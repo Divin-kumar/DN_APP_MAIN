@@ -11,8 +11,8 @@
 <meta name="theme-color" content="#2d6a4f">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-
 <meta name="apple-mobile-web-app-title" content="LifeHub">
+
 <link rel="stylesheet" href="style.css">
 
 </head>
@@ -21,15 +21,11 @@
 <div id="loginPage" class="login-page">
 
     <div class="login-card">
-
         <h1>Expense Tracker</h1>
-
         <p>Sign in to continue</p>
-
         <button onclick="signInGoogle()">
             Continue with Google
         </button>
-
     </div>
 
 </div>
@@ -37,69 +33,49 @@
 <div class="container" id="appContainer" style="display:none;">
 
 <div class="topbar">
-
     <div class="topbar-left">
-
     <button
         class="launcher-btn"
         onclick="toggleLauncher()">
         ☰
     </button>
-
     <h1>LifeHub</h1>
-
 </div>
 
 <div id="appLauncher" class="app-launcher">
-
     <div
         class="app-card"
         onclick="showModule('expenses')">
-
         💰
         <span>Expenses</span>
-
     </div>
-
     <div
         class="app-card"
         onclick="showModule('events')">
-
         📅
         <span>Events</span>
-
     </div>
-
     <div
         class="app-card"
         onclick="showModule('reminders')">
-
         ⏰
         <span>Reminders</span>
-
     </div>
-
     <div
         class="app-card"
         onclick="showModule('memories')">
-
         📸
         <span>Memories</span>
-
     </div>
-
     <div
         class="app-card"
         onclick="showModule('settings')">
-
         ⚙️
         <span>Settings</span>
-
     </div>
-
 </div>
 
-    <div class="user-section">
+<div class="user-section">
 
         <img
             id="userPhoto"
@@ -168,9 +144,9 @@
 
         <select id="category">
             <option>Food</option>
-            <option>Travel</option>
+            <option>Hospital</option>
             <option>Shopping</option>
-            <option>Bills</option>
+            <option>Travel</option>
             <option>Entertainment</option>
             <option>Other</option>
         </select>
@@ -195,32 +171,30 @@
     placeholder="Search by name or category..."
     onkeyup="renderExpenses()">
 		
-        <div style="overflow-x:auto;">
+<div style="overflow-x:auto;">
 <table>
+    <thead>
+        <tr>
+            <th>Date</th>
+            <th>Name</th>
+            <th>Category</th>
+            <th>Amount</th>
+            <th>Action</th>
+        </tr>
+    </thead>
 
-            <thead>
-                <tr>
-                    <th>Date</th>
-                    <th>Name</th>
-                    <th>Category</th>
-                    <th>Amount</th>
-                    <th>Action</th>
-                </tr>
-            </thead>
+    <tbody id="expenseTable">
+    </tbody>
 
-            <tbody id="expenseTable">
+</table>
 
-            </tbody>
-
-        </table>
 </div>
-		
-		<div style="margin-top:25px;">
-    <h2>Category Breakdown</h2>
+    <div style="margin-top:25px;">
+        <h2>Category Breakdown</h2>
     <div id="categoryBreakdown"></div>
-</div>
-
     </div>
+
+</div>
 
 </div>
 
@@ -282,9 +256,9 @@
 
         <select id="editCategory">
             <option>Food</option>
-            <option>Travel</option>
+            <option>Hospital</option>
             <option>Shopping</option>
-            <option>Bills</option>
+            <option>Travel</option>
             <option>Entertainment</option>
             <option>Other</option>
         </select>
