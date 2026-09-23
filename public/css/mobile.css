@@ -1,0 +1,173 @@
+/* ===================================
+   MOBILE (<768px)
+=================================== */
+
+@media (max-width:768px){
+
+    /* HIDE DESKTOP ELEMENTS */
+
+    #userName{
+        display:none;
+    }
+
+    /* PAGE */
+
+    body{
+        padding:8px;
+    }
+
+    .container{
+        width:100%;
+        margin:0;
+        padding:0;
+    }
+
+    /* HEADER */
+
+    .topbar{
+        display:flex;
+        justify-content:space-between;
+        align-items:center;
+
+        flex-wrap:nowrap;
+
+        padding:12px;
+        gap:10px;
+    }
+
+    .topbar h1{
+        font-size:20px;
+    }
+
+    .topbar-left{
+        display:flex;
+        align-items:center;
+        gap:10px;
+
+        flex-shrink:0;
+    }
+
+    .user-section{
+        display:flex;
+        align-items:center;
+
+        justify-content:flex-end;
+
+        gap:10px;
+        margin-left:auto;
+
+        width:auto;
+    }
+
+    .avatar{
+        width:32px;
+        height:32px;
+    }
+
+    .logout-btn{
+        width:auto;
+        padding:6px 10px;
+        font-size:11px;
+    }
+
+    /* LAYOUT */
+
+    .main-grid{
+        display:flex;
+        flex-direction:column;
+        gap:12px;
+    }
+
+    .panel{
+        padding:15px;
+        border-radius:12px;
+    }
+
+    .panel h2{
+        font-size:18px;
+    }
+
+    /* FORMS */
+
+    input,
+    select{
+        height:48px;
+        font-size:16px;
+    }
+
+    button{
+        height:48px;
+        font-size:15px;
+    }
+
+    /* DASHBOARD */
+
+    .summary-grid{
+        grid-template-columns:repeat(2,1fr);
+        gap:8px;
+        margin:12px 0;
+    }
+
+    .card{
+        min-height:75px;
+        padding:10px;
+
+        border-radius:12px;
+    }
+
+    .card-title{
+        font-size:10px;
+        margin-bottom:5px;
+    }
+
+    .card-value{
+        font-size:18px;
+    }
+
+    /* TABLE */
+
+    table{
+        font-size:12px;
+    }
+
+    th,
+    td{
+        padding:8px;
+        white-space:nowrap;
+    }
+
+    /* SEARCH */
+
+    #searchExpense{
+        height:45px;
+    }
+
+    /* APP LAUNCHER */
+
+    .app-launcher{
+        width:100%;
+        left:0;
+        top:90px;
+
+        max-width:none;
+    }
+
+    .app-card{
+        padding:12px;
+        font-size:14px;
+    }
+
+    /* MODAL */
+
+    .modal-content{
+        width:95%;
+        margin:25% auto;
+        padding:15px;
+    }
+
+    /* CATEGORY BREAKDOWN */
+
+    #categoryBreakdown div{
+        font-size:13px;
+    }
+}

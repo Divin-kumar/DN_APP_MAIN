@@ -13,7 +13,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="LifeHub">
 
-<link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/mobile.css">
 
 </head>
 <body>
@@ -35,8 +36,8 @@
 <div class="topbar">
     <div class="topbar-left">
     <button
-        class="launcher-btn"
-        onclick="toggleLauncher()">
+    class="launcher-btn"
+    onclick="toggleLauncher(event)">
         ☰
     </button>
     <h1>LifeHub</h1>
@@ -60,12 +61,6 @@
         onclick="showModule('reminders')">
         ⏰
         <span>Reminders</span>
-    </div>
-    <div
-        class="app-card"
-        onclick="showModule('memories')">
-        📸
-        <span>Memories</span>
     </div>
     <div
         class="app-card"
@@ -279,8 +274,8 @@
 
 </div>
 
-<script type="module" srcpt src="firebase.js"></script>
-<script type="module" srcpt src="app.js"></script>
+<script type="module" src="firebase.js"></script>
+<script src="app.js"></script>
 
 <script>
 if ("serviceWorker" in navigator) {

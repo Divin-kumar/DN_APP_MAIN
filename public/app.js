@@ -60,16 +60,37 @@ saveExpenseToFirestore(expense);
     initializeExpenseApp();
 }
 
-window.toggleLauncher = function(){
+window.toggleLauncher = function(event){
+
+    if(event){
+        event.stopPropagation();
+    }
+
     const launcher =
         document.getElementById("appLauncher");
 
-    if(launcher.style.display === "grid"){
+    launcher.style.display =
+        launcher.style.display === "grid"
+        ? "none"
+        : "grid";
+};
+
+window.addEventListener("click", function(event){
+
+    const launcher =
+        document.getElementById("appLauncher");
+
+    const button =
+        document.querySelector(".launcher-btn");
+
+    if(
+        !launcher.contains(event.target) &&
+        !button.contains(event.target)
+    ){
         launcher.style.display = "none";
-    }else{
-        launcher.style.display = "grid";
     }
-}
+
+});
 
 window.setTodayDate = function(){
 

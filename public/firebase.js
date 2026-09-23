@@ -154,10 +154,18 @@ onAuthStateChanged(auth, async user => {
 
         appContainer.style.display = "block";
 
-        document.getElementById(
-            "userName"
-        ).innerText =
-        user.displayName;
+const userNameEl = document.getElementById("userName");
+
+if (window.innerWidth <= 768) {
+
+    userNameEl.style.display = "none";
+
+} else {
+
+    userNameEl.style.display = "inline";
+    userNameEl.innerText = user.displayName;
+
+}
 
         document.getElementById(
             "userPhoto"
