@@ -379,16 +379,27 @@ input[type="date"]{
     box-sizing:border-box;
 }
 
-.topbar{
-    flex-wrap:wrap;
-}
-
 .user-section{
-    width:100%;
-    justify-content:space-between;
+    display:flex;
+    align-items:center;
+    gap:15px;
+    width:auto;
 }
 
 /* Mobile View */
+
+@media (max-width:768px){
+
+    .topbar{
+        flex-wrap:wrap;
+    }
+
+    .user-section{
+        width:100%;
+        justify-content:space-between;
+    }
+
+}
 
 @media (max-width:768px){
 
@@ -423,9 +434,9 @@ input[type="date"]{
         padding:15px;
     }
 
-    .topbar{
+    /*.topbar{
         padding:12px;
-    }
+    }*/
 
     .user-section{
         gap:8px;
