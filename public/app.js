@@ -4,7 +4,6 @@ window.initializeExpenseApp =
 async function(){
 
     try{
-
         expenses =
         await window.loadExpensesFromFirestore();
 		setTodayDate();
@@ -16,7 +15,7 @@ async function(){
     }
 }
 
-async function addExpense(){
+window.addExpense = async function(){
 
     let name =
     document.getElementById("name").value;
@@ -61,28 +60,18 @@ saveExpenseToFirestore(expense);
     initializeExpenseApp();
 }
 
-function toggleLauncher(){
-
+window.toggleLauncher = function(){
     const launcher =
         document.getElementById("appLauncher");
 
-    if(
-        launcher.style.display === "grid"
-    ){
-
-        launcher.style.display =
-            "none";
-
+    if(launcher.style.display === "grid"){
+        launcher.style.display = "none";
     }else{
-
-        launcher.style.display =
-            "grid";
-
+        launcher.style.display = "grid";
     }
-
 }
 
-function setTodayDate() {
+window.setTodayDate = function(){
 
     const today = new Date();
 
@@ -91,7 +80,7 @@ function setTodayDate() {
     document.getElementById("date").value = formattedDate;
 }
 
-async function deleteExpense(id){
+window.deleteExpense = async function(id){
 
     const expense =
     expenses.find(
@@ -105,7 +94,7 @@ async function deleteExpense(id){
     await initializeExpenseApp();
 }
 
-function editExpense(id){
+window.editExpense = function(id){
 
     const expense =
     expenses.find(e => e.id === id);
@@ -129,7 +118,7 @@ function editExpense(id){
     "block";
 }
 
-async function saveExpense(){
+window.saveExpense = async function(){
 
     const id =
     Number(document.getElementById("editId").value);
@@ -158,12 +147,12 @@ closeModal();
 initializeExpenseApp();
 }
 
-function closeModal(){
+window.closeModal = function(){
     document.getElementById("editModal")
     .style.display="none";
 }
 
-function renderExpenses(){
+window.renderExpenses = function(){
 
     let table =
     document.getElementById("expenseTable");
@@ -291,19 +280,7 @@ function renderExpenses(){
     }
 }
 
-function setTodayDate(){
-
-    const today = new Date();
-
-    const formattedDate =
-        today.toISOString().split('T')[0];
-
-    document.getElementById("date").value =
-        formattedDate;
-
-}
-
-function showModule(module){
+window.showModule = function(module){
 
     const modules = [
 
