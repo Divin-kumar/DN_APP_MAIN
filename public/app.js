@@ -1,5 +1,41 @@
 let expenses = [];
 
+document.addEventListener("DOMContentLoaded", function () {
+    const signInBtn = document.querySelector(".signin-btn");
+    const createBtn = document.querySelector(".signup-link");
+    const googleBtn = document.querySelector(".google-btn");
+
+    if (signInBtn) {
+        signInBtn.addEventListener("click", function () {
+            if (typeof window.loginUser === "function") {
+                window.loginUser();
+            } else {
+                alert("Authentication is still loading. Please try again in a moment.");
+            }
+        });
+    }
+
+    if (createBtn) {
+        createBtn.addEventListener("click", function () {
+            if (typeof window.registerUser === "function") {
+                window.registerUser();
+            } else {
+                alert("Authentication is still loading. Please try again in a moment.");
+            }
+        });
+    }
+
+    if (googleBtn) {
+        googleBtn.addEventListener("click", function () {
+            if (typeof window.signInGoogle === "function") {
+                window.signInGoogle();
+            } else {
+                alert("Authentication is still loading. Please try again in a moment.");
+            }
+        });
+    }
+});
+
 window.initializeExpenseApp =
 async function(){
 
