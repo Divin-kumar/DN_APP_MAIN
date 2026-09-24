@@ -154,111 +154,115 @@
     </div>
 </section>
 
-<!-- Summary cards for spending, total transactions, top category, and monthly total. -->
-<div class="summary-grid">
+<div class="module-shell">
 
-    <div class="card">
-        <div class="card-title">Total Spending</div>
-        <div class="card-value">
-            ₹ <span id="totalAmount">0</span>
+<!-- Expenses module shown as the primary finance workspace. -->
+<div id="expensesModule">
+    <!-- Summary cards for spending, total transactions, top category, and monthly total. -->
+    <div class="summary-grid">
+
+        <div class="card">
+            <div class="card-title">Total Spending</div>
+            <div class="card-value">
+                ₹ <span id="totalAmount">0</span>
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-title">Transactions</div>
-        <div class="card-value" id="transactionCount">
-            0
+        <div class="card">
+            <div class="card-title">Transactions</div>
+            <div class="card-value" id="transactionCount">
+                0
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-title">Top Category</div>
-        <div class="card-value" id="topCategory">
-            -
+        <div class="card">
+            <div class="card-title">Top Category</div>
+            <div class="card-value" id="topCategory">
+                -
+            </div>
         </div>
-    </div>
 
-    <div class="card">
-        <div class="card-title">This Month</div>
-        <div class="card-value">
-            ₹ <span id="monthTotal">0</span>
+        <div class="card">
+            <div class="card-title">This Month</div>
+            <div class="card-value">
+                ₹ <span id="monthTotal">0</span>
+            </div>
         </div>
-    </div>
-
-</div>
-
-<!-- Form and history area for adding and viewing expense records. -->
-<div class="main-grid">
-
-    <div class="panel">
-
-        <h2>Add Expense</h2>
-
-        <input
-            type="text"
-            id="name"
-            placeholder="Expense Name">
-
-        <input
-            type="number"
-            id="amount"
-            placeholder="Amount">
-
-        <select id="category">
-            <option>Food</option>
-            <option>Hospital</option>
-            <option>Shopping</option>
-            <option>Travel</option>
-            <option>Entertainment</option>
-            <option>Other</option>
-        </select>
-
-        <input
-            type="date"
-            id="date">
-
-        <button onclick="addExpense()">
-            Add Expense
-        </button>
 
     </div>
 
-    <div class="panel">
+    <!-- Form and history area for adding and viewing expense records. -->
+    <div class="main-grid">
 
-        <h2>Expense History</h2>
+        <div class="panel">
 
-		<input
-    type="text"
-    id="searchExpense"
-    placeholder="Search by name or category..."
-    onkeyup="renderExpenses()">
-		
-<div style="overflow-x:auto;">
-<table>
-    <thead>
-        <tr>
-            <th>Date</th>
-            <th>Name</th>
-            <th>Category</th>
-            <th>Amount</th>
-            <th>Action</th>
-        </tr>
-    </thead>
+            <h2>Add Expense</h2>
 
-    <tbody id="expenseTable">
-    </tbody>
+            <input
+                type="text"
+                id="name"
+                placeholder="Expense Name">
 
-</table>
+            <input
+                type="number"
+                id="amount"
+                placeholder="Amount">
 
-</div>
-    <div style="margin-top:25px;">
-        <h2>Category Breakdown</h2>
-    <div id="categoryBreakdown"></div>
+            <select id="category">
+                <option>Food</option>
+                <option>Hospital</option>
+                <option>Shopping</option>
+                <option>Travel</option>
+                <option>Entertainment</option>
+                <option>Other</option>
+            </select>
+
+            <input
+                type="date"
+                id="date">
+
+            <button onclick="addExpense()">
+                Add Expense
+            </button>
+
+        </div>
+
+        <div class="panel">
+
+            <h2>Expense History</h2>
+
+            <input
+                type="text"
+                id="searchExpense"
+                placeholder="Search by name or category..."
+                onkeyup="renderExpenses()">
+
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Category</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="expenseTable">
+                    </tbody>
+
+                </table>
+            </div>
+
+            <div style="margin-top:25px;">
+                <h2>Category Breakdown</h2>
+                <div id="categoryBreakdown"></div>
+            </div>
+
+        </div>
+
     </div>
-
-</div>
-
-</div>
 
 </div>
 
@@ -323,6 +327,8 @@
         Coming Soon
 
     </div>
+
+</div>
 
 </div>
 
