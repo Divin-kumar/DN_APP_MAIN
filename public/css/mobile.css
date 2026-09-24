@@ -1,16 +1,19 @@
 /* ===================================
    MOBILE (<768px)
+   Adjustments for phone-sized screens and touch-friendly controls.
 =================================== */
 
 @media (max-width:768px){
 
     /* HIDE DESKTOP ELEMENTS */
+    /* Hide parts of the desktop layout that are not needed on mobile. */
 
     #userName{
         display:none;
     }
 
     /* PAGE */
+    /* Keep the layout compact and easier to read on smaller screens. */
 
     body{
         padding:8px;
@@ -23,6 +26,7 @@
     }
 
     /* HEADER */
+    /* Improve spacing and sizing of the top bar for mobile. */
 
     .topbar{
         display:flex;
@@ -71,6 +75,7 @@
     }
 
     /* LAYOUT */
+    /* Stack the dashboard content vertically for better phone usability. */
 
     .main-grid{
         display:flex;
@@ -88,6 +93,7 @@
     }
 
     /* FORMS */
+    /* Increase control size for easier mobile tapping. */
 
     input,
     select{
@@ -101,6 +107,7 @@
     }
 
     /* DASHBOARD */
+    /* Keep card summary blocks readable on smaller screens. */
 
     .summary-grid{
         grid-template-columns:repeat(2,1fr);
@@ -125,6 +132,7 @@
     }
 
     /* TABLE */
+    /* Reduce spacing so the expense list remains usable on narrow screens. */
 
     table{
         font-size:12px;
@@ -143,6 +151,7 @@
     }
 
     /* APP LAUNCHER */
+    /* Make the navigation menu fit the mobile device width. */
 
     .app-launcher{
         width:100%;
@@ -158,6 +167,7 @@
     }
 
     /* MODAL */
+    /* Adjust the edit popup for mobile screens. */
 
     .modal-content{
         width:95%;

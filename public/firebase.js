@@ -1,3 +1,4 @@
+// Firebase app, auth, and Firestore imports for the expense tracker.
 import { initializeApp }
 from "https://www.gstatic.com/firebasejs/12.19.0/firebase-app.js";
 
@@ -6,9 +7,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup,
   onAuthStateChanged,
-  signOut,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword
+  signOut
 }
 from "https://www.gstatic.com/firebasejs/12.19.0/firebase-auth.js";
 
@@ -23,6 +22,7 @@ import {
 }
 from "https://www.gstatic.com/firebasejs/12.19.0/firebase-firestore.js";
 
+// Firebase project configuration used to connect the app to Google Authentication and Firestore.
 const firebaseConfig = {
     apiKey: "AIzaSyCWks2wkCCsoYY3NRLl5BIBgf23vsgqqlI",
     authDomain: "expense-tracker-divin.firebaseapp.com",
@@ -38,57 +38,7 @@ const auth = getAuth(app);
 
 const db = getFirestore(app);
 
-window.registerUser = async function(){
-
-    const email =
-        document.getElementById("email").value;
-
-    const password =
-        document.getElementById("password").value;
-
-    if(!email || !password){
-        alert("Enter email and password");
-        return;
-    }
-
-    try{
-
-        await createUserWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-        alert("Account created successfully");
-
-    }catch(error){
-
-        alert(error.message);
-    }
-};
-
-window.loginUser = async function(){
-
-    const email =
-        document.getElementById("email").value;
-
-    const password =
-        document.getElementById("password").value;
-
-    try{
-
-        await signInWithEmailAndPassword(
-            auth,
-            email,
-            password
-        );
-
-    }catch(error){
-
-        alert(error.message);
-    }
-};
-
+// Save a single expense record under the logged-in user's Firestore collection.
 window.saveExpenseToFirestore =
 async function(expense){
 
@@ -105,6 +55,7 @@ async function(expense){
     );
 };
 
+// Read all saved expense records for the current signed-in user.
 window.loadExpensesFromFirestore =
 async function(){
 
@@ -132,6 +83,7 @@ async function(){
     return data;
 };
 
+// Delete one expense document from Firestore by its document ID.
 window.deleteExpenseFromFirestore =
 async function(firestoreId){
 
@@ -146,6 +98,7 @@ async function(firestoreId){
     );
 };
 
+// Update an existing expense item with the edited values.
 window.updateExpenseInFirestore =
 async function(expense){
 
@@ -169,6 +122,7 @@ async function(expense){
 };
 
 
+// Trigger Google sign-in so the user can access their personal expense data.
 window.signInGoogle = async function(){
 
     const provider =
@@ -180,6 +134,7 @@ window.signInGoogle = async function(){
     );
 };
 
+// Log the user out from Firebase and end the current session.
 window.logoutUser = async function () {
     try {
         await signOut(auth);
@@ -191,6 +146,7 @@ window.logoutUser = async function () {
 
 
 
+// Keep track of the auth state and show or hide the app according to login status.
 onAuthStateChanged(auth, async user => {
 
     window.currentUser = user;

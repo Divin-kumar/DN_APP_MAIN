@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Expense Tracker_Latest</title>
+<title>Expense Tracker_24thSept</title>
 
 <link rel="manifest" href="manifest.json" content="#2d6a4f">
 
@@ -19,77 +19,23 @@
 </head>
 <body>
 
+<!-- Login screen shown before the user signs in. -->
 <div id="loginPage" class="login-page">
 
     <div class="login-card">
-
-        <div class="login-logo">
-            🌿
-        </div>
-
-        <h1>LifeHub</h1>
-
-        <p class="subtitle">
-            Your personal space
-        </p>
-
-        <div class="input-group">
-            <input
-                type="email"
-                id="email"
-                placeholder="Email Address">
-        </div>
-
-        <div class="input-group">
-            <input
-                type="password"
-                id="password"
-                placeholder="Password">
-        </div>
-
-        <div class="login-separator">
-            <br>
-        </div>
-        
-        <button class="signin-btn">
-            Sign In
+        <h1>Expense Tracker</h1>
+        <p>Sign in to continue</p>
+        <button onclick="signInGoogle()">
+            Continue with Google
         </button>
-
-
-        <div class="login-separator">
-            <br>
-        </div>
-
-        <button class="signup-link">
-            Create Account
-        </button>
-
-
-        <div class="login-separator">
-           or
-        </div>
-
-        <button
-        class="google-btn">
-        
-        <svg width="20" height="20" viewBox="0 0 48 48">
-        <path fill="#FFC107" d="M43.6 20H42V20H24V28H35.3C33.6 32.7 29.2 36 24 36C17.4 36 12 30.6 12 24S17.4 12 24 12C27 12 29.7 13.1 31.8 14.9L37.5 9.2C34 6 29.3 4 24 4C13 4 4 13 4 24S13 44 24 44S44 35 44 24C44 22.7 43.9 21.3 43.6 20Z"/>
-        <path fill="#FF3D00" d="M6.3 14.7L12.8 19.4C14.5 15.2 18.9 12 24 12C27 12 29.7 13.1 31.8 14.9L37.5 9.2C34 6 29.3 4 24 4C16.3 4 9.7 8.3 6.3 14.7Z"/>
-        <path fill="#4CAF50" d="M24 44C29.2 44 33.6 42.3 37 39.3L30.8 34.1C28.8 35.6 26.5 36 24 36C18.8 36 14.4 32.7 12.7 28.1L6.2 33.1C9.5 39.6 16.2 44 24 44Z"/>
-        <path fill="#1976D2" d="M43.6 20H42V20H24V28H35.3C34.5 30.3 33 32.4 30.8 34.1L37 39.3C40.6 36 44 30.8 44 24C44 22.7 43.9 21.3 43.6 20Z"/>
-        </svg>
-        
-        Continue with Google
-        
-        </button>
-
-        
     </div>
 
 </div>
 
+<!-- Main application container shown after successful login. -->
 <div class="container" id="appContainer" style="display:none;">
 
+<!-- Top header containing the app launcher and user controls. -->
 <div class="topbar">
     <div class="topbar-left">
     <button
@@ -146,6 +92,7 @@
 
 </div>
 
+<!-- Summary cards for spending, total transactions, top category, and monthly total. -->
 <div class="summary-grid">
 
     <div class="card">
@@ -178,6 +125,7 @@
 
 </div>
 
+<!-- Form and history area for adding and viewing expense records. -->
 <div class="main-grid">
 
     <div class="panel">
@@ -252,6 +200,7 @@
 
 </div>
 
+<!-- Placeholder for the events section. -->
 <div
     id="eventsModule"
     style="display:none">
@@ -294,6 +243,7 @@
 
 </div>
 
+<!-- Modal popup used to edit an existing expense entry. -->
 <div id="editModal" class="modal">
 
     <div class="modal-content">

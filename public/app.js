@@ -1,41 +1,7 @@
+// This array holds the current user's expense records while the app is open.
 let expenses = [];
 
-document.addEventListener("DOMContentLoaded", function () {
-    const signInBtn = document.querySelector(".signin-btn");
-    const createBtn = document.querySelector(".signup-link");
-    const googleBtn = document.querySelector(".google-btn");
-
-    if (signInBtn) {
-        signInBtn.addEventListener("click", function () {
-            if (typeof window.loginUser === "function") {
-                window.loginUser();
-            } else {
-                alert("Authentication is still loading. Please try again in a moment.");
-            }
-        });
-    }
-
-    if (createBtn) {
-        createBtn.addEventListener("click", function () {
-            if (typeof window.registerUser === "function") {
-                window.registerUser();
-            } else {
-                alert("Authentication is still loading. Please try again in a moment.");
-            }
-        });
-    }
-
-    if (googleBtn) {
-        googleBtn.addEventListener("click", function () {
-            if (typeof window.signInGoogle === "function") {
-                window.signInGoogle();
-            } else {
-                alert("Authentication is still loading. Please try again in a moment.");
-            }
-        });
-    }
-});
-
+// Load expenses from Firestore and refresh the dashboard after login.
 window.initializeExpenseApp =
 async function(){
 
@@ -51,6 +17,7 @@ async function(){
     }
 }
 
+// Add a new expense after validating the fields entered by the user.
 window.addExpense = async function(){
 
     let name =
@@ -96,6 +63,7 @@ saveExpenseToFirestore(expense);
     initializeExpenseApp();
 }
 
+// Show or hide the launcher menu from the top navigation bar.
 window.toggleLauncher = function(event){
 
     if(event){
@@ -128,6 +96,7 @@ window.addEventListener("click", function(event){
 
 });
 
+// Set the form date to today's date by default for faster entry.
 window.setTodayDate = function(){
 
     const today = new Date();
@@ -137,6 +106,7 @@ window.setTodayDate = function(){
     document.getElementById("date").value = formattedDate;
 }
 
+// Delete one expense item from Firestore and refresh the list.
 window.deleteExpense = async function(id){
 
     const expense =
@@ -151,6 +121,7 @@ window.deleteExpense = async function(id){
     await initializeExpenseApp();
 }
 
+// Fill the edit modal with the selected expense so it can be updated.
 window.editExpense = function(id){
 
     const expense =
@@ -175,6 +146,7 @@ window.editExpense = function(id){
     "block";
 }
 
+// Save the edited expense data back to Firestore and reload the page state.
 window.saveExpense = async function(){
 
     const id =
@@ -204,11 +176,13 @@ closeModal();
 initializeExpenseApp();
 }
 
+// Close the edit modal after saving or cancelling.
 window.closeModal = function(){
     document.getElementById("editModal")
     .style.display="none";
 }
 
+// Rebuild the table and summary values from the current expense list.
 window.renderExpenses = function(){
 
     let table =
@@ -337,6 +311,7 @@ window.renderExpenses = function(){
     }
 }
 
+// Switch the visible module in the app when the user chooses a menu item.
 window.showModule = function(module){
 
     const modules = [
