@@ -1,6 +1,12 @@
 {
   "hosting": {
-    "public": "public",
+    "public": "dist",
+    "rewrites": [
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ],
     "headers": [
       {
         "source": "index.html",
