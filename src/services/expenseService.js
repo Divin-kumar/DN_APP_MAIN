@@ -17,7 +17,10 @@ const expenseKey = (expense) => expense.id || expense.firestoreId;
 const mergeExpenseRecords = (records) => {
   const merged = new Map();
   records.forEach((record) => {
-    const normalized = normalizeExpense(record);
+    const normalized = {
+      ...normalizeExpense(record),
+      ...(record.firestoreId ? { firestoreId: record.firestoreId } : {}),
+    };
     const key = expenseKey(normalized) || crypto.randomUUID();
     if (!merged.has(key)) merged.set(key, normalized);
   });

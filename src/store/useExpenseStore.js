@@ -82,7 +82,10 @@ const useExpenseStore = create((set, get) => ({
       return;
     }
 
-    await deleteExpense(uid, expense);
+    // Nested-only records have no Firestore document to delete.
+    if (expense.firestoreId) {
+      await deleteExpense(uid, expense);
+    }
     set({ expenses: current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId) });
   },
 }));

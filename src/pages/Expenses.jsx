@@ -11,7 +11,7 @@ export default function Expenses() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const { expenses, loading, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
-  const { events, loadEvents } = useEventStore();
+  const { events, loadEvents, updateEventItem } = useEventStore();
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -54,7 +54,27 @@ export default function Expenses() {
 
   const handleDelete = async (expense) => {
     const targetId = expense.id || expense.firestoreId;
+    const expenseIds = new Set([expense.id, expense.firestoreId, targetId].filter(Boolean));
     await deleteExpenseItem(user?.uid, isGuest, targetId);
+
+    // Remove the activity-local copy so reconciliation cannot restore a deleted expense.
+    if (expense.eventId && expense.activityId) {
+      const event = events.find((item) => (item.id || item.firestoreId) === expense.eventId);
+      if (event) {
+        const activities = (event.activities || []).map((activity) => (
+          activity.id === expense.activityId
+            ? {
+                ...activity,
+                expenses: (activity.expenses || []).filter(
+                  (item) => !expenseIds.has(item.id) && !expenseIds.has(item.firestoreId)
+                ),
+              }
+            : activity
+        ));
+        await updateEventItem(user?.uid, isGuest, { ...event, activities });
+      }
+    }
+
     if (editingExpense && (editingExpense.id === targetId || editingExpense.firestoreId === targetId)) {
       setEditingExpense(null);
     }
