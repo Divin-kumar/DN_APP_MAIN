@@ -87,6 +87,7 @@ select{
 
 .topbar{
     position:relative;
+    z-index:10;
     display:flex;
     justify-content:space-between;
     align-items:center;
