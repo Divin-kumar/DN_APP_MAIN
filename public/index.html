@@ -44,6 +44,11 @@
         ☰
     </button>
     <h1>LifeHub</h1>
+    <div class="month-switcher" aria-label="Month selector">
+        <button type="button" class="month-nav" aria-label="Previous month">←</button>
+        <div class="month-label">September 2026</div>
+        <button type="button" class="month-nav" aria-label="Next month">→</button>
+    </div>
 </div>
 
 <div id="appLauncher" class="app-launcher">
@@ -91,6 +96,57 @@
     </div>
 
 </div>
+
+<section class="finance-overview" aria-label="Financial overview">
+    <div class="finance-header">
+        <div>
+            <span class="eyebrow">Financial snapshot</span>
+            <h2>Personal overview</h2>
+        </div>
+        <span class="chip">Live cash flow</span>
+    </div>
+
+    <div class="finance-grid">
+        <div class="finance-card balance">
+            <span class="finance-meta">Available balance</span>
+            <strong class="finance-value">₹19,000</strong>
+        </div>
+
+        <div class="finance-card income">
+            <span class="finance-meta">Income this month</span>
+            <strong class="finance-value">₹35,000</strong>
+        </div>
+
+        <div class="finance-card expense">
+            <span class="finance-meta">Expenses this month</span>
+            <strong class="finance-value">₹28,000</strong>
+        </div>
+
+        <div class="finance-card count">
+            <span class="finance-meta">Transactions</span>
+            <strong class="finance-value">18</strong>
+        </div>
+    </div>
+
+    <div class="overview-panel">
+        <div class="overview-row">
+            <span>Opening balance</span>
+            <strong>₹12,000</strong>
+        </div>
+        <div class="overview-row">
+            <span>Income</span>
+            <strong>₹35,000</strong>
+        </div>
+        <div class="overview-row">
+            <span>Expenses</span>
+            <strong>₹28,000</strong>
+        </div>
+        <div class="overview-row highlight">
+            <span>Closing balance</span>
+            <strong>₹19,000</strong>
+        </div>
+    </div>
+</section>
 
 <!-- Summary cards for spending, total transactions, top category, and monthly total. -->
 <div class="summary-grid">

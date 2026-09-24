@@ -50,6 +50,25 @@
         flex-shrink:0;
     }
 
+    .month-switcher{
+        margin-left:0;
+        padding:5px 8px;
+        gap:8px;
+        max-width:170px;
+    }
+
+    .month-label{
+        min-width:90px;
+        font-size:0.8rem;
+    }
+
+    .month-nav{
+        min-width:24px;
+        height:24px;
+        padding:0 7px;
+        font-size:0.8rem;
+    }
+
     .user-section{
         display:flex;
         align-items:center;
@@ -72,6 +91,35 @@
 
     /* LAYOUT */
     /* Stack the dashboard content vertically for better phone usability. */
+
+    .finance-overview{
+        padding:18px 14px 14px;
+        border-radius:18px;
+    }
+
+    .finance-header{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
+    .finance-grid{
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+    }
+
+    .finance-card{
+        padding:14px 12px;
+        border-radius:14px;
+    }
+
+    .finance-value{
+        font-size:1.3rem;
+    }
+
+    .overview-row{
+        font-size:0.82rem;
+        padding:10px 4px;
+    }
 
     .main-grid{
         display:flex;

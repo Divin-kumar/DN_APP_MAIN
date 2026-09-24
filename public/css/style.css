@@ -243,6 +243,137 @@ select{
    Summary blocks for totals, counts, and category insights.
 =================================== */
 
+.finance-overview{
+    background:linear-gradient(180deg, rgba(255,255,255,0.9), rgba(248,251,249,0.94));
+    border:1px solid rgba(232,239,233,0.92);
+    border-radius:24px;
+    padding:22px 20px 18px;
+    margin-bottom:20px;
+    box-shadow:var(--shadow-card);
+}
+
+.finance-header{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    margin-bottom:16px;
+}
+
+.eyebrow{
+    display:inline-block;
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+    color:var(--primary);
+    margin-bottom:6px;
+}
+
+.finance-header h2{
+    font-size:1.4rem;
+    letter-spacing:-0.05em;
+    color:var(--text);
+}
+
+.chip{
+    display:inline-flex;
+    align-items:center;
+    padding:7px 10px;
+    border-radius:999px;
+    background:var(--primary-soft);
+    border:1px solid rgba(31,111,93,0.08);
+    color:var(--primary);
+    font-size:0.72rem;
+    font-weight:700;
+    letter-spacing:0.03em;
+    text-transform:uppercase;
+}
+
+.finance-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:14px;
+    margin-bottom:16px;
+}
+
+.finance-card{
+    background:linear-gradient(180deg, #ffffff 0%, #f7faf8 100%);
+    border:1px solid rgba(232,239,233,0.9);
+    border-radius:18px;
+    padding:18px 16px;
+    box-shadow:0 10px 22px rgba(22,34,31,0.04);
+}
+
+.finance-meta{
+    display:block;
+    color:var(--muted);
+    font-size:0.76rem;
+    font-weight:700;
+    letter-spacing:0.06em;
+    text-transform:uppercase;
+    margin-bottom:8px;
+}
+
+.finance-value{
+    color:var(--text);
+    font-size:1.8rem;
+    letter-spacing:-0.06em;
+    font-weight:700;
+}
+
+.finance-card.balance .finance-value{
+    color:var(--primary);
+}
+
+.finance-card.income .finance-value{
+    color:#1d7a59;
+}
+
+.finance-card.expense .finance-value{
+    color:#4f5b58;
+}
+
+.finance-card.count .finance-value{
+    color:#2d3d38;
+}
+
+.overview-panel{
+    background:rgba(243,246,243,0.82);
+    border:1px solid rgba(232,239,233,0.9);
+    border-radius:18px;
+    padding:10px 12px;
+}
+
+.overview-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:12px 6px;
+    border-bottom:1px solid rgba(232,239,233,0.8);
+    color:var(--muted);
+    font-size:0.95rem;
+}
+
+.overview-row:last-child{
+    border-bottom:none;
+}
+
+.overview-row strong{
+    color:var(--text);
+    font-size:1rem;
+    letter-spacing:-0.02em;
+}
+
+.overview-row.highlight{
+    color:var(--primary);
+}
+
+.overview-row.highlight strong{
+    color:var(--primary);
+}
+
 .summary-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
