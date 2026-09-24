@@ -124,6 +124,18 @@
         grid-template-columns:1fr;
     }
 
+    .income-header{
+        align-items:flex-start;
+    }
+
+    .income-header .history-controls{
+        justify-content:flex-start;
+    }
+
+    .income-list{
+        max-height:280px;
+    }
+
     .income-item{
         align-items:flex-start;
         flex-direction:column;
@@ -289,6 +301,8 @@
     /* Adjust the edit popup for mobile screens. */
 
     .modal-content{
+        max-height:calc(100vh - 32px);
+        margin:16px auto;
         width:94%;
         margin:25% auto;
         padding:18px 14px;

@@ -338,10 +338,27 @@
     id="incomeModule"
     style="display:none">
 
-    <div class="panel income-panel">
-        <h2>Income</h2>
+    <div class="panel income-panel" id="incomeHistoryPanel">
+        <div class="income-header">
+            <div>
+                <span class="panel-eyebrow">Cash flow</span>
+                <h2>Income</h2>
+            </div>
+            <div class="history-controls">
+                <span class="history-period" id="incomeHistoryPeriod">Selected month</span>
+                <button
+                    type="button"
+                    class="history-toggle"
+                    aria-expanded="true"
+                    aria-controls="incomeContent"
+                    onclick="toggleIncomePanel()">
+                    Hide
+                </button>
+            </div>
+        </div>
 
-        <div class="income-form-grid">
+        <div class="income-content" id="incomeContent">
+            <div class="income-form-grid">
             <input
                 type="text"
                 id="incomeName"
@@ -366,17 +383,28 @@
             <button onclick="addIncome()">
                 Add Income
             </button>
-        </div>
-
-        <div class="income-summary">
-            <div>
-                <span>Total income</span>
-                <strong>₹0</strong>
             </div>
-        </div>
 
-        <div class="income-list" id="incomeList">
-            <div class="empty-state">No income added yet.</div>
+            <div class="income-summary">
+                <div>
+                    <span>Total income</span>
+                    <strong>₹0</strong>
+                </div>
+            </div>
+
+            <div class="income-filters">
+                <select id="incomeTypeFilter" onchange="renderIncomeList()" aria-label="Filter income by type">
+                    <option value="all">All income types</option>
+                    <option value="Salary">Salary</option>
+                    <option value="Freelance">Freelance</option>
+                    <option value="Bonus">Bonus</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="income-list" id="incomeList">
+                <div class="empty-state">No income added yet.</div>
+            </div>
         </div>
     </div>
 

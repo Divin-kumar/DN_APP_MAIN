@@ -59,8 +59,20 @@ function renderIncomeList(){
         return;
     }
 
-    const visibleIncomes = incomes.filter(income => isInSelectedMonth(income.date));
+    const incomeTypeFilter =
+        document.getElementById("incomeTypeFilter")?.value || "all";
+    const visibleIncomes = incomes.filter(income =>
+        isInSelectedMonth(income.date)
+        &&
+        (incomeTypeFilter === "all" || income.type === incomeTypeFilter)
+    );
     list.innerHTML = "";
+
+    document.getElementById("incomeHistoryPeriod").textContent =
+        selectedMonth.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric"
+        });
 
     if(!visibleIncomes.length){
         list.innerHTML = '<div class="empty-state">No income added for this month.</div>';
@@ -102,6 +114,15 @@ window.changeMonth = function(offset){
     renderFinanceOverview();
     renderExpenses();
     renderIncomeList();
+};
+
+window.toggleIncomePanel = function(){
+    const panel = document.getElementById("incomeHistoryPanel");
+    const button = panel.querySelector(".history-toggle");
+    const collapsed = panel.classList.toggle("income-collapsed");
+
+    button.setAttribute("aria-expanded", String(!collapsed));
+    button.textContent = collapsed ? "Show" : "Hide";
 };
 
 // Load expenses from Firestore and refresh the dashboard after login.
@@ -605,6 +626,10 @@ window.addIncome = async function(){
     window.deleteIncome = async function(id){
         const income = incomes.find(item => item.id === id);
         if(!income){
+            return;
+        }
+
+        if(!window.confirm(`Delete income entry "${income.name}"?`)){
             return;
         }
 
