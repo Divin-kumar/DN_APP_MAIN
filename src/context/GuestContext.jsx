@@ -1,3 +1,4 @@
+/* Controls guest-mode persistence and session transitions. */
 import { createContext, useContext } from 'react';
 import useAppStore from '../store/useAppStore';
 

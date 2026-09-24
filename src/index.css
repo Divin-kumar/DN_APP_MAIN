@@ -16,6 +16,8 @@
   --radius-lg: 22px;
 }
 
+/* Global reset and form defaults */
+
 * {
   box-sizing: border-box;
 }
@@ -66,6 +68,8 @@ a {
     radial-gradient(circle at 92% 0%, rgba(72, 147, 123, 0.12), transparent 28rem),
     linear-gradient(180deg, #f7faf8 0%, var(--canvas) 100%);
 }
+
+/* Application shell and navigation */
 
 .lifehub-header {
   box-shadow: var(--shadow-sm);
@@ -126,6 +130,8 @@ a {
   animation: page-enter 280ms ease both;
 }
 
+/* Shared cards, history scrolling, and drawers */
+
 .events-page {
   animation: page-fade 220ms ease both;
 }
@@ -178,6 +184,8 @@ a {
 .events-workspace {
   min-height: 560px;
 }
+
+/* Events workspace and drawer */
 
 .events-form-card,
 .events-list-card {
@@ -248,6 +256,8 @@ a {
   border: 2px solid rgba(31, 111, 93, 0.14);
 }
 
+/* Profile controls and theme surfaces */
+
 .theme-toggle {
   width: 36px;
   height: 36px;
@@ -268,6 +278,8 @@ a {
   background: #0f172a;
   color: #f8fafc;
 }
+
+/* Dark mode surfaces and typography */
 
 [data-theme="dark"] .lifehub-shell {
   background: #0f172a !important;
@@ -377,6 +389,18 @@ a {
 
 [data-theme="dark"] .activity-row strong,
 [data-theme="dark"] .event-card strong {
+  color: #f8fafc !important;
+}
+
+.activity-spent {
+  display: block;
+  margin-top: 3px;
+  color: #1f6f5d;
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+[data-theme="dark"] .activity-row .activity-spent {
   color: #f8fafc !important;
 }
 
@@ -506,6 +530,7 @@ a {
 }
 
 @media (max-width: 760px) {
+  /* Mobile navigation, drawers, and responsive module layouts */
   .summaryGrid {
     grid-template-columns: 1fr !important;
   }

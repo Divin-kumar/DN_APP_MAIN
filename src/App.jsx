@@ -1,3 +1,4 @@
+/* LifeHub application routes and provider composition. */
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';

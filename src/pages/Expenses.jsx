@@ -1,3 +1,4 @@
+/* Expense management page with filtering, summaries, and nested history scrolling. */
 import { useEffect, useMemo, useState } from 'react';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import ExpenseList from '../components/expenses/ExpenseList';

@@ -1,3 +1,4 @@
+/* Income state actions keep persisted entries and summaries synchronized. */
 import { create } from 'zustand';
 import {
   createIncome,

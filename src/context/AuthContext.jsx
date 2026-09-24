@@ -1,3 +1,4 @@
+/* Bridges Firebase auth state into the application session store. */
 import { createContext, useContext, useEffect } from 'react';
 import { authService } from '../services/firebase';
 import { mergeGuestDataIntoAccount } from '../services/guestMergeService';

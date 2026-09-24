@@ -1,3 +1,4 @@
+/* Legacy dashboard shell retained for compatibility with the migration route surface. */
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';

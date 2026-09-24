@@ -1,3 +1,4 @@
+/* Shared session, theme, and application loading state. */
 import { create } from 'zustand';
 
 const useAppStore = create((set) => ({

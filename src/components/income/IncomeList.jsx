@@ -1,3 +1,4 @@
+/* Income history rows and edit/delete actions. */
 const currency = (value) => {
   const number = Number(value || 0);
   return new Intl.NumberFormat('en-IN', {

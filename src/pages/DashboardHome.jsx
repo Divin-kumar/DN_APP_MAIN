@@ -1,3 +1,4 @@
+/* Monthly financial overview with balance, spending, and recent activity summaries. */
 import { useEffect, useMemo, useState } from 'react';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';

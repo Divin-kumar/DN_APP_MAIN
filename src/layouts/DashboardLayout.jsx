@@ -1,3 +1,4 @@
+/* Application shell: header, responsive navigation, session controls, and route outlet. */
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';

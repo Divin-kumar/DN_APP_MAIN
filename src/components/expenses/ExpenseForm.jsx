@@ -1,3 +1,4 @@
+/* Expense entry form, including optional event and activity relationships. */
 import { useEffect, useState } from 'react';
 
 const defaultState = {

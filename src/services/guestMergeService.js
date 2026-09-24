@@ -1,3 +1,4 @@
+/* Migrates guest-local records into the signed-in user's Firestore account. */
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getGuestExpenses } from './expenseService';

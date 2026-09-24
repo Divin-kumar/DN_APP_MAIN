@@ -1,3 +1,4 @@
+/* Guards application routes for authenticated and guest sessions. */
 import { Navigate, useLocation } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
 

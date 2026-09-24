@@ -1,3 +1,4 @@
+/* Expense state actions keep master financial records in sync with the UI. */
 import { create } from 'zustand';
 import {
   createExpense,

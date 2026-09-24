@@ -1,3 +1,4 @@
+/* Income persistence and guest-local income storage. */
 import {
   addDoc,
   collection,

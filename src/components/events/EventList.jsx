@@ -1,8 +1,5 @@
-const currency = (value) => new Intl.NumberFormat('en-IN', {
-  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-}).format(Number(value || 0));
-
-export default function EventList({ events, selectedId, onSelect, onEdit, onDelete, expenseByEvent }) {
+/* Compact event cards used by the event list and focus-mode entry point. */
+export default function EventList({ events, selectedId, onSelect, onEdit, onDelete }) {
   if (!events.length) {
     return (
       <div className="empty-state" style={styles.emptyState}>

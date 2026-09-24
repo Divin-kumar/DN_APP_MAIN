@@ -1,3 +1,4 @@
+/* Income management page with filtering, summaries, and persisted history. */
 import { useEffect, useMemo, useState } from 'react';
 import IncomeForm from '../components/income/IncomeForm';
 import IncomeList from '../components/income/IncomeList';

@@ -1,3 +1,4 @@
+/* Expense history rows for master financial records. */
 const currency = (value) => {
   const number = Number(value || 0);
   return new Intl.NumberFormat('en-IN', {

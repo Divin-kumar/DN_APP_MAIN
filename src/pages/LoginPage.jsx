@@ -1,3 +1,4 @@
+/* Entry screen for Google authentication and local guest sessions. */
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/firebase';

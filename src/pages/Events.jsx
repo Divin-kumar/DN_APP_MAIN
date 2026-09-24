@@ -1,3 +1,4 @@
+/* Events workspace: event focus mode, activity management, linked expenses, and memory export. */
 import { useEffect, useMemo, useState } from 'react';
 import EventForm from '../components/events/EventForm';
 import EventList from '../components/events/EventList';
@@ -20,11 +21,14 @@ export default function Events() {
   const [editingActivity, setEditingActivity] = useState(null);
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
-  const [activityAmount, setActivityAmount] = useState('');
   const [expenseActivity, setExpenseActivity] = useState(null);
   const [expenseAmount, setExpenseAmount] = useState('');
+  const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
 
+  // ============================
+  // Workspace data loading
+  // ============================
   useEffect(() => {
     if (!user && !isGuest) return;
     loadEvents(user?.uid, isGuest);
@@ -33,9 +37,34 @@ export default function Events() {
 
   const focusedEvent = useMemo(() => events.find((event) => (event.id || event.firestoreId) === focusedId) || null, [events, focusedId]);
   const eventExpenses = useMemo(() => expenses.filter((expense) => expense.eventId === focusedId), [expenses, focusedId]);
-  const actualSpent = eventExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const expensesByActivity = useMemo(() => {
+    if (!focusedEvent) return {};
 
-  const closeDrawer = () => { setDrawer(null); setEditingEvent(null); setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityAmount(''); setExpenseActivity(null); setExpenseAmount(''); };
+    const merged = {};
+    const addExpense = (activityId, expense) => {
+      if (!activityId) return;
+      if (!merged[activityId]) merged[activityId] = new Map();
+      const expenseId = expense.id || expense.firestoreId || `${activityId}-${expense.date}-${expense.amount}-${expense.description}`;
+      if (!merged[activityId].has(expenseId)) merged[activityId].set(expenseId, expense);
+    };
+
+    eventExpenses.forEach((expense) => addExpense(expense.activityId, expense));
+    focusedEvent.activities?.forEach((activity) => {
+      activity.expenses?.forEach((expense) => addExpense(activity.id, expense));
+    });
+
+    return Object.fromEntries(Object.entries(merged).map(([activityId, records]) => [activityId, [...records.values()]]));
+  }, [eventExpenses, focusedEvent]);
+
+  const actualSpent = Object.values(expensesByActivity)
+    .flat()
+    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
+    + eventExpenses.filter((expense) => !expense.activityId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+
+  // ============================
+  // Drawer and persistence actions
+  // ============================
+  const closeDrawer = () => { setDrawer(null); setEditingEvent(null); setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setExpenseActivity(null); setExpenseAmount(''); setExpenseDescription(''); };
   const openNewEvent = () => { setEditingEvent(null); setDrawer('event'); };
   const openEditEvent = () => { setEditingEvent(focusedEvent); setDrawer('event'); };
 
@@ -51,14 +80,42 @@ export default function Events() {
   const saveActivity = async () => {
     if (!focusedEvent || !activityTitle.trim()) return;
     const activities = focusedEvent.activities || [];
-    const next = { id: editingActivity?.id || crypto.randomUUID(), eventId: focusedId, title: activityTitle.trim(), description: activityDescription.trim(), amount: Number(activityAmount || 0), date: editingActivity?.date || focusedEvent.date, completed: false, createdAt: editingActivity?.createdAt || new Date().toISOString() };
+    const next = { id: editingActivity?.id || crypto.randomUUID(), eventId: focusedId, title: activityTitle.trim(), description: activityDescription.trim(), date: editingActivity?.date || focusedEvent.date, completed: false, createdAt: editingActivity?.createdAt || new Date().toISOString() };
     await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: editingActivity ? activities.map((item) => item.id === editingActivity.id ? { ...item, ...next } : item) : [...activities, next] });
     closeDrawer();
   };
 
   const saveExpense = async () => {
     if (!focusedEvent || !expenseActivity || !expenseAmount) return;
-    await addExpense(user?.uid, isGuest, { name: expenseActivity.title, amount: Number(expenseAmount), category: 'Event', date: expenseDate, eventId: focusedId, activityId: expenseActivity.id, source: 'event-activity' });
+    // Keep the master expense record and the activity-local history in sync.
+    const savedExpense = await addExpense(user?.uid, isGuest, {
+      name: expenseActivity.title,
+      description: expenseDescription.trim(),
+      amount: Number(expenseAmount),
+      category: 'Event',
+      date: expenseDate,
+      eventId: focusedId,
+      activityId: expenseActivity.id,
+      source: 'event-activity',
+    });
+
+    const nestedExpense = {
+      id: savedExpense.id || savedExpense.firestoreId || crypto.randomUUID(),
+      description: savedExpense.description || expenseDescription.trim(),
+      amount: Number(savedExpense.amount || expenseAmount),
+      date: savedExpense.date || expenseDate,
+      createdAt: savedExpense.createdAt || new Date().toISOString(),
+      eventId: focusedId,
+      activityId: expenseActivity.id,
+    };
+
+    const activities = (focusedEvent.activities || []).map((activity) => (
+      activity.id === expenseActivity.id
+        ? { ...activity, expenses: [...(activity.expenses || []), nestedExpense] }
+        : activity
+    ));
+
+    await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities });
     closeDrawer();
   };
 
@@ -72,17 +129,13 @@ export default function Events() {
     setFocusedId(null);
   };
 
-  const timeline = focusedEvent ? [
-    { date: focusedEvent.createdAt || focusedEvent.date, label: 'Event created' },
-    ...(focusedEvent.activities || []).map((activity) => ({ date: activity.createdAt || activity.date, label: `${activity.title} added` })),
-    ...eventExpenses.map((expense) => ({ date: expense.createdAt || expense.date, label: `${expense.name} expense added` })),
-  ].sort((a, b) => new Date(a.date) - new Date(b.date)) : [];
-
+  // ============================
+  // Memory album export
+  // ============================
   const exportAlbum = (format) => {
     if (!focusedEvent) return;
-    const activityText = (focusedEvent.activities || []).map((item) => `<li><strong>${item.title}</strong><br>${item.description || ''}<br>${dateLabel(item.date)}</li>`).join('');
-    const timelineText = timeline.map((item) => `<li>${dateLabel(item.date)} - ${item.label}</li>`).join('');
-    const html = `<html><head><title>${focusedEvent.name} Memory Album</title></head><body><h1>${focusedEvent.name}</h1><p>${dateLabel(focusedEvent.date)} · ${focusedEvent.type}</p><hr><h2>Summary</h2><p>Total spent: ${currency(actualSpent)}</p><h2>Timeline</h2><ul>${timelineText}</ul><h2>Activities</h2><ul>${activityText}</ul><h2>Notes</h2><p>${focusedEvent.notes || ''}</p></body></html>`;
+    const activityText = (focusedEvent.activities || []).map((item) => `<article class="memory-card"><h2>${item.title}</h2><p class="date">${dateLabel(item.date)}</p><p>${item.description || 'A memory from this event.'}</p><strong>₹${(expensesByActivity[item.id] || []).reduce((sum, expense) => sum + Number(expense.amount || 0), 0).toLocaleString('en-IN')} spent</strong></article>`).join('');
+    const html = `<html><head><title>${focusedEvent.name} Memory Album</title><style>@page{size:A4;margin:0}body{margin:0;background:#f6efe5;color:#3b2f2a;font-family:Georgia,serif}.page{min-height:100vh;box-sizing:border-box;padding:80px 70px;page-break-after:always;display:flex;flex-direction:column;justify-content:center}.cover{text-align:center;background:linear-gradient(135deg,#f0d8c8,#f8efe4)}h1{font-size:64px;margin:0 0 18px}.kicker{letter-spacing:4px;text-transform:uppercase;color:#9a6d5b}.date{color:#9a6d5b;font-style:italic}.memory-card{background:#fffaf4;border:1px solid #e3cfc0;border-radius:22px;padding:28px;margin:18px 0;box-shadow:0 10px 24px rgba(104,70,51,.08)}.memory-card strong{color:#a6533d}.closing{text-align:center}</style></head><body><section class="page cover"><p class="kicker">A memory to keep</p><h1>${focusedEvent.name}</h1><p>${dateLabel(focusedEvent.date)}</p><p>${focusedEvent.type} · LifeHub Memories</p></section><section class="page"><p class="kicker">Our memories</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.notes || 'A collection of moments, people, and stories from this special day.'}</p><p>${focusedEvent.activities?.length || 0} memories captured</p></section><section class="page"><p class="kicker">The moments</p>${activityText}</section><section class="page closing"><p class="kicker">Until next time</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.activities?.length || 0} activities</p><h2>₹${actualSpent.toLocaleString('en-IN')} spent</h2><p>${focusedEvent.notes || 'Thank you for being part of this memory.'}</p></section></body></html>`;
     if (format === 'pdf') {
       const popup = window.open('', '_blank');
       popup.document.write(html);
@@ -103,10 +156,9 @@ export default function Events() {
           <div style={styles.workspaceActions}><button type="button" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
         <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><p style={styles.metaText}>{dateLabel(focusedEvent.date)} · {focusedEvent.type}</p></header>
-        <div style={styles.summaryGrid}><div style={styles.metric}><span>Activities</span><strong>{focusedEvent.activities?.length || 0}</strong></div><div style={styles.metric}><span>Total planned</span><strong>{currency((focusedEvent.activities || []).reduce((sum, item) => sum + Number(item.amount || 0), 0))}</strong></div><div style={styles.metric}><span>Total spent</span><strong>{currency(actualSpent)}</strong></div><div style={styles.metric}><span>Remaining</span><strong>{currency((focusedEvent.activities || []).reduce((sum, item) => sum + Number(item.amount || 0), 0) - actualSpent)}</strong></div></div>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" onClick={() => setDrawer('activity')} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityAmount(String(activity.amount || '')); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={removeActivity} /></section>
-        <section className="workspace-panel" style={styles.panel}><h3 style={styles.sectionTitle}>Timeline</h3><div className="timeline-list">{timeline.length ? timeline.map((item, index) => <div className="timeline-item" key={`${item.date}-${index}`}><span>{dateLabel(item.date)}</span><strong>{item.label}</strong></div>) : <p style={styles.metaText}>Your event history will appear here.</p>}</div></section>
-        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityAmount={activityAmount} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityAmount={setActivityAmount} setExpenseAmount={setExpenseAmount} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
+        <div style={styles.summaryGrid}><div style={styles.metric}><span>Activities</span><strong>{focusedEvent.activities?.length || 0}</strong></div><div style={styles.metric}><span>Total spent</span><strong>{currency(actualSpent)}</strong></div></div>
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" onClick={() => setDrawer('activity')} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={removeActivity} /></section>
+        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
       </div>
     );
   }
@@ -114,7 +166,7 @@ export default function Events() {
   return <div className="events-page" style={styles.page}><div style={styles.headerRow}><div><span style={styles.eyebrow}>Planning</span><h2 style={styles.title}>Events</h2><p style={styles.metaText}>Open an event to enter its workspace.</p></div><button type="button" onClick={openNewEvent} style={styles.primaryButton}>+ New Event</button></div><div style={styles.card}><div style={styles.listHeader}><h3 style={styles.sectionTitle}>Your events</h3><span style={styles.count}>{events.length} total</span></div>{loading ? <p style={styles.metaText}>Loading events...</p> : <EventList events={events} selectedId={null} onSelect={(event) => setFocusedId(event.id || event.firestoreId)} onEdit={(event) => { setFocusedId(event.id || event.firestoreId); setEditingEvent(event); setDrawer('event'); }} onDelete={removeEvent} />}</div>{drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}</div>;
 }
 
-function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityAmount, expenseActivity, expenseAmount, expenseDate, setActivityTitle, setActivityDescription, setActivityAmount, setExpenseAmount, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
+function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, expenseActivity, expenseAmount, expenseDescription, expenseDate, setActivityTitle, setActivityDescription, setExpenseAmount, setExpenseDescription, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
   const heading = type === 'event' ? (editingEvent?.name || 'New event') : type === 'activity' ? (editingActivity?.title || 'New activity') : expenseActivity?.title;
 
   return (
@@ -134,13 +186,13 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
           <div style={styles.formStack}>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" style={styles.input} />
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
-            <input type="number" min="0" value={activityAmount} onChange={(event) => setActivityAmount(event.target.value)} placeholder="Planned amount" style={styles.input} />
             <button type="button" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
           </div>
         ) : (
           <div style={styles.formStack}>
             <div style={styles.linkedContext}>Event and activity are linked automatically.<br /><strong>{expenseActivity?.title}</strong></div>
             <input type="number" min="0" value={expenseAmount} onChange={(event) => setExpenseAmount(event.target.value)} placeholder="Actual amount" style={styles.input} />
+            <textarea value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} placeholder="What was this expense for?" style={styles.input} rows={3} />
             <input type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} style={styles.input} />
             <button type="button" onClick={onSaveExpense} style={styles.primaryButton}>Add Expense</button>
           </div>

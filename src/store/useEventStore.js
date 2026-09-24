@@ -1,3 +1,4 @@
+/* Event state actions coordinate persistence and the Events workspace. */
 import { create } from 'zustand';
 import {
   createEvent,

@@ -1,3 +1,4 @@
+/* Firebase authentication facade used by React contexts and the shell. */
 import { auth, db, googleProvider } from '../firebase/config';
 import {
   signInWithPopup,

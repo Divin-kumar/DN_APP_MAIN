@@ -1,3 +1,4 @@
+/* Event persistence, activity normalization, and guest event storage. */
 import {
   addDoc,
   collection,
@@ -16,7 +17,15 @@ export const normalizeActivity = (item = {}) => ({
   title: String(item.title ?? '').trim(),
   date: item.date || new Date().toISOString().slice(0, 10),
   description: item.description || '',
-  amount: Number(item.amount || 0),
+  expenses: Array.isArray(item.expenses) ? item.expenses.map((expense) => ({
+    id: expense.id || crypto.randomUUID(),
+    description: String(expense.description ?? '').trim(),
+    amount: Number(expense.amount || 0),
+    date: expense.date || new Date().toISOString().slice(0, 10),
+    createdAt: expense.createdAt || new Date().toISOString(),
+    eventId: expense.eventId || item.eventId || null,
+    activityId: expense.activityId || item.id || null,
+  })) : [],
   completed: Boolean(item.completed),
   createdAt: item.createdAt || new Date().toISOString(),
 });
@@ -28,7 +37,6 @@ export const normalizeEvent = (item = {}) => ({
   type: item.type || 'Personal',
   customType: item.customType || '',
   recurrence: item.recurrence || 'none',
-  budget: Number(item.budget || 0),
   notes: item.notes || '',
   activities: Array.isArray(item.activities)
     ? item.activities.map(normalizeActivity)

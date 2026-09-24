@@ -1,3 +1,4 @@
+/* Event metadata form used only inside the create/edit drawer. */
 import { useEffect, useState } from 'react';
 
 const defaultState = {

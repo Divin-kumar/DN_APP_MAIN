@@ -1,3 +1,4 @@
+/* Temporary route surface for modules not yet migrated into React. */
 export default function PlaceholderPage({ title }) {
   return (
     <div

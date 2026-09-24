@@ -1,3 +1,4 @@
+/* Income entry form used by the income management page. */
 import { useEffect, useState } from 'react';
 
 const defaultState = {
