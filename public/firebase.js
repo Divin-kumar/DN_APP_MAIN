@@ -99,6 +99,94 @@ async function(income){
     );
 };
 
+window.mergeGuestDataIntoAccount = async function(snapshot){
+    const collections = ["expenses", "incomes", "eventGroups", "reminders"];
+
+    for(const type of collections){
+        const records = type === "eventGroups"
+            ? (snapshot.eventGroups || snapshot.events || [])
+            : (snapshot[type] || []);
+
+        for(const record of records){
+            const copy = {...record};
+            delete copy.firestoreId;
+            await addDoc(
+                collection(db, "users", window.currentUser.uid, type),
+                copy
+            );
+        }
+    }
+};
+
+window.saveEventToFirestore = async function(eventRecord){
+    await addDoc(
+        collection(db, "users", window.currentUser.uid, "eventGroups"),
+        {
+            ...eventRecord,
+            type: eventRecord.type || "Other",
+            customType: eventRecord.customType || "",
+            recurrence: eventRecord.recurrence || "none",
+            activities: eventRecord.activities || [],
+            notes: eventRecord.notes || ""
+        }
+    );
+};
+
+window.updateEventInFirestore = async function(eventRecord){
+    await updateDoc(
+        doc(db, "users", window.currentUser.uid, "eventGroups", eventRecord.firestoreId),
+        {
+            name: eventRecord.name,
+            date: eventRecord.date,
+            type: eventRecord.type || "Other",
+            customType: eventRecord.customType || "",
+            recurrence: eventRecord.recurrence || "none",
+            activities: eventRecord.activities || [],
+            notes: eventRecord.notes || ""
+        }
+    );
+};
+
+window.deleteEventFromFirestore = async function(firestoreId){
+    await deleteDoc(
+        doc(db, "users", window.currentUser.uid, "eventGroups", firestoreId)
+    );
+};
+
+window.loadEventsFromFirestore = async function(){
+    const eventGroupsRef = collection(db, "users", window.currentUser.uid, "eventGroups");
+    let snapshot = await getDocs(eventGroupsRef);
+
+    if(snapshot.empty){
+        const legacySnapshot = await getDocs(
+            collection(db, "users", window.currentUser.uid, "events")
+        );
+
+        for(const eventDoc of legacySnapshot.docs){
+            await addDoc(eventGroupsRef, {
+                ...eventDoc.data(),
+                type: eventDoc.data().type || "Other",
+                customType: eventDoc.data().customType || "",
+                recurrence: eventDoc.data().recurrence || "none",
+                activities: eventDoc.data().activities || [],
+                notes: eventDoc.data().notes || ""
+            });
+            await deleteDoc(eventDoc.ref);
+        }
+
+        snapshot = await getDocs(eventGroupsRef);
+    }
+
+    const data = [];
+    snapshot.forEach(eventDoc => {
+        data.push({
+            firestoreId: eventDoc.id,
+            ...eventDoc.data()
+        });
+    });
+    return data;
+};
+
 window.deleteIncomeFromFirestore =
 async function(firestoreId){
 
@@ -126,7 +214,10 @@ async function(expense){
             "expenses"
         ),
 
-        expense
+        {
+            ...expense,
+            eventId: expense.eventId ?? null
+        }
     );
 };
 
@@ -191,7 +282,9 @@ async function(expense){
             name: expense.name,
             amount: expense.amount,
             category: expense.category,
-            date: expense.date
+            date: expense.date,
+            eventId: expense.eventId ?? null,
+            activityId: expense.activityId ?? null
         }
     );
 };
@@ -212,6 +305,11 @@ window.signInGoogle = async function(){
 // Log the user out from Firebase and end the current session.
 window.logoutUser = async function () {
     try {
+        if(window.isGuestSession && window.isGuestSession()){
+            window.endGuestSession();
+            window.location.reload();
+            return;
+        }
         await signOut(auth);
         alert("Logged out successfully");
     } catch (error) {
@@ -256,6 +354,12 @@ if (window.innerWidth <= 768) {
         ).src =
         user.photoURL;
 
+        document.getElementById("guestBanner").style.display = "none";
+
+        if(window.isGuestMigrationPending && window.isGuestMigrationPending() && window.guestStorage.hasData()){
+            document.getElementById("migrationModal").style.display = "block";
+        }
+
         if(window.showModule){
             window.showModule("expenses");
         }
@@ -270,6 +374,34 @@ if (window.innerWidth <= 768) {
 
             await window.initializeIncomeApp();
 
+        }
+
+        if(window.loadEventsFromFirestore){
+            const eventRecords = await window.loadEventsFromFirestore();
+            if(window.setEventsFromStorage){
+                window.setEventsFromStorage(eventRecords);
+            }
+        }
+
+    }else if(window.isGuestSession && window.isGuestSession()){
+
+        window.guestMode = true;
+        window.currentUser = null;
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("appContainer").style.display = "block";
+        document.getElementById("guestBanner").style.display = "block";
+
+        if(window.refreshGuestData){
+            window.refreshGuestData();
+        }
+        if(window.showModule){
+            window.showModule("expenses");
+        }
+        if(window.initializeExpenseApp){
+            await window.initializeExpenseApp();
+        }
+        if(window.initializeIncomeApp){
+            await window.initializeIncomeApp();
         }
 
     }else{

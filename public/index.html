@@ -25,8 +25,11 @@
     <div class="login-card">
         <h1>Expense Tracker</h1>
         <p>Sign in to continue</p>
-        <button onclick="signInGoogle()">
+        <button onclick="prepareGoogleUpgrade()">
             Continue with Google
+        </button>
+        <button class="guest-login-btn" onclick="continueAsGuest()">
+            Continue as Guest
         </button>
     </div>
 
@@ -34,6 +37,10 @@
 
 <!-- Main application container shown after successful login. -->
 <div class="container" id="appContainer" style="display:none;">
+
+<div class="guest-banner" id="guestBanner" style="display:none;">
+    Your data is stored only on this device. Sign in with Google to sync across devices.
+</div>
 
 <!-- Top header containing the app launcher and user controls. -->
 <div class="topbar">
@@ -46,7 +53,7 @@
     <h1>LifeHub</h1>
     <div class="month-switcher" aria-label="Month selector">
         <button type="button" class="month-nav" aria-label="Previous month" onclick="changeMonth(-1)">←</button>
-        <div class="month-label" id="selectedMonthLabel">September 2026</div>
+        <div class="month-label" id="selectedMonthLabel">Sep 26</div>
         <button type="button" class="month-nav" aria-label="Next month" onclick="changeMonth(1)">→</button>
     </div>
 </div>
@@ -234,9 +241,14 @@
                 type="date"
                 id="date">
 
-            <button onclick="addExpense()">
-                Add Expense
-            </button>
+            <div class="form-actions">
+                <button onclick="addExpense()">
+                    Save Expense
+                </button>
+                <button class="secondary-action" onclick="cancelExpenseForm()">
+                    Cancel
+                </button>
+            </div>
 
             <div class="expense-form-summary">
                 <div class="form-summary-header">
@@ -272,7 +284,9 @@
                     <h2>Expense History</h2>
                 </div>
                 <div class="history-controls">
-                    <span class="history-period" id="expenseHistoryPeriod">Selected month</span>
+                    <select class="month-filter" id="expenseMonthFilter" onchange="selectMonthFromFilter(this.value)" aria-label="Select expense month">
+                        <option value="">Selected month</option>
+                    </select>
                     <button
                         type="button"
                         class="history-toggle"
@@ -345,7 +359,9 @@
                 <h2>Income</h2>
             </div>
             <div class="history-controls">
-                <span class="history-period" id="incomeHistoryPeriod">Selected month</span>
+                <select class="month-filter" id="incomeMonthFilter" onchange="selectMonthFromFilter(this.value)" aria-label="Select income month">
+                    <option value="">Selected month</option>
+                </select>
                 <button
                     type="button"
                     class="history-toggle"
@@ -380,9 +396,14 @@
                 type="date"
                 id="incomeDate">
 
-            <button onclick="addIncome()">
-                Add Income
-            </button>
+            <div class="form-actions">
+                <button onclick="addIncome()">
+                    Save Income
+                </button>
+                <button class="secondary-action" onclick="cancelIncomeForm()">
+                    Cancel
+                </button>
+            </div>
             </div>
 
             <div class="income-summary">
@@ -415,12 +436,45 @@
     id="eventsModule"
     style="display:none">
 
-    <div class="panel">
+    <div class="events-layout">
+        <div class="panel events-list-panel">
+            <div class="module-header">
+                <div>
+                    <span class="panel-eyebrow">Planning</span>
+                    <h2>Events</h2>
+                </div>
+                <button class="compact-action" onclick="showEventForm()">Add Event</button>
+            </div>
+            <div class="event-form" id="eventForm" style="display:none;">
+                <input id="eventName" type="text" placeholder="Event name">
+                <select id="eventType" onchange="toggleCustomEventType()">
+                    <option>Birthday</option>
+                    <option>Festival</option>
+                    <option>Function</option>
+                    <option>Personal</option>
+                    <option>Other</option>
+                </select>
+                <input id="eventCustomType" type="text" placeholder="Custom event type" style="display:none;">
+                <input id="eventDate" type="date">
+                <select id="eventRecurrence" aria-label="Event recurrence">
+                    <option value="none">No recurrence</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="yearly">Yearly</option>
+                </select>
+                <textarea id="eventNotes" placeholder="Notes"></textarea>
+                <div class="form-actions">
+                    <button onclick="saveEventForm()" id="eventSaveButton">Save Event</button>
+                    <button class="secondary-action" onclick="cancelEventForm()">Cancel</button>
+                </div>
+            </div>
+            <div class="events-list" id="eventsList">
+                <div class="empty-state">No events added yet.</div>
+            </div>
+        </div>
 
-        <h2>Events</h2>
-
-        Coming Soon
-
+        <div class="panel event-detail-panel" id="eventDetailPanel">
+            <div class="empty-state">Select an event to view its details.</div>
+        </div>
     </div>
 
 </div>
@@ -528,8 +582,19 @@
 
 </div>
 
+<div id="migrationModal" class="modal">
+    <div class="modal-content migration-content">
+        <span class="panel-eyebrow">Welcome back</span>
+        <h2>Use your local data?</h2>
+        <p class="migration-copy">You have data saved on this device. Choose how to continue with your Google account.</p>
+        <button onclick="mergeGuestData()">Merge Local Data Into Account</button>
+        <button class="secondary-action" onclick="startFreshAccount()">Start Fresh</button>
+    </div>
+</div>
+
 <script type="module" src="firebase.js"></script>
-<script src="app.js?v=20260924-3"></script>
+<script src="guest-storage.js?v=20260924-1"></script>
+<script src="app.js?v=20260924-4"></script>
 
 <script>
 if ("serviceWorker" in navigator) {

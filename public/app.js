@@ -1,7 +1,80 @@
 // This array holds the current user's expense records while the app is open.
 let expenses = [];
 let incomes = [];
+let events = [];
 let selectedMonth = new Date();
+let selectedEventId = null;
+let eventFormMode = "create";
+let eventEditingId = null;
+let selectedActivityIds = [];
+
+window.setEventsFromStorage = function(records){
+    events = records || [];
+    renderEvents();
+};
+
+function isGuestMode(){
+    return window.guestMode === true;
+}
+
+function refreshGuestData(){
+    const snapshot = window.getGuestSnapshot();
+    expenses = snapshot.expenses.map(expense => ({
+        eventId: null,
+        ...expense
+    }));
+    incomes = snapshot.incomes;
+    events = snapshot.events;
+}
+
+window.refreshGuestData = refreshGuestData;
+
+window.prepareGoogleUpgrade = function(){
+    if(isGuestMode() && window.guestStorage.hasData()){
+        window.markGuestMigrationPending();
+    }
+    window.signInGoogle();
+};
+
+window.continueAsGuest = async function(){
+    window.startGuestSession();
+    window.currentUser = null;
+    refreshGuestData();
+    document.getElementById("loginPage").style.display = "none";
+    document.getElementById("appContainer").style.display = "block";
+    document.getElementById("guestBanner").style.display = "block";
+    document.getElementById("userName").textContent = "Guest";
+    document.getElementById("userPhoto").style.display = "none";
+    showModule("expenses");
+    setTodayDate();
+    renderExpenses();
+    renderIncomeList();
+};
+
+window.mergeGuestData = async function(){
+    try{
+        await window.mergeGuestDataIntoAccount(window.getGuestSnapshot());
+        window.guestStorage.clear();
+        window.clearGuestMigrationPending();
+        document.getElementById("migrationModal").style.display = "none";
+        await initializeExpenseApp();
+        await initializeIncomeApp();
+        alert("Local data merged into your account.");
+    }catch(error){
+        console.error(error);
+        alert("Could not merge local data. Your local data is still stored locally.");
+    }
+};
+
+window.startFreshAccount = function(){
+    window.guestStorage.clear();
+    window.clearGuestMigrationPending();
+    document.getElementById("migrationModal").style.display = "none";
+    expenses = [];
+    incomes = [];
+    renderExpenses();
+    renderIncomeList();
+};
 
 function formatCurrency(amount){
     return `₹${Number(amount || 0).toLocaleString("en-IN")}`;
@@ -25,6 +98,54 @@ function isBeforeSelectedMonth(date){
     return value < monthStart;
 }
 
+function monthKey(date){
+    const value = new Date(`${date}T00:00:00`);
+    return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function selectedMonthKey(){
+    return `${selectedMonth.getFullYear()}-${String(selectedMonth.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function populateMonthFilters(){
+    const keys = new Set([
+        selectedMonthKey(),
+        ...expenses.map(expense => monthKey(expense.date)),
+        ...incomes.map(income => monthKey(income.date))
+    ]);
+    const options = [...keys].sort().reverse();
+
+    ["expenseMonthFilter", "incomeMonthFilter"].forEach(id => {
+        const filter = document.getElementById(id);
+        if(!filter){
+            return;
+        }
+
+        const currentValue = selectedMonthKey();
+        filter.innerHTML = options.map(key => {
+            const [year, month] = key.split("-").map(Number);
+            const label = new Date(year, month - 1, 1).toLocaleDateString("en-US", {
+                month: "short",
+                year: "numeric"
+            });
+            return `<option value="${key}">${label}</option>`;
+        }).join("");
+        filter.value = currentValue;
+    });
+}
+
+window.selectMonthFromFilter = function(value){
+    if(!value){
+        return;
+    }
+
+    const [year, month] = value.split("-").map(Number);
+    selectedMonth = new Date(year, month - 1, 1);
+    renderFinanceOverview();
+    renderExpenses();
+    renderIncomeList();
+};
+
 function renderFinanceOverview(){
     const monthExpenses = expenses.filter(expense => isInSelectedMonth(expense.date));
     const monthIncome = incomes.filter(income => isInSelectedMonth(income.date));
@@ -39,10 +160,14 @@ function renderFinanceOverview(){
     const openingBalance = previousIncome - previousExpenses;
     const closingBalance = openingBalance + incomeTotal - expenseTotal;
 
-    document.getElementById("selectedMonthLabel").textContent = selectedMonth.toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric"
-    });
+    populateMonthFilters();
+
+    document.getElementById("selectedMonthLabel").textContent = selectedMonth.toLocaleDateString(
+        "en-US",
+        window.innerWidth <= 380
+            ? { month: "short", year: "2-digit" }
+            : { month: "long", year: "numeric" }
+    );
     document.getElementById("overviewBalance").textContent = formatCurrency(closingBalance);
     document.getElementById("overviewIncome").textContent = formatCurrency(incomeTotal);
     document.getElementById("overviewExpenses").textContent = formatCurrency(expenseTotal);
@@ -67,12 +192,6 @@ function renderIncomeList(){
         (incomeTypeFilter === "all" || income.type === incomeTypeFilter)
     );
     list.innerHTML = "";
-
-    document.getElementById("incomeHistoryPeriod").textContent =
-        selectedMonth.toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric"
-        });
 
     if(!visibleIncomes.length){
         list.innerHTML = '<div class="empty-state">No income added for this month.</div>';
@@ -130,8 +249,14 @@ window.initializeExpenseApp =
 async function(){
 
     try{
-        expenses =
-        await window.loadExpensesFromFirestore();
+		if(isGuestMode()){
+            refreshGuestData();
+        }else{
+            expenses = (await window.loadExpensesFromFirestore()).map(expense => ({
+                eventId: null,
+                ...expense
+            }));
+        }
 		setTodayDate();
         renderExpenses();
 
@@ -172,12 +297,17 @@ window.addExpense = async function(){
 
     category,
 
-    date
+    date,
+    eventId: null
 };
 
 expenses.push(expense);
 
-saveExpenseToFirestore(expense);
+if(isGuestMode()){
+    window.guestStorage.add("expenses", expense);
+}else{
+    saveExpenseToFirestore(expense);
+}
 
     document.getElementById("name").value="";
     document.getElementById("amount").value="";
@@ -186,6 +316,13 @@ saveExpenseToFirestore(expense);
 
     initializeExpenseApp();
 }
+
+window.cancelExpenseForm = function(){
+    document.getElementById("name").value = "";
+    document.getElementById("amount").value = "";
+    document.getElementById("category").selectedIndex = 0;
+    setTodayDate();
+};
 
 // Show or hide the launcher menu from the top navigation bar.
 window.toggleLauncher = function(event){
@@ -238,9 +375,11 @@ window.deleteExpense = async function(id){
         e => e.id === id
     );
 
-    await deleteExpenseFromFirestore(
-        expense.firestoreId
-    );
+    if(isGuestMode()){
+        window.guestStorage.remove("expenses", id);
+    }else{
+        await deleteExpenseFromFirestore(expense.firestoreId);
+    }
 
     await initializeExpenseApp();
 }
@@ -291,9 +430,11 @@ window.saveExpense = async function(){
     expense.date =
     document.getElementById("editDate").value;
 
-    await updateExpenseInFirestore(
-    expense
-);
+    if(isGuestMode()){
+        window.guestStorage.update("expenses", expense);
+    }else{
+        await updateExpenseInFirestore(expense);
+    }
 
 closeModal();
 
@@ -321,12 +462,6 @@ window.renderExpenses = function(){
     ?.value || "all";
 
     table.innerHTML="";
-
-    document.getElementById("expenseHistoryPeriod").textContent =
-        selectedMonth.toLocaleDateString("en-US", {
-            month: "short",
-            year: "numeric"
-        });
 
     let total = 0;
 
@@ -534,6 +669,15 @@ window.showModule = function(module){
 
     }
 
+    const financeOverview = document.querySelector(".finance-overview");
+    if(financeOverview){
+        financeOverview.style.display = module === "events" ? "none" : "";
+    }
+
+    if(module === "events"){
+        renderEvents();
+    }
+
     document.querySelectorAll(".app-card").forEach(card => {
         card.classList.toggle(
             "active",
@@ -547,10 +691,325 @@ window.showModule = function(module){
 
 }
 
+window.showEventForm = function(){
+    const form = document.getElementById("eventForm");
+    eventFormMode = "create";
+    eventEditingId = null;
+    document.getElementById("eventSaveButton").textContent = "Save Event";
+    form.style.display = "block";
+    if(document.getElementById("eventDate").value === ""){
+        document.getElementById("eventDate").value = new Date().toISOString().split("T")[0];
+    }
+};
+
+window.cancelEventForm = function(){
+    document.getElementById("eventForm").style.display = "none";
+    document.getElementById("eventName").value = "";
+    document.getElementById("eventCustomType").value = "";
+    document.getElementById("eventNotes").value = "";
+    eventFormMode = "create";
+    eventEditingId = null;
+};
+
+window.toggleCustomEventType = function(){
+    const type = document.getElementById("eventType").value;
+    document.getElementById("eventCustomType").style.display =
+        type === "Other" ? "block" : "none";
+};
+
+window.saveEventForm = async function(){
+    const name = document.getElementById("eventName").value.trim();
+    const date = document.getElementById("eventDate").value;
+    const type = document.getElementById("eventType").value;
+    const customType = document.getElementById("eventCustomType").value.trim();
+    const recurrence = document.getElementById("eventRecurrence").value;
+    const notes = document.getElementById("eventNotes").value.trim();
+    if(!name || !date || (type === "Other" && !customType)){
+        alert("Fill all event fields");
+        return;
+    }
+
+    const eventRecord = {
+        id: Date.now(),
+        name,
+        date,
+        type,
+        customType,
+        recurrence,
+        notes,
+        activities: []
+    };
+
+    if(eventFormMode === "edit"){
+        const existing = events.find(item => item.id === eventEditingId);
+        if(!existing){
+            return;
+        }
+        Object.assign(existing, {
+            name, date, type, customType, recurrence, notes
+        });
+        await persistEvent(existing);
+    }else{
+        events.push(eventRecord);
+        if(isGuestMode()){
+            window.guestStorage.add("events", eventRecord);
+        }else{
+            await window.saveEventToFirestore(eventRecord);
+        }
+    }
+
+    cancelEventForm();
+    renderEvents();
+};
+
+window.editEvent = function(id){
+    const eventRecord = events.find(item => item.id === id);
+    if(!eventRecord){
+        return;
+    }
+    eventFormMode = "edit";
+    eventEditingId = id;
+    document.getElementById("eventName").value = eventRecord.name;
+    document.getElementById("eventType").value = eventRecord.type || "Other";
+    document.getElementById("eventCustomType").value = eventRecord.customType || "";
+    document.getElementById("eventDate").value = eventRecord.date;
+    document.getElementById("eventRecurrence").value = eventRecord.recurrence || "none";
+    document.getElementById("eventNotes").value = eventRecord.notes || "";
+    toggleCustomEventType();
+    document.getElementById("eventSaveButton").textContent = "Update Event";
+    document.getElementById("eventForm").style.display = "block";
+};
+
+window.deleteEvent = async function(id){
+    const eventRecord = events.find(item => item.id === id);
+    if(!eventRecord || !window.confirm(`Delete event "${eventRecord.name}"?`)){
+        return;
+    }
+    if(isGuestMode()){
+        window.guestStorage.remove("events", id);
+    }else if(window.deleteEventFromFirestore){
+        await window.deleteEventFromFirestore(eventRecord.firestoreId);
+    }
+    events = events.filter(item => item.id !== id);
+    selectedEventId = null;
+    renderEvents();
+    document.getElementById("eventDetailPanel").innerHTML = '<div class="empty-state">Select an event to view its details.</div>';
+};
+
+function renderEvents(){
+    const list = document.getElementById("eventsList");
+    if(!list){
+        return;
+    }
+
+    list.innerHTML = events.length ? events.map(eventRecord => {
+        const eventExpenses = expenses.filter(expense => expense.eventId === eventRecord.id);
+        const expenseTotal = eventExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+        return `
+        <button class="event-item ${selectedEventId === eventRecord.id ? "active" : ""}" onclick="selectEvent(${eventRecord.id})">
+            <div>
+                <strong>${eventRecord.name}</strong>
+                <span>${eventRecord.customType || eventRecord.type || "Other"} · ${eventRecord.date}</span>
+            </div>
+            <div class="event-item-stats">
+                <strong>${(eventRecord.activities || []).length} activities</strong>
+                <span>${formatCurrency(expenseTotal)} expenses</span>
+            </div>
+            <span class="event-item-arrow">›</span>
+        </button>
+    `;
+    }).join("") : '<div class="empty-state">No events added yet.</div>';
+
+    if(selectedEventId !== null){
+        renderEventDetail();
+    }
+}
+
+window.selectEvent = function(id){
+    selectedEventId = id;
+    selectedActivityIds = [];
+    renderEvents();
+};
+
+function renderEventDetail(){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    const detail = document.getElementById("eventDetailPanel");
+    if(!eventRecord || !detail){
+        return;
+    }
+
+    const linkedExpenses = expenses.filter(expense => expense.eventId === eventRecord.id);
+    const activities = eventRecord.activities || [];
+    const eventTotal = linkedExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    detail.innerHTML = `
+        <div class="module-header">
+            <div>
+                <span class="panel-eyebrow">Event details</span>
+                <h2>${eventRecord.name}</h2>
+                <span class="event-date">${eventRecord.date}</span>
+                <span class="event-meta">${eventRecord.customType || eventRecord.type || "Other"} · ${eventRecord.recurrence || "none"}</span>
+            </div>
+            <div class="event-detail-actions">
+                <button class="compact-action" onclick="editEvent(${eventRecord.id})">Edit</button>
+                <button class="delete-btn" onclick="deleteEvent(${eventRecord.id})">Delete</button>
+            </div>
+        </div>
+        <div class="event-section">
+            <div class="section-heading"><h3>Activities</h3><span>${activities.length} total · ${formatCurrency(eventTotal)}</span></div>
+            <div class="activity-selection-actions">
+                <span>${selectedActivityIds.length ? `${selectedActivityIds.length} selected` : "Select an activity to manage it"}</span>
+                ${selectedActivityIds.length ? `<button class="compact-action" onclick="editSelectedActivity()">Edit</button><button class="delete-btn" onclick="deleteSelectedActivities()">Delete Selected</button><button class="secondary-action" onclick="clearActivitySelection()">Cancel</button>` : ""}
+            </div>
+            <div class="activity-list">
+                ${activities.length ? activities.map(activity => renderActivityCard(activity, eventRecord)).join("") : '<div class="empty-state">No activities yet.</div>'}
+            </div>
+            <div class="activity-add-row">
+                <input id="activityTitle" type="text" placeholder="Add activity">
+                <input id="activityDate" type="date" value="${eventRecord.date}">
+                <button class="compact-action" onclick="addActivity()">Add</button>
+            </div>
+        </div>`;
+
+    detail.innerHTML += `
+        <div class="event-section event-notes-section">
+            <div class="section-heading"><h3>Notes</h3></div>
+            <p class="event-notes">${eventRecord.notes || "No notes added."}</p>
+        </div>
+        <div class="event-section">
+            <div class="section-heading"><h3>Timeline</h3></div>
+            <div class="event-timeline"><span></span><p>Event created on ${eventRecord.date}</p></div>
+        </div>`;
+};
+
+function renderActivityCard(activity, eventRecord){
+    const activityExpenses = expenses.filter(expense => expense.activityId === activity.id);
+    const activityTotal = activityExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+    return `
+        <details class="activity-card" ${activity.expanded ? "open" : ""}>
+            <summary>
+                <input class="activity-select" type="checkbox" ${selectedActivityIds.includes(activity.id) ? "checked" : ""} onclick="selectActivity(event, ${activity.id})" aria-label="Select ${activity.title}">
+                <span class="activity-check ${activity.completed ? "done" : ""}">${activity.completed ? "✓" : ""}</span>
+                <span class="activity-card-title">${activity.title}<small>${activity.date || eventRecord.date}</small></span>
+                <strong>${formatCurrency(activityTotal)}</strong>
+            </summary>
+            <div class="activity-card-content">
+                <div class="activity-card-actions"><span>Activity details</span></div>
+                <div class="activity-expenses">
+                    ${activityExpenses.length ? activityExpenses.map(expense => `<div class="event-expense-item"><span>${expense.name}</span><strong>${formatCurrency(expense.amount)}</strong><div class="event-expense-actions"><button class="expense-edit-btn" onclick="editExpense(${expense.id})">Edit</button><button class="delete-btn" onclick="deleteExpense(${expense.id})">Delete</button></div></div>`).join("") : '<div class="empty-state">No expenses for this activity.</div>'}
+                </div>
+                <div class="activity-expense-form">
+                    <input id="activityExpenseName-${activity.id}" type="text" placeholder="Expense name">
+                    <input id="activityExpenseAmount-${activity.id}" type="number" placeholder="Amount">
+                    <select id="activityExpenseCategory-${activity.id}"><option>Food</option><option>Hospital</option><option>Shopping</option><option>Travel</option><option>Entertainment</option><option>Other</option></select>
+                    <button onclick="addActivityExpense(${activity.id})">Save Expense</button>
+                    <button class="secondary-action" onclick="cancelActivityExpense(${activity.id})">Cancel</button>
+                </div>
+            </div>
+        </details>`;
+}
+
+window.cancelActivityView = function(event){
+    event.preventDefault();
+    event.currentTarget.closest("details").open = false;
+};
+
+window.cancelActivityExpense = function(id){
+    ["Name", "Amount"].forEach(field => {
+        const input = document.getElementById(`activityExpense${field}-${id}`);
+        if(input){ input.value = ""; }
+    });
+};
+
+async function persistEvent(eventRecord){
+    if(isGuestMode()){
+        window.guestStorage.update("events", eventRecord);
+    }else if(window.updateEventInFirestore){
+        await window.updateEventInFirestore(eventRecord);
+    }
+}
+
+window.addActivity = async function(){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    const input = document.getElementById("activityTitle");
+    const title = input?.value.trim();
+    if(!eventRecord || !title){
+        return;
+    }
+    eventRecord.activities = eventRecord.activities || [];
+    const date = document.getElementById("activityDate").value || eventRecord.date;
+    eventRecord.activities.push({id: Date.now(), title, date, completed: false});
+    await persistEvent(eventRecord);
+    renderEventDetail();
+};
+
+window.editActivity = function(id){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    const activity = eventRecord?.activities?.find(item => item.id === id);
+    if(!activity){ return; }
+    const title = window.prompt("Activity name", activity.title);
+    if(title === null){ return; }
+    const date = window.prompt("Activity date (YYYY-MM-DD)", activity.date || eventRecord.date);
+    if(date === null){ return; }
+    activity.title = title.trim() || activity.title;
+    activity.date = date || activity.date;
+    persistEvent(eventRecord).then(renderEventDetail);
+};
+
+window.deleteActivity = async function(id, skipConfirm = false){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    if(!eventRecord || (!skipConfirm && !window.confirm("Delete this activity and its linked expenses?"))){ return; }
+    const activityExpenses = expenses.filter(expense => expense.activityId === id);
+    for(const expense of activityExpenses){
+        if(isGuestMode()){
+            window.guestStorage.remove("expenses", expense.id);
+        }else{
+            await window.deleteExpenseFromFirestore(expense.firestoreId);
+        }
+    }
+    eventRecord.activities = (eventRecord.activities || []).filter(item => item.id !== id);
+    await persistEvent(eventRecord);
+    expenses = expenses.filter(expense => expense.activityId !== id);
+    renderEventDetail();
+    renderExpenses();
+};
+
+window.toggleActivity = async function(id){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    const activity = eventRecord?.activities?.find(item => item.id === id);
+    if(!activity){
+        return;
+    }
+    activity.completed = !activity.completed;
+    await persistEvent(eventRecord);
+    renderEventDetail();
+};
+
+window.addActivityExpense = async function(activityId){
+    const eventRecord = events.find(item => item.id === selectedEventId);
+    const name = document.getElementById(`activityExpenseName-${activityId}`).value.trim();
+    const amount = Number(document.getElementById(`activityExpenseAmount-${activityId}`).value);
+    const category = document.getElementById(`activityExpenseCategory-${activityId}`).value;
+    if(!eventRecord || !name || !amount){
+        alert("Fill all event expense fields");
+        return;
+    }
+
+    const activity = eventRecord.activities.find(item => item.id === activityId);
+    const expense = { id: Date.now(), name, amount, category, date: activity.date || eventRecord.date, eventId: eventRecord.id, activityId };
+    expenses.push(expense);
+    if(isGuestMode()){
+        window.guestStorage.add("expenses", expense);
+    }else{
+        await window.saveExpenseToFirestore(expense);
+    }
+    renderEventDetail();
+    renderExpenses();
+};
+
 // Adds a new income entry while keeping the existing expense workflow untouched.
 window.addIncome = async function(){
 
-    if(!window.currentUser){
+    if(!window.currentUser && !isGuestMode()){
         return;
     }
 
@@ -574,7 +1033,9 @@ window.addIncome = async function(){
 
     incomes.push(income);
 
-    if(window.saveIncomeToFirestore){
+    if(isGuestMode()){
+        window.guestStorage.add("incomes", income);
+    }else if(window.saveIncomeToFirestore){
         await window.saveIncomeToFirestore(income);
     }
 
@@ -618,7 +1079,11 @@ window.addIncome = async function(){
             return;
         }
 
-        await window.updateIncomeInFirestore(income);
+        if(isGuestMode()){
+            window.guestStorage.update("incomes", income);
+        }else{
+            await window.updateIncomeInFirestore(income);
+        }
         closeIncomeModal();
         await initializeIncomeApp();
     };
@@ -633,7 +1098,11 @@ window.addIncome = async function(){
             return;
         }
 
-        await window.deleteIncomeFromFirestore(income.firestoreId);
+        if(isGuestMode()){
+            window.guestStorage.remove("incomes", id);
+        }else{
+            await window.deleteIncomeFromFirestore(income.firestoreId);
+        }
         await initializeIncomeApp();
     };
 
@@ -649,7 +1118,9 @@ window.initializeIncomeApp = async function(){
             return;
         }
 
-        if(window.loadIncomesFromFirestore){
+        if(isGuestMode()){
+            refreshGuestData();
+        }else if(window.loadIncomesFromFirestore){
             incomes = await window.loadIncomesFromFirestore();
         }
 
@@ -668,3 +1139,45 @@ window.initializeIncomeApp = async function(){
 if ("serviceWorker" in navigator) {
     navigator.serviceWorker.register("sw.js");
 }
+
+window.cancelIncomeForm = function(){
+    document.getElementById("incomeName").value = "";
+    document.getElementById("incomeAmount").value = "";
+    document.getElementById("incomeType").selectedIndex = 0;
+    if(document.getElementById("incomeDate")){
+        document.getElementById("incomeDate").value = new Date().toISOString().split("T")[0];
+    }
+};
+
+window.selectActivity = function(event, id){
+    event.preventDefault();
+    event.stopPropagation();
+    selectedActivityIds = selectedActivityIds.includes(id)
+        ? selectedActivityIds.filter(item => item !== id)
+        : [...selectedActivityIds, id];
+    renderEventDetail();
+};
+
+window.clearActivitySelection = function(){
+    selectedActivityIds = [];
+    renderEventDetail();
+};
+
+window.editSelectedActivity = function(){
+    if(selectedActivityIds.length !== 1){
+        alert("Select one activity to edit");
+        return;
+    }
+    editActivity(selectedActivityIds[0]);
+};
+
+window.deleteSelectedActivities = async function(){
+    if(!selectedActivityIds.length || !window.confirm("Delete selected activities and their linked expenses?")){
+        return;
+    }
+    for(const id of [...selectedActivityIds]){
+        await deleteActivity(id, true);
+    }
+    selectedActivityIds = [];
+    renderEventDetail();
+};
