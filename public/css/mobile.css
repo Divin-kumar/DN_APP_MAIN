@@ -97,6 +97,15 @@
         border-radius:18px;
     }
 
+    .income-form-grid{
+        grid-template-columns:1fr;
+    }
+
+    .income-item{
+        align-items:flex-start;
+        flex-direction:column;
+    }
+
     .finance-header{
         align-items:flex-start;
         flex-direction:column;

@@ -1,5 +1,6 @@
 // This array holds the current user's expense records while the app is open.
 let expenses = [];
+let incomes = [];
 
 // Load expenses from Firestore and refresh the dashboard after login.
 window.initializeExpenseApp =
@@ -317,6 +318,7 @@ window.showModule = function(module){
     const modules = [
 
         "expenses",
+        "income",
         "events",
         "reminders",
         "memories",
@@ -356,6 +358,96 @@ window.showModule = function(module){
         "appLauncher"
     ).style.display = "none";
 
+}
+
+// Adds a new income entry while keeping the existing expense workflow untouched.
+window.addIncome = async function(){
+
+    if(!window.currentUser){
+        return;
+    }
+
+    const name = document.getElementById("incomeName").value;
+    const type = document.getElementById("incomeType").value;
+    const amount = Number(document.getElementById("incomeAmount").value);
+    const date = document.getElementById("incomeDate").value;
+
+    if(!name || !amount || !date){
+        alert("Fill all income fields");
+        return;
+    }
+
+    const income = {
+        id: Date.now(),
+        name,
+        type,
+        amount,
+        date
+    };
+
+    incomes.push(income);
+
+    if(window.saveIncomeToFirestore){
+        await window.saveIncomeToFirestore(income);
+    }
+
+    document.getElementById("incomeName").value = "";
+    document.getElementById("incomeAmount").value = "";
+    document.getElementById("incomeDate").value = "";
+
+    if(window.initializeIncomeApp){
+        await window.initializeIncomeApp();
+    }
+}
+
+// Loads income records for the current signed-in user without affecting expense logic.
+window.initializeIncomeApp = async function(){
+    try{
+        if(!window.currentUser){
+            incomes = [];
+            return;
+        }
+
+        if(window.loadIncomesFromFirestore){
+            incomes = await window.loadIncomesFromFirestore();
+        }
+
+        if(document.getElementById("incomeDate")){
+            const today = new Date();
+            document.getElementById("incomeDate").value = today.toISOString().split("T")[0];
+        }
+
+        const list = document.getElementById("incomeList");
+        if(list){
+            list.innerHTML = "";
+
+            if(!incomes.length){
+                list.innerHTML = '<div class="empty-state">No income added yet.</div>';
+                return;
+            }
+
+            let total = 0;
+            incomes.forEach(income => {
+                total += Number(income.amount || 0);
+                list.innerHTML += `
+                    <div class="income-item">
+                        <div>
+                            <strong>${income.name}</strong>
+                            <span>${income.type} • ${income.date}</span>
+                        </div>
+                        <span class="income-amount">₹${income.amount}</span>
+                    </div>
+                `;
+            });
+
+            const totalEl = document.querySelector(".income-summary strong");
+            if(totalEl){
+                totalEl.textContent = `₹${total}`;
+            }
+        }
+    }catch(error){
+        console.error(error);
+    }
 }
 
 if ("serviceWorker" in navigator) {

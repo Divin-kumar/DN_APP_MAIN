@@ -38,6 +38,47 @@ const auth = getAuth(app);
 
 const db = getFirestore(app);
 
+// Save a single income record under a separate collection to keep expense logic isolated.
+window.saveIncomeToFirestore =
+async function(income){
+
+    await addDoc(
+        collection(
+            db,
+            "users",
+            window.currentUser.uid,
+            "incomes"
+        ),
+        income
+    );
+};
+
+// Read all income records for the current signed-in user.
+window.loadIncomesFromFirestore =
+async function(){
+
+    const snapshot =
+    await getDocs(
+        collection(
+            db,
+            "users",
+            window.currentUser.uid,
+            "incomes"
+        )
+    );
+
+    const data = [];
+
+    snapshot.forEach(doc => {
+        data.push({
+            firestoreId: doc.id,
+            ...doc.data()
+        });
+    });
+
+    return data;
+};
+
 // Save a single expense record under the logged-in user's Firestore collection.
 window.saveExpenseToFirestore =
 async function(expense){
@@ -184,6 +225,12 @@ if (window.innerWidth <= 768) {
         if(window.initializeExpenseApp){
 
             await window.initializeExpenseApp();
+
+        }
+
+        if(window.initializeIncomeApp){
+
+            await window.initializeIncomeApp();
 
         }
 

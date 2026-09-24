@@ -60,6 +60,12 @@
     </div>
     <div
         class="app-card"
+        onclick="showModule('income')">
+        💸
+        <span>Income</span>
+    </div>
+    <div
+        class="app-card"
         onclick="showModule('events')">
         📅
         <span>Events</span>
@@ -253,6 +259,55 @@
 </div>
 
 </div>
+
+</div>
+
+<!-- Income tracking module kept separate from the existing expenses flow. -->
+<div
+    id="incomeModule"
+    style="display:none">
+
+    <div class="panel income-panel">
+        <h2>Income</h2>
+
+        <div class="income-form-grid">
+            <input
+                type="text"
+                id="incomeName"
+                placeholder="Income source">
+
+            <select id="incomeType">
+                <option>Salary</option>
+                <option>Freelance</option>
+                <option>Bonus</option>
+                <option>Other</option>
+            </select>
+
+            <input
+                type="number"
+                id="incomeAmount"
+                placeholder="Amount">
+
+            <input
+                type="date"
+                id="incomeDate">
+
+            <button onclick="addIncome()">
+                Add Income
+            </button>
+        </div>
+
+        <div class="income-summary">
+            <div>
+                <span>Total income</span>
+                <strong>₹0</strong>
+            </div>
+        </div>
+
+        <div class="income-list" id="incomeList">
+            <div class="empty-state">No income added yet.</div>
+        </div>
+    </div>
 
 </div>
 
