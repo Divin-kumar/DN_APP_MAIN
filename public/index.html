@@ -45,39 +45,52 @@
     </button>
     <h1>LifeHub</h1>
     <div class="month-switcher" aria-label="Month selector">
-        <button type="button" class="month-nav" aria-label="Previous month">←</button>
-        <div class="month-label">September 2026</div>
-        <button type="button" class="month-nav" aria-label="Next month">→</button>
+        <button type="button" class="month-nav" aria-label="Previous month" onclick="changeMonth(-1)">←</button>
+        <div class="month-label" id="selectedMonthLabel">September 2026</div>
+        <button type="button" class="month-nav" aria-label="Next month" onclick="changeMonth(1)">→</button>
     </div>
 </div>
 
 <div id="appLauncher" class="app-launcher">
+    <div class="app-launcher-header">
+        <div>
+            <span class="app-launcher-eyebrow">Workspace</span>
+            <strong>Open a module</strong>
+        </div>
+        <span class="app-launcher-count">5 apps</span>
+    </div>
+
     <div
         class="app-card"
+        data-module="expenses"
         onclick="showModule('expenses')">
         💰
         <span>Expenses</span>
     </div>
     <div
         class="app-card"
+        data-module="income"
         onclick="showModule('income')">
         💸
         <span>Income</span>
     </div>
     <div
         class="app-card"
+        data-module="events"
         onclick="showModule('events')">
         📅
         <span>Events</span>
     </div>
     <div
         class="app-card"
+        data-module="reminders"
         onclick="showModule('reminders')">
         ⏰
         <span>Reminders</span>
     </div>
     <div
         class="app-card"
+        data-module="settings"
         onclick="showModule('settings')">
         ⚙️
         <span>Settings</span>
@@ -115,41 +128,41 @@
     <div class="finance-grid">
         <div class="finance-card balance">
             <span class="finance-meta">Available balance</span>
-            <strong class="finance-value">₹19,000</strong>
+            <strong class="finance-value" id="overviewBalance">₹0</strong>
         </div>
 
         <div class="finance-card income">
             <span class="finance-meta">Income this month</span>
-            <strong class="finance-value">₹35,000</strong>
+            <strong class="finance-value" id="overviewIncome">₹0</strong>
         </div>
 
         <div class="finance-card expense">
             <span class="finance-meta">Expenses this month</span>
-            <strong class="finance-value">₹28,000</strong>
+            <strong class="finance-value" id="overviewExpenses">₹0</strong>
         </div>
 
         <div class="finance-card count">
             <span class="finance-meta">Transactions</span>
-            <strong class="finance-value">18</strong>
+            <strong class="finance-value" id="overviewTransactions">0</strong>
         </div>
     </div>
 
     <div class="overview-panel">
         <div class="overview-row">
             <span>Opening balance</span>
-            <strong>₹12,000</strong>
+            <strong id="overviewOpeningBalance">₹0</strong>
         </div>
         <div class="overview-row">
             <span>Income</span>
-            <strong>₹35,000</strong>
+            <strong id="overviewIncomeDetail">₹0</strong>
         </div>
         <div class="overview-row">
             <span>Expenses</span>
-            <strong>₹28,000</strong>
+            <strong id="overviewExpensesDetail">₹0</strong>
         </div>
         <div class="overview-row highlight">
             <span>Closing balance</span>
-            <strong>₹19,000</strong>
+            <strong id="overviewClosingBalance">₹0</strong>
         </div>
     </div>
 </section>
@@ -398,8 +411,43 @@
 
 </div>
 
+<div id="editIncomeModal" class="modal">
+
+    <div class="modal-content">
+
+        <h2>Edit Income</h2>
+
+        <input type="hidden" id="editIncomeId">
+
+        <input type="text" id="editIncomeName" placeholder="Income source">
+
+        <select id="editIncomeType">
+            <option>Salary</option>
+            <option>Freelance</option>
+            <option>Bonus</option>
+            <option>Other</option>
+        </select>
+
+        <input type="number" id="editIncomeAmount" placeholder="Amount">
+
+        <input type="date" id="editIncomeDate">
+
+        <button onclick="saveIncome()">
+            Save
+        </button>
+
+        <button
+            onclick="closeIncomeModal()"
+            style="margin-top:10px;background:#777;">
+            Cancel
+        </button>
+
+    </div>
+
+</div>
+
 <script type="module" src="firebase.js"></script>
-<script src="app.js"></script>
+<script src="app.js?v=20260924-3"></script>
 
 <script>
 if ("serviceWorker" in navigator) {

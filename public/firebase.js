@@ -79,6 +79,40 @@ async function(){
     return data;
 };
 
+window.updateIncomeInFirestore =
+async function(income){
+
+    await updateDoc(
+        doc(
+            db,
+            "users",
+            window.currentUser.uid,
+            "incomes",
+            income.firestoreId
+        ),
+        {
+            name: income.name,
+            type: income.type,
+            amount: income.amount,
+            date: income.date
+        }
+    );
+};
+
+window.deleteIncomeFromFirestore =
+async function(firestoreId){
+
+    await deleteDoc(
+        doc(
+            db,
+            "users",
+            window.currentUser.uid,
+            "incomes",
+            firestoreId
+        )
+    );
+};
+
 // Save a single expense record under the logged-in user's Firestore collection.
 window.saveExpenseToFirestore =
 async function(expense){
@@ -221,6 +255,10 @@ if (window.innerWidth <= 768) {
             "userPhoto"
         ).src =
         user.photoURL;
+
+        if(window.showModule){
+            window.showModule("expenses");
+        }
 
         if(window.initializeExpenseApp){
 
