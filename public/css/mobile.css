@@ -22,7 +22,7 @@
     .container{
         width:100%;
         margin:0;
-        padding:0;
+        padding:12px 10px 24px;
     }
 
     /* HEADER */
@@ -32,46 +32,42 @@
         display:flex;
         justify-content:space-between;
         align-items:center;
-
         flex-wrap:nowrap;
-
-        padding:12px;
+        padding:12px 14px;
         gap:10px;
+        border-radius:18px;
     }
 
     .topbar h1{
-        font-size:20px;
+        font-size:1.3rem;
+        letter-spacing:-0.04em;
     }
 
     .topbar-left{
         display:flex;
         align-items:center;
         gap:10px;
-
         flex-shrink:0;
     }
 
     .user-section{
         display:flex;
         align-items:center;
-
         justify-content:flex-end;
-
-        gap:10px;
+        gap:8px;
         margin-left:auto;
-
         width:auto;
     }
 
     .avatar{
-        width:32px;
-        height:32px;
+        width:34px;
+        height:34px;
     }
 
     .logout-btn{
         width:auto;
-        padding:6px 10px;
-        font-size:11px;
+        padding:7px 10px;
+        font-size:0.76rem;
     }
 
     /* LAYOUT */
@@ -84,12 +80,12 @@
     }
 
     .panel{
-        padding:15px;
-        border-radius:12px;
+        padding:16px 14px;
+        border-radius:16px;
     }
 
     .panel h2{
-        font-size:18px;
+        font-size:1rem;
     }
 
     /* FORMS */
@@ -110,25 +106,24 @@
     /* Keep card summary blocks readable on smaller screens. */
 
     .summary-grid{
-        grid-template-columns:repeat(2,1fr);
-        gap:8px;
-        margin:12px 0;
+        grid-template-columns:repeat(2, minmax(0, 1fr));
+        gap:10px;
+        margin:12px 0 18px;
     }
 
     .card{
-        min-height:75px;
-        padding:10px;
-
-        border-radius:12px;
+        min-height:84px;
+        padding:14px 12px;
+        border-radius:16px;
     }
 
     .card-title{
-        font-size:10px;
+        font-size:0.64rem;
         margin-bottom:5px;
     }
 
     .card-value{
-        font-size:18px;
+        font-size:1.15rem;
     }
 
     /* TABLE */
@@ -140,7 +135,7 @@
 
     th,
     td{
-        padding:8px;
+        padding:8px 7px;
         white-space:nowrap;
     }
 
@@ -154,30 +149,37 @@
     /* Make the navigation menu fit the mobile device width. */
 
     .app-launcher{
-        width:100%;
-        left:0;
+        width:calc(100% - 12px);
+        left:6px;
         top:90px;
-
         max-width:none;
+        padding:12px;
     }
 
     .app-card{
+        min-height:92px;
         padding:12px;
-        font-size:14px;
+        font-size:15px;
+    }
+
+    .app-card span{
+        font-size:0.8rem;
     }
 
     /* MODAL */
     /* Adjust the edit popup for mobile screens. */
 
     .modal-content{
-        width:95%;
+        width:94%;
         margin:25% auto;
-        padding:15px;
+        padding:18px 14px;
+        border-radius:16px;
     }
 
     /* CATEGORY BREAKDOWN */
 
     #categoryBreakdown div{
         font-size:13px;
+        padding:10px 12px;
     }
 }
