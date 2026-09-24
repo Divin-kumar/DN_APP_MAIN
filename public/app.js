@@ -295,13 +295,34 @@ window.renderExpenses = function(){
     document.getElementById("searchExpense")
     ?.value.toLowerCase() || "";
 
+    let categoryFilter =
+    document.getElementById("historyCategoryFilter")
+    ?.value || "all";
+
     table.innerHTML="";
+
+    document.getElementById("expenseHistoryPeriod").textContent =
+        selectedMonth.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric"
+        });
 
     let total = 0;
 
     let monthTotal = 0;
 
     let categories = {};
+
+    let monthExpenses = expenses.filter(expense =>
+        isInSelectedMonth(expense.date)
+    );
+    let monthCategories = {};
+
+    monthExpenses.forEach(expense => {
+        monthCategories[expense.category] =
+            (monthCategories[expense.category] || 0)
+            + Number(expense.amount || 0);
+    });
 
     let filtered =
     expenses.filter(expense =>
@@ -316,6 +337,8 @@ window.renderExpenses = function(){
             expense.category.toLowerCase()
             .includes(search)
         )
+        &&
+        (categoryFilter === "all" || expense.category === categoryFilter)
     );
 
     filtered.forEach(expense => {
@@ -344,7 +367,7 @@ window.renderExpenses = function(){
             <td>
 
                 <button
-                style="background:#1976d2;width:auto;padding:8px 12px;"
+                class="expense-edit-btn"
                 onclick="editExpense(${expense.id})">
                 Edit
                 </button>
@@ -359,6 +382,40 @@ window.renderExpenses = function(){
 
         </tr>`;
     });
+
+    if(!filtered.length){
+        table.innerHTML = `
+            <tr>
+                <td colspan="5">
+                    <div class="table-empty-state">
+                        <strong>No expenses found</strong>
+                        <span>${search ? "Try a different search." : "Add an expense to see it here."}</span>
+                    </div>
+                </td>
+            </tr>`;
+    }
+
+    let monthTopCategory = "-";
+    let monthTopAmount = 0;
+    for(let category in monthCategories){
+        if(monthCategories[category] > monthTopAmount){
+            monthTopAmount = monthCategories[category];
+            monthTopCategory = category;
+        }
+    }
+
+    document.getElementById("expenseFormSummaryPeriod").textContent =
+        selectedMonth.toLocaleDateString("en-US", {
+            month: "short",
+            year: "numeric"
+        });
+    document.getElementById("formSummaryTotal").textContent =
+        formatCurrency(monthExpenses.reduce(
+            (sum, expense) => sum + Number(expense.amount || 0),
+            0
+        ));
+    document.getElementById("formSummaryCount").textContent = monthExpenses.length;
+    document.getElementById("formSummaryCategory").textContent = monthTopCategory;
 
     document.getElementById("totalAmount")
     .innerText = total;
@@ -404,6 +461,15 @@ window.renderExpenses = function(){
 
     renderFinanceOverview();
 }
+
+window.toggleHistoryPanel = function(){
+    const panel = document.getElementById("expenseHistoryPanel");
+    const button = document.querySelector(".history-toggle");
+    const collapsed = panel.classList.toggle("history-collapsed");
+
+    button.setAttribute("aria-expanded", String(!collapsed));
+    button.textContent = collapsed ? "Show" : "Hide";
+};
 
 // Switch the visible module in the app when the user chooses a menu item.
 window.showModule = function(module){

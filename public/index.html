@@ -238,39 +238,93 @@
                 Add Expense
             </button>
 
-        </div>
-
-        <div class="panel">
-
-            <h2>Expense History</h2>
-
-            <input
-                type="text"
-                id="searchExpense"
-                placeholder="Search by name or category..."
-                onkeyup="renderExpenses()">
-
-            <div style="overflow-x:auto;">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Date</th>
-                            <th>Name</th>
-                            <th>Category</th>
-                            <th>Amount</th>
-                            <th>Action</th>
-                        </tr>
-                    </thead>
-
-                    <tbody id="expenseTable">
-                    </tbody>
-
-                </table>
+            <div class="expense-form-summary">
+                <div class="form-summary-header">
+                    <div>
+                        <span class="panel-eyebrow">Quick view</span>
+                        <strong>This month</strong>
+                    </div>
+                    <span class="form-summary-period" id="expenseFormSummaryPeriod">Sep 2026</span>
+                </div>
+                <div class="form-summary-grid">
+                    <div>
+                        <span>Total spent</span>
+                        <strong id="formSummaryTotal">₹0</strong>
+                    </div>
+                    <div>
+                        <span>Entries</span>
+                        <strong id="formSummaryCount">0</strong>
+                    </div>
+                    <div>
+                        <span>Top category</span>
+                        <strong id="formSummaryCategory">-</strong>
+                    </div>
+                </div>
             </div>
 
-            <div style="margin-top:25px;">
-                <h2>Category Breakdown</h2>
-                <div id="categoryBreakdown"></div>
+        </div>
+
+        <div class="panel history-panel" id="expenseHistoryPanel">
+
+            <div class="history-header">
+                <div>
+                    <span class="panel-eyebrow">Activity</span>
+                    <h2>Expense History</h2>
+                </div>
+                <div class="history-controls">
+                    <span class="history-period" id="expenseHistoryPeriod">Selected month</span>
+                    <button
+                        type="button"
+                        class="history-toggle"
+                        aria-expanded="true"
+                        aria-controls="historyContent"
+                        onclick="toggleHistoryPanel()">
+                        Hide
+                    </button>
+                </div>
+            </div>
+
+            <div class="history-content" id="historyContent">
+                <div class="history-filters">
+                    <input
+                        type="text"
+                        id="searchExpense"
+                        placeholder="Search by name or category..."
+                        onkeyup="renderExpenses()">
+
+                    <select id="historyCategoryFilter" onchange="renderExpenses()" aria-label="Filter expenses by category">
+                        <option value="all">All categories</option>
+                        <option value="Food">Food</option>
+                        <option value="Hospital">Hospital</option>
+                        <option value="Shopping">Shopping</option>
+                        <option value="Travel">Travel</option>
+                        <option value="Entertainment">Entertainment</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+
+                <div class="expense-table-wrap">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+
+                        <tbody id="expenseTable">
+                        </tbody>
+
+                    </table>
+                </div>
+
+                <div class="category-breakdown-section">
+                    <h2>Category Breakdown</h2>
+                    <div id="categoryBreakdown"></div>
+                </div>
             </div>
 
         </div>

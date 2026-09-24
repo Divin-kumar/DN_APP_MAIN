@@ -162,6 +162,7 @@
         display:flex;
         flex-direction:column;
         gap:12px;
+        align-items:stretch;
     }
 
     .panel{
@@ -171,6 +172,41 @@
 
     .panel h2{
         font-size:1rem;
+    }
+
+    .expense-form-summary{
+        margin-top:18px;
+        padding-top:14px;
+    }
+
+    .form-summary-grid{
+        gap:7px;
+    }
+
+    .history-header{
+        align-items:flex-start;
+    }
+
+    .history-controls{
+        justify-content:flex-start;
+    }
+
+    .history-filters{
+        grid-template-columns:1fr;
+        gap:0;
+    }
+
+    .history-period{
+        padding:6px 8px;
+        font-size:0.66rem;
+    }
+
+    .history-content{
+        max-height:none;
+    }
+
+    .expense-table-wrap{
+        max-height:280px;
     }
 
     /* FORMS */
@@ -191,9 +227,7 @@
     /* Keep card summary blocks readable on smaller screens. */
 
     .summary-grid{
-        grid-template-columns:repeat(2, minmax(0, 1fr));
-        gap:10px;
-        margin:12px 0 18px;
+        display:none;
     }
 
     .card{
