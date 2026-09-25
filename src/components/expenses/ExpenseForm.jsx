@@ -1,29 +1,32 @@
 /* Expense entry form, including optional event and activity relationships. */
 import { useEffect, useState } from 'react';
+import useAppStore from '../../store/useAppStore';
 
-const defaultState = {
+const createDefaultState = (defaultCategory) => ({
   id: '',
   name: '',
   amount: '',
-  category: 'Food',
+  category: defaultCategory || 'Food',
   date: new Date().toISOString().slice(0, 10),
-};
+});
 
 export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Expense', events = [] }) {
-  const [form, setForm] = useState(defaultState);
+  const adminValues = useAppStore((state) => state.adminValues);
+  const defaultExpenseCategory = useAppStore((state) => state.preferences.defaultExpenseCategory);
+  const [form, setForm] = useState(() => createDefaultState(defaultExpenseCategory));
 
   useEffect(() => {
     if (initialValues) {
       setForm({
-        ...defaultState,
+        ...createDefaultState(defaultExpenseCategory),
         ...initialValues,
         amount: String(initialValues.amount ?? ''),
         date: initialValues.date || new Date().toISOString().slice(0, 10),
       });
     } else {
-      setForm(defaultState);
+      setForm(createDefaultState(defaultExpenseCategory));
     }
-  }, [initialValues]);
+  }, [initialValues, defaultExpenseCategory]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -66,11 +69,9 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitL
       />
 
       <select name="category" value={form.category} onChange={handleChange} style={styles.input}>
-        <option value="Food">Food</option>
-        <option value="Hospital">Hospital</option>
-        <option value="Shopping">Shopping</option>
-        <option value="Travel">Travel</option>
-        <option value="Entertainment">Entertainment</option>
+        {adminValues.expenseCategories.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
         <option value="Other">Other</option>
       </select>
 
@@ -95,9 +96,9 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitL
       />
 
       <div style={styles.actions}>
-        <button type="submit" style={styles.primaryButton}>{submitLabel}</button>
+        <button type="submit" className="primaryButton" style={styles.primaryButton}>{submitLabel}</button>
         {onCancel ? (
-          <button type="button" onClick={onCancel} style={styles.secondaryButton}>
+          <button type="button" className="secondaryButton" onClick={onCancel} style={styles.secondaryButton}>
             Cancel
           </button>
         ) : null}

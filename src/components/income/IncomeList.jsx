@@ -1,4 +1,6 @@
 /* Income history rows and edit/delete actions. */
+import { Pencil, Trash2 } from 'lucide-react';
+
 const currency = (value) => {
   const number = Number(value || 0);
   return new Intl.NumberFormat('en-IN', {
@@ -31,11 +33,11 @@ export default function IncomeList({ incomes, onEdit, onDelete }) {
 
           <div style={styles.rightSide}>
             <span style={styles.amount}>{currency(income.amount)}</span>
-            <button className="edit-control" type="button" onClick={() => onEdit(income)} style={styles.editButton}>
-              Edit
+            <button className="edit-control" type="button" onClick={() => onEdit(income)} style={styles.editButton} aria-label={`Edit ${income.name}`} title="Edit income">
+              <Pencil size={15} />
             </button>
-            <button className="delete-control" type="button" onClick={() => onDelete(income)} style={styles.deleteButton}>
-              Delete
+            <button className="delete-control" type="button" onClick={() => onDelete(income)} style={styles.deleteButton} aria-label={`Delete ${income.name}`} title="Delete income">
+              <Trash2 size={15} />
             </button>
           </div>
         </div>
@@ -52,19 +54,21 @@ const styles = {
     gap: '12px',
   },
   row: {
-    background: '#ffffff',
-    border: '1px solid #dfeae3',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,248,246,0.96))',
+    border: '1px solid rgba(31, 111, 93, 0.12)',
     borderRadius: '14px',
     display: 'flex',
     justifyContent: 'space-between',
     gap: '14px',
     padding: '14px 16px',
     alignItems: 'center',
+    boxShadow: '0 8px 18px rgba(15, 23, 42, 0.04)',
   },
   meta: {
     display: 'flex',
     flexDirection: 'column',
     gap: '4px',
+    minWidth: 0,
   },
   rightSide: {
     display: 'flex',
@@ -73,33 +77,45 @@ const styles = {
     flexWrap: 'wrap',
   },
   amount: {
-    fontWeight: 700,
+    fontWeight: 800,
     color: '#1b3a2b',
     minWidth: '92px',
     textAlign: 'right',
+    letterSpacing: '-0.02em',
   },
   editButton: {
-    border: '1px solid #d7e3da',
-    background: '#f4faf5',
-    color: '#1d3f2c',
-    borderRadius: '8px',
-    padding: '8px 10px',
+    display: 'inline-grid',
+    placeItems: 'center',
+    width: '32px',
+    height: '32px',
+    border: '1px solid #bfdcc8',
+    background: 'linear-gradient(180deg, #f3faf5, #ebf6ef)',
+    color: '#2f6d56',
+    borderRadius: '10px',
+    padding: 0,
     cursor: 'pointer',
+    boxShadow: '0 6px 14px rgba(31, 111, 93, 0.08)',
   },
   deleteButton: {
-    border: 'none',
-    background: '#d9534f',
-    color: '#fff',
-    borderRadius: '8px',
-    padding: '8px 10px',
+    display: 'inline-grid',
+    placeItems: 'center',
+    width: '32px',
+    height: '32px',
+    border: '1px solid #f0c9c9',
+    background: 'linear-gradient(180deg, #fff8f8, #fff0f0)',
+    color: '#d95b5b',
+    borderRadius: '10px',
+    padding: 0,
     cursor: 'pointer',
+    boxShadow: '0 6px 14px rgba(217, 91, 91, 0.08)',
   },
   emptyState: {
-    background: '#ffffff',
-    border: '1px dashed #dfeae3',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,248,246,0.96))',
+    border: '1px dashed rgba(31, 111, 93, 0.2)',
     borderRadius: '14px',
     padding: '24px',
     color: '#5a6d61',
     textAlign: 'center',
+    boxShadow: '0 8px 18px rgba(15, 23, 42, 0.02)',
   },
 };

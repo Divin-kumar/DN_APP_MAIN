@@ -2,12 +2,18 @@
 import { CalendarDays, Pencil, Trash2 } from 'lucide-react';
 
 const getBirthdayAge = (value) => {
+  if (!value) return null;
+
   const birthDate = new Date(value);
   if (Number.isNaN(birthDate.getTime())) return null;
+
   const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-  if (today < birthdayThisYear) age -= 1;
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (todayDate < birthdayThisYear) age -= 1;
+
   return Math.max(age, 0);
 };
 
@@ -23,43 +29,43 @@ export default function EventList({ events, selectedId, onSelect, onOpenWorkspac
   return (
     <div className="history-scroll">
       <div style={styles.list}>
-      {events.map((event) => (
-        (() => {
-          const activities = event.activities || [];
-          const isBirthday = String(event.type || '').toLowerCase() === 'birthday';
-          const birthdayAge = isBirthday ? getBirthdayAge(event.date) : null;
-          return (
-        <div
-          key={event.id || event.firestoreId}
-          className="event-card"
-          style={{
-            ...styles.card,
-            ...(selectedId === (event.id || event.firestoreId) ? styles.cardActive : {}),
-          }}
-        >
-          <button type="button" onClick={() => onSelect(event)} style={styles.button}>
-            <div>
-              <strong style={styles.eventName}>{event.name}</strong>
-              <div style={styles.meta}><CalendarDays size={13} /> {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-              <div style={styles.meta}>🏷 {event.type === 'Other' ? event.customType || 'Other' : event.type}</div>
-              {birthdayAge !== null ? <div className="event-age" style={styles.meta}>Age: {birthdayAge} years</div> : null}
+      {events.map((event) => {
+        const activities = event.activities || [];
+        const isBirthday = String(event.type || '').toLowerCase() === 'birthday';
+        const birthdayAge = isBirthday ? getBirthdayAge(event.date) : null;
+        return (
+          <article
+            key={event.id || event.firestoreId}
+            className="activity-row event-card"
+            style={{
+              ...styles.row,
+              ...(selectedId === (event.id || event.firestoreId) ? styles.cardActive : {}),
+            }}
+          >
+            <div style={styles.contentRow}>
+              <button type="button" onClick={() => onSelect(event)} style={styles.button}>
+                <div style={styles.textBlock}>
+                  <strong style={styles.eventName}>{event.name}</strong>
+                  <div style={styles.meta}><CalendarDays size={15} style={styles.metaIcon} /> {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                  <div style={styles.meta}><span style={styles.metaTag}>🏷</span> {event.type === 'Other' ? event.customType || 'Other' : event.type}</div>
+                  {birthdayAge !== null ? <div className="event-age" style={styles.meta}>Age: {birthdayAge} years</div> : null}
+                </div>
+              </button>
+
+              <div style={styles.actions}>
+                {onOpenWorkspace ? <button type="button" onClick={() => onOpenWorkspace(event)} style={styles.openButton} aria-label={`Open ${event.name}`} title="Open workspace">Open</button> : null}
+                <button type="button" onClick={() => onEdit(event)} style={styles.iconButton} aria-label={`Edit ${event.name}`} title="Edit event"><Pencil size={17} /></button>
+                <button type="button" onClick={() => onDelete(event)} style={styles.iconButtonDanger} aria-label={`Delete ${event.name}`} title="Delete event"><Trash2 size={17} /></button>
+              </div>
             </div>
-          </button>
 
-          <div style={styles.stats}>
-            <span>{activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
-            <span className="event-status">{new Date(event.date) >= new Date() ? 'Upcoming' : 'Past'}</span>
-          </div>
-
-          <div style={styles.actions}>
-            {onOpenWorkspace ? <button type="button" onClick={() => onOpenWorkspace(event)} style={styles.openButton} aria-label={`Open ${event.name}`} title="Open workspace">Open</button> : null}
-            <button type="button" onClick={() => onEdit(event)} style={styles.iconButton} aria-label={`Edit ${event.name}`} title="Edit event"><Pencil size={15} /></button>
-            <button type="button" onClick={() => onDelete(event)} style={styles.iconButtonDanger} aria-label={`Delete ${event.name}`} title="Delete event"><Trash2 size={15} /></button>
-          </div>
-        </div>
-          );
-        })()
-      ))}
+            <div style={styles.stats}>
+              <span>{activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
+              <span className="event-status">{new Date(event.date) >= new Date() ? 'Upcoming' : 'Past'}</span>
+            </div>
+          </article>
+        );
+      })}
       </div>
     </div>
   );
@@ -71,122 +77,141 @@ const styles = {
     flexDirection: 'column',
     gap: '10px',
   },
-  card: {
-    position: 'relative',
-    background: '#ffffff',
-    border: '1px solid #dfeae3',
-    borderRadius: '14px',
-    padding: '12px 124px 12px 12px',
+  row: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '10px',
+    background: 'var(--surface-soft)',
+    border: '1px solid var(--border)',
+    borderRadius: '12px',
+    padding: '12px 14px',
+    color: 'var(--ink)',
+    width: '100%',
+    boxSizing: 'border-box',
+  },
+  contentRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: '12px',
+    width: '100%',
   },
   cardActive: {
     borderColor: '#b7d7c0',
-    background: '#f2fbf5',
+    background: 'var(--primary-soft)',
   },
   button: {
+    flex: 1,
+    minWidth: 0,
     width: '100%',
     border: 'none',
     background: 'transparent',
     display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
     textAlign: 'left',
     cursor: 'pointer',
-    color: '#1d3f2c',
+    color: 'var(--ink)',
     padding: 0,
+  },
+  textBlock: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    textAlign: 'left',
+    minWidth: 0,
+    width: '100%',
   },
   meta: {
     display: 'flex',
     alignItems: 'center',
-    gap: '5px',
-    color: '#5a6d61',
+    justifyContent: 'flex-start',
+    gap: '6px',
+    color: 'var(--ink-soft)',
     fontSize: '0.8rem',
     marginTop: '4px',
+    width: '100%',
+    textAlign: 'left',
+  },
+  metaIcon: {
+    flexShrink: 0,
+  },
+  metaTag: {
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.95rem',
+    lineHeight: 1,
   },
   eventName: {
-    fontSize: '1rem',
+    display: 'block',
+    width: '100%',
+    fontSize: '1.02rem',
+    fontWeight: 700,
+    lineHeight: 1.3,
+    marginBottom: '2px',
+    color: '#1f3f35',
+    textAlign: 'left',
   },
   stats: {
     display: 'flex',
     flexWrap: 'wrap',
+    alignItems: 'center',
     gap: '8px',
-    marginTop: '10px',
-    color: '#536964',
+    color: 'var(--ink-soft)',
     fontSize: '0.76rem',
   },
   actions: {
     display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
     gap: '8px',
-    position: 'absolute',
-    top: '12px',
-    right: '12px',
-  },
-  editButton: {
-    border: '1px solid #d7e3da',
-    background: '#f4faf5',
-    color: '#1d3f2c',
-    borderRadius: '8px',
-    padding: '8px 10px',
-    cursor: 'pointer',
-  },
-  workspaceButton: {
-    border: '1px solid #b7d7c0',
-    background: '#eaf5f0',
-    color: '#1f6f5d',
-    borderRadius: '8px',
-    padding: '8px 10px',
-    cursor: 'pointer',
-    fontWeight: 600,
-  },
-  deleteButton: {
-    border: 'none',
-    background: '#d9534f',
-    color: '#fff',
-    borderRadius: '8px',
-    padding: '8px 10px',
-    cursor: 'pointer',
+    width: '120px',
+    flexShrink: 0,
   },
   iconButton: {
     display: 'inline-grid',
     placeItems: 'center',
-    width: '32px',
-    height: '32px',
-    border: '1px solid #dfeae3',
-    background: '#ffffff',
-    color: '#536964',
+    width: '36px',
+    height: '36px',
+    border: '1px solid #bfdcc8',
+    background: '#f3faf5',
+    color: '#2f6d56',
     borderRadius: '10px',
     padding: 0,
     cursor: 'pointer',
   },
   openButton: {
-    minWidth: '48px',
+    minWidth: '52px',
     height: '32px',
-    border: '1px solid #c7ddd1',
-    background: '#edf6f1',
-    color: '#356653',
+    border: '1px solid #bfdcc8',
+    background: '#f3faf5',
+    color: '#2f6d56',
     borderRadius: '10px',
-    padding: '0 9px',
+    padding: '0 10px',
     cursor: 'pointer',
     fontSize: '0.76rem',
     fontWeight: 700,
+    lineHeight: 1,
   },
   iconButtonDanger: {
     display: 'inline-grid',
     placeItems: 'center',
-    width: '32px',
-    height: '32px',
-    border: '1px solid #ebcaca',
-    background: '#fff5f5',
-    color: '#b76060',
+    width: '36px',
+    height: '36px',
+    border: '1px solid #f0c9c9',
+    background: '#fff3f3',
+    color: '#d95b5b',
     borderRadius: '10px',
     padding: 0,
     cursor: 'pointer',
   },
   emptyState: {
-    background: '#ffffff',
-    border: '1px dashed #dfeae3',
+    background: 'var(--surface)',
+    border: '1px dashed var(--border)',
     borderRadius: '14px',
     padding: '22px',
-    color: '#5a6d61',
+    color: 'var(--ink-soft)',
     textAlign: 'center',
   },
 };

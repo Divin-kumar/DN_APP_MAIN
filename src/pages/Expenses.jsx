@@ -11,6 +11,7 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 export default function Expenses() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const showToast = useAppStore((state) => state.showToast);
   const { expenses, loading, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
   const { events, loadEvents, updateEventItem } = useEventStore();
 
@@ -45,15 +46,18 @@ export default function Expenses() {
           id: editingExpense.id || formData.id,
         };
         await updateExpenseItem(user?.uid, isGuest, updated);
+        showToast('Expense updated', 'success');
         setEditingExpense(null);
         setExpenseDialogOpen(false);
         return;
       }
 
       await addExpense(user?.uid, isGuest, formData);
+      showToast('Expense saved', 'success');
       setExpenseDialogOpen(false);
     } catch (error) {
       console.error('Failed to save expense:', error);
+      showToast('Expense save failed', 'danger');
     }
   };
 
@@ -61,6 +65,7 @@ export default function Expenses() {
     const targetId = expense.id || expense.firestoreId;
     const expenseIds = new Set([expense.id, expense.firestoreId, targetId].filter(Boolean));
     await deleteExpenseItem(user?.uid, isGuest, targetId);
+    showToast('Expense deleted', 'danger');
 
     // Remove the activity-local copy so reconciliation cannot restore a deleted expense.
     if (expense.eventId && expense.activityId) {
@@ -98,7 +103,7 @@ export default function Expenses() {
           <span style={styles.eyebrow}>Cash flow</span>
           <h2 style={styles.title}>Expenses</h2>
         </div>
-        <button type="button" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }} style={styles.primaryButton}>Add expense</button>
+        <button type="button" className="primaryButton" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }} style={styles.primaryButton}>Add expense</button>
       </div>
 
       <ExpenseSummary expenses={filteredExpenses} />
@@ -165,7 +170,8 @@ const styles = {
   page: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '18px',
+    gap: '12px',
+    minHeight: 0,
   },
   headerRow: {
     display: 'flex',
@@ -176,11 +182,12 @@ const styles = {
     fontSize: '0.72rem',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#6a7d71',
+    color: 'var(--ink-soft)',
   },
   title: {
     margin: '6px 0 0',
     fontSize: '1.8rem',
+    color: 'var(--ink)',
   },
   primaryButton: {
     border: 'none',
@@ -194,36 +201,36 @@ const styles = {
   contentGrid: {
     display: 'grid',
     gridTemplateColumns: 'minmax(280px, 380px) minmax(0, 1fr)',
-    gap: '18px',
+    gap: '12px',
   },
   card: {
-    background: '#ffffff',
-    borderRadius: '18px',
-    border: '1px solid #dfeae3',
-    padding: '18px',
+    background: 'var(--surface)',
+    borderRadius: '16px',
+    border: '1px solid var(--border)',
+    padding: '14px',
     boxShadow: '0 8px 18px rgba(47, 70, 58, 0.04)',
   },
   sectionTitle: {
     marginTop: 0,
-    marginBottom: '14px',
-    fontSize: '1.25rem',
+    marginBottom: '10px',
+    fontSize: '1.1rem',
   },
   filters: {
     display: 'grid',
-    gap: '10px',
-    marginBottom: '16px',
+    gap: '8px',
+    marginBottom: '12px',
   },
   input: {
     width: '100%',
-    padding: '12px 14px',
+    padding: '10px 12px',
     borderRadius: '10px',
-    border: '1px solid #d7e3da',
-    background: '#fbfdfb',
-    color: '#1d3f2c',
+    border: '1px solid var(--border)',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
   },
   loading: {
     padding: '18px',
-    color: '#5a6d61',
+    color: 'var(--ink-soft)',
     textAlign: 'center',
   },
 };

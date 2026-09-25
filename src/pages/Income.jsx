@@ -10,6 +10,7 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 export default function Income() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const showToast = useAppStore((state) => state.showToast);
   const { incomes, loading, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
 
   const [search, setSearch] = useState('');
@@ -42,21 +43,25 @@ export default function Income() {
           id: editingIncome.id || formData.id,
         };
         await updateIncomeItem(user?.uid, isGuest, updated);
+        showToast('Income updated', 'success');
         setEditingIncome(null);
         setIncomeDialogOpen(false);
         return;
       }
 
       await addIncome(user?.uid, isGuest, formData);
+      showToast('Income saved', 'success');
       setIncomeDialogOpen(false);
     } catch (error) {
       console.error('Failed to save income:', error);
+      showToast('Income save failed', 'danger');
     }
   };
 
   const handleDelete = async (income) => {
     const targetId = income.id || income.firestoreId;
     await deleteIncomeItem(user?.uid, isGuest, targetId);
+    showToast('Income deleted', 'danger');
     if (editingIncome && (editingIncome.id === targetId || editingIncome.firestoreId === targetId)) {
       setEditingIncome(null);
     }
@@ -75,7 +80,7 @@ export default function Income() {
           <span style={styles.eyebrow}>Cash flow</span>
           <h2 style={styles.title}>Income</h2>
         </div>
-        <button type="button" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }} style={styles.primaryButton}>Add income</button>
+        <button type="button" className="primaryButton" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }} style={styles.primaryButton}>Add income</button>
       </div>
 
       <IncomeSummary incomes={filteredIncomes} />
@@ -139,65 +144,71 @@ const styles = {
   page: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '18px',
+    gap: '12px',
+    minHeight: 0,
   },
   headerRow: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
+    gap: '12px',
+    marginBottom: '2px',
   },
   eyebrow: {
     fontSize: '0.72rem',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#6a7d71',
+    color: 'var(--ink-soft)',
   },
   title: {
     margin: '6px 0 0',
     fontSize: '1.8rem',
+    color: 'var(--ink)',
   },
   primaryButton: {
-    border: 'none',
-    borderRadius: '10px',
-    background: '#2d6a4f',
+    border: '1px solid rgba(18, 86, 68, 0.15)',
+    borderRadius: '12px',
+    background: 'linear-gradient(135deg, #1f6f5d 0%, #2a8c72 100%)',
     color: '#ffffff',
-    padding: '10px 14px',
+    padding: '10px 15px',
     fontWeight: 700,
     cursor: 'pointer',
+    boxShadow: '0 12px 22px rgba(31, 111, 93, 0.18)',
   },
   contentGrid: {
     display: 'grid',
     gridTemplateColumns: 'minmax(280px, 380px) minmax(0, 1fr)',
-    gap: '18px',
+    gap: '12px',
   },
   card: {
-    background: '#ffffff',
-    borderRadius: '18px',
-    border: '1px solid #dfeae3',
-    padding: '18px',
-    boxShadow: '0 8px 18px rgba(47, 70, 58, 0.04)',
+    background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,248,246,0.96))',
+    borderRadius: '14px',
+    border: '1px solid rgba(31, 111, 93, 0.12)',
+    padding: '16px',
+    boxShadow: '0 10px 22px rgba(15, 23, 42, 0.04)',
   },
   sectionTitle: {
     marginTop: 0,
-    marginBottom: '14px',
-    fontSize: '1.25rem',
+    marginBottom: '12px',
+    fontSize: '1.08rem',
   },
   filters: {
     display: 'grid',
-    gap: '10px',
-    marginBottom: '16px',
+    gap: '8px',
+    marginBottom: '12px',
   },
   input: {
     width: '100%',
-    padding: '12px 14px',
+    padding: '10px 12px',
     borderRadius: '10px',
-    border: '1px solid #d7e3da',
-    background: '#fbfdfb',
-    color: '#1d3f2c',
+    border: '1px solid rgba(31, 111, 93, 0.12)',
+    background: 'rgba(31, 111, 93, 0.02)',
+    color: 'var(--ink)',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.7)',
   },
   loading: {
     padding: '18px',
-    color: '#5a6d61',
+    color: 'var(--ink-soft)',
     textAlign: 'center',
   },
 };

@@ -1,29 +1,32 @@
 /* Income entry form used by the income management page. */
 import { useEffect, useState } from 'react';
+import useAppStore from '../../store/useAppStore';
 
-const defaultState = {
+const createDefaultState = (defaultIncomeType) => ({
   id: '',
   name: '',
-  type: 'Salary',
+  type: defaultIncomeType || 'Salary',
   amount: '',
   date: new Date().toISOString().slice(0, 10),
-};
+});
 
 export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Income' }) {
-  const [form, setForm] = useState(defaultState);
+  const adminValues = useAppStore((state) => state.adminValues);
+  const defaultIncomeType = useAppStore((state) => state.preferences.defaultIncomeType);
+  const [form, setForm] = useState(() => createDefaultState(defaultIncomeType));
 
   useEffect(() => {
     if (initialValues) {
       setForm({
-        ...defaultState,
+        ...createDefaultState(defaultIncomeType),
         ...initialValues,
         amount: String(initialValues.amount ?? ''),
         date: initialValues.date || new Date().toISOString().slice(0, 10),
       });
     } else {
-      setForm(defaultState);
+      setForm(createDefaultState(defaultIncomeType));
     }
-  }, [initialValues]);
+  }, [initialValues, defaultIncomeType]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -57,9 +60,9 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
       />
 
       <select name="type" value={form.type} onChange={handleChange} style={styles.input}>
-        <option value="Salary">Salary</option>
-        <option value="Freelance">Freelance</option>
-        <option value="Bonus">Bonus</option>
+        {adminValues.incomeTypes.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
         <option value="Other">Other</option>
       </select>
 
@@ -81,9 +84,9 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
       />
 
       <div style={styles.actions}>
-        <button type="submit" style={styles.primaryButton}>{submitLabel}</button>
+        <button type="submit" className="primaryButton" style={styles.primaryButton}>{submitLabel}</button>
         {onCancel ? (
-          <button type="button" onClick={onCancel} style={styles.secondaryButton}>
+          <button type="button" className="secondaryButton" onClick={onCancel} style={styles.secondaryButton}>
             Cancel
           </button>
         ) : null}

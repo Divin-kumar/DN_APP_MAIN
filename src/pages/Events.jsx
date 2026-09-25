@@ -16,6 +16,7 @@ export default function Events() {
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
   const { expenses, loadExpenses, addExpense } = useExpenseStore();
   const [focusedId, setFocusedId] = useState(null);
@@ -87,9 +88,11 @@ export default function Events() {
   const saveEvent = async (formData) => {
     if (editingEvent) {
       await updateEventItem(user?.uid, isGuest, { ...editingEvent, ...formData, id: editingEvent.id || formData.id, activities: editingEvent.activities || [] });
+      showToast('Event updated', 'success');
       closeDrawer();
     } else {
       const savedEvent = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
+      showToast('Event saved', 'success');
       closeDrawer();
       navigate(`/events/${savedEvent.id || savedEvent.firestoreId}`);
     }
@@ -111,6 +114,7 @@ export default function Events() {
       ...focusedEvent,
       activities: editingActivity ? activities.map((item) => item.id === editingActivity.id ? { ...item, ...next } : item) : [...activities, next],
     });
+    showToast(editingActivity ? 'Activity updated' : 'Activity saved', 'success');
     closeDrawer();
   };
 
@@ -145,12 +149,14 @@ export default function Events() {
     ));
 
     await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities });
+    showToast('Expense saved', 'success');
     closeDrawer();
   };
 
   const removeActivity = async (activityId) => {
     if (!focusedEvent) return;
     await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: (focusedEvent.activities || []).filter((item) => item.id !== activityId) });
+    showToast('Activity deleted', 'danger');
     setPendingDeleteActivity(null);
   };
 
@@ -167,10 +173,12 @@ export default function Events() {
   const removeEvent = async (event) => {
     try {
       await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
+      showToast('Event deleted', 'danger');
       setFocusedId(null);
       setPendingDeleteEvent(null);
     } catch (deleteError) {
       console.error('Event deletion failed:', deleteError);
+      showToast('Delete failed', 'danger');
     }
   };
 
@@ -207,18 +215,17 @@ export default function Events() {
       <div className="events-page event-workspace-page" style={styles.page}>
         <div style={styles.workspaceHeader}>
           <button type="button" onClick={() => setFocusedId(null)} style={styles.backButton}>← Back to Events</button>
-          <div style={styles.workspaceActions}><button type="button" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
+          <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
-        <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><p style={styles.metaText}>{dateLabel(focusedEvent.date)} · {focusedEvent.type}</p></header>
-        <div style={styles.summaryGrid}><div style={styles.metric}><span>Activities</span><strong>{focusedEvent.activities?.length || 0}</strong></div><div style={styles.metric}><span>Total spent</span><strong>{currency(actualSpent)}</strong></div></div>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} /></section>
+        <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{focusedEvent.type}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} /></section>
         {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
         {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
       </div>
     );
   }
 
-  return <div className="events-page" style={styles.page}><div style={styles.headerRow}><div><span style={styles.eyebrow}>Planning</span><h2 style={styles.title}>Events</h2><p style={styles.metaText}>Open an event to enter its workspace.</p></div><button type="button" onClick={openNewEvent} style={styles.primaryButton}>+ New Event</button></div><div style={styles.card}><div style={styles.listHeader}><h3 style={styles.sectionTitle}>Your events</h3><span style={styles.count}>{events.length} total</span></div>{error ? <p style={styles.errorText}>{error}</p> : null}{loading ? <p style={styles.metaText}>Loading events...</p> : <EventList events={events} selectedId={null} onSelect={(event) => setFocusedId(event.id || event.firestoreId)} onOpenWorkspace={(event) => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={(event) => { setFocusedId(event.id || event.firestoreId); setEditingEvent(event); setDrawer('event'); }} onDelete={(event) => setPendingDeleteEvent(event)} />}</div>{pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}{drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}</div>;
+  return <div className="events-page" style={styles.page}><div style={styles.headerRow}><div><span style={styles.eyebrow}>Planning</span><h2 style={styles.title}>Events</h2><p style={styles.metaText}>Open an event to enter its workspace.</p></div><button type="button" className="primaryButton" onClick={openNewEvent} style={styles.primaryButton}>+ New Event</button></div><div style={styles.card}><div style={styles.listHeader}><h3 style={styles.sectionTitle}>Your events</h3><span style={styles.count}>{events.length} total</span></div>{error ? <p style={styles.errorText}>{error}</p> : null}{loading ? <p style={styles.metaText}>Loading events...</p> : <EventList events={events} selectedId={null} onSelect={(event) => setFocusedId(event.id || event.firestoreId)} onOpenWorkspace={(event) => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={(event) => { setFocusedId(event.id || event.firestoreId); setEditingEvent(event); setDrawer('event'); }} onDelete={(event) => setPendingDeleteEvent(event)} />}</div>{pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}{drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}</div>;
 }
 
 function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, expenseActivity, expenseAmount, expenseDescription, expenseDate, setActivityTitle, setActivityDescription, setActivityDate, setExpenseAmount, setExpenseDescription, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
@@ -242,7 +249,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" style={styles.input} />
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
             <input type="date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} style={styles.input} />
-            <button type="button" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
+            <button type="button" className="primaryButton" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
           </div>
         ) : (
           <div style={styles.formStack}>
@@ -250,7 +257,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
             <input type="number" min="0" value={expenseAmount} onChange={(event) => setExpenseAmount(event.target.value)} placeholder="Actual amount" style={styles.input} />
             <textarea value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} placeholder="What was this expense for?" style={styles.input} rows={3} />
             <input type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} style={styles.input} />
-            <button type="button" onClick={onSaveExpense} style={styles.primaryButton}>Add Expense</button>
+            <button type="button" className="primaryButton" onClick={onSaveExpense} style={styles.primaryButton}>Add Expense</button>
           </div>
         )}
       </aside>
@@ -259,30 +266,32 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
 }
 
 const styles = {
-  page: { display: 'flex', flexDirection: 'column', gap: '18px' },
+  page: { display: 'flex', flexDirection: 'column', gap: '18px', color: 'var(--ink)' },
   headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '18px' },
   workspaceHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' },
   workspaceActions: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
   workspaceTitle: { padding: '4px 0 2px' },
-  eyebrow: { fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6a7d71' },
-  title: { margin: '6px 0 0', fontSize: '1.8rem' },
-  metaText: { margin: '6px 0 0', color: '#5a6d61' },
-  card: { background: '#fff', borderRadius: '18px', border: '1px solid #dfeae3', padding: '18px', boxShadow: '0 8px 18px rgba(47, 70, 58, 0.04)' },
+  eyebrow: { fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' },
+  title: { margin: '6px 0 0', fontSize: '1.8rem', color: 'var(--ink)' },
+  metaText: { margin: '6px 0 0', color: 'var(--ink-soft)' },
+  metaRow: { margin: '8px 0 0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', color: 'var(--ink-soft)', fontSize: '0.95rem' },
+  metaDivider: { color: 'var(--ink-soft)', fontWeight: 700 },
+  card: { background: 'var(--surface)', borderRadius: '18px', border: '1px solid var(--border)', padding: '18px', boxShadow: '0 8px 18px rgba(47, 70, 58, 0.04)' },
   listHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-  count: { color: '#5a6d61', fontSize: '0.82rem' },
+  count: { color: 'var(--ink-soft)', fontSize: '0.82rem' },
   summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' },
-  metric: { background: '#fff', border: '1px solid #dfeae3', borderRadius: '14px', padding: '14px', display: 'grid', gap: '6px' },
-  panel: { background: '#fff', border: '1px solid #dfeae3', borderRadius: '16px', padding: '16px' },
+  metric: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: '14px', display: 'grid', gap: '6px', color: 'var(--ink)' },
+  panel: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '16px', color: 'var(--ink)' },
   panelHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '12px' },
-  sectionTitle: { margin: 0, fontSize: '1.2rem' },
+  sectionTitle: { margin: 0, fontSize: '1.2rem', color: 'var(--ink)' },
   primaryButton: { border: 'none', borderRadius: '10px', background: '#2d6a4f', color: '#fff', padding: '11px 14px', fontWeight: 700, cursor: 'pointer' },
-  secondaryButton: { border: '1px solid #d7e3da', borderRadius: '10px', background: '#f3f8f4', color: '#1d3f2c', padding: '9px 12px', fontWeight: 600, cursor: 'pointer' },
-  backButton: { border: 'none', background: 'transparent', color: '#1f6f5d', fontWeight: 700, cursor: 'pointer', padding: '8px 0' },
+  secondaryButton: { border: '1px solid var(--border)', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink)', padding: '9px 12px', fontWeight: 600, cursor: 'pointer' },
+  backButton: { border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', padding: '8px 0' },
   detailHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '18px' },
-  detailTitle: { margin: '4px 0 0', fontSize: '1.4rem' },
-  closeButton: { width: '34px', height: '34px', border: '1px solid #d7e3da', borderRadius: '9px', background: '#f4faf5', cursor: 'pointer', fontSize: '1.2rem' },
-  input: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #d7e3da', background: '#fbfdfb', color: '#1d3f2c', resize: 'vertical' },
+  detailTitle: { margin: '4px 0 0', fontSize: '1.4rem', color: 'var(--ink)' },
+  closeButton: { width: '34px', height: '34px', border: '1px solid var(--border)', borderRadius: '9px', background: 'var(--surface-soft)', color: 'var(--ink)', cursor: 'pointer', fontSize: '1.2rem' },
+  input: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--surface-soft)', color: 'var(--ink)', resize: 'vertical' },
   formStack: { display: 'grid', gap: '12px' },
-  linkedContext: { padding: '12px', borderRadius: '10px', background: '#f3f8f4', color: '#536964', lineHeight: 1.5 },
+  linkedContext: { padding: '12px', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink-soft)', lineHeight: 1.5 },
   errorText: { margin: '0 0 12px', padding: '10px 12px', borderRadius: '10px', background: '#fff1f1', color: '#9d3c3c', border: '1px solid #efcaca' },
 };

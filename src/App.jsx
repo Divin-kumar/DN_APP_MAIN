@@ -1,4 +1,5 @@
 /* Event-first application routes and provider composition. */
+import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';
@@ -13,11 +14,32 @@ import Financials from './pages/Financials';
 import Income from './pages/Income';
 import Expenses from './pages/Expenses';
 import Settings from './pages/Settings';
+import useAppStore from './store/useAppStore';
+
+function GlobalToast() {
+  const toast = useAppStore((state) => state.toast);
+  const hideToast = useAppStore((state) => state.hideToast);
+
+  useEffect(() => {
+    if (!toast) return undefined;
+    const id = window.setTimeout(() => hideToast(), 1200);
+    return () => window.clearTimeout(id);
+  }, [toast, hideToast]);
+
+  if (!toast) return null;
+
+  return (
+    <div className="app-toast" data-tone={toast.type || 'success'}>
+      {toast.message}
+    </div>
+  );
+}
 
 export default function App() {
   return (
     <AuthProvider>
       <GuestProvider>
+        <GlobalToast />
         <Routes>
           <Route path="/login" element={<LoginPage />} />
 

@@ -85,15 +85,15 @@ export default function Dashboard() {
 const styles = {
   appShell: {
     minHeight: '100vh',
-    background: '#f2f7f3',
-    color: '#1d3f2c',
+    background: 'var(--canvas)',
+    color: 'var(--ink)',
   },
   header: {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'space-between',
-    background: '#ffffff',
-    borderBottom: '1px solid #dfeae3',
+    background: 'var(--surface)',
+    borderBottom: '1px solid var(--border)',
     padding: '16px 24px',
     position: 'sticky',
     top: 0,
@@ -117,7 +117,7 @@ const styles = {
     fontSize: '0.72rem',
     letterSpacing: '0.08em',
     textTransform: 'uppercase',
-    color: '#6a7d71',
+    color: 'var(--ink-soft)',
   },
   title: {
     margin: 0,
@@ -152,8 +152,8 @@ const styles = {
   },
   sidebar: {
     width: '220px',
-    background: '#edf6ef',
-    borderRight: '1px solid #dfeae3',
+    background: 'var(--surface-soft)',
+    borderRight: '1px solid var(--border)',
     padding: '20px 16px',
     display: 'flex',
     flexDirection: 'column',
@@ -161,9 +161,9 @@ const styles = {
   },
   navCard: {
     padding: '14px 12px',
-    background: '#ffffff',
+    background: 'var(--surface)',
     borderRadius: '12px',
-    border: '1px solid #dfeae3',
+    border: '1px solid var(--border)',
     fontWeight: 600,
   },
   contentPane: {
@@ -171,16 +171,16 @@ const styles = {
     padding: '22px',
   },
   banner: {
-    background: '#dff2e5',
-    border: '1px solid #badbc1',
-    color: '#1d3f2c',
+    background: 'var(--primary-soft)',
+    border: '1px solid var(--border)',
+    color: 'var(--ink)',
     borderRadius: '12px',
     padding: '14px 16px',
     marginBottom: '18px',
     fontWeight: 500,
   },
   placeholderCard: {
-    background: '#ffffff',
+    background: 'var(--surface)',
     borderRadius: '18px',
     padding: '24px',
     boxShadow: '0 10px 30px rgba(47, 70, 58, 0.06)',
@@ -192,7 +192,7 @@ const styles = {
   },
   placeholderText: {
     margin: 0,
-    color: '#536a5d',
+    color: 'var(--ink-soft)',
     lineHeight: 1.6,
   },
 };

@@ -1,31 +1,34 @@
 /* Event metadata form used only inside the create/edit drawer. */
 import { useEffect, useState } from 'react';
+import useAppStore from '../../store/useAppStore';
 
-const defaultState = {
+const createDefaultState = (defaultEventType) => ({
   id: '',
   name: '',
-  type: 'Personal',
+  type: defaultEventType || 'Personal',
   customType: '',
   date: new Date().toISOString().slice(0, 10),
   recurrence: 'none',
   budget: '',
   notes: '',
-};
+});
 
 export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
-  const [form, setForm] = useState(defaultState);
+  const adminValues = useAppStore((state) => state.adminValues);
+  const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
+  const [form, setForm] = useState(() => createDefaultState(defaultEventType));
 
   useEffect(() => {
     if (initialValues) {
       setForm({
-        ...defaultState,
+        ...createDefaultState(defaultEventType),
         ...initialValues,
         customType: initialValues.customType || '',
       });
     } else {
-      setForm(defaultState);
+      setForm(createDefaultState(defaultEventType));
     }
-  }, [initialValues]);
+  }, [initialValues, defaultEventType]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -65,10 +68,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       />
 
       <select name="type" value={form.type} onChange={handleChange} style={styles.input}>
-        <option value="Birthday">Birthday</option>
-        <option value="Festival">Festival</option>
-        <option value="Function">Function</option>
-        <option value="Personal">Personal</option>
+        {adminValues.eventTypes.map((option) => (
+          <option key={option} value={option}>{option}</option>
+        ))}
         <option value="Other">Other</option>
       </select>
 
@@ -106,9 +108,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       />
 
       <div style={styles.actions}>
-        <button type="submit" style={styles.primaryButton}>{submitLabel}</button>
+        <button type="submit" className="primaryButton" style={styles.primaryButton}>{submitLabel}</button>
         {onCancel ? (
-          <button type="button" onClick={onCancel} style={styles.secondaryButton}>
+          <button type="button" className="secondaryButton" onClick={onCancel} style={styles.secondaryButton}>
             Cancel
           </button>
         ) : null}
@@ -121,18 +123,19 @@ const styles = {
   form: {
     display: 'grid',
     gap: '12px',
-    background: '#ffffff',
+    background: 'var(--surface)',
     borderRadius: '16px',
-    border: '1px solid #dfeae3',
+    border: '1px solid var(--border)',
     padding: '18px',
+    color: 'var(--ink)',
   },
   input: {
     width: '100%',
     padding: '12px 14px',
     borderRadius: '10px',
-    border: '1px solid #d7e3da',
-    background: '#fbfdfb',
-    color: '#1d3f2c',
+    border: '1px solid var(--border)',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
   },
   actions: {
     display: 'flex',
@@ -151,10 +154,10 @@ const styles = {
   },
   secondaryButton: {
     flex: 1,
-    border: '1px solid #d7e3da',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
-    background: '#f3f8f4',
-    color: '#1d3f2c',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
     padding: '12px 14px',
     fontWeight: 600,
     cursor: 'pointer',

@@ -1,7 +1,7 @@
 /* Event-first app shell for dashboard and workspace navigation. */
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, ChevronDown, LayoutDashboard, LogOut, Menu, Moon, Settings, Sun, UserCircle, WalletCards } from 'lucide-react';
+import { CalendarDays, ChevronDown, LayoutDashboard, LogOut, Menu, Settings, UserCircle, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -16,16 +16,14 @@ const navItems = [
 export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  const darkMode = useAppStore((state) => state.darkMode);
-  const toggleDarkMode = useAppStore((state) => state.toggleDarkMode);
   const { exitGuestMode } = useGuest();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
-  }, [darkMode]);
+    document.documentElement.dataset.theme = 'light';
+  }, []);
 
   useEffect(() => {
     setAvatarError(false);
@@ -78,9 +76,6 @@ export default function DashboardLayout() {
               onError={() => setAvatarError(true)}
             />
           ) : <span className="avatar avatar-fallback" aria-label="User profile">{initials}</span>}
-          <button className="theme-toggle icon-button" type="button" onClick={toggleDarkMode} aria-label={darkMode ? 'Use light theme' : 'Use dark theme'} title={darkMode ? 'Use light theme' : 'Use dark theme'}>
-            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
           <div className="profile-menu-wrap">
             <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} aria-haspopup="menu">
               <span className="user-name" style={styles.userName}>{profileName}</span>

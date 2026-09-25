@@ -13,12 +13,18 @@ const formatDate = (value) => {
 };
 
 const getBirthdayAge = (value) => {
+  if (!value) return null;
+
   const birthDate = new Date(value);
   if (Number.isNaN(birthDate.getTime())) return null;
+
   const today = new Date();
-  let age = today.getFullYear() - birthDate.getFullYear();
+  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
   const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-  if (today < birthdayThisYear) age -= 1;
+
+  let age = today.getFullYear() - birthDate.getFullYear();
+  if (todayDate < birthdayThisYear) age -= 1;
+
   return Math.max(age, 0);
 };
 
@@ -52,15 +58,15 @@ export default function EventWorkspaceShell() {
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
 
   if (loading && !event) {
-    return <p style={{ color: '#536a5d' }}>Loading event workspace...</p>;
+    return <p style={{ color: 'var(--ink-soft)' }}>Loading event workspace...</p>;
   }
 
   if (!event) {
     return (
       <div style={{ display: 'grid', gap: '14px' }}>
         <h2 style={{ margin: 0 }}>Event not found</h2>
-        <p style={{ margin: 0, color: '#536a5d' }}>This event may have been removed or is not available in the current session.</p>
-        <Link to="/events" style={{ color: '#1f6f5d', fontWeight: 700 }}>Back to Events</Link>
+        <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This event may have been removed or is not available in the current session.</p>
+        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Events</Link>
       </div>
     );
   }
@@ -208,20 +214,20 @@ export default function EventWorkspaceShell() {
               </div>
             ))}
           </div>
-        ) : <p style={{ margin: 0, color: '#536a5d' }}>Add an activity to start this event timeline.</p>;
+        ) : <p style={{ margin: 0, color: 'var(--ink-soft)' }}>Add an activity to start this event timeline.</p>;
       }
 
       return activities.length ? (
         <div style={{ display: 'grid', gap: '10px' }}>
-          {activeSection.label === 'Activities' ? <div style={{ color: '#536a5d', fontSize: '0.88rem' }}>{activities.filter((activity) => activity.completed).length} of {activities.length} complete</div> : null}
+          {activeSection.label === 'Activities' ? <div style={{ color: 'var(--ink-soft)', fontSize: '0.88rem' }}>{activities.filter((activity) => activity.completed).length} of {activities.length} complete</div> : null}
           {activities.map((activity) => (
-            <div key={activity.id} style={{ padding: '12px', border: '1px solid #edf3ee', borderRadius: '10px' }}>
+            <div key={activity.id} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink)' }}>
               <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
                 <input type="checkbox" checked={Boolean(activity.completed)} onChange={() => toggleActivity(activity.id)} />
                 <span>{activity.title || 'Untitled activity'}</span>
               </label>
-              <div style={{ marginTop: '4px', color: '#536a5d', fontSize: '0.88rem' }}>{formatDate(activity.date)}</div>
-              {activity.description ? <p style={{ margin: '7px 0 0', color: '#536a5d' }}>{activity.description}</p> : null}
+              <div style={{ marginTop: '4px', color: 'var(--ink-soft)', fontSize: '0.88rem' }}>{formatDate(activity.date)}</div>
+              {activity.description ? <p style={{ margin: '7px 0 0', color: 'var(--ink-soft)' }}>{activity.description}</p> : null}
               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
                 <button type="button" onClick={() => { setEditingActivityId(activity.id); setActivityTitle(activity.title || ''); setActivityDescription(activity.description || ''); setActivityDate(activity.date || ''); setActivityDialogOpen(true); }} style={styles.iconButton} aria-label={`Edit ${activity.title}`} title="Edit activity"><Pencil size={15} /></button>
                 <button type="button" onClick={() => setPendingDeleteActivity(activity)} style={styles.iconButtonDanger} aria-label={`Remove ${activity.title}`} title="Remove activity"><Trash2 size={15} /></button>
@@ -229,7 +235,7 @@ export default function EventWorkspaceShell() {
             </div>
           ))}
         </div>
-      ) : <p style={{ margin: 0, color: '#536a5d' }}>No activities have been added to this event yet.</p>;
+      ) : <p style={{ margin: 0, color: 'var(--ink-soft)' }}>No activities have been added to this event yet.</p>;
     }
 
     if (activeSection.label === 'Attachments') {
@@ -246,7 +252,7 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Memories') {
       return (
         <div className="workspace-resource-list">
-          <button type="button" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}>Add memory</button>
+          <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}>Add memory</button>
           {event.memories?.length ? event.memories.map((memory) => (
             <div className="workspace-resource-row" key={memory.id}><div><strong>{memory.title}</strong><span>{memory.body || 'A memory worth keeping.'}</span></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
@@ -254,21 +260,21 @@ export default function EventWorkspaceShell() {
       );
     }
 
-    return <div className="workspace-empty-surface"><Download size={24} /><strong>Export summary</strong><p>A printable summary for {event.name} will be available here.</p><button type="button" onClick={printSummary} style={styles.primaryButton}>Print summary</button></div>;
+    return <div className="workspace-empty-surface"><Download size={24} /><strong>Export summary</strong><p>A printable summary for {event.name} will be available here.</p><button type="button" className="primaryButton" onClick={printSummary} style={styles.primaryButton}>Print summary</button></div>;
   };
 
   return (
     <div style={{ display: 'grid', gap: '18px' }}>
-      <div style={{ background: '#ffffff', border: '1px solid #dfeae3', borderRadius: '18px', padding: '20px' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '18px', padding: '20px', color: 'var(--ink)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link to="/events" style={{ color: '#1f6f5d', fontWeight: 700 }}>← Back to Events</Link>
+          <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>← Back to Events</Link>
           <button type="button" onClick={() => setPendingDeleteEvent(true)} style={styles.deleteEventButton}>Delete event</button>
         </div>
-        <div style={{ marginTop: '18px', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6a7d71' }}>
+        <div style={{ marginTop: '18px', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
           Event workspace
         </div>
-        <h2 style={{ margin: '8px 0 6px', fontSize: '1.8rem' }}>{event.name}</h2>
-        <p style={{ margin: 0, color: '#536a5d', lineHeight: 1.7 }}>
+        <h2 style={{ margin: '8px 0 6px', fontSize: '1.8rem', color: 'var(--ink)' }}>{event.name}</h2>
+        <p style={{ margin: 0, color: 'var(--ink-soft)', lineHeight: 1.7 }}>
           {formatDate(event.date)}{event.type ? ` · ${event.type}` : ''}{birthdayAge !== null ? ` · Age ${birthdayAge} years` : ''}
         </p>
       </div>
@@ -278,27 +284,27 @@ export default function EventWorkspaceShell() {
           <div
             key={section.label}
             style={{
-              border: '1px solid #dfeae3',
+              border: '1px solid var(--border)',
               borderRadius: '14px',
               padding: '16px',
-              color: '#294736',
-              borderColor: activeSection.label === section.label ? '#8fbea4' : '#dfeae3',
-              background: activeSection.label === section.label ? '#f0f8f2' : '#ffffff',
+              color: 'var(--ink)',
+              borderColor: activeSection.label === section.label ? 'var(--primary)' : 'var(--border)',
+              background: activeSection.label === section.label ? 'var(--primary-soft)' : 'var(--surface)',
             }}
           >
             <Link to={section.path} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', fontWeight: 700 }}><section.icon size={16} /> {section.label}</Link>
-            <div style={{ marginTop: '8px', color: '#536a5d', fontSize: '0.88rem', fontWeight: 400 }}>{section.detail}</div>
+            <div style={{ marginTop: '8px', color: 'var(--ink-soft)', fontSize: '0.88rem', fontWeight: 400 }}>{section.detail}</div>
           </div>
         ))}
       </div>
 
-      <div style={{ background: '#ffffff', border: '1px solid #dfeae3', borderRadius: '16px', padding: '20px' }}>
-        <div style={{ fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#6a7d71' }}>
+      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '20px', color: 'var(--ink)' }}>
+        <div style={{ fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
           {activeSection.label}
         </div>
-        <h3 style={{ margin: '8px 0 6px', fontSize: '1.3rem' }}>{activeSection.detail}</h3>
+        <h3 style={{ margin: '8px 0 6px', fontSize: '1.3rem', color: 'var(--ink)' }}>{activeSection.detail}</h3>
         {error ? <p style={styles.errorText}>{error}</p> : null}
-        {activeSection.label === 'Activities' ? <button type="button" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityDialogOpen(true); }} style={styles.primaryButton}>Add activity</button> : null}
+        {activeSection.label === 'Activities' ? <button type="button" className="primaryButton" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityDialogOpen(true); }} style={styles.primaryButton}>Add activity</button> : null}
         {renderSectionContent()}
       </div>
 
@@ -310,7 +316,7 @@ export default function EventWorkspaceShell() {
             <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
             <div style={styles.dialogActions}>
               <button type="button" onClick={() => setActivityDialogOpen(false)} style={styles.cancelButton}>Cancel</button>
-              <button type="submit" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
+              <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
             </div>
           </form>
         </ModalDialog>
@@ -321,7 +327,7 @@ export default function EventWorkspaceShell() {
             <textarea value={notesDraft} onChange={(submitEvent) => setNotesDraft(submitEvent.target.value)} placeholder="What should you remember about this event?" style={styles.input} rows={7} autoFocus />
             <div style={styles.dialogActions}>
               <button type="button" onClick={() => setNotesDialogOpen(false)} style={styles.cancelButton}>Cancel</button>
-              <button type="submit" style={styles.primaryButton}>Save notes</button>
+              <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
             </div>
           </form>
         </ModalDialog>
@@ -331,7 +337,7 @@ export default function EventWorkspaceShell() {
           <form onSubmit={saveMemory} style={{ display: 'grid', gap: '12px' }}>
             <input value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Memory title" style={styles.input} autoFocus />
             <textarea value={memoryBody} onChange={(eventChange) => setMemoryBody(eventChange.target.value)} placeholder="What do you want to remember?" style={styles.input} rows={6} />
-            <div style={styles.dialogActions}><button type="button" onClick={() => setMemoryDialogOpen(false)} style={styles.cancelButton}>Cancel</button><button type="submit" style={styles.primaryButton}>Save memory</button></div>
+            <div style={styles.dialogActions}><button type="button" onClick={() => setMemoryDialogOpen(false)} style={styles.cancelButton}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
           </form>
         </ModalDialog>
       ) : null}
@@ -362,7 +368,7 @@ function ModalDialog({ title, onClose, children }) {
     <div className="lifehub-modal-backdrop" style={styles.modalBackdrop} onMouseDown={onClose}>
       <section role="dialog" aria-modal="true" aria-labelledby="lifehub-modal-title" style={styles.modal} onMouseDown={(event) => event.stopPropagation()}>
         <div style={styles.modalHeader}>
-          <h3 id="lifehub-modal-title" style={{ margin: 0 }}>{title}</h3>
+          <h3 id="lifehub-modal-title" style={{ margin: 0, color: 'var(--ink)' }}>{title}</h3>
           <button type="button" onClick={onClose} style={styles.closeButton} aria-label="Close dialog">×</button>
         </div>
         {children}
@@ -374,7 +380,7 @@ function ModalDialog({ title, onClose, children }) {
 function ConfirmDialog({ title, message, onCancel, onConfirm }) {
   return (
     <ModalDialog title={title} onClose={onCancel}>
-      <p style={{ margin: '0 0 18px', color: '#536a5d', lineHeight: 1.6 }}>{message}</p>
+      <p style={{ margin: '0 0 18px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>{message}</p>
       <div style={styles.dialogActions}>
         <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
         <button type="button" onClick={onConfirm} style={styles.confirmButton}>Delete</button>
@@ -387,10 +393,10 @@ const styles = {
   input: {
     width: '100%',
     padding: '11px 12px',
-    border: '1px solid #d7e3da',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
-    background: '#fbfdfb',
-    color: '#1d3f2c',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
   },
   primaryButton: {
     justifySelf: 'start',
@@ -413,10 +419,10 @@ const styles = {
     cursor: 'pointer',
   },
   editButton: {
-    border: '1px solid #d7e3da',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    background: '#f4faf5',
-    color: '#1d3f2c',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
     padding: '7px 10px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -426,10 +432,10 @@ const styles = {
     placeItems: 'center',
     width: '34px',
     height: '34px',
-    border: '1px solid #dfeae3',
+    border: '1px solid var(--border)',
     borderRadius: '10px',
-    background: '#ffffff',
-    color: '#536964',
+    background: 'var(--surface)',
+    color: 'var(--ink-soft)',
     cursor: 'pointer',
   },
   iconButtonDanger: {
@@ -475,7 +481,8 @@ const styles = {
     overflowY: 'auto',
     padding: '20px',
     borderRadius: '16px',
-    background: '#ffffff',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
     boxShadow: '0 20px 60px rgba(21, 57, 45, 0.2)',
   },
   modalHeader: {
@@ -488,10 +495,10 @@ const styles = {
   closeButton: {
     width: '32px',
     height: '32px',
-    border: '1px solid #d7e3da',
+    border: '1px solid var(--border)',
     borderRadius: '8px',
-    background: '#f4faf5',
-    color: '#1d3f2c',
+    background: 'var(--surface-soft)',
+    color: 'var(--ink)',
     cursor: 'pointer',
     fontSize: '1.2rem',
   },
@@ -501,10 +508,10 @@ const styles = {
     gap: '8px',
   },
   cancelButton: {
-    border: '1px solid #d7e3da',
+    border: '1px solid var(--border)',
     borderRadius: '9px',
-    background: '#ffffff',
-    color: '#1d3f2c',
+    background: 'var(--surface)',
+    color: 'var(--ink)',
     padding: '10px 14px',
     fontWeight: 600,
     cursor: 'pointer',
@@ -523,7 +530,7 @@ const styles = {
     padding: 0,
     minHeight: 0,
     background: 'transparent',
-    color: '#3d6b5b',
+    color: 'var(--primary)',
     fontSize: '0.76rem',
     fontWeight: 700,
     cursor: 'pointer',
