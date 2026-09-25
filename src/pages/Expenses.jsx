@@ -6,6 +6,7 @@ import ExpenseSummary from '../components/expenses/ExpenseSummary';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
+import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 
 export default function Expenses() {
   const user = useAppStore((state) => state.user);
@@ -16,6 +17,8 @@ export default function Expenses() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
   const [editingExpense, setEditingExpense] = useState(null);
+  const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
+  const [pendingDeleteExpense, setPendingDeleteExpense] = useState(null);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -43,10 +46,12 @@ export default function Expenses() {
         };
         await updateExpenseItem(user?.uid, isGuest, updated);
         setEditingExpense(null);
+        setExpenseDialogOpen(false);
         return;
       }
 
       await addExpense(user?.uid, isGuest, formData);
+      setExpenseDialogOpen(false);
     } catch (error) {
       console.error('Failed to save expense:', error);
     }
@@ -78,10 +83,12 @@ export default function Expenses() {
     if (editingExpense && (editingExpense.id === targetId || editingExpense.firestoreId === targetId)) {
       setEditingExpense(null);
     }
+    setPendingDeleteExpense(null);
   };
 
   const handleEdit = (expense) => {
     setEditingExpense(expense);
+    setExpenseDialogOpen(true);
   };
 
   return (
@@ -91,23 +98,13 @@ export default function Expenses() {
           <span style={styles.eyebrow}>Cash flow</span>
           <h2 style={styles.title}>Expenses</h2>
         </div>
+        <button type="button" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }} style={styles.primaryButton}>Add expense</button>
       </div>
 
       <ExpenseSummary expenses={filteredExpenses} />
 
       <div className="feature-content-grid" style={styles.contentGrid}>
-        <div className="feature-card" style={styles.card}>
-          <h3 style={styles.sectionTitle}>{editingExpense ? 'Edit Expense' : 'Add Expense'}</h3>
-          <ExpenseForm
-            initialValues={editingExpense}
-            submitLabel={editingExpense ? 'Update Expense' : 'Save Expense'}
-            onSubmit={handleSubmit}
-            onCancel={() => setEditingExpense(null)}
-            events={events}
-          />
-        </div>
-
-        <div className="feature-card" style={styles.card}>
+        <div className="feature-card" style={{ ...styles.card, gridColumn: '1 / -1' }}>
           <h3 style={styles.sectionTitle}>Expense History</h3>
 
           <div style={styles.filters}>
@@ -136,10 +133,30 @@ export default function Expenses() {
           {loading ? (
             <div style={styles.loading}>Loading expenses...</div>
           ) : (
-            <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={handleDelete} />
+            <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />
           )}
         </div>
       </div>
+
+      {expenseDialogOpen ? (
+        <ModalDialog title={editingExpense ? 'Edit expense' : 'Add expense'} onClose={() => { setExpenseDialogOpen(false); setEditingExpense(null); }}>
+          <ExpenseForm
+            initialValues={editingExpense}
+            submitLabel={editingExpense ? 'Update Expense' : 'Save Expense'}
+            onSubmit={handleSubmit}
+            onCancel={() => { setExpenseDialogOpen(false); setEditingExpense(null); }}
+            events={events}
+          />
+        </ModalDialog>
+      ) : null}
+      {pendingDeleteExpense ? (
+        <ConfirmDialog
+          title="Delete expense?"
+          message={`Delete “${pendingDeleteExpense.name || 'this expense'}”? This cannot be undone.`}
+          onCancel={() => setPendingDeleteExpense(null)}
+          onConfirm={() => handleDelete(pendingDeleteExpense)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -164,6 +181,15 @@ const styles = {
   title: {
     margin: '6px 0 0',
     fontSize: '1.8rem',
+  },
+  primaryButton: {
+    border: 'none',
+    borderRadius: '10px',
+    background: '#2d6a4f',
+    color: '#ffffff',
+    padding: '10px 14px',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
   contentGrid: {
     display: 'grid',

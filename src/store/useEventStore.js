@@ -56,13 +56,25 @@ const useEventStore = create((set, get) => ({
       return event;
     }
 
-    const updated = await updateEvent(uid, event);
-    set({
-      events: get().events.map((item) =>
-        item.id === event.id || item.firestoreId === event.firestoreId ? { ...item, ...updated } : item
-      ),
-    });
-    return updated;
+    const current = get().events;
+    const optimistic = current.map((item) => (
+      item.id === event.id || item.firestoreId === event.firestoreId ? { ...item, ...event } : item
+    ));
+    set({ events: optimistic, error: null });
+
+    try {
+      const updated = await updateEvent(uid, event);
+      set({
+        events: get().events.map((item) =>
+          item.id === event.id || item.firestoreId === event.firestoreId ? { ...item, ...updated } : item
+        ),
+      });
+      return updated;
+    } catch (error) {
+      console.error('Failed to update event:', error);
+      set({ events: current, error: 'Unable to save the event. Your changes were restored.' });
+      throw error;
+    }
   },
 
   deleteEventItem: async (uid, isGuest, eventId) => {
@@ -71,14 +83,21 @@ const useEventStore = create((set, get) => ({
 
     if (!event) return;
 
-    if (isGuest) {
-      const updated = removeGuestEvent(eventId);
-      set({ events: updated });
-      return;
-    }
+    const remaining = current.filter((item) => item.id !== eventId && item.firestoreId !== eventId);
+    set({ events: remaining, error: null });
 
-    await deleteEvent(uid, event);
-    set({ events: current.filter((item) => item.id !== eventId && item.firestoreId !== eventId) });
+    try {
+      if (isGuest) {
+        removeGuestEvent(eventId);
+        return;
+      }
+
+      await deleteEvent(uid, event);
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      set({ events: current, error: 'Unable to delete the event. It has been restored.' });
+      throw error;
+    }
   },
 }));
 

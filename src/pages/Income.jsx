@@ -5,6 +5,7 @@ import IncomeList from '../components/income/IncomeList';
 import IncomeSummary from '../components/income/IncomeSummary';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
+import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 
 export default function Income() {
   const user = useAppStore((state) => state.user);
@@ -14,6 +15,8 @@ export default function Income() {
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
   const [editingIncome, setEditingIncome] = useState(null);
+  const [incomeDialogOpen, setIncomeDialogOpen] = useState(false);
+  const [pendingDeleteIncome, setPendingDeleteIncome] = useState(null);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -40,10 +43,12 @@ export default function Income() {
         };
         await updateIncomeItem(user?.uid, isGuest, updated);
         setEditingIncome(null);
+        setIncomeDialogOpen(false);
         return;
       }
 
       await addIncome(user?.uid, isGuest, formData);
+      setIncomeDialogOpen(false);
     } catch (error) {
       console.error('Failed to save income:', error);
     }
@@ -55,10 +60,12 @@ export default function Income() {
     if (editingIncome && (editingIncome.id === targetId || editingIncome.firestoreId === targetId)) {
       setEditingIncome(null);
     }
+    setPendingDeleteIncome(null);
   };
 
   const handleEdit = (income) => {
     setEditingIncome(income);
+    setIncomeDialogOpen(true);
   };
 
   return (
@@ -68,22 +75,13 @@ export default function Income() {
           <span style={styles.eyebrow}>Cash flow</span>
           <h2 style={styles.title}>Income</h2>
         </div>
+        <button type="button" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }} style={styles.primaryButton}>Add income</button>
       </div>
 
       <IncomeSummary incomes={filteredIncomes} />
 
       <div className="feature-content-grid" style={styles.contentGrid}>
-        <div className="feature-card" style={styles.card}>
-          <h3 style={styles.sectionTitle}>{editingIncome ? 'Edit Income' : 'Add Income'}</h3>
-          <IncomeForm
-            initialValues={editingIncome}
-            submitLabel={editingIncome ? 'Update Income' : 'Save Income'}
-            onSubmit={handleSubmit}
-            onCancel={() => setEditingIncome(null)}
-          />
-        </div>
-
-        <div className="feature-card" style={styles.card}>
+        <div className="feature-card" style={{ ...styles.card, gridColumn: '1 / -1' }}>
           <h3 style={styles.sectionTitle}>Income History</h3>
 
           <div style={styles.filters}>
@@ -110,10 +108,29 @@ export default function Income() {
           {loading ? (
             <div style={styles.loading}>Loading income entries...</div>
           ) : (
-            <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={handleDelete} />
+            <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />
           )}
         </div>
       </div>
+
+      {incomeDialogOpen ? (
+        <ModalDialog title={editingIncome ? 'Edit income' : 'Add income'} onClose={() => { setIncomeDialogOpen(false); setEditingIncome(null); }}>
+          <IncomeForm
+            initialValues={editingIncome}
+            submitLabel={editingIncome ? 'Update Income' : 'Save Income'}
+            onSubmit={handleSubmit}
+            onCancel={() => { setIncomeDialogOpen(false); setEditingIncome(null); }}
+          />
+        </ModalDialog>
+      ) : null}
+      {pendingDeleteIncome ? (
+        <ConfirmDialog
+          title="Delete income?"
+          message={`Delete “${pendingDeleteIncome.name || 'this income entry'}”? This cannot be undone.`}
+          onCancel={() => setPendingDeleteIncome(null)}
+          onConfirm={() => handleDelete(pendingDeleteIncome)}
+        />
+      ) : null}
     </div>
   );
 }
@@ -138,6 +155,15 @@ const styles = {
   title: {
     margin: '6px 0 0',
     fontSize: '1.8rem',
+  },
+  primaryButton: {
+    border: 'none',
+    borderRadius: '10px',
+    background: '#2d6a4f',
+    color: '#ffffff',
+    padding: '10px 14px',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
   contentGrid: {
     display: 'grid',

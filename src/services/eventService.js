@@ -10,6 +10,7 @@ import {
 import { db } from '../firebase/config';
 
 const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
+const GUEST_SESSION_BACKUP_KEY = 'lifehub_session_backup';
 
 export const normalizeActivity = (item = {}) => ({
   id: item.id || crypto.randomUUID(),
@@ -38,6 +39,8 @@ export const normalizeEvent = (item = {}) => ({
   customType: item.customType || '',
   recurrence: item.recurrence || 'none',
   notes: item.notes || '',
+  memories: Array.isArray(item.memories) ? item.memories : [],
+  attachments: Array.isArray(item.attachments) ? item.attachments : [],
   activities: Array.isArray(item.activities)
     ? item.activities.map(normalizeActivity)
     : [],
@@ -48,7 +51,14 @@ export const getGuestEvents = () => {
   try {
     const raw = localStorage.getItem(GUEST_EVENTS_KEY) || '[]';
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeEvent) : [];
+
+    if (Array.isArray(parsed)) {
+      const normalized = parsed.map(normalizeEvent);
+      localStorage.setItem(GUEST_SESSION_BACKUP_KEY, JSON.stringify(normalized));
+      return normalized;
+    }
+
+    return [];
   } catch (error) {
     console.error('Failed to load guest events:', error);
     return [];
@@ -56,7 +66,9 @@ export const getGuestEvents = () => {
 };
 
 export const setGuestEvents = (items) => {
-  localStorage.setItem(GUEST_EVENTS_KEY, JSON.stringify(items));
+  const normalized = Array.isArray(items) ? items.map(normalizeEvent) : [];
+  localStorage.setItem(GUEST_EVENTS_KEY, JSON.stringify(normalized));
+  localStorage.setItem(GUEST_SESSION_BACKUP_KEY, JSON.stringify(normalized));
 };
 
 export const getEventsForUser = async (uid) => {

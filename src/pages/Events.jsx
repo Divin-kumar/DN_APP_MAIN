@@ -1,19 +1,22 @@
 /* Events workspace: event focus mode, activity management, linked expenses, and memory export. */
 import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import EventForm from '../components/events/EventForm';
 import EventList from '../components/events/EventList';
 import ActivityList from '../components/events/ActivityList';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
+import { ConfirmDialog } from '../components/common/ModalDialog';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 
 export default function Events() {
+  const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  const { events, loading, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
+  const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
   const { expenses, loadExpenses, addExpense } = useExpenseStore();
   const [focusedId, setFocusedId] = useState(null);
   const [drawer, setDrawer] = useState(null);
@@ -21,10 +24,13 @@ export default function Events() {
   const [editingActivity, setEditingActivity] = useState(null);
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
+  const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [expenseActivity, setExpenseActivity] = useState(null);
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
+  const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
+  const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
 
   // ============================
   // Workspace data loading
@@ -64,24 +70,47 @@ export default function Events() {
   // ============================
   // Drawer and persistence actions
   // ============================
-  const closeDrawer = () => { setDrawer(null); setEditingEvent(null); setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setExpenseActivity(null); setExpenseAmount(''); setExpenseDescription(''); };
+  const closeDrawer = () => {
+    setDrawer(null);
+    setEditingEvent(null);
+    setEditingActivity(null);
+    setActivityTitle('');
+    setActivityDescription('');
+    setActivityDate(new Date().toISOString().slice(0, 10));
+    setExpenseActivity(null);
+    setExpenseAmount('');
+    setExpenseDescription('');
+  };
   const openNewEvent = () => { setEditingEvent(null); setDrawer('event'); };
   const openEditEvent = () => { setEditingEvent(focusedEvent); setDrawer('event'); };
 
   const saveEvent = async (formData) => {
     if (editingEvent) {
       await updateEventItem(user?.uid, isGuest, { ...editingEvent, ...formData, id: editingEvent.id || formData.id, activities: editingEvent.activities || [] });
+      closeDrawer();
     } else {
-      await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
+      const savedEvent = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
+      closeDrawer();
+      navigate(`/events/${savedEvent.id || savedEvent.firestoreId}`);
     }
-    closeDrawer();
   };
 
   const saveActivity = async () => {
     if (!focusedEvent || !activityTitle.trim()) return;
     const activities = focusedEvent.activities || [];
-    const next = { id: editingActivity?.id || crypto.randomUUID(), eventId: focusedId, title: activityTitle.trim(), description: activityDescription.trim(), date: editingActivity?.date || focusedEvent.date, completed: false, createdAt: editingActivity?.createdAt || new Date().toISOString() };
-    await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: editingActivity ? activities.map((item) => item.id === editingActivity.id ? { ...item, ...next } : item) : [...activities, next] });
+    const next = {
+      id: editingActivity?.id || crypto.randomUUID(),
+      eventId: focusedId,
+      title: activityTitle.trim(),
+      description: activityDescription.trim(),
+      date: activityDate || editingActivity?.date || focusedEvent.date,
+      completed: false,
+      createdAt: editingActivity?.createdAt || new Date().toISOString(),
+    };
+    await updateEventItem(user?.uid, isGuest, {
+      ...focusedEvent,
+      activities: editingActivity ? activities.map((item) => item.id === editingActivity.id ? { ...item, ...next } : item) : [...activities, next],
+    });
     closeDrawer();
   };
 
@@ -122,11 +151,27 @@ export default function Events() {
   const removeActivity = async (activityId) => {
     if (!focusedEvent) return;
     await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: (focusedEvent.activities || []).filter((item) => item.id !== activityId) });
+    setPendingDeleteActivity(null);
+  };
+
+  const toggleActivity = async (activityId) => {
+    if (!focusedEvent) return;
+    await updateEventItem(user?.uid, isGuest, {
+      ...focusedEvent,
+      activities: (focusedEvent.activities || []).map((activity) => (
+        activity.id === activityId ? { ...activity, completed: !activity.completed } : activity
+      )),
+    });
   };
 
   const removeEvent = async (event) => {
-    await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
-    setFocusedId(null);
+    try {
+      await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
+      setFocusedId(null);
+      setPendingDeleteEvent(null);
+    } catch (deleteError) {
+      console.error('Event deletion failed:', deleteError);
+    }
   };
 
   // ============================
@@ -157,16 +202,17 @@ export default function Events() {
         </div>
         <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><p style={styles.metaText}>{dateLabel(focusedEvent.date)} · {focusedEvent.type}</p></header>
         <div style={styles.summaryGrid}><div style={styles.metric}><span>Activities</span><strong>{focusedEvent.activities?.length || 0}</strong></div><div style={styles.metric}><span>Total spent</span><strong>{currency(actualSpent)}</strong></div></div>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" onClick={() => setDrawer('activity')} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={removeActivity} /></section>
-        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} /></section>
+        {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
+        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
       </div>
     );
   }
 
-  return <div className="events-page" style={styles.page}><div style={styles.headerRow}><div><span style={styles.eyebrow}>Planning</span><h2 style={styles.title}>Events</h2><p style={styles.metaText}>Open an event to enter its workspace.</p></div><button type="button" onClick={openNewEvent} style={styles.primaryButton}>+ New Event</button></div><div style={styles.card}><div style={styles.listHeader}><h3 style={styles.sectionTitle}>Your events</h3><span style={styles.count}>{events.length} total</span></div>{loading ? <p style={styles.metaText}>Loading events...</p> : <EventList events={events} selectedId={null} onSelect={(event) => setFocusedId(event.id || event.firestoreId)} onEdit={(event) => { setFocusedId(event.id || event.firestoreId); setEditingEvent(event); setDrawer('event'); }} onDelete={removeEvent} />}</div>{drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}</div>;
+  return <div className="events-page" style={styles.page}><div style={styles.headerRow}><div><span style={styles.eyebrow}>Planning</span><h2 style={styles.title}>Events</h2><p style={styles.metaText}>Open an event to enter its workspace.</p></div><button type="button" onClick={openNewEvent} style={styles.primaryButton}>+ New Event</button></div><div style={styles.card}><div style={styles.listHeader}><h3 style={styles.sectionTitle}>Your events</h3><span style={styles.count}>{events.length} total</span></div>{error ? <p style={styles.errorText}>{error}</p> : null}{loading ? <p style={styles.metaText}>Loading events...</p> : <EventList events={events} selectedId={null} onSelect={(event) => setFocusedId(event.id || event.firestoreId)} onOpenWorkspace={(event) => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={(event) => { setFocusedId(event.id || event.firestoreId); setEditingEvent(event); setDrawer('event'); }} onDelete={(event) => setPendingDeleteEvent(event)} />}</div>{pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}{drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}</div>;
 }
 
-function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, expenseActivity, expenseAmount, expenseDescription, expenseDate, setActivityTitle, setActivityDescription, setExpenseAmount, setExpenseDescription, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
+function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, expenseActivity, expenseAmount, expenseDescription, expenseDate, setActivityTitle, setActivityDescription, setActivityDate, setExpenseAmount, setExpenseDescription, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
   const heading = type === 'event' ? (editingEvent?.name || 'New event') : type === 'activity' ? (editingActivity?.title || 'New activity') : expenseActivity?.title;
 
   return (
@@ -186,6 +232,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
           <div style={styles.formStack}>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" style={styles.input} />
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
+            <input type="date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} style={styles.input} />
             <button type="button" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
           </div>
         ) : (
@@ -228,4 +275,5 @@ const styles = {
   input: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid #d7e3da', background: '#fbfdfb', color: '#1d3f2c', resize: 'vertical' },
   formStack: { display: 'grid', gap: '12px' },
   linkedContext: { padding: '12px', borderRadius: '10px', background: '#f3f8f4', color: '#536964', lineHeight: 1.5 },
+  errorText: { margin: '0 0 12px', padding: '10px 12px', borderRadius: '10px', background: '#fff1f1', color: '#9d3c3c', border: '1px solid #efcaca' },
 };

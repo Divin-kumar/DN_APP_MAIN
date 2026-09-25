@@ -1,16 +1,16 @@
-/* Application shell: header, responsive navigation, session controls, and route outlet. */
+/* Event-first app shell for dashboard and workspace navigation. */
 import { useEffect, useState } from 'react';
 import { NavLink, Outlet } from 'react-router-dom';
+import { CalendarDays, ChevronDown, LayoutDashboard, LogOut, Menu, Moon, Settings, Sun, UserCircle, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: '⌂' },
-  { label: 'Expenses', path: '/expenses', icon: '↘' },
-  { label: 'Income', path: '/income', icon: '↗' },
-  { label: 'Events', path: '/events', icon: '◷' },
-  { label: 'Settings', path: '/settings', icon: '⚙' },
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Events', path: '/events', icon: CalendarDays },
+  { label: 'Financials', path: '/financials', icon: WalletCards },
+  { label: 'Settings', path: '/settings', icon: Settings },
 ];
 
 export default function DashboardLayout() {
@@ -21,6 +21,7 @@ export default function DashboardLayout() {
   const { exitGuestMode } = useGuest();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = darkMode ? 'dark' : 'light';
@@ -59,7 +60,7 @@ export default function DashboardLayout() {
             aria-expanded={!sidebarCollapsed}
             onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
           >
-            ☰
+            <Menu size={19} strokeWidth={2.2} />
           </button>
           <div>
             <div style={styles.eyebrow}>Workspace</div>
@@ -77,13 +78,22 @@ export default function DashboardLayout() {
               onError={() => setAvatarError(true)}
             />
           ) : <span className="avatar avatar-fallback" aria-label="User profile">{initials}</span>}
-          <button className="theme-toggle" type="button" onClick={toggleDarkMode} aria-label={darkMode ? 'Use light theme' : 'Use dark theme'}>
-            {darkMode ? '☀' : '☾'}
+          <button className="theme-toggle icon-button" type="button" onClick={toggleDarkMode} aria-label={darkMode ? 'Use light theme' : 'Use dark theme'} title={darkMode ? 'Use light theme' : 'Use dark theme'}>
+            {darkMode ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <span className="user-name" style={styles.userName}>{profileName}</span>
-          <button className="logout-button" style={styles.logoutButton} onClick={handleLogout}>
-            Logout
-          </button>
+          <div className="profile-menu-wrap">
+            <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} aria-haspopup="menu">
+              <span className="user-name" style={styles.userName}>{profileName}</span>
+              <ChevronDown size={15} />
+            </button>
+            {profileMenuOpen ? (
+              <div className="profile-menu" role="menu">
+                <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
+                <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
+                <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
+              </div>
+            ) : null}
+          </div>
         </div>
       </header>
 
@@ -104,7 +114,7 @@ export default function DashboardLayout() {
                 ...(isActive ? styles.navCardActive : {}),
               })}
             >
-              <span className="lifehub-nav-icon" aria-hidden="true">{item.icon}</span>
+              <span className="lifehub-nav-icon" aria-hidden="true"><item.icon size={18} strokeWidth={2} /></span>
               <span className="lifehub-nav-label">{item.label}</span>
             </NavLink>
           ))}

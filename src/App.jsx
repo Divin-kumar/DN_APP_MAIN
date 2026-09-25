@@ -1,4 +1,4 @@
-/* LifeHub application routes and provider composition. */
+/* Event-first application routes and provider composition. */
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';
@@ -6,10 +6,12 @@ import ProtectedRoute from './routes/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import DashboardHome from './pages/DashboardHome';
-import Expenses from './pages/Expenses';
-import Income from './pages/Income';
 import Events from './pages/Events';
 import PlaceholderPage from './pages/PlaceholderPage';
+import EventWorkspaceShell from './features/events/components/EventWorkspaceShell';
+import Financials from './pages/Financials';
+import Income from './pages/Income';
+import Expenses from './pages/Expenses';
 
 export default function App() {
   return (
@@ -28,9 +30,18 @@ export default function App() {
           >
             <Route index element={<DashboardHome />} />
             <Route path="dashboard" element={<DashboardHome />} />
-            <Route path="expenses" element={<Expenses />} />
-            <Route path="income" element={<Income />} />
             <Route path="events" element={<Events />} />
+            <Route path="events/:eventId" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/overview" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/activities" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/timeline" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/memories" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/attachments" element={<EventWorkspaceShell />} />
+            <Route path="events/:eventId/pdf" element={<EventWorkspaceShell />} />
+            <Route path="financials" element={<Financials />}>
+              <Route path="income" element={<Income />} />
+              <Route path="expenses" element={<Expenses />} />
+            </Route>
             <Route path="settings" element={<PlaceholderPage title="Settings" />} />
           </Route>
 

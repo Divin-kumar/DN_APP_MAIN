@@ -1,5 +1,7 @@
 /* Compact event cards used by the event list and focus-mode entry point. */
-export default function EventList({ events, selectedId, onSelect, onEdit, onDelete }) {
+import { CalendarDays, Pencil, Trash2 } from 'lucide-react';
+
+export default function EventList({ events, selectedId, onSelect, onOpenWorkspace, onEdit, onDelete }) {
   if (!events.length) {
     return (
       <div className="empty-state" style={styles.emptyState}>
@@ -26,19 +28,20 @@ export default function EventList({ events, selectedId, onSelect, onEdit, onDele
           <button type="button" onClick={() => onSelect(event)} style={styles.button}>
             <div>
               <strong style={styles.eventName}>{event.name}</strong>
-              <div style={styles.meta}>📅 {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+              <div style={styles.meta}><CalendarDays size={13} /> {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               <div style={styles.meta}>🏷 {event.type === 'Other' ? event.customType || 'Other' : event.type}</div>
             </div>
-            <span style={styles.arrow}>›</span>
           </button>
 
           <div style={styles.stats}>
             <span>{activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
+            <span className="event-status">{new Date(event.date) >= new Date() ? 'Upcoming' : 'Past'}</span>
           </div>
 
           <div style={styles.actions}>
-            <button type="button" onClick={() => onEdit(event)} style={styles.editButton}>Edit</button>
-            <button type="button" onClick={() => onDelete(event)} style={styles.deleteButton}>Delete</button>
+            {onOpenWorkspace ? <button type="button" onClick={() => onOpenWorkspace(event)} style={styles.openButton} aria-label={`Open ${event.name}`} title="Open workspace">Open</button> : null}
+            <button type="button" onClick={() => onEdit(event)} style={styles.iconButton} aria-label={`Edit ${event.name}`} title="Edit event"><Pencil size={15} /></button>
+            <button type="button" onClick={() => onDelete(event)} style={styles.iconButtonDanger} aria-label={`Delete ${event.name}`} title="Delete event"><Trash2 size={15} /></button>
           </div>
         </div>
           );
@@ -56,10 +59,11 @@ const styles = {
     gap: '10px',
   },
   card: {
+    position: 'relative',
     background: '#ffffff',
     border: '1px solid #dfeae3',
     borderRadius: '14px',
-    padding: '10px 12px',
+    padding: '12px 124px 12px 12px',
   },
   cardActive: {
     borderColor: '#b7d7c0',
@@ -78,6 +82,9 @@ const styles = {
     padding: 0,
   },
   meta: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '5px',
     color: '#5a6d61',
     fontSize: '0.8rem',
     marginTop: '4px',
@@ -93,15 +100,12 @@ const styles = {
     color: '#536964',
     fontSize: '0.76rem',
   },
-  arrow: {
-    fontSize: '1.5rem',
-    color: '#5a6d61',
-  },
   actions: {
     display: 'flex',
     gap: '8px',
-    justifyContent: 'flex-end',
-    marginTop: '8px',
+    position: 'absolute',
+    top: '12px',
+    right: '12px',
   },
   editButton: {
     border: '1px solid #d7e3da',
@@ -111,12 +115,57 @@ const styles = {
     padding: '8px 10px',
     cursor: 'pointer',
   },
+  workspaceButton: {
+    border: '1px solid #b7d7c0',
+    background: '#eaf5f0',
+    color: '#1f6f5d',
+    borderRadius: '8px',
+    padding: '8px 10px',
+    cursor: 'pointer',
+    fontWeight: 600,
+  },
   deleteButton: {
     border: 'none',
     background: '#d9534f',
     color: '#fff',
     borderRadius: '8px',
     padding: '8px 10px',
+    cursor: 'pointer',
+  },
+  iconButton: {
+    display: 'inline-grid',
+    placeItems: 'center',
+    width: '32px',
+    height: '32px',
+    border: '1px solid #dfeae3',
+    background: '#ffffff',
+    color: '#536964',
+    borderRadius: '10px',
+    padding: 0,
+    cursor: 'pointer',
+  },
+  openButton: {
+    minWidth: '48px',
+    height: '32px',
+    border: '1px solid #c7ddd1',
+    background: '#edf6f1',
+    color: '#356653',
+    borderRadius: '10px',
+    padding: '0 9px',
+    cursor: 'pointer',
+    fontSize: '0.76rem',
+    fontWeight: 700,
+  },
+  iconButtonDanger: {
+    display: 'inline-grid',
+    placeItems: 'center',
+    width: '32px',
+    height: '32px',
+    border: '1px solid #ebcaca',
+    background: '#fff5f5',
+    color: '#b76060',
+    borderRadius: '10px',
+    padding: 0,
     cursor: 'pointer',
   },
   emptyState: {
