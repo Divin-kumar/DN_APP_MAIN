@@ -12,6 +12,16 @@ const formatDate = (value) => {
     : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
+const getBirthdayAge = (value) => {
+  const birthDate = new Date(value);
+  if (Number.isNaN(birthDate.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+  if (today < birthdayThisYear) age -= 1;
+  return Math.max(age, 0);
+};
+
 export default function EventWorkspaceShell() {
   const { eventId } = useParams();
   const location = useLocation();
@@ -64,6 +74,7 @@ export default function EventWorkspaceShell() {
     { label: 'PDF Export', path: `/events/${eventId}/pdf`, detail: 'A printable event summary', icon: Download },
   ];
   const activeSection = sections.find((section) => location.pathname === section.path) || sections[0];
+  const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
   const activities = [...(event.activities || [])].sort((first, second) => (
     new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime()
   ));
@@ -258,7 +269,7 @@ export default function EventWorkspaceShell() {
         </div>
         <h2 style={{ margin: '8px 0 6px', fontSize: '1.8rem' }}>{event.name}</h2>
         <p style={{ margin: 0, color: '#536a5d', lineHeight: 1.7 }}>
-          {formatDate(event.date)}{event.type ? ` · ${event.type}` : ''}
+          {formatDate(event.date)}{event.type ? ` · ${event.type}` : ''}{birthdayAge !== null ? ` · Age ${birthdayAge} years` : ''}
         </p>
       </div>
 

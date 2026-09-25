@@ -12,6 +12,7 @@ import EventWorkspaceShell from './features/events/components/EventWorkspaceShel
 import Financials from './pages/Financials';
 import Income from './pages/Income';
 import Expenses from './pages/Expenses';
+import Settings from './pages/Settings';
 
 export default function App() {
   return (
@@ -42,7 +43,7 @@ export default function App() {
               <Route path="income" element={<Income />} />
               <Route path="expenses" element={<Expenses />} />
             </Route>
-            <Route path="settings" element={<PlaceholderPage title="Settings" />} />
+            <Route path="settings" element={<Settings />} />
           </Route>
 
           <Route path="*" element={<Navigate to="/" replace />} />

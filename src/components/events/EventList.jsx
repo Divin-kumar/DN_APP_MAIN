@@ -1,6 +1,16 @@
 /* Compact event cards used by the event list and focus-mode entry point. */
 import { CalendarDays, Pencil, Trash2 } from 'lucide-react';
 
+const getBirthdayAge = (value) => {
+  const birthDate = new Date(value);
+  if (Number.isNaN(birthDate.getTime())) return null;
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
+  if (today < birthdayThisYear) age -= 1;
+  return Math.max(age, 0);
+};
+
 export default function EventList({ events, selectedId, onSelect, onOpenWorkspace, onEdit, onDelete }) {
   if (!events.length) {
     return (
@@ -16,6 +26,8 @@ export default function EventList({ events, selectedId, onSelect, onOpenWorkspac
       {events.map((event) => (
         (() => {
           const activities = event.activities || [];
+          const isBirthday = String(event.type || '').toLowerCase() === 'birthday';
+          const birthdayAge = isBirthday ? getBirthdayAge(event.date) : null;
           return (
         <div
           key={event.id || event.firestoreId}
@@ -30,6 +42,7 @@ export default function EventList({ events, selectedId, onSelect, onOpenWorkspac
               <strong style={styles.eventName}>{event.name}</strong>
               <div style={styles.meta}><CalendarDays size={13} /> {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
               <div style={styles.meta}>🏷 {event.type === 'Other' ? event.customType || 'Other' : event.type}</div>
+              {birthdayAge !== null ? <div className="event-age" style={styles.meta}>Age: {birthdayAge} years</div> : null}
             </div>
           </button>
 
