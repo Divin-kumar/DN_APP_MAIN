@@ -146,6 +146,7 @@ export default function Settings() {
     },
   });
   const [backupMessage, setBackupMessage] = useState('');
+  const [openSection, setOpenSection] = useState(null);
   const [showPlaceholderReference, setShowPlaceholderReference] = useState(false);
   const [copiedPlaceholder, setCopiedPlaceholder] = useState('');
 
@@ -375,6 +376,302 @@ export default function Settings() {
     window.location.reload();
   };
 
+  const toggleSection = (section) => {
+    setOpenSection((current) => (current === section ? null : section));
+  };
+
+  const renderProfileSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
+    </div>
+  );
+
+  const renderAdminValuesSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-admin-grid">
+        <label className="settings-input-block">
+          <span>Event types</span>
+          <ValueListEditor label="event type" value={eventTypes} onChange={setEventTypes} />
+        </label>
+
+        <label className="settings-input-block">
+          <span>Income types</span>
+          <ValueListEditor label="income type" value={incomeTypes} onChange={setIncomeTypes} />
+        </label>
+
+        <label className="settings-input-block">
+          <span>Expense categories</span>
+          <ValueListEditor label="expense category" value={expenseCategories} onChange={setExpenseCategories} />
+        </label>
+      </div>
+
+      <div className="settings-actions">
+        <button type="button" className="settings-primary-button" onClick={saveAdminValues}>Save values</button>
+        <button type="button" className="settings-secondary-button" onClick={resetAdminValues}>Reset defaults</button>
+      </div>
+    </div>
+  );
+
+  const renderGreetingCardsSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-greeting-panel">
+        <div className="settings-placeholder-card">
+          <button type="button" className="settings-placeholder-toggle" onClick={() => setShowPlaceholderReference((current) => !current)}>
+            <span>{showPlaceholderReference ? '▼' : '▶'} Supported Placeholders</span>
+            <span>{showPlaceholderReference ? 'Hide' : 'Show'}</span>
+          </button>
+
+          {showPlaceholderReference ? (
+            <div className="settings-placeholder-body">
+              <div className="settings-placeholder-grid">
+                {placeholderDefinitions.map((placeholder) => (
+                  <div key={placeholder.token} className="settings-placeholder-item">
+                    <div className="settings-placeholder-header">
+                      <strong>{placeholder.token}</strong>
+                      <button type="button" className="settings-copy-placeholder" onClick={() => handleCopyPlaceholder(placeholder.token)}>
+                        {copiedPlaceholder === placeholder.token ? 'Copied' : 'Copy'}
+                      </button>
+                    </div>
+                    <span>{placeholder.detail}</span>
+                    <small>Source: {placeholder.source}</small>
+                    <small>Example: {placeholder.sample}</small>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : null}
+        </div>
+
+        <div className="settings-greeting-toolbar">
+          <label className="settings-input-block">
+            <span>Add event type</span>
+            <select value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
+              <option value="">Select an event type</option>
+              {(adminValues.eventTypes || []).filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
+                <option key={option} value={option}>{option}</option>
+              ))}
+            </select>
+          </label>
+          <button type="button" className="settings-primary-button" onClick={addGreetingType} disabled={!selectedGreetingType}>Add greeting type</button>
+        </div>
+
+        <div className="settings-greeting-list">
+          {greetingEnabledTypes.length ? greetingEnabledTypes.map((eventType) => (
+            <div key={eventType} className="settings-greeting-card">
+              <div className="settings-greeting-card-header">
+                <label className="settings-input-block settings-greeting-select-wrap">
+                  <span>Event type</span>
+                  <select value={eventType} onChange={(event) => handleGreetingTypeChange(eventType, event.target.value)}>
+                    {(adminValues.eventTypes || []).map((option) => (
+                      <option key={option} value={option}>{option}</option>
+                    ))}
+                  </select>
+                </label>
+                <button type="button" className="settings-greeting-remove" onClick={() => removeGreetingType(eventType)} aria-label={`Remove ${eventType}`}>
+                  Remove Type
+                </button>
+              </div>
+
+              <label className="settings-input-block">
+                <span>Greeting template</span>
+                <textarea
+                  rows={4}
+                  value={greetingTemplates[eventType] || ''}
+                  onChange={(event) => setGreetingTemplates((current) => ({ ...current, [eventType]: event.target.value }))}
+                  placeholder="Happy {ordinal} Birthday {name} 🎂"
+                />
+              </label>
+
+              <div className="settings-preview-box">
+                <div className="settings-preview-label">Live Preview</div>
+                <div className="settings-preview-text">{getPreviewText(eventType, greetingTemplates[eventType])}</div>
+              </div>
+            </div>
+          )) : (
+            <div className="settings-greeting-empty">No greeting-enabled event types yet. Add one from the dropdown above.</div>
+          )}
+        </div>
+      </div>
+
+      <div className="settings-actions">
+        <button type="button" className="settings-primary-button" onClick={saveGreetingSettings}>Save greeting cards</button>
+      </div>
+    </div>
+  );
+
+  const renderDefaultsSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-admin-grid">
+        <label className="settings-input-block">
+          <span>Default currency</span>
+          <select value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
+            <option value="INR">INR (₹)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+            <option value="GBP">GBP (£)</option>
+          </select>
+        </label>
+
+        <label className="settings-input-block">
+          <span>Default dashboard view</span>
+          <select value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
+            <option value="overview">Overview</option>
+            <option value="events">Events</option>
+            <option value="financials">Financials</option>
+          </select>
+        </label>
+
+        <label className="settings-input-block">
+          <span>Default event type</span>
+          <select value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
+            {adminValues.eventTypes.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="settings-input-block">
+          <span>Default income type</span>
+          <select value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
+            {adminValues.incomeTypes.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+
+        <label className="settings-input-block">
+          <span>Default expense category</span>
+          <select value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
+            {adminValues.expenseCategories.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+          </select>
+        </label>
+      </div>
+
+      <div className="settings-actions">
+        <button type="button" className="settings-primary-button" onClick={savePreferences}>Save preferences</button>
+        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
+      </div>
+    </div>
+  );
+
+  const renderNotificationsSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-admin-grid">
+        <button
+          type="button"
+          className="settings-choice"
+          onClick={() => setPrefForm((current) => ({
+            ...current,
+            notifications: {
+              ...current.notifications,
+              eventReminders: !current.notifications.eventReminders,
+            },
+          }))}
+          aria-pressed={prefForm.notifications.eventReminders}
+        >
+          <span className="settings-choice-icon"><Bell size={17} /></span>
+          <span><strong>Event reminders</strong><small>Get nudges before key dates and activities.</small></span>
+          <span className={`settings-switch ${prefForm.notifications.eventReminders ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
+        </button>
+
+        <button
+          type="button"
+          className="settings-choice"
+          onClick={() => setPrefForm((current) => ({
+            ...current,
+            notifications: {
+              ...current.notifications,
+              monthlySummary: !current.notifications.monthlySummary,
+            },
+          }))}
+          aria-pressed={prefForm.notifications.monthlySummary}
+        >
+          <span className="settings-choice-icon"><Clock3 size={17} /></span>
+          <span><strong>Monthly summary</strong><small>Receive a quick recap of spending and key events.</small></span>
+          <span className={`settings-switch ${prefForm.notifications.monthlySummary ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
+        </button>
+
+        <button
+          type="button"
+          className="settings-choice"
+          onClick={() => setPrefForm((current) => ({
+            ...current,
+            notifications: {
+              ...current.notifications,
+              budgetAlerts: !current.notifications.budgetAlerts,
+            },
+          }))}
+          aria-pressed={prefForm.notifications.budgetAlerts}
+        >
+          <span className="settings-choice-icon"><Database size={17} /></span>
+          <span><strong>Budget alerts</strong><small>Warn when your monthly spend is trending high.</small></span>
+          <span className={`settings-switch ${prefForm.notifications.budgetAlerts ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
+        </button>
+      </div>
+
+      <div className="settings-admin-grid">
+        <label className="settings-input-block">
+          <span>Daily reminder time</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="9:00 AM"
+            value={prefForm.notifications.reminderTime}
+            onChange={(event) => {
+              const nextValue = event.target.value;
+              setPrefForm((current) => ({
+                ...current,
+                notifications: {
+                  ...current.notifications,
+                  reminderTime: normalizeReminderTime(nextValue),
+                },
+              }));
+            }}
+            title="Enter a time like 9:00 AM or 21:00"
+          />
+        </label>
+      </div>
+
+      <div className="settings-actions">
+        <button type="button" className="settings-primary-button" onClick={() => setPreferences(prefForm)}>Save notifications</button>
+        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
+      </div>
+    </div>
+  );
+
+  const renderDataSection = () => (
+    <div className="settings-accordion-body">
+      <div className="settings-admin-grid">
+        <div className="settings-input-block">
+          <span>Local backup</span>
+          <p className="settings-helper">Export your current local LifeHub data as a JSON file or restore it later on the same device.</p>
+        </div>
+      </div>
+
+      <div className="settings-actions">
+        <button type="button" className="settings-primary-button" onClick={exportBackup}><Download size={15} /> Export backup</button>
+        <label className="settings-secondary-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+          <Upload size={15} /> Restore backup
+          <input type="file" accept="application/json" onChange={importBackup} style={{ display: 'none' }} />
+        </label>
+        <button type="button" className="settings-secondary-button" onClick={clearLocalData}><Trash2 size={15} /> Clear local data</button>
+      </div>
+
+      {backupMessage ? <p className="settings-message">{backupMessage}</p> : null}
+    </div>
+  );
+
+  const sections = [
+    { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
+    { key: 'admin-values', heading: 'Admin Values', description: 'Configure event types, income types and expense categories.', icon: ListChecks, body: renderAdminValuesSection() },
+    { key: 'greeting-cards', heading: 'Greeting Cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
+    { key: 'defaults', heading: 'Defaults & Preferences', description: 'Configure default behavior and application settings.', icon: Settings2, body: renderDefaultsSection() },
+    { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
+    { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
+  ];
+
   return (
     <div className="settings-page feature-page">
       <div className="settings-heading">
@@ -382,290 +679,24 @@ export default function Settings() {
         <p>Keep LifeHub comfortable for the way you plan and remember.</p>
       </div>
 
-      <section className="settings-section">
-        <div className="settings-section-heading"><UserCircle size={18} /><div><h3>Profile</h3><p>Your current session</p></div></div>
-        <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
-      </section>
-
-
-      <section className="settings-section">
-        <div className="settings-section-heading"><Settings2 size={18} /><div><h3>Defaults & preferences</h3><p>Choose the defaults that should feel natural every time you create a new record.</p></div></div>
-
-        <div className="settings-admin-grid">
-          <label className="settings-input-block">
-            <span>Default currency</span>
-            <select value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
-              <option value="INR">INR (₹)</option>
-              <option value="USD">USD ($)</option>
-              <option value="EUR">EUR (€)</option>
-              <option value="GBP">GBP (£)</option>
-            </select>
-          </label>
-
-          <label className="settings-input-block">
-            <span>Default dashboard view</span>
-            <select value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
-              <option value="overview">Overview</option>
-              <option value="events">Events</option>
-              <option value="financials">Financials</option>
-            </select>
-          </label>
-
-          <label className="settings-input-block">
-            <span>Default event type</span>
-            <select value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
-              {adminValues.eventTypes.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="settings-input-block">
-            <span>Default income type</span>
-            <select value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
-              {adminValues.incomeTypes.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
-
-          <label className="settings-input-block">
-            <span>Default expense category</span>
-            <select value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
-              {adminValues.expenseCategories.map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </select>
-          </label>
-        </div>
-
-        <div className="settings-actions">
-          <button type="button" className="settings-primary-button" onClick={savePreferences}>Save preferences</button>
-          <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
-        </div>
-      </section>
-
-      <section className="settings-section">
-        <div className="settings-section-heading"><Database size={18} /><div><h3>Data & backup</h3><p>Protect your personal records and restore them whenever needed.</p></div></div>
-
-        <div className="settings-admin-grid">
-          <div className="settings-input-block">
-            <span>Local backup</span>
-            <p className="settings-helper">Export your current local LifeHub data as a JSON file or restore it later on the same device.</p>
-          </div>
-        </div>
-
-        <div className="settings-actions">
-          <button type="button" className="settings-primary-button" onClick={exportBackup}><Download size={15} /> Export backup</button>
-          <label className="settings-secondary-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-            <Upload size={15} /> Restore backup
-            <input type="file" accept="application/json" onChange={importBackup} style={{ display: 'none' }} />
-          </label>
-          <button type="button" className="settings-secondary-button" onClick={clearLocalData}><Trash2 size={15} /> Clear local data</button>
-        </div>
-
-        {backupMessage ? <p className="settings-message">{backupMessage}</p> : null}
-      </section>
-
-      <section className="settings-section">
-        <div className="settings-section-heading"><Bell size={18} /><div><h3>Greeting Cards</h3><p>Build premium, event-specific greetings and keep them aligned with your admin event types.</p></div></div>
-
-        <div className="settings-greeting-panel">
-          <div className="settings-placeholder-card">
-            <button type="button" className="settings-placeholder-toggle" onClick={() => setShowPlaceholderReference((current) => !current)}>
-              <span>{showPlaceholderReference ? '▼' : '▶'} Placeholder Reference</span>
-              <span>{showPlaceholderReference ? 'Hide' : 'Show'}</span>
+      {sections.map(({ key, heading, description, icon: Icon, body }) => {
+        const isOpen = openSection === key;
+        return (
+          <section key={key} className="settings-section">
+            <button type="button" className="settings-accordion-toggle" onClick={() => toggleSection(key)} aria-expanded={isOpen}>
+              <span className="settings-accordion-header-main">
+                <span className="settings-accordion-icon"><Icon size={18} /></span>
+                <span className="settings-accordion-text">
+                  <strong>{heading}</strong>
+                  <small>{description}</small>
+                </span>
+              </span>
+              <span className="settings-accordion-indicator">{isOpen ? '−' : '+'}</span>
             </button>
-
-            {showPlaceholderReference ? (
-              <div className="settings-placeholder-body">
-                <div className="settings-placeholder-grid">
-                  {placeholderDefinitions.map((placeholder) => (
-                    <div key={placeholder.token} className="settings-placeholder-item">
-                      <div className="settings-placeholder-header">
-                        <strong>{placeholder.token}</strong>
-                        <button type="button" className="settings-copy-placeholder" onClick={() => handleCopyPlaceholder(placeholder.token)}>
-                          {copiedPlaceholder === placeholder.token ? 'Copied' : 'Copy'}
-                        </button>
-                      </div>
-                      <span>{placeholder.detail}</span>
-                      <small>Source: {placeholder.source}</small>
-                      <small>Example: {placeholder.sample}</small>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <div className="settings-greeting-toolbar">
-            <label className="settings-input-block">
-              <span>Add event type</span>
-              <select value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
-                <option value="">Select an event type</option>
-                {(adminValues.eventTypes || []).filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
-                  <option key={option} value={option}>{option}</option>
-                ))}
-              </select>
-            </label>
-            <button type="button" className="settings-primary-button" onClick={addGreetingType} disabled={!selectedGreetingType}>Add greeting type</button>
-          </div>
-
-          <div className="settings-greeting-list">
-            {greetingEnabledTypes.length ? greetingEnabledTypes.map((eventType) => (
-              <div key={eventType} className="settings-greeting-card">
-                <div className="settings-greeting-card-header">
-                  <label className="settings-input-block settings-greeting-select-wrap">
-                    <span>Event type</span>
-                    <select value={eventType} onChange={(event) => handleGreetingTypeChange(eventType, event.target.value)}>
-                      {(adminValues.eventTypes || []).map((option) => (
-                        <option key={option} value={option}>{option}</option>
-                      ))}
-                    </select>
-                  </label>
-                  <button type="button" className="settings-greeting-remove" onClick={() => removeGreetingType(eventType)} aria-label={`Remove ${eventType}`}>
-                    Remove Type
-                  </button>
-                </div>
-
-                <label className="settings-input-block">
-                  <span>Greeting template</span>
-                  <textarea
-                    rows={4}
-                    value={greetingTemplates[eventType] || ''}
-                    onChange={(event) => setGreetingTemplates((current) => ({ ...current, [eventType]: event.target.value }))}
-                    placeholder="Happy {ordinal} Birthday {name} 🎂"
-                  />
-                </label>
-
-                <div className="settings-preview-box">
-                  <div className="settings-preview-label">Live Preview</div>
-                  <div className="settings-preview-text">{getPreviewText(eventType, greetingTemplates[eventType])}</div>
-                </div>
-              </div>
-            )) : (
-              <div className="settings-greeting-empty">No greeting-enabled event types yet. Add one from the dropdown above.</div>
-            )}
-          </div>
-        </div>
-
-        <div className="settings-actions">
-          <button type="button" className="settings-primary-button" onClick={saveGreetingSettings}>Save greeting cards</button>
-        </div>
-      </section>
-
-
-      <section className="settings-section">
-        <div className="settings-section-heading"><Bell size={18} /><div><h3>Notifications</h3><p>Set your reminder habits and quiet hours for a calmer planning flow.</p></div></div>
-
-        <div className="settings-admin-grid">
-          <button
-            type="button"
-            className="settings-choice"
-            onClick={() => setPrefForm((current) => ({
-              ...current,
-              notifications: {
-                ...current.notifications,
-                eventReminders: !current.notifications.eventReminders,
-              },
-            }))}
-            aria-pressed={prefForm.notifications.eventReminders}
-          >
-            <span className="settings-choice-icon"><Bell size={17} /></span>
-            <span><strong>Event reminders</strong><small>Get nudges before key dates and activities.</small></span>
-            <span className={`settings-switch ${prefForm.notifications.eventReminders ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-          </button>
-
-          <button
-            type="button"
-            className="settings-choice"
-            onClick={() => setPrefForm((current) => ({
-              ...current,
-              notifications: {
-                ...current.notifications,
-                monthlySummary: !current.notifications.monthlySummary,
-              },
-            }))}
-            aria-pressed={prefForm.notifications.monthlySummary}
-          >
-            <span className="settings-choice-icon"><Clock3 size={17} /></span>
-            <span><strong>Monthly summary</strong><small>Receive a quick recap of spending and key events.</small></span>
-            <span className={`settings-switch ${prefForm.notifications.monthlySummary ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-          </button>
-
-          <button
-            type="button"
-            className="settings-choice"
-            onClick={() => setPrefForm((current) => ({
-              ...current,
-              notifications: {
-                ...current.notifications,
-                budgetAlerts: !current.notifications.budgetAlerts,
-              },
-            }))}
-            aria-pressed={prefForm.notifications.budgetAlerts}
-          >
-            <span className="settings-choice-icon"><Database size={17} /></span>
-            <span><strong>Budget alerts</strong><small>Warn when your monthly spend is trending high.</small></span>
-            <span className={`settings-switch ${prefForm.notifications.budgetAlerts ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-          </button>
-        </div>
-
-        <div className="settings-admin-grid">
-          <label className="settings-input-block">
-            <span>Daily reminder time</span>
-            <input
-              type="text"
-              inputMode="numeric"
-              placeholder="9:00 AM"
-              value={prefForm.notifications.reminderTime}
-              onChange={(event) => {
-                const nextValue = event.target.value;
-                setPrefForm((current) => ({
-                  ...current,
-                  notifications: {
-                    ...current.notifications,
-                    reminderTime: normalizeReminderTime(nextValue),
-                  },
-                }));
-              }}
-              title="Enter a time like 9:00 AM or 21:00"
-            />
-          </label>
-
-        </div>
-
-        <div className="settings-actions">
-          <button type="button" className="settings-primary-button" onClick={() => setPreferences(prefForm)}>Save notifications</button>
-          <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
-        </div>
-      </section>
-
-      <section className="settings-section">
-        <div className="settings-section-heading"><ListChecks size={18} /><div><h3>Admin values</h3><p>Customize the options used across the app. Add values as a comma-separated list.</p></div></div>
-
-        <div className="settings-admin-grid">
-          <label className="settings-input-block">
-            <span>Event types</span>
-            <ValueListEditor label="event type" value={eventTypes} onChange={setEventTypes} />
-          </label>
-
-          <label className="settings-input-block">
-            <span>Income types</span>
-            <ValueListEditor label="income type" value={incomeTypes} onChange={setIncomeTypes} />
-          </label>
-
-          <label className="settings-input-block">
-            <span>Expense categories</span>
-            <ValueListEditor label="expense category" value={expenseCategories} onChange={setExpenseCategories} />
-          </label>
-        </div>
-
-        <div className="settings-actions">
-          <button type="button" className="settings-primary-button" onClick={saveAdminValues}>Save values</button>
-          <button type="button" className="settings-secondary-button" onClick={resetAdminValues}>Reset defaults</button>
-        </div>
-      </section>
+            {isOpen ? body : null}
+          </section>
+        );
+      })}
     </div>
   );
 }
