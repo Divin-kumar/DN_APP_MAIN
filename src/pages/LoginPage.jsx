@@ -37,7 +37,7 @@ export default function LoginPage() {
   return (
     <div style={styles.page}>
       <div style={styles.card}>
-        <h1 style={styles.title}>LifeHub</h1>
+        <h1 style={styles.title}>DN</h1>
         <p style={styles.subtitle}>Sign in to continue</p>
 
         <button style={styles.primaryButton} onClick={handleGoogleSignIn}>
@@ -58,49 +58,53 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    background: 'linear-gradient(135deg, #e8f5ec 0%, #f8fbf8 100%)',
-    padding: '16px',
+    background: 'radial-gradient(circle at top, rgba(30,134,109,0.12), transparent 30%), linear-gradient(135deg, #edf7f2 0%, #f8fbf8 100%)',
+    padding: '20px',
   },
   card: {
     width: '100%',
     maxWidth: '420px',
-    background: '#ffffff',
-    borderRadius: '20px',
-    boxShadow: '0 18px 50px rgba(25, 48, 35, 0.12)',
-    padding: '32px 24px',
+    background: 'rgba(255,255,255,0.84)',
+    border: '1px solid rgba(16, 51, 42, 0.08)',
+    backdropFilter: 'blur(10px)',
+    borderRadius: '24px',
+    boxShadow: '0 20px 55px rgba(25, 48, 35, 0.12)',
+    padding: '28px 22px',
     textAlign: 'center',
   },
   title: {
     margin: '0 0 8px',
-    fontSize: '2.1rem',
+    fontSize: 'clamp(2rem, 5vw, 2.5rem)',
     color: '#1d3f2c',
+    letterSpacing: '-0.04em',
   },
   subtitle: {
     margin: '0 0 24px',
     color: '#4b6357',
-    fontSize: '1rem',
+    fontSize: '0.96rem',
   },
   primaryButton: {
     width: '100%',
     border: 'none',
-    borderRadius: '12px',
+    borderRadius: '14px',
     padding: '14px 18px',
-    background: '#2d6a4f',
+    background: 'linear-gradient(135deg, #2d6a4f 0%, #1e866d 100%)',
     color: '#fff',
-    fontSize: '1rem',
-    fontWeight: 600,
+    fontSize: '0.98rem',
+    fontWeight: 700,
     cursor: 'pointer',
     marginBottom: '12px',
+    boxShadow: '0 12px 26px rgba(30, 134, 109, 0.2)',
   },
   secondaryButton: {
     width: '100%',
     border: '1px solid #d4e4d9',
-    borderRadius: '12px',
+    borderRadius: '14px',
     padding: '14px 18px',
     background: '#f6faf7',
     color: '#1d3f2c',
-    fontSize: '1rem',
-    fontWeight: 600,
+    fontSize: '0.98rem',
+    fontWeight: 700,
     cursor: 'pointer',
   },
 };

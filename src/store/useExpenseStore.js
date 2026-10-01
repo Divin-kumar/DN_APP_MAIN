@@ -9,29 +9,54 @@ import {
   saveGuestExpense,
   updateExpense,
 } from '../services/expenseService';
+import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 
-const useExpenseStore = create((set, get) => ({
+const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+
+const useExpenseStore = create((set, get) => {
+  const pendingLoads = new Map();
+
+  return ({
   expenses: [],
   loading: false,
   error: null,
+  loadedFor: null,
+  activeLoadKey: null,
 
-  setExpenses: (items) => set({ expenses: items, loading: false, error: null }),
+  setExpenses: (items) => set({ expenses: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
   loadExpenses: async (uid, isGuest) => {
-    set({ loading: true, error: null });
+    const loadKey = getLoadKey(uid, isGuest);
+    if (get().loadedFor === loadKey) return get().expenses;
+    if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
-    try {
-      const items = isGuest
-        ? getGuestExpenses()
-        : await getExpensesForUser(uid);
+    set({ loading: true, error: null, activeLoadKey: loadKey });
 
-      set({ expenses: items, loading: false, error: null });
-      return items;
-    } catch (error) {
-      console.error('Failed to load expenses:', error);
-      set({ loading: false, error: 'Unable to load expenses.' });
-      return [];
-    }
+    const request = Promise.resolve().then(async () => {
+      try {
+        const sampleData = getActiveSampleData(uid);
+        if (sampleData) {
+          if (get().activeLoadKey === loadKey) set({ expenses: sampleData.expenses, loading: false, error: null, loadedFor: loadKey });
+          return sampleData.expenses;
+        }
+
+        const items = isGuest
+          ? getGuestExpenses()
+          : await getExpensesForUser(uid);
+
+        if (get().activeLoadKey === loadKey) set({ expenses: items, loading: false, error: null, loadedFor: loadKey });
+        return items;
+      } catch (error) {
+        console.error('Failed to load expenses:', error);
+        if (get().activeLoadKey === loadKey) set({ loading: false, error: 'Unable to load expenses.' });
+        return [];
+      } finally {
+        pendingLoads.delete(loadKey);
+      }
+    });
+    pendingLoads.set(loadKey, request);
+
+    return request;
   },
 
   addExpense: async (uid, isGuest, expense) => {
@@ -41,6 +66,14 @@ const useExpenseStore = create((set, get) => ({
       amount: Number(expense.amount || 0),
       date: expense.date || new Date().toISOString().slice(0, 10),
     };
+
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = [normalized, ...sampleData.expenses];
+      saveActiveSampleData({ ...sampleData, expenses: updated });
+      set({ expenses: updated, loading: false });
+      return normalized;
+    }
 
     if (isGuest) {
       const updated = saveGuestExpense(normalized);
@@ -55,6 +88,14 @@ const useExpenseStore = create((set, get) => ({
   },
 
   updateExpenseItem: async (uid, isGuest, expense) => {
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = sampleData.expenses.map((item) => item.id === expense.id ? { ...item, ...expense } : item);
+      saveActiveSampleData({ ...sampleData, expenses: updated });
+      set({ expenses: updated });
+      return expense;
+    }
+
     if (isGuest) {
       const updated = saveGuestExpense(expense);
       set({ expenses: updated });
@@ -76,6 +117,14 @@ const useExpenseStore = create((set, get) => ({
 
     if (!expense) return;
 
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = sampleData.expenses.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
+      saveActiveSampleData({ ...sampleData, expenses: updated });
+      set({ expenses: updated });
+      return;
+    }
+
     if (isGuest) {
       const updated = removeGuestExpense(expenseId);
       set({ expenses: updated });
@@ -88,6 +137,7 @@ const useExpenseStore = create((set, get) => ({
     }
     set({ expenses: current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId) });
   },
-}));
+  });
+});
 
 export default useExpenseStore;

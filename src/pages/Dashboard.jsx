@@ -39,7 +39,7 @@ export default function Dashboard() {
           <button style={styles.menuButton} aria-label="Open navigation">☰</button>
           <div>
             <div style={styles.eyebrow}>Workspace</div>
-            <h1 style={styles.title}>LifeHub</h1>
+            <h1 style={styles.title}>DN</h1>
           </div>
         </div>
 

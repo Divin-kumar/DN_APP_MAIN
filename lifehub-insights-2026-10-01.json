@@ -1,0 +1,297 @@
+{
+  "exportedAt": "2026-10-01T08:54:03.178Z",
+  "overview": {
+    "events": 3,
+    "upcoming": 3,
+    "archived": 0,
+    "activities": 6,
+    "completedActivities": 2,
+    "memories": 3,
+    "attachments": 2,
+    "income": 183019,
+    "expenses": 61912
+  },
+  "events": [
+    {
+      "id": "demo-new-event-0001",
+      "name": "A birthday worth celebrating",
+      "date": "2026-09-17",
+      "type": "Birthday",
+      "customType": "",
+      "recurrence": "yearly",
+      "budget": 12000,
+      "notes": "The light was soft, everyone stayed a little longer, and the day felt exactly like us. Birthday · 2026.",
+      "activities": [
+        {
+          "id": "demo-new-activity-0001",
+          "eventId": "demo-new-event-0001",
+          "title": "Book a table for the celebration",
+          "date": "2026-09-12",
+          "description": "A small next step connected to this life moment.",
+          "completed": true,
+          "completedAt": "2026-09-12T10:30:00.000Z",
+          "priority": "high",
+          "expenses": [],
+          "createdAt": "2026-09-05T03:30:00.000Z"
+        },
+        {
+          "id": "demo-new-activity-0004",
+          "eventId": "demo-new-event-0001",
+          "title": "Call the people we love",
+          "date": "2026-09-15",
+          "description": "",
+          "completed": false,
+          "completedAt": null,
+          "priority": "high",
+          "expenses": [],
+          "createdAt": "2026-09-05T03:30:00.000Z"
+        }
+      ],
+      "memories": [
+        {
+          "id": "demo-new-memory-0001",
+          "title": "The moment everything changed",
+          "body": "The light was soft, everyone stayed a little longer, and the day felt exactly like us.",
+          "kind": "note",
+          "createdAt": "2026-09-17T12:30:00.000Z"
+        }
+      ],
+      "attachments": [
+        {
+          "id": "demo-new-attachment-0001",
+          "name": "001-family-celebration.jpg",
+          "type": "image/jpeg",
+          "size": 180000,
+          "createdAt": "2026-09-17T05:30:00.000Z"
+        }
+      ],
+      "createdAt": "2026-09-17T04:30:00.000Z"
+    },
+    {
+      "id": "demo-new-event-0002",
+      "name": "Our anniversary",
+      "date": "2026-10-08",
+      "type": "Marriage Anniversary",
+      "customType": "",
+      "recurrence": "yearly",
+      "budget": 19823,
+      "notes": "We laughed about it on the way home. It is the sort of small detail that makes this memory ours. Marriage Anniversary · 2026.",
+      "activities": [
+        {
+          "id": "demo-new-activity-0002",
+          "eventId": "demo-new-event-0002",
+          "title": "Choose a thoughtful gift",
+          "date": "2026-10-04",
+          "description": "",
+          "completed": true,
+          "completedAt": "2026-10-01T10:30:00.000Z",
+          "priority": "medium",
+          "expenses": [],
+          "createdAt": "2026-09-26T03:30:00.000Z"
+        },
+        {
+          "id": "demo-new-activity-0005",
+          "eventId": "demo-new-event-0002",
+          "title": "Confirm the travel booking",
+          "date": "2026-10-07",
+          "description": "A small next step connected to this life moment.",
+          "completed": false,
+          "completedAt": null,
+          "priority": "medium",
+          "expenses": [],
+          "createdAt": "2026-09-26T03:30:00.000Z"
+        }
+      ],
+      "memories": [
+        {
+          "id": "demo-new-memory-0002",
+          "title": "A detail I want to remember",
+          "body": "We laughed about it on the way home. It is the sort of small detail that makes this memory ours.",
+          "kind": "story",
+          "createdAt": "2026-10-01T12:30:00.000Z"
+        }
+      ],
+      "attachments": [
+        {
+          "id": "demo-new-attachment-0002",
+          "name": "002-booking-confirmation.pdf",
+          "type": "application/pdf",
+          "size": 277531,
+          "createdAt": "2026-10-01T05:30:00.000Z"
+        }
+      ],
+      "createdAt": "2026-09-08T04:30:00.000Z"
+    },
+    {
+      "id": "demo-new-event-0003",
+      "name": "A new chapter together",
+      "date": "2026-10-29",
+      "type": "Wedding",
+      "customType": "",
+      "recurrence": "none",
+      "budget": 27646,
+      "notes": "A milestone made more meaningful by the people who showed up and shared it with us. Wedding · 2026.",
+      "activities": [
+        {
+          "id": "demo-new-activity-0003",
+          "eventId": "demo-new-event-0003",
+          "title": "Save the photographs",
+          "date": "2026-10-26",
+          "description": "",
+          "completed": false,
+          "completedAt": null,
+          "priority": "low",
+          "expenses": [],
+          "createdAt": "2026-10-01T03:30:00.000Z"
+        },
+        {
+          "id": "demo-new-activity-0006",
+          "eventId": "demo-new-event-0003",
+          "title": "Collect the important documents",
+          "date": "2026-10-29",
+          "description": "",
+          "completed": false,
+          "completedAt": null,
+          "priority": "low",
+          "expenses": [],
+          "createdAt": "2026-10-01T03:30:00.000Z"
+        }
+      ],
+      "memories": [
+        {
+          "id": "demo-new-memory-0003",
+          "title": "A story from that day",
+          "body": "A milestone made more meaningful by the people who showed up and shared it with us.",
+          "kind": "reflection",
+          "createdAt": "2026-10-01T12:30:00.000Z"
+        }
+      ],
+      "attachments": [],
+      "createdAt": "2026-08-29T04:30:00.000Z"
+    }
+  ],
+  "incomes": [
+    {
+      "id": "demo-new-income-0001",
+      "name": "Salary · annual",
+      "type": "Salary",
+      "amount": 72000,
+      "date": "2026-10-01",
+      "createdAt": "2026-10-01T02:30:00.000Z"
+    },
+    {
+      "id": "demo-new-income-0002",
+      "name": "Bonus",
+      "type": "Bonus",
+      "amount": 98173,
+      "date": "2026-05-02",
+      "createdAt": "2026-05-02T02:30:00.000Z"
+    },
+    {
+      "id": "demo-new-income-0003",
+      "name": "Interest",
+      "type": "Interest",
+      "amount": 12846,
+      "date": "2025-12-03",
+      "createdAt": "2025-12-03T02:30:00.000Z"
+    }
+  ],
+  "expenses": [
+    {
+      "id": "demo-new-expense-0001",
+      "name": "Weekend accommodation",
+      "amount": 850,
+      "category": "Travel",
+      "description": "Sample travel expense linked to A birthday worth celebrating.",
+      "date": "2026-10-01",
+      "createdAt": "2026-10-01T08:30:00.000Z",
+      "eventId": "demo-new-event-0001",
+      "activityId": "demo-new-activity-0001",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0002",
+      "name": "Family dinner",
+      "amount": 1529,
+      "category": "Food",
+      "description": "Sample food expense linked to Our anniversary.",
+      "date": "2026-09-02",
+      "createdAt": "2026-09-02T08:30:00.000Z",
+      "eventId": "demo-new-event-0002",
+      "activityId": "demo-new-activity-0005",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0003",
+      "name": "Thoughtful gift",
+      "amount": 2958,
+      "category": "Gifts",
+      "description": "Sample gifts expense linked to A new chapter together.",
+      "date": "2026-08-03",
+      "createdAt": "2026-08-03T08:30:00.000Z",
+      "eventId": "demo-new-event-0003",
+      "activityId": "demo-new-activity-0003",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0004",
+      "name": "Annual health visit",
+      "amount": 6637,
+      "category": "Health",
+      "description": "Sample health expense linked to A birthday worth celebrating.",
+      "date": "2026-07-04",
+      "createdAt": "2026-07-04T08:30:00.000Z",
+      "eventId": "demo-new-event-0001",
+      "activityId": "demo-new-activity-0004",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0005",
+      "name": "Policy renewal",
+      "amount": 12316,
+      "category": "Insurance",
+      "description": "Sample insurance expense linked to Our anniversary.",
+      "date": "2026-06-05",
+      "createdAt": "2026-06-05T08:30:00.000Z",
+      "eventId": "demo-new-event-0002",
+      "activityId": "demo-new-activity-0002",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0006",
+      "name": "Course materials",
+      "amount": 24895,
+      "category": "Education",
+      "description": "Sample education expense linked to A new chapter together.",
+      "date": "2026-05-06",
+      "createdAt": "2026-05-06T08:30:00.000Z",
+      "eventId": "demo-new-event-0003",
+      "activityId": "demo-new-activity-0006",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0007",
+      "name": "Home supplies",
+      "amount": 4374,
+      "category": "Home",
+      "description": "Sample home expense linked to A birthday worth celebrating.",
+      "date": "2026-04-07",
+      "createdAt": "2026-04-07T08:30:00.000Z",
+      "eventId": "demo-new-event-0001",
+      "activityId": "demo-new-activity-0001",
+      "source": "event-activity"
+    },
+    {
+      "id": "demo-new-expense-0008",
+      "name": "Vehicle service",
+      "amount": 8353,
+      "category": "Vehicle",
+      "description": "Sample vehicle expense linked to Our anniversary.",
+      "date": "2026-03-08",
+      "createdAt": "2026-03-08T08:30:00.000Z",
+      "eventId": "demo-new-event-0002",
+      "activityId": "demo-new-activity-0005",
+      "source": "event-activity"
+    }
+  ]
+}

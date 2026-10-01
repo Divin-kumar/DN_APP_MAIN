@@ -1,8 +1,8 @@
 /* Income management page with filtering, summaries, and persisted history. */
 import { useEffect, useMemo, useState } from 'react';
 import IncomeForm from '../components/income/IncomeForm';
+import DropdownSelect from '../components/common/DropdownSelect';
 import IncomeList from '../components/income/IncomeList';
-import IncomeSummary from '../components/income/IncomeSummary';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -33,6 +33,7 @@ export default function Income() {
       return matchesSearch && matchesType;
     });
   }, [incomes, search, typeFilter]);
+  const incomeTypes = useMemo(() => [...new Set([...incomes.map((income) => income.type), 'Salary', 'Bonus', 'Interest', 'Investment returns', 'Freelance', 'Other'].filter(Boolean))].sort(), [incomes]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -74,49 +75,21 @@ export default function Income() {
   };
 
   return (
-    <div className="feature-page" style={styles.page}>
-      <div className="feature-header" style={styles.headerRow}>
-        <div>
-          <span style={styles.eyebrow}>Cash flow</span>
-          <h2 style={styles.title}>Income</h2>
-        </div>
-        <button type="button" className="primaryButton" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }} style={styles.primaryButton}>Add income</button>
+    <div className="financial-module-page">
+      <header className="financial-module-heading">
+        <h3>Income</h3>
+        <button type="button" className="primaryButton" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }}>Add income</button>
+      </header>
+      <div className="financial-module-toolbar">
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search income" aria-label="Search income" />
+        <DropdownSelect value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Filter income type">
+          <option value="all">All types</option>
+          {incomeTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+        </DropdownSelect>
       </div>
-
-      <IncomeSummary incomes={filteredIncomes} />
-
-      <div className="feature-content-grid" style={styles.contentGrid}>
-        <div className="feature-card" style={{ ...styles.card, gridColumn: '1 / -1' }}>
-          <h3 style={styles.sectionTitle}>Income History</h3>
-
-          <div style={styles.filters}>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or type"
-              style={styles.input}
-            />
-
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              style={styles.input}
-            >
-              <option value="all">All types</option>
-              <option value="Salary">Salary</option>
-              <option value="Freelance">Freelance</option>
-              <option value="Bonus">Bonus</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          {loading ? (
-            <div style={styles.loading}>Loading income entries...</div>
-          ) : (
-            <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />
-          )}
-        </div>
-      </div>
+      <section className="financial-module-history" aria-label="Income history">
+        {loading ? <p className="financial-empty-copy">Loading income…</p> : <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />}
+      </section>
 
       {incomeDialogOpen ? (
         <ModalDialog title={editingIncome ? 'Edit income' : 'Add income'} onClose={() => { setIncomeDialogOpen(false); setEditingIncome(null); }}>

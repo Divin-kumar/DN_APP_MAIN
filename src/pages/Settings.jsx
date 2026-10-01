@@ -1,6 +1,14 @@
-import { UserCircle, ListChecks, Settings2, Database, Download, Upload, Trash2, Bell, Clock3 } from 'lucide-react';
+import { UserCircle, ListChecks, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+import ModalDialog from '../components/common/ModalDialog';
+import DropdownSelect from '../components/common/DropdownSelect';
+import useEventStore from '../store/useEventStore';
+import useExpenseStore from '../store/useExpenseStore';
+import useIncomeStore from '../store/useIncomeStore';
+import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
+import { downloadBlob } from '../utils/download';
 
 const normalizeList = (value) =>
   value
@@ -93,6 +101,7 @@ const normalizeReminderTime = (value = '') => {
 };
 
 export default function Settings() {
+  const location = useLocation();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -102,6 +111,7 @@ export default function Settings() {
   const resetAdminValues = useAppStore((state) => state.resetAdminValues);
   const setPreferences = useAppStore((state) => state.setPreferences);
   const resetPreferences = useAppStore((state) => state.resetPreferences);
+  const setGuestMode = useAppStore((state) => state.setGuestMode);
   const profileName = user?.displayName || user?.email || 'Guest';
 
   const [eventTypes, setEventTypes] = useState(adminValues.eventTypes.join(', '));
@@ -114,6 +124,7 @@ export default function Settings() {
       : defaultGreetingEnabledTypes;
     return enabled.filter((type) => (adminValues.eventTypes || []).includes(type)).length ? enabled.filter((type) => (adminValues.eventTypes || []).includes(type)) : [...defaultGreetingEnabledTypes];
   });
+  const [activeGreetingType, setActiveGreetingType] = useState(() => greetingEnabledTypes[0] || '');
   const [selectedGreetingType, setSelectedGreetingType] = useState(() => {
     const options = (adminValues.eventTypes || []).filter((type) => !defaultGreetingEnabledTypes.includes(type) || !greetingEnabledTypes.includes(type));
     return options[0] || '';
@@ -147,6 +158,21 @@ export default function Settings() {
   });
   const [backupMessage, setBackupMessage] = useState('');
   const [openSection, setOpenSection] = useState(null);
+  const [confirmClearData, setConfirmClearData] = useState(false);
+  const [theme, setTheme] = useState(preferences.theme || 'light');
+  const [sampleScenario, setSampleScenario] = useState('regular');
+  const [activeSampleScenario, setActiveSampleScenario] = useState(() => getActiveSampleScenario());
+
+  useEffect(() => {
+    const sectionByHash = {
+      '#profile': 'profile',
+      '#preferences': 'defaults',
+      '#theme': 'defaults',
+      '#notifications': 'notifications',
+      '#backup': 'backup',
+    };
+    if (sectionByHash[location.hash]) setOpenSection(sectionByHash[location.hash]);
+  }, [location.hash]);
   const [showPlaceholderReference, setShowPlaceholderReference] = useState(false);
   const [copiedPlaceholder, setCopiedPlaceholder] = useState('');
 
@@ -171,6 +197,11 @@ export default function Settings() {
       return valid.length ? valid : fallback;
     });
   }, [adminValues.eventTypes]);
+
+  useEffect(() => {
+    if (greetingEnabledTypes.includes(activeGreetingType)) return;
+    setActiveGreetingType(greetingEnabledTypes[0] || '');
+  }, [activeGreetingType, greetingEnabledTypes]);
 
   useEffect(() => {
     const enabled = greetingEnabledTypes.length ? greetingEnabledTypes : defaultGreetingEnabledTypes;
@@ -252,6 +283,7 @@ export default function Settings() {
 
   const addGreetingType = () => {
     if (!selectedGreetingType) return;
+    setActiveGreetingType(selectedGreetingType);
     setGreetingEnabledTypes((current) => {
       const next = [...new Set([...current, selectedGreetingType])];
       setGreetingTemplates((templates) => ({
@@ -264,6 +296,7 @@ export default function Settings() {
   };
 
   const handleGreetingTypeChange = (currentType, nextType) => {
+    if (activeGreetingType === currentType) setActiveGreetingType(nextType);
     setGreetingEnabledTypes((current) => current.map((type) => (type === currentType ? nextType : type)));
     setGreetingTemplates((current) => {
       const next = { ...current };
@@ -275,7 +308,9 @@ export default function Settings() {
   };
 
   const removeGreetingType = (eventType) => {
-    setGreetingEnabledTypes((current) => current.filter((type) => type !== eventType));
+    const remainingTypes = greetingEnabledTypes.filter((type) => type !== eventType);
+    setGreetingEnabledTypes(remainingTypes);
+    if (activeGreetingType === eventType) setActiveGreetingType(remainingTypes[0] || '');
     setGreetingTemplates((current) => {
       const next = { ...current };
       delete next[eventType];
@@ -301,6 +336,8 @@ export default function Settings() {
 
   const resetPreferencesForm = () => {
     resetPreferences();
+    setTheme('dark');
+    document.documentElement.dataset.theme = 'dark';
     setPrefForm({
       currency: 'INR',
       dashboardView: 'overview',
@@ -319,7 +356,7 @@ export default function Settings() {
   const exportBackup = () => {
     const snapshot = {
       exportedAt: new Date().toISOString(),
-      app: 'LifeHub',
+      app: 'DN',
       data: {
 
         lifehub_guest_incomes: JSON.parse(localStorage.getItem('lifehub_guest_incomes') || '[]'),
@@ -327,12 +364,7 @@ export default function Settings() {
     };
 
     const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `lifehub-backup-${new Date().toISOString().slice(0, 10)}.json`;
-    link.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `dn-backup-${new Date().toISOString().slice(0, 10)}.json`);
     setBackupMessage('Backup downloaded successfully.');
     showToast('Backup exported', 'success');
   };
@@ -360,20 +392,43 @@ export default function Settings() {
       window.location.reload();
     } catch (error) {
       console.error('Failed to restore backup:', error);
-      setBackupMessage('That file is not a valid LifeHub backup.');
+      setBackupMessage('That file is not a valid DN backup.');
       showToast('Backup restore failed', 'danger');
       event.target.value = '';
     }
   };
 
   const clearLocalData = () => {
-    const confirmed = window.confirm('Clear all local LifeHub data saved in this browser? This action cannot be undone.');
-    if (!confirmed) return;
-
-    ['lifehub_admin_values', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_session_backup'].forEach((key) => localStorage.removeItem(key));
+    ['lifehub_admin_values', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
     setBackupMessage('Local app data cleared. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
+  };
+
+  const loadSampleData = () => {
+    if (user) {
+      showToast('Sign out before loading isolated sample data', 'danger');
+      return;
+    }
+    const data = activateSampleScenario(sampleScenario);
+    localStorage.setItem('lifehub_guest_mode', 'true');
+    setGuestMode(true);
+    useEventStore.getState().setEvents(data.events);
+    useExpenseStore.getState().setExpenses(data.expenses);
+    useIncomeStore.getState().setIncomes(data.incomes);
+    setActiveSampleScenario(sampleScenario);
+    showToast(`${getSampleScenarioLabel(sampleScenario)} sample data ready`, 'success');
+  };
+
+  const clearSampleData = async () => {
+    clearActiveSampleScenario();
+    setActiveSampleScenario(null);
+    await Promise.all([
+      useEventStore.getState().loadEvents(null, isGuest),
+      useExpenseStore.getState().loadExpenses(null, isGuest),
+      useIncomeStore.getState().loadIncomes(null, isGuest),
+    ]);
+    showToast('Sample data removed; your own data is unchanged', 'success');
   };
 
   const toggleSection = (section) => {
@@ -445,52 +500,70 @@ export default function Settings() {
         <div className="settings-greeting-toolbar">
           <label className="settings-input-block">
             <span>Add event type</span>
-            <select value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
+            <DropdownSelect value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
               <option value="">Select an event type</option>
               {(adminValues.eventTypes || []).filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
-            </select>
+            </DropdownSelect>
           </label>
           <button type="button" className="settings-primary-button" onClick={addGreetingType} disabled={!selectedGreetingType}>Add greeting type</button>
         </div>
 
-        <div className="settings-greeting-list">
-          {greetingEnabledTypes.length ? greetingEnabledTypes.map((eventType) => (
-            <div key={eventType} className="settings-greeting-card">
-              <div className="settings-greeting-card-header">
-                <label className="settings-input-block settings-greeting-select-wrap">
-                  <span>Event type</span>
-                  <select value={eventType} onChange={(event) => handleGreetingTypeChange(eventType, event.target.value)}>
-                    {(adminValues.eventTypes || []).map((option) => (
-                      <option key={option} value={option}>{option}</option>
-                    ))}
-                  </select>
-                </label>
-                <button type="button" className="settings-greeting-remove" onClick={() => removeGreetingType(eventType)} aria-label={`Remove ${eventType}`}>
-                  Remove Type
+        {activeGreetingType ? (
+          <section className="settings-greeting-editor-card" aria-label={`${activeGreetingType} greeting template`}>
+            <div className="settings-greeting-type-rail" role="tablist" aria-label="Greeting event types">
+              {greetingEnabledTypes.map((eventType) => (
+                <button
+                  key={eventType}
+                  type="button"
+                  role="tab"
+                  aria-selected={activeGreetingType === eventType}
+                  className={activeGreetingType === eventType ? 'is-active' : ''}
+                  onClick={() => setActiveGreetingType(eventType)}
+                >
+                  {eventType}
                 </button>
-              </div>
+              ))}
+            </div>
 
+            <div className="settings-greeting-editor-heading">
+              <div>
+                <strong>{activeGreetingType} greeting</strong>
+                <span>Edit your template and preview the result.</span>
+              </div>
+              <label className="settings-input-block settings-greeting-select-wrap">
+                <span>Event type</span>
+                <DropdownSelect value={activeGreetingType} onChange={(event) => handleGreetingTypeChange(activeGreetingType, event.target.value)}>
+                  {(adminValues.eventTypes || []).map((option) => (
+                    <option key={option} value={option}>{option}</option>
+                  ))}
+                </DropdownSelect>
+              </label>
+              <button type="button" className="settings-greeting-remove" onClick={() => removeGreetingType(activeGreetingType)} aria-label={`Remove ${activeGreetingType} greeting type`}>
+                Remove
+              </button>
+            </div>
+
+            <div className="settings-greeting-editor-grid">
               <label className="settings-input-block">
-                <span>Greeting template</span>
+                <span>Message template</span>
                 <textarea
-                  rows={4}
-                  value={greetingTemplates[eventType] || ''}
-                  onChange={(event) => setGreetingTemplates((current) => ({ ...current, [eventType]: event.target.value }))}
-                  placeholder="Happy {ordinal} Birthday {name} 🎂"
+                  rows={3}
+                  value={greetingTemplates[activeGreetingType] || ''}
+                  onChange={(event) => setGreetingTemplates((current) => ({ ...current, [activeGreetingType]: event.target.value }))}
+                  placeholder={`Happy {ordinal} ${activeGreetingType} {name} 🎂`}
                 />
               </label>
-
               <div className="settings-preview-box">
-                <div className="settings-preview-label">Live Preview</div>
-                <div className="settings-preview-text">{getPreviewText(eventType, greetingTemplates[eventType])}</div>
+                <div className="settings-preview-label">Preview · Emma</div>
+                <div className="settings-preview-text">{getPreviewText(activeGreetingType, greetingTemplates[activeGreetingType])}</div>
               </div>
             </div>
-          )) : (
-            <div className="settings-greeting-empty">No greeting-enabled event types yet. Add one from the dropdown above.</div>
-          )}
-        </div>
+          </section>
+        ) : (
+          <div className="settings-greeting-empty">No greeting types enabled. Choose an event type above to get started.</div>
+        )}
       </div>
 
       <div className="settings-actions">
@@ -503,49 +576,62 @@ export default function Settings() {
     <div className="settings-accordion-body">
       <div className="settings-admin-grid">
         <label className="settings-input-block">
+          <span>Appearance</span>
+          <DropdownSelect value={theme} onChange={(event) => {
+            const nextTheme = event.target.value;
+            setTheme(nextTheme);
+            document.documentElement.dataset.theme = nextTheme;
+            setPreferences({ ...preferences, theme: nextTheme });
+          }}>
+            <option value="light">Soft light</option>
+            <option value="dark">Dark</option>
+          </DropdownSelect>
+        </label>
+
+        <label className="settings-input-block">
           <span>Default currency</span>
-          <select value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
+          <DropdownSelect value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
             <option value="INR">INR (₹)</option>
             <option value="USD">USD ($)</option>
             <option value="EUR">EUR (€)</option>
             <option value="GBP">GBP (£)</option>
-          </select>
+          </DropdownSelect>
         </label>
 
         <label className="settings-input-block">
           <span>Default dashboard view</span>
-          <select value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
+          <DropdownSelect value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
             <option value="overview">Overview</option>
             <option value="events">Events</option>
             <option value="financials">Financials</option>
-          </select>
+          </DropdownSelect>
         </label>
 
         <label className="settings-input-block">
           <span>Default event type</span>
-          <select value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
+          <DropdownSelect value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
             {adminValues.eventTypes.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
-          </select>
+          </DropdownSelect>
         </label>
 
         <label className="settings-input-block">
           <span>Default income type</span>
-          <select value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
+          <DropdownSelect value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
             {adminValues.incomeTypes.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
-          </select>
+          </DropdownSelect>
         </label>
 
         <label className="settings-input-block">
           <span>Default expense category</span>
-          <select value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
+          <DropdownSelect value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
             {adminValues.expenseCategories.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
-          </select>
+          </DropdownSelect>
         </label>
       </div>
 
@@ -646,7 +732,7 @@ export default function Settings() {
       <div className="settings-admin-grid">
         <div className="settings-input-block">
           <span>Local backup</span>
-          <p className="settings-helper">Export your current local LifeHub data as a JSON file or restore it later on the same device.</p>
+          <p className="settings-helper">Export your current local DN data as a JSON file or restore it later on the same device.</p>
         </div>
       </div>
 
@@ -656,7 +742,7 @@ export default function Settings() {
           <Upload size={15} /> Restore backup
           <input type="file" accept="application/json" onChange={importBackup} style={{ display: 'none' }} />
         </label>
-        <button type="button" className="settings-secondary-button" onClick={clearLocalData}><Trash2 size={15} /> Clear local data</button>
+        <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)}><Trash2 size={15} /> Clear local data</button>
       </div>
 
       {backupMessage ? <p className="settings-message">{backupMessage}</p> : null}
@@ -665,19 +751,34 @@ export default function Settings() {
 
   const sections = [
     { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
-    { key: 'admin-values', heading: 'Admin Values', description: 'Configure event types, income types and expense categories.', icon: ListChecks, body: renderAdminValuesSection() },
-    { key: 'greeting-cards', heading: 'Greeting Cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
-    { key: 'defaults', heading: 'Defaults & Preferences', description: 'Configure default behavior and application settings.', icon: Settings2, body: renderDefaultsSection() },
+    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
     { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
+    { key: 'admin-values', heading: 'Categories & types', description: 'Configure event types, income types and expense categories.', icon: ListChecks, body: renderAdminValuesSection() },
+    { key: 'greeting-cards', heading: 'Greeting cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
+    { key: 'about', heading: 'About', description: 'A personal space for the moments that matter.', icon: Info, body: <div className="settings-accordion-body settings-about"><strong>DN</strong><span>Your personal space for life moments, plans, memories, and the details you want to keep close.</span><small>Version 1.0.0</small></div> },
   ];
 
   return (
     <div className="settings-page feature-page">
       <div className="settings-heading">
         <h2>Settings</h2>
-        <p>Keep LifeHub comfortable for the way you plan and remember.</p>
+        <p>Keep DN comfortable for the way you plan and remember.</p>
       </div>
+
+      {import.meta.env.DEV && !user ? (
+        <section className="dev-sample-panel" aria-label="Development sample data">
+          <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
+          <div className="dev-sample-actions">
+            <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
+              {Object.entries(getSampleScenarioDefinitions()).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
+            </DropdownSelect>
+            <button type="button" className="settings-primary-button" onClick={loadSampleData} disabled={Boolean(user)}>Load sample</button>
+            {activeSampleScenario ? <button type="button" className="settings-secondary-button" onClick={clearSampleData}>Clear sample</button> : null}
+          </div>
+          {activeSampleScenario ? <small className="dev-sample-active">Active: {getSampleScenarioLabel(activeSampleScenario)} · {getActiveSampleData()?.events.length || 0} events · {getActiveSampleData()?.activities.length || 0} activities · {getActiveSampleData()?.memories.length || 0} memories</small> : null}
+        </section>
+      ) : null}
 
       {sections.map(({ key, heading, description, icon: Icon, body }) => {
         const isOpen = openSection === key;
@@ -697,6 +798,16 @@ export default function Settings() {
           </section>
         );
       })}
+
+      {confirmClearData ? (
+        <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
+          <p className="settings-helper">This removes guest data, preferences, and local backups from this browser. This action cannot be undone.</p>
+          <div className="settings-actions">
+            <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
+            <button type="button" className="settings-primary-button" onClick={clearLocalData}>Clear local data</button>
+          </div>
+        </ModalDialog>
+      ) : null}
     </div>
   );
 }

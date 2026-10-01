@@ -28,6 +28,10 @@ export const normalizeActivity = (item = {}) => ({
     activityId: expense.activityId || item.id || null,
   })) : [],
   completed: Boolean(item.completed),
+  priority: ['high', 'medium', 'low'].includes(String(item.priority || '').toLowerCase())
+    ? String(item.priority).toLowerCase()
+    : 'medium',
+  completedAt: item.completedAt || null,
   createdAt: item.createdAt || new Date().toISOString(),
 });
 
@@ -38,7 +42,15 @@ export const normalizeEvent = (item = {}) => ({
   type: item.type || 'Personal',
   customType: item.customType || '',
   recurrence: item.recurrence || 'none',
+  budget: Number(item.budget || 0),
   notes: item.notes || '',
+  greetingCard: item.greetingCard && typeof item.greetingCard === 'object'
+    ? {
+        title: String(item.greetingCard.title || ''),
+        body: String(item.greetingCard.body || ''),
+        updatedAt: item.greetingCard.updatedAt || null,
+      }
+    : null,
   memories: Array.isArray(item.memories) ? item.memories : [],
   attachments: Array.isArray(item.attachments) ? item.attachments : [],
   activities: Array.isArray(item.activities)
@@ -106,7 +118,10 @@ export const deleteEvent = async (uid, event) => {
 
 export const saveGuestEvent = (event) => {
   const list = getGuestEvents();
-  const index = list.findIndex((item) => item.id === event.id || item.firestoreId === event.firestoreId);
+  const index = list.findIndex((item) => (
+    (item.id && event.id && item.id === event.id)
+    || (item.firestoreId && event.firestoreId && item.firestoreId === event.firestoreId)
+  ));
 
   if (index >= 0) {
     list[index] = normalizeEvent(event);

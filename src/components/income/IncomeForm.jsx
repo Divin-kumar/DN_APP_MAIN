@@ -1,5 +1,6 @@
 /* Income entry form used by the income management page. */
 import { useEffect, useState } from 'react';
+import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
 
 const createDefaultState = (defaultIncomeType) => ({
@@ -59,12 +60,12 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
         style={styles.input}
       />
 
-      <select name="type" value={form.type} onChange={handleChange} style={styles.input}>
+      <DropdownSelect name="type" value={form.type} onChange={handleChange}>
         {adminValues.incomeTypes.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
         <option value="Other">Other</option>
-      </select>
+      </DropdownSelect>
 
       <input
         type="number"

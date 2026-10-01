@@ -15,6 +15,7 @@ const defaultGreetingTemplates = {
 };
 
 const defaultPreferences = {
+  theme: 'dark',
   currency: 'INR',
   dashboardView: 'overview',
   defaultEventType: 'Personal',
@@ -51,6 +52,7 @@ const loadPreferences = () => {
     return {
       ...defaultPreferences,
       ...stored,
+      theme: localStorage.getItem('lifehub_theme_choice') ? (stored.theme || defaultPreferences.theme) : 'dark',
       notifications: {
         ...defaultPreferences.notifications,
         ...(stored.notifications || {}),
@@ -100,12 +102,16 @@ const useAppStore = create((set) => ({
       ...state.preferences,
       ...nextPreferences,
     };
+    if (Object.prototype.hasOwnProperty.call(nextPreferences, 'theme')) {
+      localStorage.setItem('lifehub_theme_choice', '1');
+    }
     localStorage.setItem('lifehub_preferences', JSON.stringify(merged));
     return { preferences: merged };
   }),
 
   resetPreferences: () => set(() => {
     localStorage.setItem('lifehub_preferences', JSON.stringify(defaultPreferences));
+    localStorage.setItem('lifehub_theme_choice', '1');
     return { preferences: { ...defaultPreferences } };
   }),
 

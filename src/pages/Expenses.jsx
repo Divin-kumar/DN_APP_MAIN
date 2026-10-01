@@ -1,14 +1,17 @@
 /* Expense management page with filtering, summaries, and nested history scrolling. */
 import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ExpenseForm from '../components/expenses/ExpenseForm';
+import DropdownSelect from '../components/common/DropdownSelect';
 import ExpenseList from '../components/expenses/ExpenseList';
-import ExpenseSummary from '../components/expenses/ExpenseSummary';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 
 export default function Expenses() {
+  const location = useLocation();
+  const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const showToast = useAppStore((state) => state.showToast);
@@ -27,6 +30,13 @@ export default function Expenses() {
     loadEvents(user?.uid, isGuest);
   }, [user, isGuest, loadExpenses, loadEvents]);
 
+  useEffect(() => {
+    if (!location.search.includes('create=expense')) return;
+    setEditingExpense(null);
+    setExpenseDialogOpen(true);
+    navigate('/financials/expenses', { replace: true });
+  }, [location.search, navigate]);
+
   const filteredExpenses = useMemo(() => {
     return expenses.filter((expense) => {
       const matchesSearch = [expense.name, expense.category].some((value) =>
@@ -36,6 +46,7 @@ export default function Expenses() {
       return matchesSearch && matchesCategory;
     });
   }, [expenses, search, categoryFilter]);
+  const categories = useMemo(() => [...new Set([...expenses.map((expense) => expense.category), 'Food', 'Health', 'Insurance', 'Education', 'Home', 'Vehicle', 'Celebrations', 'Other'].filter(Boolean))].sort(), [expenses]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -97,51 +108,21 @@ export default function Expenses() {
   };
 
   return (
-    <div className="feature-page" style={styles.page}>
-      <div className="feature-header" style={styles.headerRow}>
-        <div>
-          <span style={styles.eyebrow}>Cash flow</span>
-          <h2 style={styles.title}>Expenses</h2>
-        </div>
-        <button type="button" className="primaryButton" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }} style={styles.primaryButton}>Add expense</button>
+    <div className="financial-module-page">
+      <header className="financial-module-heading">
+        <h3>Expense</h3>
+        <button type="button" className="primaryButton" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }}>Add expense</button>
+      </header>
+      <div className="financial-module-toolbar">
+        <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search expenses" aria-label="Search expenses" />
+        <DropdownSelect value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} aria-label="Filter expense category">
+          <option value="all">All categories</option>
+          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+        </DropdownSelect>
       </div>
-
-      <ExpenseSummary expenses={filteredExpenses} />
-
-      <div className="feature-content-grid" style={styles.contentGrid}>
-        <div className="feature-card" style={{ ...styles.card, gridColumn: '1 / -1' }}>
-          <h3 style={styles.sectionTitle}>Expense History</h3>
-
-          <div style={styles.filters}>
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search name or category"
-              style={styles.input}
-            />
-
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              style={styles.input}
-            >
-              <option value="all">All categories</option>
-              <option value="Food">Food</option>
-              <option value="Hospital">Hospital</option>
-              <option value="Shopping">Shopping</option>
-              <option value="Travel">Travel</option>
-              <option value="Entertainment">Entertainment</option>
-              <option value="Other">Other</option>
-            </select>
-          </div>
-
-          {loading ? (
-            <div style={styles.loading}>Loading expenses...</div>
-          ) : (
-            <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />
-          )}
-        </div>
-      </div>
+      <section className="financial-module-history" aria-label="Expense history">
+        {loading ? <p className="financial-empty-copy">Loading expenses…</p> : <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />}
+      </section>
 
       {expenseDialogOpen ? (
         <ModalDialog title={editingExpense ? 'Edit expense' : 'Add expense'} onClose={() => { setExpenseDialogOpen(false); setEditingExpense(null); }}>

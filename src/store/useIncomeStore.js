@@ -9,6 +9,7 @@ import {
   saveGuestIncome,
   updateIncome,
 } from '../services/incomeService';
+import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 
 const useIncomeStore = create((set, get) => ({
   incomes: [],
@@ -21,6 +22,12 @@ const useIncomeStore = create((set, get) => ({
     set({ loading: true, error: null });
 
     try {
+      const sampleData = getActiveSampleData(uid);
+      if (sampleData) {
+        set({ incomes: sampleData.incomes, loading: false, error: null });
+        return sampleData.incomes;
+      }
+
       const items = isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
       set({ incomes: items, loading: false, error: null });
       return items;
@@ -39,6 +46,14 @@ const useIncomeStore = create((set, get) => ({
       date: income.date || new Date().toISOString().slice(0, 10),
     };
 
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = [normalized, ...sampleData.incomes];
+      saveActiveSampleData({ ...sampleData, incomes: updated });
+      set({ incomes: updated });
+      return normalized;
+    }
+
     if (isGuest) {
       const updated = saveGuestIncome(normalized);
       set({ incomes: updated });
@@ -51,6 +66,14 @@ const useIncomeStore = create((set, get) => ({
   },
 
   updateIncomeItem: async (uid, isGuest, income) => {
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = sampleData.incomes.map((item) => item.id === income.id ? { ...item, ...income } : item);
+      saveActiveSampleData({ ...sampleData, incomes: updated });
+      set({ incomes: updated });
+      return income;
+    }
+
     if (isGuest) {
       const updated = saveGuestIncome(income);
       set({ incomes: updated });
@@ -71,6 +94,14 @@ const useIncomeStore = create((set, get) => ({
     const income = current.find((item) => item.id === incomeId || item.firestoreId === incomeId);
 
     if (!income) return;
+
+    const sampleData = getActiveSampleData(uid);
+    if (sampleData) {
+      const updated = sampleData.incomes.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
+      saveActiveSampleData({ ...sampleData, incomes: updated });
+      set({ incomes: updated });
+      return;
+    }
 
     if (isGuest) {
       const updated = removeGuestIncome(incomeId);

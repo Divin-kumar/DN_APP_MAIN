@@ -1,34 +1,75 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useId, useRef } from 'react';
+import { createPortal } from 'react-dom';
+import { motion } from 'framer-motion';
 
-export default function ModalDialog({ title, onClose, children }) {
+export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
   const closeButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  const titleId = useId();
+
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   useEffect(() => {
     const previousOverflow = document.body.style.overflow;
+    const previousFocus = document.activeElement;
     document.body.style.overflow = 'hidden';
+    document.body.classList.add('lifehub-modal-open');
     closeButtonRef.current?.focus();
 
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+
+      if (event.key !== 'Tab') return;
+      const focusable = [...(dialogRef.current?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') || [])]
+        .filter((element) => element.getAttribute('aria-hidden') !== 'true');
+      if (!focusable.length) {
+        event.preventDefault();
+        return;
+      }
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.body.classList.remove('lifehub-modal-open');
       document.removeEventListener('keydown', handleKeyDown);
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
-  }, [onClose]);
+  }, []);
 
-  return (
-    <div className="lifehub-modal-backdrop" style={styles.backdrop} onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="lifehub-dialog-title" style={styles.dialog} onMouseDown={(event) => event.stopPropagation()}>
+  return createPortal(
+    <motion.div
+      className={`lifehub-modal-backdrop${variant === 'drawer' ? ' lifehub-modal-backdrop-drawer' : ''}`}
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.16 }}
+      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+    >
+      <motion.section ref={dialogRef} className={`lifehub-modal${variant === 'drawer' ? ' lifehub-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         <div style={styles.header}>
-          <h3 id="lifehub-dialog-title" style={{ margin: 0 }}>{title}</h3>
+          <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" onClick={onClose} style={styles.closeButton} aria-label="Close dialog">×</button>
         </div>
         {children}
-      </section>
-    </div>
+      </motion.section>
+    </motion.div>,
+    document.body,
   );
 }
 
@@ -45,25 +86,6 @@ export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabe
 }
 
 const styles = {
-  backdrop: {
-    position: 'fixed',
-    inset: 0,
-    zIndex: 40,
-    display: 'grid',
-    placeItems: 'center',
-    padding: '20px',
-    background: 'rgba(20, 39, 32, 0.32)',
-  },
-  dialog: {
-    width: 'min(520px, 100%)',
-    maxHeight: 'calc(100vh - 40px)',
-    overflowY: 'auto',
-    padding: '20px',
-    borderRadius: '16px',
-    background: 'var(--surface)',
-    color: 'var(--ink)',
-    boxShadow: '0 20px 60px rgba(21, 57, 45, 0.2)',
-  },
   header: {
     display: 'flex',
     alignItems: 'center',

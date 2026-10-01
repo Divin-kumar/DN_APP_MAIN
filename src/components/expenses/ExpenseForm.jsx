@@ -1,5 +1,6 @@
 /* Expense entry form, including optional event and activity relationships. */
 import { useEffect, useState } from 'react';
+import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
 
 const createDefaultState = (defaultCategory) => ({
@@ -68,24 +69,24 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitL
         style={styles.input}
       />
 
-      <select name="category" value={form.category} onChange={handleChange} style={styles.input}>
+      <DropdownSelect name="category" value={form.category} onChange={handleChange}>
         {adminValues.expenseCategories.map((option) => (
           <option key={option} value={option}>{option}</option>
         ))}
         <option value="Other">Other</option>
-      </select>
+      </DropdownSelect>
 
-      <select name="eventId" value={form.eventId || ''} onChange={handleChange} style={styles.input}>
+      <DropdownSelect name="eventId" value={form.eventId || ''} onChange={handleChange}>
         <option value="">No linked event</option>
         {events.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name}</option>)}
-      </select>
+      </DropdownSelect>
 
-      <select name="activityId" value={form.activityId || ''} onChange={handleChange} style={styles.input} disabled={!form.eventId}>
+      <DropdownSelect name="activityId" value={form.activityId || ''} onChange={handleChange} disabled={!form.eventId}>
         <option value="">No linked activity</option>
         {(events.find((event) => (event.id || event.firestoreId) === form.eventId)?.activities || []).map((activity) => (
           <option key={activity.id} value={activity.id}>{activity.title}</option>
         ))}
-      </select>
+      </DropdownSelect>
 
       <input
         type="date"

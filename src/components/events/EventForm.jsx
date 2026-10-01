@@ -1,5 +1,6 @@
-/* Event metadata form used only inside the create/edit drawer. */
+/* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useState } from 'react';
+import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
 
 const createDefaultState = (defaultEventType) => ({
@@ -58,108 +59,52 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   };
 
   return (
-    <form className="form-surface" onSubmit={handleSubmit} style={styles.form}>
-      <input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Event name"
-        style={styles.input}
-      />
+    <form className="form-surface event-form" onSubmit={handleSubmit}>
+      <p className="event-form-intro">Add the details that make this moment easy to remember.</p>
 
-      <select name="type" value={form.type} onChange={handleChange} style={styles.input}>
-        {adminValues.eventTypes.map((option) => (
-          <option key={option} value={option}>{option}</option>
-        ))}
-        <option value="Other">Other</option>
-      </select>
+      <label htmlFor="event-name">Moment name
+        <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required />
+      </label>
+
+      <div className="event-form-fields">
+        <label htmlFor="event-type">Moment type
+          <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
+            {adminValues.eventTypes.map((option) => (
+              <option key={option} value={option}>{option}</option>
+            ))}
+            <option value="Other">Other</option>
+          </DropdownSelect>
+        </label>
+
+        <label htmlFor="event-date">Date
+          <input id="event-date" type="date" name="date" value={form.date} onChange={handleChange} required />
+        </label>
+      </div>
 
       {form.type === 'Other' ? (
-        <input
-          name="customType"
-          value={form.customType}
-          onChange={handleChange}
-          placeholder="Custom event type"
-          style={styles.input}
-        />
+        <label htmlFor="event-custom-type">Custom moment type
+          <input id="event-custom-type" name="customType" value={form.customType} onChange={handleChange} placeholder="What kind of moment is this?" required />
+        </label>
       ) : null}
 
-      <input
-        type="date"
-        name="date"
-        value={form.date}
-        onChange={handleChange}
-        style={styles.input}
-      />
+      <label htmlFor="event-recurrence">Repeat
+        <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
+          <option value="none">Does not repeat</option>
+          <option value="monthly">Every month</option>
+          <option value="yearly">Every year</option>
+        </DropdownSelect>
+      </label>
 
-      <select name="recurrence" value={form.recurrence} onChange={handleChange} style={styles.input}>
-        <option value="none">No recurrence</option>
-        <option value="monthly">Monthly</option>
-        <option value="yearly">Yearly</option>
-      </select>
+      <label htmlFor="event-notes">Notes <span className="event-form-optional">Optional</span>
+        <textarea id="event-notes" name="notes" value={form.notes} onChange={handleChange} placeholder="Add a detail you would like to remember" rows={3} />
+      </label>
 
-      <textarea
-        name="notes"
-        value={form.notes}
-        onChange={handleChange}
-        placeholder="Notes"
-        rows={4}
-        style={{ ...styles.input, resize: 'vertical' }}
-      />
-
-      <div style={styles.actions}>
-        <button type="submit" className="primaryButton" style={styles.primaryButton}>{submitLabel}</button>
+      <div className="event-form-actions">
+        <button type="submit" className="primaryButton">{submitLabel}</button>
         {onCancel ? (
-          <button type="button" className="secondaryButton" onClick={onCancel} style={styles.secondaryButton}>
-            Cancel
-          </button>
+          <button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button>
         ) : null}
       </div>
     </form>
   );
 }
-
-const styles = {
-  form: {
-    display: 'grid',
-    gap: '12px',
-    background: 'var(--surface)',
-    borderRadius: '16px',
-    border: '1px solid var(--border)',
-    padding: '18px',
-    color: 'var(--ink)',
-  },
-  input: {
-    width: '100%',
-    padding: '12px 14px',
-    borderRadius: '10px',
-    border: '1px solid var(--border)',
-    background: 'var(--surface-soft)',
-    color: 'var(--ink)',
-  },
-  actions: {
-    display: 'flex',
-    gap: '10px',
-    marginTop: '4px',
-  },
-  primaryButton: {
-    flex: 1,
-    border: 'none',
-    borderRadius: '10px',
-    background: '#2d6a4f',
-    color: '#ffffff',
-    padding: '12px 14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  secondaryButton: {
-    flex: 1,
-    border: '1px solid var(--border)',
-    borderRadius: '10px',
-    background: 'var(--surface-soft)',
-    color: 'var(--ink)',
-    padding: '12px 14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-};

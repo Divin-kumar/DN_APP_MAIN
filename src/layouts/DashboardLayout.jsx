@@ -1,10 +1,17 @@
 /* Event-first app shell for dashboard and workspace navigation. */
-import { useEffect, useState } from 'react';
-import { NavLink, Outlet } from 'react-router-dom';
-import { CalendarDays, ChevronDown, LayoutDashboard, LogOut, Menu, Settings, UserCircle, WalletCards } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
+import ModalDialog from '../components/common/ModalDialog';
+import EventForm from '../components/events/EventForm';
+import DropdownSelect from '../components/common/DropdownSelect';
+import ExpenseForm from '../components/expenses/ExpenseForm';
+import useEventStore from '../store/useEventStore';
+import useExpenseStore from '../store/useExpenseStore';
 
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -16,18 +23,68 @@ const navItems = [
 export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const theme = useAppStore((state) => state.preferences.theme || 'light');
+  const setPreferences = useAppStore((state) => state.setPreferences);
+  const showToast = useAppStore((state) => state.showToast);
+  const { events, loadEvents, addEvent, updateEventItem } = useEventStore();
+  const { loadExpenses, addExpense } = useExpenseStore();
   const { exitGuestMode } = useGuest();
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [sidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const quickCreateDesktopRef = useRef(null);
+  const quickCreateMobileRef = useRef(null);
+  const [quickCreateType, setQuickCreateType] = useState(null);
+  const [quickCreateError, setQuickCreateError] = useState('');
+  const [quickActivityEventId, setQuickActivityEventId] = useState('');
+  const [quickActivityTitle, setQuickActivityTitle] = useState('');
+  const [quickActivityDate, setQuickActivityDate] = useState(new Date().toISOString().slice(0, 10));
+  const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
+  const [quickActivityDescription, setQuickActivityDescription] = useState('');
 
   useEffect(() => {
-    document.documentElement.dataset.theme = 'light';
-  }, []);
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
+
+  const sidebarWidth = sidebarCollapsed ? 88 : 240;
 
   useEffect(() => {
     setAvatarError(false);
   }, [user?.photoURL]);
+
+  useEffect(() => {
+    setProfileMenuOpen(false);
+    setQuickCreateOpen(false);
+  }, [location.pathname, location.search, location.hash]);
+
+  useEffect(() => {
+    if (!quickCreateOpen) return undefined;
+
+    const closeQuickCreateOutside = (event) => {
+      const clickedInsideDesktop = quickCreateDesktopRef.current?.contains(event.target);
+      const clickedInsideMobile = quickCreateMobileRef.current?.contains(event.target);
+      if (!clickedInsideDesktop && !clickedInsideMobile) setQuickCreateOpen(false);
+    };
+    const closeQuickCreateOnEscape = (event) => {
+      if (event.key === 'Escape') setQuickCreateOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeQuickCreateOutside);
+    document.addEventListener('keydown', closeQuickCreateOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeQuickCreateOutside);
+      document.removeEventListener('keydown', closeQuickCreateOnEscape);
+    };
+  }, [quickCreateOpen]);
+
+  useEffect(() => {
+    if (!quickCreateType || (!user && !isGuest)) return;
+    if ((quickCreateType === 'activity' || quickCreateType === 'expense') && !events.length) loadEvents(user?.uid, isGuest);
+    if (quickCreateType === 'expense') loadExpenses(user?.uid, isGuest);
+  }, [quickCreateType, user, isGuest, events.length, loadEvents, loadExpenses]);
 
   const profileName = user?.displayName || user?.email || 'Guest';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
@@ -47,43 +104,100 @@ export default function DashboardLayout() {
     }
   };
 
+  const beginQuickCreate = (type) => {
+    setQuickCreateOpen(false);
+    setQuickCreateError('');
+    setQuickCreateType(type);
+    if (type === 'activity') {
+      setQuickActivityEventId('');
+      setQuickActivityTitle('');
+      setQuickActivityDate(new Date().toISOString().slice(0, 10));
+      setQuickActivityPriority('medium');
+      setQuickActivityDescription('');
+    }
+  };
+
+  const saveQuickEvent = async (formData) => {
+    try {
+      const event = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
+      setQuickCreateType(null);
+      showToast('Life moment saved', 'success');
+      navigate(`/events/${event.id || event.firestoreId}`);
+    } catch {
+      setQuickCreateError('Could not save this life moment. Please try again.');
+    }
+  };
+
+  const saveQuickExpense = async (formData) => {
+    try {
+      await addExpense(user?.uid, isGuest, formData);
+      setQuickCreateType(null);
+      showToast('Expense saved', 'success');
+      navigate('/financials/expenses');
+    } catch {
+      setQuickCreateError('Could not save this expense. Please try again.');
+    }
+  };
+
+  const saveQuickActivity = async (submitEvent) => {
+    submitEvent.preventDefault();
+    const event = events.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
+    if (!event || !quickActivityTitle.trim()) {
+      setQuickCreateError('Choose a life moment and enter an activity title.');
+      return;
+    }
+    try {
+      const activity = {
+        id: crypto.randomUUID(),
+        eventId: event.id || event.firestoreId,
+        title: quickActivityTitle.trim(),
+        description: quickActivityDescription.trim(),
+        date: quickActivityDate,
+        priority: quickActivityPriority,
+        completed: false,
+        completedAt: null,
+        createdAt: new Date().toISOString(),
+      };
+      await updateEventItem(user?.uid, isGuest, { ...event, activities: [...(event.activities || []), activity] });
+      setQuickCreateType(null);
+      showToast('Activity saved', 'success');
+      navigate(`/events/${activity.eventId}/activities`);
+    } catch {
+      setQuickCreateError('Could not save this activity. Please try again.');
+    }
+  };
+
   return (
     <div className="lifehub-shell" style={styles.appShell}>
       <header className="lifehub-header" style={styles.header}>
-        <div style={styles.topBarLeft}>
-          <button
-            className="menu-button"
-            style={styles.menuButton}
-            aria-label={sidebarCollapsed ? 'Expand navigation' : 'Collapse navigation'}
-            aria-expanded={!sidebarCollapsed}
-            onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}
-          >
-            <Menu size={19} strokeWidth={2.2} />
-          </button>
-          <div>
-            <div style={styles.eyebrow}>Workspace</div>
-            <h1 style={styles.title}>LifeHub</h1>
-          </div>
+        <div className="brand-lockup" aria-label="DN · Personal Experience">
+          <span className="brand-mark" aria-hidden="true">DN</span>
+          <span className="brand-lockup-title">Personal<span className="mobile-brand-break"><br /></span> Experience</span>
         </div>
 
-        <div style={styles.userSection}>
-          {user?.photoURL && !avatarError ? (
-            <img
-              className="avatar"
-              src={user.photoURL}
-              alt="User profile"
-              style={styles.avatar}
-              onError={() => setAvatarError(true)}
-            />
-          ) : <span className="avatar avatar-fallback" aria-label="User profile">{initials}</span>}
+        <div className="header-user-controls" style={styles.userSection}>
+          <button
+            type="button"
+            className="theme-toggle"
+            onClick={() => setPreferences({ theme: theme === 'dark' ? 'light' : 'dark' })}
+            aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-pressed={theme === 'dark'}
+          >
+            {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
           <div className="profile-menu-wrap">
-            <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-expanded={profileMenuOpen} aria-haspopup="menu">
+            <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-label="Open profile and account menu" aria-expanded={profileMenuOpen} aria-haspopup="menu">
+              {user?.photoURL && !avatarError ? (
+                <img className="avatar" src={user.photoURL} alt="" style={styles.avatar} onError={() => setAvatarError(true)} />
+              ) : <span className="avatar avatar-fallback" aria-hidden="true">{initials}</span>}
               <span className="user-name" style={styles.userName}>{profileName}</span>
               <ChevronDown size={15} />
             </button>
             {profileMenuOpen ? (
               <div className="profile-menu" role="menu">
-                <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
+                <div className="profile-menu-account"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
+                <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
                 <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
               </div>
@@ -95,13 +209,17 @@ export default function DashboardLayout() {
       <main className="lifehub-main" style={styles.mainContent}>
         <aside
           className={`lifehub-sidebar ${sidebarCollapsed ? 'lifehub-sidebar-collapsed' : ''}`}
-          style={{ ...styles.sidebar, ...(sidebarCollapsed ? styles.sidebarCollapsed : {}) }}
+          style={{
+            ...styles.sidebar,
+            width: `${sidebarWidth}px`,
+            minWidth: `${sidebarWidth}px`,
+            ...(sidebarCollapsed ? styles.sidebarCollapsed : {}),
+          }}
         >
           {navItems.map((item) => (
             <NavLink
               key={item.path}
               to={item.path}
-              onClick={() => { if (window.matchMedia('(max-width: 760px)').matches) setSidebarCollapsed(true); }}
               end={item.path === '/dashboard'}
                 className="lifehub-nav-link"
                 style={({ isActive }) => ({
@@ -124,9 +242,86 @@ export default function DashboardLayout() {
               : 'Authenticated mode active. Your data is synced with Firebase.'}
           </div>
 
-          <Outlet />
+          <motion.div
+            key={location.pathname}
+            className="lifehub-route-transition"
+            initial={{ opacity: 0.94, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.14, ease: 'easeOut' }}
+          >
+            <Outlet />
+          </motion.div>
         </section>
       </main>
+
+      <nav className="mobile-tabbar" aria-label="Main navigation">
+        {navItems.map((item) => (
+          <NavLink
+            key={item.path}
+            to={item.path}
+            end={item.path === '/dashboard'}
+            className={({ isActive }) => `mobile-tab${isActive ? ' mobile-tab-active' : ''}`}
+            aria-label={item.label}
+          >
+            <item.icon size={19} strokeWidth={2} aria-hidden="true" />
+            <span>{item.label}</span>
+          </NavLink>
+        ))}
+        <div ref={quickCreateMobileRef} className={`mobile-dock-create${quickCreateOpen ? ' is-open' : ''}`}>
+          {quickCreateOpen ? (
+            <div className="mobile-dock-create-menu" aria-label="Quick create actions">
+              <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
+              <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
+              <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
+            </div>
+          ) : null}
+          <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
+            {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
+          </button>
+        </div>
+      </nav>
+
+      <div ref={quickCreateDesktopRef} className={`lifehub-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
+        {quickCreateOpen ? (
+          <div className="lifehub-quick-create-menu" aria-label="Quick create actions">
+            <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
+            <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
+            <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
+          </div>
+        ) : null}
+        <button type="button" className="lifehub-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
+          {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
+        </button>
+      </div>
+
+      {quickCreateType === 'event' ? (
+        <ModalDialog title="Create a life moment" onClose={() => setQuickCreateType(null)}>
+          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+          <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
+        </ModalDialog>
+      ) : null}
+      {quickCreateType === 'expense' ? (
+        <ModalDialog title="Add an expense" onClose={() => setQuickCreateType(null)}>
+          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+          <ExpenseForm events={events} onSubmit={saveQuickExpense} onCancel={() => setQuickCreateType(null)} submitLabel="Save expense" />
+        </ModalDialog>
+      ) : null}
+      {quickCreateType === 'activity' ? (
+        <ModalDialog title="Add an activity" onClose={() => setQuickCreateType(null)}>
+          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+          <form className="form-surface quick-create-activity-form" onSubmit={saveQuickActivity}>
+            <DropdownSelect value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment">
+              <option value="">Choose a life moment</option>
+              {events.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}</option>)}
+            </DropdownSelect>
+            <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
+            <input type="date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
+            <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority"><option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option></DropdownSelect>
+            <textarea value={quickActivityDescription} onChange={(event) => setQuickActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
+            <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
+          </form>
+        </ModalDialog>
+      ) : null}
     </div>
   );
 }
@@ -201,12 +396,18 @@ const styles = {
   },
   sidebar: {
     width: '220px',
+    minWidth: '220px',
     background: '#edf6ef',
     borderRight: '1px solid #dfeae3',
     padding: '20px 16px',
     display: 'flex',
     flexDirection: 'column',
     gap: '12px',
+    transition: 'width 220ms ease, min-width 220ms ease, padding 220ms ease',
+  },
+  sidebarCollapsed: {
+    paddingLeft: '10px',
+    paddingRight: '10px',
   },
   navCard: {
     display: 'block',
@@ -220,7 +421,7 @@ const styles = {
   },
   navCardActive: {
     background: '#dff2e5',
-    borderColor: '#b7d7c0',
+    border: '1px solid #b7d7c0',
   },
   contentPane: {
     flex: 1,

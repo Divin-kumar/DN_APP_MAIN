@@ -1,8 +1,15 @@
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { BookHeart, Clock3, Download, FileText, Images, ListChecks, Pencil, Trash2, Upload } from 'lucide-react';
+import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import ActivityList from '../../../components/events/ActivityList';
+import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
+import useExpenseStore from '../../../store/useExpenseStore';
+import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
+import ExpenseForm from '../../../components/expenses/ExpenseForm';
+import { downloadBlob } from '../../../utils/download';
+import { getEventGreeting } from '../../../utils/greeting';
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -34,10 +41,14 @@ export default function EventWorkspaceShell() {
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || {});
+  const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
+  const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
+  const [activityPriority, setActivityPriority] = useState('medium');
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
@@ -45,15 +56,31 @@ export default function EventWorkspaceShell() {
   const [memoryDialogOpen, setMemoryDialogOpen] = useState(false);
   const [memoryTitle, setMemoryTitle] = useState('');
   const [memoryBody, setMemoryBody] = useState('');
+  const [memoryExpanded, setMemoryExpanded] = useState(false);
   const [pendingDeleteMemory, setPendingDeleteMemory] = useState(null);
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
+  const [expenseDialogActivity, setExpenseDialogActivity] = useState(null);
+  const [linkExpenseActivity, setLinkExpenseActivity] = useState(null);
+  const [expenseError, setExpenseError] = useState('');
+  const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
+  const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
+  const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
 
   useEffect(() => {
     if (!user && !isGuest) return;
     if (!events.length) loadEvents(user?.uid, isGuest);
-  }, [events.length, isGuest, loadEvents, user]);
+    loadExpenses(user?.uid, isGuest);
+  }, [events.length, isGuest, loadEvents, loadExpenses, user]);
+
+  useEffect(() => {
+    if (!location.search.includes('create=activity')) return;
+    setActivityDialogOpen(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
+  useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
 
@@ -77,13 +104,62 @@ export default function EventWorkspaceShell() {
     { label: 'Timeline', path: `/events/${eventId}/timeline`, detail: 'Milestones and progress', icon: Clock3 },
     { label: 'Memories', path: `/events/${eventId}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
     { label: 'Attachments', path: `/events/${eventId}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
-    { label: 'PDF Export', path: `/events/${eventId}/pdf`, detail: 'A printable event summary', icon: Download },
   ];
   const activeSection = sections.find((section) => location.pathname === section.path) || sections[0];
   const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
   const activities = [...(event.activities || [])].sort((first, second) => (
     new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime()
   ));
+  const eventExpenses = expenses.filter((expense) => expense.eventId === eventId);
+  const expensesByActivity = Object.fromEntries(activities.map((activity) => [
+    activity.id,
+    eventExpenses.filter((expense) => expense.activityId === activity.id),
+  ]));
+  const linkableExpenses = expenses.filter((expense) => (
+    !expense.activityId && (!expense.eventId || expense.eventId === eventId)
+  ));
+  const totalSpent = eventExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const completedActivities = activities.filter((activity) => activity.completed).length;
+  const memoryCount = (event.memories || []).length;
+  const attachments = event.attachments || [];
+  const latestMemory = [...(event.memories || [])].sort((first, second) => new Date(second.createdAt || 0) - new Date(first.createdAt || 0))[0];
+  const eventDateValue = new Date(event.date || event.startDate || event.createdAt);
+  const validEventDate = !Number.isNaN(eventDateValue.getTime());
+  const daysUntilEvent = validEventDate ? Math.ceil((new Date(eventDateValue.getFullYear(), eventDateValue.getMonth(), eventDateValue.getDate()).getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / 86400000) : null;
+  const eventStyle = String(event.type || '').toLowerCase();
+  const eventMood = eventStyle.includes('birth') || eventStyle.includes('wedding') || eventStyle.includes('engagement') ? 'celebration' : eventStyle.includes('vacation') || eventStyle.includes('travel') ? 'travel' : eventStyle.includes('investment') || eventStyle.includes('insurance') || eventStyle.includes('finance') ? 'finance' : eventStyle.includes('anniversary') || eventStyle.includes('marriage') ? 'romance' : 'life';
+  const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+  const generatedGreeting = getEventGreeting(event, greetingTemplates) || {
+    title: `A moment worth celebrating: ${event.name || event.type || 'today'}`,
+    body: event.notes || 'Wishing you a beautiful day filled with meaning and memories to treasure.',
+  };
+  const eventGreeting = event.greetingCard?.title
+    ? event.greetingCard
+    : generatedGreeting;
+
+  const openGreetingCard = () => {
+    setGreetingTitleDraft(eventGreeting.title || '');
+    setGreetingBodyDraft(eventGreeting.body || '');
+    setGreetingDialogOpen(true);
+  };
+
+  const saveGreetingCard = async (submitEvent) => {
+    submitEvent.preventDefault();
+    const greetingCard = { title: greetingTitleDraft.trim(), body: greetingBodyDraft.trim(), updatedAt: new Date().toISOString() };
+    try {
+      await updateEventItem(user?.uid, isGuest, { ...event, greetingCard });
+      setGreetingDialogOpen(false);
+      showToast('Greeting card saved', 'success');
+    } catch {
+      showToast('Could not save this greeting card', 'danger');
+    }
+  };
+
+  const downloadGreetingCard = () => {
+    const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
+    downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
+  };
 
   const addActivity = async (submitEvent) => {
     submitEvent.preventDefault();
@@ -97,6 +173,8 @@ export default function EventWorkspaceShell() {
       date: activityDate,
       description: activityDescription.trim(),
       completed: existingActivity?.completed || false,
+      completedAt: existingActivity?.completedAt || null,
+      priority: activityPriority,
       createdAt: existingActivity?.createdAt || new Date().toISOString(),
     };
 
@@ -112,6 +190,32 @@ export default function EventWorkspaceShell() {
     setActivityDialogOpen(false);
   };
 
+  const saveActivityExpense = async (formData) => {
+    if (!expenseDialogActivity) return;
+    try {
+      await addExpense(user?.uid, isGuest, {
+        ...formData,
+        eventId,
+        activityId: expenseDialogActivity.id,
+        source: 'event-activity',
+      });
+      setExpenseDialogActivity(null);
+      setExpenseError('');
+    } catch {
+      setExpenseError('Could not save this expense. Please try again.');
+    }
+  };
+
+  const linkExistingExpense = async (expense) => {
+    try {
+      await updateExpenseItem(user?.uid, isGuest, { ...expense, eventId, activityId: linkExpenseActivity.id });
+      setLinkExpenseActivity(null);
+      setExpenseError('');
+    } catch {
+      setExpenseError('Could not link this expense. Please try again.');
+    }
+  };
+
   const removeActivity = async (activityId) => {
     await updateEventItem(user?.uid, isGuest, {
       ...event,
@@ -121,10 +225,14 @@ export default function EventWorkspaceShell() {
   };
 
   const toggleActivity = async (activityId) => {
+    const currentActivity = (event.activities || []).find((activity) => activity.id === activityId);
+    if (!currentActivity) return;
     await updateEventItem(user?.uid, isGuest, {
       ...event,
       activities: (event.activities || []).map((activity) => (
-        activity.id === activityId ? { ...activity, completed: !activity.completed } : activity
+        activity.id === activityId
+          ? { ...activity, completed: !activity.completed, completedAt: activity.completed ? null : new Date().toISOString() }
+          : activity
       )),
     });
   };
@@ -193,10 +301,32 @@ export default function EventWorkspaceShell() {
   const renderSectionContent = () => {
     if (activeSection.label === 'Overview') {
       return (
-        <div className="workspace-overview-grid">
-          <div className="workspace-detail-block"><span>Event type</span><strong>{event.type || 'Personal'}</strong></div>
-          <div className="workspace-detail-block"><span>Created</span><strong>{formatDate(event.createdAt)}</strong></div>
-          <div className="workspace-notes-block"><div className="workspace-notes-heading"><span>Notes</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }} style={styles.textAction}>Edit notes</button></div><p>{event.notes || 'Add notes to capture the intention and context for this event.'}</p></div>
+        <div className="event-moment-overview">
+          <section className="event-featured-memory">
+            <div className="event-featured-memory-art"><BookHeart size={21} /><span>Memory keepsake</span></div>
+            <div className="event-featured-memory-copy">
+              <span className="event-overview-eyebrow"><Heart size={13} /> A piece of this moment</span>
+              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><p className={`event-memory-story-copy${memoryExpanded ? ' is-expanded' : ''}`}>{latestMemory.body || 'A moment worth remembering, kept safe with this event.'}</p><small>{formatDate(latestMemory.createdAt)}</small>{String(latestMemory.body || '').length > 110 ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
+            </div>
+          </section>
+
+          <section className="event-health-strip" aria-label="Event health">
+            <div className="event-overview-section-title"><span>Event health</span><small>A gentle check-in</small></div>
+            <div className="event-health-items">
+              <span className={activities.length ? 'is-ready' : 'is-pending'}>{activities.length ? <CircleCheck size={15} /> : <CircleCheck size={15} />}{activities.length ? `${activities.length} steps planned` : 'Plan a few steps'}</span>
+              <span className={memoryCount ? 'is-ready' : 'is-pending'}>{memoryCount ? <CircleCheck size={15} /> : <Heart size={15} />}{memoryCount ? `${memoryCount} memories saved` : 'Add a memory'}</span>
+              <span className={attachments.length ? 'is-ready' : 'is-pending'}>{attachments.length ? <CircleCheck size={15} /> : <Images size={15} />}{attachments.length ? `${attachments.length} keepsakes saved` : 'No keepsakes yet'}</span>
+            </div>
+          </section>
+
+          <div className="event-overview-lower-grid">
+            <section className="event-upcoming-preview">
+              <div className="event-overview-section-title"><span>Little next steps</span><button type="button" onClick={() => navigate(`/events/${eventId}/activities`)}>See all</button></div>
+              {activities.length ? activities.slice(0, 3).map((activity) => <div className={`event-next-step${activity.completed ? ' is-complete' : ''}`} key={activity.id}><span>{activity.completed ? <Check size={14} /> : null}</span><div><strong>{activity.title || 'Untitled activity'}</strong><small>{activity.completed ? 'Complete' : formatDate(activity.date)}</small></div></div>) : <p className="event-overview-hint">A few gentle reminders can make this moment easier to enjoy.</p>}
+            </section>
+          </div>
+
+          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><p>{event.notes}</p></section> : null}
         </div>
       );
     }
@@ -209,7 +339,7 @@ export default function EventWorkspaceShell() {
               <div key={activity.id} className="timeline-item">
                 <span>{formatDate(activity.date)}</span>
                 <strong>{activity.title || 'Untitled activity'}</strong>
-                <small>{activity.completed ? 'Completed' : 'In progress'}</small>
+                <small className={activity.completed ? 'is-complete' : 'is-pending'}>{activity.completed ? 'Completed' : 'In progress'}</small>
                 {activity.description ? <p>{activity.description}</p> : null}
               </div>
             ))}
@@ -217,25 +347,21 @@ export default function EventWorkspaceShell() {
         ) : <p style={{ margin: 0, color: 'var(--ink-soft)' }}>Add an activity to start this event timeline.</p>;
       }
 
-      return activities.length ? (
-        <div style={{ display: 'grid', gap: '10px' }}>
-          {activeSection.label === 'Activities' ? <div style={{ color: 'var(--ink-soft)', fontSize: '0.88rem' }}>{activities.filter((activity) => activity.completed).length} of {activities.length} complete</div> : null}
-          {activities.map((activity) => (
-            <div key={activity.id} style={{ padding: '12px', border: '1px solid var(--border)', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink)' }}>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700 }}>
-                <input type="checkbox" checked={Boolean(activity.completed)} onChange={() => toggleActivity(activity.id)} />
-                <span>{activity.title || 'Untitled activity'}</span>
-              </label>
-              <div style={{ marginTop: '4px', color: 'var(--ink-soft)', fontSize: '0.88rem' }}>{formatDate(activity.date)}</div>
-              {activity.description ? <p style={{ margin: '7px 0 0', color: 'var(--ink-soft)' }}>{activity.description}</p> : null}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                <button type="button" onClick={() => { setEditingActivityId(activity.id); setActivityTitle(activity.title || ''); setActivityDescription(activity.description || ''); setActivityDate(activity.date || ''); setActivityDialogOpen(true); }} style={styles.iconButton} aria-label={`Edit ${activity.title}`} title="Edit activity"><Pencil size={15} /></button>
-                <button type="button" onClick={() => setPendingDeleteActivity(activity)} style={styles.iconButtonDanger} aria-label={`Remove ${activity.title}`} title="Remove activity"><Trash2 size={15} /></button>
-              </div>
-            </div>
-          ))}
+      return (
+        <div className="workspace-activities">
+          <ActivityList
+            eventName={event.name || 'This life moment'}
+            activities={activities}
+            expensesByActivity={expensesByActivity}
+            onToggleComplete={toggleActivity}
+            onAddExpense={(activity) => { setExpenseError(''); setExpenseDialogActivity(activity); }}
+            onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
+            onEdit={(activity) => { setEditingActivityId(activity.id); setActivityTitle(activity.title || ''); setActivityDescription(activity.description || ''); setActivityDate(activity.date || ''); setActivityPriority(activity.priority || 'medium'); setActivityDialogOpen(true); }}
+            onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
+            onAddActivity={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}
+          />
         </div>
-      ) : <p style={{ margin: 0, color: 'var(--ink-soft)' }}>No activities have been added to this event yet.</p>;
+      );
     }
 
     if (activeSection.label === 'Attachments') {
@@ -243,7 +369,7 @@ export default function EventWorkspaceShell() {
         <div className="workspace-resource-list">
           <label className="workspace-upload-control"><Upload size={16} /> Add attachment<input type="file" onChange={addAttachment} /></label>
           {event.attachments?.length ? event.attachments.map((attachment) => (
-            <div className="workspace-resource-row" key={attachment.id}><div><strong>{attachment.name}</strong><span>{attachment.type} · {Math.ceil(attachment.size / 1024)} KB</span></div><button type="button" onClick={() => setPendingDeleteAttachment(attachment)} style={styles.iconButtonDanger} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button></div>
+            <div className="workspace-resource-row workspace-attachment-card" key={attachment.id}><span className="workspace-attachment-icon">{attachment.type?.startsWith('image/') ? <Images size={19} /> : <FileText size={19} />}</span><div><strong title={attachment.name}>{attachment.name}</strong><span className="workspace-attachment-meta"><i>{String(attachment.type || 'FILE').split('/').pop().toUpperCase()}</i>{Math.max(1, Math.ceil(Number(attachment.size || 0) / 1024))} KB · {formatDate(attachment.createdAt)}</span></div><button type="button" onClick={() => setPendingDeleteAttachment(attachment)} style={styles.iconButtonDanger} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Documents, photos, and keepsakes will stay attached to this event.</p></div>}
         </div>
       );
@@ -254,7 +380,7 @@ export default function EventWorkspaceShell() {
         <div className="workspace-resource-list">
           <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}>Add memory</button>
           {event.memories?.length ? event.memories.map((memory) => (
-            <div className="workspace-resource-row" key={memory.id}><div><strong>{memory.title}</strong><span>{memory.body || 'A memory worth keeping.'}</span></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
+            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span>{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
         </div>
       );
@@ -264,61 +390,109 @@ export default function EventWorkspaceShell() {
   };
 
   return (
-    <div style={{ display: 'grid', gap: '18px' }}>
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '18px', padding: '20px', color: 'var(--ink)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>← Back to Events</Link>
-          <button type="button" onClick={() => setPendingDeleteEvent(true)} style={styles.deleteEventButton}>Delete event</button>
-        </div>
-        <div style={{ marginTop: '18px', fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
-          Event workspace
-        </div>
-        <h2 style={{ margin: '8px 0 6px', fontSize: '1.8rem', color: 'var(--ink)' }}>{event.name}</h2>
-        <p style={{ margin: 0, color: 'var(--ink-soft)', lineHeight: 1.7 }}>
-          {formatDate(event.date)}{event.type ? ` · ${event.type}` : ''}{birthdayAge !== null ? ` · Age ${birthdayAge} years` : ''}
-        </p>
+    <div className="event-workspace-shell">
+      <div className="event-workspace-back-row">
+        <Link to="/events" className="event-moment-back"><ArrowLeft size={15} /> All moments</Link>
       </div>
-
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px' }}>
-        {sections.map((section) => (
-          <div
-            key={section.label}
-            style={{
-              border: '1px solid var(--border)',
-              borderRadius: '14px',
-              padding: '16px',
-              color: 'var(--ink)',
-              borderColor: activeSection.label === section.label ? 'var(--primary)' : 'var(--border)',
-              background: activeSection.label === section.label ? 'var(--primary-soft)' : 'var(--surface)',
-            }}
-          >
-            <Link to={section.path} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'inherit', fontWeight: 700 }}><section.icon size={16} /> {section.label}</Link>
-            <div style={{ marginTop: '8px', color: 'var(--ink-soft)', fontSize: '0.88rem', fontWeight: 400 }}>{section.detail}</div>
+      <header className={`event-moment-hero mood-${eventMood}`}>
+        <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
+        <div className="event-moment-topline">
+          <div className="event-moment-top-actions">
+            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={15} /><span>Add memory</span></button>
+            <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={15} /><span>Greeting card</span></button>
+            <button type="button" className="event-moment-delete" onClick={() => setPendingDeleteEvent(true)} aria-label="Delete event" title="Delete event"><Trash2 size={16} /></button>
           </div>
-        ))}
-      </div>
-
-      <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '20px', color: 'var(--ink)' }}>
-        <div style={{ fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
-          {activeSection.label}
         </div>
-        <h3 style={{ margin: '8px 0 6px', fontSize: '1.3rem', color: 'var(--ink)' }}>{activeSection.detail}</h3>
+        <div className="event-moment-content">
+          <span className="event-moment-kicker"><Sparkles size={13} /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}</span>
+          <h1>{event.name}</h1>
+          <div className="event-moment-date">
+            <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}</span>
+            {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge + 1}</span> : null}
+            <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
+          </div>
+          <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Memories <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
+        </div>
+      </header>
+
+      <nav className="event-workspace-nav" aria-label={`${event.name} sections`}>
+        {sections.map((section) => (
+          <Link
+            key={section.label}
+            to={section.path}
+            className={`event-workspace-nav-item${activeSection.label === section.label ? ' is-active' : ''}`}
+            aria-current={activeSection.label === section.label ? 'page' : undefined}
+          >
+            <section.icon size={16} />
+            <span>{section.label}</span>
+            {section.label === 'Activities' && activities.length ? <small>{activities.length}</small> : null}
+            {section.label === 'Memories' && memoryCount ? <small>{memoryCount}</small> : null}
+          </Link>
+        ))}
+      </nav>
+
+      <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
+        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-activity-action' : ''}`}>
+          <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
+          <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
+          {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}>Add activity</button> : null}
+        </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
-        {activeSection.label === 'Activities' ? <button type="button" className="primaryButton" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityDialogOpen(true); }} style={styles.primaryButton}>Add activity</button> : null}
         {renderSectionContent()}
-      </div>
+      </main>
+
+      {greetingDialogOpen ? (
+        <ModalDialog title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
+          <div className="event-greeting-card-preview">
+            <span><Sparkles size={14} /> A greeting for {event.name || 'this moment'}</span>
+            <strong>{greetingTitleDraft || 'Your greeting title'}</strong>
+            <p>{greetingBodyDraft || 'Your greeting message will appear here.'}</p>
+          </div>
+          <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
+            <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
+            <label>Message<textarea value={greetingBodyDraft} onChange={(changeEvent) => setGreetingBodyDraft(changeEvent.target.value)} rows={4} maxLength={500} required /></label>
+            <div className="event-greeting-editor-actions">
+              <button type="button" className="secondaryButton" onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
+              <button type="button" className="event-greeting-close-button" onClick={() => setGreetingDialogOpen(false)}><X size={15} /> Close</button>
+              <button type="submit" className="primaryButton"><Save size={15} /> Save greeting</button>
+            </div>
+          </form>
+        </ModalDialog>
+      ) : null}
 
       {activityDialogOpen ? (
         <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} onClose={() => setActivityDialogOpen(false)}>
           <form onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
             <input type="date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} style={styles.input} />
+            <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
+              <option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option>
+            </DropdownSelect>
             <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
             <div style={styles.dialogActions}>
               <button type="button" onClick={() => setActivityDialogOpen(false)} style={styles.cancelButton}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
             </div>
           </form>
+        </ModalDialog>
+      ) : null}
+      {expenseDialogActivity ? (
+        <ModalDialog title={`Add expense · ${expenseDialogActivity.title || 'Activity'}`} onClose={() => setExpenseDialogActivity(null)}>
+          {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
+          <ExpenseForm
+            initialValues={{ name: expenseDialogActivity.title || '', category: 'Food', date: new Date().toISOString().slice(0, 10), eventId, activityId: expenseDialogActivity.id }}
+            events={[event]}
+            submitLabel="Save linked expense"
+            onSubmit={saveActivityExpense}
+            onCancel={() => setExpenseDialogActivity(null)}
+          />
+        </ModalDialog>
+      ) : null}
+      {linkExpenseActivity ? (
+        <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
+          {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
+          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Create an expense for this activity instead.</p>}
+          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); setExpenseDialogActivity(activity); }}>Create expense</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
         </ModalDialog>
       ) : null}
       {notesDialogOpen ? (
@@ -360,32 +534,6 @@ export default function EventWorkspaceShell() {
         />
       ) : null}
     </div>
-  );
-}
-
-function ModalDialog({ title, onClose, children }) {
-  return (
-    <div className="lifehub-modal-backdrop" style={styles.modalBackdrop} onMouseDown={onClose}>
-      <section role="dialog" aria-modal="true" aria-labelledby="lifehub-modal-title" style={styles.modal} onMouseDown={(event) => event.stopPropagation()}>
-        <div style={styles.modalHeader}>
-          <h3 id="lifehub-modal-title" style={{ margin: 0, color: 'var(--ink)' }}>{title}</h3>
-          <button type="button" onClick={onClose} style={styles.closeButton} aria-label="Close dialog">×</button>
-        </div>
-        {children}
-      </section>
-    </div>
-  );
-}
-
-function ConfirmDialog({ title, message, onCancel, onConfirm }) {
-  return (
-    <ModalDialog title={title} onClose={onCancel}>
-      <p style={{ margin: '0 0 18px', color: 'var(--ink-soft)', lineHeight: 1.6 }}>{message}</p>
-      <div style={styles.dialogActions}>
-        <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-        <button type="button" onClick={onConfirm} style={styles.confirmButton}>Delete</button>
-      </div>
-    </ModalDialog>
   );
 }
 

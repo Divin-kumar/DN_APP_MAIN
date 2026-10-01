@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import DashboardLayout from './layouts/DashboardLayout';
 import DashboardHome from './pages/DashboardHome';
 import Events from './pages/Events';
+import Insights from './pages/Insights';
 import PlaceholderPage from './pages/PlaceholderPage';
 import EventWorkspaceShell from './features/events/components/EventWorkspaceShell';
 import Financials from './pages/Financials';
@@ -54,6 +55,8 @@ export default function App() {
             <Route index element={<DashboardHome />} />
             <Route path="dashboard" element={<DashboardHome />} />
             <Route path="events" element={<Events />} />
+            <Route path="activities" element={<Navigate to="/events" replace />} />
+            <Route path="insights" element={<Insights />} />
             <Route path="events/:eventId" element={<EventWorkspaceShell />} />
             <Route path="events/:eventId/overview" element={<EventWorkspaceShell />} />
             <Route path="events/:eventId/activities" element={<EventWorkspaceShell />} />

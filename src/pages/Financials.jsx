@@ -1,22 +1,40 @@
 import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import { ArrowRight, Landmark, Receipt, WalletCards } from 'lucide-react';
+import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
+import { Landmark, Receipt, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 
-const currency = (value) =>
-  new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
-    maximumFractionDigits: 0,
-  }).format(Number(value || 0));
+const currency = (value) => new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+}).format(Number(value || 0));
+
+const dateLabel = (value) => {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? 'Date not set' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+};
 
 const views = [
-  { label: 'Financial overview', path: '/financials', icon: WalletCards, detail: 'Keep money tracking secondary to your life events.' },
-  { label: 'Income', path: '/financials/income', icon: Landmark, detail: 'Review and manage income records.' },
-  { label: 'Expenses', path: '/financials/expenses', icon: Receipt, detail: 'Review spending and event-linked costs.' },
+  { label: 'Overview', path: '/financials', icon: WalletCards },
+  { label: 'Income', path: '/financials/income', icon: Landmark },
+  { label: 'Expense', path: '/financials/expenses', icon: Receipt },
 ];
+
+function PreviewGroup({ title, path, entries, emptyLabel, isExpense = false }) {
+  return (
+    <section className={`financials-overview-group${isExpense ? ' is-expense' : ' is-income'}`}>
+      <header><h3>{title}</h3><Link to={path}>View all</Link></header>
+      {entries.length ? entries.map((entry) => (
+        <div className="financial-preview-row" key={entry.id || entry.firestoreId}>
+          <span><strong>{entry.name || title}</strong><small>{entry.category || entry.type || 'General'} · {dateLabel(entry.date)}</small></span>
+          <strong>{currency(entry.amount)}</strong>
+        </div>
+      )) : <p className="financial-empty-copy">{emptyLabel}</p>}
+    </section>
+  );
+}
 
 export default function Financials() {
   const location = useLocation();
@@ -35,87 +53,33 @@ export default function Financials() {
   const totalIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const currentBalance = totalIncome - totalExpenses;
+  const recentIncome = [...incomes].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  const recentExpenses = [...expenses].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
 
   return (
-    <div className="financials-page feature-page">
-      <div className="financials-heading" style={styles.headingRow}>
-        <div>
-          <span className="eyebrow">Supporting view</span>
-          <h2>Financials</h2>
-          <p>Simple money tracking that supports the life you are organizing.</p>
-        </div>
+    <main className="financials-page feature-page">
+      <section className="financial-overview-summary" aria-label="Income, expense and balance summary">
+        <div><span>Income</span><strong>{currency(totalIncome)}</strong></div>
+        <div><span>Expense</span><strong>{currency(totalExpenses)}</strong></div>
+        <div className={`financial-overview-balance${currentBalance < 0 ? ' is-negative' : ''}`}><span>Balance</span><strong>{currency(currentBalance)}</strong></div>
+      </section>
 
-        <div style={styles.inlineBalance}>
-          <span style={styles.balanceLabel}>Current balance</span>
-          <strong style={{ ...styles.balanceValue, color: currentBalance >= 0 ? '#1f6f5d' : '#b14a48' }}>{currency(currentBalance)}</strong>
-          <small style={styles.metaText}>Income: {currency(totalIncome)} · Spending: {currency(totalExpenses)}</small>
-        </div>
-      </div>
+      <nav className="financials-nav" aria-label="Financial views">
+        {views.map(({ label, path, icon: Icon }) => (
+          <NavLink key={path} to={path} end={path === '/financials'} className={({ isActive }) => `financials-nav-card${isActive ? ' financials-nav-card-active' : ''}`} aria-current={location.pathname === path ? 'page' : undefined}>
+            <Icon size={16} aria-hidden="true" /><span><strong>{label}</strong></span>
+          </NavLink>
+        ))}
+      </nav>
 
-      <div className="financials-nav" aria-label="Financial views">
-        {views.map((view) => {
-          const Icon = view.icon;
-          return (
-            <NavLink key={view.path} to={view.path} end={view.path === '/financials'} className={({ isActive }) => `financials-nav-card${isActive ? ' financials-nav-card-active' : ''}`}>
-              <Icon size={18} />
-              <span><strong>{view.label}</strong><small>{view.detail}</small></span>
-              <ArrowRight size={16} />
-            </NavLink>
-          );
-        })}
-      </div>
-
-      {isOverview ? (
-        <div className="financials-empty-state" style={styles.emptyState}>
-          <WalletCards size={26} />
-          <h3>Money stays in context</h3>
-          <p>Use Income and Expenses when they help you understand an event. Your events remain useful with no financial records.</p>
-        </div>
-      ) : <Outlet />}
-    </div>
+      <section className="financials-content-panel" aria-live="polite">
+        {isOverview ? (
+          <div className="financials-overview-grid">
+            <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." />
+            <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." isExpense />
+          </div>
+        ) : <Outlet />}
+      </section>
+    </main>
   );
 }
-
-const styles = {
-  headingRow: {
-    display: 'flex',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: '16px',
-    flexWrap: 'wrap',
-  },
-  inlineBalance: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    justifyContent: 'center',
-    textAlign: 'right',
-    lineHeight: 1.2,
-    padding: '12px 14px',
-    border: '1px solid rgba(31, 111, 93, 0.12)',
-    borderRadius: '14px',
-    background: 'linear-gradient(180deg, rgba(31, 111, 93, 0.05), rgba(31, 111, 93, 0.02))',
-    boxShadow: '0 10px 22px rgba(15, 23, 42, 0.04)',
-  },
-  balanceLabel: {
-    fontSize: '0.68rem',
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: '#5f756a',
-    fontWeight: 700,
-  },
-  balanceValue: {
-    margin: 0,
-    fontSize: '1.5rem',
-    fontWeight: 800,
-    letterSpacing: '-0.04em',
-  },
-  metaText: {
-    color: '#5a6d61',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-  },
-  emptyState: {
-    marginTop: '10px',
-  },
-};
