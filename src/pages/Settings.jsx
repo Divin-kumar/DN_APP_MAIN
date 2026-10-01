@@ -756,7 +756,40 @@ export default function Settings() {
     { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
     { key: 'admin-values', heading: 'Categories & types', description: 'Configure event types, income types and expense categories.', icon: ListChecks, body: renderAdminValuesSection() },
     { key: 'greeting-cards', heading: 'Greeting cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
-    { key: 'about', heading: 'About', description: 'A personal space for the moments that matter.', icon: Info, body: <div className="settings-accordion-body settings-about"><strong>DN</strong><span>Your personal space for life moments, plans, memories, and the details you want to keep close.</span><small>Version 1.0.0</small></div> },
+    {
+      key: 'about',
+      heading: 'About',
+      description: 'A personal space for the moments that matter.',
+      icon: Info,
+      body: (
+        <div className="settings-accordion-body settings-about">
+          <strong>DN</strong>
+          <span>
+            DN is a personal life and finance companion designed to help you keep track of the moments, plans,
+            memories, and responsibilities that matter most in everyday life.
+          </span>
+          <div className="settings-about-list">
+            <p><strong>What this app helps you do:</strong></p>
+            <ul>
+              <li>Save and organize important life moments such as birthdays, anniversaries, festivals, family events, and personal milestones.</li>
+              <li>Capture activities, notes, and updates connected to each event so you can remember what happened and what still needs attention.</li>
+              <li>Track finances by recording income, expenses, and monthly spending patterns in one place.</li>
+              <li>Review your dashboard to see your recent activity, key events, and a quick overview of your personal and financial life.</li>
+              <li>Create greeting cards and thoughtful messages for birthdays, anniversaries, and other meaningful occasions.</li>
+              <li>Customize categories, event types, and preferences to match the way you prefer to organise your life.</li>
+              <li>Store your data locally and, where applicable, keep your profile and records available in your active session.</li>
+            </ul>
+            <p><strong>Upcoming notification feature:</strong></p>
+            <ul>
+              <li>Event reminder notifications will be developed to send timely alerts before birthdays, anniversaries, festivals, and scheduled activities.</li>
+              <li>Users will be able to enable or disable reminder notifications and choose preferred reminder times for important dates.</li>
+              <li>Future updates may also include monthly summaries, budget alerts, and other helpful personal notifications.</li>
+            </ul>
+          </div>
+          <small>Version 1.0.0</small>
+        </div>
+      ),
+    },
   ];
 
   return (
@@ -769,12 +802,16 @@ export default function Settings() {
       {import.meta.env.DEV && !user ? (
         <section className="dev-sample-panel" aria-label="Development sample data">
           <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
-          <div className="dev-sample-actions">
+          <div className={`dev-sample-actions${activeSampleScenario ? ' has-active-sample' : ''}`}>
             <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
               {Object.entries(getSampleScenarioDefinitions()).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
             </DropdownSelect>
-            <button type="button" className="settings-primary-button" onClick={loadSampleData} disabled={Boolean(user)}>Load sample</button>
-            {activeSampleScenario ? <button type="button" className="settings-secondary-button" onClick={clearSampleData}>Clear sample</button> : null}
+            <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} disabled={Boolean(user)} aria-label="Load sample data" title="Load sample data">
+              <Database size={16} aria-hidden="true" /><span className="dev-sample-action-label">Load sample</span>
+            </button>
+            {activeSampleScenario ? <button type="button" className="settings-secondary-button dev-sample-icon-action" onClick={clearSampleData} aria-label="Clear sample data" title="Clear sample data">
+              <Trash2 size={16} aria-hidden="true" /><span className="dev-sample-action-label">Clear sample</span>
+            </button> : null}
           </div>
           {activeSampleScenario ? <small className="dev-sample-active">Active: {getSampleScenarioLabel(activeSampleScenario)} · {getActiveSampleData()?.events.length || 0} events · {getActiveSampleData()?.activities.length || 0} activities · {getActiveSampleData()?.memories.length || 0} memories</small> : null}
         </section>

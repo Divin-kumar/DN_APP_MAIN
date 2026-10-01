@@ -1,4 +1,8 @@
-/* Bridges Firebase auth state into the application session store. */
+/*
+  This file listens to Firebase authentication and feeds the app state.
+  Its job is to translate the auth system into simple app-level values like
+  “logged in,” “guest,” or “logged out.”
+*/
 import { createContext, useContext, useEffect } from 'react';
 import { authService } from '../services/firebase';
 import { mergeGuestDataIntoAccount } from '../services/guestMergeService';
@@ -12,8 +16,10 @@ export function AuthProvider({ children }) {
   const setGuestMode = useAppStore((state) => state.setGuestMode);
 
   useEffect(() => {
+    // subscribe to auth changes so the app always knows the current login state.
     const unsubscribe = authService.onAuthChange((user) => {
       if (user) {
+        // If a real login exists, merge guest-only data into the account before storing user info.
         mergeGuestDataIntoAccount(user.uid)
           .catch((error) => {
             console.error('Failed to merge guest data:', error);
@@ -27,8 +33,10 @@ export function AuthProvider({ children }) {
             });
           });
       } else if (localStorage.getItem('lifehub_guest_mode') === 'true') {
+        // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
         setGuestMode(true);
       } else {
+        // If no account and no guest mode, reset session to a logged-out state.
         clearSession();
       }
     });

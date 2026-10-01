@@ -1,6 +1,12 @@
-/* Shared session, theme, and application loading state. */
+/*
+  This is the app's global memory.
+  It stores session info, theme settings, feature defaults, and small UI notifications
+  so that different screens can share the same state without complicated prop drilling.
+*/
 import { create } from 'zustand';
 
+// These are the default selectable values used across the app.
+// For example, the user can set event types or expense categories in settings.
 const defaultAdminValues = {
   eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
   incomeTypes: ['Salary', 'Freelance', 'Bonus'],
@@ -14,6 +20,7 @@ const defaultGreetingTemplates = {
   Anniversary: 'Happy {ordinal} Anniversary ❤️\nWishing you many more years of happiness, love and beautiful memories together.',
 };
 
+// Default app preferences such as theme, currency, and notification settings.
 const defaultPreferences = {
   theme: 'dark',
   currency: 'INR',
@@ -31,6 +38,8 @@ const defaultPreferences = {
   },
 };
 
+// Load admin values from browser storage if they exist.
+// This allows the app to remember user custom settings after refreshing.
 const loadAdminValues = () => {
   try {
     const stored = JSON.parse(localStorage.getItem('lifehub_admin_values') || '{}');
@@ -46,6 +55,7 @@ const loadAdminValues = () => {
   }
 };
 
+// Load the saved user preferences from localStorage.
 const loadPreferences = () => {
   try {
     const stored = JSON.parse(localStorage.getItem('lifehub_preferences') || '{}');
@@ -74,15 +84,19 @@ const loadPreferences = () => {
 };
 
 const useAppStore = create((set) => ({
+  // User information and session status.
   user: null,
   authReady: false,
   isGuest: false,
   appLoading: true,
   sessionType: 'unauthenticated',
+
+  // Saved app configuration and temporary popup messages.
   adminValues: loadAdminValues(),
   preferences: loadPreferences(),
   toast: null,
 
+  // Update custom values such as event labels and expense categories.
   setAdminValues: (nextValues) => set((state) => {
     const merged = {
       ...state.adminValues,
@@ -92,11 +106,13 @@ const useAppStore = create((set) => ({
     return { adminValues: merged };
   }),
 
+  // Reset admin-defined values back to the default list.
   resetAdminValues: () => set(() => {
     localStorage.setItem('lifehub_admin_values', JSON.stringify(defaultAdminValues));
     return { adminValues: { ...defaultAdminValues } };
   }),
 
+  // Save preferences and persist them so they survive page refreshes.
   setPreferences: (nextPreferences) => set((state) => {
     const merged = {
       ...state.preferences,
@@ -109,12 +125,14 @@ const useAppStore = create((set) => ({
     return { preferences: merged };
   }),
 
+  // Restore the original app defaults for theme and user preferences.
   resetPreferences: () => set(() => {
     localStorage.setItem('lifehub_preferences', JSON.stringify(defaultPreferences));
     localStorage.setItem('lifehub_theme_choice', '1');
     return { preferences: { ...defaultPreferences } };
   }),
 
+  // Mark the current user as logged in and clear guest mode.
   setUser: (user) =>
     set({
       user,
@@ -124,6 +142,7 @@ const useAppStore = create((set) => ({
       appLoading: false,
     }),
 
+  // Switch app to guest mode when no real account is active.
   setGuestMode: (value) =>
     set({
       isGuest: value,
@@ -133,12 +152,15 @@ const useAppStore = create((set) => ({
       appLoading: false,
     }),
 
+  // Small success/error popups shown throughout the app.
   showToast: (message, type = 'success') => set({ toast: { message, type } }),
   hideToast: () => set({ toast: null }),
 
+  // Shared loading state used during auth checks and boot-up.
   setAuthReady: (value) => set({ authReady: value }),
   setAppLoading: (value) => set({ appLoading: value }),
 
+  // Clear the session back to a logged-out state.
   clearSession: () =>
     set({
       user: null,

@@ -13,6 +13,8 @@ import ExpenseForm from '../components/expenses/ExpenseForm';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 
+// These are the main screens in the application.
+// The app keeps the navigation consistent across desktop and mobile layouts.
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Events', path: '/events', icon: CalendarDays },
@@ -34,6 +36,7 @@ export default function DashboardLayout() {
   const [sidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef(null);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const quickCreateDesktopRef = useRef(null);
   const quickCreateMobileRef = useRef(null);
@@ -45,15 +48,35 @@ export default function DashboardLayout() {
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
 
+  // Apply the saved theme to the page root so colors change across the whole app.
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
   }, [theme]);
 
+  // The sidebar narrows itself on smaller screens to save space.
   const sidebarWidth = sidebarCollapsed ? 88 : 240;
 
   useEffect(() => {
     setAvatarError(false);
   }, [user?.photoURL]);
+
+  useEffect(() => {
+    if (!profileMenuOpen) return undefined;
+
+    const closeProfileMenuOutside = (event) => {
+      if (!profileMenuRef.current?.contains(event.target)) setProfileMenuOpen(false);
+    };
+    const closeProfileMenuOnEscape = (event) => {
+      if (event.key === 'Escape') setProfileMenuOpen(false);
+    };
+
+    document.addEventListener('pointerdown', closeProfileMenuOutside);
+    document.addEventListener('keydown', closeProfileMenuOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeProfileMenuOutside);
+      document.removeEventListener('keydown', closeProfileMenuOnEscape);
+    };
+  }, [profileMenuOpen]);
 
   useEffect(() => {
     setProfileMenuOpen(false);
@@ -86,9 +109,11 @@ export default function DashboardLayout() {
     if (quickCreateType === 'expense') loadExpenses(user?.uid, isGuest);
   }, [quickCreateType, user, isGuest, events.length, loadEvents, loadExpenses]);
 
+  // Build a readable profile label shown in the top bar.
   const profileName = user?.displayName || user?.email || 'Guest';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
 
+  // Logout should behave differently for guest accounts and real accounts.
   const handleLogout = async () => {
     try {
       if (isGuest) {
@@ -104,6 +129,7 @@ export default function DashboardLayout() {
     }
   };
 
+  // Quick create opens a lightweight modal for common tasks without leaving the page.
   const beginQuickCreate = (type) => {
     setQuickCreateOpen(false);
     setQuickCreateError('');
@@ -117,6 +143,7 @@ export default function DashboardLayout() {
     }
   };
 
+  // Save newly created life moments and open the event page right after.
   const saveQuickEvent = async (formData) => {
     try {
       const event = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
@@ -128,6 +155,7 @@ export default function DashboardLayout() {
     }
   };
 
+  // Save the new expense and redirect to the expense list to keep the flow intuitive.
   const saveQuickExpense = async (formData) => {
     try {
       await addExpense(user?.uid, isGuest, formData);
@@ -139,6 +167,7 @@ export default function DashboardLayout() {
     }
   };
 
+  // Add a task-like activity under an existing life moment.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
     const event = events.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
@@ -167,12 +196,14 @@ export default function DashboardLayout() {
     }
   };
 
+  // The layout wraps every protected page in a consistent shell:
+  // top header, left navigation, content area, and floating quick-create panel.
   return (
     <div className="lifehub-shell" style={styles.appShell}>
       <header className="lifehub-header" style={styles.header}>
         <div className="brand-lockup" aria-label="DN · Personal Experience">
           <span className="brand-mark" aria-hidden="true">DN</span>
-          <span className="brand-lockup-title">Personal<span className="mobile-brand-break"><br /></span> Experience</span>
+          <span className="brand-lockup-title">Personal Experience</span>
         </div>
 
         <div className="header-user-controls" style={styles.userSection}>
@@ -186,7 +217,7 @@ export default function DashboardLayout() {
           >
             {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          <div className="profile-menu-wrap">
+          <div ref={profileMenuRef} className="profile-menu-wrap">
             <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-label="Open profile and account menu" aria-expanded={profileMenuOpen} aria-haspopup="menu">
               {user?.photoURL && !avatarError ? (
                 <img className="avatar" src={user.photoURL} alt="" style={styles.avatar} onError={() => setAvatarError(true)} />

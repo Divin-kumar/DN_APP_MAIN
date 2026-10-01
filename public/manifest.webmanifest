@@ -1,0 +1,20 @@
+{
+  "id": "/",
+  "name": "DN · Personal Experience",
+  "short_name": "DN",
+  "description": "Your personal space for life moments, plans, memories, and the details you want to keep close.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0b1020",
+  "theme_color": "#0b1020",
+  "icons": [
+    {
+      "src": "/dn-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
