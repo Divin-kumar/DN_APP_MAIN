@@ -36,6 +36,7 @@ export const normalizeActivity = (item = {}) => ({
     activityId: expense.activityId || item.id || null,
   })) : [],
   completed: Boolean(item.completed),
+  cancelled: Boolean(item.cancelled || String(item.status || '').toLowerCase() === 'cancelled'),
   priority: typeof item.priority === 'string' && item.priority.trim()
     ? item.priority.trim()
     : 'medium',

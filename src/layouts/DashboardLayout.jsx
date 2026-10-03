@@ -48,7 +48,7 @@ export default function DashboardLayout() {
   const contentRef = useRef(null);
   const previousLocationRef = useRef(null);
   const scrollPositionsRef = useRef(new Map());
-  const [sidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -69,6 +69,23 @@ export default function DashboardLayout() {
     const themeColor = theme === 'light' ? '#f3f6fb' : '#0b1020';
     document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   }, [theme]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 760px)');
+    const handleViewportChange = (event) => {
+      setSidebarCollapsed(event.matches);
+    };
+
+    handleViewportChange(mobileQuery);
+
+    if (typeof mobileQuery.addEventListener === 'function') {
+      mobileQuery.addEventListener('change', handleViewportChange);
+      return () => mobileQuery.removeEventListener('change', handleViewportChange);
+    }
+
+    mobileQuery.addListener(handleViewportChange);
+    return () => mobileQuery.removeListener(handleViewportChange);
+  }, []);
 
   // The sidebar narrows itself on smaller screens to save space.
   const sidebarWidth = sidebarCollapsed ? 88 : 240;
@@ -207,27 +224,23 @@ export default function DashboardLayout() {
     }
   };
 
-  // Save newly created life moments and open the event page right after.
-  // This keeps the process fluid: create a moment, then immediately land inside it.
+  // Save a life moment and let the user choose whether to open it.
   const saveQuickEvent = async (formData) => {
     try {
       const event = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
       setQuickCreateType(null);
-      showToast('Life moment saved', 'success');
-      navigate(`/events/${event.id || event.firestoreId}`);
+      showToast('Moment added successfully', 'success', { label: 'View', to: `/events/${event.id || event.firestoreId}` });
     } catch {
       setQuickCreateError('Could not save this life moment. Please try again.');
     }
   };
 
-  // Save the new expense and redirect to the expense list to keep the flow intuitive.
-  // This helps users get from entry to review without losing context.
+  // Save the expense without leaving the current screen.
   const saveQuickExpense = async (formData) => {
     try {
       await addExpense(user?.uid, isGuest, formData);
       setQuickCreateType(null);
-      showToast('Expense saved', 'success');
-      navigate('/financials/expenses');
+      showToast('Expense added successfully', 'success', { label: 'View', to: '/financials/expenses' });
     } catch {
       setQuickCreateError('Could not save this expense. Please try again.');
     }
@@ -256,8 +269,7 @@ export default function DashboardLayout() {
       };
       await updateEventItem(user?.uid, isGuest, { ...event, activities: [...(event.activities || []), activity] });
       setQuickCreateType(null);
-      showToast('Activity saved', 'success');
-      navigate(`/events/${activity.eventId}/activities`);
+      showToast('Activity added successfully', 'success', { label: 'View', to: `/events/${activity.eventId}/activities` });
     } catch {
       setQuickCreateError('Could not save this activity. Please try again.');
     }
@@ -269,9 +281,19 @@ export default function DashboardLayout() {
   return (
     <div className="lifehub-shell" style={styles.appShell}>
       <header className="lifehub-header" style={styles.header}>
-        <div className="brand-lockup" aria-label="DN · Personal Experience">
-          <span className="brand-mark" aria-hidden="true">DN</span>
-          <span className="brand-lockup-title">Personal Experience</span>
+        <div style={styles.topBarLeft}>
+          <button
+            type="button"
+            className="menu-button"
+            aria-label={sidebarCollapsed ? 'Open navigation' : 'Close navigation'}
+            onClick={() => setSidebarCollapsed((open) => !open)}
+          >
+            ☰
+          </button>
+          <div className="brand-lockup" aria-label="DN · Personal Experience">
+            <span className="brand-mark" aria-hidden="true">DN</span>
+            <span className="brand-lockup-title">Personal Experience</span>
+          </div>
         </div>
 
         <div className="header-user-controls" style={styles.userSection}>
@@ -432,7 +454,7 @@ export default function DashboardLayout() {
 
 const styles = {
   appShell: {
-    minHeight: '100vh',
+    minHeight: '100dvh',
     background: '#f2f7f3',
     color: '#1d3f2c',
   },
@@ -442,7 +464,7 @@ const styles = {
     justifyContent: 'space-between',
     background: '#ffffff',
     borderBottom: '1px solid #dfeae3',
-    padding: 'calc(16px + var(--safe-area-top, 0px)) calc(24px + var(--safe-area-right, 0px)) 16px calc(24px + var(--safe-area-left, 0px))',
+    padding: '16px 24px',
     position: 'sticky',
     top: 0,
     zIndex: 10,
@@ -496,7 +518,7 @@ const styles = {
   },
   mainContent: {
     display: 'flex',
-    minHeight: 'calc(100vh - 82px)',
+    minHeight: 'calc(100dvh - 82px)',
   },
   sidebar: {
     width: '220px',
@@ -529,7 +551,7 @@ const styles = {
   },
   contentPane: {
     flex: 1,
-    padding: 'calc(22px + var(--safe-area-top, 0px)) calc(22px + var(--safe-area-right, 0px)) calc(22px + var(--safe-area-bottom, 0px)) calc(22px + var(--safe-area-left, 0px))',
+    padding: '22px',
   },
   banner: {
     background: '#dff2e5',

@@ -1,5 +1,6 @@
 /* Income history rows and edit/delete actions. */
 import { Pencil, Trash2 } from 'lucide-react';
+import useSwipeActions from '../../hooks/useSwipeActions';
 
 const currency = (value) => {
   const number = Number(value || 0);
@@ -9,6 +10,49 @@ const currency = (value) => {
     maximumFractionDigits: 0,
   }).format(number);
 };
+
+function IncomeRow({ income, onEdit, onDelete }) {
+  const { action, setAction, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, toggleOther, close } = useSwipeActions();
+
+  return (
+    <div
+      ref={swipeRootRef}
+      className={`financial-swipe-row${action ? ` is-open-${action}` : ''}`}
+      role="group"
+      tabIndex={0}
+      aria-label={`${income.name}. Swipe left to edit, right to delete.`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerUp}
+      onClick={(event) => {
+        if (consumeSwipeClick(event)) return;
+        if (event.target.closest('button')) return;
+        if (action) close();
+        else toggleOther();
+      }}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (event.key === 'Enter' || event.key === 'ArrowLeft') { event.preventDefault(); toggleOther(); }
+        if (event.key === 'ArrowRight') { event.preventDefault(); setAction('delete'); }
+      }}
+    >
+      <div className="financial-swipe-actions financial-swipe-actions-delete" aria-hidden={action !== 'delete'}>
+        <button type="button" className="financial-swipe-action-delete" tabIndex={action === 'delete' ? 0 : -1} onClick={() => { close(); onDelete(income); }} aria-label={`Delete ${income.name}`}><Trash2 size={15} /><span>Delete</span></button>
+      </div>
+      <div className="financial-swipe-actions financial-swipe-actions-other" aria-hidden={action !== 'other'}>
+        <button type="button" className="financial-swipe-action-edit" tabIndex={action === 'other' ? 0 : -1} onClick={() => { close(); onEdit(income); }} aria-label={`Edit ${income.name}`}><Pencil size={15} /><span>Edit</span></button>
+      </div>
+      <div className="history-row financial-swipe-main" style={styles.row}>
+        <div style={styles.meta}>
+          <strong>{income.name}</strong>
+          <span>{income.type} • {income.date}</span>
+        </div>
+        <span style={styles.amount}>{currency(income.amount)}</span>
+      </div>
+    </div>
+  );
+}
 
 export default function IncomeList({ incomes, onEdit, onDelete }) {
   if (!incomes.length) {
@@ -22,26 +66,7 @@ export default function IncomeList({ incomes, onEdit, onDelete }) {
   return (
     <div className="history-scroll">
       <div style={styles.list}>
-      {incomes.map((income) => (
-        <div key={income.id || income.firestoreId} className="history-row" style={styles.row}>
-          <div style={styles.meta}>
-            <strong>{income.name}</strong>
-            <span>
-              {income.type} • {income.date}
-            </span>
-          </div>
-
-          <div style={styles.rightSide}>
-            <span style={styles.amount}>{currency(income.amount)}</span>
-            <button className="edit-control" type="button" onClick={() => onEdit(income)} style={styles.editButton} aria-label={`Edit ${income.name}`} title="Edit income">
-              <Pencil size={15} />
-            </button>
-            <button className="delete-control" type="button" onClick={() => onDelete(income)} style={styles.deleteButton} aria-label={`Delete ${income.name}`} title="Delete income">
-              <Trash2 size={15} />
-            </button>
-          </div>
-        </div>
-      ))}
+      {incomes.map((income) => <IncomeRow key={income.id || income.firestoreId} income={income} onEdit={onEdit} onDelete={onDelete} />)}
       </div>
     </div>
   );
@@ -70,44 +95,12 @@ const styles = {
     gap: '4px',
     minWidth: 0,
   },
-  rightSide: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    flexWrap: 'wrap',
-  },
   amount: {
     fontWeight: 800,
     color: '#1b3a2b',
     minWidth: '92px',
     textAlign: 'right',
     letterSpacing: '-0.02em',
-  },
-  editButton: {
-    display: 'inline-grid',
-    placeItems: 'center',
-    width: '32px',
-    height: '32px',
-    border: '1px solid #bfdcc8',
-    background: 'linear-gradient(180deg, #f3faf5, #ebf6ef)',
-    color: '#2f6d56',
-    borderRadius: '10px',
-    padding: 0,
-    cursor: 'pointer',
-    boxShadow: '0 6px 14px rgba(31, 111, 93, 0.08)',
-  },
-  deleteButton: {
-    display: 'inline-grid',
-    placeItems: 'center',
-    width: '32px',
-    height: '32px',
-    border: '1px solid #f0c9c9',
-    background: 'linear-gradient(180deg, #fff8f8, #fff0f0)',
-    color: '#d95b5b',
-    borderRadius: '10px',
-    padding: 0,
-    cursor: 'pointer',
-    boxShadow: '0 6px 14px rgba(217, 91, 91, 0.08)',
   },
   emptyState: {
     background: 'linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,248,246,0.96))',

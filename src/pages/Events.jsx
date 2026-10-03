@@ -7,7 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, CalendarDays, Clock3, FileText, LayoutGrid, List, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { BookHeart, CalendarDays, ClipboardList, Clock3, FileText, LayoutGrid, List, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -20,6 +20,10 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
+import useSwipeActions from '../hooks/useSwipeActions';
+import usePersistentSort from '../hooks/usePersistentSort';
+import SortControl from '../components/common/SortControl';
+import EventSummaryDialog from '../components/events/EventSummaryDialog';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -42,7 +46,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onCancel, onDelete }) {
+function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEdit, onCancel, onDelete }) {
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
@@ -50,72 +54,59 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onCance
   const activities = event.activities || [];
   const memories = event.memories || [];
   const attachments = event.attachments || [];
-  const [isSwiped, setIsSwiped] = useState(false);
-  const gestureStartRef = useRef(null);
-  const gestureMovedRef = useRef(false);
-
-  const handlePointerDown = (pointerEvent) => {
-    gestureStartRef.current = pointerEvent.clientX;
-    gestureMovedRef.current = false;
-    pointerEvent.currentTarget.setPointerCapture?.(pointerEvent.pointerId);
-  };
-  const handlePointerMove = (pointerEvent) => {
-    if (gestureStartRef.current === null) return;
-    const delta = gestureStartRef.current - pointerEvent.clientX;
-    if (Math.abs(delta) > 10) gestureMovedRef.current = true;
-    if (delta > 40) setIsSwiped(true);
-    if (delta < -32) setIsSwiped(false);
-  };
-  const handlePointerUp = () => { gestureStartRef.current = null; };
+  const { action, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close, toggleOther } = useSwipeActions();
+  const isOtherOpen = action === 'other';
+  const isDeleteOpen = action === 'delete';
 
   return (
-    <article className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${isSwiped ? 'is-open' : ''}`}>
-      <div className="event-story-actions" aria-hidden={!isSwiped}>
-        <button type="button" className="event-story-action-edit" tabIndex={isSwiped ? 0 : -1} onClick={onEdit} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
-        <button type="button" className="event-story-action-cancel" tabIndex={isSwiped ? 0 : -1} onClick={onCancel} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
+    <article ref={swipeRootRef} className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${action ? `is-open-${action}` : ''}`}>
+      <div className="event-story-actions event-story-actions-other" aria-hidden={!isOtherOpen}>
+        <button type="button" className="event-story-action-summary" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onSummary(); }} aria-label={`View summary for ${event.name || 'event'}`}><ClipboardList size={14} /><span>Summary</span></button>
+        <button type="button" className="event-story-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onEdit(); }} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
+        <button type="button" className="event-story-action-cancel" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onCancel(); }} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
           {status === 'cancelled' ? <CalendarDays size={14} /> : <XCircle size={14} />}<span>{status === 'cancelled' ? 'Restore' : 'Cancel'}</span>
         </button>
-        <button type="button" className="event-story-action-delete" tabIndex={isSwiped ? 0 : -1} onClick={onDelete} aria-label={`Delete ${event.name || 'event'}`}><Trash2 size={14} /><span>Delete</span></button>
       </div>
-      <button
-        type="button"
-        className="event-story-main"
-        onClick={(clickEvent) => {
-          if (gestureMovedRef.current) {
-            clickEvent.preventDefault();
-            gestureMovedRef.current = false;
-            return;
-          }
-          if (isSwiped) setIsSwiped(false);
-          else onOpen();
-        }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
-        aria-label={`Open ${event.name || 'event'}. Swipe left for actions.`}
-      >
-        <span className={`event-story-status status-${status}`} aria-label={`Status: ${statusLabel}`}>{statusLabel}</span>
-        <span className="event-story-art" aria-hidden="true">
-          <span>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
-          <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
-          <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
-        </span>
-        <span className="event-story-copy">
-          <span className="event-story-meta">
-            <span>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
+      <div className="event-story-actions event-story-actions-delete" aria-hidden={!isDeleteOpen}>
+        <button type="button" className="event-story-action-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => { close(); onDelete(); }} aria-label={`Delete ${event.name || 'event'}`}><Trash2 size={14} /><span>Delete</span></button>
+      </div>
+      <div className="event-story-main-viewport">
+        <button
+          type="button"
+          className="event-story-main"
+          onClick={(clickEvent) => {
+            if (consumeSwipeClick(clickEvent)) return;
+            if (action) close();
+            else onOpen();
+          }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          aria-label={`Open ${event.name || 'event'}. Swipe left for edit and cancel, right for delete.`}
+        >
+          <span className={`event-story-status status-${status}`} aria-label={`Status: ${statusLabel}`}>{statusLabel}</span>
+          <span className="event-story-art" aria-hidden="true">
+            <span>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
+            <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
+            <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
           </span>
-          <strong>{event.name || 'A life moment'}</strong>
-          <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
-          {event.notes ? <span className="event-story-note">{event.notes}</span> : null}
-          <span className="event-story-details">
-            <span><Clock3 size={13} /> {activities.length} activities</span>
-            <span><BookHeart size={13} /> {memories.length} memories</span>
-            <span><FileText size={13} /> {attachments.length} keepsakes</span>
-            {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
+          <span className="event-story-copy">
+            <span className="event-story-meta">
+              <span>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
+            </span>
+            <strong>{event.name || 'A life moment'}</strong>
+            <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
+            {event.notes ? <span className="event-story-note">{event.notes}</span> : null}
+            <span className="event-story-details">
+              <span><Clock3 size={13} /> {activities.length} activities</span>
+              <span><BookHeart size={13} /> {memories.length} memories</span>
+              <span><FileText size={13} /> {attachments.length} keepsakes</span>
+              {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
+            </span>
           </span>
-        </span>
-      </button>
+        </button>
+      </div>
     </article>
   );
 }
@@ -164,9 +155,11 @@ export default function Events() {
   const [expenseDescription, setExpenseDescription] = useState('');
   const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
+  const [summaryEvent, setSummaryEvent] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All moments');
+  const { field: eventSort, direction: eventSortDirection, setField: setEventSort, toggleDirection: toggleEventSortDirection } = usePersistentSort('events', 'date', 'asc');
   const [viewMode, setViewMode] = useState('timeline');
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
@@ -239,16 +232,45 @@ export default function Events() {
   }).length;
   const memoryCount = events.reduce((count, event) => count + (event.memories?.length || 0) + (event.activities?.length || 0), 0);
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
+  const compareEventDate = (first, second) => {
+    const firstDate = getTimelineDate(first)?.getTime() ?? 0;
+    const secondDate = getTimelineDate(second)?.getTime() ?? 0;
+    return firstDate - secondDate;
+  };
+  const compareEventStatus = (first, second) => {
+    const getRank = (event) => {
+      const status = getEventStatus(event);
+      if (status === 'cancelled') return 3;
+      if (status === 'completed') return 2;
+      const date = getTimelineDate(event);
+      return date && date >= todayStart ? 1 : 0;
+    };
+    return getRank(first) - getRank(second);
+  };
+  const compareEvents = (first, second) => {
+    const primary = eventSort === 'name'
+      ? String(first.name || '').localeCompare(String(second.name || ''), undefined, { sensitivity: 'base' })
+      : eventSort === 'status' ? compareEventStatus(first, second) : compareEventDate(first, second);
+    const secondary = primary || compareEventDate(first, second);
+    return eventSortDirection === 'desc' ? -secondary : secondary;
+  };
   const nextMoments = visibleEvents.filter((event) => {
     if (getEventStatus(event) === 'cancelled') return false;
     const date = getTimelineDate(event);
     return date && date >= todayStart;
-  }).sort((first, second) => getTimelineDate(first) - getTimelineDate(second));
+  }).sort(compareEvents);
   const pastMoments = visibleEvents.filter((event) => {
     if (getEventStatus(event) === 'cancelled') return true;
     const date = getTimelineDate(event);
     return date && date < todayStart;
-  }).sort((first, second) => getTimelineDate(second) - getTimelineDate(first));
+  }).sort(compareEvents);
+  const statusMomentGroups = [
+    { label: 'In Progress', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) < todayStart },
+    { label: 'Upcoming / Planned', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) >= todayStart },
+    { label: 'Completed', matches: (event) => getEventStatus(event) === 'completed' },
+    { label: 'Cancelled', matches: (event) => getEventStatus(event) === 'cancelled' },
+  ].map((group) => ({ ...group, events: visibleEvents.filter(group.matches).sort(compareEvents) })).filter((group) => group.events.length);
+  if (eventSortDirection === 'desc') statusMomentGroups.reverse();
   const pickerQuery = activityEventSearch.trim().toLowerCase();
   const pickerEvents = events.filter((event) => !pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery)));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
@@ -438,6 +460,18 @@ export default function Events() {
     });
   };
 
+  const toggleActivityCancellation = async (activityId) => {
+    if (!focusedEvent) return;
+    await updateEventItem(user?.uid, isGuest, {
+      ...focusedEvent,
+      activities: (focusedEvent.activities || []).map((activity) => (
+        activity.id === activityId
+          ? { ...activity, cancelled: !(activity.cancelled || activity.status === 'cancelled'), status: activity.cancelled || activity.status === 'cancelled' ? 'in-progress' : 'cancelled' }
+          : activity
+      )),
+    });
+  };
+
   const removeEvent = async (event) => {
     try {
       await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
@@ -485,12 +519,26 @@ export default function Events() {
           <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
         <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{focusedEvent.type}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} /></section>
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
         {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
         {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
       </div>
     );
   }
+
+  const renderEventCard = (event) => (
+    <EventStoryCard
+      key={event.id || event.firestoreId}
+      event={event}
+      viewMode={viewMode}
+      expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
+      onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
+      onSummary={() => setSummaryEvent(event)}
+      onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
+      onCancel={() => toggleEventCancellation(event)}
+      onDelete={() => setPendingDeleteEvent(event)}
+    />
+  );
 
   return (
     <div className="events-page life-timeline-page">
@@ -509,9 +557,12 @@ export default function Events() {
 
       <div className="event-discovery-bar">
         <label className="event-search"><Search size={17} /><input value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment or memory" aria-label="Search events" /></label>
-        <div className="event-view-toggle" aria-label="Choose event view">
-          <button type="button" className={viewMode === 'timeline' ? 'active' : ''} onClick={() => setViewMode('timeline')} aria-pressed={viewMode === 'timeline'}><List size={16} /><span>Timeline</span></button>
-          <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')} aria-pressed={viewMode === 'cards'}><LayoutGrid size={16} /><span>Cards</span></button>
+        <div className="event-discovery-actions">
+          <div className="event-view-toggle" aria-label="Choose event view">
+            <button type="button" className={viewMode === 'timeline' ? 'active' : ''} onClick={() => setViewMode('timeline')} aria-pressed={viewMode === 'timeline'}><List size={16} /><span>Timeline</span></button>
+            <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')} aria-pressed={viewMode === 'cards'}><LayoutGrid size={16} /><span>Cards</span></button>
+          </div>
+          <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
         </div>
       </div>
 
@@ -522,11 +573,17 @@ export default function Events() {
       {error ? <p style={styles.errorText}>{error}</p> : null}
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
         <div className={`life-journey ${viewMode === 'cards' ? 'life-journey-cards' : ''}`}>
+          {eventSort === 'status' ? statusMomentGroups.map((group) => (
+            <section className="life-journey-section" key={group.label}>
+              <div className="life-journey-label"><CalendarDays size={16} /><div><span>{group.label}</span><small>Moments grouped by status</small></div><b>{group.events.length}</b></div>
+              <div className="life-journey-items">{group.events.map(renderEventCard)}</div>
+            </section>
+          )) : <>
           {nextMoments.length ? (
             <section className="life-journey-section">
               <div className="life-journey-label"><CalendarDays size={16} /><div><span>On the horizon</span><small>Your next chapters</small></div><b>{nextMoments.length}</b></div>
               <div className="life-journey-items">
-                {nextMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onCancel={() => toggleEventCancellation(event)} onDelete={() => setPendingDeleteEvent(event)} />)}
+                {nextMoments.map(renderEventCard)}
               </div>
             </section>
           ) : null}
@@ -534,10 +591,11 @@ export default function Events() {
             <section className="life-journey-section past-journey-section">
               <div className="life-journey-label"><BookHeart size={16} /><div><span>Life so far</span><small>Moments you have lived</small></div><b>{pastMoments.length}</b></div>
               <div className="life-journey-items">
-                {pastMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onCancel={() => toggleEventCancellation(event)} onDelete={() => setPendingDeleteEvent(event)} />)}
+                {pastMoments.map(renderEventCard)}
               </div>
             </section>
           ) : null}
+          </>}
         </div>
       ) : (
         <div className="life-journey-empty">
@@ -550,6 +608,7 @@ export default function Events() {
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
+      {summaryEvent ? <EventSummaryDialog event={summaryEvent} onClose={() => setSummaryEvent(null)} /> : null}
       {drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
       {activityChooserOpen ? (
         <ModalDialog title="Choose a life moment" className="lifehub-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>

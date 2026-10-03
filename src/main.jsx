@@ -12,6 +12,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import useAppStore from './store/useAppStore';
 import './index.css';
 import './design-system.css';
 
@@ -31,10 +32,39 @@ try {
   applyDocumentTheme('dark');
 }
 
+const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
+
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js', { scope: '/', updateViaCache: 'none' })
-      .catch((error) => console.warn('DN offline app shell could not be registered:', error));
+  window.addEventListener('load', async () => {
+    try {
+      const hadController = Boolean(navigator.serviceWorker.controller);
+      if (hadController) {
+        navigator.serviceWorker.addEventListener('controllerchange', () => {
+          window.location.reload();
+        }, { once: true });
+      }
+
+      const registration = await navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`, { scope: '/', updateViaCache: 'none' });
+      const notifyUpdateReady = () => {
+        if (!hadController || !registration.waiting) return;
+        const waitingWorker = registration.waiting;
+        useAppStore.getState().showToast('A new version is available. Refresh to update.', 'success', {
+          label: 'Refresh',
+          duration: 10000,
+          onClick: () => waitingWorker.postMessage({ type: 'SKIP_WAITING' }),
+        });
+      };
+      if (registration.waiting) notifyUpdateReady();
+      registration.addEventListener('updatefound', () => {
+        const installingWorker = registration.installing;
+        installingWorker?.addEventListener('statechange', () => {
+          if (installingWorker.state === 'installed') notifyUpdateReady();
+        });
+      });
+      await registration.update();
+    } catch (error) {
+      console.warn('DN offline app shell could not be registered:', error);
+    }
   }, { once: true });
 }
 

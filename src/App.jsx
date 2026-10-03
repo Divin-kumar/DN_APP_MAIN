@@ -9,7 +9,8 @@
   show the events section; if they open any unknown page, send them home."
 */
 import { lazy, Suspense, useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';
 import ProtectedRoute from './routes/ProtectedRoute';
@@ -41,19 +42,30 @@ const loadScreen = (screen, label) => (
 function GlobalToast() {
   const toast = useAppStore((state) => state.toast);
   const hideToast = useAppStore((state) => state.hideToast);
+  const navigate = useNavigate();
 
-  // If a toast exists, remove it automatically after 1.2 seconds.
+  // Keep success feedback visible long enough to read, without blocking the page.
   useEffect(() => {
     if (!toast) return undefined;
-    const id = window.setTimeout(() => hideToast(), 1200);
+    const id = window.setTimeout(() => hideToast(), toast.duration || 2600);
     return () => window.clearTimeout(id);
   }, [toast, hideToast]);
 
   if (!toast) return null;
 
+  const handleAction = () => {
+    const destination = toast.action?.to;
+    const onClick = toast.action?.onClick;
+    hideToast();
+    onClick?.();
+    if (destination) navigate(destination);
+  };
+
   return (
-    <div className="app-toast" data-tone={toast.type || 'success'}>
-      {toast.message}
+    <div className="app-toast" data-tone={toast.type || 'success'} role="status" aria-live="polite">
+      <span className="app-toast-icon" aria-hidden="true">{toast.type === 'danger' || toast.type === 'error' ? <CircleAlert size={17} /> : <Check size={17} />}</span>
+      <span className="app-toast-message">{toast.message}</span>
+      {toast.action?.label ? <button className="app-toast-action" type="button" onClick={handleAction}>{toast.action.label}</button> : null}
     </div>
   );
 }

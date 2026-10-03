@@ -45,6 +45,7 @@ const defaultPreferences = {
     budgetAlerts: true,
     reminderTime: '09:00',
   },
+  listSort: {},
 };
 
 const createDefaultPreferences = () => ({
@@ -96,6 +97,7 @@ const loadPreferences = () => {
         ...defaultPreferences.notifications,
         ...(stored.notifications || {}),
       },
+      listSort: { ...(stored.listSort || {}) },
       greetingEnabledTypes: Array.isArray(stored.greetingEnabledTypes) && stored.greetingEnabledTypes.length
         ? [...new Set(stored.greetingEnabledTypes.filter(Boolean))]
         : [...defaultGreetingEnabledTypes],
@@ -156,6 +158,9 @@ const useAppStore = create((set) => ({
     const merged = {
       ...state.preferences,
       ...nextPreferences,
+      ...(nextPreferences.listSort ? {
+        listSort: { ...state.preferences.listSort, ...nextPreferences.listSort },
+      } : {}),
     };
     if (Object.prototype.hasOwnProperty.call(nextPreferences, 'theme')) {
       localStorage.setItem('lifehub_theme_choice', '1');
@@ -193,7 +198,7 @@ const useAppStore = create((set) => ({
     }),
 
   // Small success/error popups shown throughout the app.
-  showToast: (message, type = 'success') => set({ toast: { message, type } }),
+  showToast: (message, type = 'success', action = null) => set({ toast: { message, type, action, duration: action?.duration || 2600 } }),
   hideToast: () => set({ toast: null }),
 
   // Shared loading state used during auth checks and boot-up.

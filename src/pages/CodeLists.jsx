@@ -40,7 +40,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const incomes = useIncomeStore((state) => state.incomes);
   const [draft, setDraft] = useState('');
   const [draftLabel, setDraftLabel] = useState('');
-  const [swipedValue, setSwipedValue] = useState(null);
+  const [swipedRow, setSwipedRow] = useState(null);
   const [editingValue, setEditingValue] = useState(null);
   const [warningValue, setWarningValue] = useState(null);
   const swipeStartRef = useRef(null);
@@ -48,19 +48,19 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const sectionRef = useRef(null);
 
   useEffect(() => {
-    if (!swipedValue) return undefined;
+    if (!swipedRow) return undefined;
 
     const handleOutsidePointerDown = (event) => {
       const target = event.target;
       const clickedRow = target instanceof Element ? target.closest('.code-list-item') : null;
       if (!sectionRef.current?.contains(target) || !clickedRow || !sectionRef.current.contains(clickedRow)) {
-        setSwipedValue(null);
+        setSwipedRow(null);
       }
     };
 
     document.addEventListener('pointerdown', handleOutsidePointerDown);
     return () => document.removeEventListener('pointerdown', handleOutsidePointerDown);
-  }, [swipedValue]);
+  }, [swipedRow]);
 
   const entries = useMemo(() => {
     const source = Array.isArray(adminValues[listKey]) && adminValues[listKey].length
@@ -99,23 +99,23 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const usageCount = usageMap[entry.value] || 0;
     if (usageCount === 0) {
       updateEntries(entries.filter((item) => item.value !== entry.value));
-      setSwipedValue(null);
+      setSwipedRow(null);
       return;
     }
 
     setWarningValue({ entry, usageCount, label: entry.label });
-    setSwipedValue(null);
+    setSwipedRow(null);
   };
 
   const handleDisable = (entry) => {
     updateEntries(entries.map((item) => (item.value === entry.value ? { ...item, active: false, isActive: false } : item)));
-    setSwipedValue(null);
+    setSwipedRow(null);
   };
 
   const handleActivate = (entry) => {
     const nextEntries = entries.map((item) => (item.value === entry.value ? { ...item, active: true, isActive: true } : item));
     updateEntries(nextEntries);
-    setSwipedValue(null);
+    setSwipedRow(null);
   };
 
   const handleRename = (entry, nextValue) => {
@@ -126,11 +126,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       item.value === entry.value ? { ...item, value: trimmed, label: trimmed } : item
     )));
     setEditingValue(null);
-    setSwipedValue(null);
+    setSwipedRow(null);
   };
 
   const handlePointerDown = (event, value) => {
-    swipeStartRef.current = { value, x: event.clientX };
+    swipeStartRef.current = { value, x: event.clientX, y: event.clientY };
     swipeMovedRef.current = false;
     event.currentTarget.setPointerCapture?.(event.pointerId);
   };
@@ -138,10 +138,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const handlePointerMove = (event) => {
     const gesture = swipeStartRef.current;
     if (!gesture) return;
-    const delta = gesture.x - event.clientX;
-    if (Math.abs(delta) > 10) swipeMovedRef.current = true;
-    if (delta > 40) setSwipedValue(gesture.value);
-    if (delta < -32) setSwipedValue(null);
+    const deltaX = event.clientX - gesture.x;
+    const deltaY = event.clientY - gesture.y;
+    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) swipeMovedRef.current = true;
+    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY)) return;
+    setSwipedRow({ value: gesture.value, action: deltaX > 0 ? 'delete' : 'other' });
   };
 
   const handlePointerUp = () => {
@@ -150,42 +151,46 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
   const renderEntry = (entry) => {
     const usageCount = usageMap[entry.value] || 0;
-    const isSwiped = swipedValue === entry.value;
+    const swipedRowMatches = swipedRow?.value === entry.value;
+    const isOtherOpen = swipedRowMatches && swipedRow.action === 'other';
+    const isDeleteOpen = swipedRowMatches && swipedRow.action === 'delete';
     const isInactive = entry.active === false || entry.isActive === false;
+    const hasStatusAction = isInactive || usageCount > 0;
 
     return (
-      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isSwiped ? 'is-open' : ''} ${isInactive ? 'is-inactive' : ''}`}>
-        <div className="code-list-actions" aria-hidden={!isSwiped}>
-          <button type="button" className="code-list-action code-list-edit" tabIndex={isSwiped ? 0 : -1} onClick={() => setEditingValue(entry)}>
+      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
+        <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
+          <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { setEditingValue(entry); setSwipedRow(null); }}>
             <PencilLine size={14} /> Edit
           </button>
           {isInactive ? (
-            <button type="button" className="code-list-action code-list-activate" tabIndex={isSwiped ? 0 : -1} onClick={() => handleActivate(entry)}>
+            <button type="button" className="code-list-action code-list-activate" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleActivate(entry)}>
               <Check size={14} /> Activate
             </button>
           ) : usageCount > 0 ? (
-            <button type="button" className="code-list-action code-list-disable" tabIndex={isSwiped ? 0 : -1} onClick={() => handleDisable(entry)}>
+            <button type="button" className="code-list-action code-list-disable" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleDisable(entry)}>
               <ShieldOff size={14} /> Disable
             </button>
-          ) : (
-            <button type="button" className="code-list-action code-list-delete" tabIndex={isSwiped ? 0 : -1} onClick={() => handleDelete(entry)}>
-              <Trash2 size={14} /> Delete
-            </button>
-          )}
+          ) : null}
+        </div>
+        <div className="code-list-actions code-list-actions-delete" aria-hidden={!isDeleteOpen}>
+          <button type="button" className="code-list-action code-list-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => handleDelete(entry)}>
+            <Trash2 size={14} /> Delete
+          </button>
         </div>
 
         <button
           type="button"
           className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left or tap for actions.`}
-          aria-expanded={isSwiped}
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left for edit or status actions, right for delete.`}
+          aria-expanded={Boolean(swipedRowMatches)}
           onClick={(event) => {
             if (swipeMovedRef.current) {
               event.preventDefault();
               swipeMovedRef.current = false;
               return;
             }
-            setSwipedValue((current) => (current === entry.value ? null : entry.value));
+            setSwipedRow((current) => (current?.value === entry.value ? null : { value: entry.value, action: 'other' }));
           }}
           onPointerDown={(event) => handlePointerDown(event, entry.value)}
           onPointerMove={handlePointerMove}

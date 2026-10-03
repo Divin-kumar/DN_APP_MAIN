@@ -12,6 +12,19 @@ test('events are completed when every linked activity is completed', () => {
   assert.equal(getEventStatus({ activities: [{ completed: true }, { completed: true }] }), 'completed');
 });
 
+test('cancelled activities do not block completion of active activities', () => {
+  assert.equal(getEventStatus({
+    activities: [
+      { completed: true },
+      { completed: false, cancelled: true },
+    ],
+  }), 'completed');
+});
+
+test('events with only cancelled activities remain in progress', () => {
+  assert.equal(getEventStatus({ activities: [{ completed: true, cancelled: true }] }), 'in-progress');
+});
+
 test('manual cancellation takes precedence over activity status', () => {
   const event = {
     status: 'cancelled',

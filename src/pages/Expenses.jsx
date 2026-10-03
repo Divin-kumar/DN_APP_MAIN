@@ -14,6 +14,8 @@ import useEventStore from '../store/useEventStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import { getCodeListItems } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import SortControl from '../components/common/SortControl';
+import usePersistentSort from '../hooks/usePersistentSort';
 
 export default function Expenses() {
   const location = useLocation();
@@ -27,6 +29,7 @@ export default function Expenses() {
 
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
+  const { field: expenseSort, direction: expenseSortDirection, setField: setExpenseSort, toggleDirection: toggleExpenseSortDirection } = usePersistentSort('expenses', 'date', 'desc');
   const [editingExpense, setEditingExpense] = useState(null);
   const [expenseDialogOpen, setExpenseDialogOpen] = useState(false);
   const [pendingDeleteExpense, setPendingDeleteExpense] = useState(null);
@@ -45,14 +48,28 @@ export default function Expenses() {
   }, [location.search, navigate]);
 
   const filteredExpenses = useMemo(() => {
-    return expenses.filter((expense) => {
+    const filtered = expenses.filter((expense) => {
       const matchesSearch = [expense.name, expense.category].some((value) =>
         String(value || '').toLowerCase().includes(search.toLowerCase())
       );
       const matchesCategory = categoryFilter === 'all' || expense.category === categoryFilter;
       return matchesSearch && matchesCategory;
     });
-  }, [expenses, search, categoryFilter]);
+    return filtered.sort((first, second) => {
+      if (expenseSort === 'amount') {
+        const order = Number(first.amount || 0) - Number(second.amount || 0);
+        return expenseSortDirection === 'desc' ? -order : order;
+      }
+      if (expenseSort === 'name') {
+        const order = String(first.name || '').localeCompare(String(second.name || ''), undefined, { sensitivity: 'base' });
+        return expenseSortDirection === 'desc' ? -order : order;
+      }
+      const firstDate = new Date(first.date || 0).getTime();
+      const secondDate = new Date(second.date || 0).getTime();
+      const order = (Number.isFinite(firstDate) ? firstDate : 0) - (Number.isFinite(secondDate) ? secondDate : 0);
+      return expenseSortDirection === 'desc' ? -order : order;
+    });
+  }, [expenses, search, categoryFilter, expenseSort, expenseSortDirection]);
   const categories = useMemo(() => {
     const configured = getCodeListItems('expenseCategories', adminValues.expenseCategories);
     const known = [...new Set([...expenses.map((expense) => expense.category), ...configured].filter(Boolean))];
@@ -130,6 +147,7 @@ export default function Expenses() {
           <option value="all">All categories</option>
           {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </DropdownSelect>
+        <SortControl field={expenseSort} direction={expenseSortDirection} onFieldChange={setExpenseSort} onToggleDirection={toggleExpenseSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort expenses" />
       </div>
       <section className="financial-module-history" aria-label="Expense history">
         {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading expenses" /> : error === 'Unable to load expenses.' ? <div className="financial-load-error" role="alert"><span>Expenses couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadExpenses(user?.uid, isGuest)}>Try again</button></div> : <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />}

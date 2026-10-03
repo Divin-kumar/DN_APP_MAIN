@@ -294,6 +294,7 @@ const getGreetingMessage = (event, greetingTemplates = {}) => {
 };
 
 function EventSummaryModal({ event, onClose }) {
+  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const eventDate = getNextOccurrenceForStatus(event);
   const activities = Array.isArray(event.activities) ? event.activities : [];
   const totalActivities = activities.length;
@@ -340,6 +341,8 @@ function EventSummaryModal({ event, onClose }) {
         const label = activity.title || activity.name || 'Untitled activity';
         const check = activity.completed ? '✓' : '○';
         lines.push(`${check} ${label}`);
+        const description = String(activity.description || '').trim();
+        if (description) lines.push(`  Description: ${description}`);
       });
     }
 
@@ -383,12 +386,22 @@ function EventSummaryModal({ event, onClose }) {
                 const isComplete = Boolean(activity.completed);
 
                 return (
-                  <li key={`${label}-${activity.id || index}`} style={styles.activityItem}>
+                  <li key={`${label}-${activity.id || index}`} className="dashboard-summary-activity-item" style={styles.activityItem}>
                     <span style={isComplete ? styles.activityCheckComplete : styles.activityCheckPending}>
                       {isComplete ? '✓' : '○'}
                     </span>
-                    <span style={styles.activityLabel}>{label}</span>
-                    <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
+                    <span className="dashboard-summary-activity-copy">
+                      <span style={styles.activityLabel}>{label}</span>
+                      <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
+                      {String(activity.description || '').trim() ? (
+                        <span className="dashboard-summary-description-wrap">
+                          <span className={`dashboard-summary-description${String(activity.description).length > 150 && !expandedDescriptions[activity.id || index] ? ' is-truncated' : ''}`}>
+                            {activity.description}
+                          </span>
+                          {String(activity.description).length > 150 ? <button type="button" className="dashboard-summary-description-toggle" aria-expanded={Boolean(expandedDescriptions[activity.id || index])} onClick={() => setExpandedDescriptions((current) => ({ ...current, [activity.id || index]: !current[activity.id || index] }))}>{expandedDescriptions[activity.id || index] ? 'Show less' : 'Show more'}</button> : null}
+                        </span>
+                      ) : null}
+                    </span>
                   </li>
                 );
               })}

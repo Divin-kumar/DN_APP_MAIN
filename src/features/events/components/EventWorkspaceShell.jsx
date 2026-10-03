@@ -14,6 +14,8 @@ import ExpenseForm from '../../../components/expenses/ExpenseForm';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
+import usePersistentSort from '../../../hooks/usePersistentSort';
+import SortControl from '../../../components/common/SortControl';
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -56,6 +58,7 @@ export default function EventWorkspaceShell() {
   const [activityPriority, setActivityPriority] = useState('medium');
   const [activitySearch, setActivitySearch] = useState('');
   const [activityFilter, setActivityFilter] = useState('all');
+  const { field: activitySort, direction: activitySortDirection, setField: setActivitySort, toggleDirection: toggleActivitySortDirection } = usePersistentSort(`activities-${eventId}`, 'date', 'asc');
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [activityError, setActivityError] = useState('');
@@ -121,11 +124,31 @@ export default function EventWorkspaceShell() {
   ];
   const activeSection = sections.find((section) => location.pathname === section.path) || sections[0];
   const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
-  const activities = [...(event.activities || [])].sort((first, second) => (
-    new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime()
-  ));
+  const activities = [...(event.activities || [])].sort((first, second) => {
+    const dateOrder = new Date(first.date || '9999-12-31').getTime() - new Date(second.date || '9999-12-31').getTime();
+    let result = dateOrder;
+    if (activitySort === 'title') result = String(first.title || '').localeCompare(String(second.title || ''), undefined, { sensitivity: 'base' });
+    if (activitySort === 'priority') {
+      const priorityRank = { high: 3, medium: 2, low: 1 };
+      result = (priorityRank[String(first.priority || 'medium').toLowerCase()] || 0) - (priorityRank[String(second.priority || 'medium').toLowerCase()] || 0);
+    }
+    if (activitySort === 'status') {
+      const statusRank = (activity) => {
+        if (activity.cancelled || activity.status === 'cancelled') return 3;
+        if (activity.completed) return 2;
+        const activityDate = new Date(`${String(activity.date || '').slice(0, 10)}T00:00:00`);
+        return activityDate > new Date(new Date().setHours(0, 0, 0, 0)) ? 1 : 0;
+      };
+      result = statusRank(first) - statusRank(second);
+    }
+    if (!result && activitySort !== 'date') result = dateOrder;
+    return activitySortDirection === 'desc' ? -result : result;
+  });
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch = String(activity.title || '').toLowerCase().includes(activitySearch.trim().toLowerCase());
+    const isCancelled = activity.cancelled || activity.status === 'cancelled';
+    if (activityFilter === 'cancelled') return isCancelled && matchesSearch;
+    if (isCancelled) return false;
     const matchesFilter = activityFilter === 'all'
       || (activityFilter === 'in-progress' && !activity.completed)
       || (activityFilter === 'completed' && activity.completed)
@@ -141,7 +164,8 @@ export default function EventWorkspaceShell() {
     !expense.activityId && (!expense.eventId || expense.eventId === eventId)
   ));
   const totalSpent = eventExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-  const completedActivities = activities.filter((activity) => activity.completed).length;
+  const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
+  const completedActivities = activeActivities.filter((activity) => activity.completed).length;
   const memoryCount = (event.memories || []).length;
   const attachments = event.attachments || [];
   const latestMemory = [...(event.memories || [])].sort((first, second) => new Date(second.createdAt || 0) - new Date(first.createdAt || 0))[0];
@@ -275,6 +299,17 @@ export default function EventWorkspaceShell() {
     });
   };
 
+  const toggleActivityCancellation = async (activityId) => {
+    await updateEventItem(user?.uid, isGuest, {
+      ...event,
+      activities: (event.activities || []).map((activity) => (
+        activity.id === activityId
+          ? { ...activity, cancelled: !(activity.cancelled || activity.status === 'cancelled'), status: activity.cancelled || activity.status === 'cancelled' ? 'in-progress' : 'cancelled' }
+          : activity
+      )),
+    });
+  };
+
   const saveNotes = async (submitEvent) => {
     submitEvent.preventDefault();
     await updateEventItem(user?.uid, isGuest, { ...event, notes: notesDraft.trim() });
@@ -373,11 +408,11 @@ export default function EventWorkspaceShell() {
       if (activeSection.label === 'Timeline') {
         return activities.length ? (
           <div className="timeline-list">
-            {activities.map((activity) => (
+                {activities.map((activity) => (
               <div key={activity.id} className="timeline-item">
                 <span>{formatDate(activity.date)}</span>
                 <strong>{activity.title || 'Untitled activity'}</strong>
-                <small className={activity.completed ? 'is-complete' : 'is-pending'}>{activity.completed ? 'Completed' : 'In progress'}</small>
+                    <small className={activity.cancelled || activity.status === 'cancelled' ? 'is-cancelled' : activity.completed ? 'is-complete' : 'is-pending'}>{activity.cancelled || activity.status === 'cancelled' ? 'Cancelled' : activity.completed ? 'Completed' : 'In progress'}</small>
                 {activity.description ? <p>{activity.description}</p> : null}
               </div>
             ))}
@@ -394,6 +429,7 @@ export default function EventWorkspaceShell() {
                 ['all', 'All'],
                 ['in-progress', 'In Progress'],
                 ['completed', 'Completed'],
+                ['cancelled', 'Cancelled'],
                 ['high', 'High Priority'],
                 ['medium', 'Medium Priority'],
                 ['low', 'Low Priority'],
@@ -401,14 +437,17 @@ export default function EventWorkspaceShell() {
                 <button key={value} type="button" className={activityFilter === value ? 'is-selected' : ''} aria-pressed={activityFilter === value} onClick={() => setActivityFilter(value)}>{label}</button>
               ))}
             </div>
+            <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
           </div>
           <ActivityList
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
             allActivities={activities}
+            showCancelled={activityFilter === 'cancelled'}
             hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
             expensesByActivity={expensesByActivity}
             onToggleComplete={toggleActivity}
+            onToggleCancelled={toggleActivityCancellation}
             onAddExpense={(activity) => { setExpenseError(''); setExpenseDialogActivity(activity); }}
             onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
             onEdit={editActivity}

@@ -12,6 +12,8 @@ import useIncomeStore from '../store/useIncomeStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import { getCodeListItems } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import SortControl from '../components/common/SortControl';
+import usePersistentSort from '../hooks/usePersistentSort';
 
 export default function Income() {
   const user = useAppStore((state) => state.user);
@@ -22,6 +24,7 @@ export default function Income() {
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
+  const { field: incomeSort, direction: incomeSortDirection, setField: setIncomeSort, toggleDirection: toggleIncomeSortDirection } = usePersistentSort('income', 'date', 'desc');
   const [editingIncome, setEditingIncome] = useState(null);
   const [incomeDialogOpen, setIncomeDialogOpen] = useState(false);
   const [pendingDeleteIncome, setPendingDeleteIncome] = useState(null);
@@ -32,14 +35,28 @@ export default function Income() {
   }, [user, isGuest, loadIncomes]);
 
   const filteredIncomes = useMemo(() => {
-    return incomes.filter((income) => {
+    const filtered = incomes.filter((income) => {
       const matchesSearch = [income.name, income.type].some((value) =>
         String(value || '').toLowerCase().includes(search.toLowerCase())
       );
       const matchesType = typeFilter === 'all' || income.type === typeFilter;
       return matchesSearch && matchesType;
     });
-  }, [incomes, search, typeFilter]);
+    return filtered.sort((first, second) => {
+      if (incomeSort === 'amount') {
+        const order = Number(first.amount || 0) - Number(second.amount || 0);
+        return incomeSortDirection === 'desc' ? -order : order;
+      }
+      if (incomeSort === 'name') {
+        const order = String(first.name || '').localeCompare(String(second.name || ''), undefined, { sensitivity: 'base' });
+        return incomeSortDirection === 'desc' ? -order : order;
+      }
+      const firstDate = new Date(first.date || 0).getTime();
+      const secondDate = new Date(second.date || 0).getTime();
+      const order = (Number.isFinite(firstDate) ? firstDate : 0) - (Number.isFinite(secondDate) ? secondDate : 0);
+      return incomeSortDirection === 'desc' ? -order : order;
+    });
+  }, [incomes, search, typeFilter, incomeSort, incomeSortDirection]);
   const incomeTypes = useMemo(() => {
     const configured = getCodeListItems('incomeTypes', adminValues.incomeTypes);
     const known = [...new Set([...incomes.map((income) => income.type), ...configured].filter(Boolean))];
@@ -97,6 +114,7 @@ export default function Income() {
           <option value="all">All types</option>
           {incomeTypes.map((type) => <option key={type} value={type}>{type}</option>)}
         </DropdownSelect>
+        <SortControl field={incomeSort} direction={incomeSortDirection} onFieldChange={setIncomeSort} onToggleDirection={toggleIncomeSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort income" />
       </div>
       <section className="financial-module-history" aria-label="Income history">
         {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading income" /> : error === 'Unable to load incomes.' ? <div className="financial-load-error" role="alert"><span>Income couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadIncomes(user?.uid, isGuest)}>Try again</button></div> : <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />}

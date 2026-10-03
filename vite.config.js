@@ -1,5 +1,11 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import { readFileSync } from 'node:fs';
+
+const APP_VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
+const BUILD_ID = `${APP_VERSION}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
+const DEPLOYED_AT = process.env.VITE_DEPLOYED_AT || new Date().toISOString();
+const DEPLOY_ENV = process.env.VITE_DEPLOY_ENV || (process.env.NODE_ENV === 'production' ? 'Production' : 'Test');
 
 const pwaShellPlugin = () => ({
   name: 'dn-pwa-shell',
@@ -22,11 +28,18 @@ const pwaShellPlugin = () => ({
     const precacheUrls = [...new Set(['/', '/index.html', '/manifest.webmanifest', '/dn-icon.svg', ...entryAssets])];
     const workerSource = `
 const CACHE_PREFIX = 'dn-shell-';
-const CACHE_NAME = CACHE_PREFIX + '${Date.now()}';
+const CACHE_NAME = CACHE_PREFIX + '${BUILD_ID}';
 const PRECACHE_URLS = ${JSON.stringify(precacheUrls)};
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS)));
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(PRECACHE_URLS)),
+  );
+});
+
+self.addEventListener('message', (event) => {
+  if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 self.addEventListener('activate', (event) => {
@@ -72,6 +85,11 @@ self.addEventListener('fetch', (event) => {
 
 export default defineConfig({
   plugins: [react(), pwaShellPlugin()],
+  define: {
+    'import.meta.env.VITE_APP_VERSION': JSON.stringify(APP_VERSION),
+    'import.meta.env.VITE_DEPLOYED_AT': JSON.stringify(DEPLOYED_AT),
+    'import.meta.env.VITE_DEPLOY_ENV': JSON.stringify(DEPLOY_ENV),
+  },
   server: {
     host: '0.0.0.0',
     port: 5173,

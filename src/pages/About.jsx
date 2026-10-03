@@ -1,6 +1,13 @@
 import { ArrowLeft, BookOpen, CircleDashed, Info, Sparkles, TrendingUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
+const appVersion = import.meta.env.VITE_APP_VERSION;
+const deployedAt = new Date(import.meta.env.VITE_DEPLOYED_AT);
+const publishedDate = Number.isNaN(deployedAt.getTime())
+  ? 'Not published yet'
+  : new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).format(deployedAt);
+const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
+
 const guideItems = [
   { title: 'Dashboard Overview', description: 'Start with the dashboard to view upcoming events, recent activity, and a quick summary of your personal and financial life.' },
   { title: 'Events Management', description: 'Create life moments, organize event details, and keep each occasion linked to planning notes, memories, and attachments.' },
@@ -37,7 +44,7 @@ export default function About() {
         </button>
         <div className="settings-subpage-title-wrap">
           <span className="settings-subpage-eyebrow">Settings</span>
-          <h2>About DN</h2>
+          <h2>About LifeHub</h2>
         </div>
       </header>
 
@@ -53,20 +60,24 @@ export default function About() {
         <div className="about-summary-grid">
           <div className="about-summary-item">
             <span className="about-summary-label">Application</span>
-            <strong>DN</strong>
+            <strong>LifeHub</strong>
           </div>
           <div className="about-summary-item">
             <span className="about-summary-label">Version</span>
-            <strong>1.0.0</strong>
+            <strong>v{appVersion}</strong>
           </div>
           <div className="about-summary-item">
-            <span className="about-summary-label">Focus</span>
-            <strong>Life + Finance</strong>
+            <span className="about-summary-label">Published</span>
+            <strong>{publishedDate}</strong>
+          </div>
+          <div className="about-summary-item">
+            <span className="about-summary-label">Environment</span>
+            <strong>{deployEnvironment}</strong>
           </div>
         </div>
 
         <div className="about-description">
-          DN is a personal life and finance companion built to keep important moments, planning details, memories,
+          LifeHub is a personal life and finance companion built to keep important moments, planning details, memories,
           and financial patterns connected in one place.
         </div>
       </section>
@@ -119,6 +130,7 @@ export default function About() {
           ))}
         </ul>
       </section>
+      <footer className="about-version-footer">LifeHub · v{appVersion} · {deployEnvironment}</footer>
     </div>
   );
 }
