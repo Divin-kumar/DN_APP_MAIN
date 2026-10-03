@@ -1,3 +1,5 @@
+// This component is the main dashboard summary screen.
+// It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, CalendarDays, Copy, Download, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -441,11 +443,15 @@ export default function DashboardOverview() {
     return [...events]
       .filter((event) => {
         const date = getNextOccurrenceForStatus(event, today);
-        return date && date >= today;
+        if (!date || date < today) return false;
+
+        const diffInDays = Math.floor((date.getTime() - today.getTime()) / 86400000);
+        return diffInDays <= 30;
       })
-      .sort((a, b) => (getNextOccurrenceForStatus(a, today)?.getTime() || 0) - (getNextOccurrenceForStatus(b, today)?.getTime() || 0))
-      .slice(0, 4);
+      .sort((a, b) => (getNextOccurrenceForStatus(a, today)?.getTime() || 0) - (getNextOccurrenceForStatus(b, today)?.getTime() || 0));
   }, [events]);
+
+  const upcomingEmptyMessage = 'No moments in the next 30 days.';
 
   const focusEvent = upcomingEvents[0] || events[0] || null;
   const hour = new Date().getHours();
@@ -506,12 +512,23 @@ export default function DashboardOverview() {
           ) : null}
         </section>
         <section className="dashboard-upcoming-card" aria-label="Upcoming moments">
-          <header><span>Upcoming moments</span><button type="button" onClick={() => navigate('/events')}>All moments <span aria-hidden="true">→</span></button></header>
-          {upcomingEvents.length ? <div className="dashboard-upcoming-list">{upcomingEvents.slice(0, 3).map((event) => {
-            const date = getNextOccurrenceForStatus(event, today);
-            const days = getDaysRemaining(date);
-            return <button type="button" className="dashboard-upcoming-row" key={event.id || event.firestoreId} onClick={() => setSelectedEvent(event)}><span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span><span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span><span className="dashboard-upcoming-arrow" aria-hidden="true">›</span></button>;
-          })}</div> : <p className="dashboard-upcoming-empty">Your next moments will appear here.</p>}
+          <header style={styles.upcomingHeader}>
+            <span>Upcoming moments</span>
+            <button type="button" className="dashboard-upcoming-all-button" onClick={() => navigate('/events')}>All moments <span aria-hidden="true">→</span></button>
+          </header>
+          {upcomingEvents.length ? (
+            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container">
+              <div className="dashboard-upcoming-list" style={styles.upcomingList}>
+                {upcomingEvents.map((event) => {
+                  const date = getNextOccurrenceForStatus(event, today);
+                  const days = getDaysRemaining(date);
+                  return <button type="button" className="dashboard-upcoming-row" key={event.id || event.firestoreId} onClick={() => setSelectedEvent(event)}><span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span><span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span><span className="dashboard-upcoming-arrow" aria-hidden="true">›</span></button>;
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="dashboard-upcoming-empty">{upcomingEmptyMessage}</p>
+          )}
         </section>
         <button type="button" className="dashboard-insights-cta" onClick={() => navigate('/insights')}>
           <span><strong>View Insights</strong><small>Explore reports and patterns across your moments</small></span><Sparkles size={19} /><span className="dashboard-insights-arrow">→</span>
@@ -580,6 +597,35 @@ const styles = {
     color: '#1f6f5d',
     fontSize: '0.82rem',
     fontWeight: 800,
+  },
+  upcomingHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: '10px',
+    flexWrap: 'wrap',
+  },
+  upcomingHeaderActions: {
+    display: 'flex',
+    alignItems: 'center',
+    marginLeft: 'auto',
+    gap: '8px',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+  },
+  upcomingListContainer: {
+    maxHeight: '220px',
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    paddingRight: '4px',
+    marginRight: '-4px',
+    WebkitOverflowScrolling: 'touch',
+    overscrollBehavior: 'contain',
+  },
+  upcomingList: {
+    display: 'grid',
+    gap: '4px',
+    minHeight: 0,
   },
   section: {
     display: 'grid',

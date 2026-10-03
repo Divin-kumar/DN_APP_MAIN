@@ -1,66 +1,199 @@
-/* Activity cards render event items and their independently linked expenses. */
-import { useState } from 'react';
+/*
+  This component shows all tasks or activities connected to one event.
+  Example: "Book hall", "Send invitations", or "Confirm caterer".
+  It also shows which costs are linked to each activity and lets the user
+  mark things as done, edit them, or delete them.
+*/
+
+// Import React's state hook so the component can remember which expense list is currently expanded.
+import { useRef, useState } from 'react';
+
+// Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, Sparkles, Trash2 } from 'lucide-react';
 
-export default function ActivityList({ eventName = 'This event', activities, expensesByActivity = {}, onDelete, onEdit, onAddExpense, onLinkExpense, onToggleComplete, onAddActivity }) {
+// Main component. It receives the event name, the list of activities, money connected to each activity,
+// and callback functions that tell the parent screen what action the user wants to do.
+export default function ActivityList({
+  eventName = 'This event',
+  activities,
+  allActivities = activities,
+  hasActiveFilters = false,
+  expensesByActivity = {},
+  onDelete,
+  onEdit,
+  onAddExpense,
+  onLinkExpense,
+  onToggleComplete,
+  onAddActivity,
+}) {
+  // This state keeps track of which activity's expense list is open.
+  // Example: { "activity-123": true } means the user opened the expense panel for one task.
   const [expandedExpenses, setExpandedExpenses] = useState({});
-  if (!activities.length) {
+  const [openActivityId, setOpenActivityId] = useState(null);
+  const gestureStartRef = useRef(null);
+  const gestureMovedRef = useRef(false);
+
+  // If there are no tasks in this event, show a friendly empty state instead of an empty list.
+  if (!allActivities.length) {
     return (
+      // Empty-state box for a clean, encouraging message.
       <div className="event-activity-empty">
+        {/* Decorative icon area to make the empty state feel friendly and not blank. */}
         <span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
+
+        {/* This tells the user what kind of help they can add. */}
         <strong>A few helpful steps can make this moment easier</strong>
+
+        {/* Explain the purpose of activities in simple language. */}
         <p>Activities help you track things to do for {eventName}. Keep the plans right here, alongside the moment they belong to.</p>
+
+        {/* If the parent screen passed an add button action, show it. */}
         {onAddActivity ? <button type="button" className="primaryButton event-empty-state-cta" onClick={onAddActivity}><Plus size={15} /> Add the first activity</button> : null}
       </div>
     );
   }
 
-  const completedCount = activities.filter((activity) => activity.completed).length;
-  const progress = Math.round((completedCount / activities.length) * 100);
+  // Count how many tasks are already completed.
+  const completedCount = allActivities.filter((activity) => activity.completed).length;
 
+  // Work out the completion percentage for the progress bar.
+  const progress = Math.round((completedCount / allActivities.length) * 100);
+
+  // Main UI: the progress summary and list of all activities.
   return (
     <div className="event-activity-content">
-      <div className="event-activity-progress" aria-label={`${completedCount} of ${activities.length} activities complete`}>
-        <div><strong>{completedCount} of {activities.length}</strong><span>steps complete</span></div>
+      {/* This summary tells the user how many tasks are done out of total tasks. */}
+      <div className="event-activity-progress" aria-label={`${completedCount} of ${allActivities.length} activities complete`}>
+        <div>
+          <strong>{completedCount} of {allActivities.length}</strong>
+          <span>steps complete</span>
+        </div>
+
+        {/* The progress bar visually shows completion percentage. */}
         <span className="event-activity-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></span>
       </div>
 
+      {/* The full list of activities for this event. */}
       <div className="event-activity-list">
-        {activities.map((activity) => {
+        {!activities.length && hasActiveFilters ? <div className="event-activity-filter-empty">No activities match these filters.</div> : activities.map((activity) => {
+          // Get the expenses that belong to this single activity.
           const activityExpenses = expensesByActivity[activity.id] || [];
+
+          // Add up all linked amounts for this activity.
           const totalSpent = activityExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+
+          // Convert the string date into a real Date object so we can compare it with today.
           const activityDate = new Date(`${String(activity.date || '').slice(0, 10)}T00:00:00`);
+
+          // Decide if the task is overdue.
+          // A task is overdue only if it is not done, has a valid date, and that date is before today.
           const overdue = !activity.completed && !Number.isNaN(activityDate.getTime()) && activityDate < new Date(new Date().setHours(0, 0, 0, 0));
+
+          // Build a readable due date label, such as "Due Mon, 12 Sep" or "Past due · 12 Sep".
           const dueText = !activity.date ? 'Date to be decided' : overdue ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(activityDate)}` : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(activityDate)}`;
+
+          // Check whether the expense panel for this activity is currently open.
           const expensesOpen = Boolean(expandedExpenses[activity.id]);
+
+          // See whether this activity has any linked expenses at all.
           const hasExpenses = activityExpenses.length > 0;
+
+          // Make a friendly total label showing how many expenses are connected and how much money is spent.
           const expenseLabel = hasExpenses
             ? `${activityExpenses.length} linked ${activityExpenses.length === 1 ? 'expense' : 'expenses'} · ₹${totalSpent.toLocaleString('en-IN')}`
             : '';
 
+          const isOpen = openActivityId === activity.id;
+          const handlePointerDown = (event) => {
+            if (event.target.closest('button')) return;
+            gestureStartRef.current = event.clientX;
+            gestureMovedRef.current = false;
+            event.currentTarget.setPointerCapture?.(event.pointerId);
+          };
+          const handlePointerMove = (event) => {
+            if (gestureStartRef.current === null) return;
+            const delta = gestureStartRef.current - event.clientX;
+            if (Math.abs(delta) > 10) gestureMovedRef.current = true;
+            if (delta > 40) setOpenActivityId(activity.id);
+            if (delta < -32) setOpenActivityId(null);
+          };
+
           return (
-            <article key={activity.id} className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}`}>
-              {onToggleComplete ? (
-                <button className="event-activity-complete" type="button" onClick={() => onToggleComplete(activity.id)} aria-label={activity.completed ? `Mark ${activity.title} pending` : `Complete ${activity.title}`} aria-pressed={Boolean(activity.completed)}>
-                  {activity.completed ? <Check size={15} strokeWidth={2.5} /> : null}
-                </button>
-              ) : <span className="event-activity-complete-static">{activity.completed ? <Check size={14} /> : null}</span>}
-              <div className="event-activity-copy">
+            <article
+              key={activity.id}
+              role="group"
+              tabIndex={0}
+              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe or press Enter for actions'}`}
+              className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isOpen ? ' is-open' : ''}`}
+              onPointerDown={handlePointerDown}
+              onPointerMove={handlePointerMove}
+              onPointerUp={() => { gestureStartRef.current = null; }}
+              onPointerCancel={() => { gestureStartRef.current = null; }}
+              onClick={(event) => {
+                if (event.target.closest('button')) return;
+                if (gestureMovedRef.current) {
+                  gestureMovedRef.current = false;
+                  return;
+                }
+                setOpenActivityId((current) => (current === activity.id ? null : activity.id));
+              }}
+              onKeyDown={(event) => {
+                if (event.target !== event.currentTarget) return;
+                if (event.key === 'Enter' || event.key === ' ') {
+                  event.preventDefault();
+                  setOpenActivityId((current) => (current === activity.id ? null : activity.id));
+                }
+              }}
+            >
+              <div className="event-activity-actions" aria-hidden={!isOpen}>
+                {onAddExpense ? <button type="button" className="event-activity-action-expense" tabIndex={isOpen ? 0 : -1} onClick={() => { onAddExpense(activity); setOpenActivityId(null); }} aria-label={`Add expense to ${activity.title}`}><IndianRupee size={15} /><span>Expense</span></button> : null}
+                {onEdit ? <button type="button" className="event-activity-action-edit" tabIndex={isOpen ? 0 : -1} onClick={() => { onEdit(activity); setOpenActivityId(null); }} aria-label={`Edit ${activity.title}`}><Pencil size={15} /><span>Edit</span></button> : null}
+                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isOpen ? 0 : -1} onClick={() => { onDelete(activity.id); setOpenActivityId(null); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
+              </div>
+
+              <div className="event-activity-main">
+                {onToggleComplete ? (
+                  <button
+                    type="button"
+                    className={`event-activity-complete${activity.completed ? ' is-complete' : ''}`}
+                    onClick={(event) => { event.stopPropagation(); onToggleComplete(activity.id); }}
+                    aria-label={activity.completed ? `Mark ${activity.title} in progress` : `Complete ${activity.title}`}
+                    aria-pressed={Boolean(activity.completed)}
+                  >
+                    {activity.completed ? <Check size={15} strokeWidth={2.5} /> : null}
+                  </button>
+                ) : <span className="event-activity-complete-static">{activity.completed ? <Check size={14} /> : <Circle size={14} />}</span>}
+                <div className="event-activity-copy">
                 <div className="event-activity-title-row">
+                  {/* Task name or fallback text if the user did not enter one. */}
                   <strong>{activity.title || 'Untitled activity'}</strong>
+
+                  {/* The status text shows whether the task is done, overdue, or still pending. */}
                   <span className={`event-activity-status${activity.completed ? ' complete' : ''}`}>{activity.completed ? 'Complete' : overdue ? 'Overdue' : 'To do'}</span>
+
+                  {/* Priority tells how urgent or important the task is. */}
                   <span className={`event-activity-priority ${activity.priority || 'medium'}`}>{activity.priority || 'medium'}</span>
                 </div>
+
+                {/* Show the event name and due date together for context. */}
                 <div className="event-activity-context"><span>{eventName}</span><i>·</i><span>{dueText}</span></div>
+
+                {/* If a task has a description, show it below the title. */}
                 {activity.description ? <p>{activity.description}</p> : null}
+
+                {/* If linked expenses exist, show a section with a toggle to expand and collapse them. */}
                 {hasExpenses ? (
                   <div className="event-activity-expense-disclosure">
                     <button type="button" className="event-activity-expense-toggle" onClick={() => setExpandedExpenses((current) => ({ ...current, [activity.id]: !current[activity.id] }))} aria-expanded={expensesOpen}>
                       <IndianRupee size={13} /><span>{expenseLabel}</span><ChevronDown size={14} />
                     </button>
+
+                    {/* When the user opens the list, show each linked expense and action buttons. */}
                     {expensesOpen ? (
                       <div className="event-activity-expense-panel">
                         {activityExpenses.map((expense) => <div className="event-activity-expense-row" key={expense.id || expense.firestoreId}><span>{expense.name || expense.description || 'Expense'}</span><strong>₹{Number(expense.amount || 0).toLocaleString('en-IN')}</strong></div>)}
+
+                        {/* Actions inside the expense panel: create new expense or link an existing one. */}
                         <div className="event-activity-expense-actions">
                           {onAddExpense ? <button type="button" onClick={() => onAddExpense(activity)}><Plus size={13} /> Create expense</button> : null}
                           {onLinkExpense ? <button type="button" onClick={() => onLinkExpense(activity)}>Link existing</button> : null}
@@ -69,11 +202,7 @@ export default function ActivityList({ eventName = 'This event', activities, exp
                     ) : null}
                   </div>
                 ) : null}
-              </div>
-              <div className="event-activity-actions">
-                {onAddExpense ? <button type="button" onClick={() => onAddExpense(activity)} aria-label={`Add expense to ${activity.title}`} title="Add expense"><IndianRupee size={15} /></button> : null}
-                {onEdit ? <button type="button" onClick={() => onEdit(activity)} aria-label={`Edit ${activity.title}`} title="Edit activity"><Pencil size={15} /></button> : null}
-                {onDelete ? <button type="button" onClick={() => onDelete(activity.id)} aria-label={`Remove ${activity.title}`} title="Remove activity"><Trash2 size={15} /></button> : null}
+                </div>
               </div>
             </article>
           );

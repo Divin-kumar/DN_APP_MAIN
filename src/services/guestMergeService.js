@@ -1,4 +1,9 @@
-/* Migrates guest-local records into the signed-in user's Firestore account. */
+/*
+  Migrates guest-local records into the signed-in user's Firestore account.
+
+  This is useful when a guest user decides to log in later:
+  their saved events, expenses, and incomes are merged into the real account so nothing is lost.
+*/
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getGuestExpenses } from './expenseService';

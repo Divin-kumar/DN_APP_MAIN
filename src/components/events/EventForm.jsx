@@ -1,7 +1,9 @@
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useState } from 'react';
+import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
+import { getCodeListItems } from '../../utils/codeLists';
 
 const createDefaultState = (defaultEventType) => ({
   id: '',
@@ -16,6 +18,7 @@ const createDefaultState = (defaultEventType) => ({
 
 export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
   const adminValues = useAppStore((state) => state.adminValues);
+  const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
   const [form, setForm] = useState(() => createDefaultState(defaultEventType));
 
@@ -69,16 +72,14 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       <div className="event-form-fields">
         <label htmlFor="event-type">Moment type
           <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
-            {adminValues.eventTypes.map((option) => (
+            {eventTypeOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
             <option value="Other">Other</option>
           </DropdownSelect>
         </label>
 
-        <label htmlFor="event-date">Date
-          <input id="event-date" type="date" name="date" value={form.date} onChange={handleChange} required />
-        </label>
+        <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
       </div>
 
       {form.type === 'Other' ? (

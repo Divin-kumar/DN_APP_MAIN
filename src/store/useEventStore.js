@@ -1,4 +1,9 @@
-/* Event state actions coordinate persistence and the Events workspace. */
+/*
+  Event state actions coordinate persistence and the Events workspace.
+
+  This store is the central data layer for life moments and activities.
+  It loads event data, saves new events, edits existing ones, and deletes them.
+*/
 import { create } from 'zustand';
 import {
   createEvent,
@@ -10,6 +15,7 @@ import {
   updateEvent,
 } from '../services/eventService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { getEventStatus } from '../utils/eventStatus';
 
 const sameEvent = (first, second) => Boolean(
   (first.id && second.id && first.id === second.id)
@@ -88,6 +94,7 @@ const useEventStore = create((set, get) => {
       id: event.id || crypto.randomUUID(),
       activities: Array.isArray(event.activities) ? event.activities : [],
     };
+    normalized.status = getEventStatus(normalized);
 
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
@@ -103,48 +110,71 @@ const useEventStore = create((set, get) => {
       return normalized;
     }
 
-    const saved = await createEvent(uid, normalized);
-    set({ events: [saved, ...get().events] });
-    return saved;
+    const previous = get().events;
+    const optimistic = [normalized, ...previous];
+    set({ events: optimistic, error: null });
+
+    try {
+      const saved = await createEvent(uid, normalized);
+      set({
+        events: [saved, ...get().events.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
+        error: null,
+      });
+      return saved;
+    } catch (error) {
+      console.error('Failed to create event:', error);
+      set({
+        events: get().events.filter((item) => !sameEvent(item, normalized)),
+        error: 'Unable to create the event. Your changes were restored.',
+      });
+      throw error;
+    }
   },
 
   updateEventItem: async (uid, isGuest, event) => {
+    const normalizedEvent = { ...event, status: getEventStatus(event) };
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
       const updated = sampleData.events.map((item) => (
-        sameEvent(item, event) ? { ...item, ...event } : item
+        sameEvent(item, normalizedEvent) ? { ...item, ...normalizedEvent } : item
       ));
-      const previous = sampleData.events.find((item) => sameEvent(item, event));
-      const updatedActivityIds = new Set((updated.find((item) => sameEvent(item, event))?.activities || []).map((item) => item.id));
+      const previous = sampleData.events.find((item) => sameEvent(item, normalizedEvent));
+      const updatedActivityIds = new Set((updated.find((item) => sameEvent(item, normalizedEvent))?.activities || []).map((item) => item.id));
       const removedActivityIds = new Set((previous?.activities || []).map((activity) => activity.id).filter((id) => !updatedActivityIds.has(id)));
       syncEventSampleData(sampleData, updated, { removedActivityIds });
       set({ events: updated, error: null });
-      return event;
+      return normalizedEvent;
     }
 
     if (isGuest) {
-      const updated = saveGuestEvent(event);
+      const updated = saveGuestEvent(normalizedEvent);
       set({ events: updated });
-      return event;
+      return normalizedEvent;
     }
 
     const current = get().events;
+    const previous = current.find((item) => sameEvent(item, normalizedEvent));
     const optimistic = current.map((item) => (
-      sameEvent(item, event) ? { ...item, ...event } : item
+      sameEvent(item, normalizedEvent) ? { ...item, ...normalizedEvent } : item
     ));
     set({ events: optimistic, error: null });
 
     try {
-      const updated = await updateEvent(uid, event);
+      const updated = await updateEvent(uid, normalizedEvent);
       set({
         events: get().events.map((item) =>
-          sameEvent(item, event) ? { ...item, ...updated } : item
+          sameEvent(item, normalizedEvent) ? { ...item, ...updated } : item
         ),
       });
       return updated;
     } catch (error) {
       console.error('Failed to update event:', error);
-      set({ events: current, error: 'Unable to save the event. Your changes were restored.' });
+      set({
+        events: previous
+          ? get().events.map((item) => (sameEvent(item, normalizedEvent) ? previous : item))
+          : get().events,
+        error: 'Unable to save the event. Your changes were restored.',
+      });
       throw error;
     }
   },
@@ -175,7 +205,10 @@ const useEventStore = create((set, get) => {
       await deleteEvent(uid, event);
     } catch (error) {
       console.error('Failed to delete event:', error);
-      set({ events: current, error: 'Unable to delete the event. It has been restored.' });
+      set({
+        events: get().events.some((item) => sameEvent(item, event)) ? get().events : [event, ...get().events],
+        error: 'Unable to delete the event. It has been restored.',
+      });
       throw error;
     }
   },

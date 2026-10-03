@@ -1,3 +1,5 @@
+// This page is the financial hub for the app.
+// It shows income, expenses, and the current balance and also routes to income/expense detail screens.
 import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { Landmark, Receipt, WalletCards } from 'lucide-react';

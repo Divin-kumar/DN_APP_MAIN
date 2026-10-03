@@ -2,6 +2,10 @@
   This file listens to Firebase authentication and feeds the app state.
   Its job is to translate the auth system into simple app-level values like
   “logged in,” “guest,” or “logged out.”
+
+  In simple language:
+  this component watches whether the user is signed in, signed out, or browsing as guest.
+  Based on that, it updates the app's global state so every page can know the current session.
 */
 import { createContext, useContext, useEffect } from 'react';
 import { authService } from '../services/firebase';
@@ -16,7 +20,7 @@ export function AuthProvider({ children }) {
   const setGuestMode = useAppStore((state) => state.setGuestMode);
 
   useEffect(() => {
-    // subscribe to auth changes so the app always knows the current login state.
+    // Subscribe to auth changes so the app always knows the current login state.
     const unsubscribe = authService.onAuthChange((user) => {
       if (user) {
         // If a real login exists, merge guest-only data into the account before storing user info.

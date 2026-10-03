@@ -1,3 +1,5 @@
+// This page turns the stored event, income, and expense data into charts and summaries.
+// It helps the user understand trends, upcoming events, and money movement without digging through raw records.
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Search, Sparkles, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';

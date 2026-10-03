@@ -1,3 +1,5 @@
+// This utility exports data as a downloaded file.
+// It is used for exporting insights or other JSON reports from the dashboard into the browser download flow.
 export const downloadBlob = (blob, filename) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

@@ -1,4 +1,8 @@
-/* Expense management page with filtering, summaries, and nested history scrolling. */
+/*
+  Expense management page with filtering, summaries, and nested history scrolling.
+
+  This is the page where the user tracks money going out, filters by category, and manages spending records.
+*/
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ExpenseForm from '../components/expenses/ExpenseForm';
@@ -8,14 +12,17 @@ import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import { getCodeListItems } from '../utils/codeLists';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
 
 export default function Expenses() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
-  const { expenses, loading, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
+  const { expenses, loading, error, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
   const { events, loadEvents, updateEventItem } = useEventStore();
 
   const [search, setSearch] = useState('');
@@ -46,7 +53,11 @@ export default function Expenses() {
       return matchesSearch && matchesCategory;
     });
   }, [expenses, search, categoryFilter]);
-  const categories = useMemo(() => [...new Set([...expenses.map((expense) => expense.category), 'Food', 'Health', 'Insurance', 'Education', 'Home', 'Vehicle', 'Celebrations', 'Other'].filter(Boolean))].sort(), [expenses]);
+  const categories = useMemo(() => {
+    const configured = getCodeListItems('expenseCategories', adminValues.expenseCategories);
+    const known = [...new Set([...expenses.map((expense) => expense.category), ...configured].filter(Boolean))];
+    return known.sort();
+  }, [adminValues.expenseCategories, expenses]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -121,7 +132,7 @@ export default function Expenses() {
         </DropdownSelect>
       </div>
       <section className="financial-module-history" aria-label="Expense history">
-        {loading ? <p className="financial-empty-copy">Loading expenses…</p> : <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />}
+        {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading expenses" /> : error === 'Unable to load expenses.' ? <div className="financial-load-error" role="alert"><span>Expenses couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadExpenses(user?.uid, isGuest)}>Try again</button></div> : <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />}
       </section>
 
       {expenseDialogOpen ? (

@@ -1,3 +1,5 @@
+// This file creates realistic demo data for development and testing.
+// It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'lifehub_dev_fixture_scenario';
 const FIXTURE_DATA_KEY = 'lifehub_dev_fixture_data';
 const ANCHOR_DATE = new Date();

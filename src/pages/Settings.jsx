@@ -1,6 +1,8 @@
-import { UserCircle, ListChecks, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info } from 'lucide-react';
+// This page contains app settings and personalization controls.
+// It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
 import useEventStore from '../store/useEventStore';
@@ -8,6 +10,7 @@ import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
+import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
 
 const normalizeList = (value) =>
@@ -111,22 +114,26 @@ export default function Settings() {
   const resetAdminValues = useAppStore((state) => state.resetAdminValues);
   const setPreferences = useAppStore((state) => state.setPreferences);
   const resetPreferences = useAppStore((state) => state.resetPreferences);
+  const resetAllSettings = useAppStore((state) => state.resetAllSettings);
   const setGuestMode = useAppStore((state) => state.setGuestMode);
   const profileName = user?.displayName || user?.email || 'Guest';
+  const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
+  const incomeTypeOptions = getCodeListItems('incomeTypes', adminValues.incomeTypes);
+  const expenseCategoryOptions = getCodeListItems('expenseCategories', adminValues.expenseCategories);
 
-  const [eventTypes, setEventTypes] = useState(adminValues.eventTypes.join(', '));
-  const [incomeTypes, setIncomeTypes] = useState(adminValues.incomeTypes.join(', '));
-  const [expenseCategories, setExpenseCategories] = useState(adminValues.expenseCategories.join(', '));
-  const defaultGreetingEnabledTypes = ['Birthday', 'Anniversary'];
+  const [eventTypes, setEventTypes] = useState(eventTypeOptions.join(', '));
+  const [incomeTypes, setIncomeTypes] = useState(incomeTypeOptions.join(', '));
+  const [expenseCategories, setExpenseCategories] = useState(expenseCategoryOptions.join(', '));
+  const defaultGreetingEnabledTypes = [...DEFAULT_CODE_LISTS.greetingTemplateTypes];
   const [greetingEnabledTypes, setGreetingEnabledTypes] = useState(() => {
     const enabled = Array.isArray(preferences.greetingEnabledTypes) && preferences.greetingEnabledTypes.length
       ? preferences.greetingEnabledTypes
       : defaultGreetingEnabledTypes;
-    return enabled.filter((type) => (adminValues.eventTypes || []).includes(type)).length ? enabled.filter((type) => (adminValues.eventTypes || []).includes(type)) : [...defaultGreetingEnabledTypes];
+    return enabled.filter((type) => eventTypeOptions.includes(type)).length ? enabled.filter((type) => eventTypeOptions.includes(type)) : [...defaultGreetingEnabledTypes];
   });
   const [activeGreetingType, setActiveGreetingType] = useState(() => greetingEnabledTypes[0] || '');
   const [selectedGreetingType, setSelectedGreetingType] = useState(() => {
-    const options = (adminValues.eventTypes || []).filter((type) => !defaultGreetingEnabledTypes.includes(type) || !greetingEnabledTypes.includes(type));
+    const options = eventTypeOptions.filter((type) => !defaultGreetingEnabledTypes.includes(type) || !greetingEnabledTypes.includes(type));
     return options[0] || '';
   });
   const [greetingTemplates, setGreetingTemplates] = useState(() => {
@@ -134,7 +141,7 @@ export default function Settings() {
     const enabledList = (Array.isArray(preferences.greetingEnabledTypes) && preferences.greetingEnabledTypes.length
       ? preferences.greetingEnabledTypes
       : defaultGreetingEnabledTypes
-    ).filter((type) => (adminValues.eventTypes || []).includes(type));
+    ).filter((type) => eventTypeOptions.includes(type));
     enabledList.forEach((eventType) => {
       next[eventType] = preferences.greetingTemplates?.[eventType] || `Happy {ordinal} ${eventType} {name}`;
     });
@@ -159,6 +166,8 @@ export default function Settings() {
   const [backupMessage, setBackupMessage] = useState('');
   const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
+  const [confirmResetSettings, setConfirmResetSettings] = useState(false);
+  const [resettingSettings, setResettingSettings] = useState(false);
   const [theme, setTheme] = useState(preferences.theme || 'light');
   const [sampleScenario, setSampleScenario] = useState('regular');
   const [activeSampleScenario, setActiveSampleScenario] = useState(() => getActiveSampleScenario());
@@ -185,18 +194,18 @@ export default function Settings() {
   ];
 
   useEffect(() => {
-    setEventTypes(adminValues.eventTypes.join(', '));
-    setIncomeTypes(adminValues.incomeTypes.join(', '));
-    setExpenseCategories(adminValues.expenseCategories.join(', '));
+    setEventTypes(eventTypeOptions.join(', '));
+    setIncomeTypes(incomeTypeOptions.join(', '));
+    setExpenseCategories(expenseCategoryOptions.join(', '));
   }, [adminValues]);
 
   useEffect(() => {
     setGreetingEnabledTypes((current) => {
-      const valid = current.filter((type) => (adminValues.eventTypes || []).includes(type));
-      const fallback = [...defaultGreetingEnabledTypes].filter((type) => (adminValues.eventTypes || []).includes(type));
+      const valid = current.filter((type) => eventTypeOptions.includes(type));
+      const fallback = [...defaultGreetingEnabledTypes].filter((type) => eventTypeOptions.includes(type));
       return valid.length ? valid : fallback;
     });
-  }, [adminValues.eventTypes]);
+  }, [eventTypeOptions.join('|')]);
 
   useEffect(() => {
     if (greetingEnabledTypes.includes(activeGreetingType)) return;
@@ -269,7 +278,7 @@ export default function Settings() {
   };
 
   const saveGreetingSettings = () => {
-    const enabled = greetingEnabledTypes.filter((type) => (adminValues.eventTypes || []).includes(type));
+    const enabled = greetingEnabledTypes.filter((type) => eventTypeOptions.includes(type));
     const normalized = {};
     enabled.forEach((eventType) => {
       normalized[eventType] = (greetingTemplates[eventType] || `Happy {ordinal} ${eventType} {name}`).trim();
@@ -405,6 +414,59 @@ export default function Settings() {
     window.location.reload();
   };
 
+  const resetAllSettingsSafely = async () => {
+    if (resettingSettings) return;
+    setResettingSettings(true);
+
+    try {
+      if (!isGuest && !user?.uid) throw new Error('Your account records could not be identified. No settings were changed.');
+
+      await Promise.all([
+        useEventStore.getState().loadEvents(user?.uid, isGuest),
+        useExpenseStore.getState().loadExpenses(user?.uid, isGuest),
+        useIncomeStore.getState().loadIncomes(user?.uid, isGuest),
+      ]);
+
+      const eventState = useEventStore.getState();
+      const expenseState = useExpenseStore.getState();
+      const incomeState = useIncomeStore.getState();
+      if (eventState.error || expenseState.error || incomeState.error) {
+        throw new Error('DN could not verify all existing records. No settings were changed. Please try again when you are online.');
+      }
+
+      const referencedValues = collectReferencedCodeListValues({
+        events: eventState.events,
+        expenses: expenseState.expenses,
+        incomes: incomeState.incomes,
+      });
+      resetAllSettings(referencedValues);
+      setTheme('dark');
+      document.documentElement.dataset.theme = 'dark';
+      setPrefForm({
+        currency: 'INR',
+        dashboardView: 'overview',
+        defaultEventType: 'Personal',
+        defaultIncomeType: 'Salary',
+        defaultExpenseCategory: 'Food',
+        notifications: { eventReminders: true, monthlySummary: true, budgetAlerts: true, reminderTime: '09:00' },
+      });
+      setGreetingEnabledTypes([...DEFAULT_CODE_LISTS.greetingTemplateTypes]);
+      setActiveGreetingType(DEFAULT_CODE_LISTS.greetingTemplateTypes[0] || '');
+      setSelectedGreetingType('');
+      setGreetingTemplates({
+        Birthday: 'Happy {ordinal} Birthday {name} 🎂\nWishing you a wonderful year filled with happiness, health and success.',
+        Anniversary: 'Happy {ordinal} Anniversary ❤️\nWishing you many more years of happiness, love and beautiful memories together.',
+      });
+      setConfirmResetSettings(false);
+      showToast('Settings restored to defaults. Existing records were preserved.', 'success');
+    } catch (error) {
+      console.error('Unable to reset settings safely:', error);
+      showToast(error.message || 'Settings could not be reset. No data was changed.', 'danger');
+    } finally {
+      setResettingSettings(false);
+    }
+  };
+
   const loadSampleData = () => {
     if (user) {
       showToast('Sign out before loading isolated sample data', 'danger');
@@ -438,32 +500,6 @@ export default function Settings() {
   const renderProfileSection = () => (
     <div className="settings-accordion-body">
       <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
-    </div>
-  );
-
-  const renderAdminValuesSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <label className="settings-input-block">
-          <span>Event types</span>
-          <ValueListEditor label="event type" value={eventTypes} onChange={setEventTypes} />
-        </label>
-
-        <label className="settings-input-block">
-          <span>Income types</span>
-          <ValueListEditor label="income type" value={incomeTypes} onChange={setIncomeTypes} />
-        </label>
-
-        <label className="settings-input-block">
-          <span>Expense categories</span>
-          <ValueListEditor label="expense category" value={expenseCategories} onChange={setExpenseCategories} />
-        </label>
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={saveAdminValues}>Save values</button>
-        <button type="button" className="settings-secondary-button" onClick={resetAdminValues}>Reset defaults</button>
-      </div>
     </div>
   );
 
@@ -502,7 +538,7 @@ export default function Settings() {
             <span>Add event type</span>
             <DropdownSelect value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
               <option value="">Select an event type</option>
-              {(adminValues.eventTypes || []).filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
+              {eventTypeOptions.filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
                 <option key={option} value={option}>{option}</option>
               ))}
             </DropdownSelect>
@@ -535,7 +571,7 @@ export default function Settings() {
               <label className="settings-input-block settings-greeting-select-wrap">
                 <span>Event type</span>
                 <DropdownSelect value={activeGreetingType} onChange={(event) => handleGreetingTypeChange(activeGreetingType, event.target.value)}>
-                  {(adminValues.eventTypes || []).map((option) => (
+                  {eventTypeOptions.map((option) => (
                     <option key={option} value={option}>{option}</option>
                   ))}
                 </DropdownSelect>
@@ -610,7 +646,7 @@ export default function Settings() {
         <label className="settings-input-block">
           <span>Default event type</span>
           <DropdownSelect value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
-            {adminValues.eventTypes.map((option) => (
+            {eventTypeOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </DropdownSelect>
@@ -619,7 +655,7 @@ export default function Settings() {
         <label className="settings-input-block">
           <span>Default income type</span>
           <DropdownSelect value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
-            {adminValues.incomeTypes.map((option) => (
+            {incomeTypeOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </DropdownSelect>
@@ -628,7 +664,7 @@ export default function Settings() {
         <label className="settings-input-block">
           <span>Default expense category</span>
           <DropdownSelect value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
-            {adminValues.expenseCategories.map((option) => (
+            {expenseCategoryOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
           </DropdownSelect>
@@ -754,42 +790,7 @@ export default function Settings() {
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
     { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
-    { key: 'admin-values', heading: 'Categories & types', description: 'Configure event types, income types and expense categories.', icon: ListChecks, body: renderAdminValuesSection() },
     { key: 'greeting-cards', heading: 'Greeting cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
-    {
-      key: 'about',
-      heading: 'About',
-      description: 'A personal space for the moments that matter.',
-      icon: Info,
-      body: (
-        <div className="settings-accordion-body settings-about">
-          <strong>DN</strong>
-          <span>
-            DN is a personal life and finance companion designed to help you keep track of the moments, plans,
-            memories, and responsibilities that matter most in everyday life.
-          </span>
-          <div className="settings-about-list">
-            <p><strong>What this app helps you do:</strong></p>
-            <ul>
-              <li>Save and organize important life moments such as birthdays, anniversaries, festivals, family events, and personal milestones.</li>
-              <li>Capture activities, notes, and updates connected to each event so you can remember what happened and what still needs attention.</li>
-              <li>Track finances by recording income, expenses, and monthly spending patterns in one place.</li>
-              <li>Review your dashboard to see your recent activity, key events, and a quick overview of your personal and financial life.</li>
-              <li>Create greeting cards and thoughtful messages for birthdays, anniversaries, and other meaningful occasions.</li>
-              <li>Customize categories, event types, and preferences to match the way you prefer to organise your life.</li>
-              <li>Store your data locally and, where applicable, keep your profile and records available in your active session.</li>
-            </ul>
-            <p><strong>Upcoming notification feature:</strong></p>
-            <ul>
-              <li>Event reminder notifications will be developed to send timely alerts before birthdays, anniversaries, festivals, and scheduled activities.</li>
-              <li>Users will be able to enable or disable reminder notifications and choose preferred reminder times for important dates.</li>
-              <li>Future updates may also include monthly summaries, budget alerts, and other helpful personal notifications.</li>
-            </ul>
-          </div>
-          <small>Version 1.0.0</small>
-        </div>
-      ),
-    },
   ];
 
   return (
@@ -836,12 +837,65 @@ export default function Settings() {
         );
       })}
 
+      <div className="settings-navigation-hub settings-about-footer">
+        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
+          <span className="settings-hub-icon"><Settings2 size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>Code Lists</strong>
+            <small>Manage moment types, categories, priorities, and reminder presets</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
+          <span className="settings-hub-icon"><Info size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>About</strong>
+            <small>Application overview, version, guide, and release notes</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+      </div>
+
+      <section className="settings-reset-card">
+        <div>
+          <strong>Restore default settings</strong>
+          <p>Reset appearance, preferences, reminders, greeting settings, and Code Lists without deleting your records.</p>
+        </div>
+        <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
+          <RotateCcw size={15} /> Reset all settings
+        </button>
+      </section>
+
       {confirmClearData ? (
         <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
           <p className="settings-helper">This removes guest data, preferences, and local backups from this browser. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
             <button type="button" className="settings-primary-button" onClick={clearLocalData}>Clear local data</button>
+          </div>
+        </ModalDialog>
+      ) : null}
+
+      {confirmResetSettings ? (
+        <ModalDialog title="Reset all settings?" className="settings-reset-dialog" onClose={() => { if (!resettingSettings) setConfirmResetSettings(false); }}>
+          <div className="settings-reset-warning">
+            <p>This restores DN configuration only:</p>
+            <ul>
+              <li>Theme and appearance</li>
+              <li>Currency, dashboard view, and default moment, income, and expense selections</li>
+              <li>Notifications and reminder time</li>
+              <li>Greeting types and templates</li>
+              <li>All Code Lists and their system default values</li>
+            </ul>
+            <p>Unused custom Code List values will be removed. Values referenced by existing records will remain available as inactive values.</p>
+            <p><strong>Your events, expenses, income, activities, memories, attachments, and account data will not be deleted or edited.</strong></p>
+          </div>
+          <div className="settings-actions">
+            <button type="button" className="settings-secondary-button" onClick={() => setConfirmResetSettings(false)} disabled={resettingSettings}>Cancel</button>
+            <button type="button" className="settings-primary-button" onClick={resetAllSettingsSafely} disabled={resettingSettings}>
+              {resettingSettings ? 'Checking records…' : 'Reset all settings'}
+            </button>
           </div>
         </ModalDialog>
       ) : null}

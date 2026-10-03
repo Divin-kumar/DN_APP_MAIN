@@ -1,7 +1,10 @@
+// This is the single-event workspace.
+// It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
+import DateField from '../../../components/common/DateField';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
@@ -10,6 +13,7 @@ import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDial
 import ExpenseForm from '../../../components/expenses/ExpenseForm';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
+import { getActiveCodeListMeta } from '../../../utils/codeLists';
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -41,6 +45,7 @@ export default function EventWorkspaceShell() {
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const adminValues = useAppStore((state) => state.adminValues);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || {});
   const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
@@ -49,8 +54,11 @@ export default function EventWorkspaceShell() {
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
+  const [activitySearch, setActivitySearch] = useState('');
+  const [activityFilter, setActivityFilter] = useState('all');
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
+  const [activityError, setActivityError] = useState('');
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
   const [memoryDialogOpen, setMemoryDialogOpen] = useState(false);
@@ -76,6 +84,12 @@ export default function EventWorkspaceShell() {
 
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
+    setEditingActivityId(null);
+    setActivityTitle('');
+    setActivityDescription('');
+    setActivityDate(new Date().toISOString().slice(0, 10));
+    setActivityPriority('medium');
+    setActivityError('');
     setActivityDialogOpen(true);
     navigate(location.pathname, { replace: true });
   }, [location.pathname, location.search, navigate]);
@@ -110,6 +124,14 @@ export default function EventWorkspaceShell() {
   const activities = [...(event.activities || [])].sort((first, second) => (
     new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime()
   ));
+  const filteredActivities = activities.filter((activity) => {
+    const matchesSearch = String(activity.title || '').toLowerCase().includes(activitySearch.trim().toLowerCase());
+    const matchesFilter = activityFilter === 'all'
+      || (activityFilter === 'in-progress' && !activity.completed)
+      || (activityFilter === 'completed' && activity.completed)
+      || (activity.priority || 'medium') === activityFilter;
+    return matchesSearch && matchesFilter;
+  });
   const eventExpenses = expenses.filter((expense) => expense.eventId === eventId);
   const expensesByActivity = Object.fromEntries(activities.map((activity) => [
     activity.id,
@@ -157,13 +179,14 @@ export default function EventWorkspaceShell() {
 
   const downloadGreetingCard = () => {
     const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
   };
 
   const addActivity = async (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) return;
+    setActivityError('');
 
     const existingActivity = (event.activities || []).find((item) => item.id === editingActivityId);
     const activity = {
@@ -178,16 +201,31 @@ export default function EventWorkspaceShell() {
       createdAt: existingActivity?.createdAt || new Date().toISOString(),
     };
 
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      activities: editingActivityId
-        ? (event.activities || []).map((item) => item.id === editingActivityId ? { ...item, ...activity } : item)
-        : [...(event.activities || []), activity],
-    });
-    setActivityTitle('');
-    setActivityDescription('');
-    setEditingActivityId(null);
-    setActivityDialogOpen(false);
+    try {
+      await updateEventItem(user?.uid, isGuest, {
+        ...event,
+        activities: editingActivityId
+          ? (event.activities || []).map((item) => item.id === editingActivityId ? { ...item, ...activity } : item)
+          : [...(event.activities || []), activity],
+      });
+      setActivityTitle('');
+      setActivityDescription('');
+      setEditingActivityId(null);
+      setActivityDialogOpen(false);
+    } catch {
+      setActivityError('Could not save this activity. Please try again.');
+    }
+  };
+
+  const editActivity = (activity) => {
+    setPendingDeleteActivity(null);
+    setActivityError('');
+    setEditingActivityId(activity.id);
+    setActivityTitle(activity.title || '');
+    setActivityDescription(activity.description || '');
+    setActivityDate(activity.date || new Date().toISOString().slice(0, 10));
+    setActivityPriority(activity.priority || 'medium');
+    setActivityDialogOpen(true);
   };
 
   const saveActivityExpense = async (formData) => {
@@ -349,16 +387,33 @@ export default function EventWorkspaceShell() {
 
       return (
         <div className="workspace-activities">
+          <div className="activity-discovery-bar">
+            <label className="activity-search-field"><Search size={15} aria-hidden="true" /><input value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" /></label>
+            <div className="activity-filter-rail" role="group" aria-label="Filter activities">
+              {[
+                ['all', 'All'],
+                ['in-progress', 'In Progress'],
+                ['completed', 'Completed'],
+                ['high', 'High Priority'],
+                ['medium', 'Medium Priority'],
+                ['low', 'Low Priority'],
+              ].map(([value, label]) => (
+                <button key={value} type="button" className={activityFilter === value ? 'is-selected' : ''} aria-pressed={activityFilter === value} onClick={() => setActivityFilter(value)}>{label}</button>
+              ))}
+            </div>
+          </div>
           <ActivityList
             eventName={event.name || 'This life moment'}
-            activities={activities}
+            activities={filteredActivities}
+            allActivities={activities}
+            hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
             expensesByActivity={expensesByActivity}
             onToggleComplete={toggleActivity}
             onAddExpense={(activity) => { setExpenseError(''); setExpenseDialogActivity(activity); }}
             onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
-            onEdit={(activity) => { setEditingActivityId(activity.id); setActivityTitle(activity.title || ''); setActivityDescription(activity.description || ''); setActivityDate(activity.date || ''); setActivityPriority(activity.priority || 'medium'); setActivityDialogOpen(true); }}
+            onEdit={editActivity}
             onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
-            onAddActivity={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}
+            onAddActivity={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityError(''); setActivityDialogOpen(true); }}
           />
         </div>
       );
@@ -461,12 +516,15 @@ export default function EventWorkspaceShell() {
       ) : null}
 
       {activityDialogOpen ? (
-        <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} onClose={() => setActivityDialogOpen(false)}>
+        <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); }}>
           <form onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
+            {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
-            <input type="date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} style={styles.input} />
+            <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
             <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
-              <option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option>
+              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
             </DropdownSelect>
             <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
             <div style={styles.dialogActions}>

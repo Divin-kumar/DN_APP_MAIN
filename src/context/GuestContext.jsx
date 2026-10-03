@@ -1,4 +1,10 @@
-/* Controls guest-mode persistence and session transitions. */
+/*
+  Controls guest-mode persistence and session transitions.
+
+  This is how the app allows a user to try the product without signing up.
+  The app remembers the guest choice in localStorage, so the user stays in guest mode
+  even after refreshing the page.
+*/
 import { createContext, useContext } from 'react';
 import useAppStore from '../store/useAppStore';
 
@@ -11,16 +17,19 @@ export function GuestProvider({ children }) {
   const clearSession = useAppStore((state) => state.clearSession);
 
   const continueAsGuest = () => {
+    // Save guest preference so the app knows not to force a login next time.
     localStorage.setItem(GUEST_MODE_KEY, 'true');
     setGuestMode(true);
   };
 
   const exitGuestMode = () => {
+    // Remove guest session state and clear the app session.
     localStorage.removeItem(GUEST_MODE_KEY);
     clearSession();
   };
 
   const restoreGuestSession = () => {
+    // On reload, restore guest mode automatically if the user previously chose to stay as guest.
     const guestEnabled = localStorage.getItem(GUEST_MODE_KEY) === 'true';
     if (guestEnabled) {
       setGuestMode(true);

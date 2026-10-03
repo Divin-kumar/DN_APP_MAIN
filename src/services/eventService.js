@@ -1,4 +1,9 @@
-/* Event persistence, activity normalization, and guest event storage. */
+/*
+  Event persistence, activity normalization, and guest event storage.
+
+  This service handles how event records are saved, loaded, and normalized before they reach the UI.
+  It also keeps guest-mode data in local storage so the app can work without an account.
+*/
 import {
   addDoc,
   collection,
@@ -8,9 +13,12 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { getEventStatus } from '../utils/eventStatus';
 
 const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
 const GUEST_SESSION_BACKUP_KEY = 'lifehub_session_backup';
+
+export { getEventStatus };
 
 export const normalizeActivity = (item = {}) => ({
   id: item.id || crypto.randomUUID(),
@@ -28,8 +36,8 @@ export const normalizeActivity = (item = {}) => ({
     activityId: expense.activityId || item.id || null,
   })) : [],
   completed: Boolean(item.completed),
-  priority: ['high', 'medium', 'low'].includes(String(item.priority || '').toLowerCase())
-    ? String(item.priority).toLowerCase()
+  priority: typeof item.priority === 'string' && item.priority.trim()
+    ? item.priority.trim()
     : 'medium',
   completedAt: item.completedAt || null,
   createdAt: item.createdAt || new Date().toISOString(),
@@ -56,6 +64,7 @@ export const normalizeEvent = (item = {}) => ({
   activities: Array.isArray(item.activities)
     ? item.activities.map(normalizeActivity)
     : [],
+  status: getEventStatus(item),
   createdAt: item.createdAt || new Date().toISOString(),
 });
 

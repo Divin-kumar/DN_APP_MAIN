@@ -1,4 +1,8 @@
-/* Expense state actions keep master financial records in sync with the UI. */
+/*
+  Expense state actions keep master financial records in sync with the UI.
+
+  This store handles all expense-related data, including loading, creating, updating, and deleting records.
+*/
 import { create } from 'zustand';
 import {
   createExpense,
@@ -81,10 +85,25 @@ const useExpenseStore = create((set, get) => {
       return normalized;
     }
 
-    const saved = await createExpense(uid, normalized);
-    const current = get().expenses;
-    set({ expenses: [saved, ...current] });
-    return saved;
+    const previous = get().expenses;
+    const optimistic = [normalized, ...previous];
+    set({ expenses: optimistic, loading: false, error: null });
+
+    try {
+      const saved = await createExpense(uid, normalized);
+      set({
+        expenses: [saved, ...get().expenses.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
+        error: null,
+      });
+      return saved;
+    } catch (error) {
+      console.error('Failed to create expense:', error);
+      set({
+        expenses: get().expenses.filter((item) => item.id !== normalized.id && item.firestoreId !== normalized.id),
+        error: 'Unable to create the expense. Your changes were restored.',
+      });
+      throw error;
+    }
   },
 
   updateExpenseItem: async (uid, isGuest, expense) => {
@@ -102,13 +121,32 @@ const useExpenseStore = create((set, get) => {
       return expense;
     }
 
-    const updated = await updateExpense(uid, expense);
-    set({
-      expenses: get().expenses.map((item) =>
-        item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...updated } : item
-      ),
-    });
-    return updated;
+    const current = get().expenses;
+    const previous = current.find((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
+    const optimistic = current.map((item) =>
+      item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...expense } : item
+    );
+    set({ expenses: optimistic, error: null });
+
+    try {
+      const updated = await updateExpense(uid, expense);
+      set({
+        expenses: get().expenses.map((item) =>
+          item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...updated } : item
+        ),
+        error: null,
+      });
+      return updated;
+    } catch (error) {
+      console.error('Failed to update expense:', error);
+      set({
+        expenses: previous
+          ? get().expenses.map((item) => (item.id === expense.id || item.firestoreId === expense.firestoreId ? previous : item))
+          : get().expenses,
+        error: 'Unable to save the expense. Your changes were restored.',
+      });
+      throw error;
+    }
   },
 
   deleteExpenseItem: async (uid, isGuest, expenseId) => {
@@ -131,11 +169,24 @@ const useExpenseStore = create((set, get) => {
       return;
     }
 
-    // Nested-only records have no Firestore document to delete.
-    if (expense.firestoreId) {
-      await deleteExpense(uid, expense);
+    const remaining = current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
+    set({ expenses: remaining, error: null });
+
+    try {
+      // Nested-only records have no Firestore document to delete.
+      if (expense.firestoreId) {
+        await deleteExpense(uid, expense);
+      }
+    } catch (error) {
+      console.error('Failed to delete expense:', error);
+      set({
+        expenses: get().expenses.some((item) => item.id === expense.id || item.firestoreId === expense.firestoreId)
+          ? get().expenses
+          : [expense, ...get().expenses],
+        error: 'Unable to delete the expense. It has been restored.',
+      });
+      throw error;
     }
-    set({ expenses: current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId) });
   },
   });
 });

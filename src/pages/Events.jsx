@@ -1,15 +1,25 @@
-/* Events workspace: event focus mode, activity management, linked expenses, and memory export. */
-import { useEffect, useMemo, useState } from 'react';
+/*
+  Events workspace: event focus mode, activity management, linked expenses, and memory export.
+
+  In simple terms, this page is the main event dashboard.
+  It shows life moments, lets the user search and filter them, open an event in detail,
+  add activities, attach expenses, and manage memories or keepsakes.
+*/
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, CalendarDays, Clock3, FileText, LayoutGrid, List, Plus, Receipt, Search, Sparkles } from 'lucide-react';
+import { BookHeart, CalendarDays, Clock3, FileText, LayoutGrid, List, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
+import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import ActivityList from '../components/events/ActivityList';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { downloadBlob } from '../utils/download';
+import { getActiveCodeListMeta } from '../utils/codeLists';
+import { getEventStatus } from '../utils/eventStatus';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -32,20 +42,60 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onDelete }) {
+function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onCancel, onDelete }) {
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
-  const isUpcoming = validDate && date >= new Date(new Date().setHours(0, 0, 0, 0));
-  const requestedStatus = String(event.status || '').toLowerCase();
-  const status = ['active', 'completed', 'pending', 'cancelled'].includes(requestedStatus) ? requestedStatus : isUpcoming ? 'active' : 'completed';
-  const statusLabel = status.charAt(0).toUpperCase() + status.slice(1);
+  const status = getEventStatus(event);
+  const statusLabel = status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
   const activities = event.activities || [];
   const memories = event.memories || [];
   const attachments = event.attachments || [];
+  const [isSwiped, setIsSwiped] = useState(false);
+  const gestureStartRef = useRef(null);
+  const gestureMovedRef = useRef(false);
+
+  const handlePointerDown = (pointerEvent) => {
+    gestureStartRef.current = pointerEvent.clientX;
+    gestureMovedRef.current = false;
+    pointerEvent.currentTarget.setPointerCapture?.(pointerEvent.pointerId);
+  };
+  const handlePointerMove = (pointerEvent) => {
+    if (gestureStartRef.current === null) return;
+    const delta = gestureStartRef.current - pointerEvent.clientX;
+    if (Math.abs(delta) > 10) gestureMovedRef.current = true;
+    if (delta > 40) setIsSwiped(true);
+    if (delta < -32) setIsSwiped(false);
+  };
+  const handlePointerUp = () => { gestureStartRef.current = null; };
 
   return (
-    <article className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''}`}>
-      <button type="button" className="event-story-main" onClick={onOpen} aria-label={`Open ${event.name || 'event'}`}>
+    <article className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${isSwiped ? 'is-open' : ''}`}>
+      <div className="event-story-actions" aria-hidden={!isSwiped}>
+        <button type="button" className="event-story-action-edit" tabIndex={isSwiped ? 0 : -1} onClick={onEdit} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
+        <button type="button" className="event-story-action-cancel" tabIndex={isSwiped ? 0 : -1} onClick={onCancel} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
+          {status === 'cancelled' ? <CalendarDays size={14} /> : <XCircle size={14} />}<span>{status === 'cancelled' ? 'Restore' : 'Cancel'}</span>
+        </button>
+        <button type="button" className="event-story-action-delete" tabIndex={isSwiped ? 0 : -1} onClick={onDelete} aria-label={`Delete ${event.name || 'event'}`}><Trash2 size={14} /><span>Delete</span></button>
+      </div>
+      <button
+        type="button"
+        className="event-story-main"
+        onClick={(clickEvent) => {
+          if (gestureMovedRef.current) {
+            clickEvent.preventDefault();
+            gestureMovedRef.current = false;
+            return;
+          }
+          if (isSwiped) setIsSwiped(false);
+          else onOpen();
+        }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        aria-label={`Open ${event.name || 'event'}. Swipe left for actions.`}
+      >
+        <span className={`event-story-status status-${status}`} aria-label={`Status: ${statusLabel}`}>{statusLabel}</span>
         <span className="event-story-art" aria-hidden="true">
           <span>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
           <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
@@ -54,7 +104,6 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onDelet
         <span className="event-story-copy">
           <span className="event-story-meta">
             <span>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
-            <span className={`event-story-status status-${status}`}>{statusLabel}</span>
           </span>
           <strong>{event.name || 'A life moment'}</strong>
           <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
@@ -67,10 +116,6 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onEdit, onDelet
           </span>
         </span>
       </button>
-      <span className="event-story-actions">
-        <button type="button" onClick={onEdit} aria-label={`Edit ${event.name || 'event'}`}>Edit</button>
-        <button type="button" onClick={onDelete} aria-label={`Delete ${event.name || 'event'}`}>Delete</button>
-      </span>
     </article>
   );
 }
@@ -94,6 +139,7 @@ export default function Events() {
   const location = useLocation();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
   const loading = useEventStore((state) => state.loading);
@@ -194,10 +240,12 @@ export default function Events() {
   const memoryCount = events.reduce((count, event) => count + (event.memories?.length || 0) + (event.activities?.length || 0), 0);
   const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
   const nextMoments = visibleEvents.filter((event) => {
+    if (getEventStatus(event) === 'cancelled') return false;
     const date = getTimelineDate(event);
     return date && date >= todayStart;
   }).sort((first, second) => getTimelineDate(first) - getTimelineDate(second));
   const pastMoments = visibleEvents.filter((event) => {
+    if (getEventStatus(event) === 'cancelled') return true;
     const date = getTimelineDate(event);
     return date && date < todayStart;
   }).sort((first, second) => getTimelineDate(second) - getTimelineDate(first));
@@ -301,6 +349,16 @@ export default function Events() {
       showToast('Event saved', 'success');
       closeDrawer();
       navigate(`/events/${savedEvent.id || savedEvent.firestoreId}`);
+    }
+  };
+
+  const toggleEventCancellation = async (event) => {
+    const nextStatus = getEventStatus(event) === 'cancelled' ? 'in-progress' : 'cancelled';
+    try {
+      await updateEventItem(user?.uid, isGuest, { ...event, status: nextStatus });
+      showToast(nextStatus === 'cancelled' ? 'Event cancelled' : 'Event restored', 'success');
+    } catch {
+      showToast('Could not update event status', 'danger');
     }
   };
 
@@ -462,13 +520,13 @@ export default function Events() {
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
-      {loading ? <p className="event-loading-copy">Gathering your moments...</p> : visibleEvents.length ? (
+      {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
         <div className={`life-journey ${viewMode === 'cards' ? 'life-journey-cards' : ''}`}>
           {nextMoments.length ? (
             <section className="life-journey-section">
               <div className="life-journey-label"><CalendarDays size={16} /><div><span>On the horizon</span><small>Your next chapters</small></div><b>{nextMoments.length}</b></div>
               <div className="life-journey-items">
-                {nextMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onDelete={() => setPendingDeleteEvent(event)} />)}
+                {nextMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onCancel={() => toggleEventCancellation(event)} onDelete={() => setPendingDeleteEvent(event)} />)}
               </div>
             </section>
           ) : null}
@@ -476,7 +534,7 @@ export default function Events() {
             <section className="life-journey-section past-journey-section">
               <div className="life-journey-label"><BookHeart size={16} /><div><span>Life so far</span><small>Moments you have lived</small></div><b>{pastMoments.length}</b></div>
               <div className="life-journey-items">
-                {pastMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onDelete={() => setPendingDeleteEvent(event)} />)}
+                {pastMoments.map((event) => <EventStoryCard key={event.id || event.firestoreId} event={event} viewMode={viewMode} expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0} onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)} onEdit={() => { setEditingEvent(event); setDrawer('event'); }} onCancel={() => toggleEventCancellation(event)} onDelete={() => setPendingDeleteEvent(event)} />)}
               </div>
             </section>
           ) : null}
@@ -518,8 +576,12 @@ export default function Events() {
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus required />
-            <input type="date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
-            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority"><option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option></DropdownSelect>
+            <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
+            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
+              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </DropdownSelect>
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
           </form>
@@ -541,8 +603,12 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
           <div style={styles.formStack}>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" style={styles.input} />
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
-            <input type="date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} style={styles.input} />
-            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority"><option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option></DropdownSelect>
+            <DateField label="Date" name="activity-date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} />
+            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
+              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </DropdownSelect>
             <button type="button" className="primaryButton" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
           </div>
         ) : (
@@ -550,7 +616,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
             <div style={styles.linkedContext}>Event and activity are linked automatically.<br /><strong>{expenseActivity?.title}</strong></div>
             <input type="number" min="0" value={expenseAmount} onChange={(event) => setExpenseAmount(event.target.value)} placeholder="Actual amount" style={styles.input} />
             <textarea value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} placeholder="What was this expense for?" style={styles.input} rows={3} />
-            <input type="date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} style={styles.input} />
+            <DateField label="Date" name="expense-date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} />
             <button type="button" className="primaryButton" onClick={onSaveExpense} style={styles.primaryButton}>Add Expense</button>
           </div>
         )}

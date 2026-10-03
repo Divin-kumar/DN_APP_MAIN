@@ -1,4 +1,8 @@
-/* Income management page with filtering, summaries, and persisted history. */
+/*
+  Income management page with filtering, summaries, and persisted history.
+
+  This page helps the user track incoming money, search through records, and create or edit income entries.
+*/
 import { useEffect, useMemo, useState } from 'react';
 import IncomeForm from '../components/income/IncomeForm';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -6,12 +10,15 @@ import IncomeList from '../components/income/IncomeList';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import { getCodeListItems } from '../utils/codeLists';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
 
 export default function Income() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
-  const { incomes, loading, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
+  const { incomes, loading, error, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -33,7 +40,11 @@ export default function Income() {
       return matchesSearch && matchesType;
     });
   }, [incomes, search, typeFilter]);
-  const incomeTypes = useMemo(() => [...new Set([...incomes.map((income) => income.type), 'Salary', 'Bonus', 'Interest', 'Investment returns', 'Freelance', 'Other'].filter(Boolean))].sort(), [incomes]);
+  const incomeTypes = useMemo(() => {
+    const configured = getCodeListItems('incomeTypes', adminValues.incomeTypes);
+    const known = [...new Set([...incomes.map((income) => income.type), ...configured].filter(Boolean))];
+    return known.sort();
+  }, [adminValues.incomeTypes, incomes]);
 
   const handleSubmit = async (formData) => {
     try {
@@ -88,7 +99,7 @@ export default function Income() {
         </DropdownSelect>
       </div>
       <section className="financial-module-history" aria-label="Income history">
-        {loading ? <p className="financial-empty-copy">Loading income…</p> : <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />}
+        {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading income" /> : error === 'Unable to load incomes.' ? <div className="financial-load-error" role="alert"><span>Income couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadIncomes(user?.uid, isGuest)}>Try again</button></div> : <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />}
       </section>
 
       {incomeDialogOpen ? (

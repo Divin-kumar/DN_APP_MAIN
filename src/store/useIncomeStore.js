@@ -1,4 +1,8 @@
-/* Income state actions keep persisted entries and summaries synchronized. */
+/*
+  Income state actions keep persisted entries and summaries synchronized.
+
+  This store is responsible for all income data the app tracks, including reading from storage and saving changes.
+*/
 import { create } from 'zustand';
 import {
   createIncome,
@@ -11,31 +15,48 @@ import {
 } from '../services/incomeService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 
-const useIncomeStore = create((set, get) => ({
+const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+
+const useIncomeStore = create((set, get) => {
+  const pendingLoads = new Map();
+
+  return ({
   incomes: [],
   loading: false,
   error: null,
+  loadedFor: null,
+  activeLoadKey: null,
 
-  setIncomes: (items) => set({ incomes: items, loading: false, error: null }),
+  setIncomes: (items) => set({ incomes: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
   loadIncomes: async (uid, isGuest) => {
-    set({ loading: true, error: null });
+    const loadKey = getLoadKey(uid, isGuest);
+    if (get().loadedFor === loadKey) return get().incomes;
+    if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
-    try {
-      const sampleData = getActiveSampleData(uid);
-      if (sampleData) {
-        set({ incomes: sampleData.incomes, loading: false, error: null });
-        return sampleData.incomes;
+    const accountChanged = get().activeLoadKey && get().activeLoadKey !== loadKey;
+    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { incomes: [] } : {}) });
+
+    const request = Promise.resolve().then(async () => {
+      try {
+        const sampleData = getActiveSampleData(uid);
+        const items = sampleData
+          ? sampleData.incomes
+          : isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
+        if (get().activeLoadKey === loadKey) {
+          set({ incomes: items, loading: false, error: null, loadedFor: loadKey });
+        }
+        return items;
+      } catch (error) {
+        console.error('Failed to load incomes:', error);
+        if (get().activeLoadKey === loadKey) set({ loading: false, error: 'Unable to load incomes.' });
+        return [];
+      } finally {
+        pendingLoads.delete(loadKey);
       }
-
-      const items = isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
-      set({ incomes: items, loading: false, error: null });
-      return items;
-    } catch (error) {
-      console.error('Failed to load incomes:', error);
-      set({ loading: false, error: 'Unable to load incomes.' });
-      return [];
-    }
+    });
+    pendingLoads.set(loadKey, request);
+    return request;
   },
 
   addIncome: async (uid, isGuest, income) => {
@@ -60,9 +81,25 @@ const useIncomeStore = create((set, get) => ({
       return normalized;
     }
 
-    const saved = await createIncome(uid, normalized);
-    set({ incomes: [saved, ...get().incomes] });
-    return saved;
+    const previous = get().incomes;
+    const optimistic = [normalized, ...previous];
+    set({ incomes: optimistic, error: null });
+
+    try {
+      const saved = await createIncome(uid, normalized);
+      set({
+        incomes: [saved, ...get().incomes.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
+        error: null,
+      });
+      return saved;
+    } catch (error) {
+      console.error('Failed to create income:', error);
+      set({
+        incomes: get().incomes.filter((item) => item.id !== normalized.id && item.firestoreId !== normalized.id),
+        error: 'Unable to create the income. Your changes were restored.',
+      });
+      throw error;
+    }
   },
 
   updateIncomeItem: async (uid, isGuest, income) => {
@@ -80,13 +117,32 @@ const useIncomeStore = create((set, get) => ({
       return income;
     }
 
-    const updated = await updateIncome(uid, income);
-    set({
-      incomes: get().incomes.map((item) =>
-        item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...updated } : item
-      ),
-    });
-    return updated;
+    const current = get().incomes;
+    const previous = current.find((item) => item.id === income.id || item.firestoreId === income.firestoreId);
+    const optimistic = current.map((item) =>
+      item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...income } : item
+    );
+    set({ incomes: optimistic, error: null });
+
+    try {
+      const updated = await updateIncome(uid, income);
+      set({
+        incomes: get().incomes.map((item) =>
+          item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...updated } : item
+        ),
+        error: null,
+      });
+      return updated;
+    } catch (error) {
+      console.error('Failed to update income:', error);
+      set({
+        incomes: previous
+          ? get().incomes.map((item) => (item.id === income.id || item.firestoreId === income.firestoreId ? previous : item))
+          : get().incomes,
+        error: 'Unable to save the income. Your changes were restored.',
+      });
+      throw error;
+    }
   },
 
   deleteIncomeItem: async (uid, isGuest, incomeId) => {
@@ -109,9 +165,23 @@ const useIncomeStore = create((set, get) => ({
       return;
     }
 
-    await deleteIncome(uid, income);
-    set({ incomes: current.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId) });
+    const remaining = current.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
+    set({ incomes: remaining, error: null });
+
+    try {
+      await deleteIncome(uid, income);
+    } catch (error) {
+      console.error('Failed to delete income:', error);
+      set({
+        incomes: get().incomes.some((item) => item.id === income.id || item.firestoreId === income.firestoreId)
+          ? get().incomes
+          : [income, ...get().incomes],
+        error: 'Unable to delete the income. It has been restored.',
+      });
+      throw error;
+    }
   },
-}));
+  });
+});
 
 export default useIncomeStore;

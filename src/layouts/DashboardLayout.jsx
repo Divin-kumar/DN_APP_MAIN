@@ -1,6 +1,13 @@
-/* Event-first app shell for dashboard and workspace navigation. */
-import { useEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
+/*
+  Event-first app shell for dashboard and workspace navigation.
+
+  In simple language:
+  this file is the "parent frame" of the whole app after login.
+  It contains the top bar, side menu, mobile navigation, theme switch, profile actions,
+  and quick-create buttons that let the user create events, activities, and expenses without leaving the page.
+*/
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
@@ -8,10 +15,13 @@ import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
+import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
+import { getActiveCodeListMeta } from '../utils/codeLists';
+import ConnectivityBanner from '../components/common/ConnectivityBanner';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -25,6 +35,7 @@ const navItems = [
 export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const adminValues = useAppStore((state) => state.adminValues);
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
@@ -32,7 +43,11 @@ export default function DashboardLayout() {
   const { loadExpenses, addExpense } = useExpenseStore();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
+  const navigationType = useNavigationType();
   const navigate = useNavigate();
+  const contentRef = useRef(null);
+  const previousLocationRef = useRef(null);
+  const scrollPositionsRef = useRef(new Map());
   const [sidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -49,8 +64,10 @@ export default function DashboardLayout() {
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
 
   // Apply the saved theme to the page root so colors change across the whole app.
-  useEffect(() => {
+  useLayoutEffect(() => {
     document.documentElement.dataset.theme = theme;
+    const themeColor = theme === 'light' ? '#f3f6fb' : '#0b1020';
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', themeColor);
   }, [theme]);
 
   // The sidebar narrows itself on smaller screens to save space.
@@ -83,6 +100,50 @@ export default function DashboardLayout() {
     setQuickCreateOpen(false);
   }, [location.pathname, location.search, location.hash]);
 
+  useLayoutEffect(() => {
+    const contentNode = contentRef.current;
+    if (!contentNode) return;
+
+    const segment = location.pathname.split('/').filter(Boolean)[0] || 'dashboard';
+    const currentLocation = {
+      key: location.key || location.pathname,
+      pathname: location.pathname,
+      primaryRoute: ['dashboard', 'events', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
+    };
+    const previousLocation = previousLocationRef.current;
+
+    if (previousLocation) {
+      scrollPositionsRef.current.set(previousLocation.key, contentNode.scrollTop);
+      if (scrollPositionsRef.current.size > 80) {
+        const oldestKey = scrollPositionsRef.current.keys().next().value;
+        scrollPositionsRef.current.delete(oldestKey);
+      }
+    }
+
+    if (!previousLocation || previousLocation.primaryRoute !== currentLocation.primaryRoute) {
+      contentNode.scrollTop = 0;
+      contentNode.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    } else if (navigationType === 'POP') {
+      const savedPosition = scrollPositionsRef.current.get(currentLocation.key) || 0;
+      contentNode.scrollTop = savedPosition;
+      contentNode.scrollTo({ top: savedPosition, left: 0, behavior: 'auto' });
+    } else if (previousLocation.pathname !== currentLocation.pathname) {
+      contentNode.scrollTop = 0;
+      contentNode.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+    }
+
+    previousLocationRef.current = currentLocation;
+  }, [location.key, location.pathname, navigationType]);
+
+  useEffect(() => {
+    if (!('scrollRestoration' in window.history)) return undefined;
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = 'manual';
+    return () => { window.history.scrollRestoration = previousScrollRestoration; };
+  }, []);
+
   useEffect(() => {
     if (!quickCreateOpen) return undefined;
 
@@ -110,10 +171,12 @@ export default function DashboardLayout() {
   }, [quickCreateType, user, isGuest, events.length, loadEvents, loadExpenses]);
 
   // Build a readable profile label shown in the top bar.
+  // If the user has a name, show it; otherwise show email or simply "Guest".
   const profileName = user?.displayName || user?.email || 'Guest';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
 
   // Logout should behave differently for guest accounts and real accounts.
+  // Real users sign out through Firebase; guest users just clear the guest session.
   const handleLogout = async () => {
     try {
       if (isGuest) {
@@ -130,6 +193,7 @@ export default function DashboardLayout() {
   };
 
   // Quick create opens a lightweight modal for common tasks without leaving the page.
+  // This is a shortcut so users can add a life moment, activity, or expense in a few clicks.
   const beginQuickCreate = (type) => {
     setQuickCreateOpen(false);
     setQuickCreateError('');
@@ -144,6 +208,7 @@ export default function DashboardLayout() {
   };
 
   // Save newly created life moments and open the event page right after.
+  // This keeps the process fluid: create a moment, then immediately land inside it.
   const saveQuickEvent = async (formData) => {
     try {
       const event = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
@@ -156,6 +221,7 @@ export default function DashboardLayout() {
   };
 
   // Save the new expense and redirect to the expense list to keep the flow intuitive.
+  // This helps users get from entry to review without losing context.
   const saveQuickExpense = async (formData) => {
     try {
       await addExpense(user?.uid, isGuest, formData);
@@ -168,6 +234,7 @@ export default function DashboardLayout() {
   };
 
   // Add a task-like activity under an existing life moment.
+  // This is the same idea as creating a to-do attached to a life event.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
     const event = events.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
@@ -198,6 +265,7 @@ export default function DashboardLayout() {
 
   // The layout wraps every protected page in a consistent shell:
   // top header, left navigation, content area, and floating quick-create panel.
+  // This creates a single app frame so the experience feels consistent throughout the product.
   return (
     <div className="lifehub-shell" style={styles.appShell}>
       <header className="lifehub-header" style={styles.header}>
@@ -266,7 +334,8 @@ export default function DashboardLayout() {
 
         {!sidebarCollapsed ? <button className="mobile-nav-overlay" type="button" aria-label="Close navigation" onClick={() => setSidebarCollapsed(true)} /> : null}
 
-        <section className="lifehub-content" style={styles.contentPane}>
+        <section ref={contentRef} className="lifehub-content" style={styles.contentPane}>
+          <ConnectivityBanner />
           <div className="lifehub-banner" style={styles.banner}>
             {isGuest
               ? 'Guest mode active. Your data is stored locally on this device.'
@@ -346,8 +415,12 @@ export default function DashboardLayout() {
               {events.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}</option>)}
             </DropdownSelect>
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
-            <input type="date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
-            <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority"><option value="low">Low priority</option><option value="medium">Medium priority</option><option value="high">High priority</option></DropdownSelect>
+            <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
+            <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
+              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+                <option key={option.value} value={option.value}>{option.label}</option>
+              ))}
+            </DropdownSelect>
             <textarea value={quickActivityDescription} onChange={(event) => setQuickActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
           </form>
@@ -369,7 +442,7 @@ const styles = {
     justifyContent: 'space-between',
     background: '#ffffff',
     borderBottom: '1px solid #dfeae3',
-    padding: '16px 24px',
+    padding: 'calc(16px + var(--safe-area-top, 0px)) calc(24px + var(--safe-area-right, 0px)) 16px calc(24px + var(--safe-area-left, 0px))',
     position: 'sticky',
     top: 0,
     zIndex: 10,
@@ -456,7 +529,7 @@ const styles = {
   },
   contentPane: {
     flex: 1,
-    padding: '22px',
+    padding: 'calc(22px + var(--safe-area-top, 0px)) calc(22px + var(--safe-area-right, 0px)) calc(22px + var(--safe-area-bottom, 0px)) calc(22px + var(--safe-area-left, 0px))',
   },
   banner: {
     background: '#dff2e5',

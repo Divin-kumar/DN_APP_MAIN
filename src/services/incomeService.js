@@ -1,4 +1,8 @@
-/* Income persistence and guest-local income storage. */
+/*
+  Income persistence and guest-local income storage.
+
+  This service is responsible for reading and saving income records, whether the user is signed in or browsing in guest mode.
+*/
 import {
   addDoc,
   collection,

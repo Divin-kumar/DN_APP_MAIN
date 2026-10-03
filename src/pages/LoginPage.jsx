@@ -1,4 +1,9 @@
-/* Entry screen for Google authentication and local guest sessions. */
+/*
+  Entry screen for Google authentication and local guest sessions.
+
+  This is the first screen users see when they are not already signed in.
+  It gives them two options: continue with Google or continue as a guest.
+*/
 import { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { authService } from '../services/firebase';

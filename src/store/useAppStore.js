@@ -2,18 +2,27 @@
   This is the app's global memory.
   It stores session info, theme settings, feature defaults, and small UI notifications
   so that different screens can share the same state without complicated prop drilling.
+
+  In simple language:
+  imagine this as a central brain for the app.
+  Instead of passing the same data from page to page, the app stores it here so every component
+  can access it when needed.
 */
 import { create } from 'zustand';
+import { DEFAULT_CODE_LISTS, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists';
 
 // These are the default selectable values used across the app.
 // For example, the user can set event types or expense categories in settings.
 const defaultAdminValues = {
-  eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
-  incomeTypes: ['Salary', 'Freelance', 'Bonus'],
-  expenseCategories: ['Food', 'Hospital', 'Shopping', 'Travel', 'Entertainment'],
+  eventTypes: [...DEFAULT_CODE_LISTS.eventTypes],
+  incomeTypes: [...DEFAULT_CODE_LISTS.incomeTypes],
+  expenseCategories: [...DEFAULT_CODE_LISTS.expenseCategories],
+  activityPriorities: [...DEFAULT_CODE_LISTS.activityPriorities],
+  greetingTemplateTypes: [...DEFAULT_CODE_LISTS.greetingTemplateTypes],
+  reminderPresets: [...DEFAULT_CODE_LISTS.reminderPresets],
 };
 
-const defaultGreetingEnabledTypes = ['Birthday', 'Anniversary'];
+const defaultGreetingEnabledTypes = [...DEFAULT_CODE_LISTS.greetingTemplateTypes];
 
 const defaultGreetingTemplates = {
   Birthday: 'Happy {ordinal} Birthday {name} 🎂\nWishing you a wonderful year filled with happiness, health and success.',
@@ -38,20 +47,40 @@ const defaultPreferences = {
   },
 };
 
+const createDefaultPreferences = () => ({
+  ...defaultPreferences,
+  greetingEnabledTypes: [...defaultGreetingEnabledTypes],
+  greetingTemplates: { ...defaultGreetingTemplates },
+  notifications: { ...defaultPreferences.notifications },
+});
+
+const createDefaultAdminValues = () => Object.fromEntries(
+  Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]),
+);
+
 // Load admin values from browser storage if they exist.
 // This allows the app to remember user custom settings after refreshing.
+const normalizeStoredList = (key, storedValue) => {
+  const fallback = defaultAdminValues[key] ?? DEFAULT_CODE_LISTS[key] ?? [];
+  const source = Array.isArray(storedValue) && storedValue.length ? storedValue : fallback;
+  return serializeCodeListEntries(source);
+};
+
 const loadAdminValues = () => {
   try {
     const stored = JSON.parse(localStorage.getItem('lifehub_admin_values') || '{}');
     return {
       ...defaultAdminValues,
       ...stored,
-      eventTypes: Array.isArray(stored.eventTypes) && stored.eventTypes.length ? stored.eventTypes : defaultAdminValues.eventTypes,
-      incomeTypes: Array.isArray(stored.incomeTypes) && stored.incomeTypes.length ? stored.incomeTypes : defaultAdminValues.incomeTypes,
-      expenseCategories: Array.isArray(stored.expenseCategories) && stored.expenseCategories.length ? stored.expenseCategories : defaultAdminValues.expenseCategories,
+      eventTypes: normalizeStoredList('eventTypes', stored.eventTypes),
+      incomeTypes: normalizeStoredList('incomeTypes', stored.incomeTypes),
+      expenseCategories: normalizeStoredList('expenseCategories', stored.expenseCategories),
+      activityPriorities: normalizeStoredList('activityPriorities', stored.activityPriorities),
+      greetingTemplateTypes: normalizeStoredList('greetingTemplateTypes', stored.greetingTemplateTypes),
+      reminderPresets: normalizeStoredList('reminderPresets', stored.reminderPresets),
     };
   } catch {
-    return { ...defaultAdminValues };
+    return createDefaultAdminValues();
   }
 };
 
@@ -79,7 +108,7 @@ const loadPreferences = () => {
       defaultExpenseCategory: stored.defaultExpenseCategory || defaultPreferences.defaultExpenseCategory,
     };
   } catch {
-    return { ...defaultPreferences };
+    return createDefaultPreferences();
   }
 };
 
@@ -108,8 +137,18 @@ const useAppStore = create((set) => ({
 
   // Reset admin-defined values back to the default list.
   resetAdminValues: () => set(() => {
-    localStorage.setItem('lifehub_admin_values', JSON.stringify(defaultAdminValues));
-    return { adminValues: { ...defaultAdminValues } };
+    const adminValues = createDefaultAdminValues();
+    localStorage.setItem('lifehub_admin_values', JSON.stringify(adminValues));
+    return { adminValues };
+  }),
+
+  resetAllSettings: (referencedValues) => set((state) => {
+    const adminValues = resetCodeListsPreservingReferences(state.adminValues, referencedValues);
+    const preferences = createDefaultPreferences();
+    localStorage.setItem('lifehub_admin_values', JSON.stringify(adminValues));
+    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
+    localStorage.setItem('lifehub_theme_choice', '1');
+    return { adminValues, preferences };
   }),
 
   // Save preferences and persist them so they survive page refreshes.
@@ -127,9 +166,10 @@ const useAppStore = create((set) => ({
 
   // Restore the original app defaults for theme and user preferences.
   resetPreferences: () => set(() => {
-    localStorage.setItem('lifehub_preferences', JSON.stringify(defaultPreferences));
+    const preferences = createDefaultPreferences();
+    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
     localStorage.setItem('lifehub_theme_choice', '1');
-    return { preferences: { ...defaultPreferences } };
+    return { preferences };
   }),
 
   // Mark the current user as logged in and clear guest mode.

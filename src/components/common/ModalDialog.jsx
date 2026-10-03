@@ -1,3 +1,5 @@
+// This file creates reusable popup dialogs and confirmation windows.
+// It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';

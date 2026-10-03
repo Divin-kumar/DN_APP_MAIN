@@ -1,3 +1,5 @@
+// This is a reusable dropdown component used for event types, categories, filters, and small forms.
+// It gives the app a consistent way to render select fields with keyboard support and accessible labels.
 import { Children, isValidElement, useEffect, useId, useRef, useState } from 'react';
 import { Check, ChevronDown } from 'lucide-react';
 
