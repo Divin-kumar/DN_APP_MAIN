@@ -9,6 +9,11 @@ export const DATABASE_TABLES = Object.freeze({
   INCOMES: 'incomes',
   SETTINGS: 'settings',
   CODE_LISTS: 'codeLists',
+  MIGRATION_RUNS: 'migrationRuns',
+  MIGRATION_SNAPSHOTS: 'migrationSnapshots',
+  MIGRATION_STAGING: 'migrationStaging',
+  MIGRATION_AUDIT: 'migrationAudit',
+  MIGRATION_LOCKS: 'migrationLocks',
 });
 
 export const DATABASE_TABLE_LIST = Object.freeze(Object.values(DATABASE_TABLES));

@@ -1,6 +1,6 @@
 import { DATABASE_TABLES } from './tables.js';
 
-export const DATABASE_SCHEMA_VERSION = 1;
+export const DATABASE_SCHEMA_VERSION = 2;
 
 export const DATABASE_SCHEMA = Object.freeze({
   [DATABASE_TABLES.METADATA]: '&key, updatedAt, status',
@@ -12,6 +12,11 @@ export const DATABASE_SCHEMA = Object.freeze({
   [DATABASE_TABLES.INCOMES]: '&id, userId, date, type, amount, updatedAt, [userId+date]',
   [DATABASE_TABLES.SETTINGS]: '&id, userId, key, updatedAt, [userId+key]',
   [DATABASE_TABLES.CODE_LISTS]: '&id, userId, listKey, entryValue, active, updatedAt, [userId+listKey]',
+  [DATABASE_TABLES.MIGRATION_RUNS]: '&id, principalId, state, migrationVersion, startedAt, sourceFingerprint, [principalId+state]',
+  [DATABASE_TABLES.MIGRATION_SNAPSHOTS]: '&id, runId, principalId, createdAt, expiresAt, status, [runId+status]',
+  [DATABASE_TABLES.MIGRATION_STAGING]: '&id, runId, principalId, domain, [runId+domain]',
+  [DATABASE_TABLES.MIGRATION_AUDIT]: '&id, runId, principalId, occurredAt, eventType, [runId+occurredAt]',
+  [DATABASE_TABLES.MIGRATION_LOCKS]: '&principalId, runId, expiresAt',
 });
 
 export const DATABASE_SCHEMA_INFO = Object.freeze({
