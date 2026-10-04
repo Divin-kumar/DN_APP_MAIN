@@ -12,6 +12,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
+import { initializeDatabase } from './database/boot';
 import useAppStore from './store/useAppStore';
 import { shouldPromptForServiceWorkerUpdate } from './utils/serviceWorkerUpdate';
 import { initializeFirebaseAnalytics } from './firebase/config';
@@ -33,6 +34,10 @@ try {
 } catch {
   applyDocumentTheme('dark');
 }
+
+void initializeDatabase().catch((error) => {
+  console.warn('Dexie database boot did not complete:', error);
+});
 
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
 const getWorkerVersion = (worker) => {
