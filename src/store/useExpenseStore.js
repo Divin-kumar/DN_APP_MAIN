@@ -4,16 +4,9 @@
   This store handles all expense-related data, including loading, creating, updating, and deleting records.
 */
 import { create } from 'zustand';
-import {
-  createExpense,
-  deleteExpense,
-  getExpensesForUser,
-  getGuestExpenses,
-  removeGuestExpense,
-  saveGuestExpense,
-  updateExpense,
-} from '../services/expenseService';
-import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { expenseRepository } from '../repositories/index.js';
+import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData.js';
+import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -34,7 +27,8 @@ const useExpenseStore = create((set, get) => {
     if (get().loadedFor === loadKey) return get().expenses;
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
-    set({ loading: true, error: null, activeLoadKey: loadKey });
+    const accountChanged = get().activeLoadKey && get().activeLoadKey !== loadKey;
+    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { expenses: [] } : {}) });
 
     const request = Promise.resolve().then(async () => {
       try {
@@ -44,9 +38,9 @@ const useExpenseStore = create((set, get) => {
           return sampleData.expenses;
         }
 
-        const items = isGuest
-          ? getGuestExpenses()
-          : await getExpensesForUser(uid);
+        const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+        if (!principalId) throw new Error('No active repository principal is available.');
+        const items = await expenseRepository.getAll(principalId);
 
         if (get().activeLoadKey === loadKey) set({ expenses: items, loading: false, error: null, loadedFor: loadKey });
         return items;
@@ -79,18 +73,14 @@ const useExpenseStore = create((set, get) => {
       return normalized;
     }
 
-    if (isGuest) {
-      const updated = saveGuestExpense(normalized);
-      set({ expenses: updated, loading: false });
-      return normalized;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().expenses;
     const optimistic = [normalized, ...previous];
     set({ expenses: optimistic, loading: false, error: null });
 
     try {
-      const saved = await createExpense(uid, normalized);
+      const saved = await expenseRepository.upsert(principalId, normalized);
       set({
         expenses: [saved, ...get().expenses.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
@@ -115,12 +105,8 @@ const useExpenseStore = create((set, get) => {
       return expense;
     }
 
-    if (isGuest) {
-      const updated = saveGuestExpense(expense);
-      set({ expenses: updated });
-      return expense;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().expenses;
     const previous = current.find((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
     const optimistic = current.map((item) =>
@@ -129,7 +115,7 @@ const useExpenseStore = create((set, get) => {
     set({ expenses: optimistic, error: null });
 
     try {
-      const updated = await updateExpense(uid, expense);
+      const updated = await expenseRepository.upsert(principalId, expense);
       set({
         expenses: get().expenses.map((item) =>
           item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...updated } : item
@@ -163,20 +149,13 @@ const useExpenseStore = create((set, get) => {
       return;
     }
 
-    if (isGuest) {
-      const updated = removeGuestExpense(expenseId);
-      set({ expenses: updated });
-      return;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
     set({ expenses: remaining, error: null });
 
     try {
-      // Nested-only records have no Firestore document to delete.
-      if (expense.firestoreId) {
-        await deleteExpense(uid, expense);
-      }
+      await expenseRepository.delete(principalId, expense.id || expenseId);
     } catch (error) {
       console.error('Failed to delete expense:', error);
       set({

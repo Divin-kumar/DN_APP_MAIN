@@ -5,18 +5,13 @@
   It also keeps guest-mode data in local storage so the app can work without an account.
 */
 import {
-  addDoc,
   collection,
-  deleteDoc,
-  doc,
   getDocs,
-  updateDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
-import { getEventStatus } from '../utils/eventStatus';
+import { db } from '../firebase/config.js';
+import { getEventStatus } from '../utils/eventStatus.js';
 
 const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
-const GUEST_SESSION_BACKUP_KEY = 'lifehub_session_backup';
 
 export { getEventStatus };
 
@@ -75,9 +70,7 @@ export const getGuestEvents = () => {
     const parsed = JSON.parse(raw);
 
     if (Array.isArray(parsed)) {
-      const normalized = parsed.map(normalizeEvent);
-      localStorage.setItem(GUEST_SESSION_BACKUP_KEY, JSON.stringify(normalized));
-      return normalized;
+      return parsed.map(normalizeEvent);
     }
 
     return [];
@@ -88,9 +81,8 @@ export const getGuestEvents = () => {
 };
 
 export const setGuestEvents = (items) => {
-  const normalized = Array.isArray(items) ? items.map(normalizeEvent) : [];
-  localStorage.setItem(GUEST_EVENTS_KEY, JSON.stringify(normalized));
-  localStorage.setItem(GUEST_SESSION_BACKUP_KEY, JSON.stringify(normalized));
+  void items;
+  throw new Error('Guest event writes are deprecated; use momentRepository and child repositories.');
 };
 
 export const getEventsForUser = async (uid) => {
@@ -103,48 +95,29 @@ export const getEventsForUser = async (uid) => {
 };
 
 export const createEvent = async (uid, event) => {
-  const normalized = normalizeEvent(event);
-  const eventsRef = collection(db, 'users', uid, 'eventGroups');
-  const docRef = await addDoc(eventsRef, normalized);
-  return { firestoreId: docRef.id, ...normalized };
+  void uid;
+  void event;
+  throw new Error('Firestore event writes are deprecated; use momentRepository.');
 };
 
 export const updateEvent = async (uid, event) => {
-  const normalized = normalizeEvent(event);
-  const ref = doc(db, 'users', uid, 'eventGroups', event.firestoreId || event.id);
-  await updateDoc(ref, {
-    ...normalized,
-    id: normalized.id,
-  });
-  return normalized;
+  void uid;
+  void event;
+  throw new Error('Firestore event writes are deprecated; use momentRepository and child repositories.');
 };
 
 export const deleteEvent = async (uid, event) => {
-  const id = event.firestoreId || event.id;
-  if (!id) return;
-  const ref = doc(db, 'users', uid, 'eventGroups', id);
-  await deleteDoc(ref);
+  void uid;
+  void event;
+  throw new Error('Firestore event deletion is deprecated; use momentRepository and child repositories.');
 };
 
 export const saveGuestEvent = (event) => {
-  const list = getGuestEvents();
-  const index = list.findIndex((item) => (
-    (item.id && event.id && item.id === event.id)
-    || (item.firestoreId && event.firestoreId && item.firestoreId === event.firestoreId)
-  ));
-
-  if (index >= 0) {
-    list[index] = normalizeEvent(event);
-  } else {
-    list.push(normalizeEvent(event));
-  }
-
-  setGuestEvents(list);
-  return list;
+  void event;
+  throw new Error('Guest event writes are deprecated; use momentRepository and child repositories.');
 };
 
 export const removeGuestEvent = (eventId) => {
-  const list = getGuestEvents().filter((item) => item.id !== eventId);
-  setGuestEvents(list);
-  return list;
+  void eventId;
+  throw new Error('Guest event deletion is deprecated; use momentRepository and child repositories.');
 };

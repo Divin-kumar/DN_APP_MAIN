@@ -9,7 +9,6 @@
 */
 import { createContext, useContext, useEffect } from 'react';
 import { authService } from '../services/firebase';
-import { mergeGuestDataIntoAccount } from '../services/guestMergeService';
 import useAppStore from '../store/useAppStore';
 
 const AuthContext = createContext(null);
@@ -23,19 +22,13 @@ export function AuthProvider({ children }) {
     // Subscribe to auth changes so the app always knows the current login state.
     const unsubscribe = authService.onAuthChange((user) => {
       if (user) {
-        // If a real login exists, merge guest-only data into the account before storing user info.
-        mergeGuestDataIntoAccount(user.uid)
-          .catch((error) => {
-            console.error('Failed to merge guest data:', error);
-          })
-          .finally(() => {
-            setUser({
-              uid: user.uid,
-              email: user.email,
-              displayName: user.displayName,
-              photoURL: user.photoURL,
-            });
-          });
+        // Auth establishes the principal only; guest records remain untouched until explicitly migrated.
+        void setUser({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+        }).catch((error) => console.error('Unable to prepare local account data:', error));
       } else if (localStorage.getItem('lifehub_guest_mode') === 'true') {
         // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
         setGuestMode(true);

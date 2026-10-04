@@ -275,6 +275,14 @@ export default function DashboardLayout() {
     }
   };
 
+  const toggleTheme = async () => {
+    try {
+      await setPreferences({ theme: theme === 'dark' ? 'light' : 'dark' });
+    } catch {
+      showToast('Theme preference could not be saved', 'danger');
+    }
+  };
+
   // The layout wraps every protected page in a consistent shell:
   // top header, left navigation, content area, and floating quick-create panel.
   // This creates a single app frame so the experience feels consistent throughout the product.
@@ -300,7 +308,7 @@ export default function DashboardLayout() {
           <button
             type="button"
             className="theme-toggle"
-            onClick={() => setPreferences({ theme: theme === 'dark' ? 'light' : 'dark' })}
+            onClick={toggleTheme}
             aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
             aria-pressed={theme === 'dark'}

@@ -1,13 +1,9 @@
 /* Expense persistence and reconciliation of master and nested event records. */
 import {
-  addDoc,
   collection,
-  deleteDoc,
-  doc,
   getDocs,
-  updateDoc,
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db } from '../firebase/config.js';
 
 const GUEST_EXPENSES_KEY = 'lifehub_guest_expenses';
 const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
@@ -62,7 +58,8 @@ export const getGuestExpenses = () => {
 };
 
 export const setGuestExpenses = (items) => {
-  localStorage.setItem(GUEST_EXPENSES_KEY, JSON.stringify(items));
+  void items;
+  throw new Error('Guest expense writes are deprecated; use expenseRepository.');
 };
 
 // Load both Firestore expense records and nested activity records for reporting pages.
@@ -87,45 +84,29 @@ export const getExpensesForUser = async (uid) => {
 };
 
 export const createExpense = async (uid, expense) => {
-  const normalized = normalizeExpense(expense);
-  const expensesRef = collection(db, 'users', uid, 'expenses');
-  const docRef = await addDoc(expensesRef, normalized);
-  return { firestoreId: docRef.id, ...normalized };
+  void uid;
+  void expense;
+  throw new Error('Firestore expense writes are deprecated; use expenseRepository.');
 };
 
 export const updateExpense = async (uid, expense) => {
-  const normalized = normalizeExpense(expense);
-  const ref = doc(db, 'users', uid, 'expenses', expense.firestoreId || expense.id);
-  await updateDoc(ref, {
-    ...normalized,
-    id: normalized.id,
-  });
-  return normalized;
+  void uid;
+  void expense;
+  throw new Error('Firestore expense writes are deprecated; use expenseRepository.');
 };
 
 export const deleteExpense = async (uid, expense) => {
-  const id = expense.firestoreId || expense.id;
-  if (!id) return;
-  const ref = doc(db, 'users', uid, 'expenses', id);
-  await deleteDoc(ref);
+  void uid;
+  void expense;
+  throw new Error('Firestore expense deletion is deprecated; use expenseRepository.');
 };
 
 export const saveGuestExpense = (expense) => {
-  const list = getGuestExpenses();
-  const index = list.findIndex((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
-
-  if (index >= 0) {
-    list[index] = normalizeExpense(expense);
-  } else {
-    list.push(normalizeExpense(expense));
-  }
-
-  setGuestExpenses(list);
-  return list;
+  void expense;
+  throw new Error('Guest expense writes are deprecated; use expenseRepository.');
 };
 
 export const removeGuestExpense = (expenseId) => {
-  const list = getGuestExpenses().filter((item) => item.id !== expenseId);
-  setGuestExpenses(list);
-  return list;
+  void expenseId;
+  throw new Error('Guest expense deletion is deprecated; use expenseRepository.');
 };

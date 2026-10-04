@@ -9,10 +9,12 @@
   can access it when needed.
 */
 import { create } from 'zustand';
-import { CODE_LIST_SCHEMA_VERSION, DEFAULT_CODE_LISTS, migrateStoredCodeLists, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists';
-
-const ADMIN_VALUES_STORAGE_KEY = 'lifehub_admin_values';
-const ADMIN_VALUES_VERSION_KEY = 'lifehub_admin_values_schema_version';
+import { db } from '../database/index.js';
+import { DATABASE_TABLES } from '../database/tables.js';
+import { DEFAULT_CODE_LISTS, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists.js';
+import { codeListRepository, settingsRepository } from '../repositories/index.js';
+import { validateSettingsKey } from '../repositories/settingsRepository.validation.js';
+import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
 // Default app preferences such as theme, currency, and notification settings.
 const defaultPreferences = {
@@ -40,41 +42,52 @@ const createDefaultAdminValues = () => Object.fromEntries(
   Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]),
 );
 
-// Load and migrate admin values without replacing user-maintained entries on application updates.
-const loadAdminValues = () => {
-  try {
-    const storedJson = localStorage.getItem(ADMIN_VALUES_STORAGE_KEY);
-    const storedValues = storedJson === null ? null : JSON.parse(storedJson);
-    const storedVersion = localStorage.getItem(ADMIN_VALUES_VERSION_KEY) || 0;
-    const { adminValues, version } = migrateStoredCodeLists(storedValues, storedVersion);
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(version));
-    return adminValues;
-  } catch {
-    return createDefaultAdminValues();
-  }
+const mapCodeListRows = (rows) => Object.entries(DEFAULT_CODE_LISTS).reduce((result, [listKey, defaults]) => {
+  const stored = rows
+    .filter((row) => row.listKey === listKey)
+    .map((row) => ({
+      value: row.entryValue,
+      label: row.label,
+      active: row.active,
+      isActive: row.isActive,
+      canGenerateGreetingCards: row.canGenerateGreetingCards,
+      greetingTemplate: row.greetingTemplate,
+      showInDashboardUpcoming: row.showInDashboardUpcoming,
+    }));
+  result[listKey] = stored.length ? stored : serializeCodeListEntries(defaults);
+  return result;
+}, {});
+
+const normalizePreferences = (stored = {}) => ({
+  ...createDefaultPreferences(),
+  ...stored,
+  notifications: { ...defaultPreferences.notifications, ...(stored.notifications || {}) },
+  listSort: { ...(stored.listSort || {}) },
+});
+
+const persistCodeLists = async (principalId, current, patch) => {
+  await db.transaction('rw', db.table(DATABASE_TABLES.CODE_LISTS), async () => {
+    for (const [listKey, items] of Object.entries(patch)) {
+      if (!Object.prototype.hasOwnProperty.call(DEFAULT_CODE_LISTS, listKey)) continue;
+      const normalized = serializeCodeListEntries(items);
+      await codeListRepository.deleteList(principalId, listKey);
+      if (normalized.length) await codeListRepository.setList(principalId, listKey, normalized);
+    }
+  });
+  return { ...current, ...patch };
 };
 
-// Load the saved user preferences from localStorage.
-const loadPreferences = () => {
-  try {
-    const stored = JSON.parse(localStorage.getItem('lifehub_preferences') || '{}');
-    return {
-      ...defaultPreferences,
-      ...stored,
-      theme: localStorage.getItem('lifehub_theme_choice') ? (stored.theme || defaultPreferences.theme) : 'dark',
-      notifications: {
-        ...defaultPreferences.notifications,
-        ...(stored.notifications || {}),
-      },
-      listSort: { ...(stored.listSort || {}) },
-      defaultEventType: stored.defaultEventType || defaultPreferences.defaultEventType,
-      defaultIncomeType: stored.defaultIncomeType || defaultPreferences.defaultIncomeType,
-      defaultExpenseCategory: stored.defaultExpenseCategory || defaultPreferences.defaultExpenseCategory,
-    };
-  } catch {
-    return createDefaultPreferences();
-  }
+const persistPreferences = async (principalId, current, partial) => {
+  const merged = normalizePreferences({ ...current, ...partial });
+  if (partial.notifications) merged.notifications = { ...current.notifications, ...partial.notifications };
+  if (partial.listSort) merged.listSort = { ...current.listSort, ...partial.listSort };
+  await db.transaction('rw', db.table(DATABASE_TABLES.SETTINGS), async () => {
+    for (const [key] of Object.entries(partial)) {
+      if (!validateSettingsKey(key)) continue;
+      await settingsRepository.updateOne(principalId, key, merged[key]);
+    }
+  });
+  return merged;
 };
 
 const useAppStore = create((set) => ({
@@ -84,83 +97,182 @@ const useAppStore = create((set) => ({
   isGuest: false,
   appLoading: true,
   sessionType: 'unauthenticated',
+  principalId: null,
+  persistentReady: false,
+  persistenceError: null,
 
   // Saved app configuration and temporary popup messages.
-  adminValues: loadAdminValues(),
-  preferences: loadPreferences(),
+  adminValues: createDefaultAdminValues(),
+  preferences: createDefaultPreferences(),
   toast: null,
 
+  hydratePersistentData: async (principalId) => {
+    if (!principalId) throw new Error('A repository principal is required to hydrate persistent settings.');
+    const [storedPreferences, storedCodeLists] = await Promise.all([
+      settingsRepository.getPreferences(principalId),
+      codeListRepository.getAll(principalId),
+    ]);
+    set({
+      principalId,
+      preferences: normalizePreferences(storedPreferences),
+      adminValues: mapCodeListRows(storedCodeLists),
+      persistentReady: true,
+      persistenceError: null,
+    });
+    return { preferences: normalizePreferences(storedPreferences), adminValues: mapCodeListRows(storedCodeLists) };
+  },
+
   // Update custom values such as event labels and expense categories.
-  setAdminValues: (nextValues) => set((state) => {
-    const merged = {
-      ...state.adminValues,
-      ...nextValues,
-    };
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(merged));
-    return { adminValues: merged };
-  }),
+  setAdminValues: async (nextValues) => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const previous = state.adminValues;
+    const optimistic = { ...previous, ...nextValues };
+    set({ adminValues: optimistic, persistenceError: null });
+    try {
+      await persistCodeLists(principalId, previous, nextValues);
+      return optimistic;
+    } catch (error) {
+      set({ adminValues: previous, persistenceError: error });
+      throw error;
+    }
+  },
 
   // Reset admin-defined values back to the default list.
-  resetAdminValues: () => set(() => {
-    const adminValues = createDefaultAdminValues();
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
-    return { adminValues };
-  }),
+  resetAdminValues: async () => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const previous = state.adminValues;
+    const defaults = createDefaultAdminValues();
+    set({ adminValues: defaults, persistenceError: null });
+    try {
+      await db.transaction('rw', db.table(DATABASE_TABLES.CODE_LISTS), async () => {
+        await codeListRepository.resetToDefaults(principalId);
+      });
+      return defaults;
+    } catch (error) {
+      set({ adminValues: previous, persistenceError: error });
+      throw error;
+    }
+  },
 
-  resetAllSettings: (referencedValues) => set((state) => {
+  resetAllSettings: async (referencedValues) => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const previous = { adminValues: state.adminValues, preferences: state.preferences };
     const adminValues = resetCodeListsPreservingReferences(state.adminValues, referencedValues);
     const preferences = createDefaultPreferences();
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
-    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
-    localStorage.setItem('lifehub_theme_choice', '1');
-    return { adminValues, preferences };
-  }),
+    set({ adminValues, preferences, persistenceError: null });
+    try {
+      await db.transaction('rw', db.table(DATABASE_TABLES.SETTINGS), db.table(DATABASE_TABLES.CODE_LISTS), async () => {
+        await settingsRepository.resetToDefaults(principalId);
+        await Promise.all(Object.entries(preferences).map(([key, value]) => settingsRepository.updateOne(principalId, key, value)));
+        for (const [listKey, entries] of Object.entries(adminValues)) {
+          const normalized = serializeCodeListEntries(entries);
+          await codeListRepository.deleteList(principalId, listKey);
+          await codeListRepository.setList(principalId, listKey, normalized);
+        }
+      });
+      return { adminValues, preferences };
+    } catch (error) {
+      set({ ...previous, persistenceError: error });
+      throw error;
+    }
+  },
 
   // Save preferences and persist them so they survive page refreshes.
-  setPreferences: (nextPreferences) => set((state) => {
-    const merged = {
-      ...state.preferences,
-      ...nextPreferences,
-      ...(nextPreferences.listSort ? {
-        listSort: { ...state.preferences.listSort, ...nextPreferences.listSort },
-      } : {}),
-    };
-    if (Object.prototype.hasOwnProperty.call(nextPreferences, 'theme')) {
-      localStorage.setItem('lifehub_theme_choice', '1');
+  setPreferences: async (nextPreferences) => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const previous = state.preferences;
+    const optimistic = normalizePreferences({ ...previous, ...nextPreferences });
+    if (nextPreferences.notifications) optimistic.notifications = { ...previous.notifications, ...nextPreferences.notifications };
+    if (nextPreferences.listSort) optimistic.listSort = { ...previous.listSort, ...nextPreferences.listSort };
+    set({ preferences: optimistic, persistenceError: null });
+    try {
+      await persistPreferences(principalId, previous, nextPreferences);
+      return optimistic;
+    } catch (error) {
+      set({ preferences: previous, persistenceError: error });
+      throw error;
     }
-    localStorage.setItem('lifehub_preferences', JSON.stringify(merged));
-    return { preferences: merged };
-  }),
+  },
 
   // Restore the original app defaults for theme and user preferences.
-  resetPreferences: () => set(() => {
+  resetPreferences: async () => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const previous = state.preferences;
     const preferences = createDefaultPreferences();
-    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
-    localStorage.setItem('lifehub_theme_choice', '1');
-    return { preferences };
-  }),
+    set({ preferences, persistenceError: null });
+    try {
+      await db.transaction('rw', db.table(DATABASE_TABLES.SETTINGS), async () => {
+        await settingsRepository.resetToDefaults(principalId);
+        await Promise.all(Object.entries(preferences).map(([key, value]) => settingsRepository.updateOne(principalId, key, value)));
+      });
+      return preferences;
+    } catch (error) {
+      set({ preferences: previous, persistenceError: error });
+      throw error;
+    }
+  },
 
   // Mark the current user as logged in and clear guest mode.
-  setUser: (user) =>
+  setUser: async (user) => {
+    set({ authReady: false, appLoading: true, persistentReady: false, persistenceError: null });
+    let principalId = user?.uid || null;
+    let persistentReady = false;
+    let persistenceError = null;
+    try {
+      principalId = await resolveRepositoryPrincipal(user?.uid, false);
+      await useAppStore.getState().hydratePersistentData(principalId);
+      persistentReady = true;
+    } catch (error) {
+      persistenceError = error;
+    }
     set({
       user,
       isGuest: false,
+      principalId,
       sessionType: user ? 'authenticated' : 'unauthenticated',
       authReady: true,
       appLoading: false,
-    }),
+      persistentReady,
+      persistenceError,
+    });
+  },
 
   // Switch app to guest mode when no real account is active.
-  setGuestMode: (value) =>
+  setGuestMode: async (value) => {
+    set({ authReady: false, appLoading: true, persistentReady: false, persistenceError: null });
+    let principalId = null;
+    let persistentReady = false;
+    let persistenceError = null;
+    if (value) {
+      try {
+        principalId = await resolveRepositoryPrincipal(null, true);
+        await useAppStore.getState().hydratePersistentData(principalId);
+        persistentReady = true;
+      } catch (error) {
+        persistenceError = error;
+      }
+    }
     set({
       isGuest: value,
       user: null,
+      principalId,
       sessionType: value ? 'guest' : 'unauthenticated',
       authReady: true,
       appLoading: false,
-    }),
+      persistentReady,
+      persistenceError,
+    });
+  },
 
   // Small success/error popups shown throughout the app.
   showToast: (message, type = 'success', action = null) => set({ toast: { message, type, action, duration: action?.duration || 2600 } }),
@@ -175,6 +287,11 @@ const useAppStore = create((set) => ({
     set({
       user: null,
       isGuest: false,
+      principalId: null,
+      persistentReady: false,
+      persistenceError: null,
+      preferences: createDefaultPreferences(),
+      adminValues: createDefaultAdminValues(),
       sessionType: 'unauthenticated',
       authReady: true,
       appLoading: false,

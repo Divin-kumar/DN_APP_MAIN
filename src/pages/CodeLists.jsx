@@ -47,6 +47,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const adminValues = useAppStore((state) => state.adminValues);
   const preferences = useAppStore((state) => state.preferences);
   const setAdminValues = useAppStore((state) => state.setAdminValues);
+  const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
   const expenses = useExpenseStore((state) => state.expenses);
   const incomes = useIncomeStore((state) => state.incomes);
@@ -96,7 +97,9 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     entries.map((entry) => [entry.value, getRecordUsageCount(listKey, entry.value, { events, expenses, incomes, preferences })]),
   ), [entries, events, expenses, incomes, preferences, listKey]);
 
-  const updateEntries = (nextEntries) => setAdminValues({ [listKey]: nextEntries });
+  const updateEntries = (nextEntries) => {
+    void setAdminValues({ [listKey]: nextEntries }).catch(() => showToast('Code list changes could not be saved', 'danger'));
+  };
 
   const upsertEntry = (nextValue, nextLabel) => {
     const normalizedValue = nextValue.trim();

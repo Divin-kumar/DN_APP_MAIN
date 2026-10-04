@@ -4,16 +4,9 @@
   This store is responsible for all income data the app tracks, including reading from storage and saving changes.
 */
 import { create } from 'zustand';
-import {
-  createIncome,
-  deleteIncome,
-  getGuestIncomes,
-  getIncomesForUser,
-  removeGuestIncome,
-  saveGuestIncome,
-  updateIncome,
-} from '../services/incomeService';
-import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { incomeRepository } from '../repositories/index.js';
+import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData.js';
+import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -40,9 +33,9 @@ const useIncomeStore = create((set, get) => {
     const request = Promise.resolve().then(async () => {
       try {
         const sampleData = getActiveSampleData(uid);
-        const items = sampleData
-          ? sampleData.incomes
-          : isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
+        const principalId = sampleData ? null : await resolveRepositoryPrincipal(uid, isGuest);
+        if (!sampleData && !principalId) throw new Error('No active repository principal is available.');
+        const items = sampleData ? sampleData.incomes : await incomeRepository.getAll(principalId);
         if (get().activeLoadKey === loadKey) {
           set({ incomes: items, loading: false, error: null, loadedFor: loadKey });
         }
@@ -75,18 +68,14 @@ const useIncomeStore = create((set, get) => {
       return normalized;
     }
 
-    if (isGuest) {
-      const updated = saveGuestIncome(normalized);
-      set({ incomes: updated });
-      return normalized;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().incomes;
     const optimistic = [normalized, ...previous];
     set({ incomes: optimistic, error: null });
 
     try {
-      const saved = await createIncome(uid, normalized);
+      const saved = await incomeRepository.upsert(principalId, normalized);
       set({
         incomes: [saved, ...get().incomes.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
@@ -111,12 +100,8 @@ const useIncomeStore = create((set, get) => {
       return income;
     }
 
-    if (isGuest) {
-      const updated = saveGuestIncome(income);
-      set({ incomes: updated });
-      return income;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().incomes;
     const previous = current.find((item) => item.id === income.id || item.firestoreId === income.firestoreId);
     const optimistic = current.map((item) =>
@@ -125,7 +110,7 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: optimistic, error: null });
 
     try {
-      const updated = await updateIncome(uid, income);
+      const updated = await incomeRepository.upsert(principalId, income);
       set({
         incomes: get().incomes.map((item) =>
           item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...updated } : item
@@ -159,17 +144,13 @@ const useIncomeStore = create((set, get) => {
       return;
     }
 
-    if (isGuest) {
-      const updated = removeGuestIncome(incomeId);
-      set({ incomes: updated });
-      return;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
     set({ incomes: remaining, error: null });
 
     try {
-      await deleteIncome(uid, income);
+      await incomeRepository.delete(principalId, income.id || incomeId);
     } catch (error) {
       console.error('Failed to delete income:', error);
       set({

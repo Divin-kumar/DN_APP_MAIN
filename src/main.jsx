@@ -28,12 +28,7 @@ const applyDocumentTheme = (theme) => {
   );
 };
 
-try {
-  const storedPreferences = JSON.parse(localStorage.getItem('lifehub_preferences') || '{}');
-  applyDocumentTheme(storedPreferences.theme || 'dark');
-} catch {
-  applyDocumentTheme('dark');
-}
+applyDocumentTheme('dark');
 
 void initializeDatabase().catch((error) => {
   console.warn('Dexie database boot did not complete:', error);

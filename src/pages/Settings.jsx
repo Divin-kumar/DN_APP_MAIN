@@ -184,16 +184,20 @@ export default function Settings() {
     expenseCategories: normalizeList(expenseCategories),
   }), [eventTypes, incomeTypes, expenseCategories]);
 
-  const saveAdminValues = () => {
-    setAdminValues({
-      eventTypes: summary.eventTypes,
-      incomeTypes: summary.incomeTypes,
-      expenseCategories: summary.expenseCategories,
-    });
-    showToast('Admin values saved', 'success');
+  const saveAdminValues = async () => {
+    try {
+      await setAdminValues({
+        eventTypes: summary.eventTypes,
+        incomeTypes: summary.incomeTypes,
+        expenseCategories: summary.expenseCategories,
+      });
+      showToast('Admin values saved', 'success');
+    } catch {
+      showToast('Admin values could not be saved', 'danger');
+    }
   };
 
-  const savePreferences = () => {
+  const savePreferences = async () => {
     const normalized = {
       ...prefForm,
       notifications: {
@@ -202,12 +206,30 @@ export default function Settings() {
       },
     };
     setPrefForm(normalized);
-    setPreferences(normalized);
-    showToast('Preferences saved', 'success');
+    try {
+      await setPreferences(normalized);
+      showToast('Preferences saved', 'success');
+    } catch {
+      showToast('Preferences could not be saved', 'danger');
+    }
   };
 
-  const resetPreferencesForm = () => {
-    resetPreferences();
+  const saveNotificationPreferences = async () => {
+    try {
+      await setPreferences(prefForm);
+      showToast('Notification preferences saved', 'success');
+    } catch {
+      showToast('Notification preferences could not be saved', 'danger');
+    }
+  };
+
+  const resetPreferencesForm = async () => {
+    try {
+      await resetPreferences();
+    } catch {
+      showToast('Preferences could not be reset', 'danger');
+      return;
+    }
     setTheme('dark');
     document.documentElement.dataset.theme = 'dark';
     setPrefForm({
@@ -304,7 +326,7 @@ export default function Settings() {
         expenses: expenseState.expenses,
         incomes: incomeState.incomes,
       });
-      resetAllSettings(referencedValues);
+      await resetAllSettings(referencedValues);
       setTheme('dark');
       document.documentElement.dataset.theme = 'dark';
       setPrefForm({
@@ -370,7 +392,11 @@ export default function Settings() {
             const nextTheme = event.target.value;
             setTheme(nextTheme);
             document.documentElement.dataset.theme = nextTheme;
-            setPreferences({ ...preferences, theme: nextTheme });
+            void setPreferences({ ...preferences, theme: nextTheme }).catch(() => {
+              setTheme(preferences.theme || 'dark');
+              document.documentElement.dataset.theme = preferences.theme || 'dark';
+              showToast('Theme preference could not be saved', 'danger');
+            });
           }}>
             <option value="light">Soft light</option>
             <option value="dark">Dark</option>
@@ -510,7 +536,7 @@ export default function Settings() {
       </div>
 
       <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={() => setPreferences(prefForm)}>Save notifications</button>
+        <button type="button" className="settings-primary-button" onClick={saveNotificationPreferences}>Save notifications</button>
         <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
       </div>
     </div>

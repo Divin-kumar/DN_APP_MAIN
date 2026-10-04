@@ -5,17 +5,12 @@
   It loads event data, saves new events, edits existing ones, and deletes them.
 */
 import { create } from 'zustand';
-import {
-  createEvent,
-  deleteEvent,
-  getEventsForUser,
-  getGuestEvents,
-  removeGuestEvent,
-  saveGuestEvent,
-  updateEvent,
-} from '../services/eventService';
-import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
-import { getEventStatus } from '../utils/eventStatus';
+import { db } from '../database/index.js';
+import { DATABASE_TABLES } from '../database/tables.js';
+import { activityRepository, attachmentRepository, expenseRepository, memoryRepository, momentRepository } from '../repositories/index.js';
+import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData.js';
+import { getEventStatus } from '../utils/eventStatus.js';
+import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
 const sameEvent = (first, second) => Boolean(
   (first.id && second.id && first.id === second.id)
@@ -45,6 +40,67 @@ const syncEventSampleData = (data, events, options = {}) => {
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
+const projectEvents = async (principalId) => {
+  const [moments, activities, memories, attachments, expenses] = await Promise.all([
+    momentRepository.getAll(principalId),
+    activityRepository.getAll(principalId),
+    memoryRepository.getAll(principalId),
+    attachmentRepository.getAll(principalId),
+    expenseRepository.getAll(principalId),
+  ]);
+
+  return moments.map((moment) => {
+    const momentActivities = activities.filter((activity) => activity.momentId === moment.id).map((activity) => ({
+      ...activity,
+      eventId: moment.id,
+      expenses: expenses.filter((expense) => expense.activityId === activity.id).map((expense) => ({
+        ...expense,
+        description: expense.description || expense.name || '',
+        eventId: moment.id,
+      })),
+    }));
+    const event = {
+      ...moment,
+      activities: momentActivities,
+      memories: memories.filter((memory) => memory.momentId === moment.id).map((memory) => ({
+        ...memory,
+        eventId: moment.id,
+        body: memory.body ?? memory.content ?? '',
+      })),
+      attachments: attachments.filter((attachment) => attachment.momentId === moment.id).map((attachment) => ({
+        ...attachment,
+        eventId: moment.id,
+      })),
+    };
+    return { ...event, status: getEventStatus(event) };
+  });
+};
+
+const saveChildRows = async (repository, principalId, momentId, previousRows = [], nextRows = [], map = (row) => row) => {
+  const previousById = new Map(previousRows.map((row) => [row.id, row]));
+  const nextById = new Map(nextRows.map((row) => [row.id, row]));
+  for (const next of nextRows) {
+    const record = map(next, momentId);
+    if (previousById.has(next.id)) await repository.update(principalId, record);
+    else await repository.create(principalId, record);
+  }
+  for (const previous of previousRows) {
+    if (!nextById.has(previous.id)) await repository.delete(principalId, previous.id);
+  }
+};
+
+const saveActivityExpenses = async (principalId, momentId, previousActivities, nextActivities) => {
+  const previous = previousActivities.flatMap((activity) => activity.expenses || []);
+  const next = nextActivities.flatMap((activity) => activity.expenses || []);
+  await saveChildRows(expenseRepository, principalId, momentId, previous, next, (expense, eventId) => ({
+    ...expense,
+    name: expense.name || expense.description || 'Expense',
+    eventId,
+    momentId: eventId,
+    source: expense.source || 'manual',
+  }));
+};
+
 const useEventStore = create((set, get) => {
   const pendingLoads = new Map();
 
@@ -62,7 +118,8 @@ const useEventStore = create((set, get) => {
     if (get().loadedFor === loadKey) return get().events;
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
-    set({ loading: true, error: null, activeLoadKey: loadKey });
+    const accountChanged = get().activeLoadKey && get().activeLoadKey !== loadKey;
+    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { events: [] } : {}) });
 
     const request = Promise.resolve().then(async () => {
       try {
@@ -72,7 +129,9 @@ const useEventStore = create((set, get) => {
           return sampleData.events;
         }
 
-        const items = isGuest ? getGuestEvents() : await getEventsForUser(uid);
+        const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+        if (!principalId) throw new Error('No active repository principal is available.');
+        const items = await projectEvents(principalId);
         if (get().activeLoadKey === loadKey) set({ events: items, loading: false, error: null, loadedFor: loadKey });
         return items;
       } catch (error) {
@@ -104,20 +163,32 @@ const useEventStore = create((set, get) => {
       return normalized;
     }
 
-    if (isGuest) {
-      const updated = saveGuestEvent(normalized);
-      set({ events: updated });
-      return normalized;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().events;
     const optimistic = [normalized, ...previous];
     set({ events: optimistic, error: null });
 
     try {
-      const saved = await createEvent(uid, normalized);
+      const { activities = [], memories = [], attachments = [], ...moment } = normalized;
+      const tables = [
+        DATABASE_TABLES.MOMENTS,
+        DATABASE_TABLES.ACTIVITIES,
+        DATABASE_TABLES.MEMORIES,
+        DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.EXPENSES,
+      ].map((name) => db.table(name));
+      let saved;
+      await db.transaction('rw', ...tables, async () => {
+        saved = await momentRepository.create(principalId, { ...moment, userId: principalId });
+        for (const activity of activities) await activityRepository.create(principalId, { ...activity, eventId: saved.id, momentId: saved.id });
+        for (const memory of memories) await memoryRepository.create(principalId, { ...memory, eventId: saved.id, momentId: saved.id, content: memory.body ?? memory.content ?? '' });
+        for (const attachment of attachments) await attachmentRepository.create(principalId, { ...attachment, eventId: saved.id, momentId: saved.id });
+        await saveActivityExpenses(principalId, saved.id, [], activities);
+      });
+      const projected = await projectEvents(principalId);
       set({
-        events: [saved, ...get().events.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
+        events: projected,
         error: null,
       });
       return saved;
@@ -146,12 +217,8 @@ const useEventStore = create((set, get) => {
       return normalizedEvent;
     }
 
-    if (isGuest) {
-      const updated = saveGuestEvent(normalizedEvent);
-      set({ events: updated });
-      return normalizedEvent;
-    }
-
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().events;
     const previous = current.find((item) => sameEvent(item, normalizedEvent));
     const optimistic = current.map((item) => (
@@ -160,13 +227,39 @@ const useEventStore = create((set, get) => {
     set({ events: optimistic, error: null });
 
     try {
-      const updated = await updateEvent(uid, normalizedEvent);
-      set({
-        events: get().events.map((item) =>
-          sameEvent(item, normalizedEvent) ? { ...item, ...updated } : item
-        ),
+      const { activities = [], memories = [], attachments = [], ...moment } = normalizedEvent;
+      const previousActivities = previous?.activities || [];
+      const tables = [
+        DATABASE_TABLES.MOMENTS,
+        DATABASE_TABLES.ACTIVITIES,
+        DATABASE_TABLES.MEMORIES,
+        DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.EXPENSES,
+      ].map((name) => db.table(name));
+      let updated;
+      await db.transaction('rw', ...tables, async () => {
+        updated = await momentRepository.update(principalId, { ...moment, userId: principalId });
+        await saveChildRows(activityRepository, principalId, updated.id, previousActivities, activities, (activity, momentId) => ({
+          ...activity,
+          eventId: momentId,
+          momentId,
+          completedAt: activity.completed ? (activity.completedAt || new Date().toISOString()) : null,
+        }));
+        await saveActivityExpenses(principalId, updated.id, previousActivities, activities);
+        await saveChildRows(memoryRepository, principalId, updated.id, previous?.memories || [], memories, (memory, momentId) => ({
+          ...memory,
+          eventId: momentId,
+          momentId,
+          content: memory.body ?? memory.content ?? '',
+        }));
+        await saveChildRows(attachmentRepository, principalId, updated.id, previous?.attachments || [], attachments, (attachment, momentId) => ({
+          ...attachment,
+          eventId: momentId,
+          momentId,
+        }));
       });
-      return updated;
+      set({ events: await projectEvents(principalId), error: null });
+      return { ...updated, activities, memories, attachments, status: getEventStatus({ ...updated, activities }) };
     } catch (error) {
       console.error('Failed to update event:', error);
       set({
@@ -193,16 +286,36 @@ const useEventStore = create((set, get) => {
       return;
     }
 
+    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== eventId && item.firestoreId !== eventId);
     set({ events: remaining, error: null });
 
     try {
-      if (isGuest) {
-        removeGuestEvent(eventId);
-        return;
-      }
-
-      await deleteEvent(uid, event);
+      const momentId = event.id;
+      const [activities, memories, attachments, expenses] = await Promise.all([
+        activityRepository.getByMoment(principalId, momentId),
+        memoryRepository.getByMoment(principalId, momentId),
+        attachmentRepository.getByMoment(principalId, momentId),
+        expenseRepository.getByEvent(principalId, momentId),
+      ]);
+      const tables = [
+        DATABASE_TABLES.MOMENTS,
+        DATABASE_TABLES.ACTIVITIES,
+        DATABASE_TABLES.MEMORIES,
+        DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.EXPENSES,
+      ].map((name) => db.table(name));
+      await db.transaction('rw', ...tables, async () => {
+        await Promise.all([
+          ...activities.map((item) => activityRepository.delete(principalId, item.id)),
+          ...memories.map((item) => memoryRepository.delete(principalId, item.id)),
+          ...attachments.map((item) => attachmentRepository.delete(principalId, item.id)),
+          ...expenses.map((item) => expenseRepository.delete(principalId, item.id)),
+        ]);
+        await momentRepository.delete(principalId, momentId);
+      });
+      set({ events: await projectEvents(principalId), error: null });
     } catch (error) {
       console.error('Failed to delete event:', error);
       set({

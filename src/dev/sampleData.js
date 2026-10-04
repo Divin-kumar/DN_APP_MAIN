@@ -2,6 +2,7 @@
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'lifehub_dev_fixture_scenario';
 const FIXTURE_DATA_KEY = 'lifehub_dev_fixture_data';
+const IS_DEV_BUILD = Boolean(import.meta.env?.DEV);
 const ANCHOR_DATE = new Date();
 ANCHOR_DATE.setHours(12, 0, 0, 0);
 
@@ -218,7 +219,7 @@ function makeDataset(scenario) {
 export const getSampleScenarioDefinitions = () => scenarioDefinitions;
 
 export const getActiveSampleScenario = (uid) => {
-  if (!import.meta.env.DEV || uid || typeof localStorage === 'undefined') return null;
+  if (!IS_DEV_BUILD || uid || typeof localStorage === 'undefined') return null;
   return localStorage.getItem(ACTIVE_SCENARIO_KEY) || null;
 };
 
@@ -234,7 +235,7 @@ export const getActiveSampleData = (uid) => {
 };
 
 export const activateSampleScenario = (scenario) => {
-  if (!import.meta.env.DEV) throw new Error('Sample data is available only in development builds.');
+  if (!IS_DEV_BUILD) throw new Error('Sample data is available only in development builds.');
   const data = makeDataset(scenario);
   localStorage.setItem(FIXTURE_DATA_KEY, JSON.stringify(data));
   localStorage.setItem(ACTIVE_SCENARIO_KEY, scenario);
@@ -242,13 +243,13 @@ export const activateSampleScenario = (scenario) => {
 };
 
 export const saveActiveSampleData = (data) => {
-  if (!import.meta.env.DEV || !getActiveSampleScenario()) throw new Error('No isolated sample session is active.');
+  if (!IS_DEV_BUILD || !getActiveSampleScenario()) throw new Error('No isolated sample session is active.');
   localStorage.setItem(FIXTURE_DATA_KEY, JSON.stringify(data));
   return data;
 };
 
 export const clearActiveSampleScenario = () => {
-  if (!import.meta.env.DEV) return;
+  if (!IS_DEV_BUILD) return;
   localStorage.removeItem(ACTIVE_SCENARIO_KEY);
   localStorage.removeItem(FIXTURE_DATA_KEY);
 };
