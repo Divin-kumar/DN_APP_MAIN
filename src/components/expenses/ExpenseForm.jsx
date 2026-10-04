@@ -99,10 +99,10 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitL
         className="expense-date-field"
       />
 
-      <div style={styles.actions}>
-        <button type="submit" className="primaryButton" style={styles.primaryButton}>{submitLabel}</button>
+      <div className="form-actions">
+        <button type="submit" className="primaryButton">{submitLabel}</button>
         {onCancel ? (
-          <button type="button" className="secondaryButton" onClick={onCancel} style={styles.secondaryButton}>
+          <button type="button" className="secondaryButton" onClick={onCancel}>
             Cancel
           </button>
         ) : null}
@@ -126,30 +126,5 @@ const styles = {
     border: '1px solid #d7e3da',
     background: '#fbfdfb',
     color: '#1d3f2c',
-  },
-  actions: {
-    display: 'flex',
-    gap: '10px',
-    marginTop: '4px',
-  },
-  primaryButton: {
-    flex: 1,
-    border: 'none',
-    borderRadius: '10px',
-    background: '#2d6a4f',
-    color: '#ffffff',
-    padding: '12px 14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  secondaryButton: {
-    flex: 1,
-    border: '1px solid #d7e3da',
-    borderRadius: '10px',
-    background: '#f3f8f4',
-    color: '#1d3f2c',
-    padding: '12px 14px',
-    fontWeight: 600,
-    cursor: 'pointer',
   },
 };

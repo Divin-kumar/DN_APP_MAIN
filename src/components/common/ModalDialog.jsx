@@ -66,7 +66,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
       <motion.section ref={dialogRef} className={`lifehub-modal${variant === 'drawer' ? ' lifehub-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         <div style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
-          <button ref={closeButtonRef} type="button" onClick={onClose} style={styles.closeButton} aria-label="Close dialog">×</button>
+          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog">×</button>
         </div>
         {children}
       </motion.section>
@@ -79,9 +79,9 @@ export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabe
   return (
     <ModalDialog title={title} onClose={onCancel}>
       <p style={styles.message}>{message}</p>
-      <div style={styles.actions}>
-        <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-        <button type="button" onClick={onConfirm} style={styles.confirmButton}>{confirmLabel}</button>
+      <div className="modal-confirm-actions" style={styles.actions}>
+        <button type="button" className="secondaryButton modal-action-button" onClick={onCancel}>Cancel</button>
+        <button type="button" className="modal-danger-button modal-action-button" onClick={onConfirm}>{confirmLabel}</button>
       </div>
     </ModalDialog>
   );
@@ -95,16 +95,6 @@ const styles = {
     gap: '12px',
     marginBottom: '18px',
   },
-  closeButton: {
-    width: '32px',
-    height: '32px',
-    border: '1px solid var(--border)',
-    borderRadius: '8px',
-    background: 'var(--surface-soft)',
-    color: 'var(--ink)',
-    cursor: 'pointer',
-    fontSize: '1.2rem',
-  },
   message: {
     margin: '0 0 18px',
     color: 'var(--ink-soft)',
@@ -114,23 +104,5 @@ const styles = {
     display: 'flex',
     justifyContent: 'flex-end',
     gap: '8px',
-  },
-  cancelButton: {
-    border: '1px solid var(--border)',
-    borderRadius: '9px',
-    background: 'var(--surface)',
-    color: 'var(--ink)',
-    padding: '10px 14px',
-    fontWeight: 600,
-    cursor: 'pointer',
-  },
-  confirmButton: {
-    border: '1px solid #b84b4b',
-    borderRadius: '9px',
-    background: '#b84b4b',
-    color: '#ffffff',
-    padding: '10px 14px',
-    fontWeight: 700,
-    cursor: 'pointer',
   },
 };

@@ -7,7 +7,6 @@ export const DEFAULT_CODE_LISTS = Object.freeze({
     { value: 'medium', label: 'Medium priority', active: true },
     { value: 'high', label: 'High priority', active: true },
   ],
-  greetingTemplateTypes: ['Birthday', 'Anniversary'],
   reminderPresets: [
     { value: '09:00', label: 'Morning (9:00 AM)', active: true },
     { value: '12:00', label: 'Midday (12:00 PM)', active: true },
@@ -15,10 +14,68 @@ export const DEFAULT_CODE_LISTS = Object.freeze({
   ],
 });
 
+// Keep this version independent from the app/PWA build version. For future default additions,
+// increment the schema version and list only the new entries in that version's `additions` map.
+// Never copy or replace an existing entry during a migration.
+export const CODE_LIST_SCHEMA_VERSION = 1;
+export const CODE_LIST_MIGRATIONS = Object.freeze({
+  1: Object.freeze({ additions: Object.freeze({}) }),
+});
+
+export const migrateStoredCodeLists = (
+  storedValues,
+  storedVersion = 0,
+  migrations = CODE_LIST_MIGRATIONS,
+  targetVersion = CODE_LIST_SCHEMA_VERSION,
+) => {
+  const hasStoredValues = storedValues && typeof storedValues === 'object' && !Array.isArray(storedValues);
+  if (!hasStoredValues) {
+    return {
+      adminValues: Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)])),
+      version: targetVersion,
+    };
+  }
+
+  const adminValues = { ...storedValues };
+  Object.keys(DEFAULT_CODE_LISTS).forEach((listKey) => {
+    adminValues[listKey] = Array.isArray(storedValues[listKey])
+      ? serializeCodeListEntries(storedValues[listKey])
+      : [];
+  });
+
+  const parsedVersion = Number.parseInt(storedVersion, 10);
+  let version = Number.isInteger(parsedVersion) && parsedVersion >= 0 ? parsedVersion : 0;
+  while (version < targetVersion) {
+    const nextVersion = version + 1;
+    const migration = migrations[nextVersion];
+    if (!migration) return { adminValues, version };
+
+    Object.entries(migration.additions || {}).forEach(([listKey, additions]) => {
+      if (!Object.prototype.hasOwnProperty.call(DEFAULT_CODE_LISTS, listKey)) return;
+      const currentEntries = adminValues[listKey] || [];
+      const existingValues = new Set(currentEntries.map((entry) => entry.value));
+      const newEntries = serializeCodeListEntries(additions).filter((entry) => !existingValues.has(entry.value));
+      adminValues[listKey] = [...currentEntries, ...newEntries];
+    });
+
+    version = nextVersion;
+  }
+
+  return { adminValues, version };
+};
+
 const normalizeMetaEntry = (item) => {
   if (typeof item === 'string') {
     const value = item.trim();
-    return value ? { value, label: value, active: true } : null;
+    return value ? {
+      value,
+      label: value,
+      active: true,
+      isActive: true,
+      canGenerateGreetingCards: true,
+      greetingTemplate: '',
+      showInDashboardUpcoming: true,
+    } : null;
   }
 
   if (item && typeof item === 'object') {
@@ -27,10 +84,14 @@ const normalizeMetaEntry = (item) => {
     if (!value) return null;
     const active = item.isActive !== false && item.active !== false;
     return {
+      ...item,
       value,
       label: label || value,
       active,
       isActive: active,
+      canGenerateGreetingCards: item.canGenerateGreetingCards ?? item.generateGreetingCards ?? true,
+      greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
+      showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
     };
   }
 
@@ -39,7 +100,7 @@ const normalizeMetaEntry = (item) => {
 
 export const getCodeListMeta = (listKey, customValues) => {
   const fallback = DEFAULT_CODE_LISTS[listKey] ?? [];
-  const source = Array.isArray(customValues) && customValues.length ? customValues : fallback;
+  const source = Array.isArray(customValues) ? customValues : fallback;
 
   return source
     .map((item) => normalizeMetaEntry(item))
@@ -91,17 +152,21 @@ export const serializeCodeListEntries = (items) => {
     .map((item) => {
       if (typeof item === 'string') {
         const value = item.trim();
-        return value ? { value, label: value, active: true } : null;
+        return value ? { value, label: value, active: true, isActive: true, canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true } : null;
       }
       if (item && typeof item === 'object') {
         const value = String(item.value ?? item.id ?? '').trim();
         if (!value) return null;
         const active = item.isActive !== false && item.active !== false;
         return {
+          ...item,
           value,
           label: String(item.label ?? item.name ?? value).trim() || value,
           active,
           isActive: active,
+          canGenerateGreetingCards: item.canGenerateGreetingCards ?? item.generateGreetingCards ?? true,
+          greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
+          showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
         };
       }
       return null;
@@ -143,10 +208,6 @@ export const collectReferencedCodeListValues = ({ events = [], expenses = [], in
   events.forEach((event) => {
     add('eventTypes', event.type);
     add('eventTypes', event.customType);
-    // Greeting templates are keyed by moment type, so historical moment types
-    // are also considered referenced by that list.
-    add('greetingTemplateTypes', event.type);
-    add('greetingTemplateTypes', event.customType);
     (event.activities || []).forEach((activity) => add('activityPriorities', activity.priority));
   });
   expenses.forEach((expense) => add('expenseCategories', expense.category));

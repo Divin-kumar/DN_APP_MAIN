@@ -8,7 +8,7 @@
   It tells the app: "if the user opens /login, show login page; if they open /events,
   show the events section; if they open any unknown page, send them home."
 */
-import { lazy, Suspense, useEffect } from 'react';
+import { Component, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
@@ -29,10 +29,73 @@ const Expenses = lazy(() => import('./pages/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
+const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
+const CHUNK_RELOAD_KEY = `lifehub-chunk-reload:${APP_VERSION}`;
+
+class RouteErrorBoundary extends Component {
+  state = { error: null };
+
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+
+  componentDidMount() {
+    if (!this.state.error) {
+      try {
+        sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+      } catch {
+        // Storage can be unavailable in private browsing; route rendering still works.
+      }
+    }
+  }
+
+  componentDidCatch(error) {
+    console.error('A route failed to render:', error);
+    const message = String(error?.message || error);
+    const isChunkLoadError = /chunk|dynamically imported module|module script|fetch.*module|loading css|preload.*css|failed to fetch|networkerror|load failed/i.test(message);
+    if (!isChunkLoadError) return;
+
+    try {
+      if (sessionStorage.getItem(CHUNK_RELOAD_KEY)) return;
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+      window.location.reload();
+    } catch {
+      // The in-app retry fallback remains available if session storage is blocked.
+    }
+  }
+
+  retryPage = () => {
+    try {
+      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+    } catch {
+      // Reload still works if browser storage is blocked.
+    }
+    window.location.reload();
+  };
+
+  render() {
+    if (!this.state.error) return this.props.children;
+
+    return (
+      <main className="route-error-screen" role="alert">
+        <div className="route-error-card">
+          <span className="route-error-eyebrow">LifeHub</span>
+          <h1>This page couldn’t load</h1>
+          <p>The page encountered a loading error. Refresh to try again.</p>
+          <details className="route-error-details">
+            <summary>Technical details</summary>
+            <code>{this.state.error?.name || 'Error'}: {this.state.error?.message || 'Unknown rendering error'}</code>
+          </details>
+          <button type="button" className="primaryButton" onClick={this.retryPage}>Refresh app</button>
+        </div>
+      </main>
+    );
+  }
+}
 
 const loadScreen = (screen, label) => (
   <Suspense fallback={<LoadingSkeleton rows={4} label={`Loading ${label}`} />}>
-    {screen}
+    <RouteErrorBoundary>{screen}</RouteErrorBoundary>
   </Suspense>
 );
 

@@ -1,6 +1,6 @@
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -63,7 +63,7 @@ const ValueListEditor = ({ label, value, onChange }) => {
           placeholder={`Add ${label}`}
           aria-label={`Add ${label}`}
         />
-        <button type="button" className="settings-tag-add" onClick={addItem}>Add</button>
+        <button type="button" className="settings-tag-add" onClick={addItem}><Plus size={15} aria-hidden="true" /> Add</button>
       </div>
     </div>
   );
@@ -124,32 +124,6 @@ export default function Settings() {
   const [eventTypes, setEventTypes] = useState(eventTypeOptions.join(', '));
   const [incomeTypes, setIncomeTypes] = useState(incomeTypeOptions.join(', '));
   const [expenseCategories, setExpenseCategories] = useState(expenseCategoryOptions.join(', '));
-  const defaultGreetingEnabledTypes = [...DEFAULT_CODE_LISTS.greetingTemplateTypes];
-  const [greetingEnabledTypes, setGreetingEnabledTypes] = useState(() => {
-    const enabled = Array.isArray(preferences.greetingEnabledTypes) && preferences.greetingEnabledTypes.length
-      ? preferences.greetingEnabledTypes
-      : defaultGreetingEnabledTypes;
-    return enabled.filter((type) => eventTypeOptions.includes(type)).length ? enabled.filter((type) => eventTypeOptions.includes(type)) : [...defaultGreetingEnabledTypes];
-  });
-  const [activeGreetingType, setActiveGreetingType] = useState(() => greetingEnabledTypes[0] || '');
-  const [selectedGreetingType, setSelectedGreetingType] = useState(() => {
-    const options = eventTypeOptions.filter((type) => !defaultGreetingEnabledTypes.includes(type) || !greetingEnabledTypes.includes(type));
-    return options[0] || '';
-  });
-  const [greetingTemplates, setGreetingTemplates] = useState(() => {
-    const next = {};
-    const enabledList = (Array.isArray(preferences.greetingEnabledTypes) && preferences.greetingEnabledTypes.length
-      ? preferences.greetingEnabledTypes
-      : defaultGreetingEnabledTypes
-    ).filter((type) => eventTypeOptions.includes(type));
-    enabledList.forEach((eventType) => {
-      next[eventType] = preferences.greetingTemplates?.[eventType] || `Happy {ordinal} ${eventType} {name}`;
-    });
-    return Object.keys(next).length ? next : {
-      Birthday: preferences.greetingTemplates?.Birthday || 'Happy {ordinal} Birthday {name} 🎂',
-      Anniversary: preferences.greetingTemplates?.Anniversary || 'Happy {ordinal} Anniversary {name} ❤️',
-    };
-  });
   const [prefForm, setPrefForm] = useState({
     currency: preferences.currency,
     dashboardView: preferences.dashboardView,
@@ -182,46 +156,11 @@ export default function Settings() {
     };
     if (sectionByHash[location.hash]) setOpenSection(sectionByHash[location.hash]);
   }, [location.hash]);
-  const [showPlaceholderReference, setShowPlaceholderReference] = useState(false);
-  const [copiedPlaceholder, setCopiedPlaceholder] = useState('');
-
-  const placeholderDefinitions = [
-    { token: '{name}', detail: 'Recipient or person name', source: 'Greeting template', sample: 'Emma' },
-    { token: '{ordinal}', detail: 'Age or anniversary count in ordinal form', source: 'Greeting template', sample: '21st' },
-    { token: '{years}', detail: 'Years value for anniversaries or milestones', source: 'Greeting template', sample: '5' },
-    { token: '{eventName}', detail: 'Configured event type name', source: 'Greeting template', sample: 'Birthday' },
-    { token: '{eventDate}', detail: 'Event date in a readable format', source: 'Greeting template', sample: '25 Sept 2026' },
-  ];
-
   useEffect(() => {
     setEventTypes(eventTypeOptions.join(', '));
     setIncomeTypes(incomeTypeOptions.join(', '));
     setExpenseCategories(expenseCategoryOptions.join(', '));
   }, [adminValues]);
-
-  useEffect(() => {
-    setGreetingEnabledTypes((current) => {
-      const valid = current.filter((type) => eventTypeOptions.includes(type));
-      const fallback = [...defaultGreetingEnabledTypes].filter((type) => eventTypeOptions.includes(type));
-      return valid.length ? valid : fallback;
-    });
-  }, [eventTypeOptions.join('|')]);
-
-  useEffect(() => {
-    if (greetingEnabledTypes.includes(activeGreetingType)) return;
-    setActiveGreetingType(greetingEnabledTypes[0] || '');
-  }, [activeGreetingType, greetingEnabledTypes]);
-
-  useEffect(() => {
-    const enabled = greetingEnabledTypes.length ? greetingEnabledTypes : defaultGreetingEnabledTypes;
-    setGreetingTemplates((current) => {
-      const next = {};
-      enabled.forEach((eventType) => {
-        next[eventType] = preferences.greetingTemplates?.[eventType] || current[eventType] || `Happy {ordinal} ${eventType} {name}`;
-      });
-      return next;
-    });
-  }, [greetingEnabledTypes, preferences.greetingTemplates]);
 
   useEffect(() => {
     setPrefForm({
@@ -254,16 +193,6 @@ export default function Settings() {
     showToast('Admin values saved', 'success');
   };
 
-  const handleCopyPlaceholder = async (token) => {
-    try {
-      await navigator.clipboard.writeText(token);
-      setCopiedPlaceholder(token);
-      window.setTimeout(() => setCopiedPlaceholder(''), 1200);
-    } catch (error) {
-      console.error('Unable to copy placeholder token:', error);
-    }
-  };
-
   const savePreferences = () => {
     const normalized = {
       ...prefForm,
@@ -275,72 +204,6 @@ export default function Settings() {
     setPrefForm(normalized);
     setPreferences(normalized);
     showToast('Preferences saved', 'success');
-  };
-
-  const saveGreetingSettings = () => {
-    const enabled = greetingEnabledTypes.filter((type) => eventTypeOptions.includes(type));
-    const normalized = {};
-    enabled.forEach((eventType) => {
-      normalized[eventType] = (greetingTemplates[eventType] || `Happy {ordinal} ${eventType} {name}`).trim();
-    });
-    setPreferences({
-      greetingEnabledTypes: enabled,
-      greetingTemplates: normalized,
-    });
-    showToast('Greeting cards saved', 'success');
-  };
-
-  const addGreetingType = () => {
-    if (!selectedGreetingType) return;
-    setActiveGreetingType(selectedGreetingType);
-    setGreetingEnabledTypes((current) => {
-      const next = [...new Set([...current, selectedGreetingType])];
-      setGreetingTemplates((templates) => ({
-        ...templates,
-        [selectedGreetingType]: templates[selectedGreetingType] || `Happy {ordinal} ${selectedGreetingType} {name}`,
-      }));
-      return next;
-    });
-    setSelectedGreetingType('');
-  };
-
-  const handleGreetingTypeChange = (currentType, nextType) => {
-    if (activeGreetingType === currentType) setActiveGreetingType(nextType);
-    setGreetingEnabledTypes((current) => current.map((type) => (type === currentType ? nextType : type)));
-    setGreetingTemplates((current) => {
-      const next = { ...current };
-      const template = next[currentType] || `Happy {ordinal} ${currentType} {name}`;
-      delete next[currentType];
-      next[nextType] = template;
-      return next;
-    });
-  };
-
-  const removeGreetingType = (eventType) => {
-    const remainingTypes = greetingEnabledTypes.filter((type) => type !== eventType);
-    setGreetingEnabledTypes(remainingTypes);
-    if (activeGreetingType === eventType) setActiveGreetingType(remainingTypes[0] || '');
-    setGreetingTemplates((current) => {
-      const next = { ...current };
-      delete next[eventType];
-      return next;
-    });
-  };
-
-  const getPreviewText = (eventType, template) => {
-    const typeName = String(eventType || '').trim() || 'Birthday';
-    const sampleName = 'Emma';
-    const sampleDate = '25 Sept 2026';
-    const sampleOrdinal = typeName.toLowerCase().includes('anniversary') ? '5th' : typeName.toLowerCase().includes('birthday') ? '21st' : '1st';
-    const sampleYears = typeName.toLowerCase().includes('anniversary') ? '5' : '21';
-    const source = template && template.trim() ? template : `Happy {ordinal} ${typeName} {name} 🎂`;
-
-    return source
-      .replace(/\{name\}/gi, sampleName)
-      .replace(/\{ordinal\}/gi, sampleOrdinal)
-      .replace(/\{years\}/gi, sampleYears)
-      .replace(/\{eventName\}/gi, typeName)
-      .replace(/\{eventDate\}/gi, sampleDate);
   };
 
   const resetPreferencesForm = () => {
@@ -367,6 +230,8 @@ export default function Settings() {
       exportedAt: new Date().toISOString(),
       app: 'DN',
       data: {
+        lifehub_admin_values: JSON.parse(localStorage.getItem('lifehub_admin_values') || 'null'),
+        lifehub_admin_values_schema_version: localStorage.getItem('lifehub_admin_values_schema_version'),
 
         lifehub_guest_incomes: JSON.parse(localStorage.getItem('lifehub_guest_incomes') || '[]'),
       },
@@ -408,7 +273,7 @@ export default function Settings() {
   };
 
   const clearLocalData = () => {
-    ['lifehub_admin_values', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
+    ['lifehub_admin_values', 'lifehub_admin_values_schema_version', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
     setBackupMessage('Local app data cleared. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
@@ -449,13 +314,6 @@ export default function Settings() {
         defaultIncomeType: 'Salary',
         defaultExpenseCategory: 'Food',
         notifications: { eventReminders: true, monthlySummary: true, budgetAlerts: true, reminderTime: '09:00' },
-      });
-      setGreetingEnabledTypes([...DEFAULT_CODE_LISTS.greetingTemplateTypes]);
-      setActiveGreetingType(DEFAULT_CODE_LISTS.greetingTemplateTypes[0] || '');
-      setSelectedGreetingType('');
-      setGreetingTemplates({
-        Birthday: 'Happy {ordinal} Birthday {name} 🎂\nWishing you a wonderful year filled with happiness, health and success.',
-        Anniversary: 'Happy {ordinal} Anniversary ❤️\nWishing you many more years of happiness, love and beautiful memories together.',
       });
       setConfirmResetSettings(false);
       showToast('Settings restored to defaults. Existing records were preserved.', 'success');
@@ -500,111 +358,6 @@ export default function Settings() {
   const renderProfileSection = () => (
     <div className="settings-accordion-body">
       <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
-    </div>
-  );
-
-  const renderGreetingCardsSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-greeting-panel">
-        <div className="settings-placeholder-card">
-          <button type="button" className="settings-placeholder-toggle" onClick={() => setShowPlaceholderReference((current) => !current)}>
-            <span>{showPlaceholderReference ? '▼' : '▶'} Supported Placeholders</span>
-            <span>{showPlaceholderReference ? 'Hide' : 'Show'}</span>
-          </button>
-
-          {showPlaceholderReference ? (
-            <div className="settings-placeholder-body">
-              <div className="settings-placeholder-grid">
-                {placeholderDefinitions.map((placeholder) => (
-                  <div key={placeholder.token} className="settings-placeholder-item">
-                    <div className="settings-placeholder-header">
-                      <strong>{placeholder.token}</strong>
-                      <button type="button" className="settings-copy-placeholder" onClick={() => handleCopyPlaceholder(placeholder.token)}>
-                        {copiedPlaceholder === placeholder.token ? 'Copied' : 'Copy'}
-                      </button>
-                    </div>
-                    <span>{placeholder.detail}</span>
-                    <small>Source: {placeholder.source}</small>
-                    <small>Example: {placeholder.sample}</small>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <div className="settings-greeting-toolbar">
-          <label className="settings-input-block">
-            <span>Add event type</span>
-            <DropdownSelect value={selectedGreetingType} onChange={(event) => setSelectedGreetingType(event.target.value)}>
-              <option value="">Select an event type</option>
-              {eventTypeOptions.filter((type) => !greetingEnabledTypes.includes(type)).map((option) => (
-                <option key={option} value={option}>{option}</option>
-              ))}
-            </DropdownSelect>
-          </label>
-          <button type="button" className="settings-primary-button" onClick={addGreetingType} disabled={!selectedGreetingType}>Add greeting type</button>
-        </div>
-
-        {activeGreetingType ? (
-          <section className="settings-greeting-editor-card" aria-label={`${activeGreetingType} greeting template`}>
-            <div className="settings-greeting-type-rail" role="tablist" aria-label="Greeting event types">
-              {greetingEnabledTypes.map((eventType) => (
-                <button
-                  key={eventType}
-                  type="button"
-                  role="tab"
-                  aria-selected={activeGreetingType === eventType}
-                  className={activeGreetingType === eventType ? 'is-active' : ''}
-                  onClick={() => setActiveGreetingType(eventType)}
-                >
-                  {eventType}
-                </button>
-              ))}
-            </div>
-
-            <div className="settings-greeting-editor-heading">
-              <div>
-                <strong>{activeGreetingType} greeting</strong>
-                <span>Edit your template and preview the result.</span>
-              </div>
-              <label className="settings-input-block settings-greeting-select-wrap">
-                <span>Event type</span>
-                <DropdownSelect value={activeGreetingType} onChange={(event) => handleGreetingTypeChange(activeGreetingType, event.target.value)}>
-                  {eventTypeOptions.map((option) => (
-                    <option key={option} value={option}>{option}</option>
-                  ))}
-                </DropdownSelect>
-              </label>
-              <button type="button" className="settings-greeting-remove" onClick={() => removeGreetingType(activeGreetingType)} aria-label={`Remove ${activeGreetingType} greeting type`}>
-                Remove
-              </button>
-            </div>
-
-            <div className="settings-greeting-editor-grid">
-              <label className="settings-input-block">
-                <span>Message template</span>
-                <textarea
-                  rows={3}
-                  value={greetingTemplates[activeGreetingType] || ''}
-                  onChange={(event) => setGreetingTemplates((current) => ({ ...current, [activeGreetingType]: event.target.value }))}
-                  placeholder={`Happy {ordinal} ${activeGreetingType} {name} 🎂`}
-                />
-              </label>
-              <div className="settings-preview-box">
-                <div className="settings-preview-label">Preview · Emma</div>
-                <div className="settings-preview-text">{getPreviewText(activeGreetingType, greetingTemplates[activeGreetingType])}</div>
-              </div>
-            </div>
-          </section>
-        ) : (
-          <div className="settings-greeting-empty">No greeting types enabled. Choose an event type above to get started.</div>
-        )}
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={saveGreetingSettings}>Save greeting cards</button>
-      </div>
     </div>
   );
 
@@ -790,7 +543,6 @@ export default function Settings() {
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
     { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
-    { key: 'greeting-cards', heading: 'Greeting cards', description: 'Manage greeting templates and event greetings.', icon: Bell, body: renderGreetingCardsSection() },
   ];
 
   return (

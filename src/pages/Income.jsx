@@ -4,6 +4,7 @@
   This page helps the user track incoming money, search through records, and create or edit income entries.
 */
 import { useEffect, useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
 import IncomeForm from '../components/income/IncomeForm';
 import DropdownSelect from '../components/common/DropdownSelect';
 import IncomeList from '../components/income/IncomeList';
@@ -106,7 +107,7 @@ export default function Income() {
     <div className="financial-module-page">
       <header className="financial-module-heading">
         <h3>Income</h3>
-        <button type="button" className="primaryButton" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }}>Add income</button>
+        <button type="button" className="primaryButton" onClick={() => { setEditingIncome(null); setIncomeDialogOpen(true); }}><Plus size={16} aria-hidden="true" /> Add income</button>
       </header>
       <div className="financial-module-toolbar">
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search income" aria-label="Search income" />

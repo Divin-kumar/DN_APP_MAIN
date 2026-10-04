@@ -6,7 +6,11 @@ import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
+import { getDashboardVisibleEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { downloadBlob } from '../../../utils/download';
+
+const EMPTY_GREETING_TEMPLATES = Object.freeze({});
+const EMPTY_MOMENT_TYPES = Object.freeze([]);
 
 const getEventDate = (event) => {
   const date = new Date(event.date || event.startDate || event.createdAt);
@@ -191,20 +195,20 @@ const renderGreetingTemplate = (template, replacements = {}) => {
   });
 };
 
-const resolveGreetingTemplate = (eventType, greetingTemplates = {}) => {
+const resolveGreetingTemplate = (eventType, greetingTemplates = {}, momentTypes = []) => {
   const rawType = String(eventType || '').trim();
   if (!rawType) return null;
 
-  const exact = greetingTemplates[rawType];
-  if (exact) return exact;
+  const configuredTemplate = getMomentTypeGreetingTemplate(rawType, momentTypes, greetingTemplates[rawType]);
+  if (configuredTemplate) return configuredTemplate;
 
   const lowered = rawType.toLowerCase();
   return Object.entries(greetingTemplates).find(([key]) => String(key).toLowerCase() === lowered)?.[1] || null;
 };
 
-const getGreetingMessage = (event, greetingTemplates = {}) => {
+const getGreetingMessage = (event, greetingTemplates = {}, momentTypes = []) => {
   const type = String(event?.type || '').trim() || String(event?.name || '').trim();
-  const configuredTemplate = resolveGreetingTemplate(type, greetingTemplates);
+  const configuredTemplate = resolveGreetingTemplate(type, greetingTemplates, momentTypes);
   if (!configuredTemplate) return null;
 
   const eventName = String(event?.type || event?.name || 'Celebration').trim() || 'Celebration';
@@ -231,10 +235,10 @@ const getGreetingMessage = (event, greetingTemplates = {}) => {
       eventName,
       eventDate,
     });
-    const [title, ...rest] = String(text).split(/\n+/).filter(Boolean);
+    const [title, ...rest] = String(text).split(/\r\n|\r|\n/);
     return {
       title: title || `Happy ${ordinal} Birthday ${name} 🎂`,
-      body: rest.join(' ') || 'Wishing you a wonderful year filled with happiness, health and success.',
+      body: rest.join('\n') || 'Wishing you a wonderful year filled with happiness, health and success.',
     };
   }
 
@@ -255,10 +259,10 @@ const getGreetingMessage = (event, greetingTemplates = {}) => {
       eventName,
       eventDate,
     });
-    const [title, ...rest] = String(text).split(/\n+/).filter(Boolean);
+    const [title, ...rest] = String(text).split(/\r\n|\r|\n/);
     return {
       title: title || `Happy ${ordinal} Anniversary ❤️`,
-      body: rest.join(' ') || 'Wishing you many more years of happiness, love and beautiful memories together.',
+      body: rest.join('\n') || 'Wishing you many more years of happiness, love and beautiful memories together.',
     };
   }
 
@@ -271,10 +275,10 @@ const getGreetingMessage = (event, greetingTemplates = {}) => {
       eventName,
       eventDate,
     });
-    const [title, ...rest] = String(text).split(/\n+/).filter(Boolean);
+    const [title, ...rest] = String(text).split(/\r\n|\r|\n/);
     return {
       title: title || `Happy ${eventName} 🎉`,
-      body: rest.join(' ') || 'Wishing you a joyful celebration and beautiful memories to treasure.',
+      body: rest.join('\n') || 'Wishing you a joyful celebration and beautiful memories to treasure.',
     };
   }
 
@@ -286,10 +290,10 @@ const getGreetingMessage = (event, greetingTemplates = {}) => {
     eventName,
     eventDate,
   });
-  const [title, ...rest] = String(text).split(/\n+/).filter(Boolean);
+  const [title, ...rest] = String(text).split(/\r\n|\r|\n/);
   return {
     title: title || `Happy ${eventName}`,
-    body: rest.join(' ') || 'Wishing you a wonderful celebration.',
+    body: rest.join('\n') || 'Wishing you a wonderful celebration.',
   };
 };
 
@@ -319,8 +323,9 @@ function EventSummaryModal({ event, onClose }) {
   })();
 
   const statusText = eventStatus === 'Upcoming' && daysRemaining !== null && daysRemaining <= 3 && !isRecurring ? 'Event is approaching' : eventStatus;
-  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || {});
-  const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates);
+  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
+  const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
+  const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
 
   const handleDownload = () => {
     const lines = [
@@ -370,7 +375,7 @@ function EventSummaryModal({ event, onClose }) {
         {greeting ? (
           <div style={styles.greetingCard}>
             <div style={styles.greetingTitle}>{greeting.title}</div>
-            <p style={styles.greetingBody}>{greeting.body}</p>
+            <p className="free-text-content" style={styles.greetingBody}>{greeting.body}</p>
           </div>
         ) : null}
 
@@ -384,6 +389,10 @@ function EventSummaryModal({ event, onClose }) {
               {activities.map((activity, index) => {
                 const label = activity.title || activity.name || 'Untitled activity';
                 const isComplete = Boolean(activity.completed);
+                const description = String(activity.description || '');
+                const hasDescription = Boolean(description.trim());
+                const canExpandDescription = description.length > 150 || description.split(/\r\n|\r|\n/).length > 2;
+                const descriptionExpanded = Boolean(expandedDescriptions[activity.id || index]);
 
                 return (
                   <li key={`${label}-${activity.id || index}`} className="dashboard-summary-activity-item" style={styles.activityItem}>
@@ -393,12 +402,12 @@ function EventSummaryModal({ event, onClose }) {
                     <span className="dashboard-summary-activity-copy">
                       <span style={styles.activityLabel}>{label}</span>
                       <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
-                      {String(activity.description || '').trim() ? (
+                      {hasDescription ? (
                         <span className="dashboard-summary-description-wrap">
-                          <span className={`dashboard-summary-description${String(activity.description).length > 150 && !expandedDescriptions[activity.id || index] ? ' is-truncated' : ''}`}>
-                            {activity.description}
+                          <span className={`dashboard-summary-description free-text-content${canExpandDescription && !descriptionExpanded ? ' free-text-preview is-truncated' : ''}`}>
+                            {description}
                           </span>
-                          {String(activity.description).length > 150 ? <button type="button" className="dashboard-summary-description-toggle" aria-expanded={Boolean(expandedDescriptions[activity.id || index])} onClick={() => setExpandedDescriptions((current) => ({ ...current, [activity.id || index]: !current[activity.id || index] }))}>{expandedDescriptions[activity.id || index] ? 'Show less' : 'Show more'}</button> : null}
+                          {canExpandDescription ? <button type="button" className="dashboard-summary-description-toggle" aria-expanded={descriptionExpanded} onClick={() => setExpandedDescriptions((current) => ({ ...current, [activity.id || index]: !current[activity.id || index] }))}>{descriptionExpanded ? 'Show less' : 'Show more'}</button> : null}
                         </span>
                       ) : null}
                     </span>
@@ -425,7 +434,7 @@ function GreetingCardModal({ event, greeting, onClose, onCopy }) {
         <span className="dashboard-greeting-card-kicker"><Sparkles size={15} /> A greeting for today</span>
         <span className="dashboard-greeting-card-event">{event.name || event.type || 'On this day'} · {formatDisplayDate(new Date())}</span>
         <h2>{greeting.title}</h2>
-        <p>{greeting.body}</p>
+        <p className="free-text-content">{greeting.body}</p>
       </article>
       <div className="dashboard-greeting-modal-actions">
         <button type="button" className="primaryButton" onClick={onCopy}><Copy size={15} /> Copy greeting</button>
@@ -439,7 +448,8 @@ export default function DashboardOverview() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const showToast = useAppStore((state) => state.showToast);
-  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || {});
+  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
+  const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const { events, loading, loadEvents } = useEventStore();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
@@ -453,7 +463,7 @@ export default function DashboardOverview() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    return [...events]
+    return [...getDashboardVisibleEvents(events, momentTypes)]
       .filter((event) => {
         const date = getNextOccurrenceForStatus(event, today);
         if (!date || date < today) return false;
@@ -462,7 +472,7 @@ export default function DashboardOverview() {
         return diffInDays <= 30;
       })
       .sort((a, b) => (getNextOccurrenceForStatus(a, today)?.getTime() || 0) - (getNextOccurrenceForStatus(b, today)?.getTime() || 0));
-  }, [events]);
+  }, [events, momentTypes]);
 
   const upcomingEmptyMessage = 'No moments in the next 30 days.';
 
@@ -487,7 +497,7 @@ export default function DashboardOverview() {
   const spotlightDate = spotlightEvent ? getEventDate(spotlightEvent) : null;
   const spotlightGreeting = spotlightEvent?.greetingCard?.title
     ? spotlightEvent.greetingCard
-    : spotlightGreetingEvent ? getGreetingMessage(spotlightGreetingEvent, greetingTemplates) : null;
+    : spotlightGreetingEvent ? getGreetingMessage(spotlightGreetingEvent, greetingTemplates, momentTypes) : null;
   const activeTodayCount = events.filter((event) => isSameDay(getNextOccurrenceForStatus(event, today), today)).length;
   const dateText = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: '2-digit', month: 'short' }).format(today);
   const copyTodaysGreeting = async () => {

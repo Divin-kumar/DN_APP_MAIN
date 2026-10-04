@@ -13,6 +13,8 @@ import ReactDOM from 'react-dom/client';
 import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import useAppStore from './store/useAppStore';
+import { shouldPromptForServiceWorkerUpdate } from './utils/serviceWorkerUpdate';
+import { initializeFirebaseAnalytics } from './firebase/config';
 import './index.css';
 import './design-system.css';
 
@@ -33,6 +35,20 @@ try {
 }
 
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
+const getWorkerVersion = (worker) => {
+  if (!worker?.scriptURL) return null;
+  try {
+    return new URL(worker.scriptURL).searchParams.get('v');
+  } catch {
+    return null;
+  }
+};
+
+if (import.meta.env.PROD) {
+  window.addEventListener('load', () => {
+    void initializeFirebaseAnalytics();
+  }, { once: true });
+}
 
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
   window.addEventListener('load', async () => {
@@ -45,9 +61,18 @@ if (import.meta.env.PROD && 'serviceWorker' in navigator) {
       }
 
       const registration = await navigator.serviceWorker.register(`/sw.js?v=${APP_VERSION}`, { scope: '/', updateViaCache: 'none' });
+      let notifiedWaitingWorker = null;
       const notifyUpdateReady = () => {
-        if (!hadController || !registration.waiting) return;
         const waitingWorker = registration.waiting;
+        if (!waitingWorker || waitingWorker === notifiedWaitingWorker) return;
+        const shouldNotify = shouldPromptForServiceWorkerUpdate({
+          hasController: hadController,
+          activeVersion: getWorkerVersion(registration.active || navigator.serviceWorker.controller),
+          waitingVersion: getWorkerVersion(waitingWorker),
+          currentVersion: APP_VERSION,
+        });
+        if (!shouldNotify) return;
+        notifiedWaitingWorker = waitingWorker;
         useAppStore.getState().showToast('A new version is available. Refresh to update.', 'success', {
           label: 'Refresh',
           duration: 10000,

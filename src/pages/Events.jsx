@@ -7,7 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, CalendarDays, ClipboardList, Clock3, FileText, LayoutGrid, List, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, FileText, Heart, House, LayoutGrid, List, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -27,6 +27,28 @@ import EventSummaryDialog from '../components/events/EventSummaryDialog';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+
+const getMomentGalleryIcon = (type = '') => {
+  const normalized = String(type).toLowerCase();
+  if (normalized.includes('birthday')) return Cake;
+  if (normalized.includes('anniversary') || normalized.includes('wedding')) return Heart;
+  if (normalized.includes('travel') || normalized.includes('vacation')) return Plane;
+  if (normalized.includes('home') || normalized.includes('house')) return House;
+  if (normalized.includes('work') || normalized.includes('career')) return BriefcaseBusiness;
+  if (normalized.includes('festival') || normalized.includes('celebration')) return PartyPopper;
+  return Sparkles;
+};
+
+const getMomentGalleryMood = (type = '') => {
+  const normalized = String(type).toLowerCase();
+  if (normalized.includes('birthday')) return 'birthday';
+  if (normalized.includes('anniversary') || normalized.includes('wedding')) return 'love';
+  if (normalized.includes('travel') || normalized.includes('vacation')) return 'travel';
+  if (normalized.includes('home') || normalized.includes('house')) return 'home';
+  if (normalized.includes('work') || normalized.includes('career')) return 'work';
+  if (normalized.includes('festival') || normalized.includes('celebration')) return 'festival';
+  return 'life';
+};
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
   const baseDate = new Date(event.date || event.startDate || event.createdAt);
@@ -54,6 +76,11 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
   const activities = event.activities || [];
   const memories = event.memories || [];
   const attachments = event.attachments || [];
+  const galleryImage = typeof event.coverImage === 'string'
+    ? event.coverImage
+    : event.coverImage?.url || event.coverImageUrl || event.coverUrl || event.attachments?.find((attachment) => String(attachment.type || '').startsWith('image/'))?.url || null;
+  const GalleryIcon = getMomentGalleryIcon(event.type === 'Other' ? event.customType : event.type);
+  const galleryMood = getMomentGalleryMood(event.type === 'Other' ? event.customType : event.type);
   const { action, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close, toggleOther } = useSwipeActions();
   const isOtherOpen = action === 'other';
   const isDeleteOpen = action === 'delete';
@@ -63,7 +90,7 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
       <div className="event-story-actions event-story-actions-other" aria-hidden={!isOtherOpen}>
         <button type="button" className="event-story-action-summary" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onSummary(); }} aria-label={`View summary for ${event.name || 'event'}`}><ClipboardList size={14} /><span>Summary</span></button>
         <button type="button" className="event-story-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onEdit(); }} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
-        <button type="button" className="event-story-action-cancel" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onCancel(); }} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
+        <button type="button" className={`event-story-action-cancel ${status === 'cancelled' ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onCancel(); }} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
           {status === 'cancelled' ? <CalendarDays size={14} /> : <XCircle size={14} />}<span>{status === 'cancelled' ? 'Restore' : 'Cancel'}</span>
         </button>
       </div>
@@ -75,19 +102,25 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
           type="button"
           className="event-story-main"
           onClick={(clickEvent) => {
+            if (viewMode === 'cards') {
+              onOpen();
+              return;
+            }
             if (consumeSwipeClick(clickEvent)) return;
             if (action) close();
             else onOpen();
           }}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-          aria-label={`Open ${event.name || 'event'}. Swipe left for edit and cancel, right for delete.`}
+          onPointerDown={viewMode === 'cards' ? undefined : handlePointerDown}
+          onPointerMove={viewMode === 'cards' ? undefined : handlePointerMove}
+          onPointerUp={viewMode === 'cards' ? undefined : handlePointerUp}
+          onPointerCancel={viewMode === 'cards' ? undefined : handlePointerUp}
+          aria-label={viewMode === 'cards' ? `Open ${event.name || 'event'}` : `Open ${event.name || 'event'}. Swipe left for edit and cancel, right for delete.`}
         >
           <span className={`event-story-status status-${status}`} aria-label={`Status: ${statusLabel}`}>{statusLabel}</span>
-          <span className="event-story-art" aria-hidden="true">
-            <span>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
+          <span className={`event-story-art${viewMode === 'cards' ? ` event-story-gallery-cover mood-${galleryMood}` : ''}`} aria-hidden="true">
+            {viewMode === 'cards' && galleryImage ? <img src={galleryImage} alt="" loading="lazy" /> : null}
+            {viewMode === 'cards' && !galleryImage ? <GalleryIcon className="event-story-gallery-fallback-icon" size={32} strokeWidth={1.5} /> : null}
+            <span className={viewMode === 'cards' ? 'event-story-gallery-date' : ''}>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
             <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
             <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
           </span>
@@ -97,7 +130,7 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
             </span>
             <strong>{event.name || 'A life moment'}</strong>
             <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
-            {event.notes ? <span className="event-story-note">{event.notes}</span> : null}
+            {event.notes ? <span className="event-story-note free-text-preview is-truncated">{event.notes}</span> : null}
             <span className="event-story-details">
               <span><Clock3 size={13} /> {activities.length} activities</span>
               <span><BookHeart size={13} /> {memories.length} memories</span>
@@ -515,11 +548,11 @@ export default function Events() {
     return (
       <div className="events-page event-workspace-page" style={styles.page}>
         <div style={styles.workspaceHeader}>
-          <button type="button" onClick={() => setFocusedId(null)} style={styles.backButton}>← Back to Events</button>
+          <button type="button" className="secondaryButton" onClick={() => setFocusedId(null)} style={styles.backButton}>← Back to Events</button>
           <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
         <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{focusedEvent.type}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}>+ Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
         {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
         {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
       </div>
@@ -603,7 +636,7 @@ export default function Events() {
           <span className="life-timeline-eyebrow">A fresh page</span>
           <h3>{events.length ? 'No moments found' : 'Your story starts with one moment'}</h3>
           <p>{events.length ? 'Try another search or category.' : 'Save the dates and people that make life feel like yours. Add the first moment whenever you are ready.'}</p>
-          {!events.length ? <button type="button" onClick={openNewEvent}>Create your first moment <Plus size={16} /></button> : null}
+          {!events.length ? <button type="button" className="primaryButton event-empty-state-cta" onClick={openNewEvent}><Plus size={16} aria-hidden="true" /> Create your first moment</button> : null}
         </div>
       )}
 
@@ -626,7 +659,7 @@ export default function Events() {
               </div>
             </div>
           ) : (
-            <div className="activity-event-picker-empty"><p>Start with a life moment. Activities will live inside its story.</p><button type="button" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}>Create a life moment</button></div>
+            <div className="activity-event-picker-empty"><p>Start with a life moment. Activities will live inside its story.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}><Plus size={16} aria-hidden="true" /> Create a life moment</button></div>
           )}
         </ModalDialog>
       ) : null}
@@ -676,7 +709,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
             <input type="number" min="0" value={expenseAmount} onChange={(event) => setExpenseAmount(event.target.value)} placeholder="Actual amount" style={styles.input} />
             <textarea value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} placeholder="What was this expense for?" style={styles.input} rows={3} />
             <DateField label="Date" name="expense-date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} />
-            <button type="button" className="primaryButton" onClick={onSaveExpense} style={styles.primaryButton}>Add Expense</button>
+            <button type="button" className="primaryButton" onClick={onSaveExpense} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Expense</button>
           </div>
         )}
       </div>

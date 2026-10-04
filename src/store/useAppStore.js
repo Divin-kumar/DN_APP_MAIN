@@ -9,25 +9,10 @@
   can access it when needed.
 */
 import { create } from 'zustand';
-import { DEFAULT_CODE_LISTS, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists';
+import { CODE_LIST_SCHEMA_VERSION, DEFAULT_CODE_LISTS, migrateStoredCodeLists, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists';
 
-// These are the default selectable values used across the app.
-// For example, the user can set event types or expense categories in settings.
-const defaultAdminValues = {
-  eventTypes: [...DEFAULT_CODE_LISTS.eventTypes],
-  incomeTypes: [...DEFAULT_CODE_LISTS.incomeTypes],
-  expenseCategories: [...DEFAULT_CODE_LISTS.expenseCategories],
-  activityPriorities: [...DEFAULT_CODE_LISTS.activityPriorities],
-  greetingTemplateTypes: [...DEFAULT_CODE_LISTS.greetingTemplateTypes],
-  reminderPresets: [...DEFAULT_CODE_LISTS.reminderPresets],
-};
-
-const defaultGreetingEnabledTypes = [...DEFAULT_CODE_LISTS.greetingTemplateTypes];
-
-const defaultGreetingTemplates = {
-  Birthday: 'Happy {ordinal} Birthday {name} 🎂\nWishing you a wonderful year filled with happiness, health and success.',
-  Anniversary: 'Happy {ordinal} Anniversary ❤️\nWishing you many more years of happiness, love and beautiful memories together.',
-};
+const ADMIN_VALUES_STORAGE_KEY = 'lifehub_admin_values';
+const ADMIN_VALUES_VERSION_KEY = 'lifehub_admin_values_schema_version';
 
 // Default app preferences such as theme, currency, and notification settings.
 const defaultPreferences = {
@@ -37,8 +22,6 @@ const defaultPreferences = {
   defaultEventType: 'Personal',
   defaultIncomeType: 'Salary',
   defaultExpenseCategory: 'Food',
-  greetingEnabledTypes: [...defaultGreetingEnabledTypes],
-  greetingTemplates: { ...defaultGreetingTemplates },
   notifications: {
     eventReminders: true,
     monthlySummary: true,
@@ -50,8 +33,6 @@ const defaultPreferences = {
 
 const createDefaultPreferences = () => ({
   ...defaultPreferences,
-  greetingEnabledTypes: [...defaultGreetingEnabledTypes],
-  greetingTemplates: { ...defaultGreetingTemplates },
   notifications: { ...defaultPreferences.notifications },
 });
 
@@ -59,27 +40,16 @@ const createDefaultAdminValues = () => Object.fromEntries(
   Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]),
 );
 
-// Load admin values from browser storage if they exist.
-// This allows the app to remember user custom settings after refreshing.
-const normalizeStoredList = (key, storedValue) => {
-  const fallback = defaultAdminValues[key] ?? DEFAULT_CODE_LISTS[key] ?? [];
-  const source = Array.isArray(storedValue) && storedValue.length ? storedValue : fallback;
-  return serializeCodeListEntries(source);
-};
-
+// Load and migrate admin values without replacing user-maintained entries on application updates.
 const loadAdminValues = () => {
   try {
-    const stored = JSON.parse(localStorage.getItem('lifehub_admin_values') || '{}');
-    return {
-      ...defaultAdminValues,
-      ...stored,
-      eventTypes: normalizeStoredList('eventTypes', stored.eventTypes),
-      incomeTypes: normalizeStoredList('incomeTypes', stored.incomeTypes),
-      expenseCategories: normalizeStoredList('expenseCategories', stored.expenseCategories),
-      activityPriorities: normalizeStoredList('activityPriorities', stored.activityPriorities),
-      greetingTemplateTypes: normalizeStoredList('greetingTemplateTypes', stored.greetingTemplateTypes),
-      reminderPresets: normalizeStoredList('reminderPresets', stored.reminderPresets),
-    };
+    const storedJson = localStorage.getItem(ADMIN_VALUES_STORAGE_KEY);
+    const storedValues = storedJson === null ? null : JSON.parse(storedJson);
+    const storedVersion = localStorage.getItem(ADMIN_VALUES_VERSION_KEY) || 0;
+    const { adminValues, version } = migrateStoredCodeLists(storedValues, storedVersion);
+    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
+    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(version));
+    return adminValues;
   } catch {
     return createDefaultAdminValues();
   }
@@ -98,13 +68,6 @@ const loadPreferences = () => {
         ...(stored.notifications || {}),
       },
       listSort: { ...(stored.listSort || {}) },
-      greetingEnabledTypes: Array.isArray(stored.greetingEnabledTypes) && stored.greetingEnabledTypes.length
-        ? [...new Set(stored.greetingEnabledTypes.filter(Boolean))]
-        : [...defaultGreetingEnabledTypes],
-      greetingTemplates: {
-        ...defaultGreetingTemplates,
-        ...(stored.greetingTemplates || {}),
-      },
       defaultEventType: stored.defaultEventType || defaultPreferences.defaultEventType,
       defaultIncomeType: stored.defaultIncomeType || defaultPreferences.defaultIncomeType,
       defaultExpenseCategory: stored.defaultExpenseCategory || defaultPreferences.defaultExpenseCategory,
@@ -133,21 +96,23 @@ const useAppStore = create((set) => ({
       ...state.adminValues,
       ...nextValues,
     };
-    localStorage.setItem('lifehub_admin_values', JSON.stringify(merged));
+    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(merged));
     return { adminValues: merged };
   }),
 
   // Reset admin-defined values back to the default list.
   resetAdminValues: () => set(() => {
     const adminValues = createDefaultAdminValues();
-    localStorage.setItem('lifehub_admin_values', JSON.stringify(adminValues));
+    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
+    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
     return { adminValues };
   }),
 
   resetAllSettings: (referencedValues) => set((state) => {
     const adminValues = resetCodeListsPreservingReferences(state.adminValues, referencedValues);
     const preferences = createDefaultPreferences();
-    localStorage.setItem('lifehub_admin_values', JSON.stringify(adminValues));
+    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
+    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
     localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
     localStorage.setItem('lifehub_theme_choice', '1');
     return { adminValues, preferences };

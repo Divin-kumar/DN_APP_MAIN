@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  CODE_LIST_SCHEMA_VERSION,
   DEFAULT_CODE_LISTS,
   getActivityPriorityLabel,
   getReminderPresetLabel,
   getCodeListItems,
   collectReferencedCodeListValues,
   getCodeListMeta,
+  migrateStoredCodeLists,
   resetCodeListsPreservingReferences,
 } from './codeLists.js';
 
@@ -16,8 +18,67 @@ test('default code lists include the required domains', () => {
   assert.ok(DEFAULT_CODE_LISTS.expenseCategories.includes('Food'));
   assert.ok(DEFAULT_CODE_LISTS.incomeTypes.includes('Salary'));
   assert.ok(DEFAULT_CODE_LISTS.activityPriorities.some((item) => item.value === 'high'));
-  assert.ok(DEFAULT_CODE_LISTS.greetingTemplateTypes.includes('Birthday'));
   assert.ok(DEFAULT_CODE_LISTS.reminderPresets.some((item) => item.value === '09:00'));
+});
+
+test('first install seeds defaults and records the current code-list schema version', () => {
+  const result = migrateStoredCodeLists(null);
+  assert.equal(result.version, CODE_LIST_SCHEMA_VERSION);
+  assert.deepEqual(getCodeListItems('eventTypes', result.adminValues.eventTypes), DEFAULT_CODE_LISTS.eventTypes);
+  assert.deepEqual(getCodeListItems('expenseCategories', result.adminValues.expenseCategories), DEFAULT_CODE_LISTS.expenseCategories);
+});
+
+test('legacy migration preserves custom values, edits, metadata, inactive values, and empty lists', () => {
+  const result = migrateStoredCodeLists({
+    eventTypes: [
+      { value: 'Birthday', label: 'My birthday label', active: false, canGenerateGreetingCards: false, greetingTemplate: 'Keep this', customFlag: 'preserve me' },
+      { value: 'Custom Moment', label: 'My custom moment' },
+    ],
+    expenseCategories: [],
+    incomeTypes: [{ value: 'Consulting', label: 'Consulting income' }],
+  });
+
+  assert.equal(result.version, CODE_LIST_SCHEMA_VERSION);
+  assert.deepEqual(result.adminValues.expenseCategories, []);
+  assert.deepEqual(getCodeListItems('expenseCategories', result.adminValues.expenseCategories), []);
+  assert.deepEqual(result.adminValues.eventTypes[0], {
+    value: 'Birthday',
+    label: 'My birthday label',
+    active: false,
+    isActive: false,
+    canGenerateGreetingCards: false,
+    greetingTemplate: 'Keep this',
+    showInDashboardUpcoming: true,
+    customFlag: 'preserve me',
+  });
+  assert.equal(result.adminValues.eventTypes.some((entry) => entry.value === 'Custom Moment'), true);
+  assert.equal(result.adminValues.incomeTypes[0].value, 'Consulting');
+});
+
+test('versioned migrations append only explicitly added defaults without replacing existing values', () => {
+  const migrations = {
+    1: { additions: { eventTypes: [{ value: 'Birthday', label: 'Migration must not replace this' }, 'New Moment'] } },
+    2: { additions: { expenseCategories: ['New Category'] } },
+  };
+  const initial = {
+    eventTypes: [{ value: 'Birthday', label: 'User edited', canGenerateGreetingCards: false }, 'Custom Moment'],
+    expenseCategories: [],
+  };
+  const migrated = migrateStoredCodeLists(initial, 0, migrations, 2);
+  const migratedAgain = migrateStoredCodeLists(migrated.adminValues, migrated.version, migrations, 2);
+
+  assert.equal(migrated.version, 2);
+  assert.equal(migrated.adminValues.eventTypes[0].label, 'User edited');
+  assert.equal(migrated.adminValues.eventTypes[0].canGenerateGreetingCards, false);
+  assert.deepEqual(migrated.adminValues.eventTypes.map((entry) => entry.value), ['Birthday', 'Custom Moment', 'New Moment']);
+  assert.deepEqual(migrated.adminValues.expenseCategories.map((entry) => entry.value), ['New Category']);
+  assert.deepEqual(migratedAgain.adminValues, migrated.adminValues);
+});
+
+test('missing migration steps leave data intact and do not advance the schema version', () => {
+  const result = migrateStoredCodeLists({ eventTypes: ['Custom Moment'] }, 0, {}, 2);
+  assert.equal(result.version, 0);
+  assert.equal(result.adminValues.eventTypes[0].value, 'Custom Moment');
 });
 
 test('code list helpers return readable labels', () => {
@@ -71,8 +132,14 @@ test('record references are collected for configured data domains', () => {
   });
 
   assert.deepEqual(references.eventTypes.sort(), ['Custom Moment', 'Legacy Moment']);
-  assert.deepEqual(references.greetingTemplateTypes.sort(), ['Custom Moment', 'Legacy Moment']);
   assert.deepEqual(references.activityPriorities, ['urgent']);
   assert.deepEqual(references.expenseCategories, ['Custom Expense']);
   assert.deepEqual(references.incomeTypes, ['Custom Income']);
+});
+
+test('moment-type metadata is preserved with legacy entries', () => {
+  const meta = getCodeListMeta('eventTypes', [{ value: 'Birthday', label: 'Birthday', canGenerateGreetingCards: false, greetingTemplate: 'Custom', showInDashboardUpcoming: false }]);
+  assert.equal(meta[0].canGenerateGreetingCards, false);
+  assert.equal(meta[0].showInDashboardUpcoming, false);
+  assert.equal(meta[0].greetingTemplate, 'Custom');
 });

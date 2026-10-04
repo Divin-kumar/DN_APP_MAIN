@@ -17,6 +17,9 @@ import { getActiveCodeListMeta } from '../../../utils/codeLists';
 import usePersistentSort from '../../../hooks/usePersistentSort';
 import SortControl from '../../../components/common/SortControl';
 
+const EMPTY_GREETING_TEMPLATES = Object.freeze({});
+const EMPTY_MOMENT_TYPES = Object.freeze([]);
+
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
   const date = new Date(value);
@@ -48,7 +51,8 @@ export default function EventWorkspaceShell() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
-  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || {});
+  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
+  const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
   const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
@@ -169,13 +173,15 @@ export default function EventWorkspaceShell() {
   const memoryCount = (event.memories || []).length;
   const attachments = event.attachments || [];
   const latestMemory = [...(event.memories || [])].sort((first, second) => new Date(second.createdAt || 0) - new Date(first.createdAt || 0))[0];
+  const latestMemoryBody = String(latestMemory?.body || '');
+  const latestMemoryNeedsExpansion = latestMemoryBody.length > 110 || latestMemoryBody.split(/\r\n|\r|\n/).length > 3;
   const eventDateValue = new Date(event.date || event.startDate || event.createdAt);
   const validEventDate = !Number.isNaN(eventDateValue.getTime());
   const daysUntilEvent = validEventDate ? Math.ceil((new Date(eventDateValue.getFullYear(), eventDateValue.getMonth(), eventDateValue.getDate()).getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / 86400000) : null;
   const eventStyle = String(event.type || '').toLowerCase();
   const eventMood = eventStyle.includes('birth') || eventStyle.includes('wedding') || eventStyle.includes('engagement') ? 'celebration' : eventStyle.includes('vacation') || eventStyle.includes('travel') ? 'travel' : eventStyle.includes('investment') || eventStyle.includes('insurance') || eventStyle.includes('finance') ? 'finance' : eventStyle.includes('anniversary') || eventStyle.includes('marriage') ? 'romance' : 'life';
   const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-  const generatedGreeting = getEventGreeting(event, greetingTemplates) || {
+  const generatedGreeting = getEventGreeting(event, greetingTemplates, momentTypes) || {
     title: `A moment worth celebrating: ${event.name || event.type || 'today'}`,
     body: event.notes || 'Wishing you a beautiful day filled with meaning and memories to treasure.',
   };
@@ -379,7 +385,7 @@ export default function EventWorkspaceShell() {
             <div className="event-featured-memory-art"><BookHeart size={21} /><span>Memory keepsake</span></div>
             <div className="event-featured-memory-copy">
               <span className="event-overview-eyebrow"><Heart size={13} /> A piece of this moment</span>
-              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><p className={`event-memory-story-copy${memoryExpanded ? ' is-expanded' : ''}`}>{latestMemory.body || 'A moment worth remembering, kept safe with this event.'}</p><small>{formatDate(latestMemory.createdAt)}</small>{String(latestMemory.body || '').length > 110 ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
+              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><p className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`}>{latestMemory.body || 'A moment worth remembering, kept safe with this event.'}</p><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
             </div>
           </section>
 
@@ -399,7 +405,7 @@ export default function EventWorkspaceShell() {
             </section>
           </div>
 
-          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><p>{event.notes}</p></section> : null}
+          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><p className="free-text-content">{event.notes}</p></section> : null}
         </div>
       );
     }
@@ -413,7 +419,7 @@ export default function EventWorkspaceShell() {
                 <span>{formatDate(activity.date)}</span>
                 <strong>{activity.title || 'Untitled activity'}</strong>
                     <small className={activity.cancelled || activity.status === 'cancelled' ? 'is-cancelled' : activity.completed ? 'is-complete' : 'is-pending'}>{activity.cancelled || activity.status === 'cancelled' ? 'Cancelled' : activity.completed ? 'Completed' : 'In progress'}</small>
-                {activity.description ? <p>{activity.description}</p> : null}
+                {activity.description ? <p className="free-text-content">{activity.description}</p> : null}
               </div>
             ))}
           </div>
@@ -472,9 +478,9 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Memories') {
       return (
         <div className="workspace-resource-list">
-          <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}>Add memory</button>
+          <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add memory</button>
           {event.memories?.length ? event.memories.map((memory) => (
-            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span>{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
+            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span className="workspace-memory-body free-text-preview is-truncated">{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
         </div>
       );
@@ -529,7 +535,7 @@ export default function EventWorkspaceShell() {
         <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-activity-action' : ''}`}>
           <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
           <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
-          {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}>Add activity</button> : null}
+          {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}><Plus size={15} aria-hidden="true" /> Add activity</button> : null}
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
@@ -540,7 +546,7 @@ export default function EventWorkspaceShell() {
           <div className="event-greeting-card-preview">
             <span><Sparkles size={14} /> A greeting for {event.name || 'this moment'}</span>
             <strong>{greetingTitleDraft || 'Your greeting title'}</strong>
-            <p>{greetingBodyDraft || 'Your greeting message will appear here.'}</p>
+            <p className="free-text-content">{greetingBodyDraft || 'Your greeting message will appear here.'}</p>
           </div>
           <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
             <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
@@ -566,8 +572,8 @@ export default function EventWorkspaceShell() {
               ))}
             </DropdownSelect>
             <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
-            <div style={styles.dialogActions}>
-              <button type="button" onClick={() => setActivityDialogOpen(false)} style={styles.cancelButton}>Cancel</button>
+            <div className="dialog-actions" style={styles.dialogActions}>
+              <button type="button" className="secondaryButton" onClick={() => setActivityDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
             </div>
           </form>
@@ -589,15 +595,15 @@ export default function EventWorkspaceShell() {
         <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
           {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
           {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Create an expense for this activity instead.</p>}
-          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); setExpenseDialogActivity(activity); }}>Create expense</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
+          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); setExpenseDialogActivity(activity); }}><Plus size={15} aria-hidden="true" /> Create expense</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
         </ModalDialog>
       ) : null}
       {notesDialogOpen ? (
         <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
           <form onSubmit={saveNotes} style={{ display: 'grid', gap: '12px' }}>
             <textarea value={notesDraft} onChange={(submitEvent) => setNotesDraft(submitEvent.target.value)} placeholder="What should you remember about this event?" style={styles.input} rows={7} autoFocus />
-            <div style={styles.dialogActions}>
-              <button type="button" onClick={() => setNotesDialogOpen(false)} style={styles.cancelButton}>Cancel</button>
+            <div className="dialog-actions" style={styles.dialogActions}>
+              <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
             </div>
           </form>
@@ -608,7 +614,7 @@ export default function EventWorkspaceShell() {
           <form onSubmit={saveMemory} style={{ display: 'grid', gap: '12px' }}>
             <input value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Memory title" style={styles.input} autoFocus />
             <textarea value={memoryBody} onChange={(eventChange) => setMemoryBody(eventChange.target.value)} placeholder="What do you want to remember?" style={styles.input} rows={6} />
-            <div style={styles.dialogActions}><button type="button" onClick={() => setMemoryDialogOpen(false)} style={styles.cancelButton}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
+            <div className="dialog-actions" style={styles.dialogActions}><button type="button" className="secondaryButton" onClick={() => setMemoryDialogOpen(false)}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
           </form>
         </ModalDialog>
       ) : null}

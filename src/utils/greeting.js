@@ -1,3 +1,5 @@
+import { getMomentTypeGreetingTemplate } from './dashboardVisibility.js';
+
 const getEventDate = (event) => {
   const date = new Date(event?.date || event?.startDate || event?.createdAt);
   return Number.isNaN(date.getTime()) ? null : date;
@@ -45,10 +47,11 @@ const renderTemplate = (template, replacements) => String(template || '').replac
   return replacements[normalized] ?? replacements[key] ?? match;
 });
 
-export const getEventGreeting = (event, greetingTemplates = {}) => {
+export const getEventGreeting = (event, greetingTemplates = {}, momentTypes = []) => {
   if (!event) return null;
   const type = String(event.type || '').trim() || String(event.name || '').trim();
-  const configured = resolveTemplate(type, greetingTemplates);
+  const configured = getMomentTypeGreetingTemplate(type, momentTypes, resolveTemplate(type, greetingTemplates));
+  if (!configured) return null;
   const baseDate = getEventDate(event);
   if (!baseDate) return null;
   const occurs = nextOccurrence(event) || baseDate;
@@ -71,9 +74,9 @@ export const getEventGreeting = (event, greetingTemplates = {}) => {
     eventName,
     eventDate: formatDate(occurs),
   });
-  const [title, ...body] = text.split(/\n+/).filter(Boolean);
+  const [title, ...body] = text.split(/\r\n|\r|\n/);
   return {
     title: title || (isBirthday ? `Happy ${ordinal(years)} Birthday ${name} 🎂` : isAnniversary ? `Happy ${ordinal(years)} Anniversary ❤️` : `Happy ${eventName} 🎉`),
-    body: body.join(' ') || 'Wishing you a wonderful celebration and beautiful memories to treasure.',
+    body: body.join('\n') || 'Wishing you a wonderful celebration and beautiful memories to treasure.',
   };
 };

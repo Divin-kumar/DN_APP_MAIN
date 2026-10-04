@@ -1,4 +1,18 @@
-import { ArrowLeft, BellRing, Check, Hash, PencilLine, ShieldOff, Trash2 } from 'lucide-react';
+/**
+ * CodeLists.jsx
+ *
+ * Purpose:
+ * A configuration screen for custom categories and defaults that shape the user experience.
+ * This file lets people define the labels used throughout the app for moments, income, expense,
+ * and reminder behavior without changing the underlying software code.
+ *
+ * Main Responsibilities:
+ * - manage reusable list values used across the app
+ * - keep active and inactive values organized
+ * - track whether a value is still in use before deleting it
+ * - keep the app aligned with each user's terminology and personal setup
+ */
+import { ArrowLeft, BellRing, Check, Hash, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -22,8 +36,6 @@ const getRecordUsageCount = (listKey, value, state) => {
       return incomes.filter((income) => income.type === value).length;
     case 'activityPriorities':
       return events.reduce((count, event) => count + (event.activities || []).filter((activity) => activity.priority === value).length, 0);
-    case 'greetingTemplateTypes':
-      return Array.isArray(preferences?.greetingEnabledTypes) && preferences.greetingEnabledTypes.includes(value) ? 1 : 0;
     case 'reminderPresets':
       return preferences?.notifications?.reminderTime === value ? 1 : 0;
     default:
@@ -43,9 +55,18 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const [swipedRow, setSwipedRow] = useState(null);
   const [editingValue, setEditingValue] = useState(null);
   const [warningValue, setWarningValue] = useState(null);
+  const [momentTypeEditor, setMomentTypeEditor] = useState(null);
+  const isMomentTypeEditorOpen = Boolean(momentTypeEditor);
   const swipeStartRef = useRef(null);
   const swipeMovedRef = useRef(false);
   const sectionRef = useRef(null);
+  const momentTypeTitleRef = useRef(null);
+
+  useEffect(() => {
+    if (!momentTypeEditor) return undefined;
+    const frameId = window.requestAnimationFrame(() => momentTypeTitleRef.current?.focus());
+    return () => window.cancelAnimationFrame(frameId);
+  }, [isMomentTypeEditorOpen]);
 
   useEffect(() => {
     if (!swipedRow) return undefined;
@@ -63,7 +84,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   }, [swipedRow]);
 
   const entries = useMemo(() => {
-    const source = Array.isArray(adminValues[listKey]) && adminValues[listKey].length
+    const source = Array.isArray(adminValues[listKey])
       ? adminValues[listKey]
       : DEFAULT_CODE_LISTS[listKey] || [];
     return sanitizeEntries(source).sort((a, b) => a.label.localeCompare(b.label));
@@ -95,6 +116,56 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     setDraftLabel('');
   };
 
+  const openMomentTypeEditor = (entry = null) => {
+    const baseEntry = entry || { value: '', label: '', canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true };
+    setMomentTypeEditor({
+      existingValue: baseEntry.value || null,
+      title: baseEntry.label || baseEntry.value || '',
+      canGenerateGreetingCards: baseEntry.canGenerateGreetingCards ?? true,
+      greetingTemplate: typeof baseEntry.greetingTemplate === 'string' ? baseEntry.greetingTemplate : '',
+      showInDashboardUpcoming: baseEntry.showInDashboardUpcoming ?? true,
+    });
+  };
+
+  const saveMomentTypeEditor = () => {
+    const title = momentTypeEditor?.title?.trim();
+    if (!title) return;
+
+    const nextEntry = {
+      value: title,
+      label: title,
+      active: true,
+      isActive: true,
+      canGenerateGreetingCards: Boolean(momentTypeEditor.canGenerateGreetingCards),
+      greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate.trim() : '',
+      showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
+    };
+
+    const nextEntries = entries.some((entry) => entry.value === (momentTypeEditor.existingValue || title))
+      ? entries.map((entry) => (entry.value === (momentTypeEditor.existingValue || title) ? { ...entry, ...nextEntry } : entry))
+      : [...entries, nextEntry];
+
+    updateEntries(nextEntries);
+    setMomentTypeEditor(null);
+  };
+
+  const getGreetingTemplatePreview = (template) => {
+    const fallback = 'Happy 1st Birthday Alex';
+    const nextTemplate = (template || '').trim();
+    if (!nextTemplate) return fallback;
+
+    const replacements = {
+      name: 'Alex',
+      eventName: 'Birthday',
+      ordinal: '1st',
+      title: 'Birthday',
+      month: 'October',
+      date: '15',
+    };
+
+    return nextTemplate.replace(/\{(\w+)\}/g, (match, key) => replacements[key] || match);
+  };
+
   const handleDelete = (entry) => {
     const usageCount = usageMap[entry.value] || 0;
     if (usageCount === 0) {
@@ -122,9 +193,20 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const trimmed = nextValue.trim();
     if (!trimmed) return;
 
-    updateEntries(entries.map((item) => (
-      item.value === entry.value ? { ...item, value: trimmed, label: trimmed } : item
-    )));
+    updateEntries(entries.map((item) => {
+      if (item.value !== entry.value) return item;
+      if (listKey === 'eventTypes') {
+        return {
+          ...item,
+          value: trimmed,
+          label: trimmed,
+          canGenerateGreetingCards: item.canGenerateGreetingCards ?? true,
+          greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : '',
+          showInDashboardUpcoming: item.showInDashboardUpcoming ?? true,
+        };
+      }
+      return { ...item, value: trimmed, label: trimmed };
+    }));
     setEditingValue(null);
     setSwipedRow(null);
   };
@@ -160,7 +242,14 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     return (
       <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
         <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
-          <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { setEditingValue(entry); setSwipedRow(null); }}>
+          <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => {
+            if (listKey === 'eventTypes') {
+              openMomentTypeEditor(entry);
+            } else {
+              setEditingValue(entry);
+            }
+            setSwipedRow(null);
+          }}>
             <PencilLine size={14} /> Edit
           </button>
           {isInactive ? (
@@ -207,28 +296,33 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   };
 
   return (
-    <section ref={sectionRef} className="settings-section code-list-section">
+    <section ref={sectionRef} className={`settings-section code-list-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
       <div className="settings-section-heading">
         <span className="settings-accordion-icon"><Hash size={18} /></span>
         <div>
           <h3>{title}</h3>
           <p>{description}</p>
         </div>
+        {listKey === 'eventTypes' ? (
+          <button type="button" className="settings-tag-add moment-type-add-button" onClick={() => openMomentTypeEditor()}>
+            <Plus size={15} /> Add
+          </button>
+        ) : null}
       </div>
 
-      <div className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}>
-        {allowLabels ? (
-          <>
+      {listKey !== 'eventTypes' ? (
+        <div className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}>
+          {allowLabels ? (
+            <>
+              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+              <input value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Label" aria-label="Label" />
+            </>
+          ) : (
             <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
-            <input value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Label" aria-label="Label" />
-          </>
-        ) : (
-          <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
-        )}
-        <button type="button" className="settings-tag-add" onClick={() => upsertEntry(draft, allowLabels ? draftLabel : undefined)}>
-          Add
-        </button>
-      </div>
+          )}
+          <button type="button" className="settings-tag-add" onClick={() => upsertEntry(draft, allowLabels ? draftLabel : undefined)}><Plus size={15} aria-hidden="true" /> Add</button>
+        </div>
+      ) : null}
 
       <div className="code-list-groups">
         <section className="code-list-group" aria-label="Active values">
@@ -269,6 +363,63 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         </ModalDialog>
       ) : null}
 
+      {momentTypeEditor ? (
+        <ModalDialog title={entries.some((entry) => entry.value === (momentTypeEditor.existingValue || momentTypeEditor.title)) ? 'Edit moment type' : 'New moment type'} className="code-list-rename-dialog moment-type-dialog" onClose={() => setMomentTypeEditor(null)}>
+          <div className="moment-type-form">
+            <label className="settings-input-block">
+              <span>Title</span>
+              <input
+                ref={momentTypeTitleRef}
+                autoFocus
+                value={momentTypeEditor.title}
+                onChange={(event) => setMomentTypeEditor((current) => ({ ...current, title: event.target.value }))}
+                placeholder="Enter a title"
+              />
+            </label>
+
+            <div className="moment-type-switch-list">
+              <div className="moment-type-switch-row">
+                <span>Greeting Cards</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Greeting Cards" aria-checked={momentTypeEditor.canGenerateGreetingCards} onClick={() => setMomentTypeEditor((current) => ({ ...current, canGenerateGreetingCards: !current.canGenerateGreetingCards }))}>
+                  <span className="moment-type-switch-thumb" />
+                </button>
+              </div>
+              <div className="moment-type-switch-row">
+                <span>Show on Dashboard</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Show on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
+                  <span className="moment-type-switch-thumb" />
+                </button>
+              </div>
+            </div>
+
+            {momentTypeEditor.canGenerateGreetingCards ? (
+              <div className="moment-type-template-field">
+                <label className="settings-input-block">
+                  <span>Greeting Template</span>
+                  <textarea
+                    rows={3}
+                    value={momentTypeEditor.greetingTemplate}
+                    onChange={(event) => setMomentTypeEditor((current) => ({ ...current, greetingTemplate: event.target.value }))}
+                    placeholder="Happy {ordinal} {eventName} {name}"
+                  />
+                  <small className="settings-placeholder-guide">Supported placeholders: {'{name}'}, {'{eventName}'}, {'{ordinal}'}</small>
+                </label>
+
+                <div className="moment-type-preview" aria-live="polite">
+                  <span>Preview</span>
+                  <div className="free-text-preview is-truncated">{getGreetingTemplatePreview(momentTypeEditor.greetingTemplate)}</div>
+                </div>
+              </div>
+            ) : null}
+
+            <div className="settings-actions">
+              <button type="button" className="settings-secondary-button" onClick={() => setMomentTypeEditor(null)}>Cancel</button>
+              <button type="button" className="settings-primary-button" onClick={saveMomentTypeEditor}>Save moment type</button>
+            </div>
+          </div>
+        </ModalDialog>
+      ) : null}
+
       {warningValue ? (
         <ModalDialog title="Value is currently in use" onClose={() => setWarningValue(null)}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>
@@ -300,11 +451,10 @@ export default function CodeLists() {
         </div>
       </header>
 
-      <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments." listKey="eventTypes" placeholder="Add moment type" />
+      <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
       <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
       <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
       <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
-      <CodeListSection title="Greeting Template Types" description="Defines which event types can generate greeting cards." listKey="greetingTemplateTypes" placeholder="Add greeting type" />
       <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
 
       <section className="settings-section">

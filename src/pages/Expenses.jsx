@@ -4,6 +4,7 @@
   This is the page where the user tracks money going out, filters by category, and manages spending records.
 */
 import { useEffect, useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -139,7 +140,7 @@ export default function Expenses() {
     <div className="financial-module-page">
       <header className="financial-module-heading">
         <h3>Expense</h3>
-        <button type="button" className="primaryButton" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }}>Add expense</button>
+        <button type="button" className="primaryButton" onClick={() => { setEditingExpense(null); setExpenseDialogOpen(true); }}><Plus size={16} aria-hidden="true" /> Add expense</button>
       </header>
       <div className="financial-module-toolbar">
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search expenses" aria-label="Search expenses" />
