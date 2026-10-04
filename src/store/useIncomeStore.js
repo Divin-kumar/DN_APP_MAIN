@@ -75,7 +75,7 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: optimistic, error: null });
 
     try {
-      const saved = await incomeRepository.upsert(principalId, normalized);
+      const saved = await incomeRepository.create(principalId, normalized);
       set({
         incomes: [saved, ...get().incomes.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
@@ -110,7 +110,7 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: optimistic, error: null });
 
     try {
-      const updated = await incomeRepository.upsert(principalId, income);
+      const updated = await incomeRepository.update(principalId, income);
       set({
         incomes: get().incomes.map((item) =>
           item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...updated } : item

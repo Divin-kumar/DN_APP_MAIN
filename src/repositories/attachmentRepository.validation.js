@@ -1,4 +1,4 @@
-import { hasRequiredFields, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isSerializable, isIsoDate, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_ATTACHMENT_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 
@@ -12,6 +12,7 @@ export const validateAttachmentRecord = (record = {}) => {
   if (!hasRequiredFields(record, ['id', 'userId', 'momentId', 'name'])) {
     errors.push('Attachment record is missing required identifiers or values.');
   }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId', 'momentId']));
 
   if (typeof record.name !== 'string' || record.name.trim().length === 0) {
     errors.push('Attachment name is required.');
@@ -23,6 +24,10 @@ export const validateAttachmentRecord = (record = {}) => {
 
   if (record.source && !VALID_ATTACHMENT_SOURCES.includes(record.source)) {
     errors.push('Unsupported attachment source.');
+  }
+
+  for (const field of ['createdAt', 'updatedAt']) {
+    if (record[field] && !isIsoDate(String(record[field]))) errors.push(`Attachment ${field} must be a valid ISO timestamp.`);
   }
 
   if (!isSerializable(record)) {

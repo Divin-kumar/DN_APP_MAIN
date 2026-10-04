@@ -1,4 +1,4 @@
-import { hasRequiredFields, isIsoDate, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isIsoDate, isSerializable, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_ACTIVITY_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 export const VALID_ACTIVITY_PRIORITIES = Object.freeze(['low', 'medium', 'high']);
@@ -13,6 +13,7 @@ export const validateActivityRecord = (record = {}) => {
   if (!hasRequiredFields(record, ['id', 'userId', 'momentId', 'title', 'date'])) {
     errors.push('Activity record is missing required identifiers or values.');
   }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId', 'momentId']));
 
   if (typeof record.title !== 'string' || record.title.trim().length === 0) {
     errors.push('Activity title is required.');

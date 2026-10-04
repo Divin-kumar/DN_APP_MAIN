@@ -1,3 +1,5 @@
+import { DATABASE_SCHEMA_VERSION } from './schema.js';
+
 export const DATABASE_METADATA_KEYS = Object.freeze({
   SCHEMA_VERSION: 'schemaVersion',
   MIGRATION_STATUS: 'migrationStatus',
@@ -6,19 +8,19 @@ export const DATABASE_METADATA_KEYS = Object.freeze({
 });
 
 export const DEFAULT_METADATA = Object.freeze({
-  schemaVersion: 1,
+  schemaVersion: DATABASE_SCHEMA_VERSION,
   migrationStatus: 'pending',
   lastSuccessfulMigration: null,
   rollbackStatus: 'none',
   updatedAt: null,
 });
 
-export const buildMetadataEntries = () => {
+export const buildMetadataEntries = (schemaVersion = DATABASE_SCHEMA_VERSION) => {
   const now = new Date().toISOString();
   return [
     {
       key: DATABASE_METADATA_KEYS.SCHEMA_VERSION,
-      value: DEFAULT_METADATA.schemaVersion,
+      value: schemaVersion,
       updatedAt: now,
       status: 'ready',
     },

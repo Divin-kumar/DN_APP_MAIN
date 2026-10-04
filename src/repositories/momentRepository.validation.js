@@ -1,4 +1,4 @@
-import { hasRequiredFields, isIsoDate, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isIsoDate, isSerializable, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_MOMENT_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 export const VALID_MOMENT_STATUS_VALUES = Object.freeze(['active', 'completed', 'archived', 'cancelled', 'upcoming', 'overdue', 'in-progress']);
@@ -20,6 +20,7 @@ export const validateMomentRecord = (record = {}) => {
   if (!hasRequiredFields(record, ['id', 'userId', 'name', 'date', 'type'])) {
     errors.push('Moment record is missing required identifiers or values.');
   }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId']));
 
   if (typeof record.name !== 'string' || record.name.trim().length === 0) {
     errors.push('Moment name is required.');

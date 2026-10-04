@@ -3,6 +3,8 @@ import { DATABASE_TABLES } from '../database/tables.js';
 import { mapActivityCollection, mapActivityRecord } from './activityMapper.js';
 import { readLegacyActivityRecords } from './activityLegacyAdapter.js';
 import { validateActivityRecord } from './activityRepository.validation.js';
+import { momentRepository } from './momentRepository.js';
+import { bulkCreateUniqueRecords, createUniqueRecord, makeRepositoryConflict, updateOwnedRecord, withRepositoryConflictAudit } from './repositoryConflict.js';
 
 const activityTable = () => db.table(DATABASE_TABLES.ACTIVITIES);
 
@@ -47,13 +49,27 @@ export const activityRepository = {
     }
 
     const next = { ...mapped, createdAt: mapped.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
-    await activityTable().put(next);
-    return next;
+    return createUniqueRecord({
+      tableName: DATABASE_TABLES.ACTIVITIES,
+      record: next,
+      domain: 'activities',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async () => {
+        if (!(await momentRepository.getById(userId, next.momentId))) {
+          throw makeRepositoryConflict({ domain: 'activities', operation: 'create', record: next, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async update(userId, activity) {
     if (!userId || !activity) return null;
     const existing = await this.getById(userId, activity.id || activity.firestoreId);
+    if (!existing) {
+      const collision = await activityTable().get(activity.id || activity.firestoreId);
+      if (collision) throw makeRepositoryConflict({ domain: 'activities', operation: 'update', record: activity, existing: collision, reason: 'id-owned-by-another-principal' });
+      throw new Error(`Activity record ${activity.id || activity.firestoreId} does not exist for update.`);
+    }
     const mapped = mapActivityRecord({ ...existing, ...activity, userId }, userId);
     if (!mapped) return null;
 
@@ -63,16 +79,34 @@ export const activityRepository = {
     }
 
     const next = { ...mapped, updatedAt: new Date().toISOString() };
-    await activityTable().put(next);
-    return next;
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.ACTIVITIES,
+      record: next,
+      domain: 'activities',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeUpdate: async (_existing, record) => {
+        if (!(await momentRepository.getById(userId, record.momentId))) {
+          throw makeRepositoryConflict({ domain: 'activities', operation: 'update', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async delete(userId, activityId) {
     if (!userId || !activityId) return false;
-    const match = await this.getById(userId, activityId);
-    if (!match) return false;
-    await activityTable().delete(match.id);
-    return true;
+    return withRepositoryConflictAudit({ principalId: userId, operation: 'activities.delete' }, async () => db.transaction(
+      'rw', activityTable(), db.table(DATABASE_TABLES.EXPENSES), async () => {
+        const match = await this.getById(userId, activityId);
+        if (!match) return false;
+        const linkedExpenses = await db.table(DATABASE_TABLES.EXPENSES)
+          .where('userId').equals(userId).filter((row) => row.activityId === match.id).toArray();
+        if (linkedExpenses.length) {
+          throw makeRepositoryConflict({ domain: 'activities', operation: 'delete', record: match, existing: match, reason: 'activity-has-linked-expenses', fields: ['activityId'] });
+        }
+        await activityTable().delete(match.id);
+        return true;
+      },
+    ));
   },
 
   async bulkUpsert(userId, activities = []) {
@@ -87,28 +121,24 @@ export const activityRepository = {
         return activity;
       });
 
-    if (!prepared.length) return [];
-    await activityTable().bulkPut(prepared);
-    return prepared;
+    return bulkCreateUniqueRecords({
+      tableName: DATABASE_TABLES.ACTIVITIES,
+      records: prepared,
+      domain: 'activities',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async (records) => {
+        for (const record of records) {
+          if (!(await momentRepository.getById(userId, record.momentId))) {
+            throw makeRepositoryConflict({ domain: 'activities', operation: 'bulk-create', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+          }
+        }
+      },
+    });
   },
 
   async reconcile(userId, activities = []) {
     if (!userId || !Array.isArray(activities)) return [];
-    const incoming = activities;
-    const existing = await this.getAll(userId);
-    const deduped = new Map();
-
-    [...existing, ...incoming].forEach((activity) => {
-      const key = activity.id || activity.firestoreId || `${activity.userId}:${activity.momentId}:${activity.title}:${activity.date}`;
-      const current = deduped.get(key);
-      if (!current || new Date(activity.updatedAt || activity.createdAt || 0).getTime() > new Date(current.updatedAt || current.createdAt || 0).getTime()) {
-        deduped.set(key, { ...activity, userId });
-      }
-    });
-
-    const prepared = [...deduped.values()];
-    await activityTable().bulkPut(prepared);
-    return prepared;
+    return this.bulkUpsert(userId, activities);
   },
 
   async migrateLegacy(userId = null) {

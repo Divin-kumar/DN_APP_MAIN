@@ -10,6 +10,8 @@ import useExpenseStore from './useExpenseStore.js';
 import useIncomeStore from './useIncomeStore.js';
 
 test('runtime stores persist all domains through repositories and reload from Dexie', async () => {
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = () => { throw new Error('Network access is disabled in repository cutover validation.'); };
   await db.delete();
   await initializeDatabase();
 
@@ -77,6 +79,8 @@ test('runtime stores persist all domains through repositories and reload from De
   assert.equal((await settingsRepository.getPreferences(principalId)).theme, 'light');
   assert.equal((await codeListRepository.getList(principalId, 'eventTypes'))[0].entryValue, 'Custom moment');
 
+  await db.close();
+  await initializeDatabase();
   useEventStore.getState().setEvents([]);
   useExpenseStore.getState().setExpenses([]);
   useIncomeStore.getState().setIncomes([]);
@@ -87,6 +91,7 @@ test('runtime stores persist all domains through repositories and reload from De
 
   projectedEvent = useEventStore.getState().events.find((item) => item.id === event.id);
   assert.equal(projectedEvent.activities[0].title, 'Updated task');
+  assert.equal(projectedEvent.activities[0].expenses[0].id, 'expense-cutover-1');
   assert.equal(projectedEvent.memories[0].body, 'Updated note');
   assert.equal(useExpenseStore.getState().expenses[0].id, 'expense-cutover-1');
   assert.equal(useIncomeStore.getState().incomes[0].amount, 125);
@@ -126,4 +131,5 @@ test('runtime stores persist all domains through repositories and reload from De
   assert.equal((await attachmentRepository.getAll(principalId)).length, 0);
 
   await db.delete();
+  globalThis.fetch = originalFetch;
 });

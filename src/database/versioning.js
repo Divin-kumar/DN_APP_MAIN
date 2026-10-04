@@ -1,3 +1,5 @@
+import { DATABASE_SCHEMA_VERSION } from './schema.js';
+
 export const DATABASE_BOOT_STATUS = Object.freeze({
   PENDING: 'pending',
   READY: 'ready',
@@ -6,7 +8,7 @@ export const DATABASE_BOOT_STATUS = Object.freeze({
 });
 
 export const DATABASE_VERSION_INFO = Object.freeze({
-  current: 1,
+  current: DATABASE_SCHEMA_VERSION,
   minimumSupported: 1,
   metadataKeys: Object.freeze({
     SCHEMA_VERSION: 'schemaVersion',

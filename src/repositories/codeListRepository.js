@@ -4,6 +4,7 @@ import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists
 import { mapCodeListCollection, mapCodeListEntry } from './codeListMapper.js';
 import { validateCodeListKey, validateCodeListRecord } from './codeListRepository.validation.js';
 import { readLegacyCodeLists, readLegacyCodeListVersion } from './codeListLegacyAdapter.js';
+import { bulkCreateUniqueRecords, makeRepositoryConflict, recordsEquivalent, updateOwnedRecord, withRepositoryConflictAudit } from './repositoryConflict.js';
 
 const codeListTable = () => db.table(DATABASE_TABLES.CODE_LISTS);
 
@@ -15,7 +16,22 @@ export const codeListRepository = {
 
   async getList(userId, listKey) {
     if (!userId || !listKey || !validateCodeListKey(listKey)) return [];
-    return codeListTable().where('[userId+listKey]').equals([userId, listKey]).toArray();
+    const rows = await codeListTable().where('[userId+listKey]').equals([userId, listKey]).toArray();
+    const byValue = new Map();
+    for (const row of rows) {
+      const key = row.entryValue.trim().toLocaleLowerCase();
+      const existing = byValue.get(key);
+      if (!existing) {
+        byValue.set(key, row);
+        continue;
+      }
+      if (!recordsEquivalent(existing, row, { ignoreId: true })) {
+        await withRepositoryConflictAudit({ principalId: userId, operation: 'codeLists.getList' }, async () => {
+          throw makeRepositoryConflict({ domain: 'codeLists', operation: 'read', record: row, existing, reason: 'duplicate-logical-entry-differs', fields: ['label', 'active', 'greetingTemplate'] });
+        });
+      }
+    }
+    return [...byValue.values()].sort((left, right) => left.id.localeCompare(right.id));
   },
 
   async getMeta(userId, listKey) {
@@ -38,6 +54,12 @@ export const codeListRepository = {
     if (!userId || !listKey || !validateCodeListKey(listKey)) return [];
 
     const normalized = serializeCodeListEntries(entries || DEFAULT_CODE_LISTS[listKey] || []);
+    const normalizedValues = normalized.map((entry) => entry.value.trim().toLocaleLowerCase());
+    if (new Set(normalizedValues).size !== normalizedValues.length) {
+      return withRepositoryConflictAudit({ principalId: userId, operation: 'codeLists.setList' }, async () => {
+        throw makeRepositoryConflict({ domain: 'codeLists', operation: 'setList', record: { userId, listKey }, reason: 'duplicate-entry-value-in-list', fields: ['entryValue'] });
+      });
+    }
     const prepared = normalized
       .map((entry) => {
         const mapped = mapCodeListEntry({
@@ -63,9 +85,26 @@ export const codeListRepository = {
       })
       .filter(Boolean);
 
-    if (!prepared.length) return [];
-    await codeListTable().bulkPut(prepared);
-    return prepared;
+    return withRepositoryConflictAudit({ principalId: userId, operation: 'codeLists.setList' }, async () => db.transaction('rw', codeListTable(), async () => {
+      const existing = await codeListTable().where('[userId+listKey]').equals([userId, listKey]).toArray();
+      const existingByValue = new Map();
+      for (const row of existing) {
+        const key = row.entryValue.trim().toLocaleLowerCase();
+        const prior = existingByValue.get(key);
+        if (prior && !recordsEquivalent(prior, row, { ignoreId: true })) {
+          throw makeRepositoryConflict({ domain: 'codeLists', operation: 'setList', record: row, existing: prior, reason: 'preexisting-logical-entry-conflict', fields: ['label', 'active', 'greetingTemplate'] });
+        }
+        if (!prior) existingByValue.set(key, row);
+      }
+      const otherRows = (await codeListTable().toArray()).filter((row) => row.userId !== userId);
+      for (const row of prepared) {
+        const collision = otherRows.find((item) => item.id === row.id);
+        if (collision) throw makeRepositoryConflict({ domain: 'codeLists', operation: 'setList', record: row, existing: collision, reason: 'id-owned-by-another-principal' });
+      }
+      if (existing.length) await codeListTable().bulkDelete(existing.map((row) => row.id));
+      if (prepared.length) await bulkCreateUniqueRecords({ database: db, tableName: DATABASE_TABLES.CODE_LISTS, records: prepared, domain: 'codeLists', identityKey: (row) => `${row.listKey}:${row.entryValue.trim().toLocaleLowerCase()}` });
+      return prepared;
+    }));
   },
 
   async upsertEntry(userId, listKey, entry) {
@@ -87,14 +126,25 @@ export const codeListRepository = {
     const value = safeEntry.entryValue;
     if (!value) return null;
 
-    const existing = await codeListTable()
-      .where('[userId+listKey]')
-      .equals([userId, listKey])
-      .filter((row) => row.entryValue === value)
-      .first();
+    const existing = (await this.getList(userId, listKey))
+      .find((row) => row.entryValue.trim().toLocaleLowerCase() === value.trim().toLocaleLowerCase()) || null;
+
+    if (!existing && safeEntry.id) {
+      const collision = await codeListTable().get(safeEntry.id);
+      if (collision && collision.userId !== userId) {
+        return withRepositoryConflictAudit({ principalId: userId, operation: 'codeLists.upsertEntry' }, async () => {
+          throw makeRepositoryConflict({ domain: 'codeLists', operation: 'upsertEntry', record: safeEntry, existing: collision, reason: 'id-owned-by-another-principal' });
+        });
+      }
+      if (collision && (collision.listKey !== listKey || collision.entryValue !== value)) {
+        return withRepositoryConflictAudit({ principalId: userId, operation: 'codeLists.upsertEntry' }, async () => {
+          throw makeRepositoryConflict({ domain: 'codeLists', operation: 'upsertEntry', record: safeEntry, existing: collision, reason: 'id-owned-by-another-logical-entry' });
+        });
+      }
+    }
 
     const mapped = mapCodeListEntry(
-      existing ? { ...existing, ...safeEntry, updatedAt: new Date().toISOString() } : { ...safeEntry, id: crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
+      existing ? { ...existing, ...safeEntry, id: existing.id, updatedAt: new Date().toISOString() } : { ...safeEntry, id: safeEntry.id || crypto.randomUUID(), createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
       userId,
     );
 
@@ -105,8 +155,20 @@ export const codeListRepository = {
       throw new Error(validation.errors.join(', '));
     }
 
-    await codeListTable().put(mapped);
-    return mapped;
+    if (existing) {
+      return updateOwnedRecord({
+        tableName: DATABASE_TABLES.CODE_LISTS,
+        record: { ...mapped, id: existing.id },
+        domain: 'codeLists',
+        identityKey: (row) => `${row.listKey}:${row.entryValue.trim().toLocaleLowerCase()}`,
+      });
+    }
+    return bulkCreateUniqueRecords({
+      tableName: DATABASE_TABLES.CODE_LISTS,
+      records: [mapped],
+      domain: 'codeLists',
+      identityKey: (row) => `${row.listKey}:${row.entryValue.trim().toLocaleLowerCase()}`,
+    }).then((rows) => rows[0] || mapped);
   },
 
   async deleteList(userId, listKey) {

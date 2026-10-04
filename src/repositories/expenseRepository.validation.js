@@ -1,4 +1,4 @@
-import { hasRequiredFields, isIsoDate, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isIsoDate, isSerializable, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_EXPENSE_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 
@@ -11,6 +11,10 @@ export const validateExpenseRecord = (record = {}) => {
 
   if (!hasRequiredFields(record, ['id', 'userId', 'name', 'date', 'category'])) {
     errors.push('Expense record is missing required identifiers or required fields.');
+  }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId']));
+  for (const field of ['momentId', 'eventId', 'activityId']) {
+    if (record[field] !== null && record[field] !== undefined) errors.push(...validateStringIdentifiers(record, [field]));
   }
 
   const amount = Number(record.amount ?? 0);

@@ -3,6 +3,8 @@ import { DATABASE_TABLES } from '../database/tables.js';
 import { mapAttachmentCollection, mapAttachmentRecord } from './attachmentMapper.js';
 import { readLegacyAttachmentRecords } from './attachmentLegacyAdapter.js';
 import { validateAttachmentRecord } from './attachmentRepository.validation.js';
+import { momentRepository } from './momentRepository.js';
+import { bulkCreateUniqueRecords, createUniqueRecord, makeRepositoryConflict, updateOwnedRecord } from './repositoryConflict.js';
 
 const attachmentTable = () => db.table(DATABASE_TABLES.ATTACHMENTS);
 
@@ -35,13 +37,27 @@ export const attachmentRepository = {
     }
 
     const next = { ...mapped, createdAt: mapped.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
-    await attachmentTable().put(next);
-    return next;
+    return createUniqueRecord({
+      tableName: DATABASE_TABLES.ATTACHMENTS,
+      record: next,
+      domain: 'attachments',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async () => {
+        if (!(await momentRepository.getById(userId, next.momentId))) {
+          throw makeRepositoryConflict({ domain: 'attachments', operation: 'create', record: next, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async update(userId, attachment) {
     if (!userId || !attachment) return null;
     const existing = await this.getById(userId, attachment.id || attachment.firestoreId);
+    if (!existing) {
+      const collision = await attachmentTable().get(attachment.id || attachment.firestoreId);
+      if (collision) throw makeRepositoryConflict({ domain: 'attachments', operation: 'update', record: attachment, existing: collision, reason: 'id-owned-by-another-principal' });
+      throw new Error(`Attachment record ${attachment.id || attachment.firestoreId} does not exist for update.`);
+    }
     const mapped = mapAttachmentRecord({ ...existing, ...attachment, userId }, userId);
     if (!mapped) return null;
 
@@ -51,8 +67,17 @@ export const attachmentRepository = {
     }
 
     const next = { ...mapped, updatedAt: new Date().toISOString() };
-    await attachmentTable().put(next);
-    return next;
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.ATTACHMENTS,
+      record: next,
+      domain: 'attachments',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeUpdate: async (_existing, record) => {
+        if (!(await momentRepository.getById(userId, record.momentId))) {
+          throw makeRepositoryConflict({ domain: 'attachments', operation: 'update', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async delete(userId, attachmentId) {
@@ -75,9 +100,19 @@ export const attachmentRepository = {
         return attachment;
       });
 
-    if (!prepared.length) return [];
-    await attachmentTable().bulkPut(prepared);
-    return prepared;
+    return bulkCreateUniqueRecords({
+      tableName: DATABASE_TABLES.ATTACHMENTS,
+      records: prepared,
+      domain: 'attachments',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async (records) => {
+        for (const record of records) {
+          if (!(await momentRepository.getById(userId, record.momentId))) {
+            throw makeRepositoryConflict({ domain: 'attachments', operation: 'bulk-create', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+          }
+        }
+      },
+    });
   },
 
   async migrateLegacy(userId = null) {

@@ -1,4 +1,4 @@
-import { hasRequiredFields, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isSerializable, isIsoDate, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_MEMORY_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 
@@ -11,6 +11,11 @@ export const validateMemoryRecord = (record = {}) => {
 
   if (!hasRequiredFields(record, ['id', 'userId', 'momentId'])) {
     errors.push('Memory record is missing required identifiers.');
+  }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId', 'momentId']));
+
+  for (const field of ['createdAt', 'updatedAt']) {
+    if (record[field] && !isIsoDate(String(record[field]))) errors.push(`Memory ${field} must be a valid ISO timestamp.`);
   }
 
   if (typeof record.title !== 'string' || record.title.trim().length === 0) {

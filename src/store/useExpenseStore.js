@@ -80,7 +80,7 @@ const useExpenseStore = create((set, get) => {
     set({ expenses: optimistic, loading: false, error: null });
 
     try {
-      const saved = await expenseRepository.upsert(principalId, normalized);
+      const saved = await expenseRepository.create(principalId, normalized);
       set({
         expenses: [saved, ...get().expenses.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
@@ -115,7 +115,7 @@ const useExpenseStore = create((set, get) => {
     set({ expenses: optimistic, error: null });
 
     try {
-      const updated = await expenseRepository.upsert(principalId, expense);
+      const updated = await expenseRepository.update(principalId, expense);
       set({
         expenses: get().expenses.map((item) =>
           item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...updated } : item

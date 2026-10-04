@@ -3,6 +3,8 @@ import { DATABASE_TABLES } from '../database/tables.js';
 import { mapMemoryCollection, mapMemoryRecord } from './memoryMapper.js';
 import { readLegacyMemoryRecords } from './memoryLegacyAdapter.js';
 import { validateMemoryRecord } from './memoryRepository.validation.js';
+import { momentRepository } from './momentRepository.js';
+import { bulkCreateUniqueRecords, createUniqueRecord, makeRepositoryConflict, updateOwnedRecord } from './repositoryConflict.js';
 
 const memoryTable = () => db.table(DATABASE_TABLES.MEMORIES);
 
@@ -35,13 +37,27 @@ export const memoryRepository = {
     }
 
     const next = { ...mapped, createdAt: mapped.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
-    await memoryTable().put(next);
-    return next;
+    return createUniqueRecord({
+      tableName: DATABASE_TABLES.MEMORIES,
+      record: next,
+      domain: 'memories',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async () => {
+        if (!(await momentRepository.getById(userId, next.momentId))) {
+          throw makeRepositoryConflict({ domain: 'memories', operation: 'create', record: next, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async update(userId, memory) {
     if (!userId || !memory) return null;
     const existing = await this.getById(userId, memory.id || memory.firestoreId);
+    if (!existing) {
+      const collision = await memoryTable().get(memory.id || memory.firestoreId);
+      if (collision) throw makeRepositoryConflict({ domain: 'memories', operation: 'update', record: memory, existing: collision, reason: 'id-owned-by-another-principal' });
+      throw new Error(`Memory record ${memory.id || memory.firestoreId} does not exist for update.`);
+    }
     const mapped = mapMemoryRecord({ ...existing, ...memory, userId }, userId);
     if (!mapped) return null;
 
@@ -51,8 +67,17 @@ export const memoryRepository = {
     }
 
     const next = { ...mapped, updatedAt: new Date().toISOString() };
-    await memoryTable().put(next);
-    return next;
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.MEMORIES,
+      record: next,
+      domain: 'memories',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeUpdate: async (_existing, record) => {
+        if (!(await momentRepository.getById(userId, record.momentId))) {
+          throw makeRepositoryConflict({ domain: 'memories', operation: 'update', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+        }
+      },
+    });
   },
 
   async delete(userId, memoryId) {
@@ -75,9 +100,19 @@ export const memoryRepository = {
         return memory;
       });
 
-    if (!prepared.length) return [];
-    await memoryTable().bulkPut(prepared);
-    return prepared;
+    return bulkCreateUniqueRecords({
+      tableName: DATABASE_TABLES.MEMORIES,
+      records: prepared,
+      domain: 'memories',
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      beforeInsert: async (records) => {
+        for (const record of records) {
+          if (!(await momentRepository.getById(userId, record.momentId))) {
+            throw makeRepositoryConflict({ domain: 'memories', operation: 'bulk-create', record, reason: 'parent-moment-missing', fields: ['momentId'] });
+          }
+        }
+      },
+    });
   },
 
   async migrateLegacy(userId = null) {

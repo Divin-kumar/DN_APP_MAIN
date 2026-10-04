@@ -1,4 +1,4 @@
-import { isSerializable } from '../validators/base.js';
+import { isSerializable, isIsoDate, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_CODELIST_KEYS = Object.freeze({
   EVENT_TYPES: 'eventTypes',
@@ -17,6 +17,8 @@ export const validateCodeListRecord = (record = {}) => {
     return { valid: false, errors };
   }
 
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId']));
+
   if (!record.listKey || !validateCodeListKey(record.listKey)) {
     errors.push('Code list key is invalid or unsupported.');
   }
@@ -28,6 +30,9 @@ export const validateCodeListRecord = (record = {}) => {
   if (!record.label || typeof record.label !== 'string') {
     errors.push('Code list label is required.');
   }
+
+  if (record.createdAt && !isIsoDate(String(record.createdAt))) errors.push('Code list createdAt must be a valid ISO timestamp.');
+  if (record.updatedAt && !isIsoDate(String(record.updatedAt))) errors.push('Code list updatedAt must be a valid ISO timestamp.');
 
   if (!isSerializable(record)) {
     errors.push('Code list record must be serializable.');

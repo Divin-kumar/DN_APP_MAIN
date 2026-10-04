@@ -1,4 +1,4 @@
-import { hasRequiredFields, isIsoDate, isSerializable } from '../validators/base.js';
+import { hasRequiredFields, isIsoDate, isSerializable, validateStringIdentifiers } from '../validators/base.js';
 
 export const VALID_INCOME_SOURCES = Object.freeze(['manual', 'firebase', 'guest', 'legacy', 'dexie']);
 
@@ -12,6 +12,7 @@ export const validateIncomeRecord = (record = {}) => {
   if (!hasRequiredFields(record, ['id', 'userId', 'name', 'date', 'type'])) {
     errors.push('Income record is missing required identifiers or required fields.');
   }
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId']));
 
   const amount = Number(record.amount ?? 0);
   if (!Number.isFinite(amount) || amount < 0) {

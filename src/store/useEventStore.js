@@ -76,7 +76,7 @@ const projectEvents = async (principalId) => {
   });
 };
 
-const saveChildRows = async (repository, principalId, momentId, previousRows = [], nextRows = [], map = (row) => row) => {
+const saveChildRows = async (repository, principalId, momentId, previousRows = [], nextRows = [], map = (row) => row, { deferDeletes = false } = {}) => {
   const previousById = new Map(previousRows.map((row) => [row.id, row]));
   const nextById = new Map(nextRows.map((row) => [row.id, row]));
   for (const next of nextRows) {
@@ -84,9 +84,11 @@ const saveChildRows = async (repository, principalId, momentId, previousRows = [
     if (previousById.has(next.id)) await repository.update(principalId, record);
     else await repository.create(principalId, record);
   }
-  for (const previous of previousRows) {
-    if (!nextById.has(previous.id)) await repository.delete(principalId, previous.id);
+  const removed = previousRows.filter((previous) => !nextById.has(previous.id));
+  if (!deferDeletes) {
+    for (const previous of removed) await repository.delete(principalId, previous.id);
   }
+  return removed;
 };
 
 const saveActivityExpenses = async (principalId, momentId, previousActivities, nextActivities) => {
@@ -239,13 +241,14 @@ const useEventStore = create((set, get) => {
       let updated;
       await db.transaction('rw', ...tables, async () => {
         updated = await momentRepository.update(principalId, { ...moment, userId: principalId });
-        await saveChildRows(activityRepository, principalId, updated.id, previousActivities, activities, (activity, momentId) => ({
+        const removedActivities = await saveChildRows(activityRepository, principalId, updated.id, previousActivities, activities, (activity, momentId) => ({
           ...activity,
           eventId: momentId,
           momentId,
           completedAt: activity.completed ? (activity.completedAt || new Date().toISOString()) : null,
-        }));
+        }), { deferDeletes: true });
         await saveActivityExpenses(principalId, updated.id, previousActivities, activities);
+        for (const activity of removedActivities) await activityRepository.delete(principalId, activity.id);
         await saveChildRows(memoryRepository, principalId, updated.id, previous?.memories || [], memories, (memory, momentId) => ({
           ...memory,
           eventId: momentId,
@@ -308,10 +311,12 @@ const useEventStore = create((set, get) => {
       ].map((name) => db.table(name));
       await db.transaction('rw', ...tables, async () => {
         await Promise.all([
+          ...expenses.map((item) => expenseRepository.delete(principalId, item.id)),
+        ]);
+        await Promise.all([
           ...activities.map((item) => activityRepository.delete(principalId, item.id)),
           ...memories.map((item) => memoryRepository.delete(principalId, item.id)),
           ...attachments.map((item) => attachmentRepository.delete(principalId, item.id)),
-          ...expenses.map((item) => expenseRepository.delete(principalId, item.id)),
         ]);
         await momentRepository.delete(principalId, momentId);
       });

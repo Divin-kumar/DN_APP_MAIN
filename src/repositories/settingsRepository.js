@@ -3,6 +3,7 @@ import { DATABASE_TABLES } from '../database/tables.js';
 import { mapSettingsCollection, mapSettingsRecord } from './settingsMapper.js';
 import { validateSettingsRecord, validateSettingsValue } from './settingsRepository.validation.js';
 import { migrateLegacySettings } from './settingsRepository.migration.js';
+import { bulkCreateUniqueRecords, createUniqueRecord, makeRepositoryConflict, recordsEquivalent, updateOwnedRecord, withRepositoryConflictAudit } from './repositoryConflict.js';
 
 const settingsTable = () => db.table(DATABASE_TABLES.SETTINGS);
 
@@ -14,7 +15,13 @@ export const settingsRepository = {
 
   async getByKey(userId, key) {
     if (!userId || !key) return null;
-    return settingsTable().where('[userId+key]').equals([userId, key]).first();
+    const rows = await settingsTable().where('[userId+key]').equals([userId, key]).toArray();
+    if (rows.length < 2) return rows[0] || null;
+    const deterministic = [...rows].sort((left, right) => left.id.localeCompare(right.id));
+    if (deterministic.every((row) => recordsEquivalent(deterministic[0], row))) return deterministic[0];
+    return withRepositoryConflictAudit({ principalId: userId, operation: 'settings.read-conflict' }, async () => {
+      throw makeRepositoryConflict({ domain: 'settings', operation: 'read', record: deterministic[0], existing: deterministic[1], reason: 'multiple-setting-rows-differ', fields: ['value'] });
+    });
   },
 
   async setOne(userId, key, value) {
@@ -34,8 +41,12 @@ export const settingsRepository = {
       source: 'dexie',
     };
 
-    const record = await settingsTable().put(next);
-    return { ...next, id: record };
+    return createUniqueRecord({
+      tableName: DATABASE_TABLES.SETTINGS,
+      record: next,
+      domain: 'settings',
+      identityKey: (row) => row.key,
+    });
   },
 
   async updateOne(userId, key, value) {
@@ -57,8 +68,12 @@ export const settingsRepository = {
       source: 'dexie',
     };
 
-    await settingsTable().put(updated);
-    return updated;
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.SETTINGS,
+      record: updated,
+      domain: 'settings',
+      identityKey: (row) => row.key,
+    });
   },
 
   async setMany(userId, entries = []) {
@@ -72,8 +87,12 @@ export const settingsRepository = {
         return entry;
       });
 
-    await settingsTable().bulkPut(prepared);
-    return prepared;
+    return bulkCreateUniqueRecords({
+      tableName: DATABASE_TABLES.SETTINGS,
+      records: prepared,
+      domain: 'settings',
+      identityKey: (row) => row.key,
+    });
   },
 
   async resetToDefaults(userId) {
@@ -98,18 +117,11 @@ export const settingsRepository = {
       return {};
     }
 
-    const entries = Object.entries(partialPreferences).map(([key, value]) => ({
-      id: crypto.randomUUID(),
-      userId,
-      key,
-      value,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      source: 'dexie',
-    }));
-
+    const entries = Object.entries(partialPreferences);
     if (!entries.length) return {};
-    await settingsTable().bulkPut(entries);
+    await db.transaction('rw', settingsTable(), async () => {
+      for (const [key, value] of entries) await this.updateOne(userId, key, value);
+    });
     return partialPreferences;
   },
 
