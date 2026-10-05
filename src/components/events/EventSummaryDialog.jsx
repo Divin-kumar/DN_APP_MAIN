@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { CalendarDays, Check, Circle } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import { getEventStatus } from '../../utils/eventStatus';
+import { getMomentTypeLabel } from '../../utils/codeLists';
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -9,7 +10,7 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime()) ? 'Date to be decided' : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 };
 
-export default function EventSummaryDialog({ event, onClose }) {
+export default function EventSummaryDialog({ event, momentTypes, onClose }) {
   const [expandedActivities, setExpandedActivities] = useState({});
   if (!event) return null;
   const activities = event.activities || [];
@@ -20,7 +21,7 @@ export default function EventSummaryDialog({ event, onClose }) {
     <ModalDialog title="Event summary" onClose={onClose} className="event-summary-dialog">
       <div className="event-summary-content">
         <header className="event-summary-header">
-          <span><CalendarDays size={15} /> {event.type || 'Life moment'}</span>
+          <span><CalendarDays size={15} /> {getMomentTypeLabel(event, momentTypes)}</span>
           <h3>{event.name || 'Untitled moment'}</h3>
           <p>{formatDate(event.date)} · {statusLabel}</p>
         </header>

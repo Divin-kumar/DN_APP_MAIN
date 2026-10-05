@@ -1,7 +1,7 @@
 /* Compact event cards used by the event list and focus-mode entry point. */
 import { CalendarDays, Pencil, Trash2 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
-import { getCodeListLabel } from '../../utils/codeLists';
+import { getMomentTypeLabel } from '../../utils/codeLists';
 
 const getBirthdayAge = (value) => {
   if (!value) return null;
@@ -51,7 +51,7 @@ export default function EventList({ events, selectedId, onSelect, onOpenWorkspac
                 <div style={styles.textBlock}>
                   <strong style={styles.eventName}>{event.name}</strong>
                   <div style={styles.meta}><CalendarDays size={15} style={styles.metaIcon} /> {new Date(event.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
-                  <div style={styles.meta}><span style={styles.metaTag}>🏷</span> {event.type === 'Other' ? event.customType || 'Other' : getCodeListLabel('eventTypes', event.type, adminValues.eventTypes)}</div>
+                  <div style={styles.meta}><span style={styles.metaTag}>🏷</span> {getMomentTypeLabel(event, adminValues.eventTypes)}</div>
                   {birthdayAge !== null ? <div className="event-age" style={styles.meta}>Age: {birthdayAge} years</div> : null}
                 </div>
               </button>

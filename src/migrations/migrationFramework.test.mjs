@@ -48,6 +48,14 @@ test('duplicate detection distinguishes exact duplicates from same-ID conflicts'
   assert.equal(result.kept.length, 0);
 });
 
+test('migration code-list duplicate detection uses canonical repository normalization', async () => {
+  const existing = [{ id: 'list-1', userId: principalId, listKey: 'eventTypes', entryValue: 'Family Celebration', label: 'Family Day' }];
+  const incoming = [{ id: 'list-2', userId: principalId, listKey: 'eventTypes', entryValue: ' family   celebration ', label: 'Family Day' }];
+  const result = await detectMigrationDuplicates('codeLists', incoming, existing);
+  assert.equal(result.duplicates.length, 1);
+  assert.equal(result.kept.length, 0);
+});
+
 test('dataset builder flattens embedded event children and preserves parent links', () => {
   const sources = {
     firebase: {

@@ -1,12 +1,14 @@
+export const ACTIVITY_PRIORITY_OPTIONS = Object.freeze([
+  { value: 'low', label: 'Low', active: true, isActive: true },
+  { value: 'medium', label: 'Medium', active: true, isActive: true },
+  { value: 'high', label: 'High', active: true, isActive: true },
+]);
+
 export const DEFAULT_CODE_LISTS = Object.freeze({
   eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
   incomeTypes: ['Salary', 'Freelance', 'Bonus'],
   expenseCategories: ['Food', 'Hospital', 'Shopping', 'Travel', 'Entertainment'],
-  activityPriorities: [
-    { value: 'low', label: 'Low priority', active: true },
-    { value: 'medium', label: 'Medium priority', active: true },
-    { value: 'high', label: 'High priority', active: true },
-  ],
+  activityPriorities: ACTIVITY_PRIORITY_OPTIONS,
   reminderPresets: [
     { value: '09:00', label: 'Morning (9:00 AM)', active: true },
     { value: '12:00', label: 'Midday (12:00 PM)', active: true },
@@ -122,15 +124,19 @@ export const getActiveCodeListMeta = (listKey, customValues = DEFAULT_CODE_LISTS
 
 export const getCodeListItems = (listKey, customValues) => getActiveCodeListMeta(listKey, customValues).map((item) => item.value);
 
-export const getCodeListLabel = (listKey, value, customValues) => {
-  const entry = getCodeListMeta(listKey, customValues).find((item) => item.value === value);
-  return entry?.label || value || 'Unknown';
+export const getCodeListLabel = (listKey, value, customValues, fallbackLabel = null) => {
+  const normalizedValue = normalizeCodeListIdentityValue(value);
+  const entry = getCodeListMeta(listKey, customValues).find((item) => normalizeCodeListIdentityValue(item.value) === normalizedValue);
+  return entry?.label || fallbackLabel || value || 'Unknown';
 };
 
-export const getActivityPriorityLabel = (value) => {
-  const entry = getCodeListMeta('activityPriorities').find((item) => item.value === value);
-  return entry?.label || 'Medium priority';
+export const getMomentTypeLabel = (event, customValues) => {
+  if (!event?.type) return 'Personal';
+  if (event.type === 'Other') return event.customType || 'Other';
+  return getCodeListLabel('eventTypes', event.type, customValues, 'Other');
 };
+
+export const getActivityPriorityLabel = (value) => getCodeListLabel('activityPriorities', value, ACTIVITY_PRIORITY_OPTIONS, 'Medium');
 
 export const getReminderPresetLabel = (value) => {
   const entry = getCodeListMeta('reminderPresets').find((item) => item.value === value);

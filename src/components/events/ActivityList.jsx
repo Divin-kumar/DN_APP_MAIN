@@ -11,6 +11,7 @@ import { useState } from 'react';
 // Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
 import useSwipeActions from '../../hooks/useSwipeActions';
+import { ACTIVITY_PRIORITY_OPTIONS, getActivityPriorityLabel } from '../../utils/codeLists';
 
 // Main component. It receives the event name, the list of activities, money connected to each activity,
 // and callback functions that tell the parent screen what action the user wants to do.
@@ -101,6 +102,9 @@ export default function ActivityList({
           // Check whether the expense panel for this activity is currently open.
           const expensesOpen = Boolean(expandedExpenses[activity.id]);
           const isCancelled = activity.cancelled || activity.status === 'cancelled';
+          const priorityValue = ACTIVITY_PRIORITY_OPTIONS.some((option) => option.value === String(activity.priority || '').toLowerCase())
+            ? String(activity.priority || '').toLowerCase()
+            : 'medium';
 
           // See whether this activity has any linked expenses at all.
           const hasExpenses = activityExpenses.length > 0;
@@ -191,7 +195,7 @@ export default function ActivityList({
                   <span className={`event-activity-status${activity.completed ? ' complete' : ''}${isCancelled ? ' cancelled' : ''}`}>{isCancelled ? 'Cancelled' : activity.completed ? 'Complete' : overdue ? 'Overdue' : 'To do'}</span>
 
                   {/* Priority tells how urgent or important the task is. */}
-                  <span className={`event-activity-priority ${activity.priority || 'medium'}`}>{activity.priority || 'medium'}</span>
+                  <span className={`event-activity-priority ${priorityValue}`}>{getActivityPriorityLabel(priorityValue)}</span>
                 </div>
 
                 {/* Show the event name and due date together for context. */}

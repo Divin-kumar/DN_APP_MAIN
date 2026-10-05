@@ -8,6 +8,7 @@ import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import { getDashboardVisibleEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { downloadBlob } from '../../../utils/download';
+import { getMomentTypeLabel } from '../../../utils/codeLists';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -211,7 +212,7 @@ const getGreetingMessage = (event, greetingTemplates = {}, momentTypes = []) => 
   const configuredTemplate = resolveGreetingTemplate(type, greetingTemplates, momentTypes);
   if (!configuredTemplate) return null;
 
-  const eventName = String(event?.type || event?.name || 'Celebration').trim() || 'Celebration';
+  const eventName = String(event?.type ? getMomentTypeLabel(event, momentTypes) : event?.name || 'Celebration').trim() || 'Celebration';
   const nextOccurrenceDate = getNextOccurrenceForStatus(event);
   const eventDate = formatDisplayDate(nextOccurrenceDate || getEventDate(event));
   const name = getGreetingName(event);
@@ -325,12 +326,13 @@ function EventSummaryModal({ event, onClose }) {
   const statusText = eventStatus === 'Upcoming' && daysRemaining !== null && daysRemaining <= 3 && !isRecurring ? 'Event is approaching' : eventStatus;
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
+  const eventTypeLabel = getMomentTypeLabel(event, momentTypes);
   const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
 
   const handleDownload = () => {
     const lines = [
       `${event.name || 'Untitled event'}`,
-      `Type: ${event.type || 'Event'}`,
+      `Type: ${eventTypeLabel}`,
       `Date: ${formatDisplayDate(eventDate)}`,
       `Status: ${statusText}`,
       '',
@@ -364,7 +366,7 @@ function EventSummaryModal({ event, onClose }) {
             <h4 style={styles.heroTitle}>{event.name || 'Untitled event'}</h4>
           </div>
           <div style={styles.heroMeta}>
-            <span style={styles.typePill}>{event.type || 'Event'}</span>
+            <span style={styles.typePill}>{eventTypeLabel}</span>
             <strong style={styles.daysText}>
               {daysRemaining === null ? 'Date pending' : daysRemaining === 0 ? 'Today' : `${daysRemaining} days left`}
             </strong>
@@ -432,7 +434,7 @@ function GreetingCardModal({ event, greeting, onClose, onCopy }) {
     <ModalDialog title="Today's greeting" onClose={onClose} className="dashboard-greeting-modal">
       <article className="dashboard-greeting-card-full">
         <span className="dashboard-greeting-card-kicker"><Sparkles size={15} /> A greeting for today</span>
-        <span className="dashboard-greeting-card-event">{event.name || event.type || 'On this day'} · {formatDisplayDate(new Date())}</span>
+        <span className="dashboard-greeting-card-event">{event.name || getMomentTypeLabel(event, momentTypes) || 'On this day'} · {formatDisplayDate(new Date())}</span>
         <h2>{greeting.title}</h2>
         <p className="free-text-content">{greeting.body}</p>
       </article>
@@ -449,6 +451,7 @@ export default function DashboardOverview() {
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
   const showToast = useAppStore((state) => state.showToast);
+  const profile = useAppStore((state) => state.profile);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const { events, loading, loadEvents } = useEventStore();
@@ -480,7 +483,7 @@ export default function DashboardOverview() {
   const focusEvent = upcomingEvents[0] || events[0] || null;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const profileName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || (isGuest ? 'Guest' : 'there');
+  const profileName = (profile?.nickname || profile?.displayName || user?.displayName || 'there').split(' ')[0];
   const focusDate = focusEvent ? getNextOccurrenceForStatus(focusEvent) : null;
   const daysUntilFocus = focusDate ? getDaysRemaining(focusDate) : null;
   const today = new Date();
@@ -523,7 +526,7 @@ export default function DashboardOverview() {
           {spotlightEvent ? (
             <button type="button" className="dashboard-spotlight" onClick={() => setSelectedEvent(spotlightEvent)}>
               <span className="dashboard-spotlight-date">{formatDisplayDate(spotlightDate)}</span>
-              <strong>{spotlightEvent.name || spotlightEvent.type || 'A life moment'}</strong>
+              <strong>{spotlightEvent.name || getMomentTypeLabel(spotlightEvent, momentTypes) || 'A life moment'}</strong>
               <span>{spotlightDate ? `${today.getFullYear() - spotlightDate.getFullYear()} ${today.getFullYear() - spotlightDate.getFullYear() === 1 ? 'year' : 'years'} ago` : 'A moment to remember'}</span>
             </button>
           ) : (
@@ -546,7 +549,7 @@ export default function DashboardOverview() {
                 {upcomingEvents.map((event) => {
                   const date = getNextOccurrenceForStatus(event, today);
                   const days = getDaysRemaining(date);
-                  return <button type="button" className="dashboard-upcoming-row" key={event.id || event.firestoreId} onClick={() => setSelectedEvent(event)}><span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span><span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span><span className="dashboard-upcoming-arrow" aria-hidden="true">›</span></button>;
+                    return <button type="button" className="dashboard-upcoming-row" key={event.id || event.firestoreId} onClick={() => setSelectedEvent(event)}><span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span><span className="dashboard-upcoming-copy"><strong>{event.name || getMomentTypeLabel(event, momentTypes) || 'Life moment'}</strong><small>{getMomentTypeLabel(event, momentTypes)} · {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span><span className="dashboard-upcoming-arrow" aria-hidden="true">›</span></button>;
                 })}
               </div>
             </div>

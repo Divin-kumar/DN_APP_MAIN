@@ -4,7 +4,7 @@
  * Purpose:
  * A configuration screen for custom categories and defaults that shape the user experience.
  * This file lets people define the labels used throughout the app for moments, income, expense,
- * and reminder behavior without changing the underlying software code.
+ * and reminder behavior without changing the underlying software code. Activity priorities are fixed.
  *
  * Main Responsibilities:
  * - manage reusable list values used across the app
@@ -34,8 +34,6 @@ const getRecordUsageCount = (listKey, value, state) => {
       return expenses.filter((expense) => expense.category === value).length;
     case 'incomeTypes':
       return incomes.filter((income) => income.type === value).length;
-    case 'activityPriorities':
-      return events.reduce((count, event) => count + (event.activities || []).filter((activity) => activity.priority === value).length, 0);
     case 'reminderPresets':
       return preferences?.notifications?.reminderTime === value ? 1 : 0;
     default:
@@ -439,7 +437,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       {warningValue ? (
         <ModalDialog title="Value is currently in use" onClose={() => setWarningValue(null)}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>
-            {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : listKey === 'activityPriorities' ? 'activity record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
+            {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
             Deleting this value may affect existing records and reporting.
           </div>
           <div className="settings-actions">
@@ -470,7 +468,6 @@ export default function CodeLists() {
       <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
       <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Stable value" allowLabels />
       <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Stable value" allowLabels />
-      <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
       <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
 
       <section className="settings-section">
@@ -478,7 +475,7 @@ export default function CodeLists() {
           <span className="settings-accordion-icon"><BellRing size={18} /></span>
           <div>
             <h3>Notes</h3>
-            <p>Only supported code lists are managed here. Derived statuses and attachment/memory taxonomies stay out of scope for now.</p>
+            <p>Activity priorities are fixed as Low, Medium, and High so filtering, sorting, and urgency cues stay consistent. Other supported code lists can be customized here. Derived statuses and attachment/memory taxonomies stay out of scope for now.</p>
           </div>
         </div>
       </section>

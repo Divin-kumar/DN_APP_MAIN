@@ -18,7 +18,7 @@ import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { downloadBlob } from '../utils/download';
-import { getActiveCodeListMeta, getCodeListLabel } from '../utils/codeLists';
+import { ACTIVITY_PRIORITY_OPTIONS, getCodeListLabel, getMomentTypeLabel } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
 import useSwipeActions from '../hooks/useSwipeActions';
 import usePersistentSort from '../hooks/usePersistentSort';
@@ -27,6 +27,7 @@ import EventSummaryDialog from '../components/events/EventSummaryDialog';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+const momentTypeLabel = (event, momentTypes) => getMomentTypeLabel(event, momentTypes);
 
 const getMomentGalleryIcon = (type = '') => {
   const normalized = String(type).toLowerCase();
@@ -68,7 +69,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEdit, onCancel, onDelete }) {
+function EventStoryCard({ event, momentTypes, expenseTotal, viewMode, onOpen, onSummary, onEdit, onCancel, onDelete }) {
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
@@ -122,11 +123,11 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
             {viewMode === 'cards' && !galleryImage ? <GalleryIcon className="event-story-gallery-fallback-icon" size={32} strokeWidth={1.5} /> : null}
             <span className={viewMode === 'cards' ? 'event-story-gallery-date' : ''}>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
             <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
-            <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
+            <i>{momentTypeLabel(event, momentTypes).slice(0, 1).toUpperCase()}</i>
           </span>
           <span className="event-story-copy">
             <span className="event-story-meta">
-              <span>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
+              <span>{momentTypeLabel(event, momentTypes)}</span>
             </span>
             <strong>{event.name || 'A life moment'}</strong>
             <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
@@ -145,12 +146,13 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
 }
 
 function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorite }) {
+  const momentTypes = useAppStore((state) => state.adminValues.eventTypes);
   const nextDate = getTimelineDate(event);
   return (
     <div className="activity-event-option">
       <button type="button" className="activity-event-option-main" onClick={onChoose}>
         <span className="activity-event-option-date"><strong>{nextDate ? nextDate.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</strong><small>{nextDate ? nextDate.toLocaleDateString('en-GB', { month: 'short' }) : 'Date'}</small></span>
-        <span className="activity-event-option-copy"><strong>{event.name || 'Life moment'}</strong><small>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'} · {dateLabel(nextDate || event.date)}</small></span>
+        <span className="activity-event-option-copy"><strong>{event.name || 'Life moment'}</strong><small>{momentTypeLabel(event, momentTypes)} · {dateLabel(nextDate || event.date)}</small></span>
         {badge ? <span className="activity-event-option-badge">{badge}</span> : null}
       </button>
       <button type="button" className={`activity-event-favorite${favorite ? ' is-favorite' : ''}`} onClick={onToggleFavorite} aria-label={favorite ? `Remove ${event.name} from favorites` : `Favorite ${event.name}`} aria-pressed={favorite}>★</button>
@@ -248,7 +250,11 @@ export default function Events() {
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
     + eventExpenses.filter((expense) => !expense.activityId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-  const categories = useMemo(() => ['All moments', ...new Set(events.map((event) => event.type || 'Personal').filter(Boolean))], [events]);
+  const categories = useMemo(() => [
+    { value: 'All moments', label: 'All moments' },
+    ...[...new Set(events.map((event) => event.type || 'Personal').filter(Boolean))]
+      .map((value) => ({ value, label: getCodeListLabel('eventTypes', value, adminValues.eventTypes) })),
+  ], [events, adminValues.eventTypes]);
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
     return [...events]
@@ -524,7 +530,7 @@ export default function Events() {
   const exportAlbum = (format) => {
     if (!focusedEvent) return;
     const activityText = (focusedEvent.activities || []).map((item) => `<article class="memory-card"><h2>${item.title}</h2><p class="date">${dateLabel(item.date)}</p><p>${item.description || 'A memory from this event.'}</p><strong>₹${(expensesByActivity[item.id] || []).reduce((sum, expense) => sum + Number(expense.amount || 0), 0).toLocaleString('en-IN')} spent</strong></article>`).join('');
-    const html = `<html><head><title>${focusedEvent.name} Memory Album</title><style>@page{size:A4;margin:0}body{margin:0;background:#f6efe5;color:#3b2f2a;font-family:Georgia,serif}.page{min-height:100vh;box-sizing:border-box;padding:80px 70px;page-break-after:always;display:flex;flex-direction:column;justify-content:center}.cover{text-align:center;background:linear-gradient(135deg,#f0d8c8,#f8efe4)}h1{font-size:64px;margin:0 0 18px}.kicker{letter-spacing:4px;text-transform:uppercase;color:#9a6d5b}.date{color:#9a6d5b;font-style:italic}.memory-card{background:#fffaf4;border:1px solid #e3cfc0;border-radius:22px;padding:28px;margin:18px 0;box-shadow:0 10px 24px rgba(104,70,51,.08)}.memory-card strong{color:#a6533d}.closing{text-align:center}</style></head><body><section class="page cover"><p class="kicker">A memory to keep</p><h1>${focusedEvent.name}</h1><p>${dateLabel(focusedEvent.date)}</p><p>${focusedEvent.type} · DN Memories</p></section><section class="page"><p class="kicker">Our memories</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.notes || 'A collection of moments, people, and stories from this special day.'}</p><p>${focusedEvent.activities?.length || 0} memories captured</p></section><section class="page"><p class="kicker">The moments</p>${activityText}</section><section class="page closing"><p class="kicker">Until next time</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.activities?.length || 0} activities</p><h2>₹${actualSpent.toLocaleString('en-IN')} spent</h2><p>${focusedEvent.notes || 'Thank you for being part of this memory.'}</p></section></body></html>`;
+    const html = `<html><head><title>${focusedEvent.name} Memory Album</title><style>@page{size:A4;margin:0}body{margin:0;background:#f6efe5;color:#3b2f2a;font-family:Georgia,serif}.page{min-height:100vh;box-sizing:border-box;padding:80px 70px;page-break-after:always;display:flex;flex-direction:column;justify-content:center}.cover{text-align:center;background:linear-gradient(135deg,#f0d8c8,#f8efe4)}h1{font-size:64px;margin:0 0 18px}.kicker{letter-spacing:4px;text-transform:uppercase;color:#9a6d5b}.date{color:#9a6d5b;font-style:italic}.memory-card{background:#fffaf4;border:1px solid #e3cfc0;border-radius:22px;padding:28px;margin:18px 0;box-shadow:0 10px 24px rgba(104,70,51,.08)}.memory-card strong{color:#a6533d}.closing{text-align:center}</style></head><body><section class="page cover"><p class="kicker">A memory to keep</p><h1>${focusedEvent.name}</h1><p>${dateLabel(focusedEvent.date)}</p><p>${momentTypeLabel(focusedEvent, adminValues.eventTypes)} · DN Memories</p></section><section class="page"><p class="kicker">Our memories</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.notes || 'A collection of moments, people, and stories from this special day.'}</p><p>${focusedEvent.activities?.length || 0} memories captured</p></section><section class="page"><p class="kicker">The moments</p>${activityText}</section><section class="page closing"><p class="kicker">Until next time</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.activities?.length || 0} activities</p><h2>₹${actualSpent.toLocaleString('en-IN')} spent</h2><p>${focusedEvent.notes || 'Thank you for being part of this memory.'}</p></section></body></html>`;
     if (format === 'pdf') {
       const popup = window.open('', '_blank');
       if (!popup) return;
@@ -552,7 +558,7 @@ export default function Events() {
           <button type="button" className="secondaryButton" onClick={() => setFocusedId(null)} style={styles.backButton}>← Back to Events</button>
           <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
-        <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{getCodeListLabel('eventTypes', focusedEvent.type, adminValues.eventTypes)}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
+        <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{momentTypeLabel(focusedEvent, adminValues.eventTypes)}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
         <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
         {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
         {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
@@ -564,6 +570,7 @@ export default function Events() {
     <EventStoryCard
       key={event.id || event.firestoreId}
       event={event}
+      momentTypes={adminValues.eventTypes}
       viewMode={viewMode}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
       onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
@@ -601,7 +608,7 @@ export default function Events() {
       </div>
 
       <div className="event-category-rail" aria-label="Filter by event category">
-        {categories.map((item) => <button key={item} type="button" className={category === item ? 'selected' : ''} onClick={() => setCategory(item)}>{item}</button>)}
+        {categories.map((item) => <button key={item.value} type="button" className={category === item.value ? 'selected' : ''} onClick={() => setCategory(item.value)}>{item.label}</button>)}
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
@@ -642,7 +649,7 @@ export default function Events() {
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
-      {summaryEvent ? <EventSummaryDialog event={summaryEvent} onClose={() => setSummaryEvent(null)} /> : null}
+      {summaryEvent ? <EventSummaryDialog event={summaryEvent} momentTypes={adminValues.eventTypes} onClose={() => setSummaryEvent(null)} /> : null}
       {drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
       {activityChooserOpen ? (
         <ModalDialog title="Choose a life moment" className="lifehub-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
@@ -671,7 +678,7 @@ export default function Events() {
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus required />
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
             <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+              {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
@@ -698,7 +705,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
             <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
             <DateField label="Date" name="activity-date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} />
             <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+              {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>

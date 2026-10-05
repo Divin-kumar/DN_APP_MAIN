@@ -34,6 +34,8 @@ const defaultPreferences = {
   listSort: {},
 };
 
+export const DEFAULT_LOCAL_PROFILE = Object.freeze({ displayName: '', nickname: '', description: '', photoDataUrl: '' });
+
 const createDefaultPreferences = () => ({
   ...defaultPreferences,
   notifications: { ...defaultPreferences.notifications },
@@ -119,19 +121,23 @@ const useAppStore = create((set) => ({
   adminValues: createDefaultAdminValues(),
   preferences: createDefaultPreferences(),
   toast: null,
+  profile: DEFAULT_LOCAL_PROFILE,
 
   hydratePersistentData: async (principalId) => {
     if (!principalId) throw new Error('A repository principal is required to hydrate persistent settings.');
     const { preferences: defaultPreferencesState, adminValues: defaultAdminValues } = await ensurePersistentDefaults(principalId);
-    const [storedPreferences, storedCodeLists] = await Promise.all([
+    const [storedPreferences, storedCodeLists, storedProfile] = await Promise.all([
       settingsRepository.getPreferences(principalId),
       codeListRepository.getAll(principalId),
+      settingsRepository.getByKey(principalId, 'profile'),
     ]);
+    if (!storedProfile) await settingsRepository.setOne(principalId, 'profile', DEFAULT_LOCAL_PROFILE);
     const normalizedPreferences = normalizePreferences(storedPreferences && Object.keys(storedPreferences).length ? storedPreferences : defaultPreferencesState);
     const normalizedAdminValues = Object.keys(storedCodeLists || {}).length ? mapCodeListRows(storedCodeLists) : { ...defaultAdminValues, ...mapCodeListRows(storedCodeLists) };
     set({
       principalId,
       preferences: normalizedPreferences,
+      profile: storedProfile?.value || DEFAULT_LOCAL_PROFILE,
       adminValues: normalizedAdminValues,
       persistentReady: true,
       persistenceError: null,
@@ -187,6 +193,7 @@ const useAppStore = create((set) => ({
       await db.transaction('rw', db.table(DATABASE_TABLES.SETTINGS), db.table(DATABASE_TABLES.CODE_LISTS), async () => {
         await settingsRepository.resetToDefaults(principalId);
         await Promise.all(Object.entries(preferences).map(([key, value]) => settingsRepository.updateOne(principalId, key, value)));
+        await settingsRepository.updateOne(principalId, 'profile', state.profile || DEFAULT_LOCAL_PROFILE);
         for (const [listKey, entries] of Object.entries(adminValues)) {
           const normalized = serializeCodeListEntries(entries);
           await codeListRepository.deleteList(principalId, listKey);
@@ -219,6 +226,22 @@ const useAppStore = create((set) => ({
     }
   },
 
+  setProfile: async (nextProfile) => {
+    const state = useAppStore.getState();
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active local profile is available.');
+    const previous = state.profile;
+    const profile = { ...previous, ...nextProfile };
+    set({ profile, persistenceError: null });
+    try {
+      await settingsRepository.updateOne(principalId, 'profile', profile);
+      return profile;
+    } catch (error) {
+      set({ profile: previous, persistenceError: error });
+      throw error;
+    }
+  },
+
   // Restore the original app defaults for theme and user preferences.
   resetPreferences: async () => {
     const state = useAppStore.getState();
@@ -231,6 +254,7 @@ const useAppStore = create((set) => ({
       await db.transaction('rw', db.table(DATABASE_TABLES.SETTINGS), async () => {
         await settingsRepository.resetToDefaults(principalId);
         await Promise.all(Object.entries(preferences).map(([key, value]) => settingsRepository.updateOne(principalId, key, value)));
+        await settingsRepository.updateOne(principalId, 'profile', state.profile || DEFAULT_LOCAL_PROFILE);
       });
       return preferences;
     } catch (error) {

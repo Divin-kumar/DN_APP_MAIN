@@ -7,6 +7,7 @@ import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
+import { getCodeListLabel, getMomentTypeLabel } from '../utils/codeLists';
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 const eventDate = (event) => {
@@ -32,6 +33,7 @@ const nextEventDate = (event) => {
 export default function Insights() {
   const [search, setSearch] = useState('');
   const principal = useAppStore((state) => state.principal);
+  const adminValues = useAppStore((state) => state.adminValues);
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
   const { events, loadEvents } = useEventStore();
@@ -56,7 +58,7 @@ export default function Insights() {
       return result;
     }, {});
     return Object.entries(groups).sort((first, second) => second[1] - first[1]);
-  }, [events]);
+  }, [events, adminValues.eventTypes]);
   const expenseCategoryRows = useMemo(() => {
     const groups = expenses.reduce((result, expense) => {
       const category = expense.category || 'Other';
@@ -145,8 +147,8 @@ export default function Insights() {
           <PanelHeading icon={CalendarDays} title="Events overview" detail="Your chapters across time" />
           <div className="insights-timeline-stats"><span><strong>{nextEvents.length}</strong> upcoming</span><span><strong>{pastEvents.length}</strong> archived</span><span><strong>{events.reduce((sum, event) => sum + (event.activities || []).length, 0)}</strong> planned steps</span></div>
           <div className="insights-milestones-grid">
-            <MilestoneList title="Next milestones" events={searchedUpcoming} emptyText="No matching upcoming moments." useNextDate />
-            <MilestoneList title="Recently remembered" events={searchedPast} emptyText="No matching archived moments." />
+            <MilestoneList title="Next milestones" events={searchedUpcoming} momentTypes={adminValues.eventTypes} emptyText="No matching upcoming moments." useNextDate />
+            <MilestoneList title="Recently remembered" events={searchedPast} momentTypes={adminValues.eventTypes} emptyText="No matching archived moments." />
           </div>
         </section>
 
@@ -160,7 +162,7 @@ export default function Insights() {
 
         <section className="insights-panel">
           <PanelHeading icon={HeartPulse} title="Event categories" detail="The moments you make room for" />
-          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{name}</span><i><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
+          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{getCodeListLabel('eventTypes', name, adminValues.eventTypes)}</span><i><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
         </section>
 
         <section className="insights-panel">
@@ -183,7 +185,7 @@ export default function Insights() {
 
         <section className="insights-panel">
           <PanelHeading icon={ArrowDownRight} title="Spending by category" detail="Where expenses are recorded" />
-          {expenseCategoryRows.length ? <div className="category-insight-list">{expenseCategoryRows.map(([category, amount]) => <div key={category} className="category-insight-row"><span>{category}</span><i><b style={{ width: `${Math.max(8, (amount / Math.max(1, totalExpenses)) * 100)}%` }} /></i><strong>{money(amount)}</strong></div>)}</div> : <p className="insights-muted">Add expenses to see your spending breakdown.</p>}
+          {expenseCategoryRows.length ? <div className="category-insight-list">{expenseCategoryRows.map(([category, amount]) => <div key={category} className="category-insight-row"><span>{getCodeListLabel('expenseCategories', category, adminValues.expenseCategories)}</span><i><b style={{ width: `${Math.max(8, (amount / Math.max(1, totalExpenses)) * 100)}%` }} /></i><strong>{money(amount)}</strong></div>)}</div> : <p className="insights-muted">Add expenses to see your spending breakdown.</p>}
         </section>
 
         <section className="insights-panel">
@@ -208,9 +210,9 @@ function PanelHeading({ icon: Icon, title, detail }) {
   return <div className="insights-panel-heading"><span><Icon size={17} /></span><div><h3>{title}</h3><small>{detail}</small></div></div>;
 }
 
-function MilestoneList({ title, events, emptyText, useNextDate = false }) {
+function MilestoneList({ title, events, momentTypes, emptyText, useNextDate = false }) {
   return <div className="milestone-list"><h4>{title}</h4>{events.length ? events.map((event) => {
     const date = useNextDate ? nextEventDate(event) : eventDate(event);
-    return <div className="milestone-row" key={event.id || event.firestoreId}><span>{date?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '—'}</span><strong>{event.name || 'Life moment'}</strong><small>{event.type || 'Personal'}</small></div>;
+    return <div className="milestone-row" key={event.id || event.firestoreId}><span>{date?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '—'}</span><strong>{event.name || 'Life moment'}</strong><small>{getMomentTypeLabel(event, momentTypes)}</small></div>;
   }) : <p>{emptyText}</p>}</div>;
 }

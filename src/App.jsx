@@ -26,6 +26,7 @@ const Financials = lazy(() => import('./pages/Financials'));
 const Income = lazy(() => import('./pages/Income'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Profile = lazy(() => import('./pages/Profile'));
 const DataBackup = lazy(() => import('./pages/DataBackup'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
@@ -171,6 +172,7 @@ export default function App() {
               <Route path="expenses" element={loadScreen(<Expenses />, 'expenses')} />
             </Route>
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
+            <Route path="profile" element={loadScreen(<Profile />, 'profile')} />
             <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />

@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import ModalDialog from '../components/common/ModalDialog';
 import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Database, Download, FileCheck2, HardDrive, Heart, Layers3, ShieldCheck, Smartphone, Upload, WalletCards } from 'lucide-react';
 import { db } from '../database/index.js';
 import { DATABASE_TABLES } from '../database/tables.js';
@@ -8,6 +9,7 @@ import { createBackupArtifact, previewRestoreBackup, restoreBackupArtifact, vali
 import useAppStore from '../store/useAppStore.js';
 import { buildBackupFilename } from '../utils/backupFilename.js';
 import { downloadBlob } from '../utils/download.js';
+import { isGoogleDriveConfigured, pickBackupFromGoogleDrive, primeGoogleDrive, saveBackupToFiles, uploadBackupToGoogleDrive } from '../services/googleDriveBackup.js';
 import './data-backup.css';
 
 const BACKUP_STATUS_KEY = 'lifehub_last_backup_status';
@@ -106,6 +108,10 @@ export default function DataBackup() {
   const [restorePreview, setRestorePreview] = useState(null);
   const [restoreResolution, setRestoreResolution] = useState('keep-existing');
   const [activeSection, setActiveSection] = useState('overview');
+  const [destinationDialogOpen, setDestinationDialogOpen] = useState(false);
+  const [restoreSourceDialogOpen, setRestoreSourceDialogOpen] = useState(false);
+  const [pendingBackup, setPendingBackup] = useState(null);
+  const restoreFileInput = useRef(null);
 
   useEffect(() => setDeviceName(principal?.deviceName || ''), [principal?.deviceName]);
 
@@ -134,7 +140,7 @@ export default function DataBackup() {
 
   useEffect(() => { if (persistentReady && principalId) void refreshHealth(); }, [persistentReady, principalId, refreshHealth]);
 
-  const exportBackup = async () => {
+  const prepareBackup = async () => {
     if (!principalId) return;
     setBusy(true);
     setStatus('');
@@ -144,18 +150,51 @@ export default function DataBackup() {
       const integrity = await verifyBackupArtifactIntegrity(artifact);
       if (!integrity.valid) throw new Error('The backup could not be verified, so it was not downloaded.');
       const personalRecordCount = [...PERSONAL_BACKUP_DOMAINS].reduce((count, domain) => count + (artifact.payload[domain]?.length || 0), 0);
-      downloadBlob(new Blob([JSON.stringify(artifact, null, 2)], { type: 'application/json' }), filename);
+      const blob = new Blob([JSON.stringify(artifact, null, 2)], { type: 'application/json' });
       const info = { filename, createdAt: artifact.createdAt, deviceName: principal?.deviceName || getFilenameDeviceName(filename), recordCount: personalRecordCount, verified: true, verifiedAt: new Date().toISOString() };
-      setProtectionBackup(info);
-      setVerificationStatus(true);
-      setLastVerified(info.verifiedAt);
-      writeSavedBackupStatus(info);
-      setStatus('Your backup is ready. Save the file somewhere you trust.');
-      showToast('Backup created', 'success');
+      setPendingBackup({ blob, filename, info });
+      setDestinationDialogOpen(true);
     } catch (error) {
       setStatus(error?.message || 'Backup creation failed.');
       showToast('Backup creation failed', 'danger');
     } finally { setBusy(false); }
+  };
+
+  const savePreparedBackup = async (destination) => {
+    if (!pendingBackup) return;
+    setBusy(true);
+    let destinationMessage = '';
+    try {
+      if (destination === 'device') {
+        downloadBlob(pendingBackup.blob, pendingBackup.filename);
+      } else if (destination === 'icloud') {
+        const result = await saveBackupToFiles(pendingBackup);
+        if (result === 'unsupported') {
+          downloadBlob(pendingBackup.blob, pendingBackup.filename);
+          destinationMessage = 'Backup downloaded. Move it to iCloud Drive using Files.';
+        }
+      } else if (destination === 'google') {
+        await uploadBackupToGoogleDrive(pendingBackup);
+      }
+      const info = pendingBackup.info;
+      setProtectionBackup(info);
+      setVerificationStatus(true);
+      setLastVerified(info.verifiedAt);
+      writeSavedBackupStatus(info);
+      setDestinationDialogOpen(false);
+      setPendingBackup(null);
+      if (destination === 'google') showToast('Backup saved to Google Drive', 'success');
+      else if (destination === 'icloud') showToast(destinationMessage || 'Choose Save to Files, then iCloud Drive.', 'success', { duration: 4000 });
+      else showToast('Backup downloaded to this device', 'success');
+    } catch (error) {
+      if (error?.name === 'AbortError') return;
+      showToast(error?.message || 'Backup destination failed.', 'danger');
+    } finally { setBusy(false); }
+  };
+
+  const cancelBackupDestination = () => {
+    setDestinationDialogOpen(false);
+    setPendingBackup(null);
   };
 
   const verifyFile = async (file) => {
@@ -259,10 +298,10 @@ export default function DataBackup() {
       <section className="db-actions-section" aria-labelledby="db-actions-title">
         <div className="db-section-heading"><h2 id="db-actions-title">Backup &amp; Restore</h2><p>Everything stays in your hands.</p></div>
         <div className="db-action-grid">
-          <button className={`db-action-card db-action-create ${!verificationStatus ? 'is-primary' : ''}`} type="button" disabled={busy || !principalId} onClick={() => void exportBackup()}>
+          <button className={`db-action-card db-action-create ${!verificationStatus ? 'is-primary' : ''}`} type="button" disabled={busy || !principalId} onClick={() => void prepareBackup()}>
             <span className="db-action-icon"><Download size={19} /></span><span className="db-action-copy"><strong>{busy ? 'Preparing backup…' : verificationStatus ? 'Create another backup' : 'Create Backup'}</strong><small>{verificationStatus ? 'Save a fresh copy of your data' : 'Private, verified and saved to your device'}</small></span><ChevronRight className="db-action-arrow" size={17} />
           </button>
-          <label className="db-action-card db-action-restore"><span className="db-action-icon"><Upload size={19} /></span><span className="db-action-copy"><strong>{restoreCandidate ? 'Choose a different backup' : 'Restore Backup'}</strong><small>{restoreCandidate ? 'Select another file' : 'Choose a backup file to continue'}</small></span><ChevronRight className="db-action-arrow" size={17} /><input type="file" accept="application/json,.json" hidden disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; void prepareRestore(file); }} /></label>
+          <button className="db-action-card db-action-restore" type="button" disabled={busy} onClick={() => setRestoreSourceDialogOpen(true)}><span className="db-action-icon"><Upload size={19} /></span><span className="db-action-copy"><strong>{restoreCandidate ? 'Choose a different backup' : 'Restore Backup'}</strong><small>{restoreCandidate ? 'Select another file' : 'Choose where to import from'}</small></span><ChevronRight className="db-action-arrow" size={17} /></button>
           <label className="db-action-card db-action-verify"><span className="db-action-icon"><FileCheck2 size={19} /></span><span className="db-action-copy"><strong>Verify Backup</strong><small>Check a backup file’s integrity</small></span><ChevronRight className="db-action-arrow" size={17} /><input type="file" accept="application/json,.json" hidden disabled={busy} onChange={(event) => void verifyFile(event.target.files?.[0])} /></label>
         </div>
       </section>
@@ -286,6 +325,27 @@ export default function DataBackup() {
         <button type="button" className="db-primary-button db-restore-button" disabled={busy || !canResolveRestore} onClick={() => void restoreBackup()}><Upload size={16} />Restore to this device</button>
         <p className="db-privacy-note"><ShieldCheck size={14} />Nothing changes until you confirm the restore.</p>
       </section> : null}
+
+      <input ref={restoreFileInput} type="file" accept="application/json,.json" hidden disabled={busy} onChange={(event) => { const file = event.currentTarget.files?.[0]; event.currentTarget.value = ''; setRestoreSourceDialogOpen(false); void prepareRestore(file); }} />
+
+      {destinationDialogOpen ? <ModalDialog title="Create Backup" onClose={cancelBackupDestination} className="db-destination-dialog">
+        <p className="db-destination-intro">Choose where to save this verified backup. DN keeps your data on this device; this does not turn on sync.</p>
+        <div className="db-destination-options">
+          <button type="button" disabled={busy} onClick={() => pendingBackup ? void savePreparedBackup('device') : void prepareBackup()}><Download size={18} /><span><strong>Save to Device</strong><small>Download the backup file</small></span><ChevronRight size={17} /></button>
+          <button type="button" disabled={busy} onClick={() => pendingBackup ? void savePreparedBackup('icloud') : void prepareBackup()}><HardDrive size={18} /><span><strong>Save to iCloud Drive</strong><small>Choose Save to Files, then iCloud Drive</small></span><ChevronRight size={17} /></button>
+          <button type="button" disabled={busy} onClick={() => pendingBackup ? void savePreparedBackup('google') : void prepareBackup()}><Database size={18} /><span><strong>Save to Google Drive</strong><small>{isGoogleDriveConfigured() ? 'Google is used only for this file transfer' : 'Requires Google Drive setup for this DN deployment'}</small></span><ChevronRight size={17} /></button>
+        </div>
+        {busy ? <p className="db-destination-progress" role="status">Preparing verified backup…</p> : null}
+      </ModalDialog> : null}
+
+      {restoreSourceDialogOpen ? <ModalDialog title="Restore Backup" onClose={() => setRestoreSourceDialogOpen(false)} className="db-destination-dialog">
+        <p className="db-destination-intro">Choose a source. The selected file will use DN’s existing validation and restore preview.</p>
+        <div className="db-destination-options">
+          <button type="button" onClick={() => { setRestoreSourceDialogOpen(false); restoreFileInput.current?.click(); }}><Upload size={18} /><span><strong>Import from Device</strong><small>Choose a backup file stored on this device</small></span><ChevronRight size={17} /></button>
+          <button type="button" onClick={() => { setRestoreSourceDialogOpen(false); restoreFileInput.current?.click(); }}><HardDrive size={18} /><span><strong>Import from iCloud Drive</strong><small>Choose iCloud Drive in the system file picker</small></span><ChevronRight size={17} /></button>
+          <button type="button" onClick={() => { setRestoreSourceDialogOpen(false); void pickBackupFromGoogleDrive().then((file) => file && prepareRestore(file)).catch((error) => showToast(error?.message || 'Google Drive import failed.', 'danger')); }}><Database size={18} /><span><strong>Import from Google Drive</strong><small>{isGoogleDriveConfigured() ? 'Select a DN backup file in Google Drive' : 'Requires Google Drive setup for this DN deployment'}</small></span><ChevronRight size={17} /></button>
+        </div>
+      </ModalDialog> : null}
     </>
   );
 
@@ -340,7 +400,7 @@ export default function DataBackup() {
         {renderProtection()}
         <nav className="db-secondary-nav" aria-label="Data and backup navigation">
           {Object.entries(sectionLabels).map(([key, label]) => (
-            <button key={key} type="button" onClick={() => { setActiveSection(key); setStatus(''); }}>
+              <button key={key} type="button" onClick={() => { setActiveSection(key); setStatus(''); if (key === 'backup') void primeGoogleDrive().catch(() => {}); }}>
               <span>{label}</span><ChevronRight size={17} aria-hidden="true" />
             </button>
           ))}

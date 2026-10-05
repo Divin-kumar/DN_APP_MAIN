@@ -211,8 +211,8 @@ test('restore normalizes duplicate code list entries by logical key', async () =
           id: 'event-duplicate-1',
           userId: principalId,
           listKey: 'eventTypes',
-          entryValue: 'Anniversary',
-          label: 'Anniversary',
+          entryValue: 'Family Celebration',
+          label: 'Family Day',
           active: true,
           isActive: true,
           createdAt: '2026-10-05T00:00:00.000Z',
@@ -223,8 +223,8 @@ test('restore normalizes duplicate code list entries by logical key', async () =
           id: 'event-duplicate-2',
           userId: principalId,
           listKey: 'eventTypes',
-          entryValue: 'Anniversary',
-          label: 'Anniversary',
+          entryValue: ' family   celebration ',
+          label: 'Family Day',
           active: true,
           isActive: true,
           createdAt: '2026-10-05T00:00:00.000Z',
@@ -247,8 +247,9 @@ test('restore normalizes duplicate code list entries by logical key', async () =
   const restoredRows = await db.table(DATABASE_TABLES.CODE_LISTS)
     .where('[userId+listKey]').equals([principalId, 'eventTypes'])
     .toArray();
-  const anniversaryRows = restoredRows.filter((row) => row.entryValue === 'Anniversary');
-  assert.equal(anniversaryRows.length, 1);
+  const familyRows = restoredRows.filter((row) => row.entryValue.toLocaleLowerCase().replace(/\s+/g, ' ').trim() === 'family celebration');
+  assert.equal(familyRows.length, 1);
+  assert.equal(familyRows[0].entryValue, 'Family Celebration');
 
   await db.delete();
 });
@@ -287,6 +288,25 @@ test('restore writes to Dexie and not localStorage', async () => {
   assert.equal(localStorage.getItem(legacyKey), 'should-remain-untouched');
 
   localStorage.removeItem(legacyKey);
+  await db.delete();
+});
+
+test('local profile settings survive backup and restore without adding cloud identity', async () => {
+  await db.delete();
+  await initializeDatabase();
+  const sourcePrincipalId = 'profile-backup-source';
+  const profile = { displayName: 'Alex', nickname: 'Lex', description: 'Local profile', photoDataUrl: '' };
+  await settingsRepository.setOne(sourcePrincipalId, 'profile', profile);
+  const artifact = await createBackupArtifact({ database: db, principalId: sourcePrincipalId });
+  assert.equal(artifact.payload[DATABASE_TABLES.SETTINGS].find((row) => row.key === 'profile')?.value.displayName, 'Alex');
+
+  await db.delete();
+  await initializeDatabase();
+  const targetPrincipalId = 'profile-backup-target';
+  await restoreBackupArtifact(artifact, { database: db, targetPrincipalId });
+  const restored = await settingsRepository.getByKey(targetPrincipalId, 'profile');
+  assert.deepEqual(restored.value, profile);
+  assert.equal(artifact.payload[DATABASE_TABLES.METADATA].some((row) => String(row.key).toLowerCase().includes('google')), false);
   await db.delete();
 });
 

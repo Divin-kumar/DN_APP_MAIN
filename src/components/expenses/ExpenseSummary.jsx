@@ -1,4 +1,7 @@
 /* Summary cards derived from the currently filtered expense collection. */
+import useAppStore from '../../store/useAppStore';
+import { getCodeListLabel } from '../../utils/codeLists';
+
 const currency = (value) => {
   const number = Number(value || 0);
   return new Intl.NumberFormat('en-IN', {
@@ -9,6 +12,7 @@ const currency = (value) => {
 };
 
 export default function ExpenseSummary({ expenses }) {
+  const expenseCategories = useAppStore((state) => state.adminValues.expenseCategories);
   const total = expenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
   const categories = expenses.reduce((acc, expense) => {
     acc[expense.category] = (acc[expense.category] || 0) + Number(expense.amount || 0);
@@ -31,7 +35,7 @@ export default function ExpenseSummary({ expenses }) {
 
       <div className="summary-card" style={styles.card}>
         <span style={styles.label}>Top category</span>
-        <strong style={styles.value}>{topCategory ? topCategory[0] : '-'}</strong>
+        <strong style={styles.value}>{topCategory ? getCodeListLabel('expenseCategories', topCategory[0], expenseCategories) : '-'}</strong>
       </div>
     </div>
   );

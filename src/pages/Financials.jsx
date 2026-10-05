@@ -6,6 +6,7 @@ import { Landmark, Receipt, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
+import { getCodeListLabel } from '../utils/codeLists';
 
 const currency = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -24,13 +25,13 @@ const views = [
   { label: 'Expense', path: '/financials/expenses', icon: Receipt },
 ];
 
-function PreviewGroup({ title, path, entries, emptyLabel, isExpense = false }) {
+function PreviewGroup({ title, path, entries, emptyLabel, listKey, listValues, isExpense = false }) {
   return (
     <section className={`financials-overview-group${isExpense ? ' is-expense' : ' is-income'}`}>
       <header><h3>{title}</h3><Link to={path}>View all</Link></header>
       {entries.length ? entries.map((entry) => (
         <div className="financial-preview-row" key={entry.id || entry.firestoreId}>
-          <span><strong>{entry.name || title}</strong><small>{entry.category || entry.type || 'General'} · {dateLabel(entry.date)}</small></span>
+          <span><strong>{entry.name || title}</strong><small>{getCodeListLabel(listKey, isExpense ? entry.category : entry.type, listValues)} · {dateLabel(entry.date)}</small></span>
           <strong>{currency(entry.amount)}</strong>
         </div>
       )) : <p className="financial-empty-copy">{emptyLabel}</p>}
@@ -42,6 +43,7 @@ export default function Financials() {
   const location = useLocation();
   const isOverview = location.pathname === '/financials';
   const principal = useAppStore((state) => state.principal);
+  const adminValues = useAppStore((state) => state.adminValues);
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
   const { incomes, loadIncomes } = useIncomeStore();
@@ -78,8 +80,8 @@ export default function Financials() {
       <section className="financials-content-panel" aria-live="polite">
         {isOverview ? (
           <div className="financials-overview-grid">
-            <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." />
-            <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." isExpense />
+            <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." listKey="incomeTypes" listValues={adminValues.incomeTypes} />
+            <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." listKey="expenseCategories" listValues={adminValues.expenseCategories} isExpense />
           </div>
         ) : <Outlet />}
       </section>

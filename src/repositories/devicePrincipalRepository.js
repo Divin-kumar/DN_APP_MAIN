@@ -1,5 +1,6 @@
 import { db } from '../database/index.js';
 import { DATABASE_TABLES } from '../database/tables.js';
+import { normalizeCodeListIdentityValue } from '../utils/codeLists.js';
 
 const DEVICE_PRINCIPAL_KEY = 'devicePrincipal';
 const LEGACY_GUEST_PRINCIPAL_KEY = 'migration.guestPrincipalId';
@@ -35,7 +36,7 @@ const deduplicateOwnedRows = async (table, rows, targetPrincipalId, kind) => {
   if (kind === DATABASE_TABLES.CODE_LISTS) {
     const byValue = new Map();
     for (const row of candidates) {
-      const key = `${row.listKey}::${String(row.entryValue || '').trim().toLocaleLowerCase()}`;
+      const key = `${row.listKey}::${normalizeCodeListIdentityValue(row.entryValue ?? row.value)}`;
       const current = byValue.get(key);
       if (!current || String(row.updatedAt || '') > String(current.updatedAt || '')) byValue.set(key, row);
     }

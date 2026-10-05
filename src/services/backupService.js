@@ -3,6 +3,7 @@ import { DATABASE_SCHEMA_VERSION } from '../database/schema.js';
 import { DATABASE_TABLES } from '../database/tables.js';
 import { codeListRepository, settingsRepository } from '../repositories/index.js';
 import { normalizeBackupArtifact, normalizeManifest } from '../utils/backupManifest.js';
+import { normalizeCodeListIdentityValue } from '../utils/codeLists.js';
 
 const stableStringify = (value) => JSON.stringify(value, Object.keys(value ?? {}).sort());
 
@@ -253,9 +254,9 @@ const resolveRestoreConflicts = async (artifact, { database, targetPrincipalId, 
       for (const [groupKey, incomingRows] of incomingGroups) {
         const [userId, listKey] = groupKey.split('::');
         const currentRows = await table.where('[userId+listKey]').equals([userId, listKey]).toArray();
-        const byValue = new Map(currentRows.map((row) => [String(row.entryValue || '').trim().toLocaleLowerCase(), row]));
+        const byValue = new Map(currentRows.map((row) => [normalizeCodeListIdentityValue(row.entryValue ?? row.value), row]));
         for (const row of incomingRows) {
-          const logicalKey = String(row.entryValue || '').trim().toLocaleLowerCase();
+          const logicalKey = normalizeCodeListIdentityValue(row.entryValue ?? row.value);
           if (!byValue.has(logicalKey)) byValue.set(logicalKey, row);
         }
         mergedRows.push(...byValue.values());
@@ -333,21 +334,21 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
           const [userId, listKey] = logicalKey.split('::');
           const deduped = new Map();
           for (const row of groupRows) {
-            const candidate = String(row.entryValue ?? '').trim();
+            const candidate = String(row.entryValue ?? row.value ?? '').trim();
             if (!candidate) continue;
-            const normalized = candidate.toLocaleLowerCase();
-            const current = deduped.get(normalized) || row;
-            deduped.set(normalized, {
-              ...current,
-              ...row,
-              entryValue: candidate,
-              label: row.label || current.label || candidate,
-              active: row.active ?? current.active ?? true,
-              isActive: row.isActive ?? current.isActive ?? true,
-              canGenerateGreetingCards: row.canGenerateGreetingCards ?? current.canGenerateGreetingCards ?? true,
-              greetingTemplate: typeof row.greetingTemplate === 'string' ? row.greetingTemplate : (typeof current.greetingTemplate === 'string' ? current.greetingTemplate : ''),
-              showInDashboardUpcoming: row.showInDashboardUpcoming ?? current.showInDashboardUpcoming ?? true,
-            });
+            const normalized = normalizeCodeListIdentityValue(candidate);
+            if (!deduped.has(normalized)) {
+              deduped.set(normalized, {
+                ...row,
+                entryValue: candidate,
+                label: row.label || candidate,
+                active: row.active ?? row.isActive ?? true,
+                isActive: row.isActive ?? row.active ?? true,
+                canGenerateGreetingCards: row.canGenerateGreetingCards ?? row.generateGreetingCards ?? true,
+                greetingTemplate: typeof row.greetingTemplate === 'string' ? row.greetingTemplate : '',
+                showInDashboardUpcoming: row.showInDashboardUpcoming ?? row.showInDashboard ?? true,
+              });
+            }
           }
 
           const entries = [...deduped.values()].map((row) => ({

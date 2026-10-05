@@ -18,7 +18,7 @@ import DropdownSelect from '../components/common/DropdownSelect';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
-import { getActiveCodeListMeta } from '../utils/codeLists';
+import { ACTIVITY_PRIORITY_OPTIONS } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 
 // These are the main screens in the application.
@@ -35,6 +35,7 @@ export default function DashboardLayout() {
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
+  const profile = useAppStore((state) => state.profile);
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
@@ -187,7 +188,7 @@ export default function DashboardLayout() {
 
   // Build a readable profile label shown in the top bar.
   // If the user has a name, show it; otherwise show email or simply "Guest".
-  const profileName = user?.displayName || user?.email || 'Guest';
+  const profileName = profile?.nickname || profile?.displayName || user?.displayName || 'Local Device User';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
 
   // Quick create opens a lightweight modal for common tasks without leaving the page.
@@ -298,8 +299,8 @@ export default function DashboardLayout() {
           </button>
           <div ref={profileMenuRef} className="profile-menu-wrap">
             <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-label="Open profile and account menu" aria-expanded={profileMenuOpen} aria-haspopup="menu">
-              {user?.photoURL && !avatarError ? (
-                <img className="avatar" src={user.photoURL} alt="" style={styles.avatar} onError={() => setAvatarError(true)} />
+              {profile?.photoDataUrl && !avatarError ? (
+                <img className="avatar" src={profile.photoDataUrl} alt="" style={styles.avatar} onError={() => setAvatarError(true)} />
               ) : <span className="avatar avatar-fallback" aria-hidden="true">{initials}</span>}
               <span className="user-name" style={styles.userName}>{profileName}</span>
               <ChevronDown size={15} />
@@ -307,7 +308,7 @@ export default function DashboardLayout() {
             {profileMenuOpen ? (
               <div className="profile-menu" role="menu">
                 <div className="profile-menu-account"><strong>{profileName}</strong><span>Device Principal</span></div>
-                <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
+                <NavLink to="/profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
               </div>
             ) : null}
@@ -425,7 +426,7 @@ export default function DashboardLayout() {
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
             <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
             <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+              {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>

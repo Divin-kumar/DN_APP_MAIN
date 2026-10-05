@@ -13,6 +13,7 @@ import { MigrationRollbackManager } from './migrationRollbackManager.js';
 import { MigrationSnapshotManager } from './migrationSnapshotManager.js';
 import { transitionMigrationRun } from './migrationStateMachine.js';
 import { readFirebaseMigrationSources, readGuestMigrationSources, readSettingsMigrationSource } from './migrationSources.js';
+import { normalizeCodeListIdentityValue } from '../utils/codeLists.js';
 
 const createId = () => globalThis.crypto?.randomUUID?.() || `run-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 const ACTIVE_STATES = new Set([
@@ -120,8 +121,8 @@ export class MigrationCoordinator {
 
     const runId = createId();
     const now = this.now().toISOString();
-    let run = {
-      id: runId,
+        const exists = domain === MIGRATION_DOMAIN.CODE_LISTS
+          ? targetRows.some((row) => row.listKey === record.listKey && normalizeCodeListIdentityValue(row.entryValue ?? row.value) === normalizeCodeListIdentityValue(record.entryValue ?? record.value))
       principalId,
       principalType,
       migrationVersion,

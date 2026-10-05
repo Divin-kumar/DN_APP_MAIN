@@ -201,8 +201,8 @@ export const codeListRepository = {
 
     for (const [listKey, values] of Object.entries(DEFAULT_CODE_LISTS)) {
       const existing = await this.getList(userId, listKey);
-      const existingValues = new Set(existing.map((row) => row.entryValue.trim().toLocaleLowerCase()));
-      const missing = serializeCodeListEntries(values).filter((entry) => !existingValues.has(entry.value.trim().toLocaleLowerCase()));
+      const existingValues = new Set(existing.map((row) => normalizeCodeListIdentityValue(row.entryValue)));
+      const missing = serializeCodeListEntries(values).filter((entry) => !existingValues.has(normalizeCodeListIdentityValue(entry.value)));
       if (!missing.length) {
         result[listKey] = existing;
         continue;

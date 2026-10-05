@@ -6,6 +6,7 @@ import {
   DEFAULT_CODE_LISTS,
   getActivityPriorityLabel,
   getReminderPresetLabel,
+  getCodeListLabel,
   getCodeListItems,
   collectReferencedCodeListValues,
   getCodeListMeta,
@@ -83,8 +84,15 @@ test('missing migration steps leave data intact and do not advance the schema ve
 });
 
 test('code list helpers return readable labels', () => {
-  assert.equal(getActivityPriorityLabel('medium'), 'Medium priority');
+  assert.equal(getActivityPriorityLabel('medium'), 'Medium');
   assert.equal(getReminderPresetLabel('18:00'), 'Evening (6:00 PM)');
+});
+
+test('code-list labels resolve stable values using canonical identity normalization', () => {
+  assert.equal(getCodeListLabel('eventTypes', ' family   celebration ', [
+    { value: 'Family Celebration', label: 'Family Day' },
+  ]), 'Family Day');
+  assert.equal(getCodeListLabel('activityPriorities', 'urgent', DEFAULT_CODE_LISTS.activityPriorities, 'Medium'), 'Medium');
 });
 
 test('code list items are normalized for editing', () => {

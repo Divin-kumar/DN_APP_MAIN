@@ -292,3 +292,18 @@ html[data-theme="dark"] .db-resolution label.is-selected { background: color-mix
 html[data-theme="dark"] .db-conflict-summary { color: #e7d4ad; border-color: #6b5837; background: #30291d; }
 html[data-theme="dark"] .db-backup-intro { background: color-mix(in srgb, #496b53 18%, var(--color-card, #171d22)); }
 html[data-theme="dark"] .db-preview-outcome .has-conflicts { background: #30291d; }
+.db-destination-dialog { width: min(100% - 28px, 520px); }
+.db-destination-intro { margin: -4px 0 15px; color: var(--db-muted); font-size: .82rem; line-height: 1.5; }
+.db-destination-options { display: grid; gap: 1px; overflow: hidden; border: 1px solid var(--db-border); border-radius: 15px; background: var(--db-border); }
+.db-destination-options button { display: grid; grid-template-columns: 23px minmax(0,1fr) 18px; align-items: center; gap: 11px; min-height: 65px; padding: 10px 13px; border: 0; background: var(--db-card); color: var(--db-ink); text-align: left; font: inherit; cursor: pointer; }
+.db-destination-options button:hover:not(:disabled),.db-destination-options button:focus-visible { background: color-mix(in srgb, var(--db-accent) 6%, var(--db-card)); }
+.db-destination-options button:focus-visible { outline: 3px solid color-mix(in srgb, var(--db-accent) 50%, transparent); outline-offset: -3px; }
+.db-destination-options button:disabled { opacity: .6; cursor: progress; }
+.db-destination-options button > svg:first-child { color: var(--db-accent); }
+.db-destination-options button > svg:last-child { color: var(--db-muted); }
+.db-destination-options button span { display: grid; gap: 4px; }
+.db-destination-options button strong { font-size: .84rem; }
+.db-destination-options button small { color: var(--db-muted); font-size: .7rem; line-height: 1.35; }
+.db-destination-progress { margin: 12px 0 0; color: var(--db-muted); font-size: .77rem; }
+html[data-theme="dark"] .db-destination-options button { background: var(--color-card, #171d22); }
+html[data-theme="dark"] .db-destination-options button:hover:not(:disabled) { background: color-mix(in srgb, var(--db-accent) 14%, var(--color-card, #171d22)); }

@@ -9,6 +9,7 @@ export const VALID_SETTINGS_KEYS = Object.freeze({
   DEFAULT_EXPENSE_CATEGORY: 'defaultExpenseCategory',
   NOTIFICATIONS: 'notifications',
   LIST_SORT: 'listSort',
+  PROFILE: 'profile',
 });
 
 export const validateSettingsKey = (key) => Boolean(key && Object.values(VALID_SETTINGS_KEYS).includes(key));
@@ -32,6 +33,17 @@ export const validateSettingsValue = (key, value) => {
       valid: value && typeof value === 'object' && !Array.isArray(value),
       errors: value && typeof value === 'object' && !Array.isArray(value) ? [] : ['Notifications must be an object.'],
     };
+  }
+
+  if (key === VALID_SETTINGS_KEYS.PROFILE) {
+    const valid = value && typeof value === 'object' && !Array.isArray(value)
+      && ['displayName', 'nickname', 'description', 'photoDataUrl'].every((field) => typeof value[field] === 'string')
+      && value.displayName.length <= 80
+      && value.nickname.length <= 80
+      && value.description.length <= 500
+      && value.photoDataUrl.length <= 750_000
+      && (!value.photoDataUrl || /^data:image\/(jpeg|png|webp);base64,/.test(value.photoDataUrl));
+    return { valid, errors: valid ? [] : ['Profile must contain valid local profile text and an optional JPEG, PNG, or WebP image under 750 KB.'] };
   }
 
   return { valid: true, errors: [] };

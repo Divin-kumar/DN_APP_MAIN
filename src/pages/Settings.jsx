@@ -312,12 +312,6 @@ export default function Settings() {
     setOpenSection((current) => (current === section ? null : section));
   };
 
-  const renderProfileSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-profile-row"><strong>{profileName}</strong><span>Local Device Principal</span></div>
-    </div>
-  );
-
   const renderDefaultsSection = () => (
     <div className="settings-accordion-body">
       <div className="settings-admin-grid">
@@ -478,7 +472,7 @@ export default function Settings() {
   );
 
   const sections = [
-    { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
+    { key: 'profile', heading: 'Profile', description: 'Your local profile and life summary.', icon: UserCircle, body: <div className="settings-accordion-body"><div className="settings-profile-row"><strong>{profileName}</strong><span>Local Device User · profile details</span></div><Link className="settings-primary-button" to="/profile">Open Profile</Link></div> },
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
   ];

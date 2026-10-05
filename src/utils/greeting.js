@@ -1,4 +1,5 @@
 import { getMomentTypeGreetingTemplate } from './dashboardVisibility.js';
+import { getMomentTypeLabel } from './codeLists.js';
 
 const getEventDate = (event) => {
   const date = new Date(event?.date || event?.startDate || event?.createdAt);
@@ -59,7 +60,7 @@ export const getEventGreeting = (event, greetingTemplates = {}, momentTypes = []
   const isBirthday = type.toLowerCase().includes('birthday');
   const isAnniversary = type.toLowerCase().includes('anniversary');
   const name = greetingName(event);
-  const eventName = String(event.type || event.name || 'Celebration').trim();
+  const eventName = String(event.type ? getMomentTypeLabel(event, momentTypes) : event.name || 'Celebration').trim();
   const defaults = isBirthday
     ? `Happy {ordinal} Birthday ${name} 🎂\nWishing you a wonderful year filled with happiness, health and success.`
     : isAnniversary

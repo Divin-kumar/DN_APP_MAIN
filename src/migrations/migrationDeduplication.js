@@ -1,4 +1,5 @@
 import { canonicalFingerprint, stableStringify } from './migrationIdentity.js';
+import { normalizeCodeListIdentityValue } from '../utils/codeLists.js';
 
 const normalizeText = (value) => String(value ?? '').trim().toLocaleLowerCase();
 const minorUnits = (value) => Number.isFinite(Number(value)) ? Math.round(Number(value) * 100) : null;
@@ -34,7 +35,7 @@ const fingerprintFields = Object.freeze({
   }),
   settings: (row) => ({ userId: row.userId, key: row.key, value: row.value }),
   codeLists: (row) => ({
-    userId: row.userId, listKey: row.listKey, entryValue: normalizeText(row.entryValue),
+    userId: row.userId, listKey: row.listKey, entryValue: normalizeCodeListIdentityValue(row.entryValue ?? row.value),
     label: normalizeText(row.label), active: row.active, isActive: row.isActive,
     canGenerateGreetingCards: row.canGenerateGreetingCards,
     greetingTemplate: row.greetingTemplate, showInDashboardUpcoming: row.showInDashboardUpcoming,
@@ -50,7 +51,7 @@ const naturalIdentity = (domain, row) => {
     expenses: [row.userId, row.momentId || row.eventId || null, row.activityId || null, row.date, minorUnits(row.amount), normalizeText(row.name), normalizeText(row.category)],
     incomes: [row.userId, row.date, minorUnits(row.amount), normalizeText(row.name), normalizeText(row.type)],
     settings: [row.userId, row.key],
-    codeLists: [row.userId, row.listKey, normalizeText(row.entryValue)],
+    codeLists: [row.userId, row.listKey, normalizeCodeListIdentityValue(row.entryValue ?? row.value)],
   }[domain];
   return keys ? stableStringify(keys) : null;
 };

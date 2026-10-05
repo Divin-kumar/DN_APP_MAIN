@@ -13,7 +13,7 @@ import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDial
 import ExpenseForm from '../../../components/expenses/ExpenseForm';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
-import { getActiveCodeListMeta } from '../../../utils/codeLists';
+import { ACTIVITY_PRIORITY_OPTIONS, getCodeListLabel, getMomentTypeLabel } from '../../../utils/codeLists';
 import usePersistentSort from '../../../hooks/usePersistentSort';
 import SortControl from '../../../components/common/SortControl';
 
@@ -183,7 +183,7 @@ export default function EventWorkspaceShell() {
   const eventMood = eventStyle.includes('birth') || eventStyle.includes('wedding') || eventStyle.includes('engagement') ? 'celebration' : eventStyle.includes('vacation') || eventStyle.includes('travel') ? 'travel' : eventStyle.includes('investment') || eventStyle.includes('insurance') || eventStyle.includes('finance') ? 'finance' : eventStyle.includes('anniversary') || eventStyle.includes('marriage') ? 'romance' : 'life';
   const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
   const generatedGreeting = getEventGreeting(event, greetingTemplates, momentTypes) || {
-    title: `A moment worth celebrating: ${event.name || event.type || 'today'}`,
+    title: `A moment worth celebrating: ${event.name || getMomentTypeLabel(event, adminValues.eventTypes) || 'today'}`,
     body: event.notes || 'Wishing you a beautiful day filled with meaning and memories to treasure.',
   };
   const eventGreeting = event.greetingCard?.title
@@ -210,7 +210,7 @@ export default function EventWorkspaceShell() {
 
   const downloadGreetingCard = () => {
     const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || getMomentTypeLabel(event, adminValues.eventTypes))} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
   };
 
@@ -437,9 +437,9 @@ export default function EventWorkspaceShell() {
                 ['in-progress', 'In Progress'],
                 ['completed', 'Completed'],
                 ['cancelled', 'Cancelled'],
-                ['high', 'High Priority'],
-                ['medium', 'Medium Priority'],
-                ['low', 'Low Priority'],
+                ['high', 'High'],
+                ['medium', 'Medium'],
+                ['low', 'Low'],
               ].map(([value, label]) => (
                 <button key={value} type="button" className={activityFilter === value ? 'is-selected' : ''} aria-pressed={activityFilter === value} onClick={() => setActivityFilter(value)}>{label}</button>
               ))}
@@ -505,7 +505,7 @@ export default function EventWorkspaceShell() {
           </div>
         </div>
         <div className="event-moment-content">
-          <span className="event-moment-kicker"><Sparkles size={13} /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}</span>
+          <span className="event-moment-kicker"><Sparkles size={13} /> {getMomentTypeLabel(event, adminValues.eventTypes)}</span>
           <h1>{event.name}</h1>
           <div className="event-moment-date">
             <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}</span>
@@ -568,7 +568,7 @@ export default function EventWorkspaceShell() {
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
             <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
+              {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
@@ -595,7 +595,7 @@ export default function EventWorkspaceShell() {
       {linkExpenseActivity ? (
         <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
           {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
-          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Create an expense for this activity instead.</p>}
+          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{getCodeListLabel('expenseCategories', expense.category, adminValues.expenseCategories)} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Create an expense for this activity instead.</p>}
           <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); setExpenseDialogActivity(activity); }}><Plus size={15} aria-hidden="true" /> Create expense</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
         </ModalDialog>
       ) : null}

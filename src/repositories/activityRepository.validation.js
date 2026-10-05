@@ -24,7 +24,7 @@ export const validateActivityRecord = (record = {}) => {
   }
 
   if (record.priority && !VALID_ACTIVITY_PRIORITIES.includes(String(record.priority).toLowerCase())) {
-    errors.push('Unsupported activity priority.');
+    errors.push('Activity priority must be Low, Medium, or High.');
   }
 
   if (record.completed && !record.completedAt) {

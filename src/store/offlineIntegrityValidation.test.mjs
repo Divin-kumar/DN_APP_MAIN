@@ -28,6 +28,16 @@ const validators = {
   incomes: validateIncomeRecord,
 };
 
+test('activity priority validation accepts only fixed Low, Medium, and High keys', () => {
+  const base = { id: 'activity-priority-test', userId: 'user-1', momentId: 'moment-1', title: 'Task', date: new Date().toISOString().slice(0, 10) };
+  for (const priority of ['low', 'medium', 'high']) {
+    assert.equal(validateActivityRecord({ ...base, priority }).valid, true);
+  }
+  const custom = validateActivityRecord({ ...base, priority: 'urgent' });
+  assert.equal(custom.valid, false);
+  assert.ok(custom.errors.includes('Activity priority must be Low, Medium, or High.'));
+});
+
 const auditPrincipal = async (principalId) => {
   const [moments, activities, memories, attachments, expenses, incomes] = await Promise.all([
     momentRepository.getAll(principalId),
