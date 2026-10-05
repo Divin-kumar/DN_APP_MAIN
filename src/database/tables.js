@@ -1,6 +1,12 @@
 // Centralized table names keep database definitions and migration scaffolding aligned.
 export const DATABASE_TABLES = Object.freeze({
   METADATA: 'metadata',
+  DEVICE_REGISTRY: 'deviceRegistry',
+  SYNC_JOURNAL: 'syncJournal',
+  SYNC_TOMBSTONES: 'syncTombstones',
+  SYNC_CONFLICTS: 'syncConflicts',
+  SYNC_AUDIT: 'syncAudit',
+  GUEST_LINEAGE: 'guestLineage',
   MOMENTS: 'moments',
   ACTIVITIES: 'activities',
   MEMORIES: 'memories',

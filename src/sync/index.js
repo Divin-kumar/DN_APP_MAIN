@@ -1,0 +1,10 @@
+export { registerDevice, getDevice, updateDeviceLifecycle } from './deviceIdentity.js';
+export { appendMutationJournalEntry, getMutationJournal } from './mutationJournal.js';
+export { createRevisionEnvelope, normalizeRevision } from './revisionTracker.js';
+export { createTombstone, transitionTombstoneState } from './tombstones.js';
+export { buildSyncMetadataEnvelope, applySyncMetadataEnvelope } from './syncMetadataEnvelope.js';
+export { quarantineConflict, resolveConflict } from './conflictQuarantine.js';
+export { preserveSyncMetadataForBackup } from './backupRestoreCompatibility.js';
+export { withMigrationProvenance } from './migrationCompatibility.js';
+export { convertGuestToUser } from './guestLineage.js';
+export { appendAudit, listAuditEntries } from './audit.js';

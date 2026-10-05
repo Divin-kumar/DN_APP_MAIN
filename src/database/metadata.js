@@ -5,6 +5,7 @@ export const DATABASE_METADATA_KEYS = Object.freeze({
   MIGRATION_STATUS: 'migrationStatus',
   LAST_SUCCESSFUL_MIGRATION: 'lastSuccessfulMigration',
   ROLLBACK_STATUS: 'rollbackStatus',
+  SYNC_FOUNDATION_STATUS: 'syncFoundationStatus',
 });
 
 export const DEFAULT_METADATA = Object.freeze({
@@ -12,6 +13,7 @@ export const DEFAULT_METADATA = Object.freeze({
   migrationStatus: 'pending',
   lastSuccessfulMigration: null,
   rollbackStatus: 'none',
+  syncFoundationStatus: 'ready',
   updatedAt: null,
 });
 
@@ -41,6 +43,12 @@ export const buildMetadataEntries = (schemaVersion = DATABASE_SCHEMA_VERSION) =>
       value: DEFAULT_METADATA.rollbackStatus,
       updatedAt: now,
       status: DEFAULT_METADATA.rollbackStatus,
+    },
+    {
+      key: DATABASE_METADATA_KEYS.SYNC_FOUNDATION_STATUS,
+      value: DEFAULT_METADATA.syncFoundationStatus,
+      updatedAt: now,
+      status: DEFAULT_METADATA.syncFoundationStatus,
     },
   ];
 };

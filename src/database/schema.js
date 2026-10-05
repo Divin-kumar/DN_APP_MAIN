@@ -1,9 +1,15 @@
 import { DATABASE_TABLES } from './tables.js';
 
-export const DATABASE_SCHEMA_VERSION = 2;
+export const DATABASE_SCHEMA_VERSION = 3;
 
 export const DATABASE_SCHEMA = Object.freeze({
   [DATABASE_TABLES.METADATA]: '&key, updatedAt, status',
+  [DATABASE_TABLES.DEVICE_REGISTRY]: '&deviceId, principalId, status, registeredAt, lastSeenAt, [principalId+status]',
+  [DATABASE_TABLES.SYNC_JOURNAL]: '&journalId, entityType, recordId, principalId, originDeviceId, changeType, occurredAt, [entityType+recordId], [principalId+occurredAt]',
+  [DATABASE_TABLES.SYNC_TOMBSTONES]: '&tombstoneId, recordId, entityType, status, deletedAt, retentionUntil, [recordId+entityType]',
+  [DATABASE_TABLES.SYNC_CONFLICTS]: '&conflictId, recordId, entityType, status, createdAt, [recordId+status]',
+  [DATABASE_TABLES.SYNC_AUDIT]: '&auditId, principalId, entityType, eventType, occurredAt, [principalId+occurredAt]',
+  [DATABASE_TABLES.GUEST_LINEAGE]: '&lineageId, recordId, entityType, principalId, guestPrincipalId, convertedAt, [principalId+convertedAt]',
   [DATABASE_TABLES.MOMENTS]: '&id, userId, ownerType, date, type, status, updatedAt, [userId+ownerType]',
   [DATABASE_TABLES.ACTIVITIES]: '&id, momentId, userId, date, completed, priority, updatedAt, [momentId+date]',
   [DATABASE_TABLES.MEMORIES]: '&id, momentId, userId, createdAt, kind, updatedAt, [momentId+createdAt]',
