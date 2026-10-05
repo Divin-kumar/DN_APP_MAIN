@@ -18,7 +18,9 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
   const incomeTypeOptions = getActiveCodeListMeta('incomeTypes', adminValues.incomeTypes);
   const defaultIncomeType = useAppStore((state) => state.preferences.defaultIncomeType);
   const [form, setForm] = useState(() => createDefaultState(defaultIncomeType));
+  const [errors, setErrors] = useState({});
 
+  // Do not replace a user's in-progress draft if a default preference changes.
   useEffect(() => {
     if (initialValues) {
       setForm({
@@ -30,18 +32,32 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
     } else {
       setForm(createDefaultState(defaultIncomeType));
     }
-  }, [initialValues, defaultIncomeType]);
+    setErrors({});
+  }, [initialValues]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      return next;
+    });
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.name.trim() || !form.amount || !form.date) {
-      alert('Please complete all required fields.');
+    const amountIsValid = form.amount.trim() !== '' && Number.isFinite(Number(form.amount));
+    const nextErrors = {
+      ...(!form.name.trim() ? { name: 'Enter an income source.' } : {}),
+      ...(!amountIsValid ? { amount: form.amount.trim() ? 'Enter a valid amount.' : 'Enter an amount.' } : {}),
+      ...(!form.date ? { date: 'Choose a date.' } : {}),
+    };
+    setErrors(nextErrors);
+    const firstInvalid = Object.keys(nextErrors)[0];
+    if (firstInvalid) {
+      document.getElementById(`income-${firstInvalid}`)?.focus();
       return;
     }
 
@@ -54,38 +70,19 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
   };
 
   return (
-    <form className="form-surface" onSubmit={handleSubmit} style={styles.form}>
-      <input
-        name="name"
-        value={form.name}
-        onChange={handleChange}
-        placeholder="Income source"
-        style={styles.input}
-      />
+    <form className="form-surface financial-entry-form" onSubmit={handleSubmit} noValidate>
+      <label htmlFor="income-name">Income source<input id="income-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. Monthly salary" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'income-name-error' : undefined} />{errors.name ? <span className="form-field-error" id="income-name-error" role="alert">{errors.name}</span> : null}</label>
 
-      <DropdownSelect name="type" value={form.type} onChange={handleChange}>
+      <label htmlFor="income-type">Income type<DropdownSelect id="income-type" name="type" value={form.type} onChange={handleChange}>
         {incomeTypeOptions.map((option) => (
           <option key={option.id || option.value} value={option.value}>{option.label}</option>
         ))}
         <option value="Other">Other</option>
-      </DropdownSelect>
+      </DropdownSelect></label>
 
-      <input
-        type="number"
-        name="amount"
-        value={form.amount}
-        onChange={handleChange}
-        placeholder="Amount"
-        style={styles.input}
-      />
+      <label htmlFor="income-amount">Amount<input id="income-amount" type="number" step="any" name="amount" value={form.amount} onChange={handleChange} placeholder="0.00" required aria-invalid={Boolean(errors.amount)} aria-describedby={errors.amount ? 'income-amount-error' : undefined} />{errors.amount ? <span className="form-field-error" id="income-amount-error" role="alert">{errors.amount}</span> : null}</label>
 
-      <DateField
-        label="Date"
-        name="date"
-        value={form.date}
-        onChange={handleChange}
-        className="income-date-field"
-      />
+      <div className="form-field-wrap"><DateField label="Date" id="income-date" name="date" value={form.date} onChange={handleChange} className="income-date-field" required aria-invalid={Boolean(errors.date)} aria-describedby={errors.date ? 'income-date-error' : undefined} />{errors.date ? <span className="form-field-error" id="income-date-error" role="alert">{errors.date}</span> : null}</div>
 
       <div className="form-actions">
         <button type="submit" className="primaryButton">{submitLabel}</button>
@@ -99,20 +96,3 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
   );
 }
 
-const styles = {
-  form: {
-    display: 'grid',
-    gap: '12px',
-    background: '#ffffff',
-    borderRadius: '16px',
-    border: '1px solid #dfeae3',
-    padding: '18px',
-  },
-  input: {
-    padding: '12px 14px',
-    borderRadius: '10px',
-    border: '1px solid #d7e3da',
-    background: '#fbfdfb',
-    color: '#1d3f2c',
-  },
-};

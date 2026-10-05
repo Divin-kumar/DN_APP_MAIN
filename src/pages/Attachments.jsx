@@ -6,6 +6,8 @@ import useEventStore from '../store/useEventStore';
 import { getAttachmentHealthSummary, getAttachmentStatus, getAttachmentTypeBucket, getAttachmentTypeLabel, sortAttachmentsForGallery } from '../utils/attachmentStatus.js';
 import AttachmentStatusBadge from '../components/attachments/AttachmentStatusBadge';
 import ModalDialog from '../components/common/ModalDialog';
+import StatePanel from '../components/common/StatePanel';
+import DropdownSelect from '../components/common/DropdownSelect';
 
 const formatDate = (value) => {
   if (!value) return 'No date';
@@ -32,7 +34,7 @@ const getParentKey = (link) => `${link.parentType}:${link.parentId}`;
 export default function AttachmentsPage() {
   const principal = useAppStore((state) => state.principal);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, loadEvents, updateAttachmentLinks, getAttachmentBlob } = useEventStore();
+  const { events, loading, error, loadedFor, loadEvents, updateAttachmentLinks, getAttachmentBlob } = useEventStore();
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -114,6 +116,7 @@ export default function AttachmentsPage() {
   }, [attachments, query, statusFilter, typeFilter, sortMode]);
 
   const health = getAttachmentHealthSummary(attachments);
+  const collectionResolved = loadedFor === `device:${principal?.principalId || 'active'}` && !loading && !error;
 
   const beginRelink = (attachment) => {
     setEditingAttachment(attachment);
@@ -150,14 +153,14 @@ export default function AttachmentsPage() {
           <h1>Attachments</h1>
           <p>Files and references connected to your Moments and Activities.</p>
         </div>
-        <span className="attachment-library-count">{health.total} {health.total === 1 ? 'attachment' : 'attachments'}</span>
+        <span className="attachment-library-count">{collectionResolved ? health.total : '—'} {collectionResolved ? health.total === 1 ? 'attachment' : 'attachments' : 'attachments'}</span>
       </header>
 
       <section className="attachment-health-grid" aria-label="Attachment status summary">
-        <SummaryTile label="Available" value={health.available} Icon={CheckCircle2} tone="available" />
-        <SummaryTile label="On This Device" value={health.onDevice} Icon={HardDrive} tone="on-device" />
-        <SummaryTile label="Reference Only" value={health.referenceOnly} Icon={Link2} tone="reference-only" />
-        <SummaryTile label="Unavailable" value={health.unavailable} Icon={AlertCircle} tone="unavailable" />
+        <SummaryTile label="Available" value={collectionResolved ? health.available : '—'} Icon={CheckCircle2} tone="available" />
+        <SummaryTile label="On This Device" value={collectionResolved ? health.onDevice : '—'} Icon={HardDrive} tone="on-device" />
+        <SummaryTile label="Reference Only" value={collectionResolved ? health.referenceOnly : '—'} Icon={Link2} tone="reference-only" />
+        <SummaryTile label="Unavailable" value={collectionResolved ? health.unavailable : '—'} Icon={AlertCircle} tone="unavailable" />
       </section>
 
       <section className="attachment-library-toolbar" aria-label="Search and filter attachments">
@@ -173,18 +176,18 @@ export default function AttachmentsPage() {
       </section>
 
       <section className="attachment-library-list" aria-label="Attachment library">
-        {loading ? <p className="attachment-library-message">Loading attachments…</p> : visibleAttachments.length ? visibleAttachments.map((attachment) => (
+        {error === 'Unable to load events.' ? (
+          <StatePanel variant="error" icon={AlertCircle} title="Attachments couldn’t be loaded" description="The attachment library is based on your saved Moments. Try again to reload them." actionLabel="Try again" onAction={() => loadEvents(principal?.principalId)} />
+        ) : loading || (!loadedFor && !events.length) ? (
+          <StatePanel variant="loading" icon={ImageIcon} title="Loading attachments" description="Checking your local collection and linked records." />
+        ) : visibleAttachments.length ? visibleAttachments.map((attachment) => (
           <LibraryAttachmentCard
             key={attachment.id || attachment.attachmentId}
             attachment={attachment}
             getAttachmentBlob={getAttachmentBlob}
             onRelink={() => beginRelink(attachment)}
           />
-        )) : <div className="attachment-library-empty">
-          <ImageIcon size={25} aria-hidden="true" />
-          <strong>{attachments.length ? 'No attachments match these filters' : 'Your attachment library is ready'}</strong>
-          <p>{attachments.length ? 'Try a different search or clear one of the filters.' : 'Add a photo, receipt, or document from a Moment to see it here.'}</p>
-        </div>}
+        )) : <StatePanel variant="empty" icon={ImageIcon} title={attachments.length ? 'No attachments match these filters' : 'Your attachment library is ready'} description={attachments.length ? 'Try a different search or clear one of the filters.' : 'Add a photo, receipt, or document to a Moment or Activity to see it here.'} />}
       </section>
 
       {editingAttachment ? <ModalDialog title="Manage attachment links" onClose={() => setEditingAttachment(null)}>
@@ -280,9 +283,9 @@ function FilterSelect({ label, value, onChange, options }) {
   return <label className="attachment-filter-select">
     <SlidersHorizontal size={14} aria-hidden="true" />
     <span>{label}</span>
-    <select value={value} onChange={(event) => onChange(event.target.value)} aria-label={`Filter attachments by ${label.toLowerCase()}`}>
+    <DropdownSelect value={value} onChange={(event) => onChange(event.target.value)} aria-label={`Filter attachments by ${label.toLowerCase()}`}>
       {options.map(([optionValue, optionLabel]) => <option key={optionValue} value={optionValue}>{optionLabel}</option>)}
-    </select>
+    </DropdownSelect>
   </label>;
 }
 

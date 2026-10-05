@@ -320,11 +320,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         <div className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}>
           {allowLabels ? (
             <>
-              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
-              <input value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Label" aria-label="Label" />
+              <label className="code-list-add-field"><span>Value</span><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} /></label>
+              <label className="code-list-add-field"><span>Display label</span><input value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Optional display label" /></label>
             </>
           ) : (
-            <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+            <label className="code-list-add-field"><span>{title === 'Expense Categories' ? 'Expense category' : 'Income type'}</span><input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} /></label>
           )}
           <button type="button" className="settings-tag-add" onClick={() => upsertEntry(draft, allowLabels ? draftLabel : undefined)}><Plus size={15} aria-hidden="true" /> Add</button>
         </div>
@@ -468,7 +468,6 @@ export default function CodeLists() {
       <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
       <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Stable value" allowLabels />
       <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Stable value" allowLabels />
-      <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
 
       <section className="settings-section">
         <div className="settings-section-heading">

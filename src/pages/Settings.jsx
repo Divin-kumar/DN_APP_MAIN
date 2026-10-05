@@ -1,6 +1,6 @@
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
+import { UserCircle, Settings2, Database, Trash2, Bell, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -209,15 +209,6 @@ export default function Settings() {
     }
   };
 
-  const saveNotificationPreferences = async () => {
-    try {
-      await setPreferences(prefForm);
-      showToast('Notification preferences saved', 'success');
-    } catch {
-      showToast('Notification preferences could not be saved', 'danger');
-    }
-  };
-
   const resetPreferencesForm = async () => {
     try {
       await resetPreferences();
@@ -333,25 +324,6 @@ export default function Settings() {
         </label>
 
         <label className="settings-input-block">
-          <span>Default currency</span>
-          <DropdownSelect value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
-            <option value="INR">INR (₹)</option>
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-          </DropdownSelect>
-        </label>
-
-        <label className="settings-input-block">
-          <span>Default dashboard view</span>
-          <DropdownSelect value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
-            <option value="overview">Overview</option>
-            <option value="events">Events</option>
-            <option value="financials">Financials</option>
-          </DropdownSelect>
-        </label>
-
-        <label className="settings-input-block">
           <span>Default event type</span>
           <DropdownSelect value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
             {eventTypeOptions.map((option) => (
@@ -381,100 +353,24 @@ export default function Settings() {
 
       <div className="settings-actions">
         <button type="button" className="settings-primary-button" onClick={savePreferences}>Save preferences</button>
-        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
+        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset all preferences</button>
       </div>
     </div>
   );
 
   const renderNotificationsSection = () => (
     <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              eventReminders: !current.notifications.eventReminders,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.eventReminders}
-        >
-          <span className="settings-choice-icon"><Bell size={17} /></span>
-          <span><strong>Event reminders</strong><small>Get nudges before key dates and activities.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.eventReminders ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              monthlySummary: !current.notifications.monthlySummary,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.monthlySummary}
-        >
-          <span className="settings-choice-icon"><Clock3 size={17} /></span>
-          <span><strong>Monthly summary</strong><small>Receive a quick recap of spending and key events.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.monthlySummary ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              budgetAlerts: !current.notifications.budgetAlerts,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.budgetAlerts}
-        >
-          <span className="settings-choice-icon"><Database size={17} /></span>
-          <span><strong>Budget alerts</strong><small>Warn when your monthly spend is trending high.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.budgetAlerts ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-      </div>
-
-      <div className="settings-admin-grid">
-        <label className="settings-input-block">
-          <span>Daily reminder time</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="9:00 AM"
-            value={prefForm.notifications.reminderTime}
-            onChange={(event) => {
-              const nextValue = event.target.value;
-              setPrefForm((current) => ({
-                ...current,
-                notifications: {
-                  ...current.notifications,
-                  reminderTime: normalizeReminderTime(nextValue),
-                },
-              }));
-            }}
-            title="Enter a time like 9:00 AM or 21:00"
-          />
-        </label>
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={saveNotificationPreferences}>Save notifications</button>
-        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
+      <div className="settings-unavailable-note" role="note">
+        <Bell size={17} aria-hidden="true" />
+        <p>Notifications and scheduled reminders are not currently available. DN will not send event reminders, monthly summaries, or budget alerts.</p>
       </div>
     </div>
   );
 
   const sections = [
     { key: 'profile', heading: 'Profile', description: 'Your local profile and life summary.', icon: UserCircle, body: <div className="settings-accordion-body"><div className="settings-profile-row"><strong>{profileName}</strong><span>Local Device User · profile details</span></div><Link className="settings-primary-button" to="/profile">Open Profile</Link></div> },
-    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
-    { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
+    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme and default entry behavior.', icon: Settings2, body: renderDefaultsSection() },
+    { key: 'notifications', heading: 'Notifications', description: 'Notifications and scheduled reminders are not currently available.', icon: Bell, body: renderNotificationsSection() },
   ];
 
   return (
@@ -531,7 +427,7 @@ export default function Settings() {
           <span className="settings-hub-icon"><Settings2 size={18} /></span>
           <span className="settings-hub-copy">
             <strong>Code Lists</strong>
-            <small>Manage moment types, categories, priorities, and reminder presets</small>
+            <small>Manage Moment types, income types, and expense categories</small>
           </span>
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>
@@ -549,7 +445,7 @@ export default function Settings() {
       <section className="settings-reset-card">
         <div>
           <strong>Restore default settings</strong>
-          <p>Reset appearance, preferences, reminders, greeting settings, and Code Lists without deleting your records.</p>
+          <p>Reset appearance, entry defaults, saved notification preferences, greeting settings, and Code Lists without deleting your records.</p>
         </div>
         <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
           <RotateCcw size={15} /> Reset all settings
@@ -563,7 +459,7 @@ export default function Settings() {
             <ul>
               <li>Theme and appearance</li>
               <li>Currency, dashboard view, and default moment, income, and expense selections</li>
-              <li>Notifications and reminder time</li>
+              <li>Saved notification preferences (notifications are currently unavailable)</li>
               <li>Greeting types and templates</li>
               <li>All Code Lists and their system default values</li>
             </ul>

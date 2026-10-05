@@ -40,6 +40,13 @@ const isHttpUrl = (value) => {
   }
 };
 
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Image preview could not be read.'));
+  reader.onerror = () => reject(reader.error || new Error('Image preview could not be read.'));
+  reader.readAsDataURL(blob);
+});
+
 const parentKey = (link) => `${link.parentType}:${link.parentId}`;
 
 export default function AttachmentDetailPage() {
@@ -295,11 +302,11 @@ export default function AttachmentDetailPage() {
           </section>
 
           <section id="attachment-detail-linked" className="attachment-detail-linked-card" tabIndex={-1}>
-            <div className="attachment-detail-section-heading"><div><h2>Linked to</h2><p>This attachment stays connected to its memory context.</p></div><Link2 size={18} aria-hidden="true" /></div>
+            <div className="attachment-detail-section-heading"><div><h2>Linked to</h2><p>This attachment stays connected to its Moment or Activity.</p></div><Link2 size={18} aria-hidden="true" /></div>
             {attachment.parentLinks.length ? <div className="attachment-detail-parent-list">{attachment.parentLinks.map((link) => <div className="attachment-detail-parent-row" key={parentKey(link)}>
               <div className="attachment-detail-parent-identity"><span className="attachment-detail-parent-type">{link.parentType === 'moment' ? 'Moment' : 'Activity'}</span>{link.route ? <Link to={link.route}>{link.parentName}</Link> : <strong>{link.parentName}</strong>}{link.momentName ? <small>{link.momentName}</small> : null}</div>
               {attachment.parentLinks.length > 1 ? <button type="button" className="attachment-detail-remove-link" disabled={saving} onClick={() => setPendingRemoveLink(link)}><X size={14} /> Remove Link</button> : <span className="attachment-detail-last-link-note">Keep at least one link</span>}
-            </div>)}</div> : <p className="attachment-detail-empty-links">No parent links are available for this attachment.</p>}
+            </div>)}</div> : <p className="attachment-detail-empty-links">No Moment or Activity links are available for this attachment.</p>}
           </section>
         </div>
 
@@ -346,6 +353,7 @@ export default function AttachmentDetailPage() {
 function AttachmentPreview({ attachment, previewReference, getAttachmentBlob, userId, retryCount, onSourceError, onSourceReady, onRetry }) {
   const [blob, setBlob] = useState(null);
   const [localUrl, setLocalUrl] = useState('');
+  const [dataUrlFallback, setDataUrlFallback] = useState('');
   const [localMissing, setLocalMissing] = useState(false);
   const [previewState, setPreviewState] = useState('loading');
   const [textContent, setTextContent] = useState('');
@@ -361,6 +369,7 @@ function AttachmentPreview({ attachment, previewReference, getAttachmentBlob, us
     let objectUrl = '';
     setBlob(null);
     setLocalUrl('');
+    setDataUrlFallback('');
     setLocalMissing(false);
     setPreviewState('loading');
     if (!attachment.hasLocalCopy) return () => { active = false; };
@@ -373,11 +382,32 @@ function AttachmentPreview({ attachment, previewReference, getAttachmentBlob, us
         onSourceError();
         return;
       }
-      objectUrl = URL.createObjectURL(localBlob);
       setBlob(localBlob);
-      setLocalUrl(objectUrl);
-      onSourceReady(objectUrl);
-      setPreviewState('ready');
+      try {
+        objectUrl = URL.createObjectURL(localBlob);
+        setLocalUrl(objectUrl);
+        onSourceReady(objectUrl);
+        setPreviewState('ready');
+      } catch {
+        if (!imageLike) {
+          setLocalMissing(true);
+          setPreviewState('unavailable');
+          onSourceError();
+          return;
+        }
+        void blobToDataUrl(localBlob).then((dataUrl) => {
+          if (!active) return;
+          setDataUrlFallback(dataUrl);
+          onSourceReady(dataUrl);
+          setPreviewState('ready');
+        }).catch(() => {
+          if (active) {
+            setLocalMissing(true);
+            setPreviewState('unavailable');
+            onSourceError();
+          }
+        });
+      }
     }).catch(() => {
       if (active) {
         setLocalMissing(true);
@@ -403,7 +433,7 @@ function AttachmentPreview({ attachment, previewReference, getAttachmentBlob, us
   const remoteSource = isHttpUrl(previewReference) ? previewReference : isHttpUrl(attachment.fileReference || attachment.url)
     ? attachment.fileReference || attachment.url
     : isHttpUrl(attachment.previewReference) ? attachment.previewReference : '';
-  const source = localMissing && remoteSource ? remoteSource : localUrl || remoteSource;
+  const source = localMissing && remoteSource ? remoteSource : dataUrlFallback || localUrl || remoteSource;
   const localCopyMissingWithReference = localMissing && Boolean(remoteSource);
   const hasSource = Boolean(source);
 
@@ -415,12 +445,18 @@ function AttachmentPreview({ attachment, previewReference, getAttachmentBlob, us
   }, [pdfLike, hasSource, localUrl, retryCount]);
 
   if (!hasSource && attachment.hasLocalCopy && !localMissing) return <PreviewLoading label="Loading local file…" />;
-  if (!hasSource) return <PreviewMessage tone="unavailable" Icon={AlertTriangle} title="Preview unavailable" message="No readable local file or usable reference is available. Relink or replace the file to recover it." onRetry={onRetry} />;
+  if (!hasSource) return <PreviewMessage tone="unavailable" Icon={AlertTriangle} title="Preview unavailable" message="No readable file copy is available in this device’s local storage, and no usable link was saved. Relink a working URL or replace the file from this device to restore its preview." onRetry={onRetry} />;
 
   if (imageLike) return <div className="attachment-preview-content">
     {localCopyMissingWithReference ? <p className="attachment-preview-caption">The local copy is unavailable; showing the saved reference instead.</p> : null}
-    {previewState === 'loading' ? <><PreviewLoading label="Loading image preview…" /><img className="attachment-preview-image is-loading" src={source} alt="" aria-hidden="true" onLoad={() => setPreviewState('ready')} onError={() => { setPreviewState('error'); if (!localUrl) onSourceError(); }} /></> : null}
-    {previewState === 'ready' ? <img className="attachment-preview-image" src={source} alt={attachment.name || 'Attachment image'} onError={() => { setPreviewState('error'); if (!localUrl) onSourceError(); }} /> : null}
+    {previewState === 'loading' ? <><PreviewLoading label="Loading image preview…" /><img className="attachment-preview-image is-loading" src={source} alt="" aria-hidden="true" onLoad={() => setPreviewState('ready')} onError={() => {
+      if (blob && !dataUrlFallback) void blobToDataUrl(blob).then(setDataUrlFallback).then(() => setPreviewState('ready')).catch(() => { setPreviewState('error'); if (!localUrl) onSourceError(); });
+      else { setPreviewState('error'); if (!localUrl) onSourceError(); }
+    }} /></> : null}
+    {previewState === 'ready' ? <img className="attachment-preview-image" src={source} alt={attachment.name || 'Attachment image'} onError={() => {
+      if (blob && !dataUrlFallback) void blobToDataUrl(blob).then(setDataUrlFallback).then(() => setPreviewState('ready')).catch(() => { setPreviewState('error'); if (!localUrl) onSourceError(); });
+      else { setPreviewState('error'); if (!localUrl) onSourceError(); }
+    }} /> : null}
     {previewState === 'error' ? <PreviewMessage tone="restricted" Icon={ImageIcon} title="Image preview could not load" message="The current reference did not return a displayable image. You can retry, relink the file, or replace it." onRetry={onRetry} /> : null}
   </div>;
 

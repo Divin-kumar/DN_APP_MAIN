@@ -4,7 +4,7 @@
   This is the page where the user tracks money going out, filters by category, and manages spending records.
 */
 import { useEffect, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { AlertCircle, Plus, Receipt, Search } from 'lucide-react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import ExpenseForm from '../components/expenses/ExpenseForm';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -17,6 +17,7 @@ import { getCodeListItems, getCodeListLabel } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import SortControl from '../components/common/SortControl';
 import usePersistentSort from '../hooks/usePersistentSort';
+import StatePanel from '../components/common/StatePanel';
 
 export default function Expenses() {
   const location = useLocation();
@@ -26,7 +27,7 @@ export default function Expenses() {
   const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
-  const { expenses, loading, error, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
+  const { expenses, loading, error, loadedFor, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
   const { events, loadEvents, updateEventItem } = useEventStore();
 
   const [search, setSearch] = useState('');
@@ -152,7 +153,11 @@ export default function Expenses() {
         <SortControl field={expenseSort} direction={expenseSortDirection} onFieldChange={setExpenseSort} onToggleDirection={toggleExpenseSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort expenses" />
       </div>
       <section className="financial-module-history" aria-label="Expense history">
-        {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading expenses" /> : error === 'Unable to load expenses.' ? <div className="financial-load-error" role="alert"><span>Expenses couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadExpenses(user?.uid, isGuest)}>Try again</button></div> : <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />}
+        {error === 'Unable to load expenses.' ? <StatePanel variant="error" icon={AlertCircle} title="Expenses couldn’t be loaded" description="Your saved entries are unchanged. Try again to reload them." actionLabel="Try again" onAction={() => loadExpenses(user?.uid, isGuest)} />
+          : loading || (!loadedFor && !expenses.length) ? <LoadingSkeleton rows={3} variant="financial" label="Loading expenses" />
+            : filteredExpenses.length ? <ExpenseList expenses={filteredExpenses} onEdit={handleEdit} onDelete={(expense) => setPendingDeleteExpense(expense)} />
+              : expenses.length ? <StatePanel variant="empty" icon={Search} title="No expenses match these filters" description="Try another search or expense category." actionLabel="Clear filters" onAction={() => { setSearch(''); setCategoryFilter('all'); }} />
+                : <StatePanel variant="empty" icon={Receipt} title="No expense entries yet" description="Your recorded expenses will appear here." actionLabel="Add expense" onAction={() => { setEditingExpense(null); setExpenseDialogOpen(true); }} />}
       </section>
 
       {expenseDialogOpen ? (

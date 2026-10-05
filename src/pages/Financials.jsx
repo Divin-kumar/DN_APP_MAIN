@@ -2,11 +2,12 @@
 // It shows recorded income, expenses, and their net difference, and routes to the income/expense screens.
 import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { Landmark, Receipt, WalletCards } from 'lucide-react';
+import { AlertCircle, Landmark, Receipt, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { getCodeListLabel } from '../utils/codeLists';
+import StatePanel from '../components/common/StatePanel';
 
 const currency = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -46,8 +47,16 @@ export default function Financials() {
   const adminValues = useAppStore((state) => state.adminValues);
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
-  const { incomes, loadIncomes } = useIncomeStore();
-  const { expenses, loadExpenses } = useExpenseStore();
+  const incomes = useIncomeStore((state) => state.incomes);
+  const incomeLoading = useIncomeStore((state) => state.loading);
+  const incomeError = useIncomeStore((state) => state.error);
+  const incomeLoadedFor = useIncomeStore((state) => state.loadedFor);
+  const loadIncomes = useIncomeStore((state) => state.loadIncomes);
+  const expenses = useExpenseStore((state) => state.expenses);
+  const expenseLoading = useExpenseStore((state) => state.loading);
+  const expenseError = useExpenseStore((state) => state.error);
+  const expenseLoadedFor = useExpenseStore((state) => state.loadedFor);
+  const loadExpenses = useExpenseStore((state) => state.loadExpenses);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -60,13 +69,16 @@ export default function Financials() {
   const netRecorded = totalIncome - totalExpenses;
   const recentIncome = [...incomes].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
   const recentExpenses = [...expenses].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  const loadError = incomeError === 'Unable to load incomes.' || expenseError === 'Unable to load expenses.';
+  const loading = incomeLoading || expenseLoading || ((!incomeLoadedFor && !incomes.length && !incomeError) || (!expenseLoadedFor && !expenses.length && !expenseError));
+  const showFinancialTotals = !loading && !loadError;
 
   return (
     <main className="financials-page feature-page">
       <section className="financial-overview-summary" aria-label="Recorded income, recorded expenses, and net recorded">
-        <div><span>Income</span><strong>{currency(totalIncome)}</strong></div>
-        <div><span>Expenses</span><strong>{currency(totalExpenses)}</strong></div>
-        <div className={`financial-overview-balance${netRecorded < 0 ? ' is-negative' : ''}`}><span>Net recorded</span><strong>{currency(netRecorded)}</strong></div>
+        <div><span>Income</span><strong>{showFinancialTotals ? currency(totalIncome) : '—'}</strong></div>
+        <div><span>Expenses</span><strong>{showFinancialTotals ? currency(totalExpenses) : '—'}</strong></div>
+        <div className={`financial-overview-balance${netRecorded < 0 ? ' is-negative' : ''}`}><span>Net recorded</span><strong>{showFinancialTotals ? currency(netRecorded) : '—'}</strong></div>
       </section>
       <p className="financial-overview-scope-note">Income minus expenses recorded in DN. This is not a bank or account balance.</p>
 
@@ -80,10 +92,16 @@ export default function Financials() {
 
       <section className="financials-content-panel" aria-live="polite">
         {isOverview ? (
-          <div className="financials-overview-grid">
-            <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." listKey="incomeTypes" listValues={adminValues.incomeTypes} />
-            <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." listKey="expenseCategories" listValues={adminValues.expenseCategories} isExpense />
-          </div>
+          loadError ? <StatePanel variant="error" icon={AlertCircle} title="Financial records couldn’t be loaded" description="Your saved records are unchanged. Try again to refresh the overview." actionLabel="Try again" onAction={() => { void loadIncomes(user?.uid, isGuest); void loadExpenses(user?.uid, isGuest); }} />
+          : loading ? <StatePanel variant="loading" icon={WalletCards} title="Loading financial records" description="Gathering your recorded income and expenses." />
+          : recentIncome.length || recentExpenses.length ? (
+            <div className="financials-overview-grid">
+              <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." listKey="incomeTypes" listValues={adminValues.incomeTypes} />
+              <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." listKey="expenseCategories" listValues={adminValues.expenseCategories} isExpense />
+            </div>
+          ) : (
+            <StatePanel variant="empty" icon={WalletCards} title="No financial records yet" description="Income and expense entries will appear here once you start recording them." />
+          )
         ) : <Outlet />}
       </section>
     </main>

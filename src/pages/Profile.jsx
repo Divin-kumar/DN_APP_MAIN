@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Activity, CalendarDays, Camera, CheckCircle2, Heart, HardDrive, ImagePlus, Settings2, Smartphone, WalletCards, X } from 'lucide-react';
+import { ArrowLeft, Activity, AlertCircle, CalendarDays, Camera, CheckCircle2, Heart, HardDrive, ImagePlus, Settings2, Smartphone, WalletCards, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import './profile.css';
+import StatePanel from '../components/common/StatePanel';
 
 const displayDate = (value) => value ? new Date(value).toLocaleDateString(undefined, { dateStyle: 'long' }) : '—';
 const initialsFor = (value) => String(value || 'DN').trim().split(/\s+/).slice(0, 2).map((part) => part[0]?.toUpperCase() || '').join('') || 'DN';
@@ -38,10 +39,19 @@ export default function Profile() {
   const setProfile = useAppStore((state) => state.setProfile);
   const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
+  const eventsLoading = useEventStore((state) => state.loading);
+  const eventsError = useEventStore((state) => state.error);
+  const eventsLoadedFor = useEventStore((state) => state.loadedFor);
   const loadEvents = useEventStore((state) => state.loadEvents);
   const expenses = useExpenseStore((state) => state.expenses);
+  const expensesLoading = useExpenseStore((state) => state.loading);
+  const expensesError = useExpenseStore((state) => state.error);
+  const expensesLoadedFor = useExpenseStore((state) => state.loadedFor);
   const loadExpenses = useExpenseStore((state) => state.loadExpenses);
   const incomes = useIncomeStore((state) => state.incomes);
+  const incomesLoading = useIncomeStore((state) => state.loading);
+  const incomesError = useIncomeStore((state) => state.error);
+  const incomesLoadedFor = useIncomeStore((state) => state.loadedFor);
   const loadIncomes = useIncomeStore((state) => state.loadIncomes);
   const fileInput = useRef(null);
   const [draft, setDraft] = useState(profile);
@@ -72,6 +82,12 @@ export default function Profile() {
     expenses: expenses.length,
     income: incomes.length,
   };
+  const dataError = eventsError === 'Unable to load events.'
+    || expensesError === 'Unable to load expenses.'
+    || incomesError === 'Unable to load incomes.';
+  const dataLoading = eventsLoading || expensesLoading || incomesLoading
+    || ((!eventsLoadedFor && !events.length && !eventsError) || (!expensesLoadedFor && !expenses.length && !expensesError) || (!incomesLoadedFor && !incomes.length && !incomesError));
+  const noLifeData = !events.length && !expenses.length && !incomes.length;
   const earned = [
     { title: 'First Backup', earned: Boolean(readBackupStatus()?.verified) },
     { title: 'First Memory', earned: memories.length > 0 },
@@ -137,13 +153,16 @@ export default function Profile() {
 
       <section className="profile-section" aria-labelledby="profile-life-summary">
         <div className="profile-section-heading"><div><span className="profile-eyebrow">Your life in DN</span><h2 id="profile-life-summary">Life Summary</h2></div></div>
-        <div className="profile-stat-grid">
-          <Stat icon={CalendarDays} label="Moments" value={counts.moments} />
-          <Stat icon={Activity} label="Activities" value={counts.activities} />
-          <Stat icon={Heart} label="Memories" value={counts.memories} />
-          <Stat icon={WalletCards} label="Expenses" value={counts.expenses} />
-          <Stat icon={WalletCards} label="Income" value={counts.income} />
-        </div>
+        {dataError ? <StatePanel variant="error" icon={AlertCircle} title="Your life summary couldn’t be loaded" description="Your profile is still available. Try again to refresh the record counts." actionLabel="Try again" onAction={() => { void loadEvents(principalId); void loadExpenses(principalId); void loadIncomes(principalId); }} />
+          : dataLoading ? <StatePanel variant="loading" icon={Activity} title="Loading your life summary" description="Gathering your saved Moments and financial records." />
+            : noLifeData ? <StatePanel variant="empty" icon={Heart} title="Your summary will grow with your records" description="Moments, activities, memories, income, and expenses will appear here as you add them." />
+              : <div className="profile-stat-grid">
+                <Stat icon={CalendarDays} label="Moments" value={counts.moments} />
+                <Stat icon={Activity} label="Activities" value={counts.activities} />
+                <Stat icon={Heart} label="Memories" value={counts.memories} />
+                <Stat icon={WalletCards} label="Expenses" value={counts.expenses} />
+                <Stat icon={WalletCards} label="Income" value={counts.income} />
+              </div>}
       </section>
 
       <section className="profile-section" aria-labelledby="profile-achievements">
@@ -166,7 +185,7 @@ export default function Profile() {
         <div className="profile-section-heading"><div><span className="profile-eyebrow">Your setup</span><h2 id="profile-preferences">Preferences</h2></div><Link to="/settings#preferences" aria-label="Edit preferences"><Settings2 size={17} /></Link></div>
         <div className="profile-detail-list">
           <Detail label="Theme" value={preferences.theme === 'light' ? 'Light' : 'Dark'} />
-          <Detail label="Currency" value={preferences.currency || 'INR'} />
+          <Detail label="Amount display" value="INR (currently fixed)" />
           <Detail label="Date Format" value={displayFormat} />
           <Detail label="Locale" value={`${locale} · automatic`} />
         </div>

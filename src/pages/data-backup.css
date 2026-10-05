@@ -307,6 +307,8 @@ html[data-theme="dark"] .db-preview-outcome .has-conflicts { background: #30291d
 .db-destination-options button small { color: var(--db-muted); font-size: .7rem; line-height: 1.35; }
 .db-destination-progress { margin: 12px 0 0; color: var(--db-muted); font-size: .77rem; }
 .db-attachment-backup-mode { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 9px 3px; color: var(--db-muted); font-size: .75rem; }
-.db-attachment-backup-mode select { min-height: 36px; max-width: 65%; padding: 5px 9px; border: 1px solid var(--db-border); border-radius: 9px; background: var(--db-card); color: var(--db-ink); font: inherit; font-size: .7rem; }
+.db-attachment-backup-mode .dropdown-field { width: min(65%,420px); }
+.db-attachment-backup-mode .dropdown-trigger { min-height: 38px; padding: 0 10px !important; border-radius: 9px !important; font-size: .7rem !important; }
+@media (max-width: 600px) { .db-attachment-backup-mode .dropdown-field { width: min(100%,360px); } }
 html[data-theme="dark"] .db-destination-options button { background: var(--color-card, #171d22); }
 html[data-theme="dark"] .db-destination-options button:hover:not(:disabled) { background: color-mix(in srgb, var(--db-accent) 14%, var(--color-card, #171d22)); }

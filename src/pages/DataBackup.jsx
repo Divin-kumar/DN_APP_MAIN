@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
+import DropdownSelect from '../components/common/DropdownSelect';
 import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Database, Download, FileCheck2, HardDrive, Heart, Layers3, ShieldCheck, Smartphone, Upload, WalletCards } from 'lucide-react';
 import { db } from '../database/index.js';
 import { DATABASE_TABLES } from '../database/tables.js';
@@ -310,7 +311,7 @@ export default function DataBackup() {
     <>
       <section className="db-actions-section" aria-labelledby="db-actions-title">
         <div className="db-section-heading"><h2 id="db-actions-title">Backup &amp; Restore</h2><p>Everything stays in your hands.</p></div>
-        <label className="db-attachment-backup-mode"><span>Attachment backup</span><select value={attachmentMode} disabled={busy} onChange={(event) => setAttachmentMode(event.target.value)}><option value="metadata-only">Metadata Only · references only</option><option value="include-attachments">Include Attachments · local copies only</option></select></label>
+        <label className="db-attachment-backup-mode"><span>Attachment backup</span><DropdownSelect value={attachmentMode} disabled={busy} onChange={(event) => setAttachmentMode(event.target.value)} aria-label="Attachment backup mode"><option value="metadata-only">Metadata Only · references only</option><option value="include-attachments">Include Attachments · local copies only</option></DropdownSelect></label>
         <div className="db-action-grid">
           <button className={`db-action-card db-action-create ${!verificationStatus ? 'is-primary' : ''}`} type="button" disabled={busy || !principalId} onClick={() => void prepareBackup()}>
             <span className="db-action-icon"><Download size={19} /></span><span className="db-action-copy"><strong>{busy ? 'Preparing backup…' : verificationStatus ? 'Create another backup' : 'Create Backup'}</strong><small>{verificationStatus ? 'Save a fresh copy of your data' : 'Private, verified and saved to your device'}</small></span><ChevronRight className="db-action-arrow" size={17} />

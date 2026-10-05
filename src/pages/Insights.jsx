@@ -1,13 +1,14 @@
 // This page turns the stored event, income, and expense data into charts and summaries.
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Search, Sparkles, WalletCards } from 'lucide-react';
+import { Activity, AlertCircle, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Search, Sparkles, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
 import { getCodeListLabel, getMomentTypeLabel } from '../utils/codeLists';
+import StatePanel from '../components/common/StatePanel';
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 const eventDate = (event) => {
@@ -37,8 +38,17 @@ export default function Insights() {
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
   const { events, loadEvents } = useEventStore();
+  const eventsLoading = useEventStore((state) => state.loading);
+  const eventsError = useEventStore((state) => state.error);
+  const eventsLoadedFor = useEventStore((state) => state.loadedFor);
   const { expenses, loadExpenses } = useExpenseStore();
+  const expensesLoading = useExpenseStore((state) => state.loading);
+  const expensesError = useExpenseStore((state) => state.error);
+  const expensesLoadedFor = useExpenseStore((state) => state.loadedFor);
   const { incomes, loadIncomes } = useIncomeStore();
+  const incomesLoading = useIncomeStore((state) => state.loading);
+  const incomesError = useIncomeStore((state) => state.error);
+  const incomesLoadedFor = useIncomeStore((state) => state.loadedFor);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -105,6 +115,11 @@ export default function Insights() {
   const activityMax = Math.max(1, ...monthlyActivity.map((month) => month.count));
   const expenseMax = Math.max(1, ...monthlyExpenses.map((month) => month.amount));
   const empty = !events.length && !incomes.length && !expenses.length;
+  const dataError = eventsError === 'Unable to load events.'
+    || expensesError === 'Unable to load expenses.'
+    || incomesError === 'Unable to load incomes.';
+  const dataLoading = eventsLoading || expensesLoading || incomesLoading
+    || ((!eventsLoadedFor && !events.length && !eventsError) || (!expensesLoadedFor && !expenses.length && !expensesError) || (!incomesLoadedFor && !incomes.length && !incomesError));
   const searchedUpcoming = nextEvents.filter((event) => `${event.name || ''} ${event.type || ''}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4);
   const searchedPast = pastEvents.filter((event) => `${event.name || ''} ${event.type || ''}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4);
   const years = [...new Set(events.map((event) => eventDate(event)?.getFullYear()).filter(Boolean))].sort((first, second) => second - first);
@@ -133,7 +148,10 @@ export default function Insights() {
         <div className="insights-tools"><label><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search your timeline" aria-label="Search Insights" /></label><button type="button" onClick={exportInsights}><Download size={15} /> Export</button></div>
       </header>
 
-      {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on.</span></div> : null}
+      {dataError ? <StatePanel variant="error" icon={AlertCircle} title="Insights couldn’t be loaded" description="Your saved records are unchanged. Try again to refresh your insights." actionLabel="Try again" onAction={() => { void loadEvents(user?.uid, isGuest); void loadExpenses(user?.uid, isGuest); void loadIncomes(user?.uid, isGuest); }} />
+        : dataLoading ? <StatePanel variant="loading" icon={HeartPulse} title="Loading your insights" description="Gathering Moments, income, and expense records." />
+          : empty ? <StatePanel variant="empty" icon={HeartPulse} title="Insights will appear as your story grows" description="Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on." /> : (
+      <>
 
       <section className="insights-metric-grid" aria-label="Life overview">
         <InsightMetric icon={CalendarDays} label="Life moments" value={events.length} detail={`${nextEvents.length} ahead`} />
@@ -144,7 +162,7 @@ export default function Insights() {
 
       <div className="insights-content-grid">
         <section className="insights-panel">
-          <PanelHeading icon={CalendarDays} title="Events overview" detail="Your chapters across time" />
+          <PanelHeading icon={CalendarDays} title="Moments overview" detail="Your chapters across time" />
           <div className="insights-timeline-stats"><span><strong>{nextEvents.length}</strong> upcoming</span><span><strong>{pastEvents.length}</strong> archived</span><span><strong>{events.reduce((sum, event) => sum + (event.activities || []).length, 0)}</strong> planned steps</span></div>
           <div className="insights-milestones-grid">
             <MilestoneList title="Next milestones" events={searchedUpcoming} momentTypes={adminValues.eventTypes} emptyText="No matching upcoming moments." useNextDate />
@@ -161,7 +179,7 @@ export default function Insights() {
         </section>
 
         <section className="insights-panel">
-          <PanelHeading icon={HeartPulse} title="Event categories" detail="The moments you make room for" />
+          <PanelHeading icon={HeartPulse} title="Moment types" detail="The moments you make room for" />
           {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{getCodeListLabel('eventTypes', name, adminValues.eventTypes)}</span><i><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
         </section>
 
@@ -198,6 +216,8 @@ export default function Insights() {
           <p>{activities.length ? `${completedActivities} of your ${activities.length} recorded activities are complete. Every small step attached to a life moment helps turn a plan into a memory.` : events.length ? `You have gathered ${events.length} life ${events.length === 1 ? 'moment' : 'moments'}. Add activities or memories to see your journey take shape in more detail.` : 'Start with one moment worth remembering. Your personal insights will grow alongside it.'}</p>
         </section>
       </div>
+      </>
+      )}
     </div>
   );
 }

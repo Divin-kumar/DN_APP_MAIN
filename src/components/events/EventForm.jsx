@@ -16,12 +16,14 @@ const createDefaultState = (defaultEventType) => ({
   notes: '',
 });
 
-export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
+export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Moment' }) {
   const adminValues = useAppStore((state) => state.adminValues);
   const eventTypeOptions = getActiveCodeListMeta('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
   const [form, setForm] = useState(() => createDefaultState(defaultEventType));
+  const [errors, setErrors] = useState({});
 
+  // Do not replace a user's in-progress draft if a default preference changes.
   useEffect(() => {
     if (initialValues) {
       setForm({
@@ -32,23 +34,32 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
     } else {
       setForm(createDefaultState(defaultEventType));
     }
-  }, [initialValues, defaultEventType]);
+    setErrors({});
+  }, [initialValues]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setErrors((current) => {
+      const next = { ...current };
+      delete next[name];
+      if (name === 'type' && value !== 'Other') delete next.customType;
+      return next;
+    });
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.name.trim() || !form.date) {
-      alert('Event name and date are required.');
-      return;
-    }
-
-    if (form.type === 'Other' && !form.customType.trim()) {
-      alert('Please enter a custom event type.');
+    const nextErrors = {
+      ...(!form.name.trim() ? { name: 'Enter a moment name.' } : {}),
+      ...(!form.date ? { date: 'Choose a date.' } : {}),
+      ...(form.type === 'Other' && !form.customType.trim() ? { customType: 'Enter a custom moment type.' } : {}),
+    };
+    setErrors(nextErrors);
+    const firstInvalid = Object.keys(nextErrors)[0];
+    if (firstInvalid) {
+      document.getElementById(`event-${firstInvalid === 'name' ? 'name' : firstInvalid === 'date' ? 'date' : 'custom-type'}`)?.focus();
       return;
     }
 
@@ -62,11 +73,12 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   };
 
   return (
-    <form className="form-surface event-form" onSubmit={handleSubmit}>
+    <form className="form-surface event-form" onSubmit={handleSubmit} noValidate>
       <p className="event-form-intro">Add the details that make this moment easy to remember.</p>
 
       <label htmlFor="event-name">Moment name
-        <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required />
+        <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'event-name-error' : undefined} />
+        {errors.name ? <span className="form-field-error" id="event-name-error" role="alert">{errors.name}</span> : null}
       </label>
 
       <div className="event-form-fields">
@@ -79,12 +91,13 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
           </DropdownSelect>
         </label>
 
-        <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
+          <div className="form-field-wrap"><DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required aria-invalid={Boolean(errors.date)} aria-describedby={errors.date ? 'event-date-error' : undefined} />{errors.date ? <span className="form-field-error" id="event-date-error" role="alert">{errors.date}</span> : null}</div>
       </div>
 
       {form.type === 'Other' ? (
         <label htmlFor="event-custom-type">Custom moment type
-          <input id="event-custom-type" name="customType" value={form.customType} onChange={handleChange} placeholder="What kind of moment is this?" required />
+          <input id="event-custom-type" name="customType" value={form.customType} onChange={handleChange} placeholder="What kind of moment is this?" required aria-invalid={Boolean(errors.customType)} aria-describedby={errors.customType ? 'event-custom-type-error' : undefined} />
+          {errors.customType ? <span className="form-field-error" id="event-custom-type-error" role="alert">{errors.customType}</span> : null}
         </label>
       ) : null}
 

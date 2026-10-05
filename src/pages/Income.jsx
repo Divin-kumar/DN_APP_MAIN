@@ -4,7 +4,7 @@
   This page helps the user track incoming money, search through records, and create or edit income entries.
 */
 import { useEffect, useMemo, useState } from 'react';
-import { Plus } from 'lucide-react';
+import { AlertCircle, Plus, Search, WalletCards } from 'lucide-react';
 import IncomeForm from '../components/income/IncomeForm';
 import DropdownSelect from '../components/common/DropdownSelect';
 import IncomeList from '../components/income/IncomeList';
@@ -15,6 +15,7 @@ import { getCodeListItems, getCodeListLabel } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import SortControl from '../components/common/SortControl';
 import usePersistentSort from '../hooks/usePersistentSort';
+import StatePanel from '../components/common/StatePanel';
 
 export default function Income() {
   const principal = useAppStore((state) => state.principal);
@@ -22,7 +23,7 @@ export default function Income() {
   const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
-  const { incomes, loading, error, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
+  const { incomes, loading, error, loadedFor, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
 
   const [search, setSearch] = useState('');
   const [typeFilter, setTypeFilter] = useState('all');
@@ -119,7 +120,11 @@ export default function Income() {
         <SortControl field={incomeSort} direction={incomeSortDirection} onFieldChange={setIncomeSort} onToggleDirection={toggleIncomeSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort income" />
       </div>
       <section className="financial-module-history" aria-label="Income history">
-        {loading ? <LoadingSkeleton rows={3} variant="financial" label="Loading income" /> : error === 'Unable to load incomes.' ? <div className="financial-load-error" role="alert"><span>Income couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadIncomes(user?.uid, isGuest)}>Try again</button></div> : <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />}
+        {error === 'Unable to load incomes.' ? <StatePanel variant="error" icon={AlertCircle} title="Income couldn’t be loaded" description="Your saved entries are unchanged. Try again to reload them." actionLabel="Try again" onAction={() => loadIncomes(user?.uid, isGuest)} />
+          : loading || (!loadedFor && !incomes.length) ? <LoadingSkeleton rows={3} variant="financial" label="Loading income" />
+            : filteredIncomes.length ? <IncomeList incomes={filteredIncomes} onEdit={handleEdit} onDelete={(income) => setPendingDeleteIncome(income)} />
+              : incomes.length ? <StatePanel variant="empty" icon={Search} title="No income matches these filters" description="Try another search or income type." actionLabel="Clear filters" onAction={() => { setSearch(''); setTypeFilter('all'); }} />
+                : <StatePanel variant="empty" icon={WalletCards} title="No income entries yet" description="Your recorded income will appear here." actionLabel="Add income" onAction={() => { setEditingIncome(null); setIncomeDialogOpen(true); }} />}
       </section>
 
       {incomeDialogOpen ? (

@@ -25,7 +25,7 @@ import ConnectivityBanner from '../components/common/ConnectivityBanner';
 // The app keeps the navigation consistent across desktop and mobile layouts.
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Events', path: '/events', icon: CalendarDays },
+  { label: 'Moments', path: '/events', icon: CalendarDays },
   { label: 'Attachments', path: '/attachments', icon: FileImage },
   { label: 'Financials', path: '/financials', icon: WalletCards },
   { label: 'Settings', path: '/settings', icon: Settings },
@@ -366,8 +366,10 @@ export default function DashboardLayout() {
               key={item.path}
               to={item.path}
               end={item.path === '/dashboard'}
-                className="lifehub-nav-link"
-                style={({ isActive }) => ({
+              className="lifehub-nav-link"
+              aria-label={item.label}
+              title={item.label}
+              style={({ isActive }) => ({
                 ...styles.navCard,
                 ...(isActive ? styles.navCardActive : {}),
               })}
@@ -422,7 +424,7 @@ export default function DashboardLayout() {
           </div>
         ) : null}
         <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-          {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
+          {quickCreateOpen ? <X size={20} aria-hidden="true" /> : <span className="quick-create-sticker" aria-hidden="true"><Sparkles size={23} /></span>}
         </button>
       </div>
 
@@ -435,7 +437,7 @@ export default function DashboardLayout() {
           </div>
         ) : null}
         <button type="button" className="lifehub-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-          {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
+          {quickCreateOpen ? <X size={21} aria-hidden="true" /> : <span className="quick-create-sticker" aria-hidden="true"><Sparkles size={24} /></span>}
         </button>
       </div>
 
@@ -455,18 +457,18 @@ export default function DashboardLayout() {
         <ModalDialog title="Add an activity" onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form" onSubmit={saveQuickActivity}>
-            <DropdownSelect value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment">
+            <label>Moment<DropdownSelect value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} placeholder="Choose a Moment">
               <option value="">Choose a life moment</option>
               {events.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}</option>)}
-            </DropdownSelect>
-            <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
+            </DropdownSelect></label>
+            <label htmlFor="quick-activity-title">Activity title<input id="quick-activity-title" value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="e.g. Book a table" autoFocus /></label>
             <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
-            <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
+            <label>Priority<DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)}>
               {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
-            </DropdownSelect>
-            <textarea value={quickActivityDescription} onChange={(event) => setQuickActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
+            </DropdownSelect></label>
+            <label htmlFor="quick-activity-description">Description <span className="event-form-optional">Optional</span><textarea id="quick-activity-description" value={quickActivityDescription} onChange={(event) => setQuickActivityDescription(event.target.value)} placeholder="Add useful context" rows={3} /></label>
             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
           </form>
         </ModalDialog>

@@ -1,6 +1,6 @@
 // This is the single-event workspace.
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BookHeart, CalendarDays, Camera, Check, CircleCheck, Clock3, Download, FileText, FolderOpen, Heart, Images, Link2, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
@@ -10,6 +10,7 @@ import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
+import StatePanel from '../../../components/common/StatePanel';
 import ExpenseForm from '../../../components/expenses/ExpenseForm';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
@@ -123,11 +124,12 @@ export default function EventWorkspaceShell() {
   const principal = useAppStore((state) => state.principal);
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
+  const eventLoadKey = `device:${user?.uid || 'active'}`;
   const adminValues = useAppStore((state) => state.adminValues);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem, createAttachment, deleteAttachment, getAttachmentBlob } = useEventStore();
+  const { events, loading, error, loadedFor, loadEvents, updateEventItem, deleteAttachment, createAttachment, getAttachmentBlob } = useEventStore();
   const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
@@ -151,13 +153,14 @@ export default function EventWorkspaceShell() {
   const [attachmentReference, setAttachmentReference] = useState('');
   const [attachmentSource, setAttachmentSource] = useState('gallery');
   const [attachmentFiles, setAttachmentFiles] = useState([]);
-  const [keepAttachmentCopy, setKeepAttachmentCopy] = useState(false);
+  const [keepAttachmentCopy, setKeepAttachmentCopy] = useState(true);
+  const [attachmentDialogOpen, setAttachmentDialogOpen] = useState(false);
+  const galleryInputRef = useRef(null);
+  const filesInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
   const [attachmentSaving, setAttachmentSaving] = useState(false);
   const [attachmentOnMoment, setAttachmentOnMoment] = useState(true);
   const [attachmentActivityId, setAttachmentActivityId] = useState('');
-  const [attachmentTypeFilter, setAttachmentTypeFilter] = useState('all');
-  const [attachmentStatusFilter, setAttachmentStatusFilter] = useState('all');
-  const [attachmentSortMode, setAttachmentSortMode] = useState('recent');
   const [showAllMomentPhotos, setShowAllMomentPhotos] = useState(false);
   const [photoViewer, setPhotoViewer] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
@@ -171,9 +174,9 @@ export default function EventWorkspaceShell() {
 
   useEffect(() => {
     if (!user && !isGuest) return;
-    if (!events.length) loadEvents(user?.uid, isGuest);
+    if (loadedFor !== eventLoadKey) loadEvents(user?.uid, isGuest);
     loadExpenses(user?.uid, isGuest);
-  }, [events.length, isGuest, loadEvents, loadExpenses, user]);
+  }, [eventLoadKey, isGuest, loadedFor, loadEvents, loadExpenses, user]);
 
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
@@ -195,8 +198,12 @@ export default function EventWorkspaceShell() {
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
 
-  if (loading && !event) {
-    return <p style={{ color: 'var(--ink-soft)' }}>Loading event workspace...</p>;
+  if (error === 'Unable to load events.') {
+    return <StatePanel variant="error" icon={CircleAlert} title="Moment couldn’t be loaded" description="Your saved Moment is unchanged. Try again to reopen its workspace." actionLabel="Try again" onAction={() => loadEvents(user?.uid, isGuest)} />;
+  }
+
+  if (loading || loadedFor !== eventLoadKey) {
+    return <StatePanel variant="loading" icon={Clock3} title="Loading Moment" description="Gathering its activities, memories, and attachments." />;
   }
 
 function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId, onRemove }) {
@@ -250,19 +257,19 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
   if (!event) {
     return (
       <div style={{ display: 'grid', gap: '14px' }}>
-        <h2 style={{ margin: 0 }}>Event not found</h2>
-        <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This event may have been removed or is not available in the current session.</p>
-        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Events</Link>
+        <h2 style={{ margin: 0 }}>Moment not found</h2>
+        <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This Moment may have been removed or is not available in the current session.</p>
+        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Moments</Link>
       </div>
     );
   }
 
   const sections = [
-    { label: 'Overview', path: `/events/${eventId}/overview`, detail: 'Event details and current status', icon: FileText },
+    { label: 'Overview', path: `/events/${eventId}/overview`, detail: 'Moment details and current status', icon: FileText },
     { label: 'Activities', path: `/events/${eventId}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
     { label: 'Timeline', path: `/events/${eventId}/timeline`, detail: 'Milestones and progress', icon: Clock3 },
     { label: 'Memories', path: `/events/${eventId}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
-    { label: 'Attachments', path: `/events/${eventId}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
+    { label: 'Attachments', path: `/events/${eventId}/attachments`, detail: `${event.attachments?.length || 0} attachments linked`, icon: Images },
   ];
   const activeSection = sections.find((section) => location.pathname === section.path) || sections[0];
   const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
@@ -485,9 +492,23 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
   const selectAttachmentSource = (source) => {
     setAttachmentSource(source);
     setAttachmentFiles([]);
-    setKeepAttachmentCopy(false);
+    setKeepAttachmentCopy(source === 'gallery' || source === 'camera');
     setAttachmentReference('');
     setAttachmentName('');
+    if (source === 'gallery') galleryInputRef.current?.click();
+    if (source === 'files') filesInputRef.current?.click();
+    if (source === 'camera') cameraInputRef.current?.click();
+  };
+
+  const openAttachmentDialog = () => {
+    setAttachmentSource('gallery');
+    setAttachmentFiles([]);
+    setKeepAttachmentCopy(true);
+    setAttachmentReference('');
+    setAttachmentName('');
+    setAttachmentOnMoment(true);
+    setAttachmentActivityId('');
+    setAttachmentDialogOpen(true);
   };
 
   const addAttachment = async (submitEvent) => {
@@ -548,9 +569,10 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
       setAttachmentName('');
       setAttachmentReference('');
       setAttachmentFiles([]);
-      setKeepAttachmentCopy(false);
+      setKeepAttachmentCopy(attachmentSource === 'gallery' || attachmentSource === 'camera');
       setAttachmentOnMoment(true);
       setAttachmentActivityId('');
+      setAttachmentDialogOpen(false);
       if (isExternalLink) showToast('External link added', 'success');
       else if (keepAttachmentCopy) showToast(`${addedCount} ${addedCount === 1 ? 'file' : 'files'} added with local copies`, 'success');
       else showToast(`${addedCount} ${addedCount === 1 ? 'file detail' : 'file details'} saved. The browser cannot preserve the selected file reference; reselect it later or choose Keep Local Copy.`, 'success');
@@ -673,57 +695,13 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
     }
 
     if (activeSection.label === 'Attachments') {
-      const visibleAttachments = sortAttachmentsForGallery(attachments.filter((attachment) => (
-        (attachmentTypeFilter === 'all' || getAttachmentTypeBucket(attachment) === attachmentTypeFilter)
-        && (attachmentStatusFilter === 'all' || getAttachmentStatus(attachment).value === attachmentStatusFilter)
-      )), attachmentSortMode);
+      const visibleAttachments = sortAttachmentsForGallery(attachments, 'recent');
       const momentPhotos = visibleAttachments.filter((attachment) => getAttachmentTypeBucket(attachment) === 'image');
       const otherAttachments = visibleAttachments.filter((attachment) => getAttachmentTypeBucket(attachment) !== 'image');
       const momentPhotoCount = attachments.filter((attachment) => getAttachmentTypeBucket(attachment) === 'image').length;
       const photosToShow = showAllMomentPhotos ? momentPhotos : momentPhotos.slice(0, 8);
       return (
-        <div className="workspace-resource-list">
-          <details className="attachment-add-disclosure">
-          <summary><Plus size={16} /><span>Add photos or attachment</span></summary>
-          <form className="attachment-create-form" onSubmit={(submitEvent) => void addAttachment(submitEvent)}>
-            <h3>Add an attachment</h3>
-            <p>Choose a source, then connect it to this Moment, an Activity, or both.</p>
-            <div className="attachment-source-options" role="group" aria-label="Attachment source">
-              <button type="button" className={attachmentSource === 'gallery' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'gallery'} onClick={() => selectAttachmentSource('gallery')}><Images size={17} /><span>Photo Gallery</span></button>
-              <button type="button" className={attachmentSource === 'files' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'files'} onClick={() => selectAttachmentSource('files')}><FolderOpen size={17} /><span>Files</span></button>
-              <button type="button" className={attachmentSource === 'camera' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'camera'} onClick={() => selectAttachmentSource('camera')}><Camera size={17} /><span>Camera</span></button>
-              <button type="button" className={`attachment-source-link${attachmentSource === 'external' ? ' is-selected' : ''}`} aria-pressed={attachmentSource === 'external'} onClick={() => selectAttachmentSource('external')}><Link2 size={15} /><span>External Link</span></button>
-            </div>
-            {attachmentSource === 'external' ? <>
-              <label><span>External URL</span><input type="url" value={attachmentReference} onChange={(inputEvent) => setAttachmentReference(inputEvent.target.value)} placeholder="https://…" /></label>
-              <label><span>Display name</span><input value={attachmentName} onChange={(inputEvent) => setAttachmentName(inputEvent.target.value)} placeholder="Reservation, map, web page…" /></label>
-              <p className="attachment-source-note">External links remain references. DN does not download their content.</p>
-            </> : <>
-              <label className="attachment-file-picker"><span>{attachmentSource === 'gallery' ? 'Select photos' : attachmentSource === 'camera' ? 'Capture a photo' : 'Choose files'} <small>{attachmentSource === 'camera' ? 'Your browser may open the device camera.' : attachmentSource === 'gallery' ? 'Choose one or more images.' : 'PDFs, images, Office documents, or text files.'}</small></span><input type="file" accept={attachmentSource === 'gallery' || attachmentSource === 'camera' ? 'image/*' : 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv'} capture={attachmentSource === 'camera' ? 'environment' : undefined} multiple={attachmentSource !== 'camera'} onChange={(inputEvent) => { setAttachmentFiles(Array.from(inputEvent.target.files || [])); inputEvent.currentTarget.value = ''; }} /></label>
-              {attachmentFiles.length ? <section className={attachmentSource === 'gallery' ? 'attachment-selection-review is-photos' : 'attachment-selection-review'} aria-label={`Review ${attachmentFiles.length} selected ${attachmentSource === 'gallery' ? 'photos' : 'files'}`}>
-                <div className="attachment-selection-heading"><strong>Review {attachmentFiles.length} {attachmentSource === 'gallery' ? attachmentFiles.length === 1 ? 'photo' : 'photos' : attachmentFiles.length === 1 ? 'file' : 'files'}</strong><span>Remove anything you don’t want to add.</span></div>
-                <div className={attachmentSource === 'gallery' ? 'attachment-photo-selection-grid' : 'attachment-selected-files'}>{attachmentFiles.map((file, index) => attachmentSource === 'gallery'
-                  ? <SelectedPhoto key={`${file.name}:${file.lastModified}:${index}`} file={file} onRemove={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))} />
-                  : <div className="attachment-selected-file" key={`${file.name}:${file.lastModified}:${index}`}><span><strong>{file.name}</strong><small>{String(file.type || 'Unknown type')} · {formatBytes(file.size)}</small></span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))}><X size={14} /></button></div>)}</div>
-              </section> : null}
-              {attachmentFiles.length ? <>
-                <label className="attachment-copy-choice"><input type="checkbox" checked={keepAttachmentCopy} onChange={(inputEvent) => setKeepAttachmentCopy(inputEvent.target.checked)} /><span>Keep local copy in DN ({attachmentFiles.length} {attachmentFiles.length === 1 ? 'file' : 'files'}, {formatBytes(attachmentFiles.reduce((total, file) => total + file.size, 0))}). This uses device storage and enables Include Attachments backups.</span></label>
-                {!keepAttachmentCopy ? <p className="attachment-source-warning" role="status">No photo bytes are saved by default. A picker selection is temporary, not a durable reference: without a usable reference DN will show Unavailable and you may need to select the photo again. Reference Only applies only when a usable reference is actually saved. Choose Keep Local Copy to preserve this photo on the device.</p> : null}
-              </> : <p className="attachment-source-note">Keep Local Copy is optional and remains off by default.</p>}
-            </>}
-            <div className="attachment-parent-choices">
-              <label><input type="checkbox" checked={attachmentOnMoment} onChange={(inputEvent) => setAttachmentOnMoment(inputEvent.target.checked)} /><span>This Moment</span></label>
-              <label><span>Activity</span><select value={attachmentActivityId} onChange={(inputEvent) => setAttachmentActivityId(inputEvent.target.value)}><option value="">Not linked to an Activity</option>{activities.map((activity) => <option key={activity.id} value={activity.id}>{activity.title || 'Untitled activity'}</option>)}</select></label>
-            </div>
-            <div className="attachment-parent-preview" role="status"><span>Linked to:</span><strong>{getAttachmentLinkLabel([...(attachmentOnMoment ? ['moment'] : []), ...(attachmentActivityId ? ['activity'] : [])])}</strong></div>
-            <button type="submit" className="primaryButton" style={styles.primaryButton} disabled={attachmentSaving}><Plus size={15} /> {attachmentSaving ? 'Adding…' : attachmentSource === 'gallery' && attachmentFiles.length > 1 ? `Add ${attachmentFiles.length} photos` : attachmentSource === 'gallery' ? 'Add photo' : 'Add attachment'}</button>
-          </form>
-          </details>
-          {attachments.length ? <div className="attachment-gallery-toolbar" aria-label="Filter and sort Moment attachments">
-            <label><span>Type</span><select value={attachmentTypeFilter} onChange={(inputEvent) => setAttachmentTypeFilter(inputEvent.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="pdf">PDFs</option><option value="document">Documents</option></select></label>
-            <label><span>Status</span><select value={attachmentStatusFilter} onChange={(inputEvent) => setAttachmentStatusFilter(inputEvent.target.value)}><option value="all">All statuses</option><option value="available">Available</option><option value="on-device">On This Device</option><option value="reference-only">Reference Only</option><option value="unavailable">Unavailable</option></select></label>
-            <label><span>Sort</span><select value={attachmentSortMode} onChange={(inputEvent) => setAttachmentSortMode(inputEvent.target.value)}><option value="recent">Most recent</option><option value="oldest">Oldest</option><option value="name">Name</option><option value="type">Type</option><option value="status">Status</option></select></label>
-          </div> : null}
+        <div className="workspace-resource-list moment-attachments-workspace">
           {attachments.length ? <>
             {momentPhotos.length ? <section className="moment-photo-gallery" aria-label="Moment photos">
               <header className="moment-photo-gallery-heading"><div><h3>Photos</h3><span>{momentPhotoCount} {momentPhotoCount === 1 ? 'photo' : 'photos'} in this Moment{momentPhotos.length !== momentPhotoCount ? ` · ${momentPhotos.length} shown by filters` : ''}</span></div>{momentPhotos.length > 8 ? <button type="button" onClick={() => setShowAllMomentPhotos((current) => !current)}>{showAllMomentPhotos ? 'Show less' : `View all ${momentPhotos.length} photos`}</button> : null}</header>
@@ -732,9 +710,45 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
             {otherAttachments.length ? <section className="moment-other-attachments"><h3>{momentPhotos.length ? 'Other attachments' : 'Attachments'}</h3><div className="attachment-gallery-grid">{otherAttachments.map((attachment) => (
               <AttachmentGalleryItem key={attachment.id} attachment={attachment} getAttachmentBlob={getAttachmentBlob} userId={user?.uid} eventId={eventId} onRemove={() => setPendingDeleteAttachment(attachment)} />
             ))}</div></section> : null}
-            {!visibleAttachments.length ? <div className="workspace-empty-surface"><Images size={24} /><strong>No attachments match these filters</strong><p>Change the type or status filter to see other attachments.</p></div> : null}
           </> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Add photos to this Moment, then open any photo to view its status and links. Choose Keep Local Copy if you want DN to preserve the image on this device.</p></div>}
           {photoViewer ? <PhotoViewerDialog photos={photoViewer.photos} index={photoViewer.index} setIndex={(index) => setPhotoViewer((current) => ({ ...current, index: typeof index === 'function' ? index(current.index) : index }))} contextName={photoViewer.contextName} getAttachmentBlob={getAttachmentBlob} userId={user?.uid} eventId={eventId} onClose={() => setPhotoViewer(null)} /> : null}
+          {attachmentDialogOpen ? <ModalDialog title="Add photos or attachments" variant="drawer" className="attachment-create-drawer" onClose={() => setAttachmentDialogOpen(false)}>
+            <form className="attachment-create-form attachment-create-drawer-form" onSubmit={(submitEvent) => void addAttachment(submitEvent)}>
+              <p>Choose a source, review your selection, then link it to this Moment or an Activity.</p>
+              <div className="attachment-source-options" role="group" aria-label="Choose attachment source">
+                <button type="button" className={attachmentSource === 'gallery' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'gallery'} onClick={() => selectAttachmentSource('gallery')}><Images size={18} /><span><strong>Photo Gallery</strong><small>Choose photos</small></span></button>
+                <button type="button" className={attachmentSource === 'files' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'files'} onClick={() => selectAttachmentSource('files')}><FolderOpen size={18} /><span><strong>Files</strong><small>Browse documents</small></span></button>
+                <button type="button" className={attachmentSource === 'camera' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'camera'} onClick={() => selectAttachmentSource('camera')}><Camera size={18} /><span><strong>Camera</strong><small>Take a photo</small></span></button>
+                <button type="button" className={`attachment-source-link${attachmentSource === 'external' ? ' is-selected' : ''}`} aria-pressed={attachmentSource === 'external'} onClick={() => selectAttachmentSource('external')}><Link2 size={17} /><span><strong>External Link</strong><small>Add a URL</small></span></button>
+              </div>
+              <input ref={galleryInputRef} className="attachment-hidden-picker" type="file" accept="image/*" multiple tabIndex={-1} onChange={(inputEvent) => { setAttachmentFiles(Array.from(inputEvent.target.files || [])); inputEvent.currentTarget.value = ''; }} aria-label="Choose photos from your gallery" />
+              <input ref={filesInputRef} className="attachment-hidden-picker" type="file" accept="image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv" multiple tabIndex={-1} onChange={(inputEvent) => { setAttachmentFiles(Array.from(inputEvent.target.files || [])); inputEvent.currentTarget.value = ''; }} aria-label="Choose files" />
+              <input ref={cameraInputRef} className="attachment-hidden-picker" type="file" accept="image/*" capture="environment" tabIndex={-1} onChange={(inputEvent) => { setAttachmentFiles(Array.from(inputEvent.target.files || [])); inputEvent.currentTarget.value = ''; }} aria-label="Take a photo with the camera" />
+              {attachmentSource === 'external' ? <>
+                <label><span>External URL</span><input type="url" value={attachmentReference} onChange={(inputEvent) => setAttachmentReference(inputEvent.target.value)} placeholder="https://…" /></label>
+                <label><span>Display name</span><input value={attachmentName} onChange={(inputEvent) => setAttachmentName(inputEvent.target.value)} placeholder="Reservation, map, web page…" /></label>
+                <p className="attachment-source-note">External links stay as references. DN does not download their content.</p>
+              </> : attachmentFiles.length ? <>
+                <section className={attachmentSource === 'gallery' || attachmentSource === 'camera' ? 'attachment-selection-review is-photos' : 'attachment-selection-review'} aria-label={`Review ${attachmentFiles.length} selected ${attachmentFiles.length === 1 ? 'item' : 'items'}`}>
+                  <div className="attachment-selection-heading"><strong>Review {attachmentFiles.length} {attachmentFiles.length === 1 ? 'item' : 'items'}</strong><span>Remove anything you don’t want to add.</span></div>
+                  <div className={attachmentSource === 'gallery' || attachmentSource === 'camera' ? 'attachment-photo-selection-grid' : 'attachment-selected-files'}>{attachmentFiles.map((file, index) => attachmentSource === 'gallery' || attachmentSource === 'camera'
+                    ? <SelectedPhoto key={`${file.name}:${file.lastModified}:${index}`} file={file} onRemove={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))} />
+                    : <div className="attachment-selected-file" key={`${file.name}:${file.lastModified}:${index}`}><span><strong>{file.name}</strong><small>{String(file.type || 'Unknown type')} · {formatBytes(file.size)}</small></span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))}><X size={14} /></button></div>)}</div>
+                </section>
+                <label className="attachment-copy-choice"><input type="checkbox" checked={keepAttachmentCopy} onChange={(inputEvent) => setKeepAttachmentCopy(inputEvent.target.checked)} /><span>{attachmentSource === 'gallery' || attachmentSource === 'camera' ? 'Keep photo copy on this device · Recommended' : 'Keep a local copy in DN'} ({attachmentFiles.length} {attachmentFiles.length === 1 ? 'file' : 'files'}, {formatBytes(attachmentFiles.reduce((total, file) => total + file.size, 0))}). Uses device storage; copies move to another device only in an Include Attachments backup.</span></label>
+                {!keepAttachmentCopy ? <p className="attachment-source-warning" role="status">Only file details and links will be saved. The selected local file is temporary and will become unavailable after this session unless you select it again. A local file is not a Reference Only link.</p> : <p className="attachment-source-note" role="status">A local copy lets DN preview this selection after you leave the picker. The copy stays on this device.</p>}
+              </> : <p className="attachment-source-note">{attachmentSource === 'gallery' ? 'Choose photos above. A local copy is recommended so they remain previewable after this session.' : attachmentSource === 'camera' ? 'Choose Camera to open the device capture flow. Your browser may ask for camera permission or offer its photo picker.' : 'Choose Files to browse this device. A local copy is optional; without it, DN keeps details only.'}</p>}
+              <div className="attachment-parent-choices">
+                <label><input type="checkbox" checked={attachmentOnMoment} onChange={(inputEvent) => setAttachmentOnMoment(inputEvent.target.checked)} /><span>This Moment</span></label>
+                <label><span>Activity</span><DropdownSelect value={attachmentActivityId} onChange={(inputEvent) => setAttachmentActivityId(inputEvent.target.value)} aria-label="Link attachment to Activity"><option value="">Not linked to an Activity</option>{activities.map((activity) => <option key={activity.id} value={activity.id}>{activity.title || 'Untitled activity'}</option>)}</DropdownSelect></label>
+              </div>
+              <div className="attachment-parent-preview" role="status"><span>Linked to:</span><strong>{getAttachmentLinkLabel([...(attachmentOnMoment ? ['moment'] : []), ...(attachmentActivityId ? ['activity'] : [])])}</strong></div>
+              <div className="attachment-create-actions">
+                <button type="button" className="secondaryButton" onClick={() => setAttachmentDialogOpen(false)}>Cancel</button>
+                <button type="submit" className="primaryButton" disabled={attachmentSaving}><Plus size={15} aria-hidden="true" /> {attachmentSaving ? 'Adding…' : attachmentSource === 'gallery' && attachmentFiles.length > 1 ? `Add ${attachmentFiles.length} photos` : attachmentSource === 'gallery' ? 'Add photo' : attachmentSource === 'camera' ? 'Save photo' : 'Add attachment'}</button>
+              </div>
+            </form>
+          </ModalDialog> : null}
         </div>
       );
     }
@@ -742,7 +756,6 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
     if (activeSection.label === 'Memories') {
       return (
         <div className="workspace-resource-list">
-          <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add memory</button>
           {event.memories?.length ? event.memories.map((memory) => (
             <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span className="workspace-memory-body free-text-preview is-truncated">{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
@@ -762,7 +775,6 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
           <div className="event-moment-top-actions">
-            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={15} /><span>Add memory</span></button>
             <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={15} /><span>Greeting card</span></button>
             <button type="button" className="event-moment-delete" onClick={() => setPendingDeleteEvent(true)} aria-label="Delete event" title="Delete event"><Trash2 size={16} /></button>
           </div>
@@ -796,10 +808,12 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
       </nav>
 
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
-        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-activity-action' : ''}`}>
+        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-activity-action' : ''}${activeSection.label === 'Memories' || activeSection.label === 'Attachments' ? ' has-section-action' : ''}`}>
           <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
           <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
           {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}><Plus size={15} aria-hidden="true" /> Add activity</button> : null}
+          {activeSection.label === 'Memories' ? <button type="button" className="workspace-add-activity workspace-add-section-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><Plus size={15} aria-hidden="true" /> Add</button> : null}
+          {activeSection.label === 'Attachments' ? <button type="button" className="workspace-add-activity workspace-add-section-action" onClick={openAttachmentDialog} aria-label="Add photos or attachment"><Plus size={15} aria-hidden="true" /> Add</button> : null}
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
@@ -826,16 +840,16 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
 
       {activityDialogOpen ? (
         <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); }}>
-          <form onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
+          <form className="form-surface" onSubmit={addActivity}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
-            <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
+            <label htmlFor="workspace-activity-title">Activity title<input id="workspace-activity-title" value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="e.g. Book a table" autoFocus /></label>
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
-            <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
+            <label>Priority<DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)}>
               {ACTIVITY_PRIORITY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
-            </DropdownSelect>
-            <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
+            </DropdownSelect></label>
+            <label htmlFor="workspace-activity-description">Description <span className="event-form-optional">Optional</span><textarea id="workspace-activity-description" value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Add useful context" rows={4} /></label>
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setActivityDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
@@ -864,8 +878,8 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
       ) : null}
       {notesDialogOpen ? (
         <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
-          <form onSubmit={saveNotes} style={{ display: 'grid', gap: '12px' }}>
-            <textarea value={notesDraft} onChange={(submitEvent) => setNotesDraft(submitEvent.target.value)} placeholder="What should you remember about this event?" style={styles.input} rows={7} autoFocus />
+          <form className="form-surface" onSubmit={saveNotes}>
+            <label htmlFor="workspace-moment-notes">Moment notes<textarea id="workspace-moment-notes" value={notesDraft} onChange={(submitEvent) => setNotesDraft(submitEvent.target.value)} placeholder="What would you like to remember about this Moment?" rows={7} autoFocus /></label>
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
@@ -875,9 +889,9 @@ function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId,
       ) : null}
       {memoryDialogOpen ? (
         <ModalDialog title="Add memory" onClose={() => setMemoryDialogOpen(false)}>
-          <form onSubmit={saveMemory} style={{ display: 'grid', gap: '12px' }}>
-            <input value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Memory title" style={styles.input} autoFocus />
-            <textarea value={memoryBody} onChange={(eventChange) => setMemoryBody(eventChange.target.value)} placeholder="What do you want to remember?" style={styles.input} rows={6} />
+          <form className="form-surface" onSubmit={saveMemory}>
+            <label htmlFor="workspace-memory-title">Memory title<input id="workspace-memory-title" value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Give this memory a title" autoFocus /></label>
+            <label htmlFor="workspace-memory-body">Memory details<textarea id="workspace-memory-body" value={memoryBody} onChange={(eventChange) => setMemoryBody(eventChange.target.value)} placeholder="What do you want to remember?" rows={6} /></label>
             <div className="dialog-actions" style={styles.dialogActions}><button type="button" className="secondaryButton" onClick={() => setMemoryDialogOpen(false)}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
           </form>
         </ModalDialog>

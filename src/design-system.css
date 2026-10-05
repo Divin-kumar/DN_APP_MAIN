@@ -317,10 +317,15 @@ html[data-theme] .event-workspace-section-panel { min-width: 0; }
 html[data-theme] .event-workspace-section-panel { padding-top: var(--space-xs); }
 html[data-theme] .event-section-heading { display: grid; gap: var(--space-xs); margin: 0 0 var(--space-sm); }
 html[data-theme] .event-section-heading h2 { margin: 0; color: var(--color-text); font-size: var(--font-title); }
-html[data-theme] .event-section-heading.has-activity-action { grid-template-columns: minmax(0,1fr) auto; align-items: end; column-gap: var(--space-md); row-gap: var(--space-xs); }
-html[data-theme] .event-section-heading.has-activity-action > span { grid-column: 1 / -1; }
-html[data-theme] .event-section-heading.has-activity-action > h2 { grid-column: 1; grid-row: 2; }
-html[data-theme] .event-section-heading.has-activity-action > .workspace-add-activity { grid-column: 2; grid-row: 2; }
+html[data-theme] .event-section-heading.has-activity-action,
+html[data-theme] .event-section-heading.has-section-action { grid-template-columns: minmax(0,1fr) auto; align-items: end; column-gap: var(--space-md); row-gap: var(--space-xs); }
+html[data-theme] .event-section-heading.has-activity-action > span,
+html[data-theme] .event-section-heading.has-section-action > span { grid-column: 1 / -1; }
+html[data-theme] .event-section-heading.has-activity-action > h2,
+html[data-theme] .event-section-heading.has-section-action > h2 { grid-column: 1; grid-row: 2; }
+html[data-theme] .event-section-heading.has-activity-action > .workspace-add-activity,
+html[data-theme] .event-section-heading.has-section-action > .workspace-add-section-action { grid-column: 2; grid-row: 2; }
+html[data-theme] .workspace-add-section-action { display: inline-flex; min-height: 36px; align-items: center; justify-self: end; gap: var(--space-xs); padding: 0 11px !important; font-size: var(--font-caption) !important; white-space: nowrap; }
 html[data-theme] .event-moment-overview { display: grid; grid-template-columns: minmax(0,1.3fr) minmax(220px,.7fr); gap: var(--space-md); }
 html[data-theme] .event-featured-memory { min-height: 145px; }
 html[data-theme] .event-health-strip,
@@ -747,8 +752,6 @@ html[data-theme] .event-activity-card.is-open { cursor: default; }
 }
 
 @media (hover: hover) and (pointer: fine) {
-  html[data-theme] .event-story-card:hover .event-story-actions { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
-  html[data-theme] .event-story-card:hover .event-story-main { transform: translateX(-246px); }
   html[data-theme] .event-activity-card:hover .event-activity-actions { visibility: visible; opacity: 1; pointer-events: auto; }
   html[data-theme] .event-activity-card:hover .event-activity-main { transform: translateX(-222px); }
 }
@@ -885,6 +888,8 @@ html[data-theme] .event-activity-card.is-open { cursor: default; }
 html[data-theme] .code-list-section { display: grid; gap: var(--space-md) !important; padding: var(--space-lg) !important; }
 html[data-theme] .code-list-add-row { display: grid; grid-template-columns: minmax(0,1fr) auto; gap: var(--space-sm); align-items: center; }
 html[data-theme] .code-list-add-row.has-labels { grid-template-columns: minmax(0,1fr) minmax(0,1fr) auto; }
+html[data-theme] .code-list-add-field { display: grid; min-width: 0; gap: 4px; color: var(--color-text-muted); font-size: var(--font-caption); font-weight: 650; }
+html[data-theme] .code-list-add-field > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme] .code-list-add-row input { width: 100%; min-width: 0; min-height: 40px; padding: 0 var(--space-md) !important; font-size: var(--font-body) !important; }
 html[data-theme] .code-list-add-row .settings-tag-add { min-width: 64px; min-height: 40px; height: 40px; border-radius: var(--radius-sm); font-size: var(--font-body); }
 html[data-theme] .code-list-rows { overflow: hidden; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
@@ -926,7 +931,7 @@ html[data-theme] .code-list-rename-dialog .settings-actions button { min-height:
 @media (max-width: 760px) {
   html[data-theme] .code-list-section { gap: var(--space-md) !important; padding: var(--space-md) !important; }
   html[data-theme] .code-list-add-row.has-labels { grid-template-columns: minmax(0,1fr) auto; }
-  html[data-theme] .code-list-add-row.has-labels input:nth-child(2) { grid-column: 1; }
+  html[data-theme] .code-list-add-row.has-labels .code-list-add-field { grid-column: 1; }
   html[data-theme] .code-list-add-row.has-labels .settings-tag-add { grid-column: 2; grid-row: 1 / span 2; height: 100%; }
   html[data-theme] .code-list-row { padding: 0 var(--space-md) !important; }
   html[data-theme] .lifehub-modal.code-list-rename-dialog { width: min(400px,100%) !important; padding: 20px 18px !important; border-radius: 22px !important; }
@@ -1049,6 +1054,27 @@ html[data-theme] .event-story-main { width: 100%; }
 html[data-theme] .event-story-copy { min-width: 0; overflow: hidden; overflow-wrap: anywhere; }
 html[data-theme] .event-story-details { min-width: 0; }
 
+/* Keyboard users can reveal the Moment swipe actions from a focused card. */
+html[data-theme] .event-story-main:focus-visible { outline: 3px solid color-mix(in srgb,var(--color-primary) 72%,transparent) !important; outline-offset: -3px; }
+html[data-theme] .event-story-main:focus-visible::after {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  z-index: 4;
+  padding: 4px 7px;
+  border-radius: 7px;
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  content: "← Actions · Delete →";
+  font-size: 10px;
+}
+html[data-theme] .event-story-main .event-story-status { right: 98px; }
+html[data-theme] .event-story-main .event-story-meta { padding-right: 100px; }
+html[data-theme] .event-story-copy { overflow-wrap: normal; word-break: normal; }
+html[data-theme] .life-journey-cards .event-story-main .event-story-status { top: 56px; right: 8px; }
+html[data-theme] .life-journey-cards .event-story-main .event-story-meta { padding-right: 0; }
+html[data-theme] .event-story-card:not(.is-open-other):not(.is-open-delete):hover .event-story-main { transform: none !important; }
+
 html[data-theme] .event-activity-actions-other { inset: 0 0 0 auto !important; width: 222px !important; }
 html[data-theme] .event-activity-actions-delete { inset: 0 auto 0 0 !important; width: 74px !important; }
 html[data-theme] .event-activity-actions .event-activity-action-cancel { background: var(--color-warning) !important; color: #172033 !important; }
@@ -1100,16 +1126,9 @@ html[data-theme] .financial-swipe-row.is-open-delete .financial-swipe-main { tra
 }
 
 @media (hover: hover) and (pointer: fine) {
-  html[data-theme] .event-story-card:hover .event-story-actions-delete,
   html[data-theme] .event-activity-card:hover .event-activity-actions-delete { visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
-  html[data-theme] .event-story-card:hover .event-story-actions-other,
   html[data-theme] .event-activity-card:hover .event-activity-actions-other { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
-  html[data-theme] .event-story-card:hover .event-story-actions-other { z-index: 2 !important; }
-  html[data-theme] .event-story-card:hover .event-story-main { transform: translateX(-246px) !important; }
   html[data-theme] .event-activity-card:hover .event-activity-main { transform: translateX(-222px) !important; }
-  html[data-theme] .financial-swipe-row:hover .financial-swipe-actions-delete { visibility: hidden; opacity: 0; pointer-events: none; }
-  html[data-theme] .financial-swipe-row:hover .financial-swipe-actions-other { visibility: visible; opacity: 1; pointer-events: auto; }
-  html[data-theme] .financial-swipe-row:hover .financial-swipe-main { transform: translateX(-76px); }
 }
 
 html[data-theme] .event-discovery-actions { display: flex; min-width: 0; align-items: center; justify-content: flex-end; gap: var(--space-sm); }
@@ -1328,6 +1347,10 @@ html[data-theme] .mobile-dock-create-trigger {
 }
 html[data-theme] .lifehub-quick-create-trigger svg,
 html[data-theme] .mobile-dock-create-trigger svg { width: 22px; height: 22px; stroke-width: 2.2; }
+html[data-theme] .quick-create-sticker { position: relative; display: grid; place-items: center; color: #fff; filter: drop-shadow(0 2px 4px color-mix(in srgb,var(--color-primary-dark) 45%,transparent)); animation: dn-quick-create-sticker 2.8s ease-in-out infinite; }
+html[data-theme] .quick-create-sticker::after { position: absolute; inset: -7px; border: 1px solid color-mix(in srgb,#fff 40%,transparent); border-radius: 50%; content: ''; animation: dn-quick-create-halo 2.8s ease-in-out infinite; }
+@keyframes dn-quick-create-sticker { 0%,100% { transform: translateY(0) rotate(-4deg) scale(1); } 50% { transform: translateY(-2px) rotate(4deg) scale(1.08); } }
+@keyframes dn-quick-create-halo { 0%,100% { opacity: .25; transform: scale(.88); } 50% { opacity: .75; transform: scale(1.08); } }
 html[data-theme] .lifehub-quick-create-trigger:hover,
 html[data-theme] .mobile-dock-create-trigger:hover { box-shadow: 0 12px 29px color-mix(in srgb,var(--color-primary) 38%,transparent),inset 0 1px 0 color-mix(in srgb,#fff 38%,transparent) !important; transform: translateY(-2px) scale(1.025); }
 html[data-theme] .lifehub-quick-create-trigger:active,
@@ -1391,7 +1414,7 @@ html[data-theme] .mobile-dock-create-trigger { width: 50px !important; min-width
   html[data-theme] .lifehub-modal .form-actions button,
   html[data-theme] .lifehub-modal .dialog-actions button,
   html[data-theme] .lifehub-modal .event-form-actions button { min-height: 44px !important; flex: 1 1 auto; }
-  html[data-theme] .lifehub-quick-create { right: var(--space-md); bottom: calc(env(safe-area-inset-bottom,0px) + 86px); }
+  html[data-theme] .lifehub-quick-create { right: var(--space-md); bottom: 86px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1403,6 +1426,8 @@ html[data-theme] .mobile-dock-create-trigger { width: 50px !important; min-width
   html[data-theme] .modal-danger-button,
   html[data-theme] .lifehub-quick-create-trigger,
   html[data-theme] .mobile-dock-create-trigger { transition-duration: .01ms !important; }
+  html[data-theme] .quick-create-sticker,
+  html[data-theme] .quick-create-sticker::after { animation: none !important; }
 }
 
 /* Free text always keeps authored line breaks; previews clamp only after preserving that structure. */
@@ -1522,10 +1547,11 @@ html[data-theme] .life-journey-cards .event-story-copy > .event-story-date,
 html[data-theme] .life-journey-cards .event-story-copy > .event-story-note,
 html[data-theme] .life-journey-cards .event-story-copy > .event-story-details { display: none !important; }
 html[data-theme] .life-journey-cards .event-story-copy > strong { display: block !important; width: 100%; min-width: 0; overflow: hidden; color: var(--color-text) !important; font-size: var(--font-caption) !important; font-weight: 700; line-height: 1.25; text-overflow: ellipsis; white-space: nowrap !important; }
-html[data-theme] .life-journey-cards .event-story-actions { display: none !important; visibility: hidden !important; opacity: 0 !important; pointer-events: none !important; }
-html[data-theme] .life-journey-cards .event-story-card:hover .event-story-main,
-html[data-theme] .life-journey-cards .event-story-card.is-open-other .event-story-main,
-html[data-theme] .life-journey-cards .event-story-card.is-open-delete .event-story-main { transform: none !important; }
+html[data-theme] .life-journey-cards .event-story-actions { display: flex !important; }
+html[data-theme] .life-journey-cards .event-story-card.is-open-other .event-story-actions-other,
+html[data-theme] .life-journey-cards .event-story-card.is-open-delete .event-story-actions-delete { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
+html[data-theme] .life-journey-cards .event-story-card.is-open-other .event-story-main { transform: translateX(-246px) !important; }
+html[data-theme] .life-journey-cards .event-story-card.is-open-delete .event-story-main { transform: translateX(82px) !important; }
 html[data-theme] .life-journey-cards .event-story-main:hover { background: var(--color-card-raised) !important; }
 
 @media (max-width: 760px) {
@@ -1561,7 +1587,7 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
 /* Keep the mobile quick-create FAB spatially separate from the navigation dock. */
 @media (max-width: 760px) {
   html[data-theme] {
-    --mobile-tabbar-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+    --mobile-tabbar-bottom: 8px;
     --mobile-tabbar-height: 72px;
     --mobile-fab-gap: 14px;
     --mobile-fab-size: 56px;
@@ -1585,7 +1611,7 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
   html[data-theme] .mobile-dock-create {
     position: fixed !important;
     right: max(16px, calc(env(safe-area-inset-right, 0px) + 14px)) !important;
-    bottom: calc(var(--mobile-tabbar-bottom) + var(--mobile-tabbar-height) + var(--mobile-fab-gap) + var(--mobile-fab-size)) !important;
+    bottom: calc(var(--mobile-tabbar-bottom) + var(--mobile-tabbar-height) + var(--mobile-fab-gap)) !important;
     z-index: 100 !important;
     display: grid !important;
     justify-items: end;
@@ -1625,7 +1651,7 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
 
 @media (max-width: 900px) and (max-height: 500px) {
   html[data-theme] {
-    --mobile-tabbar-bottom: calc(env(safe-area-inset-bottom, 0px) + 6px);
+    --mobile-tabbar-bottom: 6px;
     --mobile-tabbar-height: 54px;
     --mobile-fab-gap: 10px;
     --mobile-fab-size: 48px;
@@ -1634,4 +1660,64 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
   html[data-theme] .mobile-tabbar { padding: 3px !important; }
   html[data-theme] .mobile-tabbar > .mobile-tab { min-height: 44px !important; }
   html[data-theme] .mobile-dock-create-menu { max-height: min(32dvh, 132px) !important; }
+}
+
+/* Moment swipe viewport and tray share the same clipped card surface. */
+html[data-theme] .event-story-card:not(.event-story-card-grid) { overflow: hidden; border-radius: 16px; }
+html[data-theme] .event-story-card.is-actions-menu-open { overflow: visible !important; }
+html[data-theme] .event-story-main-viewport { overflow: visible !important; }
+/* Financial swipe rows keep a stationary card box and fixed 76px reveal geometry. */
+html[data-theme] .financial-swipe-row {
+  width: 100%;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-card-raised);
+  box-shadow: var(--shadow-card);
+}
+html[data-theme] .financial-swipe-main {
+  width: 100%;
+  margin: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--color-card-raised) !important;
+  box-shadow: none !important;
+}
+html[data-theme] .financial-swipe-actions { width: 76px; align-items: stretch; }
+html[data-theme] .financial-swipe-actions-delete { inset-inline-start: 0; inset-inline-end: auto; }
+html[data-theme] .financial-swipe-actions-other { inset-inline-end: 0; inset-inline-start: auto; }
+html[data-theme] .financial-swipe-actions button {
+  width: 68px !important;
+  min-width: 68px !important;
+  flex: 0 0 68px !important;
+  height: calc(100% - 8px) !important;
+  margin: 4px !important;
+}
+
+html[data-theme] .event-summary-photos { display: grid; gap: var(--space-sm); }
+html[data-theme] .event-summary-photos > h4 { display: flex; align-items: center; gap: var(--space-sm); color: var(--color-text); font-size: var(--font-body); }
+html[data-theme] .event-summary-photos > h4 span { color: var(--color-text-muted); font-size: var(--font-caption); }
+html[data-theme] .event-summary-photo-grid { display: grid; grid-template-columns: repeat(auto-fill,minmax(92px,1fr)); gap: var(--space-sm); }
+html[data-theme] .event-summary-photo-button { display: grid; min-width: 0; gap: 5px; padding: 5px; overflow: hidden; border: 1px solid var(--color-border); border-radius: 12px; background: var(--color-card-raised) !important; color: var(--color-text-muted) !important; text-align: left; text-decoration: none; }
+html[data-theme] .event-summary-photo-button > img,
+html[data-theme] .event-summary-photo-fallback { display: grid; width: 100%; aspect-ratio: 1; place-items: center; overflow: hidden; border-radius: 8px; background: var(--color-surface); object-fit: cover; }
+html[data-theme] .event-summary-photo-fallback { align-content: center; gap: 5px; }
+html[data-theme] .event-summary-photo-fallback small { font-size: 10px; text-align: center; }
+html[data-theme] .event-summary-photo-name { overflow: hidden; padding: 0 3px 2px; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+html[data-theme] .event-summary-photo-details-link { padding: 4px 3px 2px; border-top: 1px solid var(--color-border); color: var(--color-primary); font-size: 10px; font-weight: 700; }
+html[data-theme] .event-summary-photo-button:hover,
+html[data-theme] .event-summary-photo-button:focus-visible { border-color: var(--color-primary); outline: 2px solid color-mix(in srgb,var(--color-primary) 48%,transparent); outline-offset: 2px; }
+
+html[data-theme] .event-story-card { --moment-other-reveal: 246px; --moment-delete-reveal: 82px; }
+html[data-theme] .event-story-actions-other { width: var(--moment-other-reveal) !important; }
+html[data-theme] .event-story-actions-delete,
+html[data-theme] .event-story-actions-delete .event-story-action-delete { width: var(--moment-delete-reveal) !important; min-width: var(--moment-delete-reveal) !important; }
+html[data-theme] .event-story-card.is-open-other .event-story-main { transform: translateX(calc(-1 * var(--moment-other-reveal))) !important; }
+html[data-theme] .event-story-card.is-open-delete .event-story-main { transform: translateX(var(--moment-delete-reveal)) !important; }
+html[data-theme] .life-journey-cards .event-story-card { --moment-other-reveal: min(216px,100%); --moment-delete-reveal: min(72px,100%); }
+html[data-theme] .life-journey-cards .event-story-card.is-open-other .event-story-main { transform: translateX(calc(-1 * var(--moment-other-reveal))) !important; }
+html[data-theme] .life-journey-cards .event-story-card.is-open-delete .event-story-main { transform: translateX(var(--moment-delete-reveal)) !important; }
+html[data-theme] .life-journey-cards .event-story-card.is-open-other .event-story-actions-other,
+html[data-theme] .life-journey-cards .event-story-card.is-open-delete .event-story-actions-delete { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important; }
+@media (max-width: 760px) {
+  html[data-theme] .life-journey:not(.life-journey-cards) .event-story-card { --moment-other-reveal: 216px; --moment-delete-reveal: 72px; }
 }
