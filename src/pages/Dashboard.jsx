@@ -1,36 +1,8 @@
 /* Legacy dashboard shell retained for compatibility with the migration route surface. */
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
-import { authService } from '../services/firebase';
-import { useGuest } from '../context/GuestContext';
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
-  const { exitGuestMode } = useGuest();
-
-  const handleLogout = async () => {
-    try {
-      if (isGuest) {
-        exitGuestMode();
-        navigate('/login', { replace: true });
-        return;
-      }
-
-      await authService.signOutUser();
-      navigate('/login', { replace: true });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  useEffect(() => {
-    if (!user && !isGuest) {
-      navigate('/login', { replace: true });
-    }
-  }, [user, isGuest, navigate]);
+  const principal = useAppStore((state) => state.principal);
 
   return (
     <div style={styles.appShell}>
@@ -44,13 +16,7 @@ export default function Dashboard() {
         </div>
 
         <div style={styles.userSection}>
-          {user?.photoURL ? (
-            <img src={user.photoURL} alt="User profile" style={styles.avatar} />
-          ) : null}
-          <span style={styles.userName}>{user?.displayName || 'Guest'}</span>
-          <button style={styles.logoutButton} onClick={handleLogout}>
-            Logout
-          </button>
+          <span style={styles.userName}>{principal?.deviceName || 'This device'}</span>
         </div>
       </header>
 
@@ -65,15 +31,13 @@ export default function Dashboard() {
 
         <section style={styles.contentPane}>
           <div style={styles.banner}>
-            {isGuest
-              ? 'Guest mode active. Your data is stored locally on this device.'
-              : 'Authenticated mode active. Your data is synced with Firebase.'}
+            Your data is stored locally on this device.
           </div>
 
           <div style={styles.placeholderCard}>
             <h2 style={styles.placeholderTitle}>Dashboard Shell Ready</h2>
             <p style={styles.placeholderText}>
-              Phase 1 includes auth, guest mode, protected routes, and the layout shell.
+              DN is ready for this device.
             </p>
           </div>
         </section>

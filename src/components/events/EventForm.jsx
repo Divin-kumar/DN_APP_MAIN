@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
-import { getCodeListItems } from '../../utils/codeLists';
+import { getActiveCodeListMeta } from '../../utils/codeLists';
 
 const createDefaultState = (defaultEventType) => ({
   id: '',
@@ -18,7 +18,7 @@ const createDefaultState = (defaultEventType) => ({
 
 export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
   const adminValues = useAppStore((state) => state.adminValues);
-  const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
+  const eventTypeOptions = getActiveCodeListMeta('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
   const [form, setForm] = useState(() => createDefaultState(defaultEventType));
 
@@ -73,7 +73,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         <label htmlFor="event-type">Moment type
           <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
             {eventTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option.id || option.value} value={option.value}>{option.label}</option>
             ))}
             <option value="Other">Other</option>
           </DropdownSelect>

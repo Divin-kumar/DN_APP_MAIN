@@ -12,7 +12,6 @@ import { Component, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
-import { GuestProvider } from './context/GuestContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
@@ -27,6 +26,7 @@ const Financials = lazy(() => import('./pages/Financials'));
 const Income = lazy(() => import('./pages/Income'));
 const Expenses = lazy(() => import('./pages/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
+const DataBackup = lazy(() => import('./pages/DataBackup'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
@@ -79,7 +79,7 @@ class RouteErrorBoundary extends Component {
     return (
       <main className="route-error-screen" role="alert">
         <div className="route-error-card">
-          <span className="route-error-eyebrow">LifeHub</span>
+          <span className="route-error-eyebrow">DN</span>
           <h1>This page couldn’t load</h1>
           <p>The page encountered a loading error. Refresh to try again.</p>
           <details className="route-error-details">
@@ -135,9 +135,8 @@ function GlobalToast() {
 
 export default function App() {
   return (
-    // Authentication and guest session wrappers sit at the top level.
+    // The provider bootstraps the local Device Principal before protected routes render.
     <AuthProvider>
-      <GuestProvider>
         <GlobalToast />
         <Routes>
           {/* Public route: anyone can view the login screen. */}
@@ -172,6 +171,7 @@ export default function App() {
               <Route path="expenses" element={loadScreen(<Expenses />, 'expenses')} />
             </Route>
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
+            <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />
           </Route>
@@ -179,7 +179,6 @@ export default function App() {
           {/* If a user types an unknown URL, send them to home. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </GuestProvider>
     </AuthProvider>
   );
 }

@@ -22,6 +22,11 @@ export const CODE_LIST_MIGRATIONS = Object.freeze({
   1: Object.freeze({ additions: Object.freeze({}) }),
 });
 
+export const normalizeCodeListIdentityValue = (value) => String(value ?? '')
+  .trim()
+  .toLocaleLowerCase()
+  .replace(/\s+/g, ' ');
+
 export const migrateStoredCodeLists = (
   storedValues,
   storedVersion = 0,
@@ -85,6 +90,7 @@ const normalizeMetaEntry = (item) => {
     const active = item.isActive !== false && item.active !== false;
     return {
       ...item,
+      id: typeof item.id === 'string' && item.id ? item.id : `legacy:${value}`,
       value,
       label: label || value,
       active,

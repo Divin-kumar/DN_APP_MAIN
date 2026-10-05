@@ -27,6 +27,10 @@ export const validateCodeListRecord = (record = {}) => {
     errors.push('Code list entryValue is required.');
   }
 
+  if (record.value !== undefined && (typeof record.value !== 'string' || record.value !== record.entryValue)) {
+    errors.push('Code list value must match its stable entryValue identity.');
+  }
+
   if (!record.label || typeof record.label !== 'string') {
     errors.push('Code list label is required.');
   }

@@ -10,9 +10,10 @@
 */
 import { create } from 'zustand';
 import { db } from '../database/index.js';
+import { initializeDatabase } from '../database/boot.js';
 import { DATABASE_TABLES } from '../database/tables.js';
 import { DEFAULT_CODE_LISTS, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists.js';
-import { codeListRepository, settingsRepository } from '../repositories/index.js';
+import { codeListRepository, devicePrincipalRepository, settingsRepository } from '../repositories/index.js';
 import { validateSettingsKey } from '../repositories/settingsRepository.validation.js';
 import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
@@ -46,7 +47,8 @@ const mapCodeListRows = (rows) => Object.entries(DEFAULT_CODE_LISTS).reduce((res
   const stored = rows
     .filter((row) => row.listKey === listKey)
     .map((row) => ({
-      value: row.entryValue,
+      id: row.id,
+      value: row.value ?? row.entryValue,
       label: row.label,
       active: row.active,
       isActive: row.isActive,
@@ -70,11 +72,24 @@ const persistCodeLists = async (principalId, current, patch) => {
     for (const [listKey, items] of Object.entries(patch)) {
       if (!Object.prototype.hasOwnProperty.call(DEFAULT_CODE_LISTS, listKey)) continue;
       const normalized = serializeCodeListEntries(items);
-      await codeListRepository.deleteList(principalId, listKey);
       if (normalized.length) await codeListRepository.setList(principalId, listKey, normalized);
+      else await codeListRepository.deleteList(principalId, listKey);
     }
   });
   return { ...current, ...patch };
+};
+
+const ensurePersistentDefaults = async (principalId) => {
+  if (!principalId) return { preferences: {}, adminValues: {} };
+  const defaults = createDefaultPreferences();
+  const [settingsResult, codeListResult] = await Promise.all([
+    settingsRepository.ensureDefaults(principalId, defaults),
+    codeListRepository.ensureDefaults(principalId),
+  ]);
+  return {
+    preferences: normalizePreferences(settingsResult),
+    adminValues: Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([listKey, values]) => [listKey, serializeCodeListEntries(codeListResult[listKey] || values)])),
+  };
 };
 
 const persistPreferences = async (principalId, current, partial) => {
@@ -92,11 +107,10 @@ const persistPreferences = async (principalId, current, partial) => {
 
 const useAppStore = create((set) => ({
   // User information and session status.
-  user: null,
-  authReady: false,
-  isGuest: false,
+  principal: null,
+  principalReady: false,
+  migrationCandidates: [],
   appLoading: true,
-  sessionType: 'unauthenticated',
   principalId: null,
   persistentReady: false,
   persistenceError: null,
@@ -108,24 +122,27 @@ const useAppStore = create((set) => ({
 
   hydratePersistentData: async (principalId) => {
     if (!principalId) throw new Error('A repository principal is required to hydrate persistent settings.');
+    const { preferences: defaultPreferencesState, adminValues: defaultAdminValues } = await ensurePersistentDefaults(principalId);
     const [storedPreferences, storedCodeLists] = await Promise.all([
       settingsRepository.getPreferences(principalId),
       codeListRepository.getAll(principalId),
     ]);
+    const normalizedPreferences = normalizePreferences(storedPreferences && Object.keys(storedPreferences).length ? storedPreferences : defaultPreferencesState);
+    const normalizedAdminValues = Object.keys(storedCodeLists || {}).length ? mapCodeListRows(storedCodeLists) : { ...defaultAdminValues, ...mapCodeListRows(storedCodeLists) };
     set({
       principalId,
-      preferences: normalizePreferences(storedPreferences),
-      adminValues: mapCodeListRows(storedCodeLists),
+      preferences: normalizedPreferences,
+      adminValues: normalizedAdminValues,
       persistentReady: true,
       persistenceError: null,
     });
-    return { preferences: normalizePreferences(storedPreferences), adminValues: mapCodeListRows(storedCodeLists) };
+    return { preferences: normalizedPreferences, adminValues: normalizedAdminValues };
   },
 
   // Update custom values such as event labels and expense categories.
   setAdminValues: async (nextValues) => {
     const state = useAppStore.getState();
-    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = state.adminValues;
     const optimistic = { ...previous, ...nextValues };
@@ -142,7 +159,7 @@ const useAppStore = create((set) => ({
   // Reset admin-defined values back to the default list.
   resetAdminValues: async () => {
     const state = useAppStore.getState();
-    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = state.adminValues;
     const defaults = createDefaultAdminValues();
@@ -160,7 +177,7 @@ const useAppStore = create((set) => ({
 
   resetAllSettings: async (referencedValues) => {
     const state = useAppStore.getState();
-    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = { adminValues: state.adminValues, preferences: state.preferences };
     const adminValues = resetCodeListsPreservingReferences(state.adminValues, referencedValues);
@@ -186,7 +203,7 @@ const useAppStore = create((set) => ({
   // Save preferences and persist them so they survive page refreshes.
   setPreferences: async (nextPreferences) => {
     const state = useAppStore.getState();
-    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = state.preferences;
     const optimistic = normalizePreferences({ ...previous, ...nextPreferences });
@@ -205,7 +222,7 @@ const useAppStore = create((set) => ({
   // Restore the original app defaults for theme and user preferences.
   resetPreferences: async () => {
     const state = useAppStore.getState();
-    const principalId = state.principalId || await resolveRepositoryPrincipal(state.user?.uid, state.isGuest);
+    const principalId = state.principalId || await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = state.preferences;
     const preferences = createDefaultPreferences();
@@ -222,56 +239,24 @@ const useAppStore = create((set) => ({
     }
   },
 
-  // Mark the current user as logged in and clear guest mode.
-  setUser: async (user) => {
-    set({ authReady: false, appLoading: true, persistentReady: false, persistenceError: null });
-    let principalId = user?.uid || null;
-    let persistentReady = false;
-    let persistenceError = null;
+  bootstrapDevicePrincipal: async (options = {}) => {
+    set({ principalReady: false, appLoading: true, persistentReady: false, persistenceError: null });
     try {
-      principalId = await resolveRepositoryPrincipal(user?.uid, false);
-      await useAppStore.getState().hydratePersistentData(principalId);
-      persistentReady = true;
+      await initializeDatabase();
+      const principal = await devicePrincipalRepository.getOrCreate(options);
+      await useAppStore.getState().hydratePersistentData(principal.principalId);
+      set({ principal, principalId: principal.principalId, migrationCandidates: [], principalReady: true, appLoading: false, persistentReady: true, persistenceError: null });
+      return principal;
     } catch (error) {
-      persistenceError = error;
+      set({ principalReady: true, appLoading: false, persistentReady: false, persistenceError: error, migrationCandidates: error?.legacyPrincipals || [] });
+      throw error;
     }
-    set({
-      user,
-      isGuest: false,
-      principalId,
-      sessionType: user ? 'authenticated' : 'unauthenticated',
-      authReady: true,
-      appLoading: false,
-      persistentReady,
-      persistenceError,
-    });
   },
 
-  // Switch app to guest mode when no real account is active.
-  setGuestMode: async (value) => {
-    set({ authReady: false, appLoading: true, persistentReady: false, persistenceError: null });
-    let principalId = null;
-    let persistentReady = false;
-    let persistenceError = null;
-    if (value) {
-      try {
-        principalId = await resolveRepositoryPrincipal(null, true);
-        await useAppStore.getState().hydratePersistentData(principalId);
-        persistentReady = true;
-      } catch (error) {
-        persistenceError = error;
-      }
-    }
-    set({
-      isGuest: value,
-      user: null,
-      principalId,
-      sessionType: value ? 'guest' : 'unauthenticated',
-      authReady: true,
-      appLoading: false,
-      persistentReady,
-      persistenceError,
-    });
+  updateDeviceName: async (deviceName) => {
+    const principal = await devicePrincipalRepository.updateDeviceName(deviceName);
+    set({ principal, principalId: principal.principalId });
+    return principal;
   },
 
   // Small success/error popups shown throughout the app.
@@ -279,23 +264,8 @@ const useAppStore = create((set) => ({
   hideToast: () => set({ toast: null }),
 
   // Shared loading state used during auth checks and boot-up.
-  setAuthReady: (value) => set({ authReady: value }),
+  setPrincipalReady: (value) => set({ principalReady: value }),
   setAppLoading: (value) => set({ appLoading: value }),
-
-  // Clear the session back to a logged-out state.
-  clearSession: () =>
-    set({
-      user: null,
-      isGuest: false,
-      principalId: null,
-      persistentReady: false,
-      persistenceError: null,
-      preferences: createDefaultPreferences(),
-      adminValues: createDefaultAdminValues(),
-      sessionType: 'unauthenticated',
-      authReady: true,
-      appLoading: false,
-    }),
 }));
 
 export default useAppStore;

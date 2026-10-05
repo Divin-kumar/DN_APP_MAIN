@@ -1,22 +1,10 @@
 import { db } from '../database/index.js';
 import { initializeDatabase } from '../database/boot.js';
-import { getOrCreateGuestPrincipalId } from '../migrations/migrationPrincipal.js';
+import { devicePrincipalRepository } from '../repositories/devicePrincipalRepository.js';
 
-let guestPrincipalPromise = null;
-
-export const resolveRepositoryPrincipal = async (uid, isGuest) => {
+export const resolveRepositoryPrincipal = async () => {
   await initializeDatabase();
-  if (uid) return uid;
-  if (!isGuest) return null;
-  if (!guestPrincipalPromise) {
-    guestPrincipalPromise = getOrCreateGuestPrincipalId(db).catch((error) => {
-      guestPrincipalPromise = null;
-      throw error;
-    });
-  }
-  return guestPrincipalPromise;
-};
-
-export const clearResolvedGuestPrincipal = () => {
-  guestPrincipalPromise = null;
+  const principal = await devicePrincipalRepository.get();
+  if (!principal?.principalId) throw new Error('Device Principal has not been initialized.');
+  return principal.principalId;
 };

@@ -20,7 +20,7 @@ import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
-import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists';
+import { DEFAULT_CODE_LISTS, normalizeCodeListIdentityValue, serializeCodeListEntries } from '../utils/codeLists';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -98,21 +98,25 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   ), [entries, events, expenses, incomes, preferences, listKey]);
 
   const updateEntries = (nextEntries) => {
-    void setAdminValues({ [listKey]: nextEntries }).catch(() => showToast('Code list changes could not be saved', 'danger'));
+    void setAdminValues({ [listKey]: nextEntries }).catch((error) => showToast(error?.message || 'Code list changes could not be saved', 'danger'));
   };
 
   const upsertEntry = (nextValue, nextLabel) => {
-    const normalizedValue = nextValue.trim();
+    const normalizedValue = nextValue.trim().replace(/\s+/g, ' ');
     if (!normalizedValue) return;
+    const duplicate = entries.find((entry) => normalizeCodeListIdentityValue(entry.value) === normalizeCodeListIdentityValue(normalizedValue));
+    if (duplicate) {
+      showToast(`“${duplicate.label}” is already in this list. Choose a different value.`, 'danger');
+      return;
+    }
     const createdEntry = {
+      id: globalThis.crypto?.randomUUID?.(),
       value: normalizedValue,
       label: (nextLabel || normalizedValue).trim() || normalizedValue,
       active: true,
       isActive: true,
     };
-    const nextEntries = entries.some((entry) => entry.value === normalizedValue)
-      ? entries.map((entry) => (entry.value === normalizedValue ? { ...entry, label: createdEntry.label, active: true, isActive: true } : entry))
-      : [...entries, createdEntry];
+    const nextEntries = [...entries, createdEntry];
 
     updateEntries(nextEntries);
     setDraft('');
@@ -123,7 +127,9 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const baseEntry = entry || { value: '', label: '', canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true };
     setMomentTypeEditor({
       existingValue: baseEntry.value || null,
+      value: baseEntry.value || '',
       title: baseEntry.label || baseEntry.value || '',
+      id: baseEntry.id || null,
       canGenerateGreetingCards: baseEntry.canGenerateGreetingCards ?? true,
       greetingTemplate: typeof baseEntry.greetingTemplate === 'string' ? baseEntry.greetingTemplate : '',
       showInDashboardUpcoming: baseEntry.showInDashboardUpcoming ?? true,
@@ -134,8 +140,18 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const title = momentTypeEditor?.title?.trim();
     if (!title) return;
 
+    const value = (momentTypeEditor.existingValue || momentTypeEditor.value || title).trim().replace(/\s+/g, ' ');
+    if (!value) return;
+    const duplicate = entries.find((entry) => normalizeCodeListIdentityValue(entry.value) === normalizeCodeListIdentityValue(value)
+      && entry.value !== momentTypeEditor.existingValue);
+    if (duplicate) {
+      showToast(`“${duplicate.label}” is already in this list. Choose a different value.`, 'danger');
+      return;
+    }
+
     const nextEntry = {
-      value: title,
+      id: momentTypeEditor.id || globalThis.crypto?.randomUUID?.(),
+      value,
       label: title,
       active: true,
       isActive: true,
@@ -144,8 +160,8 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
     };
 
-    const nextEntries = entries.some((entry) => entry.value === (momentTypeEditor.existingValue || title))
-      ? entries.map((entry) => (entry.value === (momentTypeEditor.existingValue || title) ? { ...entry, ...nextEntry } : entry))
+    const nextEntries = entries.some((entry) => entry.value === momentTypeEditor.existingValue)
+      ? entries.map((entry) => (entry.value === momentTypeEditor.existingValue ? { ...entry, ...nextEntry, id: entry.id } : entry))
       : [...entries, nextEntry];
 
     updateEntries(nextEntries);
@@ -196,20 +212,9 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const trimmed = nextValue.trim();
     if (!trimmed) return;
 
-    updateEntries(entries.map((item) => {
-      if (item.value !== entry.value) return item;
-      if (listKey === 'eventTypes') {
-        return {
-          ...item,
-          value: trimmed,
-          label: trimmed,
-          canGenerateGreetingCards: item.canGenerateGreetingCards ?? true,
-          greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : '',
-          showInDashboardUpcoming: item.showInDashboardUpcoming ?? true,
-        };
-      }
-      return { ...item, value: trimmed, label: trimmed };
-    }));
+    updateEntries(entries.map((item) => item.id === entry.id || (!item.id && item.value === entry.value)
+      ? { ...item, label: trimmed }
+      : item));
     setEditingValue(null);
     setSwipedRow(null);
   };
@@ -243,7 +248,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const hasStatusAction = isInactive || usageCount > 0;
 
     return (
-      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
+      <div key={entry.id || `${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
         <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
           <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => {
             if (listKey === 'eventTypes') {
@@ -349,7 +354,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         <ModalDialog title="Edit value" className="code-list-rename-dialog" onClose={() => setEditingValue(null)}>
           <div className="code-list-editor-modal">
             <label className="settings-input-block">
-              <span>Value</span>
+                <span>Display name</span>
               <input
                 className="code-list-rename-input"
                 autoFocus
@@ -369,8 +374,16 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       {momentTypeEditor ? (
         <ModalDialog title={entries.some((entry) => entry.value === (momentTypeEditor.existingValue || momentTypeEditor.title)) ? 'Edit moment type' : 'New moment type'} className="code-list-rename-dialog moment-type-dialog" onClose={() => setMomentTypeEditor(null)}>
           <div className="moment-type-form">
+            {!momentTypeEditor.existingValue ? <label className="settings-input-block">
+              <span>Stable value</span>
+              <input
+                value={momentTypeEditor.value}
+                onChange={(event) => setMomentTypeEditor((current) => ({ ...current, value: event.target.value }))}
+                placeholder="e.g. family_celebration"
+              />
+            </label> : <p className="settings-helper">Stable value: <strong>{momentTypeEditor.existingValue}</strong></p>}
             <label className="settings-input-block">
-              <span>Title</span>
+              <span>Display name</span>
               <input
                 ref={momentTypeTitleRef}
                 autoFocus
@@ -455,8 +468,8 @@ export default function CodeLists() {
       </header>
 
       <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
-      <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
-      <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
+      <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Stable value" allowLabels />
+      <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Stable value" allowLabels />
       <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
       <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
 

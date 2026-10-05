@@ -95,6 +95,29 @@ test('parent relationship writes reject missing or mismatched records', async ()
   await db.delete();
 });
 
+test('code-list updates preserve stable IDs when only labels change and reject normalized duplicate values', async () => {
+  await db.delete();
+  await initializeDatabase();
+  const first = await codeListRepository.setList(principalId, 'eventTypes', [
+    { id: 'event-stable-id', value: 'Family Event', label: 'Family Event' },
+  ]);
+  const updated = await codeListRepository.setList(principalId, 'eventTypes', [
+    { id: first[0].id, value: 'Family Event', label: 'Family Celebration' },
+  ]);
+
+  assert.equal(updated[0].id, 'event-stable-id');
+  assert.equal(updated[0].value, 'Family Event');
+  assert.equal(updated[0].label, 'Family Celebration');
+  await assert.rejects(
+    codeListRepository.setList(principalId, 'eventTypes', [
+      { value: 'Family Event', label: 'Family Event' },
+      { value: ' family   event ', label: 'Duplicate' },
+    ]),
+    /already contains an entry with that name/i,
+  );
+  await db.delete();
+});
+
 test('duplicate bulk records abort atomically and preserve existing rows', async () => {
   await db.delete();
   await initializeDatabase();

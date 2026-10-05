@@ -8,7 +8,7 @@ import { expenseRepository } from '../repositories/index.js';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData.js';
 import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
-const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+const getLoadKey = (principalId) => `device:${principalId || 'active'}`;
 
 const useExpenseStore = create((set, get) => {
   const pendingLoads = new Map();
@@ -22,8 +22,8 @@ const useExpenseStore = create((set, get) => {
 
   setExpenses: (items) => set({ expenses: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
-  loadExpenses: async (uid, isGuest) => {
-    const loadKey = getLoadKey(uid, isGuest);
+  loadExpenses: async (uid) => {
+    const loadKey = getLoadKey(uid);
     if (get().loadedFor === loadKey) return get().expenses;
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
@@ -38,7 +38,7 @@ const useExpenseStore = create((set, get) => {
           return sampleData.expenses;
         }
 
-        const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+        const principalId = await resolveRepositoryPrincipal();
         if (!principalId) throw new Error('No active repository principal is available.');
         const items = await expenseRepository.getAll(principalId);
 
@@ -57,7 +57,7 @@ const useExpenseStore = create((set, get) => {
     return request;
   },
 
-  addExpense: async (uid, isGuest, expense) => {
+  addExpense: async (uid, _legacyMode, expense) => {
     const normalized = {
       ...expense,
       id: expense.id || crypto.randomUUID(),
@@ -73,7 +73,7 @@ const useExpenseStore = create((set, get) => {
       return normalized;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().expenses;
     const optimistic = [normalized, ...previous];
@@ -96,7 +96,7 @@ const useExpenseStore = create((set, get) => {
     }
   },
 
-  updateExpenseItem: async (uid, isGuest, expense) => {
+  updateExpenseItem: async (uid, _legacyMode, expense) => {
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
       const updated = sampleData.expenses.map((item) => item.id === expense.id ? { ...item, ...expense } : item);
@@ -105,7 +105,7 @@ const useExpenseStore = create((set, get) => {
       return expense;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().expenses;
     const previous = current.find((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
@@ -135,7 +135,7 @@ const useExpenseStore = create((set, get) => {
     }
   },
 
-  deleteExpenseItem: async (uid, isGuest, expenseId) => {
+  deleteExpenseItem: async (uid, _legacyMode, expenseId) => {
     const current = get().expenses;
     const expense = current.find((item) => item.id === expenseId || item.firestoreId === expenseId);
 
@@ -149,7 +149,7 @@ const useExpenseStore = create((set, get) => {
       return;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
     set({ expenses: remaining, error: null });

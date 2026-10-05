@@ -9,6 +9,7 @@ import {
   getCodeListItems,
   collectReferencedCodeListValues,
   getCodeListMeta,
+  normalizeCodeListIdentityValue,
   migrateStoredCodeLists,
   resetCodeListsPreservingReferences,
 } from './codeLists.js';
@@ -89,6 +90,10 @@ test('code list helpers return readable labels', () => {
 test('code list items are normalized for editing', () => {
   const items = getCodeListItems('eventTypes', ['Birthday', '  Anniversary  ', '']);
   assert.deepEqual(items, ['Birthday', 'Anniversary']);
+});
+
+test('code-list identity normalization trims, lowercases, and collapses spaces', () => {
+  assert.equal(normalizeCodeListIdentityValue('  Family   Celebration  '), 'family celebration');
 });
 
 test('isActive values control selectors while legacy active values stay compatible', () => {

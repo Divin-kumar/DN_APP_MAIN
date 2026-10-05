@@ -1,6 +1,8 @@
 /* Expense history rows for master financial records. */
 import { Pencil, Trash2 } from 'lucide-react';
 import useSwipeActions from '../../hooks/useSwipeActions';
+import useAppStore from '../../store/useAppStore';
+import { getCodeListLabel } from '../../utils/codeLists';
 
 const currency = (value) => {
   const number = Number(value || 0);
@@ -12,6 +14,7 @@ const currency = (value) => {
 };
 
 function ExpenseRow({ expense, onEdit, onDelete }) {
+  const adminValues = useAppStore((state) => state.adminValues);
   const { action, setAction, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, toggleOther, close } = useSwipeActions();
 
   return (
@@ -46,7 +49,7 @@ function ExpenseRow({ expense, onEdit, onDelete }) {
       <div className="history-row financial-swipe-main" style={styles.row}>
         <div style={styles.meta}>
           <strong>{expense.name}</strong>
-          <span>{expense.category} • {expense.date}{expense.activityId ? ' • Linked activity' : ''}</span>
+          <span>{getCodeListLabel('expenseCategories', expense.category, adminValues.expenseCategories)} • {expense.date}{expense.activityId ? ' • Linked activity' : ''}</span>
         </div>
         <span style={styles.amount}>{currency(expense.amount)}</span>
       </div>

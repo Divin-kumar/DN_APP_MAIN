@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
-import { getCodeListItems } from '../../utils/codeLists';
+import { getActiveCodeListMeta } from '../../utils/codeLists';
 
 const createDefaultState = (defaultCategory) => ({
   id: '',
@@ -15,7 +15,7 @@ const createDefaultState = (defaultCategory) => ({
 
 export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Expense', events = [] }) {
   const adminValues = useAppStore((state) => state.adminValues);
-  const expenseCategoryOptions = getCodeListItems('expenseCategories', adminValues.expenseCategories);
+  const expenseCategoryOptions = getActiveCodeListMeta('expenseCategories', adminValues.expenseCategories);
   const defaultExpenseCategory = useAppStore((state) => state.preferences.defaultExpenseCategory);
   const [form, setForm] = useState(() => createDefaultState(defaultExpenseCategory));
 
@@ -74,7 +74,7 @@ export default function ExpenseForm({ initialValues, onSubmit, onCancel, submitL
 
       <DropdownSelect name="category" value={form.category} onChange={handleChange}>
         {expenseCategoryOptions.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option.id || option.value} value={option.value}>{option.label}</option>
         ))}
         <option value="Other">Other</option>
       </DropdownSelect>

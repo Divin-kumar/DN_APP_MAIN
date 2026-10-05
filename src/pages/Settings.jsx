@@ -1,6 +1,6 @@
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
+import { UserCircle, Settings2, Database, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -10,8 +10,7 @@ import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
-import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
-import { downloadBlob } from '../utils/download';
+import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems, getCodeListLabel } from '../utils/codeLists';
 
 const normalizeList = (value) =>
   value
@@ -105,8 +104,8 @@ const normalizeReminderTime = (value = '') => {
 
 export default function Settings() {
   const location = useLocation();
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const principalId = useAppStore((state) => state.principalId);
   const adminValues = useAppStore((state) => state.adminValues);
   const preferences = useAppStore((state) => state.preferences);
   const showToast = useAppStore((state) => state.showToast);
@@ -115,8 +114,7 @@ export default function Settings() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const resetPreferences = useAppStore((state) => state.resetPreferences);
   const resetAllSettings = useAppStore((state) => state.resetAllSettings);
-  const setGuestMode = useAppStore((state) => state.setGuestMode);
-  const profileName = user?.displayName || user?.email || 'Guest';
+  const profileName = principal?.deviceName || 'This device';
   const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
   const incomeTypeOptions = getCodeListItems('incomeTypes', adminValues.incomeTypes);
   const expenseCategoryOptions = getCodeListItems('expenseCategories', adminValues.expenseCategories);
@@ -137,9 +135,7 @@ export default function Settings() {
       reminderTime: preferences.notifications?.reminderTime ?? '09:00',
     },
   });
-  const [backupMessage, setBackupMessage] = useState('');
   const [openSection, setOpenSection] = useState(null);
-  const [confirmClearData, setConfirmClearData] = useState(false);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
   const [resettingSettings, setResettingSettings] = useState(false);
   const [theme, setTheme] = useState(preferences.theme || 'light');
@@ -152,7 +148,6 @@ export default function Settings() {
       '#preferences': 'defaults',
       '#theme': 'defaults',
       '#notifications': 'notifications',
-      '#backup': 'backup',
     };
     if (sectionByHash[location.hash]) setOpenSection(sectionByHash[location.hash]);
   }, [location.hash]);
@@ -247,71 +242,17 @@ export default function Settings() {
     });
   };
 
-  const exportBackup = () => {
-    const snapshot = {
-      exportedAt: new Date().toISOString(),
-      app: 'DN',
-      data: {
-        lifehub_admin_values: JSON.parse(localStorage.getItem('lifehub_admin_values') || 'null'),
-        lifehub_admin_values_schema_version: localStorage.getItem('lifehub_admin_values_schema_version'),
-
-        lifehub_guest_incomes: JSON.parse(localStorage.getItem('lifehub_guest_incomes') || '[]'),
-      },
-    };
-
-    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `dn-backup-${new Date().toISOString().slice(0, 10)}.json`);
-    setBackupMessage('Backup downloaded successfully.');
-    showToast('Backup exported', 'success');
-  };
-
-  const importBackup = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      const target = parsed.data || parsed;
-
-      Object.entries(target).forEach(([key, value]) => {
-        if (value === undefined || value === null) {
-          localStorage.removeItem(key);
-          return;
-        }
-        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-      });
-
-      setBackupMessage('Backup restored successfully. Reloading app...');
-      showToast('Backup restored', 'success');
-      event.target.value = '';
-      window.location.reload();
-    } catch (error) {
-      console.error('Failed to restore backup:', error);
-      setBackupMessage('That file is not a valid DN backup.');
-      showToast('Backup restore failed', 'danger');
-      event.target.value = '';
-    }
-  };
-
-  const clearLocalData = () => {
-    ['lifehub_admin_values', 'lifehub_admin_values_schema_version', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
-    setBackupMessage('Local app data cleared. Reloading...');
-    showToast('Local data cleared', 'danger');
-    window.location.reload();
-  };
-
   const resetAllSettingsSafely = async () => {
     if (resettingSettings) return;
     setResettingSettings(true);
 
     try {
-      if (!isGuest && !user?.uid) throw new Error('Your account records could not be identified. No settings were changed.');
+      if (!principal?.principalId) throw new Error('The Device Principal is unavailable. No settings were changed.');
 
       await Promise.all([
-        useEventStore.getState().loadEvents(user?.uid, isGuest),
-        useExpenseStore.getState().loadExpenses(user?.uid, isGuest),
-        useIncomeStore.getState().loadIncomes(user?.uid, isGuest),
+        useEventStore.getState().loadEvents(principalId),
+        useExpenseStore.getState().loadExpenses(principalId),
+        useIncomeStore.getState().loadIncomes(principalId),
       ]);
 
       const eventState = useEventStore.getState();
@@ -348,13 +289,7 @@ export default function Settings() {
   };
 
   const loadSampleData = () => {
-    if (user) {
-      showToast('Sign out before loading isolated sample data', 'danger');
-      return;
-    }
     const data = activateSampleScenario(sampleScenario);
-    localStorage.setItem('lifehub_guest_mode', 'true');
-    setGuestMode(true);
     useEventStore.getState().setEvents(data.events);
     useExpenseStore.getState().setExpenses(data.expenses);
     useIncomeStore.getState().setIncomes(data.incomes);
@@ -366,9 +301,9 @@ export default function Settings() {
     clearActiveSampleScenario();
     setActiveSampleScenario(null);
     await Promise.all([
-      useEventStore.getState().loadEvents(null, isGuest),
-      useExpenseStore.getState().loadExpenses(null, isGuest),
-      useIncomeStore.getState().loadIncomes(null, isGuest),
+      useEventStore.getState().loadEvents(principal?.principalId),
+      useExpenseStore.getState().loadExpenses(principal?.principalId),
+      useIncomeStore.getState().loadIncomes(principal?.principalId),
     ]);
     showToast('Sample data removed; your own data is unchanged', 'success');
   };
@@ -379,7 +314,7 @@ export default function Settings() {
 
   const renderProfileSection = () => (
     <div className="settings-accordion-body">
-      <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
+      <div className="settings-profile-row"><strong>{profileName}</strong><span>Local Device Principal</span></div>
     </div>
   );
 
@@ -426,7 +361,7 @@ export default function Settings() {
           <span>Default event type</span>
           <DropdownSelect value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
             {eventTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option} value={option}>{getCodeListLabel('eventTypes', option, adminValues.eventTypes)}</option>
             ))}
           </DropdownSelect>
         </label>
@@ -435,7 +370,7 @@ export default function Settings() {
           <span>Default income type</span>
           <DropdownSelect value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
             {incomeTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option} value={option}>{getCodeListLabel('incomeTypes', option, adminValues.incomeTypes)}</option>
             ))}
           </DropdownSelect>
         </label>
@@ -444,7 +379,7 @@ export default function Settings() {
           <span>Default expense category</span>
           <DropdownSelect value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
             {expenseCategoryOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
+              <option key={option} value={option}>{getCodeListLabel('expenseCategories', option, adminValues.expenseCategories)}</option>
             ))}
           </DropdownSelect>
         </label>
@@ -542,33 +477,10 @@ export default function Settings() {
     </div>
   );
 
-  const renderDataSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <div className="settings-input-block">
-          <span>Local backup</span>
-          <p className="settings-helper">Export your current local DN data as a JSON file or restore it later on the same device.</p>
-        </div>
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={exportBackup}><Download size={15} /> Export backup</button>
-        <label className="settings-secondary-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-          <Upload size={15} /> Restore backup
-          <input type="file" accept="application/json" onChange={importBackup} style={{ display: 'none' }} />
-        </label>
-        <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)}><Trash2 size={15} /> Clear local data</button>
-      </div>
-
-      {backupMessage ? <p className="settings-message">{backupMessage}</p> : null}
-    </div>
-  );
-
   const sections = [
     { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
-    { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
   ];
 
   return (
@@ -578,14 +490,14 @@ export default function Settings() {
         <p>Keep DN comfortable for the way you plan and remember.</p>
       </div>
 
-      {import.meta.env.DEV && !user ? (
+      {import.meta.env.DEV ? (
         <section className="dev-sample-panel" aria-label="Development sample data">
-          <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
+          <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from the Device Principal’s saved records.</p></div>
           <div className={`dev-sample-actions${activeSampleScenario ? ' has-active-sample' : ''}`}>
             <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
               {Object.entries(getSampleScenarioDefinitions()).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
             </DropdownSelect>
-            <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} disabled={Boolean(user)} aria-label="Load sample data" title="Load sample data">
+            <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} aria-label="Load sample data" title="Load sample data">
               <Database size={16} aria-hidden="true" /><span className="dev-sample-action-label">Load sample</span>
             </button>
             {activeSampleScenario ? <button type="button" className="settings-secondary-button dev-sample-icon-action" onClick={clearSampleData} aria-label="Clear sample data" title="Clear sample data">
@@ -616,6 +528,11 @@ export default function Settings() {
       })}
 
       <div className="settings-navigation-hub settings-about-footer">
+        <Link to="/settings/data-backup" className="settings-hub-card" aria-label="Open Data and Backup page">
+          <span className="settings-hub-icon"><Database size={18} /></span>
+          <span className="settings-hub-copy"><strong>Data &amp; Backup</strong><small>Database health, storage, backup, restore, and device information</small></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
         <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
           <span className="settings-hub-icon"><Settings2 size={18} /></span>
           <span className="settings-hub-copy">
@@ -644,16 +561,6 @@ export default function Settings() {
           <RotateCcw size={15} /> Reset all settings
         </button>
       </section>
-
-      {confirmClearData ? (
-        <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
-          <p className="settings-helper">This removes guest data, preferences, and local backups from this browser. This action cannot be undone.</p>
-          <div className="settings-actions">
-            <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
-            <button type="button" className="settings-primary-button" onClick={clearLocalData}>Clear local data</button>
-          </div>
-        </ModalDialog>
-      ) : null}
 
       {confirmResetSettings ? (
         <ModalDialog title="Reset all settings?" className="settings-reset-dialog" onClose={() => { if (!resettingSettings) setConfirmResetSettings(false); }}>

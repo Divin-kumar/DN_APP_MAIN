@@ -1,6 +1,5 @@
 /* Firebase client configuration shared by authentication and Firestore services. */
 import { initializeApp } from 'firebase/app';
-import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
 const firebaseConfig = {
@@ -14,9 +13,7 @@ const firebaseConfig = {
 };
 
 export const firebaseApp = initializeApp(firebaseConfig);
-export const auth = getAuth(firebaseApp);
 export const db = getFirestore(firebaseApp);
-export const googleProvider = new GoogleAuthProvider();
 
 // Keep optional Analytics out of the initial app bundle and never block core Firebase services.
 export const initializeFirebaseAnalytics = async () => {

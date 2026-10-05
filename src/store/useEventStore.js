@@ -38,7 +38,7 @@ const syncEventSampleData = (data, events, options = {}) => {
   return next;
 };
 
-const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+const getLoadKey = (principalId) => `device:${principalId || 'active'}`;
 
 const projectEvents = async (principalId) => {
   const [moments, activities, memories, attachments, expenses] = await Promise.all([
@@ -115,8 +115,8 @@ const useEventStore = create((set, get) => {
 
   setEvents: (items) => set({ events: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
-  loadEvents: async (uid, isGuest) => {
-    const loadKey = getLoadKey(uid, isGuest);
+  loadEvents: async (uid) => {
+    const loadKey = getLoadKey(uid);
     if (get().loadedFor === loadKey) return get().events;
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
@@ -131,7 +131,7 @@ const useEventStore = create((set, get) => {
           return sampleData.events;
         }
 
-        const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+        const principalId = await resolveRepositoryPrincipal();
         if (!principalId) throw new Error('No active repository principal is available.');
         const items = await projectEvents(principalId);
         if (get().activeLoadKey === loadKey) set({ events: items, loading: false, error: null, loadedFor: loadKey });
@@ -149,7 +149,7 @@ const useEventStore = create((set, get) => {
     return request;
   },
 
-  addEvent: async (uid, isGuest, event) => {
+  addEvent: async (uid, _legacyMode, event) => {
     const normalized = {
       ...event,
       id: event.id || crypto.randomUUID(),
@@ -165,7 +165,7 @@ const useEventStore = create((set, get) => {
       return normalized;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().events;
     const optimistic = [normalized, ...previous];
@@ -204,7 +204,7 @@ const useEventStore = create((set, get) => {
     }
   },
 
-  updateEventItem: async (uid, isGuest, event) => {
+  updateEventItem: async (uid, _legacyMode, event) => {
     const normalizedEvent = { ...event, status: getEventStatus(event) };
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
@@ -219,7 +219,7 @@ const useEventStore = create((set, get) => {
       return normalizedEvent;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().events;
     const previous = current.find((item) => sameEvent(item, normalizedEvent));
@@ -275,7 +275,7 @@ const useEventStore = create((set, get) => {
     }
   },
 
-  deleteEventItem: async (uid, isGuest, eventId) => {
+  deleteEventItem: async (uid, _legacyMode, eventId) => {
     const current = get().events;
     const event = current.find((item) => item.id === eventId || item.firestoreId === eventId);
 
@@ -289,7 +289,7 @@ const useEventStore = create((set, get) => {
       return;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== eventId && item.firestoreId !== eventId);
     set({ events: remaining, error: null });

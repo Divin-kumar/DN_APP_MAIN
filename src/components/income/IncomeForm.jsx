@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import useAppStore from '../../store/useAppStore';
-import { getCodeListItems } from '../../utils/codeLists';
+import { getActiveCodeListMeta } from '../../utils/codeLists';
 
 const createDefaultState = (defaultIncomeType) => ({
   id: '',
@@ -15,7 +15,7 @@ const createDefaultState = (defaultIncomeType) => ({
 
 export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Income' }) {
   const adminValues = useAppStore((state) => state.adminValues);
-  const incomeTypeOptions = getCodeListItems('incomeTypes', adminValues.incomeTypes);
+  const incomeTypeOptions = getActiveCodeListMeta('incomeTypes', adminValues.incomeTypes);
   const defaultIncomeType = useAppStore((state) => state.preferences.defaultIncomeType);
   const [form, setForm] = useState(() => createDefaultState(defaultIncomeType));
 
@@ -65,7 +65,7 @@ export default function IncomeForm({ initialValues, onSubmit, onCancel, submitLa
 
       <DropdownSelect name="type" value={form.type} onChange={handleChange}>
         {incomeTypeOptions.map((option) => (
-          <option key={option} value={option}>{option}</option>
+          <option key={option.id || option.value} value={option.value}>{option.label}</option>
         ))}
         <option value="Other">Other</option>
       </DropdownSelect>

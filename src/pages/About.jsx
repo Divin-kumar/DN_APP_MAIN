@@ -126,7 +126,7 @@ export default function About() {
         <div className="settings-subpage-title-wrap">
           <span className="settings-subpage-eyebrow">Settings</span>
           <div className="about-title-row">
-            <h2>About LifeHub</h2>
+            <h2>About DN</h2>
             <span className="about-version-badge">v{appVersion}</span>
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function About() {
         <div className="about-summary-grid">
           <div className="about-summary-item">
             <span className="about-summary-label">Application</span>
-            <strong>LifeHub</strong>
+            <strong>DN</strong>
           </div>
           <div className="about-summary-item">
             <span className="about-summary-label">Version</span>
@@ -161,7 +161,7 @@ export default function About() {
         </div>
 
         <div className="about-description">
-          LifeHub is a personal life and finance companion built to keep important moments, planning details, memories,
+          DN is a personal life and finance companion built to keep important moments, planning details, memories,
           and financial patterns connected in one place.
         </div>
 

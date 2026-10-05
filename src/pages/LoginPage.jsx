@@ -1,57 +1,57 @@
-/*
-  Entry screen for Google authentication and local guest sessions.
-
-  This is the first screen users see when they are not already signed in.
-  It gives them two options: continue with Google or continue as a guest.
-*/
-import { useEffect } from 'react';
+/* Local device setup and recovery screen. */
+import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { authService } from '../services/firebase';
-import { useGuest } from '../context/GuestContext';
-import useAppStore from '../store/useAppStore';
+import { useAuth } from '../context/AuthContext';
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { continueAsGuest } = useGuest();
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const { principal, principalReady, migrationCandidates, persistentReady, persistenceError, bootstrapDevicePrincipal } = useAuth();
+  const [deviceName, setDeviceName] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState('');
+  const [approveLegacyMigration, setApproveLegacyMigration] = useState(false);
 
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    if (user || isGuest) {
-      navigate(from, { replace: true });
-    }
-  }, [user, isGuest, from, navigate]);
+    if (principal && principalReady && persistentReady) navigate(from, { replace: true });
+  }, [principal, principalReady, persistentReady, from, navigate]);
 
-  const handleGoogleSignIn = async () => {
+  const continueOnDevice = async () => {
+    setSubmitting(true);
+    setError('');
     try {
-      await authService.signInWithGoogle();
+      await bootstrapDevicePrincipal({ deviceName, approveLegacyMigration });
       navigate(from, { replace: true });
-    } catch (error) {
-      console.error('Google sign-in failed:', error);
+    } catch (bootstrapError) {
+      console.error('Device setup failed:', bootstrapError);
+      setError('DN could not prepare local data. Your saved records were not changed.');
+    } finally {
+      setSubmitting(false);
     }
-  };
-
-  const handleGuestLogin = () => {
-    continueAsGuest();
-    navigate(from, { replace: true });
   };
 
   return (
     <div style={styles.page}>
       <div style={styles.card}>
         <h1 style={styles.title}>DN</h1>
-        <p style={styles.subtitle}>Sign in to continue</p>
-
-        <button style={styles.primaryButton} onClick={handleGoogleSignIn}>
-          Continue with Google
+        <p style={styles.subtitle}>Your data stays on this device.</p>
+        <label style={styles.deviceLabel}>
+          Device name
+          <input style={styles.deviceInput} value={deviceName || principal?.deviceName || ''} onChange={(event) => setDeviceName(event.target.value)} maxLength={64} placeholder="My device" />
+        </label>
+        {migrationCandidates.length > 1 ? <div style={styles.migrationNotice}>
+          <strong>More than one local profile was found</strong>
+          <p>Choose to consolidate these existing profiles under this device. This does not upload data.</p>
+          <ul>{migrationCandidates.map((candidate) => <li key={candidate.principalId}>{candidate.principalId} · {candidate.recordCount} records</li>)}</ul>
+          <label><input type="checkbox" checked={approveLegacyMigration} onChange={(event) => setApproveLegacyMigration(event.target.checked)} /> I approve consolidating these local profiles.</label>
+        </div> : null}
+        <button style={styles.primaryButton} type="button" onClick={continueOnDevice} disabled={submitting || (!principalReady && !persistenceError) || (migrationCandidates.length > 1 && !approveLegacyMigration)}>
+          {submitting ? 'Preparing…' : 'Continue on this device'}
         </button>
-
-        <button style={styles.secondaryButton} onClick={handleGuestLogin}>
-          Continue as Guest
-        </button>
+        {error ? <p role="alert" style={styles.error}>{error}</p> : null}
+        {persistenceError && !migrationCandidates.length ? <p role="alert" style={styles.error}>Local data is unavailable. Please retry.</p> : null}
       </div>
     </div>
   );
@@ -101,15 +101,8 @@ const styles = {
     marginBottom: '12px',
     boxShadow: '0 12px 26px rgba(30, 134, 109, 0.2)',
   },
-  secondaryButton: {
-    width: '100%',
-    border: '1px solid #d4e4d9',
-    borderRadius: '14px',
-    padding: '14px 18px',
-    background: '#f6faf7',
-    color: '#1d3f2c',
-    fontSize: '0.98rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-  },
+  deviceLabel: { display: 'grid', gap: '8px', marginBottom: '16px', color: '#4b6357', textAlign: 'left', fontSize: '0.88rem' },
+  deviceInput: { border: '1px solid #d4e4d9', borderRadius: '12px', padding: '12px 14px', font: 'inherit' },
+  error: { color: '#a32626', fontSize: '0.9rem' },
+  migrationNotice: { margin: '0 0 18px', padding: '14px', borderRadius: '14px', background: '#fff8e7', color: '#4d4126', textAlign: 'left', fontSize: '0.88rem' },
 };

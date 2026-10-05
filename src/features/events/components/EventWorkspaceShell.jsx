@@ -48,8 +48,9 @@ export default function EventWorkspaceShell() {
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);

@@ -41,8 +41,9 @@ function PreviewGroup({ title, path, entries, emptyLabel, isExpense = false }) {
 export default function Financials() {
   const location = useLocation();
   const isOverview = location.pathname === '/financials';
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const { incomes, loadIncomes } = useIncomeStore();
   const { expenses, loadExpenses } = useExpenseStore();
 

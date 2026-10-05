@@ -1,47 +1,30 @@
-/*
-  This file listens to Firebase authentication and feeds the app state.
-  Its job is to translate the auth system into simple app-level values like
-  “logged in,” “guest,” or “logged out.”
-
-  In simple language:
-  this component watches whether the user is signed in, signed out, or browsing as guest.
-  Based on that, it updates the app's global state so every page can know the current session.
-*/
-import { createContext, useContext, useEffect } from 'react';
-import { authService } from '../services/firebase';
+import { createContext, useContext, useEffect, useMemo } from 'react';
 import useAppStore from '../store/useAppStore';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const setUser = useAppStore((state) => state.setUser);
-  const clearSession = useAppStore((state) => state.clearSession);
-  const setGuestMode = useAppStore((state) => state.setGuestMode);
+  const principal = useAppStore((state) => state.principal);
+  const principalReady = useAppStore((state) => state.principalReady);
+  const migrationCandidates = useAppStore((state) => state.migrationCandidates);
+  const persistentReady = useAppStore((state) => state.persistentReady);
+  const persistenceError = useAppStore((state) => state.persistenceError);
+  const bootstrapDevicePrincipal = useAppStore((state) => state.bootstrapDevicePrincipal);
 
   useEffect(() => {
-    // Subscribe to auth changes so the app always knows the current login state.
-    const unsubscribe = authService.onAuthChange((user) => {
-      if (user) {
-        // Auth establishes the principal only; guest records remain untouched until explicitly migrated.
-        void setUser({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL,
-        }).catch((error) => console.error('Unable to prepare local account data:', error));
-      } else if (localStorage.getItem('lifehub_guest_mode') === 'true') {
-        // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
-        setGuestMode(true);
-      } else {
-        // If no account and no guest mode, reset session to a logged-out state.
-        clearSession();
-      }
-    });
+    void bootstrapDevicePrincipal().catch((error) => console.error('Unable to initialize local device data:', error));
+  }, [bootstrapDevicePrincipal]);
 
-    return () => unsubscribe?.();
-  }, [clearSession, setGuestMode, setUser]);
+  const value = useMemo(() => ({
+    principal,
+    principalReady,
+    migrationCandidates,
+    persistentReady,
+    persistenceError,
+    bootstrapDevicePrincipal,
+  }), [principal, principalReady, migrationCandidates, persistentReady, persistenceError, bootstrapDevicePrincipal]);
 
-  return <AuthContext.Provider value={{}}>{children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

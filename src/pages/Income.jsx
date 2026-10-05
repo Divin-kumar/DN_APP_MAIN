@@ -11,14 +11,15 @@ import IncomeList from '../components/income/IncomeList';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
-import { getCodeListItems } from '../utils/codeLists';
+import { getCodeListItems, getCodeListLabel } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import SortControl from '../components/common/SortControl';
 import usePersistentSort from '../hooks/usePersistentSort';
 
 export default function Income() {
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const { incomes, loading, error, loadIncomes, addIncome, updateIncomeItem, deleteIncomeItem } = useIncomeStore();
@@ -113,7 +114,7 @@ export default function Income() {
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search income" aria-label="Search income" />
         <DropdownSelect value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} aria-label="Filter income type">
           <option value="all">All types</option>
-          {incomeTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+          {incomeTypes.map((type) => <option key={type} value={type}>{getCodeListLabel('incomeTypes', type, adminValues.incomeTypes)}</option>)}
         </DropdownSelect>
         <SortControl field={incomeSort} direction={incomeSortDirection} onFieldChange={setIncomeSort} onToggleDirection={toggleIncomeSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort income" />
       </div>

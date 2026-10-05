@@ -3,7 +3,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { db } from '../database/index.js';
 import { initializeDatabase } from '../database/boot.js';
-import { activityRepository, attachmentRepository, codeListRepository, expenseRepository, incomeRepository, memoryRepository, momentRepository, settingsRepository } from '../repositories/index.js';
+import { activityRepository, attachmentRepository, codeListRepository, devicePrincipalRepository, expenseRepository, incomeRepository, memoryRepository, momentRepository, settingsRepository } from '../repositories/index.js';
 import useAppStore from './useAppStore.js';
 import useEventStore from './useEventStore.js';
 import useExpenseStore from './useExpenseStore.js';
@@ -15,9 +15,9 @@ test('runtime stores persist all domains through repositories and reload from De
   await db.delete();
   await initializeDatabase();
 
-  await useAppStore.getState().setGuestMode(true);
+  await useAppStore.getState().bootstrapDevicePrincipal();
   const principalId = useAppStore.getState().principalId;
-  assert.ok(principalId?.startsWith('guest_'));
+  assert.ok(principalId?.startsWith('device_'));
 
   useEventStore.getState().setEvents([]);
   useExpenseStore.getState().setExpenses([]);
@@ -96,27 +96,15 @@ test('runtime stores persist all domains through repositories and reload from De
   assert.equal(useExpenseStore.getState().expenses[0].id, 'expense-cutover-1');
   assert.equal(useIncomeStore.getState().incomes[0].amount, 125);
   assert.equal(useAppStore.getState().preferences.theme, 'light');
-  assert.equal(useAppStore.getState().adminValues.eventTypes[0].value, 'Custom moment');
+  assert.ok(useAppStore.getState().adminValues.eventTypes.some((entry) => entry.value === 'Custom moment'));
 
   await useAppStore.getState().resetPreferences();
   assert.equal((await settingsRepository.getPreferences(principalId)).theme, 'dark');
   await useAppStore.getState().resetAdminValues();
   assert.ok((await codeListRepository.getList(principalId, 'eventTypes')).length > 0);
 
-  await useAppStore.getState().setUser({ uid: 'account-cutover-1', email: 'account@example.test' });
   useEventStore.getState().setEvents([]);
-  const accountMoment = await useEventStore.getState().addEvent('account-cutover-1', false, {
-    id: 'account-moment-1', name: 'Account moment', date: today, type: 'Personal', activities: [],
-  });
-  assert.equal((await momentRepository.getAll('account-cutover-1')).length, 1);
-  assert.equal((await momentRepository.getAll(principalId)).length, 1);
-  await useEventStore.getState().deleteEventItem('account-cutover-1', false, accountMoment.id);
-  assert.equal((await momentRepository.getAll('account-cutover-1')).length, 0);
-  assert.equal((await momentRepository.getAll(principalId)).length, 1);
-
-  await useAppStore.getState().setGuestMode(true);
-  useEventStore.getState().setEvents([]);
-  await useEventStore.getState().loadEvents(null, true);
+  await useEventStore.getState().loadEvents(principalId);
   assert.equal(useEventStore.getState().events[0].id, event.id);
 
   await useExpenseStore.getState().deleteExpenseItem(null, true, 'expense-cutover-1');
@@ -132,4 +120,46 @@ test('runtime stores persist all domains through repositories and reload from De
 
   await db.delete();
   globalThis.fetch = originalFetch;
+});
+
+test('Device Principal bootstrap adopts existing local owner rows and remains stable', async () => {
+  await db.delete();
+  await initializeDatabase();
+  await db.table('moments').put({ id: 'legacy-moment', userId: 'firebase-uid-1', name: 'Legacy', date: '2026-10-05', type: 'Personal' });
+  await db.table('settings').put({ id: 'legacy-setting', userId: 'firebase-uid-1', key: 'theme', value: 'light' });
+
+  const first = await useAppStore.getState().bootstrapDevicePrincipal({ deviceName: 'Migration Device' });
+  const adoptedMoment = await db.table('moments').get('legacy-moment');
+  const adoptedSetting = await db.table('settings').get('legacy-setting');
+  const second = await useAppStore.getState().bootstrapDevicePrincipal();
+
+  assert.equal(first.principalType, 'device');
+  assert.equal(first.deviceName, 'Migration Device');
+  assert.equal(adoptedMoment.userId, first.principalId);
+  assert.equal(adoptedSetting.userId, first.principalId);
+  assert.deepEqual(second, { ...first, lastSeenAt: second.lastSeenAt });
+  assert.ok(first.legacyPrincipalIds.includes('firebase-uid-1'));
+  await db.delete();
+});
+
+test('multiple legacy owners require explicit approval before consolidation', async () => {
+  await db.delete();
+  await initializeDatabase();
+  await db.table('moments').bulkPut([
+    { id: 'legacy-a', userId: 'firebase-uid-a', name: 'A', date: '2026-10-05', type: 'Personal' },
+    { id: 'legacy-b', userId: 'firebase-uid-b', name: 'B', date: '2026-10-05', type: 'Personal' },
+  ]);
+
+  await assert.rejects(devicePrincipalRepository.getOrCreate(), (error) => {
+    assert.equal(error.code, 'DEVICE_PRINCIPAL_MIGRATION_APPROVAL_REQUIRED');
+    assert.equal(error.legacyPrincipals.length, 2);
+    return true;
+  });
+  assert.equal((await db.table('moments').get('legacy-a')).userId, 'firebase-uid-a');
+  assert.equal((await db.table('moments').get('legacy-b')).userId, 'firebase-uid-b');
+
+  const principal = await devicePrincipalRepository.getOrCreate({ approveLegacyMigration: true });
+  assert.equal((await db.table('moments').get('legacy-a')).userId, principal.principalId);
+  assert.equal((await db.table('moments').get('legacy-b')).userId, principal.principalId);
+  await db.delete();
 });

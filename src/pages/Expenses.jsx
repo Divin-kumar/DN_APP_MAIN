@@ -13,7 +13,7 @@ import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
-import { getCodeListItems } from '../utils/codeLists';
+import { getCodeListItems, getCodeListLabel } from '../utils/codeLists';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import SortControl from '../components/common/SortControl';
 import usePersistentSort from '../hooks/usePersistentSort';
@@ -21,8 +21,9 @@ import usePersistentSort from '../hooks/usePersistentSort';
 export default function Expenses() {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const { expenses, loading, error, loadExpenses, addExpense, updateExpenseItem, deleteExpenseItem } = useExpenseStore();
@@ -146,7 +147,7 @@ export default function Expenses() {
         <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search expenses" aria-label="Search expenses" />
         <DropdownSelect value={categoryFilter} onChange={(event) => setCategoryFilter(event.target.value)} aria-label="Filter expense category">
           <option value="all">All categories</option>
-          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+          {categories.map((category) => <option key={category} value={category}>{getCodeListLabel('expenseCategories', category, adminValues.expenseCategories)}</option>)}
         </DropdownSelect>
         <SortControl field={expenseSort} direction={expenseSortDirection} onFieldChange={setExpenseSort} onToggleDirection={toggleExpenseSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'amount', label: 'Amount' }, { value: 'name', label: 'Name' }]} label="Sort expenses" />
       </div>

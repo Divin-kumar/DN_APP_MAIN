@@ -31,8 +31,9 @@ const nextEventDate = (event) => {
 
 export default function Insights() {
   const [search, setSearch] = useState('');
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const { events, loadEvents } = useEventStore();
   const { expenses, loadExpenses } = useExpenseStore();
   const { incomes, loadIncomes } = useIncomeStore();

@@ -102,6 +102,25 @@ export const settingsRepository = {
     return [];
   },
 
+  async ensureDefaults(userId, defaults = {}) {
+    if (!userId || typeof defaults !== 'object' || Array.isArray(defaults)) return {};
+    const result = {};
+
+    for (const [key, value] of Object.entries(defaults)) {
+      if (!key) continue;
+      const existing = await this.getByKey(userId, key);
+      if (existing) {
+        result[key] = existing.value;
+        continue;
+      }
+
+      const saved = await this.setOne(userId, key, value);
+      result[key] = saved?.value ?? value;
+    }
+
+    return result;
+  },
+
   async getPreferences(userId) {
     const settings = await this.getAll(userId);
     return settings.reduce((accumulator, setting) => {

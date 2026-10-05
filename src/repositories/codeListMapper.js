@@ -13,6 +13,7 @@ export const mapCodeListEntry = (record = {}, userId = null) => {
     id: record.id || crypto.randomUUID(),
     userId,
     listKey,
+    value: entryValue,
     entryValue,
     label: typeof record.label === 'string' ? record.label : entryValue,
     active: record.active !== false && record.isActive !== false,

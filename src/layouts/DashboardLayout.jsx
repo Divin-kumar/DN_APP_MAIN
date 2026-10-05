@@ -9,10 +9,8 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
+import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
-import { authService } from '../services/firebase';
-import { useGuest } from '../context/GuestContext';
 import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
@@ -33,15 +31,15 @@ const navItems = [
 ];
 
 export default function DashboardLayout() {
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
+  const principal = useAppStore((state) => state.principal);
+  const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
+  const isGuest = false;
   const adminValues = useAppStore((state) => state.adminValues);
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const { events, loadEvents, addEvent, updateEventItem } = useEventStore();
   const { loadExpenses, addExpense } = useExpenseStore();
-  const { exitGuestMode } = useGuest();
   const location = useLocation();
   const navigationType = useNavigationType();
   const navigate = useNavigate();
@@ -192,23 +190,6 @@ export default function DashboardLayout() {
   const profileName = user?.displayName || user?.email || 'Guest';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
 
-  // Logout should behave differently for guest accounts and real accounts.
-  // Real users sign out through Firebase; guest users just clear the guest session.
-  const handleLogout = async () => {
-    try {
-      if (isGuest) {
-        exitGuestMode();
-        window.location.href = '/login';
-        return;
-      }
-
-      await authService.signOutUser();
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
   // Quick create opens a lightweight modal for common tasks without leaving the page.
   // This is a shortcut so users can add a life moment, activity, or expense in a few clicks.
   const beginQuickCreate = (type) => {
@@ -325,10 +306,9 @@ export default function DashboardLayout() {
             </button>
             {profileMenuOpen ? (
               <div className="profile-menu" role="menu">
-                <div className="profile-menu-account"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
+                <div className="profile-menu-account"><strong>{profileName}</strong><span>Device Principal</span></div>
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
-                <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
               </div>
             ) : null}
           </div>
@@ -367,9 +347,7 @@ export default function DashboardLayout() {
         <section ref={contentRef} className="lifehub-content" style={styles.contentPane}>
           <ConnectivityBanner />
           <div className="lifehub-banner" style={styles.banner}>
-            {isGuest
-              ? 'Guest mode active. Your data is stored locally on this device.'
-              : 'Authenticated mode active. Your data is synced with Firebase.'}
+            Your data is stored locally on this device.
           </div>
 
           <motion.div

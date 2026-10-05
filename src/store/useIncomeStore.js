@@ -8,7 +8,7 @@ import { incomeRepository } from '../repositories/index.js';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData.js';
 import { resolveRepositoryPrincipal } from './repositoryRuntime.js';
 
-const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+const getLoadKey = (principalId) => `device:${principalId || 'active'}`;
 
 const useIncomeStore = create((set, get) => {
   const pendingLoads = new Map();
@@ -22,8 +22,8 @@ const useIncomeStore = create((set, get) => {
 
   setIncomes: (items) => set({ incomes: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
-  loadIncomes: async (uid, isGuest) => {
-    const loadKey = getLoadKey(uid, isGuest);
+  loadIncomes: async (uid) => {
+    const loadKey = getLoadKey(uid);
     if (get().loadedFor === loadKey) return get().incomes;
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
@@ -33,7 +33,7 @@ const useIncomeStore = create((set, get) => {
     const request = Promise.resolve().then(async () => {
       try {
         const sampleData = getActiveSampleData(uid);
-        const principalId = sampleData ? null : await resolveRepositoryPrincipal(uid, isGuest);
+        const principalId = sampleData ? null : await resolveRepositoryPrincipal();
         if (!sampleData && !principalId) throw new Error('No active repository principal is available.');
         const items = sampleData ? sampleData.incomes : await incomeRepository.getAll(principalId);
         if (get().activeLoadKey === loadKey) {
@@ -52,7 +52,7 @@ const useIncomeStore = create((set, get) => {
     return request;
   },
 
-  addIncome: async (uid, isGuest, income) => {
+  addIncome: async (uid, _legacyMode, income) => {
     const normalized = {
       ...income,
       id: income.id || crypto.randomUUID(),
@@ -68,7 +68,7 @@ const useIncomeStore = create((set, get) => {
       return normalized;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const previous = get().incomes;
     const optimistic = [normalized, ...previous];
@@ -91,7 +91,7 @@ const useIncomeStore = create((set, get) => {
     }
   },
 
-  updateIncomeItem: async (uid, isGuest, income) => {
+  updateIncomeItem: async (uid, _legacyMode, income) => {
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
       const updated = sampleData.incomes.map((item) => item.id === income.id ? { ...item, ...income } : item);
@@ -100,7 +100,7 @@ const useIncomeStore = create((set, get) => {
       return income;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const current = get().incomes;
     const previous = current.find((item) => item.id === income.id || item.firestoreId === income.firestoreId);
@@ -130,7 +130,7 @@ const useIncomeStore = create((set, get) => {
     }
   },
 
-  deleteIncomeItem: async (uid, isGuest, incomeId) => {
+  deleteIncomeItem: async (uid, _legacyMode, incomeId) => {
     const current = get().incomes;
     const income = current.find((item) => item.id === incomeId || item.firestoreId === incomeId);
 
@@ -144,7 +144,7 @@ const useIncomeStore = create((set, get) => {
       return;
     }
 
-    const principalId = await resolveRepositoryPrincipal(uid, isGuest);
+    const principalId = await resolveRepositoryPrincipal();
     if (!principalId) throw new Error('No active repository principal is available.');
     const remaining = current.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
     set({ incomes: remaining, error: null });

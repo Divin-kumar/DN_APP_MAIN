@@ -6,6 +6,7 @@ export * from './momentRepository.js';
 export * from './activityRepository.js';
 export * from './memoryRepository.js';
 export * from './attachmentRepository.js';
+export * from './devicePrincipalRepository.js';
 export * from './settingsMapper.js';
 export * from './codeListMapper.js';
 export * from './expenseMapper.js';

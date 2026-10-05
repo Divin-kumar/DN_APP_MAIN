@@ -1,6 +1,8 @@
 /* Income history rows and edit/delete actions. */
 import { Pencil, Trash2 } from 'lucide-react';
 import useSwipeActions from '../../hooks/useSwipeActions';
+import useAppStore from '../../store/useAppStore';
+import { getCodeListLabel } from '../../utils/codeLists';
 
 const currency = (value) => {
   const number = Number(value || 0);
@@ -12,6 +14,7 @@ const currency = (value) => {
 };
 
 function IncomeRow({ income, onEdit, onDelete }) {
+  const adminValues = useAppStore((state) => state.adminValues);
   const { action, setAction, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, toggleOther, close } = useSwipeActions();
 
   return (
@@ -46,7 +49,7 @@ function IncomeRow({ income, onEdit, onDelete }) {
       <div className="history-row financial-swipe-main" style={styles.row}>
         <div style={styles.meta}>
           <strong>{income.name}</strong>
-          <span>{income.type} • {income.date}</span>
+          <span>{getCodeListLabel('incomeTypes', income.type, adminValues.incomeTypes)} • {income.date}</span>
         </div>
         <span style={styles.amount}>{currency(income.amount)}</span>
       </div>
