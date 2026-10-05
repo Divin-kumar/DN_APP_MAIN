@@ -424,7 +424,7 @@ export default function DashboardLayout() {
           </div>
         ) : null}
         <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-          {quickCreateOpen ? <X size={20} aria-hidden="true" /> : <span className="quick-create-sticker" aria-hidden="true"><Sparkles size={23} /></span>}
+          {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
         </button>
       </div>
 
@@ -437,7 +437,7 @@ export default function DashboardLayout() {
           </div>
         ) : null}
         <button type="button" className="lifehub-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-          {quickCreateOpen ? <X size={21} aria-hidden="true" /> : <span className="quick-create-sticker" aria-hidden="true"><Sparkles size={24} /></span>}
+          {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
         </button>
       </div>
 

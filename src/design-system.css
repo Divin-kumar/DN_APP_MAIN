@@ -1347,10 +1347,6 @@ html[data-theme] .mobile-dock-create-trigger {
 }
 html[data-theme] .lifehub-quick-create-trigger svg,
 html[data-theme] .mobile-dock-create-trigger svg { width: 22px; height: 22px; stroke-width: 2.2; }
-html[data-theme] .quick-create-sticker { position: relative; display: grid; place-items: center; color: #fff; filter: drop-shadow(0 2px 4px color-mix(in srgb,var(--color-primary-dark) 45%,transparent)); animation: dn-quick-create-sticker 2.8s ease-in-out infinite; }
-html[data-theme] .quick-create-sticker::after { position: absolute; inset: -7px; border: 1px solid color-mix(in srgb,#fff 40%,transparent); border-radius: 50%; content: ''; animation: dn-quick-create-halo 2.8s ease-in-out infinite; }
-@keyframes dn-quick-create-sticker { 0%,100% { transform: translateY(0) rotate(-4deg) scale(1); } 50% { transform: translateY(-2px) rotate(4deg) scale(1.08); } }
-@keyframes dn-quick-create-halo { 0%,100% { opacity: .25; transform: scale(.88); } 50% { opacity: .75; transform: scale(1.08); } }
 html[data-theme] .lifehub-quick-create-trigger:hover,
 html[data-theme] .mobile-dock-create-trigger:hover { box-shadow: 0 12px 29px color-mix(in srgb,var(--color-primary) 38%,transparent),inset 0 1px 0 color-mix(in srgb,#fff 38%,transparent) !important; transform: translateY(-2px) scale(1.025); }
 html[data-theme] .lifehub-quick-create-trigger:active,
@@ -1426,8 +1422,6 @@ html[data-theme] .mobile-dock-create-trigger { width: 50px !important; min-width
   html[data-theme] .modal-danger-button,
   html[data-theme] .lifehub-quick-create-trigger,
   html[data-theme] .mobile-dock-create-trigger { transition-duration: .01ms !important; }
-  html[data-theme] .quick-create-sticker,
-  html[data-theme] .quick-create-sticker::after { animation: none !important; }
 }
 
 /* Free text always keeps authored line breaks; previews clamp only after preserving that structure. */
