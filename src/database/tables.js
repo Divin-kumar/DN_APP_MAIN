@@ -11,6 +11,8 @@ export const DATABASE_TABLES = Object.freeze({
   ACTIVITIES: 'activities',
   MEMORIES: 'memories',
   ATTACHMENTS: 'attachments',
+  ATTACHMENT_LINKS: 'attachmentLinks',
+  ATTACHMENT_FILES: 'attachmentFiles',
   EXPENSES: 'expenses',
   INCOMES: 'incomes',
   SETTINGS: 'settings',

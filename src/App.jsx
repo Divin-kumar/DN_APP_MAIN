@@ -20,6 +20,8 @@ import useAppStore from './store/useAppStore';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const Events = lazy(() => import('./pages/Events'));
+const Attachments = lazy(() => import('./pages/Attachments'));
+const AttachmentDetail = lazy(() => import('./pages/AttachmentDetail'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
@@ -155,6 +157,8 @@ export default function App() {
             <Route index element={loadScreen(<DashboardHome />, 'dashboard')} />
             <Route path="dashboard" element={loadScreen(<DashboardHome />, 'dashboard')} />
             <Route path="events" element={loadScreen(<Events />, 'moments')} />
+            <Route path="attachments" element={loadScreen(<Attachments />, 'attachments')} />
+            <Route path="attachments/:attachmentId" element={loadScreen(<AttachmentDetail />, 'attachment details')} />
             <Route path="activities" element={<Navigate to="/events" replace />} />
             <Route path="insights" element={loadScreen(<Insights />, 'insights')} />
 

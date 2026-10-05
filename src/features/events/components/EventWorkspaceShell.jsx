@@ -2,7 +2,7 @@
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { ArrowLeft, BookHeart, CalendarDays, Camera, Check, CircleCheck, Clock3, Download, FileText, FolderOpen, Heart, Images, Link2, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
 import DateField from '../../../components/common/DateField';
 import DropdownSelect from '../../../components/common/DropdownSelect';
@@ -16,6 +16,9 @@ import { getEventGreeting } from '../../../utils/greeting';
 import { ACTIVITY_PRIORITY_OPTIONS, getCodeListLabel, getMomentTypeLabel } from '../../../utils/codeLists';
 import usePersistentSort from '../../../hooks/usePersistentSort';
 import SortControl from '../../../components/common/SortControl';
+import AttachmentStatusBadge from '../../../components/attachments/AttachmentStatusBadge';
+import PhotoViewerDialog from '../../../components/attachments/PhotoViewerDialog';
+import { getAttachmentLinkLabel, getAttachmentStatus, getAttachmentTypeBucket, sortAttachmentsForGallery } from '../../../utils/attachmentStatus.js';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -26,6 +29,15 @@ const formatDate = (value) => {
   return Number.isNaN(date.getTime())
     ? 'Date to be decided'
     : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};  
+
+const formatBytes = (value = 0) => {
+  if (value < 1024) return `${value} B`;
+  const units = ['KB', 'MB', 'GB'];
+  let amount = value / 1024;
+  let unit = units[0];
+  for (let index = 1; amount >= 1024 && index < units.length; index += 1) { amount /= 1024; unit = units[index]; }
+  return `${amount.toFixed(1)} ${unit}`;
 };
 
 const getBirthdayAge = (value) => {
@@ -44,6 +56,66 @@ const getBirthdayAge = (value) => {
   return Math.max(age, 0);
 };
 
+function SelectedPhoto({ file, onRemove }) {
+  const [previewUrl, setPreviewUrl] = useState('');
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    const objectUrl = URL.createObjectURL(file);
+    setPreviewUrl(objectUrl);
+    setFailed(false);
+    return () => URL.revokeObjectURL(objectUrl);
+  }, [file]);
+
+  return <article className="attachment-photo-selection-card">
+    <div className="attachment-photo-selection-thumb">{previewUrl && !failed ? <img src={previewUrl} alt="" onError={() => setFailed(true)} /> : <Images size={22} aria-hidden="true" />}</div>
+    <div className="attachment-photo-selection-caption"><strong title={file.name}>{file.name}</strong><small>{formatBytes(file.size)}</small></div>
+    <button type="button" aria-label={`Remove ${file.name} from selection`} onClick={onRemove}><X size={15} /></button>
+  </article>;
+}
+
+function PhotoThumbnail({ attachment, getAttachmentBlob, userId, onOpen }) {
+  const [source, setSource] = useState('');
+  const [loading, setLoading] = useState(Boolean(attachment.hasLocalCopy));
+  const [imageLoaded, setImageLoaded] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const reference = attachment.previewReference || attachment.fileReference || attachment.url || '';
+  const status = getAttachmentStatus(attachment);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+    setSource('');
+    setImageLoaded(false);
+    setFailed(false);
+    if (attachment.hasLocalCopy) {
+      setLoading(true);
+      void getAttachmentBlob(userId, attachment.id).then((blob) => {
+        if (!active) return;
+        if (blob) {
+          objectUrl = URL.createObjectURL(blob);
+          setSource(objectUrl);
+        } else { setFailed(true); setLoading(false); }
+      }).catch(() => { if (active) { setFailed(true); setLoading(false); } });
+    } else {
+      if (/^https?:\/\//i.test(reference) && status.value !== 'unavailable') { setLoading(true); setSource(reference); }
+      else { setLoading(false); setFailed(true); }
+    }
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment.id, attachment.hasLocalCopy, reference, getAttachmentBlob, userId, status.value]);
+
+  return <button type="button" className="moment-photo-tile" onClick={onOpen} aria-label={`Open photo ${attachment.name || 'untitled'}; status ${status.label}`}>
+    <span className={`moment-photo-tile-image${failed ? ' is-unavailable' : ''}`}>
+      {loading || (source && !imageLoaded && !failed) ? <span className="moment-photo-loading" role="status">Loading photo…</span> : null}
+      {source && !failed && status.value !== 'unavailable' ? <img src={source} alt="" loading="lazy" onLoad={() => { setImageLoaded(true); setLoading(false); }} onError={() => { setFailed(true); setLoading(false); }} /> : !loading ? <span className="moment-photo-unavailable"><Images size={24} /><small>{status.label}</small></span> : null}
+    </span>
+    <span className="moment-photo-tile-meta"><strong title={attachment.name}>{attachment.name || 'Untitled photo'}</strong><AttachmentStatusBadge attachment={attachment} small /></span>
+  </button>;
+}
+
 export default function EventWorkspaceShell() {
   const { eventId } = useParams();
   const location = useLocation();
@@ -55,7 +127,7 @@ export default function EventWorkspaceShell() {
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
+  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem, createAttachment, deleteAttachment, getAttachmentBlob } = useEventStore();
   const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
@@ -75,6 +147,19 @@ export default function EventWorkspaceShell() {
   const [memoryExpanded, setMemoryExpanded] = useState(false);
   const [pendingDeleteMemory, setPendingDeleteMemory] = useState(null);
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
+  const [attachmentName, setAttachmentName] = useState('');
+  const [attachmentReference, setAttachmentReference] = useState('');
+  const [attachmentSource, setAttachmentSource] = useState('gallery');
+  const [attachmentFiles, setAttachmentFiles] = useState([]);
+  const [keepAttachmentCopy, setKeepAttachmentCopy] = useState(false);
+  const [attachmentSaving, setAttachmentSaving] = useState(false);
+  const [attachmentOnMoment, setAttachmentOnMoment] = useState(true);
+  const [attachmentActivityId, setAttachmentActivityId] = useState('');
+  const [attachmentTypeFilter, setAttachmentTypeFilter] = useState('all');
+  const [attachmentStatusFilter, setAttachmentStatusFilter] = useState('all');
+  const [attachmentSortMode, setAttachmentSortMode] = useState('recent');
+  const [showAllMomentPhotos, setShowAllMomentPhotos] = useState(false);
+  const [photoViewer, setPhotoViewer] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
   const [expenseDialogActivity, setExpenseDialogActivity] = useState(null);
@@ -103,12 +188,64 @@ export default function EventWorkspaceShell() {
   }, [location.pathname, location.search, navigate]);
 
   useEffect(() => setMemoryExpanded(false), [eventId]);
+  useEffect(() => {
+    setShowAllMomentPhotos(false);
+    setPhotoViewer(null);
+  }, [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
 
   if (loading && !event) {
     return <p style={{ color: 'var(--ink-soft)' }}>Loading event workspace...</p>;
   }
+
+function AttachmentGalleryItem({ attachment, getAttachmentBlob, userId, eventId, onRemove }) {
+  const [localPreview, setLocalPreview] = useState('');
+  const [previewFailed, setPreviewFailed] = useState(false);
+  const [localFileMissing, setLocalFileMissing] = useState(false);
+  const imageLike = String(attachment.mimeType || attachment.type || '').startsWith('image/');
+  const reference = attachment.previewReference || attachment.fileReference || attachment.url || '';
+  const resolvedAttachment = localFileMissing ? { ...attachment, hasLocalCopy: false } : attachment;
+  const status = getAttachmentStatus(resolvedAttachment);
+  const openReference = status.value === 'unavailable' ? '' : localPreview || (/^https?:\/\//i.test(reference) ? reference : '');
+
+  useEffect(() => {
+    let objectUrl = '';
+    let active = true;
+    if (attachment.availability === 'local-copy' || attachment.hasLocalCopy) {
+      void getAttachmentBlob(userId, attachment.id).then((blob) => {
+        if (!active) return;
+        if (!blob) {
+          setLocalFileMissing(true);
+          return;
+        }
+        objectUrl = URL.createObjectURL(blob);
+        setLocalPreview(objectUrl);
+      }).catch(() => { if (active) setLocalFileMissing(true); });
+    }
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment.id, attachment.availability, attachment.hasLocalCopy, getAttachmentBlob, imageLike, userId]);
+
+  const preview = status.value !== 'unavailable' && !previewFailed && (localPreview || (imageLike && /^https?:\/\//i.test(reference) ? reference : ''));
+  const parentLabelText = getAttachmentLinkLabel((attachment.parentLinks || []).map((link) => link.parentType));
+
+  return (
+    <article className="attachment-gallery-card">
+      {preview ? <a className="attachment-gallery-preview" href={openReference || preview} target="_blank" rel="noreferrer" aria-label={`Preview ${attachment.name}`}><img src={preview} alt="" loading="lazy" onError={() => setPreviewFailed(true)} /></a> : <span className={`attachment-gallery-placeholder${status.value === 'unavailable' ? ' is-unavailable' : ''}`} aria-label={status.value === 'unavailable' ? 'File unavailable' : `${imageLike ? 'Image' : 'Document'} preview unavailable`}>{imageLike ? <Images size={23} /> : <FileText size={23} />}{status.value === 'unavailable' ? <small>Unavailable</small> : null}</span>}
+      <div className="attachment-gallery-copy">
+        <strong title={attachment.name}><Link to={`/attachments/${attachment.id}`} state={{ from: `/events/${eventId}/attachments` }}>{attachment.name}</Link></strong>
+        <small>{String(attachment.mimeType || attachment.type || 'File').split('/').pop().toUpperCase()} · {formatBytes(Number(attachment.size || 0))}</small>
+        <span className="attachment-relationship-badge">{parentLabelText === 'Not linked' ? 'Not linked' : `Linked to: ${parentLabelText}`}</span>
+      </div>
+      <AttachmentStatusBadge attachment={resolvedAttachment} small />
+      {openReference ? <a className="attachment-gallery-open" href={openReference} target="_blank" rel="noreferrer">Open</a> : null}
+      <button type="button" className="attachment-gallery-remove" onClick={onRemove} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button>
+    </article>
+  );
+}
 
   if (!event) {
     return (
@@ -345,24 +482,90 @@ export default function EventWorkspaceShell() {
     setPendingDeleteMemory(null);
   };
 
-  const addAttachment = async (changeEvent) => {
-    const file = changeEvent.target.files?.[0];
-    if (!file) return;
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      attachments: [...(event.attachments || []), {
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type || 'File',
-        size: file.size,
-        createdAt: new Date().toISOString(),
-      }],
-    });
-    changeEvent.target.value = '';
+  const selectAttachmentSource = (source) => {
+    setAttachmentSource(source);
+    setAttachmentFiles([]);
+    setKeepAttachmentCopy(false);
+    setAttachmentReference('');
+    setAttachmentName('');
+  };
+
+  const addAttachment = async (submitEvent) => {
+    submitEvent.preventDefault();
+    const url = attachmentReference.trim();
+    const isExternalLink = attachmentSource === 'external';
+    if (isExternalLink && !/^https?:\/\//i.test(url)) {
+      showToast('Use a secure web link (https://) or an http:// link.', 'danger');
+      return;
+    }
+    if (isExternalLink && !url) {
+      showToast('Enter a URL to add an external link.', 'danger');
+      return;
+    }
+    if (!isExternalLink && !attachmentFiles.length) {
+      showToast('Choose at least one item from the selected source.', 'danger');
+      return;
+    }
+    if (!attachmentOnMoment && !attachmentActivityId) {
+      showToast('Choose a Moment, an Activity, or both.', 'danger');
+      return;
+    }
+    if (keepAttachmentCopy && !isExternalLink) {
+      const localCopyTypes = new Set(['application/pdf', 'text/plain', 'text/csv', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'application/vnd.ms-excel', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-powerpoint', 'application/vnd.openxmlformats-officedocument.presentationml.presentation']);
+      const unsupportedFile = attachmentFiles.find((file) => !file.type.startsWith('image/') && !localCopyTypes.has(file.type));
+      if (unsupportedFile) {
+        showToast(`${unsupportedFile.name} cannot be kept as a local copy. Add it as a reference or leave Keep Local Copy off.`, 'danger');
+        return;
+      }
+      if (attachmentFiles.some((file) => file.size > 20 * 1024 * 1024)) {
+        showToast('Local attachment copies are limited to 20 MB each.', 'danger');
+        return;
+      }
+    }
+    const parentLinks = [
+      ...(attachmentOnMoment ? [{ parentType: 'moment', parentId: eventId }] : []),
+      ...(attachmentActivityId ? [{ parentType: 'activity', parentId: attachmentActivityId }] : []),
+    ];
+    const filesToAdd = isExternalLink ? [null] : attachmentFiles;
+    let addedCount = 0;
+    setAttachmentSaving(true);
+    try {
+      for (const file of filesToAdd) {
+        const fileReference = isExternalLink ? url : '';
+        await createAttachment(user?.uid, {
+          id: crypto.randomUUID(),
+          name: isExternalLink ? attachmentName.trim() || url.split('/').pop() || 'External link' : file.name || 'Attachment',
+          type: isExternalLink ? 'text/uri-list' : file.type || 'application/octet-stream',
+          mimeType: isExternalLink ? 'text/uri-list' : file.type || 'application/octet-stream',
+          size: file?.size || 0,
+          fileReference,
+          availability: isExternalLink ? 'reference' : keepAttachmentCopy ? 'local-copy' : 'unavailable',
+          createdAt: new Date().toISOString(),
+          source: 'manual',
+        }, parentLinks, keepAttachmentCopy ? file : null);
+        addedCount += 1;
+      }
+      setAttachmentName('');
+      setAttachmentReference('');
+      setAttachmentFiles([]);
+      setKeepAttachmentCopy(false);
+      setAttachmentOnMoment(true);
+      setAttachmentActivityId('');
+      if (isExternalLink) showToast('External link added', 'success');
+      else if (keepAttachmentCopy) showToast(`${addedCount} ${addedCount === 1 ? 'file' : 'files'} added with local copies`, 'success');
+      else showToast(`${addedCount} ${addedCount === 1 ? 'file detail' : 'file details'} saved. The browser cannot preserve the selected file reference; reselect it later or choose Keep Local Copy.`, 'success');
+    } catch (error) {
+      if (!isExternalLink && addedCount) setAttachmentFiles((current) => current.slice(addedCount));
+      const failureMessage = error?.message || 'Attachment could not be added.';
+      const addedLabel = attachmentSource === 'gallery' ? `${addedCount} photo${addedCount === 1 ? '' : 's'}` : `${addedCount} file${addedCount === 1 ? '' : 's'}`;
+      showToast(addedCount ? `${addedLabel} saved. The remaining selections are ready to retry. ${failureMessage}` : failureMessage, 'danger');
+    } finally {
+      setAttachmentSaving(false);
+    }
   };
 
   const removeAttachment = async (attachmentId) => {
-    await updateEventItem(user?.uid, isGuest, { ...event, attachments: (event.attachments || []).filter((attachment) => attachment.id !== attachmentId) });
+    await deleteAttachment(user?.uid, attachmentId);
     setPendingDeleteAttachment(null);
   };
 
@@ -460,18 +663,78 @@ export default function EventWorkspaceShell() {
             onEdit={editActivity}
             onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
             onAddActivity={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityError(''); setActivityDialogOpen(true); }}
+            getAttachmentBlob={getAttachmentBlob}
+            userId={user?.uid}
+            eventId={eventId}
+            onOpenPhoto={(photos, index, contextName) => setPhotoViewer({ photos, index, contextName })}
           />
         </div>
       );
     }
 
     if (activeSection.label === 'Attachments') {
+      const visibleAttachments = sortAttachmentsForGallery(attachments.filter((attachment) => (
+        (attachmentTypeFilter === 'all' || getAttachmentTypeBucket(attachment) === attachmentTypeFilter)
+        && (attachmentStatusFilter === 'all' || getAttachmentStatus(attachment).value === attachmentStatusFilter)
+      )), attachmentSortMode);
+      const momentPhotos = visibleAttachments.filter((attachment) => getAttachmentTypeBucket(attachment) === 'image');
+      const otherAttachments = visibleAttachments.filter((attachment) => getAttachmentTypeBucket(attachment) !== 'image');
+      const momentPhotoCount = attachments.filter((attachment) => getAttachmentTypeBucket(attachment) === 'image').length;
+      const photosToShow = showAllMomentPhotos ? momentPhotos : momentPhotos.slice(0, 8);
       return (
         <div className="workspace-resource-list">
-          <label className="workspace-upload-control"><Upload size={16} /> Add attachment<input type="file" onChange={addAttachment} /></label>
-          {event.attachments?.length ? event.attachments.map((attachment) => (
-            <div className="workspace-resource-row workspace-attachment-card" key={attachment.id}><span className="workspace-attachment-icon">{attachment.type?.startsWith('image/') ? <Images size={19} /> : <FileText size={19} />}</span><div><strong title={attachment.name}>{attachment.name}</strong><span className="workspace-attachment-meta"><i>{String(attachment.type || 'FILE').split('/').pop().toUpperCase()}</i>{Math.max(1, Math.ceil(Number(attachment.size || 0) / 1024))} KB · {formatDate(attachment.createdAt)}</span></div><button type="button" onClick={() => setPendingDeleteAttachment(attachment)} style={styles.iconButtonDanger} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button></div>
-          )) : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Documents, photos, and keepsakes will stay attached to this event.</p></div>}
+          <details className="attachment-add-disclosure">
+          <summary><Plus size={16} /><span>Add photos or attachment</span></summary>
+          <form className="attachment-create-form" onSubmit={(submitEvent) => void addAttachment(submitEvent)}>
+            <h3>Add an attachment</h3>
+            <p>Choose a source, then connect it to this Moment, an Activity, or both.</p>
+            <div className="attachment-source-options" role="group" aria-label="Attachment source">
+              <button type="button" className={attachmentSource === 'gallery' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'gallery'} onClick={() => selectAttachmentSource('gallery')}><Images size={17} /><span>Photo Gallery</span></button>
+              <button type="button" className={attachmentSource === 'files' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'files'} onClick={() => selectAttachmentSource('files')}><FolderOpen size={17} /><span>Files</span></button>
+              <button type="button" className={attachmentSource === 'camera' ? 'is-selected' : ''} aria-pressed={attachmentSource === 'camera'} onClick={() => selectAttachmentSource('camera')}><Camera size={17} /><span>Camera</span></button>
+              <button type="button" className={`attachment-source-link${attachmentSource === 'external' ? ' is-selected' : ''}`} aria-pressed={attachmentSource === 'external'} onClick={() => selectAttachmentSource('external')}><Link2 size={15} /><span>External Link</span></button>
+            </div>
+            {attachmentSource === 'external' ? <>
+              <label><span>External URL</span><input type="url" value={attachmentReference} onChange={(inputEvent) => setAttachmentReference(inputEvent.target.value)} placeholder="https://…" /></label>
+              <label><span>Display name</span><input value={attachmentName} onChange={(inputEvent) => setAttachmentName(inputEvent.target.value)} placeholder="Reservation, map, web page…" /></label>
+              <p className="attachment-source-note">External links remain references. DN does not download their content.</p>
+            </> : <>
+              <label className="attachment-file-picker"><span>{attachmentSource === 'gallery' ? 'Select photos' : attachmentSource === 'camera' ? 'Capture a photo' : 'Choose files'} <small>{attachmentSource === 'camera' ? 'Your browser may open the device camera.' : attachmentSource === 'gallery' ? 'Choose one or more images.' : 'PDFs, images, Office documents, or text files.'}</small></span><input type="file" accept={attachmentSource === 'gallery' || attachmentSource === 'camera' ? 'image/*' : 'image/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv'} capture={attachmentSource === 'camera' ? 'environment' : undefined} multiple={attachmentSource !== 'camera'} onChange={(inputEvent) => { setAttachmentFiles(Array.from(inputEvent.target.files || [])); inputEvent.currentTarget.value = ''; }} /></label>
+              {attachmentFiles.length ? <section className={attachmentSource === 'gallery' ? 'attachment-selection-review is-photos' : 'attachment-selection-review'} aria-label={`Review ${attachmentFiles.length} selected ${attachmentSource === 'gallery' ? 'photos' : 'files'}`}>
+                <div className="attachment-selection-heading"><strong>Review {attachmentFiles.length} {attachmentSource === 'gallery' ? attachmentFiles.length === 1 ? 'photo' : 'photos' : attachmentFiles.length === 1 ? 'file' : 'files'}</strong><span>Remove anything you don’t want to add.</span></div>
+                <div className={attachmentSource === 'gallery' ? 'attachment-photo-selection-grid' : 'attachment-selected-files'}>{attachmentFiles.map((file, index) => attachmentSource === 'gallery'
+                  ? <SelectedPhoto key={`${file.name}:${file.lastModified}:${index}`} file={file} onRemove={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))} />
+                  : <div className="attachment-selected-file" key={`${file.name}:${file.lastModified}:${index}`}><span><strong>{file.name}</strong><small>{String(file.type || 'Unknown type')} · {formatBytes(file.size)}</small></span><button type="button" aria-label={`Remove ${file.name}`} onClick={() => setAttachmentFiles((current) => current.filter((_, currentIndex) => currentIndex !== index))}><X size={14} /></button></div>)}</div>
+              </section> : null}
+              {attachmentFiles.length ? <>
+                <label className="attachment-copy-choice"><input type="checkbox" checked={keepAttachmentCopy} onChange={(inputEvent) => setKeepAttachmentCopy(inputEvent.target.checked)} /><span>Keep local copy in DN ({attachmentFiles.length} {attachmentFiles.length === 1 ? 'file' : 'files'}, {formatBytes(attachmentFiles.reduce((total, file) => total + file.size, 0))}). This uses device storage and enables Include Attachments backups.</span></label>
+                {!keepAttachmentCopy ? <p className="attachment-source-warning" role="status">No photo bytes are saved by default. A picker selection is temporary, not a durable reference: without a usable reference DN will show Unavailable and you may need to select the photo again. Reference Only applies only when a usable reference is actually saved. Choose Keep Local Copy to preserve this photo on the device.</p> : null}
+              </> : <p className="attachment-source-note">Keep Local Copy is optional and remains off by default.</p>}
+            </>}
+            <div className="attachment-parent-choices">
+              <label><input type="checkbox" checked={attachmentOnMoment} onChange={(inputEvent) => setAttachmentOnMoment(inputEvent.target.checked)} /><span>This Moment</span></label>
+              <label><span>Activity</span><select value={attachmentActivityId} onChange={(inputEvent) => setAttachmentActivityId(inputEvent.target.value)}><option value="">Not linked to an Activity</option>{activities.map((activity) => <option key={activity.id} value={activity.id}>{activity.title || 'Untitled activity'}</option>)}</select></label>
+            </div>
+            <div className="attachment-parent-preview" role="status"><span>Linked to:</span><strong>{getAttachmentLinkLabel([...(attachmentOnMoment ? ['moment'] : []), ...(attachmentActivityId ? ['activity'] : [])])}</strong></div>
+            <button type="submit" className="primaryButton" style={styles.primaryButton} disabled={attachmentSaving}><Plus size={15} /> {attachmentSaving ? 'Adding…' : attachmentSource === 'gallery' && attachmentFiles.length > 1 ? `Add ${attachmentFiles.length} photos` : attachmentSource === 'gallery' ? 'Add photo' : 'Add attachment'}</button>
+          </form>
+          </details>
+          {attachments.length ? <div className="attachment-gallery-toolbar" aria-label="Filter and sort Moment attachments">
+            <label><span>Type</span><select value={attachmentTypeFilter} onChange={(inputEvent) => setAttachmentTypeFilter(inputEvent.target.value)}><option value="all">All types</option><option value="image">Images</option><option value="pdf">PDFs</option><option value="document">Documents</option></select></label>
+            <label><span>Status</span><select value={attachmentStatusFilter} onChange={(inputEvent) => setAttachmentStatusFilter(inputEvent.target.value)}><option value="all">All statuses</option><option value="available">Available</option><option value="on-device">On This Device</option><option value="reference-only">Reference Only</option><option value="unavailable">Unavailable</option></select></label>
+            <label><span>Sort</span><select value={attachmentSortMode} onChange={(inputEvent) => setAttachmentSortMode(inputEvent.target.value)}><option value="recent">Most recent</option><option value="oldest">Oldest</option><option value="name">Name</option><option value="type">Type</option><option value="status">Status</option></select></label>
+          </div> : null}
+          {attachments.length ? <>
+            {momentPhotos.length ? <section className="moment-photo-gallery" aria-label="Moment photos">
+              <header className="moment-photo-gallery-heading"><div><h3>Photos</h3><span>{momentPhotoCount} {momentPhotoCount === 1 ? 'photo' : 'photos'} in this Moment{momentPhotos.length !== momentPhotoCount ? ` · ${momentPhotos.length} shown by filters` : ''}</span></div>{momentPhotos.length > 8 ? <button type="button" onClick={() => setShowAllMomentPhotos((current) => !current)}>{showAllMomentPhotos ? 'Show less' : `View all ${momentPhotos.length} photos`}</button> : null}</header>
+              <div className="moment-photo-grid">{photosToShow.map((photo, index) => <PhotoThumbnail key={photo.id} attachment={photo} getAttachmentBlob={getAttachmentBlob} userId={user?.uid} onOpen={() => setPhotoViewer({ photos: momentPhotos, index, contextName: event.name || 'This Moment' })} />)}</div>
+            </section> : null}
+            {otherAttachments.length ? <section className="moment-other-attachments"><h3>{momentPhotos.length ? 'Other attachments' : 'Attachments'}</h3><div className="attachment-gallery-grid">{otherAttachments.map((attachment) => (
+              <AttachmentGalleryItem key={attachment.id} attachment={attachment} getAttachmentBlob={getAttachmentBlob} userId={user?.uid} eventId={eventId} onRemove={() => setPendingDeleteAttachment(attachment)} />
+            ))}</div></section> : null}
+            {!visibleAttachments.length ? <div className="workspace-empty-surface"><Images size={24} /><strong>No attachments match these filters</strong><p>Change the type or status filter to see other attachments.</p></div> : null}
+          </> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Add photos to this Moment, then open any photo to view its status and links. Choose Keep Local Copy if you want DN to preserve the image on this device.</p></div>}
+          {photoViewer ? <PhotoViewerDialog photos={photoViewer.photos} index={photoViewer.index} setIndex={(index) => setPhotoViewer((current) => ({ ...current, index: typeof index === 'function' ? index(current.index) : index }))} contextName={photoViewer.contextName} getAttachmentBlob={getAttachmentBlob} userId={user?.uid} eventId={eventId} onClose={() => setPhotoViewer(null)} /> : null}
         </div>
       );
     }

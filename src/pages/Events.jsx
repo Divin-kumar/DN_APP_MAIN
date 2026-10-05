@@ -7,7 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, FileText, Heart, House, LayoutGrid, List, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, FileText, Heart, House, LayoutGrid, List, MoreVertical, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Sparkles, Trash2, X, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -70,6 +70,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
 };
 
 function EventStoryCard({ event, momentTypes, expenseTotal, viewMode, onOpen, onSummary, onEdit, onCancel, onDelete }) {
+  const actionsMenuRef = useRef(null);
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
@@ -82,12 +83,35 @@ function EventStoryCard({ event, momentTypes, expenseTotal, viewMode, onOpen, on
     : event.coverImage?.url || event.coverImageUrl || event.coverUrl || event.attachments?.find((attachment) => String(attachment.type || '').startsWith('image/'))?.url || null;
   const GalleryIcon = getMomentGalleryIcon(event.type === 'Other' ? event.customType : event.type);
   const galleryMood = getMomentGalleryMood(event.type === 'Other' ? event.customType : event.type);
-  const { action, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close, toggleOther } = useSwipeActions();
+  const { action, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close } = useSwipeActions();
   const isOtherOpen = action === 'other';
   const isDeleteOpen = action === 'delete';
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+
+  useEffect(() => {
+    if (!actionsMenuOpen) return undefined;
+    const closeOutside = (pointerEvent) => {
+      if (!actionsMenuRef.current?.contains(pointerEvent.target)) setActionsMenuOpen(false);
+    };
+    const closeOnEscape = (keyEvent) => {
+      if (keyEvent.key === 'Escape') setActionsMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOutside);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [actionsMenuOpen]);
+
+  const runCardAction = (callback) => {
+    setActionsMenuOpen(false);
+    close();
+    callback();
+  };
 
   return (
-    <article ref={swipeRootRef} className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${action ? `is-open-${action}` : ''}`}>
+    <article ref={swipeRootRef} className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${action ? `is-open-${action}` : ''}${actionsMenuOpen ? ' is-actions-menu-open' : ''}`}>
       <div className="event-story-actions event-story-actions-other" aria-hidden={!isOtherOpen}>
         <button type="button" className="event-story-action-summary" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onSummary(); }} aria-label={`View summary for ${event.name || 'event'}`}><ClipboardList size={14} /><span>Summary</span></button>
         <button type="button" className="event-story-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onEdit(); }} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
@@ -140,6 +164,18 @@ function EventStoryCard({ event, momentTypes, expenseTotal, viewMode, onOpen, on
             </span>
           </span>
         </button>
+      </div>
+      <div ref={actionsMenuRef} className="event-story-visible-actions">
+        <button type="button" className="event-story-actions-trigger" aria-label={`Actions for ${event.name || 'Moment'}`} aria-expanded={actionsMenuOpen} aria-haspopup="true" onClick={() => { close(); setActionsMenuOpen((open) => !open); }}>
+          {actionsMenuOpen ? <X size={15} aria-hidden="true" /> : <MoreVertical size={16} aria-hidden="true" />}
+          <span>{actionsMenuOpen ? 'Close' : 'Actions'}</span>
+        </button>
+        {actionsMenuOpen ? <div className="event-story-visible-menu" aria-label={`Actions for ${event.name || 'Moment'}`}>
+          <button type="button" onClick={() => runCardAction(onSummary)}><ClipboardList size={15} /><span>Summary</span></button>
+          <button type="button" onClick={() => runCardAction(onEdit)}><Pencil size={15} /><span>Edit Moment</span></button>
+          <button type="button" onClick={() => runCardAction(onCancel)}><XCircle size={15} /><span>{status === 'cancelled' ? 'Restore' : 'Cancel'}</span></button>
+          <button type="button" className="is-destructive" onClick={() => runCardAction(onDelete)}><Trash2 size={15} /><span>Delete</span></button>
+        </div> : null}
       </div>
     </article>
   );

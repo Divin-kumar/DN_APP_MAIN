@@ -50,7 +50,9 @@ const projectEvents = async (principalId) => {
   ]);
 
   return moments.map((moment) => {
-    const momentActivities = activities.filter((activity) => activity.momentId === moment.id).map((activity) => ({
+    const momentActivityRows = activities.filter((activity) => activity.momentId === moment.id);
+    const momentActivityIds = new Set(momentActivityRows.map((activity) => activity.id));
+    const momentActivities = momentActivityRows.map((activity) => ({
       ...activity,
       eventId: moment.id,
       expenses: expenses.filter((expense) => expense.activityId === activity.id).map((expense) => ({
@@ -58,6 +60,7 @@ const projectEvents = async (principalId) => {
         description: expense.description || expense.name || '',
         eventId: moment.id,
       })),
+      attachments: attachments.filter((attachment) => attachment.parentLinks?.some((link) => link.parentType === 'activity' && link.parentId === activity.id)),
     }));
     const event = {
       ...moment,
@@ -67,7 +70,7 @@ const projectEvents = async (principalId) => {
         eventId: moment.id,
         body: memory.body ?? memory.content ?? '',
       })),
-      attachments: attachments.filter((attachment) => attachment.momentId === moment.id).map((attachment) => ({
+      attachments: attachments.filter((attachment) => attachment.parentLinks?.some((link) => (link.parentType === 'moment' && link.parentId === moment.id) || (link.parentType === 'activity' && momentActivityIds.has(link.parentId))) || attachment.momentId === moment.id).map((attachment) => ({
         ...attachment,
         eventId: moment.id,
       })),
@@ -101,6 +104,26 @@ const saveActivityExpenses = async (principalId, momentId, previousActivities, n
     momentId: eventId,
     source: expense.source || 'manual',
   }));
+};
+
+const saveAttachments = async (principalId, momentId, previousRows = [], nextRows = []) => {
+  const previousById = new Map(previousRows.map((row) => [row.id, row]));
+  const nextById = new Map(nextRows.map((row) => [row.id, row]));
+  for (const row of nextRows) {
+    if (previousById.has(row.id)) {
+      const previous = previousById.get(row.id);
+      const persistedFields = ['name', 'type', 'mimeType', 'size', 'fileReference', 'previewReference', 'availability'];
+      const unchanged = persistedFields.every((field) => previous[field] === row[field]);
+      if (unchanged) continue;
+      const latest = await attachmentRepository.getById(principalId, row.id);
+      if (latest) await attachmentRepository.update(principalId, { ...latest, ...row, momentId: latest.momentId });
+      continue;
+    }
+    const legacyMomentLink = { parentType: 'moment', parentId: momentId };
+    const links = row.parentLinks?.length ? row.parentLinks : (row.momentId ? [legacyMomentLink] : []);
+    await attachmentRepository.create(principalId, { ...row, eventId: momentId, momentId: links.some((link) => link.parentType === 'moment') ? momentId : null }, { parentLinks: links, blob: row.blob || null });
+  }
+  for (const row of previousRows) if (!nextById.has(row.id)) await attachmentRepository.delete(principalId, row.id);
 };
 
 const useEventStore = create((set, get) => {
@@ -178,6 +201,8 @@ const useEventStore = create((set, get) => {
         DATABASE_TABLES.ACTIVITIES,
         DATABASE_TABLES.MEMORIES,
         DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.ATTACHMENT_LINKS,
+        DATABASE_TABLES.ATTACHMENT_FILES,
         DATABASE_TABLES.EXPENSES,
       ].map((name) => db.table(name));
       let saved;
@@ -185,7 +210,10 @@ const useEventStore = create((set, get) => {
         saved = await momentRepository.create(principalId, { ...moment, userId: principalId });
         for (const activity of activities) await activityRepository.create(principalId, { ...activity, eventId: saved.id, momentId: saved.id });
         for (const memory of memories) await memoryRepository.create(principalId, { ...memory, eventId: saved.id, momentId: saved.id, content: memory.body ?? memory.content ?? '' });
-        for (const attachment of attachments) await attachmentRepository.create(principalId, { ...attachment, eventId: saved.id, momentId: saved.id });
+        for (const attachment of attachments) {
+          const links = attachment.parentLinks?.length ? attachment.parentLinks : [{ parentType: 'moment', parentId: saved.id }];
+          await attachmentRepository.create(principalId, { ...attachment, eventId: saved.id, momentId: links.some((link) => link.parentType === 'moment') ? saved.id : null }, { parentLinks: links, blob: attachment.blob || null });
+        }
         await saveActivityExpenses(principalId, saved.id, [], activities);
       });
       const projected = await projectEvents(principalId);
@@ -236,6 +264,8 @@ const useEventStore = create((set, get) => {
         DATABASE_TABLES.ACTIVITIES,
         DATABASE_TABLES.MEMORIES,
         DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.ATTACHMENT_LINKS,
+        DATABASE_TABLES.ATTACHMENT_FILES,
         DATABASE_TABLES.EXPENSES,
       ].map((name) => db.table(name));
       let updated;
@@ -255,11 +285,7 @@ const useEventStore = create((set, get) => {
           momentId,
           content: memory.body ?? memory.content ?? '',
         }));
-        await saveChildRows(attachmentRepository, principalId, updated.id, previous?.attachments || [], attachments, (attachment, momentId) => ({
-          ...attachment,
-          eventId: momentId,
-          momentId,
-        }));
+        await saveAttachments(principalId, updated.id, previous?.attachments || [], attachments);
       });
       set({ events: await projectEvents(principalId), error: null });
       return { ...updated, activities, memories, attachments, status: getEventStatus({ ...updated, activities }) };
@@ -307,6 +333,8 @@ const useEventStore = create((set, get) => {
         DATABASE_TABLES.ACTIVITIES,
         DATABASE_TABLES.MEMORIES,
         DATABASE_TABLES.ATTACHMENTS,
+        DATABASE_TABLES.ATTACHMENT_LINKS,
+        DATABASE_TABLES.ATTACHMENT_FILES,
         DATABASE_TABLES.EXPENSES,
       ].map((name) => db.table(name));
       await db.transaction('rw', ...tables, async () => {
@@ -329,6 +357,46 @@ const useEventStore = create((set, get) => {
       });
       throw error;
     }
+  },
+  createAttachment: async (userId, attachment, parentLinks, blob = null) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const created = await attachmentRepository.create(principalId, attachment, { parentLinks, blob });
+    set({ events: await projectEvents(principalId), error: null });
+    return created;
+  },
+  updateAttachmentLinks: async (userId, attachmentId, parentLinks) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const links = await attachmentRepository.replaceParentLinks(principalId, attachmentId, parentLinks);
+    set({ events: await projectEvents(principalId), error: null });
+    return links;
+  },
+  relinkAttachment: async (userId, attachmentId, reference) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const updated = await attachmentRepository.updateReference(principalId, attachmentId, reference);
+    set({ events: await projectEvents(principalId), error: null });
+    return updated;
+  },
+  replaceAttachmentFile: async (userId, attachmentId, file) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const updated = await attachmentRepository.replaceFile(principalId, attachmentId, file);
+    set({ events: await projectEvents(principalId), error: null });
+    return updated;
+  },
+  deleteAttachment: async (userId, attachmentId) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const deleted = await attachmentRepository.delete(principalId, attachmentId);
+    set({ events: await projectEvents(principalId), error: null });
+    return deleted;
+  },
+  getAttachmentBlob: async (userId, attachmentId) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (!principalId) return null;
+    return db.table(DATABASE_TABLES.ATTACHMENT_FILES).get(attachmentId).then((row) => row?.userId === principalId ? row.blob : null);
   },
   });
 });

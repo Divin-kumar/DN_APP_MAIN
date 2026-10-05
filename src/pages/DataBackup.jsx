@@ -111,6 +111,7 @@ export default function DataBackup() {
   const [destinationDialogOpen, setDestinationDialogOpen] = useState(false);
   const [restoreSourceDialogOpen, setRestoreSourceDialogOpen] = useState(false);
   const [pendingBackup, setPendingBackup] = useState(null);
+  const [attachmentMode, setAttachmentMode] = useState('metadata-only');
   const restoreFileInput = useRef(null);
 
   useEffect(() => setDeviceName(principal?.deviceName || ''), [principal?.deviceName]);
@@ -145,14 +146,14 @@ export default function DataBackup() {
     setBusy(true);
     setStatus('');
     try {
-      const artifact = await createBackupArtifact({ database: db, principalId, reason: 'manual-local-backup' });
+      const artifact = await createBackupArtifact({ database: db, principalId, reason: 'manual-local-backup', attachmentMode });
       const filename = buildBackupFilename(new Date(), principal?.deviceName);
       const integrity = await verifyBackupArtifactIntegrity(artifact);
       if (!integrity.valid) throw new Error('The backup could not be verified, so it was not downloaded.');
       const personalRecordCount = [...PERSONAL_BACKUP_DOMAINS].reduce((count, domain) => count + (artifact.payload[domain]?.length || 0), 0);
       const blob = new Blob([JSON.stringify(artifact, null, 2)], { type: 'application/json' });
       const info = { filename, createdAt: artifact.createdAt, deviceName: principal?.deviceName || getFilenameDeviceName(filename), recordCount: personalRecordCount, verified: true, verifiedAt: new Date().toISOString() };
-      setPendingBackup({ blob, filename, info });
+      setPendingBackup({ blob, filename, info, attachmentMode });
       setDestinationDialogOpen(true);
     } catch (error) {
       setStatus(error?.message || 'Backup creation failed.');
@@ -206,9 +207,20 @@ export default function DataBackup() {
       const isVerified = Boolean(validation.valid && integrity.valid);
       if (isVerified) {
         const verifiedAt = new Date().toISOString();
+        const backupRecordCount = [...PERSONAL_BACKUP_DOMAINS].reduce((count, domain) => count + (artifact.payload?.[domain]?.length || 0), 0);
+        const verifiedBackup = {
+          filename: file.name,
+          createdAt: artifact.createdAt || artifact.manifest?.createdAt || null,
+          deviceName: artifact.manifest?.deviceName || artifact.deviceName || getFilenameDeviceName(file.name) || 'DN device',
+          recordCount: backupRecordCount,
+          attachmentMode: artifact.manifest?.attachmentMode || 'metadata-only',
+          verified: true,
+          verifiedAt,
+        };
         setVerificationStatus(true);
         setLastVerified(verifiedAt);
-        writeSavedBackupStatus({ ...(readSavedBackupStatus() || {}), verified: true, verifiedAt });
+        setProtectionBackup(verifiedBackup);
+        writeSavedBackupStatus(verifiedBackup);
         showToast('Backup verified', 'success', { duration: 3500 });
       } else {
         showToast('Backup verification needs attention', 'danger');
@@ -282,14 +294,15 @@ export default function DataBackup() {
     <section className="db-protection-card" aria-label="Data protection status">
       <div className="db-protection-status">
         <ShieldCheck size={20} aria-hidden="true" />
-        <strong>{verificationStatus ? 'Protected' : 'Needs backup'}</strong>
+        <strong>{verificationStatus ? 'Backup file verified' : 'No verified backup file'}</strong>
       </div>
       <div className="db-protection-facts">
-        <div><span>Last Backup</span><strong>{prettyDate(protectionBackup?.createdAt)}</strong></div>
-        <div><span>Verified</span><strong className={verificationStatus ? 'is-verified' : ''}>{verificationStatus ? <><CheckCircle2 size={15} aria-label="Verified" />{lastVerified ? <small>Last Verified {prettyDate(lastVerified)}</small> : null}</> : 'Not verified'}</strong></div>
+        <div><span>Backup Created</span><strong>{prettyDate(protectionBackup?.createdAt)}</strong></div>
+        <div><span>File Integrity</span><strong className={verificationStatus ? 'is-verified' : ''}>{verificationStatus ? <><CheckCircle2 size={15} aria-label="Verified" />{lastVerified ? <small>Checked {prettyDate(lastVerified)}</small> : null}</> : 'Not verified'}</strong></div>
         <div><span>Device</span><strong>{protectionBackup?.deviceName || getFilenameDeviceName(protectionBackup?.filename || '') || principal?.deviceName || 'This device'}</strong></div>
-        <div><span>Protected Records</span><strong>{Number(protectionBackup?.recordCount || 0).toLocaleString()}</strong></div>
+        <div><span>Records in File</span><strong>{Number(protectionBackup?.recordCount || 0).toLocaleString()}</strong></div>
       </div>
+      <p className="db-protection-freshness-note">Verification checks this backup file’s integrity; it does not confirm that it includes changes made after the backup date.</p>
     </section>
   );
 
@@ -297,6 +310,7 @@ export default function DataBackup() {
     <>
       <section className="db-actions-section" aria-labelledby="db-actions-title">
         <div className="db-section-heading"><h2 id="db-actions-title">Backup &amp; Restore</h2><p>Everything stays in your hands.</p></div>
+        <label className="db-attachment-backup-mode"><span>Attachment backup</span><select value={attachmentMode} disabled={busy} onChange={(event) => setAttachmentMode(event.target.value)}><option value="metadata-only">Metadata Only · references only</option><option value="include-attachments">Include Attachments · local copies only</option></select></label>
         <div className="db-action-grid">
           <button className={`db-action-card db-action-create ${!verificationStatus ? 'is-primary' : ''}`} type="button" disabled={busy || !principalId} onClick={() => void prepareBackup()}>
             <span className="db-action-icon"><Download size={19} /></span><span className="db-action-copy"><strong>{busy ? 'Preparing backup…' : verificationStatus ? 'Create another backup' : 'Create Backup'}</strong><small>{verificationStatus ? 'Save a fresh copy of your data' : 'Private, verified and saved to your device'}</small></span><ChevronRight className="db-action-arrow" size={17} />
@@ -313,7 +327,7 @@ export default function DataBackup() {
           <div><span>Device</span><strong>{restoreCandidate.manifest?.deviceName || restoreCandidate.deviceName || getFilenameDeviceName(restoreFilename) || 'DN device'}</strong></div>
           <div><span>Protected Records</span><strong>{restoreProtectedRecordCount.toLocaleString()}</strong></div>
         </div>
-        <div className="db-preview-contains"><h3>Contains</h3><div>{['Moments', 'Activities', 'Memories', 'Expenses', 'Income', 'Configuration'].map((item) => <span key={item}>{item}</span>)}</div></div>
+        <div className="db-preview-contains"><h3>Contains</h3><div>{['Moments', 'Activities', 'Memories', 'Attachments', 'Expenses', 'Income', 'Configuration'].map((item) => <span key={item}>{item}</span>)}</div></div>
         {hasRestoreConflicts ? <>
           <div className="db-conflict-summary" role="status"><strong>{restorePreview.summary.conflicted} {restorePreview.summary.conflicted === 1 ? 'conflict needs' : 'conflicts need'} your attention</strong>{friendlyConflicts.map(({ domain, count }) => <span key={domain}>{domain} · {count} {count === 1 ? 'item' : 'items'}</span>)}</div>
           <fieldset className="db-resolution"><legend>Choose how to resolve conflicts</legend>

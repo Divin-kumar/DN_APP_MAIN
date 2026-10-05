@@ -9,10 +9,10 @@ export const validateAttachmentRecord = (record = {}) => {
     return { valid: false, errors: ['Attachment record is required.'] };
   }
 
-  if (!hasRequiredFields(record, ['id', 'userId', 'momentId', 'name'])) {
+  if (!hasRequiredFields(record, ['id', 'userId', 'name'])) {
     errors.push('Attachment record is missing required identifiers or values.');
   }
-  errors.push(...validateStringIdentifiers(record, ['id', 'userId', 'momentId']));
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId', ...(record.momentId ? ['momentId'] : [])]));
 
   if (typeof record.name !== 'string' || record.name.trim().length === 0) {
     errors.push('Attachment name is required.');

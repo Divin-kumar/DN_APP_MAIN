@@ -1,5 +1,5 @@
 // This page is the financial hub for the app.
-// It shows income, expenses, and the current balance and also routes to income/expense detail screens.
+// It shows recorded income, expenses, and their net difference, and routes to the income/expense screens.
 import { useEffect } from 'react';
 import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
 import { Landmark, Receipt, WalletCards } from 'lucide-react';
@@ -22,7 +22,7 @@ const dateLabel = (value) => {
 const views = [
   { label: 'Overview', path: '/financials', icon: WalletCards },
   { label: 'Income', path: '/financials/income', icon: Landmark },
-  { label: 'Expense', path: '/financials/expenses', icon: Receipt },
+  { label: 'Expenses', path: '/financials/expenses', icon: Receipt },
 ];
 
 function PreviewGroup({ title, path, entries, emptyLabel, listKey, listValues, isExpense = false }) {
@@ -57,17 +57,18 @@ export default function Financials() {
 
   const totalIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
   const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const currentBalance = totalIncome - totalExpenses;
+  const netRecorded = totalIncome - totalExpenses;
   const recentIncome = [...incomes].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
   const recentExpenses = [...expenses].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
 
   return (
     <main className="financials-page feature-page">
-      <section className="financial-overview-summary" aria-label="Income, expense and balance summary">
+      <section className="financial-overview-summary" aria-label="Recorded income, recorded expenses, and net recorded">
         <div><span>Income</span><strong>{currency(totalIncome)}</strong></div>
-        <div><span>Expense</span><strong>{currency(totalExpenses)}</strong></div>
-        <div className={`financial-overview-balance${currentBalance < 0 ? ' is-negative' : ''}`}><span>Balance</span><strong>{currency(currentBalance)}</strong></div>
+        <div><span>Expenses</span><strong>{currency(totalExpenses)}</strong></div>
+        <div className={`financial-overview-balance${netRecorded < 0 ? ' is-negative' : ''}`}><span>Net recorded</span><strong>{currency(netRecorded)}</strong></div>
       </section>
+      <p className="financial-overview-scope-note">Income minus expenses recorded in DN. This is not a bank or account balance.</p>
 
       <nav className="financials-nav" aria-label="Financial views">
         {views.map(({ label, path, icon: Icon }) => (

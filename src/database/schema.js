@@ -1,6 +1,6 @@
 import { DATABASE_TABLES } from './tables.js';
 
-export const DATABASE_SCHEMA_VERSION = 3;
+export const DATABASE_SCHEMA_VERSION = 4;
 
 export const DATABASE_SCHEMA = Object.freeze({
   [DATABASE_TABLES.METADATA]: '&key, updatedAt, status',
@@ -14,6 +14,8 @@ export const DATABASE_SCHEMA = Object.freeze({
   [DATABASE_TABLES.ACTIVITIES]: '&id, momentId, userId, date, completed, priority, updatedAt, [momentId+date]',
   [DATABASE_TABLES.MEMORIES]: '&id, momentId, userId, createdAt, kind, updatedAt, [momentId+createdAt]',
   [DATABASE_TABLES.ATTACHMENTS]: '&id, momentId, userId, type, createdAt, updatedAt, [momentId+createdAt]',
+  [DATABASE_TABLES.ATTACHMENT_LINKS]: '&id, userId, attachmentId, parentType, parentId, createdAt, [userId+attachmentId], [userId+parentType+parentId]',
+  [DATABASE_TABLES.ATTACHMENT_FILES]: '&attachmentId, userId, mimeType, size, updatedAt',
   [DATABASE_TABLES.EXPENSES]: '&id, userId, momentId, activityId, date, category, amount, updatedAt, [userId+date]',
   [DATABASE_TABLES.INCOMES]: '&id, userId, date, type, amount, updatedAt, [userId+date]',
   [DATABASE_TABLES.SETTINGS]: '&id, userId, key, updatedAt, [userId+key]',

@@ -429,7 +429,7 @@ function EventSummaryModal({ event, onClose }) {
   );
 }
 
-function GreetingCardModal({ event, greeting, onClose, onCopy }) {
+function GreetingCardModal({ event, greeting, momentTypes, onClose, onCopy }) {
   return (
     <ModalDialog title="Today's greeting" onClose={onClose} className="dashboard-greeting-modal">
       <article className="dashboard-greeting-card-full">
@@ -563,7 +563,7 @@ export default function DashboardOverview() {
       </div>
 
       {selectedEvent ? <EventSummaryModal event={selectedEvent} onClose={() => setSelectedEvent(null)} /> : null}
-      {greetingEvent && spotlightGreeting ? <GreetingCardModal event={greetingEvent} greeting={spotlightGreeting} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
+      {greetingEvent && spotlightGreeting ? <GreetingCardModal event={greetingEvent} greeting={spotlightGreeting} momentTypes={momentTypes} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
     </>
   );
 }

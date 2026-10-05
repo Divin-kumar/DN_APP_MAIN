@@ -7,6 +7,7 @@ export const mapAttachmentRecord = (record = {}, userId = null) => {
   const now = new Date().toISOString();
   const id = String(record.id ?? record.firestoreId ?? crypto.randomUUID());
   const attachmentType = typeof record.type === 'string' ? record.type.trim() : String(record.mimeType ?? 'file');
+  const fileReference = record.fileReference ?? record.url ?? record.fileUrl ?? '';
 
   return {
     id,
@@ -16,7 +17,10 @@ export const mapAttachmentRecord = (record = {}, userId = null) => {
     type: attachmentType,
     mimeType: typeof record.mimeType === 'string' ? record.mimeType.trim() : attachmentType,
     size: Number.isFinite(Number(record.size)) ? Number(record.size) : 0,
-    url: typeof record.url === 'string' ? record.url.trim() : (typeof record.fileUrl === 'string' ? record.fileUrl.trim() : ''),
+    url: typeof fileReference === 'string' ? fileReference.trim() : '',
+    fileReference: typeof fileReference === 'string' ? fileReference.trim() : '',
+    previewReference: typeof record.previewReference === 'string' ? record.previewReference.trim() : '',
+    availability: record.availability || (fileReference ? 'reference' : 'metadata-only'),
     createdAt: record.createdAt || now,
     updatedAt: record.updatedAt || now,
     source: VALID_ATTACHMENT_SOURCES.includes(record.source) ? record.source : 'legacy',

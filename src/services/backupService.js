@@ -1,9 +1,9 @@
 import { db } from '../database/index.js';
 import { DATABASE_SCHEMA_VERSION } from '../database/schema.js';
-import { DATABASE_TABLES } from '../database/tables.js';
 import { codeListRepository, settingsRepository } from '../repositories/index.js';
 import { normalizeBackupArtifact, normalizeManifest } from '../utils/backupManifest.js';
 import { normalizeCodeListIdentityValue } from '../utils/codeLists.js';
+import { getAllBackupDescriptors, getBackupDescriptorForTable, getBackupRegistry, validateBackupRegistry } from '../backup/index.js';
 
 const stableStringify = (value) => JSON.stringify(value, Object.keys(value ?? {}).sort());
 
@@ -32,52 +32,40 @@ const canonicalDomainPayload = (domain, rows) => ({
   rowCount: rows.length,
 });
 
-const PRINCIPAL_SCOPED_TABLES = new Set([
-  DATABASE_TABLES.MOMENTS,
-  DATABASE_TABLES.ACTIVITIES,
-  DATABASE_TABLES.MEMORIES,
-  DATABASE_TABLES.ATTACHMENTS,
-  DATABASE_TABLES.EXPENSES,
-  DATABASE_TABLES.INCOMES,
-  DATABASE_TABLES.SETTINGS,
-  DATABASE_TABLES.CODE_LISTS,
-]);
+const remapPrincipalRows = (tableName, rows, targetPrincipalId) => {
+  const descriptor = getAllBackupDescriptors().find((candidate) => candidate.tables.includes(tableName));
+  if (descriptor?.ownershipPolicy.type !== 'principal-field') return rows;
+  const field = descriptor.ownershipPolicy.field;
+  return rows.map((row) => (row[field] ? { ...row, [field]: targetPrincipalId } : row));
+};
+
+const restorePolicyFor = (tableName) => getAllBackupDescriptors().find((descriptor) => descriptor.tables.includes(tableName))?.restorePolicy || 'table';
 
 const remapArtifactPrincipal = async (artifact, targetPrincipalId) => {
   if (!targetPrincipalId || artifact.principalScope === targetPrincipalId) return artifact;
-  const payload = Object.fromEntries(Object.entries(artifact.payload || {}).map(([tableName, rows]) => [
-    tableName,
-    PRINCIPAL_SCOPED_TABLES.has(tableName)
-      ? rows.map((row) => (row.userId ? { ...row, userId: targetPrincipalId } : row))
-      : rows,
-  ]));
+  const payload = Object.fromEntries(Object.entries(artifact.payload || {}).map(([tableName, rows]) => [tableName, remapPrincipalRows(tableName, rows, targetPrincipalId)]));
   const manifest = { ...artifact.manifest, principalScope: targetPrincipalId };
   const mapped = { ...artifact, principalScope: targetPrincipalId, manifest, payload };
   mapped.checksum = await hashPayload({ manifest, payload });
   return mapped;
 };
 
-export const createBackupArtifact = async ({ database = db, principalId, reason = 'manual-local-backup' } = {}) => {
-  const tables = [
-    DATABASE_TABLES.MOMENTS,
-    DATABASE_TABLES.ACTIVITIES,
-    DATABASE_TABLES.MEMORIES,
-    DATABASE_TABLES.ATTACHMENTS,
-    DATABASE_TABLES.EXPENSES,
-    DATABASE_TABLES.INCOMES,
-    DATABASE_TABLES.SETTINGS,
-    DATABASE_TABLES.CODE_LISTS,
-    DATABASE_TABLES.METADATA,
-    DATABASE_TABLES.MIGRATION_AUDIT,
-  ];
-
+export const createBackupArtifact = async ({ database = db, principalId, reason = 'manual-local-backup', attachmentMode = 'metadata-only' } = {}) => {
+  const descriptors = getBackupRegistry({ attachmentMode });
+  const registryValidation = validateBackupRegistry(database.tables.map((table) => table.name));
+  if (!registryValidation.valid) throw new Error(registryValidation.errors.join(' '));
   const payload = {};
-  for (const tableName of tables) {
+  for (const descriptor of descriptors) for (const tableName of descriptor.tables) {
     const rows = await database.table(tableName).toArray();
-    const filteredRows = principalId
-      ? rows.filter((row) => row.userId === principalId || !row.userId)
-      : rows;
-    payload[tableName] = filteredRows;
+    const { ownershipPolicy } = descriptor;
+    const filteredRows = !principalId || ownershipPolicy.type === 'all-local'
+      ? rows
+      : ownershipPolicy.type === 'principal-field'
+        ? rows.filter((row) => row[ownershipPolicy.field] === principalId)
+        : ownershipPolicy.type === 'principal-or-device-field'
+          ? rows.filter((row) => row.principalId === principalId || row.ownerId === principalId)
+          : (() => { throw new Error(`Unsupported ownership policy for backup domain ${descriptor.domain}.`); })();
+    payload[tableName] = descriptor.exportRows ? await descriptor.exportRows(filteredRows) : filteredRows;
   }
 
   const manifest = normalizeManifest({
@@ -95,6 +83,7 @@ export const createBackupArtifact = async ({ database = db, principalId, reason 
     })),
     recordCounts: Object.fromEntries(Object.entries(payload).map(([domain, rows]) => [domain, rows.length])),
     reason,
+    attachmentMode,
   });
 
   const artifact = normalizeBackupArtifact({
@@ -144,8 +133,13 @@ export const validateBackupArtifact = async (artifact) => {
   if (!artifact.payload || typeof artifact.payload !== 'object') {
     errors.push('Backup payload missing.');
   }
-  if (artifact.databaseSchemaVersion !== DATABASE_SCHEMA_VERSION) {
-    errors.push(`Backup schema version ${String(artifact.databaseSchemaVersion)} does not match the installed schema version ${DATABASE_SCHEMA_VERSION}.`);
+  const backupSchemaVersion = Number(artifact.databaseSchemaVersion);
+  if (!Number.isInteger(backupSchemaVersion) || backupSchemaVersion < 1 || backupSchemaVersion > DATABASE_SCHEMA_VERSION) {
+    errors.push(`Backup schema version ${String(artifact.databaseSchemaVersion)} is not supported by installed schema version ${DATABASE_SCHEMA_VERSION}.`);
+  }
+
+  for (const tableName of Object.keys(artifact.payload || {})) {
+    if (!getBackupDescriptorForTable(tableName)) errors.push(`Backup contains an unregistered domain: ${tableName}.`);
   }
 
   const verification = await verifyBackupArtifactIntegrity(artifact);
@@ -170,7 +164,7 @@ export const previewRestoreBackup = async (artifact, { database = db, targetPrin
   const summary = { inserted: 0, conflicted: 0, skipped: 0 };
 
   for (const [tableName, rows] of Object.entries(restoreArtifact.payload || {})) {
-    if (tableName === DATABASE_TABLES.METADATA) continue;
+    if (restorePolicyFor(tableName) === 'skip') continue;
     const table = database.table(tableName);
     if (!table) {
       conflicts.push({ domain: tableName, reason: 'missing-table', message: 'Table is unavailable in the current database.' });
@@ -227,11 +221,12 @@ const resolveRestoreConflicts = async (artifact, { database, targetPrincipalId, 
 
   const payload = { ...mapped.payload };
   for (const [tableName, rows] of Object.entries(payload)) {
-    if (tableName === DATABASE_TABLES.METADATA) continue;
+    const restorePolicy = restorePolicyFor(tableName);
+    if (restorePolicy === 'skip') continue;
     const table = database.table(tableName);
     if (!table) continue;
 
-    if (tableName === DATABASE_TABLES.SETTINGS) {
+    if (restorePolicy === 'settings') {
       const retained = [];
       for (const row of rows) {
         if (!row?.userId || !row?.key) continue;
@@ -242,7 +237,7 @@ const resolveRestoreConflicts = async (artifact, { database, targetPrincipalId, 
       continue;
     }
 
-    if (tableName === DATABASE_TABLES.CODE_LISTS) {
+    if (restorePolicy === 'code-lists') {
       const incomingGroups = new Map();
       for (const row of rows) {
         const key = `${row.userId}::${row.listKey}`;
@@ -292,6 +287,15 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
     throw error;
   }
 
+  for (const descriptor of getAllBackupDescriptors()) {
+    if (!descriptor.restoreRows) continue;
+    for (const tableName of descriptor.tables) {
+      if (Object.prototype.hasOwnProperty.call(restoreArtifact.payload, tableName)) {
+        restoreArtifact.payload[tableName] = await descriptor.restoreRows(restoreArtifact.payload[tableName]);
+      }
+    }
+  }
+
   const snapshot = {};
   for (const [tableName, rows] of Object.entries(restoreArtifact.payload || {})) {
     const table = database.table(tableName);
@@ -301,8 +305,9 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
 
   try {
     for (const [tableName, rows] of Object.entries(restoreArtifact.payload || {})) {
-      if (tableName === DATABASE_TABLES.METADATA) continue;
-      if (tableName === DATABASE_TABLES.SETTINGS) {
+      const restorePolicy = restorePolicyFor(tableName);
+      if (restorePolicy === 'skip') continue;
+      if (restorePolicy === 'settings') {
         for (const row of rows) {
           if (!row?.userId || !row?.key) continue;
           const existing = await settingsRepository.getByKey(row.userId, row.key);
@@ -320,7 +325,7 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
         continue;
       }
 
-      if (tableName === DATABASE_TABLES.CODE_LISTS) {
+      if (restorePolicy === 'code-lists') {
         const groups = new Map();
         for (const row of rows) {
           if (!row?.userId || !row?.listKey) continue;
@@ -369,12 +374,17 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
       }
     }
 
-    const transactionTables = Object.keys(restoreArtifact.payload || {}).filter((name) => name !== DATABASE_TABLES.METADATA && name !== DATABASE_TABLES.SETTINGS && name !== DATABASE_TABLES.CODE_LISTS).map((name) => database.table(name));
+    for (const [tableName, rows] of Object.entries(restoreArtifact.payload || {})) {
+      if (restorePolicyFor(tableName) !== 'repository') continue;
+      const descriptor = getBackupDescriptorForTable(tableName);
+      await descriptor.restoreAdapter({ database, tableName, rows, targetPrincipalId, conflictResolution, allowOverwrite: overwriteAllowed, force });
+    }
+
+    const transactionTables = Object.keys(restoreArtifact.payload || {}).filter((name) => !['skip', 'settings', 'code-lists', 'repository'].includes(restorePolicyFor(name))).map((name) => database.table(name));
     if (transactionTables.length) {
       await database.transaction('rw', ...transactionTables, async () => {
         for (const [tableName, rows] of Object.entries(restoreArtifact.payload || {})) {
-          if (tableName === DATABASE_TABLES.METADATA) continue;
-          if (tableName === DATABASE_TABLES.SETTINGS || tableName === DATABASE_TABLES.CODE_LISTS) continue;
+          if (['skip', 'settings', 'code-lists', 'repository'].includes(restorePolicyFor(tableName))) continue;
           const table = database.table(tableName);
           if (!table) continue;
 

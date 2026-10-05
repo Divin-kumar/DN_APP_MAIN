@@ -9,7 +9,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
+import { CalendarDays, ChevronDown, FileImage, LayoutDashboard, ListChecks, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
@@ -26,6 +26,7 @@ import ConnectivityBanner from '../components/common/ConnectivityBanner';
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Events', path: '/events', icon: CalendarDays },
+  { label: 'Attachments', path: '/attachments', icon: FileImage },
   { label: 'Financials', path: '/financials', icon: WalletCards },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
@@ -52,6 +53,7 @@ export default function DashboardLayout() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
+  const [mobileKeyboardOpen, setMobileKeyboardOpen] = useState(false);
   const quickCreateDesktopRef = useRef(null);
   const quickCreateMobileRef = useRef(null);
   const [quickCreateType, setQuickCreateType] = useState(null);
@@ -179,6 +181,39 @@ export default function DashboardLayout() {
       document.removeEventListener('keydown', closeQuickCreateOnEscape);
     };
   }, [quickCreateOpen]);
+
+  useEffect(() => {
+    const mobileQuery = window.matchMedia('(max-width: 760px)');
+    const updateKeyboardState = () => {
+      const activeElement = document.activeElement;
+      const isEditable = activeElement instanceof HTMLElement && (
+        activeElement.matches('input:not([type="button"]):not([type="submit"]):not([type="reset"]), textarea, select, [contenteditable="true"]')
+      );
+      const viewport = window.visualViewport;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      const keyboardVisible = mobileQuery.matches && isEditable && window.innerHeight - viewportHeight > 160;
+      setMobileKeyboardOpen(keyboardVisible);
+      if (keyboardVisible) setQuickCreateOpen(false);
+    };
+    const scheduleUpdate = () => window.requestAnimationFrame(updateKeyboardState);
+
+    document.addEventListener('focusin', updateKeyboardState);
+    document.addEventListener('focusout', scheduleUpdate);
+    window.addEventListener('resize', updateKeyboardState);
+    window.visualViewport?.addEventListener('resize', updateKeyboardState);
+    window.visualViewport?.addEventListener('scroll', updateKeyboardState);
+    mobileQuery.addEventListener?.('change', updateKeyboardState);
+    updateKeyboardState();
+
+    return () => {
+      document.removeEventListener('focusin', updateKeyboardState);
+      document.removeEventListener('focusout', scheduleUpdate);
+      window.removeEventListener('resize', updateKeyboardState);
+      window.visualViewport?.removeEventListener('resize', updateKeyboardState);
+      window.visualViewport?.removeEventListener('scroll', updateKeyboardState);
+      mobileQuery.removeEventListener?.('change', updateKeyboardState);
+    };
+  }, []);
 
   useEffect(() => {
     if (!quickCreateType || (!user && !isGuest)) return;
@@ -376,19 +411,20 @@ export default function DashboardLayout() {
             <span>{item.label}</span>
           </NavLink>
         ))}
-        <div ref={quickCreateMobileRef} className={`mobile-dock-create${quickCreateOpen ? ' is-open' : ''}`}>
-          {quickCreateOpen ? (
-            <div className="mobile-dock-create-menu" aria-label="Quick create actions">
-              <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
-              <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
-              <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
-            </div>
-          ) : null}
-          <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-            {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
-          </button>
-        </div>
       </nav>
+
+      <div ref={quickCreateMobileRef} className={`mobile-dock-create${quickCreateOpen ? ' is-open' : ''}${mobileKeyboardOpen ? ' is-keyboard-open' : ''}`}>
+        {quickCreateOpen ? (
+          <div className="mobile-dock-create-menu" aria-label="Quick create actions">
+            <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
+            <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
+            <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
+          </div>
+        ) : null}
+        <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
+          {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
+        </button>
+      </div>
 
       <div ref={quickCreateDesktopRef} className={`lifehub-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
         {quickCreateOpen ? (

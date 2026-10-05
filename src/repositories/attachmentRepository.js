@@ -4,14 +4,43 @@ import { mapAttachmentCollection, mapAttachmentRecord } from './attachmentMapper
 import { readLegacyAttachmentRecords } from './attachmentLegacyAdapter.js';
 import { validateAttachmentRecord } from './attachmentRepository.validation.js';
 import { momentRepository } from './momentRepository.js';
+import { activityRepository } from './activityRepository.js';
 import { bulkCreateUniqueRecords, createUniqueRecord, makeRepositoryConflict, updateOwnedRecord } from './repositoryConflict.js';
 
 const attachmentTable = () => db.table(DATABASE_TABLES.ATTACHMENTS);
+const linkTable = () => db.table(DATABASE_TABLES.ATTACHMENT_LINKS);
+const fileTable = () => db.table(DATABASE_TABLES.ATTACHMENT_FILES);
+
+const normalizeParentLinks = (attachmentId, userId, links = []) => {
+  const normalized = links
+    .filter((link) => ['moment', 'activity'].includes(link.parentType) && link.parentId)
+    .map((link) => ({
+      id: `${attachmentId}:${link.parentType}:${link.parentId}`,
+      attachmentId,
+      userId,
+      parentType: link.parentType,
+      parentId: String(link.parentId),
+      createdAt: link.createdAt || new Date().toISOString(),
+    }));
+  return [...new Map(normalized.map((link) => [`${link.parentType}:${link.parentId}`, link])).values()];
+};
 
 export const attachmentRepository = {
   async getAll(userId = null) {
     if (!userId) return [];
-    return attachmentTable().where('userId').equals(userId).toArray();
+    const [rows, links, files] = await Promise.all([
+      attachmentTable().where('userId').equals(userId).toArray(),
+      linkTable().where('userId').equals(userId).toArray(),
+      fileTable().where('userId').equals(userId).toArray(),
+    ]);
+    const fileIds = new Set(files
+      .filter((file) => typeof Blob !== 'undefined' && file.blob instanceof Blob)
+      .map((file) => file.attachmentId));
+    return rows.map((row) => {
+      const parentLinks = links.filter((link) => link.attachmentId === row.id);
+      if (!parentLinks.length && row.momentId) parentLinks.push({ id: `${row.id}:moment:${row.momentId}`, attachmentId: row.id, userId, parentType: 'moment', parentId: row.momentId, legacy: true });
+      return { ...row, hasLocalCopy: fileIds.has(row.id), parentLinks };
+    });
   },
 
   async getById(userId, attachmentId) {
@@ -23,10 +52,21 @@ export const attachmentRepository = {
   async getByMoment(userId, momentId) {
     if (!userId || !momentId) return [];
     const rows = await this.getAll(userId);
-    return rows.filter((row) => row.momentId === momentId || row.eventId === momentId);
+    return rows.filter((row) => row.parentLinks.some((link) => link.parentType === 'moment' && link.parentId === momentId) || row.momentId === momentId || row.eventId === momentId);
   },
 
-  async create(userId, attachment) {
+  async getByActivity(userId, activityId) {
+    if (!userId || !activityId) return [];
+    const rows = await this.getAll(userId);
+    return rows.filter((row) => row.parentLinks.some((link) => link.parentType === 'activity' && link.parentId === activityId));
+  },
+
+  async getLinks(userId = null) {
+    if (!userId) return [];
+    return linkTable().where('userId').equals(userId).toArray();
+  },
+
+  async create(userId, attachment, { parentLinks = null, blob = null } = {}) {
     if (!userId || !attachment) return null;
     const mapped = mapAttachmentRecord({ ...attachment, userId }, userId);
     if (!mapped) return null;
@@ -37,15 +77,22 @@ export const attachmentRepository = {
     }
 
     const next = { ...mapped, createdAt: mapped.createdAt || new Date().toISOString(), updatedAt: new Date().toISOString() };
+    const links = normalizeParentLinks(mapped.id, userId, parentLinks || (mapped.momentId ? [{ parentType: 'moment', parentId: mapped.momentId }] : []));
+    if (!links.length) throw new Error('Link the attachment to a Moment or Activity.');
     return createUniqueRecord({
       tableName: DATABASE_TABLES.ATTACHMENTS,
       record: next,
       domain: 'attachments',
-      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS), db.table(DATABASE_TABLES.ACTIVITIES), linkTable(), fileTable()],
       beforeInsert: async () => {
-        if (!(await momentRepository.getById(userId, next.momentId))) {
-          throw makeRepositoryConflict({ domain: 'attachments', operation: 'create', record: next, reason: 'parent-moment-missing', fields: ['momentId'] });
+        for (const link of links) {
+          const parent = link.parentType === 'moment'
+            ? await momentRepository.getById(userId, link.parentId)
+            : await activityRepository.getById(userId, link.parentId);
+          if (!parent) throw makeRepositoryConflict({ domain: 'attachments', operation: 'create', record: next, reason: `parent-${link.parentType}-missing`, fields: ['parentId'] });
         }
+        await linkTable().bulkPut(links);
+        if (blob) await fileTable().put({ attachmentId: next.id, userId, blob, mimeType: next.mimeType, size: blob.size, updatedAt: new Date().toISOString() });
       },
     });
   },
@@ -80,12 +127,108 @@ export const attachmentRepository = {
     });
   },
 
+  async updateReference(userId, attachmentId, { fileReference, previewReference = '' } = {}) {
+    if (!userId || !attachmentId) throw new Error('An attachment and local profile are required to relink a file.');
+    let parsedReference;
+    try {
+      parsedReference = new URL(String(fileReference || '').trim());
+    } catch {
+      throw new Error('Enter a valid http:// or https:// file reference.');
+    }
+    if (!['http:', 'https:'].includes(parsedReference.protocol)) throw new Error('Enter a valid http:// or https:// file reference.');
+
+    const existing = await this.getById(userId, attachmentId);
+    if (!existing) throw new Error(`Attachment ${attachmentId} was not found for this local profile.`);
+    const next = mapAttachmentRecord({
+      ...existing,
+      fileReference: parsedReference.href,
+      url: parsedReference.href,
+      previewReference: String(previewReference || '').trim(),
+      availability: 'reference',
+      updatedAt: new Date().toISOString(),
+    }, userId);
+    const validation = validateAttachmentRecord(next);
+    if (!validation.valid) throw new Error(validation.errors.join(', '));
+
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.ATTACHMENTS,
+      record: next,
+      domain: 'attachments',
+      transactionTables: [linkTable(), fileTable()],
+    });
+  },
+
+  async replaceFile(userId, attachmentId, { blob, name, mimeType } = {}) {
+    if (!userId || !attachmentId) throw new Error('An attachment and local profile are required to replace a file.');
+    if (typeof Blob === 'undefined' || !(blob instanceof Blob)) throw new Error('Choose a readable local file to replace this attachment.');
+    if (blob.size > 20 * 1024 * 1024) throw new Error('Local attachment copies are limited to 20 MB each.');
+
+    const existing = await this.getById(userId, attachmentId);
+    if (!existing) throw new Error(`Attachment ${attachmentId} was not found for this local profile.`);
+    const next = mapAttachmentRecord({
+      ...existing,
+      name: String(name || existing.name || 'Attachment').trim(),
+      type: mimeType || blob.type || 'application/octet-stream',
+      mimeType: mimeType || blob.type || 'application/octet-stream',
+      size: blob.size,
+      fileReference: '',
+      url: '',
+      previewReference: '',
+      availability: 'local-copy',
+      updatedAt: new Date().toISOString(),
+    }, userId);
+    const validation = validateAttachmentRecord(next);
+    if (!validation.valid) throw new Error(validation.errors.join(', '));
+
+    return updateOwnedRecord({
+      tableName: DATABASE_TABLES.ATTACHMENTS,
+      record: next,
+      domain: 'attachments',
+      transactionTables: [fileTable()],
+      beforeUpdate: async () => {
+        await fileTable().put({
+          attachmentId: next.id,
+          userId,
+          blob,
+          mimeType: next.mimeType,
+          size: blob.size,
+          updatedAt: new Date().toISOString(),
+        });
+      },
+    });
+  },
+
   async delete(userId, attachmentId) {
     if (!userId || !attachmentId) return false;
     const match = await this.getById(userId, attachmentId);
     if (!match) return false;
-    await attachmentTable().delete(match.id);
+    await db.transaction('rw', attachmentTable(), linkTable(), fileTable(), async () => {
+      await attachmentTable().delete(match.id);
+      const links = await linkTable().where('attachmentId').equals(match.id).toArray();
+      if (links.length) await linkTable().bulkDelete(links.map((link) => link.id));
+      await fileTable().delete(match.id);
+    });
     return true;
+  },
+
+  async replaceParentLinks(userId, attachmentId, parentLinks = []) {
+    const attachment = await this.getById(userId, attachmentId);
+    if (!attachment) throw new Error(`Attachment ${attachmentId} was not found for this local profile.`);
+    const links = normalizeParentLinks(attachmentId, userId, parentLinks);
+    if (!links.length) throw new Error('An attachment must remain linked to at least one Moment or Activity.');
+    return db.transaction('rw', attachmentTable(), linkTable(), db.table(DATABASE_TABLES.MOMENTS), db.table(DATABASE_TABLES.ACTIVITIES), async () => {
+      for (const link of links) {
+        const parent = link.parentType === 'moment'
+          ? await momentRepository.getById(userId, link.parentId)
+          : await activityRepository.getById(userId, link.parentId);
+        if (!parent) throw makeRepositoryConflict({ domain: 'attachments', operation: 'link', record: link, reason: `parent-${link.parentType}-missing`, fields: ['parentId'] });
+      }
+      const existing = await linkTable().where('attachmentId').equals(attachmentId).toArray();
+      if (existing.length) await linkTable().bulkDelete(existing.map((link) => link.id));
+      await linkTable().bulkPut(links);
+      await attachmentTable().put({ ...attachment, momentId: links.find((link) => link.parentType === 'moment')?.parentId || null, updatedAt: new Date().toISOString() });
+      return links;
+    });
   },
 
   async bulkUpsert(userId, attachments = []) {
@@ -100,17 +243,19 @@ export const attachmentRepository = {
         return attachment;
       });
 
+    const links = prepared.flatMap((attachment) => normalizeParentLinks(attachment.id, userId, attachment.momentId ? [{ parentType: 'moment', parentId: attachment.momentId }] : []));
     return bulkCreateUniqueRecords({
       tableName: DATABASE_TABLES.ATTACHMENTS,
       records: prepared,
       domain: 'attachments',
-      transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
+      transactionTables: [db.table(DATABASE_TABLES.MOMENTS), linkTable()],
       beforeInsert: async (records) => {
         for (const record of records) {
           if (!(await momentRepository.getById(userId, record.momentId))) {
             throw makeRepositoryConflict({ domain: 'attachments', operation: 'bulk-create', record, reason: 'parent-moment-missing', fields: ['momentId'] });
           }
         }
+        if (links.length) await linkTable().bulkPut(links);
       },
     });
   },

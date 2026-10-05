@@ -6,12 +6,22 @@
 */
 
 // Import React's state hook so the component can remember which expense list is currently expanded.
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 
 // Import icons used for actions like complete, edit, delete, money, and add.
-import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Check, ChevronDown, Circle, Images, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
 import useSwipeActions from '../../hooks/useSwipeActions';
 import { ACTIVITY_PRIORITY_OPTIONS, getActivityPriorityLabel } from '../../utils/codeLists';
+import AttachmentStatusBadge from '../attachments/AttachmentStatusBadge';
+import { getAttachmentLinkLabel, getAttachmentStatus, getAttachmentTypeLabel } from '../../utils/attachmentStatus.js';
+
+const blobToDataUrl = (blob) => new Promise((resolve, reject) => {
+  const reader = new FileReader();
+  reader.onload = () => typeof reader.result === 'string' ? resolve(reader.result) : reject(new Error('Image preview could not be read.'));
+  reader.onerror = () => reject(reader.error || new Error('Image preview could not be read.'));
+  reader.readAsDataURL(blob);
+});
 
 // Main component. It receives the event name, the list of activities, money connected to each activity,
 // and callback functions that tell the parent screen what action the user wants to do.
@@ -29,6 +39,10 @@ export default function ActivityList({
   onToggleComplete,
   onToggleCancelled,
   onAddActivity,
+  getAttachmentBlob,
+  userId,
+  eventId,
+  onOpenPhoto,
 }) {
   // This state keeps track of which activity's expense list is open.
   // Example: { "activity-123": true } means the user opened the expense panel for one task.
@@ -203,6 +217,7 @@ export default function ActivityList({
 
                 {/* If a task has a description, show it below the title. */}
                 {activity.description ? <p className="free-text-content">{activity.description}</p> : null}
+                {activity.attachments?.length ? <ActivityAttachments attachments={activity.attachments} getAttachmentBlob={getAttachmentBlob} userId={userId} eventId={eventId} eventName={eventName} activityTitle={activity.title || 'Activity'} onOpenPhoto={onOpenPhoto} /> : null}
 
                 {/* If linked expenses exist, show a section with a toggle to expand and collapse them. */}
                 {hasExpenses ? (
@@ -233,4 +248,85 @@ export default function ActivityList({
       </div>
     </div>
   );
+}
+
+function ActivityAttachments({ attachments, getAttachmentBlob, userId, eventId, eventName, activityTitle, onOpenPhoto }) {
+  const photos = attachments.filter((attachment) => getAttachmentTypeLabel(attachment) === 'Image');
+  const otherAttachments = attachments.filter((attachment) => getAttachmentTypeLabel(attachment) !== 'Image');
+  const renderAttachment = (attachment) => <ActivityAttachment key={attachment.id} attachment={attachment} attachments={attachments} getAttachmentBlob={getAttachmentBlob} userId={userId} eventId={eventId} eventName={eventName} activityTitle={activityTitle} onOpenPhoto={onOpenPhoto} />;
+
+  return <div className="activity-attachments">
+    {photos.length ? <section className="activity-photo-gallery" aria-label={`Photo previews linked to ${activityTitle}`}>
+      <div className="activity-photo-grid">{photos.map(renderAttachment)}</div>
+    </section> : null}
+    {otherAttachments.length ? <div className="activity-attachment-links" aria-label="Other attachments linked to this activity">{otherAttachments.map(renderAttachment)}</div> : null}
+  </div>;
+}
+
+function ActivityAttachment({ attachment, attachments, getAttachmentBlob, userId, eventId, eventName, activityTitle, onOpenPhoto }) {
+  const [localUrl, setLocalUrl] = useState('');
+  const [localBlob, setLocalBlob] = useState(null);
+  const [dataUrlFallback, setDataUrlFallback] = useState('');
+  const [dataUrlAttempted, setDataUrlAttempted] = useState(false);
+  const [localFileMissing, setLocalFileMissing] = useState(false);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const resolvedAttachment = localUrl
+    ? { ...attachment, hasLocalCopy: true }
+    : localFileMissing ? { ...attachment, hasLocalCopy: false } : attachment;
+  const status = getAttachmentStatus(resolvedAttachment);
+  const externalUrl = [attachment.previewReference, attachment.fileReference, attachment.url]
+    .find((candidate) => /^(https?:\/\/|data:image\/(?:png|jpeg|gif|webp);base64,)/i.test(String(candidate || ''))) || '';
+  const openUrl = dataUrlFallback || localUrl || externalUrl;
+  const linkLabel = getAttachmentLinkLabel(attachment.parentLinks || []);
+  const isPhoto = getAttachmentTypeLabel(attachment) === 'Image';
+  const activityPhotos = attachments.filter((item) => getAttachmentTypeLabel(item) === 'Image');
+  const photoIndex = activityPhotos.findIndex((item) => item.id === attachment.id);
+
+  useEffect(() => {
+    let active = true;
+    let objectUrl = '';
+    setLocalUrl('');
+    setLocalBlob(null);
+    setDataUrlFallback('');
+    setDataUrlAttempted(false);
+    setThumbnailFailed(false);
+    setLocalFileMissing(false);
+    if ((attachment.hasLocalCopy || attachment.availability === 'local-copy') && getAttachmentBlob) {
+      void getAttachmentBlob(userId, attachment.id).then((blob) => {
+        if (!active) return;
+        if (!blob) {
+          setLocalFileMissing(true);
+          return;
+        }
+        setLocalBlob(blob);
+        try {
+          objectUrl = URL.createObjectURL(blob);
+          setLocalUrl(objectUrl);
+          setLocalFileMissing(false);
+        } catch {
+          setDataUrlAttempted(true);
+          void blobToDataUrl(blob).then((dataUrl) => { if (active) { setDataUrlFallback(dataUrl); setLocalFileMissing(false); } }).catch(() => { if (active) setThumbnailFailed(true); });
+        }
+      }).catch(() => { if (active) setLocalFileMissing(true); });
+    }
+    return () => {
+      active = false;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [attachment.id, attachment.hasLocalCopy, attachment.availability, getAttachmentBlob, userId]);
+
+  if (isPhoto) return <button type="button" className="activity-photo-preview-button" aria-label={`Preview ${attachment.name || 'photo'}`} onClick={() => onOpenPhoto?.(activityPhotos, photoIndex, `${eventName} · ${activityTitle}`)}>
+    {openUrl && !thumbnailFailed ? <img src={openUrl} alt="" loading="lazy" onError={() => {
+      if (localBlob && !dataUrlAttempted) {
+        setDataUrlAttempted(true);
+        void blobToDataUrl(localBlob).then((dataUrl) => setDataUrlFallback(dataUrl)).catch(() => setThumbnailFailed(true));
+      } else setThumbnailFailed(true);
+    }} /> : <span className="activity-photo-preview-fallback"><Images size={22} /><small>{status.value === 'unavailable' ? 'Unavailable' : 'Preview unavailable'}</small></span>}
+  </button>;
+
+  return <span className={`activity-attachment-link${isPhoto ? ' is-photo' : ''}`}>
+    <span className="activity-attachment-copy"><strong><Link to={`/attachments/${attachment.id}`} state={{ from: `/events/${eventId}/activities` }} onClick={(event) => event.stopPropagation()}>{attachment.name || 'Untitled attachment'}</Link></strong><small>{getAttachmentTypeLabel(attachment)}</small><span className="attachment-relationship-badge">Linked to: {linkLabel}</span></span>
+    <AttachmentStatusBadge attachment={resolvedAttachment} small />
+    {openUrl ? <a href={openUrl} target="_blank" rel="noreferrer">Open</a> : <span className="activity-attachment-open-unavailable">Unavailable</span>}
+  </span>;
 }

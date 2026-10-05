@@ -95,13 +95,22 @@ export const activityRepository = {
   async delete(userId, activityId) {
     if (!userId || !activityId) return false;
     return withRepositoryConflictAudit({ principalId: userId, operation: 'activities.delete' }, async () => db.transaction(
-      'rw', activityTable(), db.table(DATABASE_TABLES.EXPENSES), async () => {
+      'rw', activityTable(), db.table(DATABASE_TABLES.EXPENSES), db.table(DATABASE_TABLES.ATTACHMENT_LINKS), db.table(DATABASE_TABLES.ATTACHMENTS), async () => {
         const match = await this.getById(userId, activityId);
         if (!match) return false;
         const linkedExpenses = await db.table(DATABASE_TABLES.EXPENSES)
           .where('userId').equals(userId).filter((row) => row.activityId === match.id).toArray();
         if (linkedExpenses.length) {
           throw makeRepositoryConflict({ domain: 'activities', operation: 'delete', record: match, existing: match, reason: 'activity-has-linked-expenses', fields: ['activityId'] });
+        }
+        const linkedAttachments = await db.table(DATABASE_TABLES.ATTACHMENT_LINKS)
+          .where('[userId+parentType+parentId]').equals([userId, 'activity', match.id]).toArray();
+        for (const link of linkedAttachments) {
+          await db.table(DATABASE_TABLES.ATTACHMENT_LINKS).delete(link.id);
+          const momentLinkId = `${link.attachmentId}:moment:${match.momentId}`;
+          await db.table(DATABASE_TABLES.ATTACHMENT_LINKS).put({ id: momentLinkId, attachmentId: link.attachmentId, userId, parentType: 'moment', parentId: match.momentId, createdAt: new Date().toISOString() });
+          const attachment = await db.table(DATABASE_TABLES.ATTACHMENTS).get(link.attachmentId);
+          if (attachment?.userId === userId) await db.table(DATABASE_TABLES.ATTACHMENTS).put({ ...attachment, momentId: match.momentId, updatedAt: new Date().toISOString() });
         }
         await activityTable().delete(match.id);
         return true;
