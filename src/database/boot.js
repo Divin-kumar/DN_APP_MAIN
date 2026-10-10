@@ -3,6 +3,8 @@ import { DATABASE_SCHEMA_VERSION } from './schema.js';
 import { buildMetadataEntries, DATABASE_METADATA_KEYS } from './metadata.js';
 import { validateSchemaMetadataRecord } from '../validators/migration.js';
 
+let initializationPromise = null;
+
 export const ensureDatabaseMetadata = async (database = db) => {
   const openedVersion = Number(database.verno);
   if (!Number.isInteger(openedVersion) || openedVersion !== DATABASE_SCHEMA_VERSION) {
@@ -11,11 +13,17 @@ export const ensureDatabaseMetadata = async (database = db) => {
 
   const metadataTable = database.table('metadata');
   const rows = buildMetadataEntries(openedVersion);
+  const keys = rows.map((row) => row.key);
+
   await database.transaction('rw', metadataTable, async () => {
-    for (const row of rows) {
-      const existing = await metadataTable.get(row.key);
+    const existingList = await metadataTable.bulkGet(keys);
+    const toPut = [];
+
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
+      const existing = existingList[i];
       if (!existing) {
-        await metadataTable.put(row);
+        toPut.push(row);
         continue;
       }
 
@@ -25,18 +33,22 @@ export const ensureDatabaseMetadata = async (database = db) => {
           throw new Error(`Stored metadata schema version ${String(existing.value)} is invalid or newer than the opened database.`);
         }
         if (storedVersion !== openedVersion || existing.status !== 'ready') {
-          await metadataTable.put({ ...existing, value: openedVersion, status: 'ready', updatedAt: new Date().toISOString() });
+          toPut.push({ ...existing, value: openedVersion, status: 'ready', updatedAt: new Date().toISOString() });
         }
       }
       // Boot defaults initialize missing control rows only; they must not reset data-migration history.
     }
+
+    if (toPut.length > 0) {
+      await metadataTable.bulkPut(toPut);
+    }
   });
 
-  const values = await Promise.all([
-    metadataTable.get(DATABASE_METADATA_KEYS.SCHEMA_VERSION),
-    metadataTable.get(DATABASE_METADATA_KEYS.MIGRATION_STATUS),
-    metadataTable.get(DATABASE_METADATA_KEYS.LAST_SUCCESSFUL_MIGRATION),
-    metadataTable.get(DATABASE_METADATA_KEYS.ROLLBACK_STATUS),
+  const values = await metadataTable.bulkGet([
+    DATABASE_METADATA_KEYS.SCHEMA_VERSION,
+    DATABASE_METADATA_KEYS.MIGRATION_STATUS,
+    DATABASE_METADATA_KEYS.LAST_SUCCESSFUL_MIGRATION,
+    DATABASE_METADATA_KEYS.ROLLBACK_STATUS,
   ]);
 
   const schemaValidation = validateSchemaMetadataRecord(values[0], openedVersion);
@@ -46,12 +58,35 @@ export const ensureDatabaseMetadata = async (database = db) => {
 };
 
 export const initializeDatabase = async () => {
-  try {
-    await db.open();
-    await ensureDatabaseMetadata(db);
+  if (db.isOpen() && initializationPromise) {
+    return initializationPromise;
+  }
+  initializationPromise = null;
+
+  const runInit = async () => {
+    if (!db.isOpen()) {
+      await db.open();
+    }
+    try {
+      await ensureDatabaseMetadata(db);
+    } catch (error) {
+      if (error?.name === 'UnknownError' || String(error?.message || '').includes('without an in-progress transaction')) {
+        console.warn('Recovering from Dexie transaction state error, reopening database...', error);
+        db.close();
+        await db.open();
+        await ensureDatabaseMetadata(db);
+      } else {
+        throw error;
+      }
+    }
     return db;
-  } catch (error) {
+  };
+
+  initializationPromise = runInit().catch((error) => {
+    initializationPromise = null;
     console.error('Dexie database initialization failed:', error);
     throw error;
-  }
+  });
+
+  return initializationPromise;
 };

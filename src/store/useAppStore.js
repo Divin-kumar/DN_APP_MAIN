@@ -107,6 +107,8 @@ const persistPreferences = async (principalId, current, partial) => {
   return merged;
 };
 
+let bootstrapInFlight = null;
+
 const useAppStore = create((set) => ({
   // User information and session status.
   principal: null,
@@ -264,17 +266,26 @@ const useAppStore = create((set) => ({
   },
 
   bootstrapDevicePrincipal: async (options = {}) => {
-    set({ principalReady: false, appLoading: true, persistentReady: false, persistenceError: null });
-    try {
-      await initializeDatabase();
-      const principal = await devicePrincipalRepository.getOrCreate(options);
-      await useAppStore.getState().hydratePersistentData(principal.principalId);
-      set({ principal, principalId: principal.principalId, migrationCandidates: [], principalReady: true, appLoading: false, persistentReady: true, persistenceError: null });
-      return principal;
-    } catch (error) {
-      set({ principalReady: true, appLoading: false, persistentReady: false, persistenceError: error, migrationCandidates: error?.legacyPrincipals || [] });
-      throw error;
+    if (bootstrapInFlight && Object.keys(options).length === 0) {
+      return bootstrapInFlight;
     }
+    const run = async () => {
+      set({ principalReady: false, appLoading: true, persistentReady: false, persistenceError: null });
+      try {
+        await initializeDatabase();
+        const principal = await devicePrincipalRepository.getOrCreate(options);
+        await useAppStore.getState().hydratePersistentData(principal.principalId);
+        set({ principal, principalId: principal.principalId, migrationCandidates: [], principalReady: true, appLoading: false, persistentReady: true, persistenceError: null });
+        return principal;
+      } catch (error) {
+        set({ principalReady: true, appLoading: false, persistentReady: false, persistenceError: error, migrationCandidates: error?.legacyPrincipals || [] });
+        throw error;
+      } finally {
+        bootstrapInFlight = null;
+      }
+    };
+    bootstrapInFlight = run();
+    return bootstrapInFlight;
   },
 
   updateDeviceName: async (deviceName) => {

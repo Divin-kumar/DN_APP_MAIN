@@ -30,7 +30,8 @@ const deduplicateOwnedRows = async (table, rows, targetPrincipalId, kind) => {
       if (!current || String(row.updatedAt || '') > String(current.updatedAt || '')) byKey.set(row.key, row);
     }
     const keep = new Set([...byKey.values()].map((row) => row.id));
-    for (const row of rows) if (!keep.has(row.id)) await table.delete(row.id);
+    const toDelete = rows.filter((row) => !keep.has(row.id)).map((row) => row.id);
+    if (toDelete.length) await table.bulkDelete(toDelete);
     return [...byKey.values()];
   }
   if (kind === DATABASE_TABLES.CODE_LISTS) {
@@ -41,7 +42,8 @@ const deduplicateOwnedRows = async (table, rows, targetPrincipalId, kind) => {
       if (!current || String(row.updatedAt || '') > String(current.updatedAt || '')) byValue.set(key, row);
     }
     const keep = new Set([...byValue.values()].map((row) => row.id));
-    for (const row of rows) if (!keep.has(row.id)) await table.delete(row.id);
+    const toDelete = rows.filter((row) => !keep.has(row.id)).map((row) => row.id);
+    if (toDelete.length) await table.bulkDelete(toDelete);
     return [...byValue.values()];
   }
   return candidates;
