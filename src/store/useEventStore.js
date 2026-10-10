@@ -40,7 +40,7 @@ const syncEventSampleData = (data, events, options = {}) => {
 
 const getLoadKey = (principalId) => `device:${principalId || 'active'}`;
 
-const projectEvents = async (principalId) => {
+export const projectEventsAndStandalone = async (principalId) => {
   const [moments, activities, memories, attachments, expenses] = await Promise.all([
     momentRepository.getAll(principalId),
     activityRepository.getAll(principalId),
@@ -49,7 +49,9 @@ const projectEvents = async (principalId) => {
     expenseRepository.getAll(principalId),
   ]);
 
-  return moments.map((moment) => {
+  const momentIdSet = new Set(moments.map((m) => m.id));
+
+  const projectedEvents = moments.map((moment) => {
     const momentActivityRows = activities.filter((activity) => activity.momentId === moment.id);
     const momentActivityIds = new Set(momentActivityRows.map((activity) => activity.id));
     const momentActivities = momentActivityRows.map((activity) => ({
@@ -77,6 +79,27 @@ const projectEvents = async (principalId) => {
     };
     return { ...event, status: getEventStatus(event) };
   });
+
+  const standaloneActivities = activities
+    .filter((activity) => !activity.momentId || !momentIdSet.has(activity.momentId))
+    .map((activity) => ({
+      ...activity,
+      eventId: null,
+      momentId: null,
+      eventName: 'Standalone Activity',
+      expenses: expenses.filter((expense) => expense.activityId === activity.id).map((expense) => ({
+        ...expense,
+        description: expense.description || expense.name || '',
+      })),
+      attachments: attachments.filter((attachment) => attachment.parentLinks?.some((link) => link.parentType === 'activity' && link.parentId === activity.id)),
+    }));
+
+  return { events: projectedEvents, standaloneActivities };
+};
+
+const projectEvents = async (principalId) => {
+  const result = await projectEventsAndStandalone(principalId);
+  return result.events;
 };
 
 const saveChildRows = async (repository, principalId, momentId, previousRows = [], nextRows = [], map = (row) => row, { deferDeletes = false } = {}) => {
@@ -131,12 +154,14 @@ const useEventStore = create((set, get) => {
 
   return ({
   events: [],
+  standaloneActivities: [],
   loading: false,
   error: null,
   loadedFor: null,
   activeLoadKey: null,
 
   setEvents: (items) => set({ events: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
+  setStandaloneActivities: (items) => set({ standaloneActivities: items }),
 
   loadEvents: async (uid) => {
     const loadKey = getLoadKey(uid);
@@ -144,20 +169,20 @@ const useEventStore = create((set, get) => {
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
 
     const accountChanged = get().activeLoadKey && get().activeLoadKey !== loadKey;
-    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { events: [] } : {}) });
+    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { events: [], standaloneActivities: [] } : {}) });
 
     const request = Promise.resolve().then(async () => {
       try {
         const sampleData = getActiveSampleData(uid);
         if (sampleData) {
-          if (get().activeLoadKey === loadKey) set({ events: sampleData.events, loading: false, error: null, loadedFor: loadKey });
+          if (get().activeLoadKey === loadKey) set({ events: sampleData.events, standaloneActivities: [], loading: false, error: null, loadedFor: loadKey });
           return sampleData.events;
         }
 
         const principalId = await resolveRepositoryPrincipal();
         if (!principalId) throw new Error('No active repository principal is available.');
-        const items = await projectEvents(principalId);
-        if (get().activeLoadKey === loadKey) set({ events: items, loading: false, error: null, loadedFor: loadKey });
+        const { events: items, standaloneActivities } = await projectEventsAndStandalone(principalId);
+        if (get().activeLoadKey === loadKey) set({ events: items, standaloneActivities, loading: false, error: null, loadedFor: loadKey });
         return items;
       } catch (error) {
         console.error('Failed to load events:', error);
@@ -399,6 +424,7 @@ const useEventStore = create((set, get) => {
     return db.table(DATABASE_TABLES.ATTACHMENT_FILES).get(attachmentId).then((row) => row?.userId === principalId ? row.blob : null);
   },
   toggleActivityCompletion: async (userId, isGuest, activityId, targetEventId = null) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
     const currentEvents = get().events;
     let foundEvent = null;
     let targetActivity = null;
@@ -413,71 +439,136 @@ const useEventStore = create((set, get) => {
       }
     }
 
-    if (!foundEvent || !targetActivity) {
-      throw new Error(`Activity ${activityId} not found.`);
+    if (foundEvent && targetActivity) {
+      const nextCompleted = !targetActivity.completed;
+      const updatedActivity = {
+        ...targetActivity,
+        completed: nextCompleted,
+        completedAt: nextCompleted ? (targetActivity.completedAt || new Date().toISOString()) : null,
+        updatedAt: new Date().toISOString(),
+      };
+
+      const updatedActivities = (foundEvent.activities || []).map((a) =>
+        a.id === activityId ? updatedActivity : a
+      );
+
+      return get().updateEventItem(userId, isGuest, {
+        ...foundEvent,
+        activities: updatedActivities,
+      });
     }
 
-    const nextCompleted = !targetActivity.completed;
-    const updatedActivity = {
-      ...targetActivity,
-      completed: nextCompleted,
-      completedAt: nextCompleted ? (targetActivity.completedAt || new Date().toISOString()) : null,
+    // Check standalone activities
+    const standaloneAct = (get().standaloneActivities || []).find((a) => a.id === activityId)
+      || (principalId ? await activityRepository.getById(principalId, activityId) : null);
+    if (standaloneAct && principalId) {
+      const nextCompleted = !standaloneAct.completed;
+      const updatedActivity = {
+        ...standaloneAct,
+        completed: nextCompleted,
+        completedAt: nextCompleted ? (standaloneAct.completedAt || new Date().toISOString()) : null,
+        updatedAt: new Date().toISOString(),
+      };
+      await activityRepository.update(principalId, updatedActivity);
+      const { events: reprojectedEvents, standaloneActivities } = await projectEventsAndStandalone(principalId);
+      set({ events: reprojectedEvents, standaloneActivities, error: null });
+      return updatedActivity;
+    }
+
+    throw new Error(`Activity ${activityId} not found.`);
+  },
+  saveActivity: async (userId, isGuest, eventId, activityData) => {
+    const principalId = userId || await resolveRepositoryPrincipal();
+    const isStandalone = !eventId || eventId === 'standalone';
+
+    if (!isStandalone) {
+      const currentEvents = get().events;
+      const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
+      if (foundEvent) {
+        const existingActivities = foundEvent.activities || [];
+        const existingIndex = existingActivities.findIndex((a) => a.id === activityData.id);
+
+        let nextActivities;
+        if (existingIndex >= 0) {
+          nextActivities = existingActivities.map((a, i) => (i === existingIndex ? { ...a, ...activityData, updatedAt: new Date().toISOString() } : a));
+        } else {
+          const newActivity = {
+            id: activityData.id || crypto.randomUUID(),
+            eventId: foundEvent.id || foundEvent.firestoreId,
+            momentId: foundEvent.id || foundEvent.firestoreId,
+            title: activityData.title || '',
+            description: activityData.description || '',
+            date: activityData.date || new Date().toISOString().slice(0, 10),
+            time: activityData.time || '',
+            priority: activityData.priority || 'medium',
+            completed: Boolean(activityData.completed),
+            completedAt: activityData.completed ? (activityData.completedAt || new Date().toISOString()) : null,
+            createdAt: activityData.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            attachments: activityData.attachments || [],
+          };
+          nextActivities = [...existingActivities, newActivity];
+        }
+
+        return get().updateEventItem(userId, isGuest, {
+          ...foundEvent,
+          activities: nextActivities,
+        });
+      }
+    }
+
+    // Standalone activity persistence
+    if (!principalId) throw new Error('No active repository principal is available.');
+    const activityId = activityData.id || crypto.randomUUID();
+    const existing = await activityRepository.getById(principalId, activityId);
+    const payload = {
+      ...activityData,
+      id: activityId,
+      userId: principalId,
+      momentId: null,
+      eventId: null,
+      title: activityData.title || '',
+      description: activityData.description || '',
+      date: activityData.date || new Date().toISOString().slice(0, 10),
+      time: activityData.time || '',
+      priority: activityData.priority || 'medium',
+      completed: Boolean(activityData.completed),
+      completedAt: activityData.completed ? (activityData.completedAt || new Date().toISOString()) : null,
       updatedAt: new Date().toISOString(),
     };
 
-    const updatedActivities = (foundEvent.activities || []).map((a) =>
-      a.id === activityId ? updatedActivity : a
-    );
-
-    return get().updateEventItem(userId, isGuest, {
-      ...foundEvent,
-      activities: updatedActivities,
-    });
-  },
-  saveActivity: async (userId, isGuest, eventId, activityData) => {
-    const currentEvents = get().events;
-    const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
-    if (!foundEvent) throw new Error(`Parent moment ${eventId} not found.`);
-
-    const existingActivities = foundEvent.activities || [];
-    const existingIndex = existingActivities.findIndex((a) => a.id === activityData.id);
-
-    let nextActivities;
-    if (existingIndex >= 0) {
-      nextActivities = existingActivities.map((a, i) => (i === existingIndex ? { ...a, ...activityData, updatedAt: new Date().toISOString() } : a));
+    if (existing) {
+      await activityRepository.update(principalId, payload);
     } else {
-      const newActivity = {
-        id: activityData.id || crypto.randomUUID(),
-        eventId: foundEvent.id || foundEvent.firestoreId,
-        title: activityData.title || '',
-        description: activityData.description || '',
-        date: activityData.date || new Date().toISOString().slice(0, 10),
-        time: activityData.time || '',
-        priority: activityData.priority || 'medium',
-        completed: Boolean(activityData.completed),
-        completedAt: activityData.completed ? (activityData.completedAt || new Date().toISOString()) : null,
+      await activityRepository.create(principalId, {
+        ...payload,
         createdAt: activityData.createdAt || new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        attachments: activityData.attachments || [],
-      };
-      nextActivities = [...existingActivities, newActivity];
+      });
     }
 
-    return get().updateEventItem(userId, isGuest, {
-      ...foundEvent,
-      activities: nextActivities,
-    });
+    const { events: reprojectedEvents, standaloneActivities } = await projectEventsAndStandalone(principalId);
+    set({ events: reprojectedEvents, standaloneActivities, error: null });
+    return payload;
   },
   deleteActivity: async (userId, isGuest, eventId, activityId) => {
-    const currentEvents = get().events;
-    const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
-    if (!foundEvent) return;
+    const principalId = userId || await resolveRepositoryPrincipal();
+    if (eventId) {
+      const currentEvents = get().events;
+      const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
+      if (foundEvent) {
+        const nextActivities = (foundEvent.activities || []).filter((a) => a.id !== activityId);
+        return get().updateEventItem(userId, isGuest, {
+          ...foundEvent,
+          activities: nextActivities,
+        });
+      }
+    }
 
-    const nextActivities = (foundEvent.activities || []).filter((a) => a.id !== activityId);
-    return get().updateEventItem(userId, isGuest, {
-      ...foundEvent,
-      activities: nextActivities,
-    });
+    if (principalId && activityId) {
+      await activityRepository.delete(principalId, activityId);
+      const { events: reprojectedEvents, standaloneActivities } = await projectEventsAndStandalone(principalId);
+      set({ events: reprojectedEvents, standaloneActivities, error: null });
+    }
   },
   });
 });

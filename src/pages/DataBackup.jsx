@@ -1,12 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
-import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Cloud, Database, Download, FileCheck2, HardDrive, Heart, Layers3, ShieldCheck, Smartphone, Upload, WalletCards } from 'lucide-react';
+import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Cloud, Database, Download, FileCheck2, HardDrive, Heart, Layers3, RefreshCw, ShieldCheck, Smartphone, Upload, WalletCards, X } from 'lucide-react';
 import { db } from '../database/index.js';
 import { DATABASE_TABLES } from '../database/tables.js';
 import { getDatabaseVersionInfo } from '../database/versioning.js';
 import { createBackupArtifact, previewRestoreBackup, restoreBackupArtifact, validateBackupArtifact, verifyBackupArtifactIntegrity } from '../services/backupService.js';
+import {
+  getCloudSyncConfig,
+  saveCloudSyncConfig,
+  connectGoogleDrive,
+  disconnectGoogleDrive,
+  syncWithGoogleDrive,
+  connectICloud,
+  disconnectICloud,
+  syncWithICloud,
+} from '../services/cloudSyncService.js';
 import useAppStore from '../store/useAppStore.js';
 import { buildBackupFilename } from '../utils/backupFilename.js';
 import { downloadBlob } from '../utils/download.js';
@@ -108,7 +118,32 @@ export default function DataBackup() {
   const [restoreFilename, setRestoreFilename] = useState('');
   const [restorePreview, setRestorePreview] = useState(null);
   const [restoreResolution, setRestoreResolution] = useState('keep-existing');
-  const [activeSection, setActiveSection] = useState('overview');
+  const [searchParams] = useSearchParams();
+  const requestedSection = searchParams.get('section');
+  const [activeSection, setActiveSection] = useState(() => requestedSection || 'overview');
+
+  useEffect(() => {
+    if (requestedSection) {
+      setActiveSection(requestedSection);
+    }
+  }, [requestedSection]);
+
+  const [syncConfig, setSyncConfig] = useState(() => getCloudSyncConfig());
+  const [googleSyncing, setGoogleSyncing] = useState(false);
+  const [googleProgress, setGoogleProgress] = useState(null);
+  const [iCloudSyncing, setICloudSyncing] = useState(false);
+  const [iCloudProgress, setICloudProgress] = useState(null);
+  const [iCloudModalOpen, setICloudModalOpen] = useState(false);
+  const [appleIdDraft, setAppleIdDraft] = useState('');
+
+  useEffect(() => {
+    const handleUpdate = (e) => {
+      if (e.detail) setSyncConfig(e.detail);
+    };
+    window.addEventListener('lifehub:sync-config-updated', handleUpdate);
+    return () => window.removeEventListener('lifehub:sync-config-updated', handleUpdate);
+  }, []);
+
   const [destinationDialogOpen, setDestinationDialogOpen] = useState(false);
   const [restoreSourceDialogOpen, setRestoreSourceDialogOpen] = useState(false);
   const [pendingBackup, setPendingBackup] = useState(null);
@@ -280,6 +315,410 @@ export default function DataBackup() {
     catch (error) { setStatus(error?.message || 'Device name could not be saved.'); }
   };
 
+  const handleConnectGoogle = async () => {
+    try {
+      setGoogleProgress({ message: 'Authorizing with Google…' });
+      await connectGoogleDrive();
+      setSyncConfig(getCloudSyncConfig());
+      showToast('Connected to Google Drive', 'success');
+      await handleSyncGoogle();
+    } catch (err) {
+      showToast(err.message || 'Google Drive connection failed', 'danger');
+    } finally {
+      setGoogleProgress(null);
+    }
+  };
+
+  const handleDisconnectGoogle = async () => {
+    try {
+      await disconnectGoogleDrive();
+      setSyncConfig(getCloudSyncConfig());
+      showToast('Google Drive disconnected', 'success');
+    } catch {
+      showToast('Failed to disconnect Google Drive', 'danger');
+    }
+  };
+
+  const handleSyncGoogle = async () => {
+    if (googleSyncing) return;
+    setGoogleSyncing(true);
+    try {
+      const result = await syncWithGoogleDrive((progress) => {
+        setGoogleProgress(progress);
+      });
+      setSyncConfig(getCloudSyncConfig());
+      void refreshHealth();
+      showToast(
+        `Google Drive synced (${result.syncedCounts.moments} moments, ${result.syncedCounts.activities} activities)`,
+        'success'
+      );
+    } catch (err) {
+      showToast(err.message || 'Google Drive sync failed', 'danger');
+    } finally {
+      setGoogleSyncing(false);
+      setGoogleProgress(null);
+    }
+  };
+
+  const handleToggleGoogleAutoSync = () => {
+    const updated = {
+      ...syncConfig,
+      googleDrive: {
+        ...syncConfig.googleDrive,
+        autoSync: !syncConfig.googleDrive.autoSync,
+      },
+    };
+    saveCloudSyncConfig(updated);
+    setSyncConfig(updated);
+    showToast(
+      updated.googleDrive.autoSync ? 'Google Drive auto-sync enabled' : 'Auto-sync disabled',
+      'success'
+    );
+  };
+
+  const handleConnectICloud = async () => {
+    try {
+      await connectICloud({ appleId: appleIdDraft });
+      setSyncConfig(getCloudSyncConfig());
+      setICloudModalOpen(false);
+      showToast('Connected to iCloud container', 'success');
+      await handleSyncICloud();
+    } catch (err) {
+      showToast(err.message || 'iCloud connection failed', 'danger');
+    }
+  };
+
+  const handleDisconnectICloud = async () => {
+    try {
+      await disconnectICloud();
+      setSyncConfig(getCloudSyncConfig());
+      showToast('iCloud disconnected', 'success');
+    } catch {
+      showToast('Failed to disconnect iCloud', 'danger');
+    }
+  };
+
+  const handleSyncICloud = async () => {
+    if (iCloudSyncing) return;
+    setICloudSyncing(true);
+    try {
+      const result = await syncWithICloud((progress) => {
+        setICloudProgress(progress);
+      });
+      setSyncConfig(getCloudSyncConfig());
+      void refreshHealth();
+      showToast(
+        `iCloud synced (${result.syncedCounts.moments} moments, ${result.syncedCounts.activities} activities)`,
+        'success'
+      );
+    } catch (err) {
+      showToast(err.message || 'iCloud sync failed', 'danger');
+    } finally {
+      setICloudSyncing(false);
+      setICloudProgress(null);
+    }
+  };
+
+  const handleToggleICloudAutoSync = () => {
+    const updated = {
+      ...syncConfig,
+      iCloud: {
+        ...syncConfig.iCloud,
+        autoSync: !syncConfig.iCloud.autoSync,
+      },
+    };
+    saveCloudSyncConfig(updated);
+    setSyncConfig(updated);
+    showToast(
+      updated.iCloud.autoSync ? 'iCloud auto-sync enabled' : 'Auto-sync disabled',
+      'success'
+    );
+  };
+
+  const handleConflictResolutionChange = (resolution) => {
+    const updated = {
+      ...syncConfig,
+      conflictResolution: resolution,
+    };
+    saveCloudSyncConfig(updated);
+    setSyncConfig(updated);
+    showToast(`Sync conflict resolution set to ${resolution}`, 'success');
+  };
+
+  const renderCloudSync = () => (
+    <section className="db-actions-section" aria-labelledby="db-sync-title">
+      <div className="db-section-heading">
+        <h2 id="db-sync-title">Cloud Sync (Google Drive &amp; iCloud)</h2>
+        <p>Keep your entire life library automatically synchronized and backed up across devices.</p>
+      </div>
+
+      <div className="space-y-4">
+        {/* Google Drive Card */}
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                <Database size={20} />
+              </span>
+              <div>
+                <strong className="block text-sm text-slate-900 dark:text-slate-100">Google Drive</strong>
+                <small className="text-xs text-slate-500 dark:text-slate-400">
+                  {syncConfig.googleDrive.connected
+                    ? `Connected · ${syncConfig.googleDrive.userEmail || syncConfig.googleDrive.userName || 'Authorized account'}`
+                    : 'Not connected'}
+                </small>
+              </div>
+            </div>
+            <span
+              className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                syncConfig.googleDrive.connected
+                  ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+              }`}
+            >
+              {syncConfig.googleDrive.connected ? 'Connected' : 'Offline'}
+            </span>
+          </div>
+
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            Last synced: <strong>{prettyDate(syncConfig.googleDrive.lastSyncTime)}</strong>
+          </div>
+
+          {googleProgress && (
+            <div className="text-xs p-2 rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-300 flex items-center gap-2">
+              <RefreshCw size={13} className="animate-spin" />
+              <span>{googleProgress.message || 'Syncing with Google Drive…'}</span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            {syncConfig.googleDrive.connected ? (
+              <>
+                <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(syncConfig.googleDrive.autoSync)}
+                    onChange={handleToggleGoogleAutoSync}
+                    className="rounded text-emerald-600"
+                  />
+                  <span>Auto-sync enabled</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSyncGoogle}
+                    disabled={googleSyncing}
+                    className="primaryButton text-xs py-1.5 px-3 flex items-center gap-1.5"
+                  >
+                    <RefreshCw size={13} className={googleSyncing ? 'animate-spin' : ''} />
+                    <span>{googleSyncing ? 'Syncing…' : 'Sync Now'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectGoogle}
+                    className="secondaryButton text-xs py-1.5 px-2.5"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={handleConnectGoogle}
+                className="primaryButton text-xs py-1.5 px-3"
+              >
+                Connect Google Drive
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* iCloud Card */}
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <span className="p-2 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/40 dark:text-sky-300">
+                <HardDrive size={20} />
+              </span>
+              <div>
+                <strong className="block text-sm text-slate-900 dark:text-slate-100">Apple iCloud</strong>
+                <small className="text-xs text-slate-500 dark:text-slate-400">
+                  {syncConfig.iCloud.connected
+                    ? `Connected · ${syncConfig.iCloud.appleId || 'iCloud Container'}`
+                    : 'Not connected'}
+                </small>
+              </div>
+            </div>
+            <span
+              className={`text-xs px-2.5 py-1 rounded-full font-semibold ${
+                syncConfig.iCloud.connected
+                  ? 'bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-300'
+                  : 'bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400'
+              }`}
+            >
+              {syncConfig.iCloud.connected ? 'Connected' : 'Offline'}
+            </span>
+          </div>
+
+          <div className="text-xs text-slate-500 dark:text-slate-400">
+            Last synced: <strong>{prettyDate(syncConfig.iCloud.lastSyncTime)}</strong>
+          </div>
+
+          {iCloudProgress && (
+            <div className="text-xs p-2 rounded-lg bg-sky-50 text-sky-700 dark:bg-sky-950/50 dark:text-sky-300 flex items-center gap-2">
+              <RefreshCw size={13} className="animate-spin" />
+              <span>{iCloudProgress.message || 'Syncing with iCloud…'}</span>
+            </div>
+          )}
+
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            {syncConfig.iCloud.connected ? (
+              <>
+                <label className="flex items-center gap-2 text-xs text-slate-700 dark:text-slate-300 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(syncConfig.iCloud.autoSync)}
+                    onChange={handleToggleICloudAutoSync}
+                    className="rounded text-sky-600"
+                  />
+                  <span>Auto-sync enabled</span>
+                </label>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSyncICloud}
+                    disabled={iCloudSyncing}
+                    className="primaryButton text-xs py-1.5 px-3 flex items-center gap-1.5 bg-sky-600 hover:bg-sky-700"
+                  >
+                    <RefreshCw size={13} className={iCloudSyncing ? 'animate-spin' : ''} />
+                    <span>{iCloudSyncing ? 'Syncing…' : 'Sync Now'}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleDisconnectICloud}
+                    className="secondaryButton text-xs py-1.5 px-2.5"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setICloudModalOpen(true)}
+                className="primaryButton text-xs py-1.5 px-3 bg-sky-600 hover:bg-sky-700"
+              >
+                Connect Apple iCloud
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Conflict Resolution Policy Selector */}
+        <div className="p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100">Sync &amp; Import Conflict Resolution</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Choose how LifeHub handles conflicting items when synchronizing with cloud or importing files.
+            </p>
+          </div>
+
+          <fieldset className="db-resolution">
+            <legend className="sr-only">Choose conflict resolution policy</legend>
+            <label className={syncConfig.conflictResolution === 'merge-safe' ? 'is-selected' : ''}>
+              <input
+                type="radio"
+                name="cloud-sync-resolution"
+                value="merge-safe"
+                checked={syncConfig.conflictResolution === 'merge-safe'}
+                onChange={() => handleConflictResolutionChange('merge-safe')}
+              />
+              <span>
+                <strong>Merge Safe Data (Recommended)</strong>
+                <small>Import all non-conflicting items and preserve current local records for conflicts.</small>
+              </span>
+              <Check size={16} aria-hidden="true" />
+            </label>
+            <label className={syncConfig.conflictResolution === 'use-backup-version' ? 'is-selected' : ''}>
+              <input
+                type="radio"
+                name="cloud-sync-resolution"
+                value="use-backup-version"
+                checked={syncConfig.conflictResolution === 'use-backup-version'}
+                onChange={() => handleConflictResolutionChange('use-backup-version')}
+              />
+              <span>
+                <strong>Use Cloud Version</strong>
+                <small>Replace conflicting local records with the latest cloud / imported version.</small>
+              </span>
+              <Check size={16} aria-hidden="true" />
+            </label>
+            <label className={syncConfig.conflictResolution === 'keep-existing' ? 'is-selected' : ''}>
+              <input
+                type="radio"
+                name="cloud-sync-resolution"
+                value="keep-existing"
+                checked={syncConfig.conflictResolution === 'keep-existing'}
+                onChange={() => handleConflictResolutionChange('keep-existing')}
+              />
+              <span>
+                <strong>Keep Local Data</strong>
+                <small>Keep current local versions unchanged for any conflicting records.</small>
+              </span>
+              <Check size={16} aria-hidden="true" />
+            </label>
+          </fieldset>
+        </div>
+
+        {/* Data Scope Note */}
+        <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 text-xs text-slate-600 dark:text-slate-300 flex items-start gap-2.5">
+          <ShieldCheck size={18} className="text-emerald-600 shrink-0 mt-0.5" />
+          <div>
+            <strong>100% of User Data Protected:</strong> Every single record—moments, standalone activities, memories, expenses, incomes, custom code lists, attachments, and preferences—is synced and backed up together using LifeHub's verified conflict resolution engine.
+          </div>
+        </div>
+      </div>
+
+      {iCloudModalOpen && (
+        <ModalDialog title="Connect to Apple iCloud" onClose={() => setICloudModalOpen(false)}>
+          <div className="space-y-3.5">
+            <p className="text-xs text-slate-600 dark:text-slate-300">
+              Connect your iCloud Drive or CloudKit container to synchronize your LifeHub records across Apple and web devices.
+            </p>
+            <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
+              Apple ID or Account Note <span className="event-form-optional">Optional</span>
+              <input
+                type="text"
+                value={appleIdDraft}
+                onChange={(e) => setAppleIdDraft(e.target.value)}
+                placeholder="e.g. user@icloud.com"
+                className="w-full mt-1"
+                autoFocus
+              />
+            </label>
+            <div className="dialog-actions pt-2 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setICloudModalOpen(false)}
+                className="secondaryButton"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConnectICloud}
+                className="primaryButton bg-sky-600 hover:bg-sky-700"
+              >
+                Connect Container
+              </button>
+            </div>
+          </div>
+        </ModalDialog>
+      )}
+    </section>
+  );
+
   const versionInfo = getDatabaseVersionInfo();
   const healthy = persistentReady && !health.loading && !health.error;
   const totalRecords = Object.values(health.counts).reduce((total, count) => total + count, 0);
@@ -395,6 +834,7 @@ export default function DataBackup() {
   );
 
   const sectionLabels = {
+    sync: 'Cloud Sync (Google Drive & iCloud)',
     backup: 'Backup & Restore',
     data: 'Your Data',
     device: 'Device & Storage',
@@ -414,18 +854,25 @@ export default function DataBackup() {
       {activeSection === 'overview' ? <>
         {renderProtection()}
         <nav className="db-secondary-nav" aria-label="Data and backup navigation">
-          <Link to="/settings/sync" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#edf7f2', borderRadius: '12px', border: '1px solid #1f6f5d', color: '#1f6f5d', fontWeight: 600, textDecoration: 'none', marginBottom: '8px' }}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Cloud size={18} /><span>Sync with Google Drive &amp; iCloud</span></span>
+          <button
+            type="button"
+            onClick={() => { setActiveSection('sync'); setStatus(''); }}
+            style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#edf7f2', borderRadius: '12px', border: '1px solid #1f6f5d', color: '#1f6f5d', fontWeight: 600, textDecoration: 'none', marginBottom: '8px', cursor: 'pointer', width: '100%' }}
+          >
+            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Cloud size={18} /><span>Cloud Sync (Google Drive &amp; iCloud)</span></span>
             <ChevronRight size={17} aria-hidden="true" />
-          </Link>
+          </button>
           {Object.entries(sectionLabels).map(([key, label]) => (
+            key === 'sync' ? null : (
               <button key={key} type="button" onClick={() => { setActiveSection(key); setStatus(''); if (key === 'backup') void primeGoogleDrive().catch(() => {}); }}>
-              <span>{label}</span><ChevronRight size={17} aria-hidden="true" />
-            </button>
+                <span>{label}</span><ChevronRight size={17} aria-hidden="true" />
+              </button>
+            )
           ))}
         </nav>
       </> : null}
 
+      {activeSection === 'sync' && renderCloudSync()}
       {activeSection === 'backup' && renderBackup()}
       {activeSection === 'data' && renderData()}
       {activeSection === 'device' && renderDevice()}

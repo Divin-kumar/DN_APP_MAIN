@@ -67,3 +67,41 @@ test('dashboard activities filter separates today from high-priority without dup
   const allShownIds = [...todayActivities.map((a) => a.id), ...highPriorityActivities.map((a) => a.id)];
   assert.equal(new Set(allShownIds).size, allShownIds.length);
 });
+
+test('merged dashboard activities rule: high priority incomplete appears, completed non-today disappears', () => {
+  const todayIso = '2026-10-10';
+
+  const activities = [
+    { id: '1', title: 'Today high incomplete', date: '2026-10-10', priority: 'high', completed: false },
+    { id: '2', title: 'Today normal completed', date: '2026-10-10', priority: 'medium', completed: true },
+    { id: '3', title: 'Future high incomplete', date: '2026-10-15', priority: 'high', completed: false },
+    { id: '4', title: 'Future high completed', date: '2026-10-15', priority: 'high', completed: true },
+    { id: '5', title: 'Overdue high incomplete', date: '2026-10-01', priority: 'high', completed: false },
+    { id: '6', title: 'Overdue high completed', date: '2026-10-01', priority: 'high', completed: true },
+    { id: '7', title: 'Today high completed', date: '2026-10-10', priority: 'high', completed: true },
+    { id: '8', title: 'Standalone high incomplete', date: '2026-10-12', priority: 'high', completed: false, momentId: null },
+  ];
+
+  const merged = activities.filter((activity) => {
+    if (activity.cancelled) return false;
+    const isToday = activity.date === todayIso;
+    if (isToday) return true; // Today's activities work as usual (includes completed & incomplete)
+    return activity.priority === 'high' && !activity.completed; // High priority incomplete only
+  });
+
+  const mergedIds = new Set(merged.map((a) => a.id));
+
+  // Today items (both completed and incomplete) must be included
+  assert.ok(mergedIds.has('1'), 'Today high incomplete should appear');
+  assert.ok(mergedIds.has('2'), 'Today normal completed should appear');
+  assert.ok(mergedIds.has('7'), 'Today high completed should appear');
+
+  // Future & Overdue high incomplete must be included
+  assert.ok(mergedIds.has('3'), 'Future high incomplete should appear');
+  assert.ok(mergedIds.has('5'), 'Overdue high incomplete should appear');
+  assert.ok(mergedIds.has('8'), 'Standalone high incomplete should appear');
+
+  // Completed items from other dates must NOT be included!
+  assert.equal(mergedIds.has('4'), false, 'Future high completed must NOT appear');
+  assert.equal(mergedIds.has('6'), false, 'Overdue high completed must NOT appear');
+});

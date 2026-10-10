@@ -29,6 +29,13 @@ import {
 } from '../repositories/index.js';
 import { resolveRepositoryPrincipal } from '../store/repositoryRuntime.js';
 import useEventStore from '../store/useEventStore.js';
+import useExpenseStore from '../store/useExpenseStore.js';
+import useIncomeStore from '../store/useIncomeStore.js';
+import {
+  createBackupArtifact,
+  previewRestoreBackup,
+  restoreBackupArtifact,
+} from './backupService.js';
 import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
@@ -68,6 +75,8 @@ const getFirebaseAuth = () => {
 
 // Default providers configuration
 const defaultProvidersConfig = {
+  conflictResolution: 'merge-safe', // 'merge-safe' | 'use-backup-version' | 'keep-existing'
+  autoSync: true,
   googleDrive: {
     connected: false,
     userEmail: null,
@@ -75,7 +84,7 @@ const defaultProvidersConfig = {
     lastSyncTime: null,
     syncStatus: 'idle', // 'idle' | 'syncing' | 'success' | 'error'
     syncError: null,
-    autoSync: false,
+    autoSync: true,
     fileId: null,
   },
   iCloud: {
@@ -85,7 +94,7 @@ const defaultProvidersConfig = {
     lastSyncTime: null,
     syncStatus: 'idle',
     syncError: null,
-    autoSync: false,
+    autoSync: true,
     mode: 'browser-cloudkit', // 'browser-cloudkit' | 'device-container'
   },
 };
@@ -107,6 +116,8 @@ export const getCloudSyncConfig = () => {
     if (!stored) return defaultProvidersConfig;
     const parsed = JSON.parse(stored);
     return {
+      conflictResolution: parsed.conflictResolution || defaultProvidersConfig.conflictResolution,
+      autoSync: typeof parsed.autoSync === 'boolean' ? parsed.autoSync : defaultProvidersConfig.autoSync,
       googleDrive: { ...defaultProvidersConfig.googleDrive, ...parsed.googleDrive },
       iCloud: { ...defaultProvidersConfig.iCloud, ...parsed.iCloud },
     };
@@ -119,6 +130,8 @@ export const saveCloudSyncConfig = (config) => {
   try {
     // Sanitized: remove any accidental token fields
     const sanitized = {
+      conflictResolution: config.conflictResolution || 'merge-safe',
+      autoSync: typeof config.autoSync === 'boolean' ? config.autoSync : true,
       googleDrive: {
         connected: Boolean(config.googleDrive?.connected),
         userEmail: config.googleDrive?.userEmail || null,
@@ -437,9 +450,21 @@ const uploadDriveSyncEnvelope = async (token, fileId, envelope) => {
 // -------------------------------------------------------------
 
 /**
- * Extract all local LifeHub records for sync
+ * Extract all local LifeHub records for sync using the complete backup artifact engine
  */
 const collectLocalSyncData = async (principalId) => {
+  let artifact = null;
+  try {
+    artifact = await createBackupArtifact({
+      database: db,
+      principalId,
+      reason: 'cloud-sync',
+      attachmentMode: 'include-attachments',
+    });
+  } catch (err) {
+    console.warn('Backup artifact generation fallback:', err);
+  }
+
   const [moments, activities, memories, expenses, incomes, codeLists, settings, attachments] = await Promise.all([
     momentRepository.getAll(principalId).catch(() => []),
     activityRepository.getAll(principalId).catch(() => []),
@@ -455,7 +480,8 @@ const collectLocalSyncData = async (principalId) => {
     version: 2,
     syncTimestamp: new Date().toISOString(),
     principalId,
-    data: {
+    artifact,
+    data: artifact?.payload || {
       moments: moments || [],
       activities: activities || [],
       memories: memories || [],
@@ -502,6 +528,58 @@ export const mergeRecordCollections = (localItems = [], remoteItems = []) => {
   }
 
   return Array.from(mergedMap.values()).map((entry) => entry.record);
+};
+
+/**
+ * Reconcile remote sync envelope into the local database reusing backup import conflict resolution
+ */
+export const reconcileRemoteDataWithBackupEngine = async (principalId, remoteEnvelope, conflictResolution = 'merge-safe') => {
+  if (!remoteEnvelope) return;
+  let artifact = remoteEnvelope.artifact;
+  if (!artifact && remoteEnvelope.data) {
+    artifact = {
+      manifestVersion: 1,
+      schemaVersion: 6,
+      databaseSchemaVersion: 6,
+      createdAt: remoteEnvelope.lastSyncTimestamp || remoteEnvelope.syncTimestamp || new Date().toISOString(),
+      principalScope: principalId,
+      manifest: {
+        backupId: `sync-${Date.now()}`,
+        createdAt: remoteEnvelope.lastSyncTimestamp || remoteEnvelope.syncTimestamp || new Date().toISOString(),
+        schemaVersion: 6,
+        principalScope: principalId,
+        attachmentMode: 'include-attachments',
+      },
+      payload: remoteEnvelope.data,
+    };
+  }
+
+  if (artifact && artifact.payload) {
+    try {
+      await restoreBackupArtifact(artifact, {
+        database: db,
+        targetPrincipalId: principalId,
+        conflictResolution,
+        allowOverwrite: conflictResolution === 'use-backup-version',
+      });
+      try {
+        await Promise.all([
+          useEventStore.getState().loadEvents(principalId),
+          useExpenseStore.getState().loadExpenses(principalId),
+          useIncomeStore.getState().loadIncomes(principalId),
+        ]);
+      } catch {
+        // Ignore store reload error
+      }
+      return;
+    } catch (err) {
+      console.warn('Backup engine reconcile warning, using direct transactional merge:', err);
+    }
+  }
+
+  if (remoteEnvelope.data) {
+    await reconcileMergedDataLocally(principalId, remoteEnvelope.data);
+  }
 };
 
 /**
@@ -638,10 +716,14 @@ export const syncWithGoogleDrive = async (onProgress = () => {}) => {
       version: 2,
       lastSyncTimestamp: new Date().toISOString(),
       principalId,
+      artifact: localEnvelope.artifact,
       data: merged,
     });
 
     onProgress({ stage: 'reconciling-local', percent: 98, message: 'Applying changes to local database…' });
+    if (remoteEnvelope) {
+      await reconcileRemoteDataWithBackupEngine(principalId, remoteEnvelope, currentConfig.conflictResolution || 'merge-safe');
+    }
     await reconcileMergedDataLocally(principalId, merged);
 
     const finishTime = new Date().toISOString();
@@ -789,11 +871,15 @@ export const syncWithICloud = async (onProgress = () => {}) => {
         version: 2,
         lastSyncTimestamp: new Date().toISOString(),
         principalId,
+        artifact: localEnvelope.artifact,
         data: merged,
       })
     );
 
     onProgress({ stage: 'reconciling', percent: 95, message: 'Updating local records…' });
+    if (remoteData && Object.keys(remoteData).length > 0) {
+      await reconcileRemoteDataWithBackupEngine(principalId, { data: remoteData }, currentConfig.conflictResolution || 'merge-safe');
+    }
     await reconcileMergedDataLocally(principalId, merged);
 
     const finishTime = new Date().toISOString();

@@ -10,10 +10,13 @@ export const validateActivityRecord = (record = {}) => {
     return { valid: false, errors: ['Activity record is required.'] };
   }
 
-  if (!hasRequiredFields(record, ['id', 'userId', 'momentId', 'title', 'date'])) {
+  if (!hasRequiredFields(record, ['id', 'userId', 'title', 'date'])) {
     errors.push('Activity record is missing required identifiers or values.');
   }
-  errors.push(...validateStringIdentifiers(record, ['id', 'userId', 'momentId']));
+  errors.push(...validateStringIdentifiers(record, ['id', 'userId']));
+  if (record.momentId) {
+    errors.push(...validateStringIdentifiers(record, ['momentId']));
+  }
 
   if (typeof record.title !== 'string' || record.title.trim().length === 0) {
     errors.push('Activity title is required.');

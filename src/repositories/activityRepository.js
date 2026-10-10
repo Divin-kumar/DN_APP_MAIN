@@ -55,7 +55,7 @@ export const activityRepository = {
       domain: 'activities',
       transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
       beforeInsert: async () => {
-        if (!(await momentRepository.getById(userId, next.momentId))) {
+        if (next.momentId && !(await momentRepository.getById(userId, next.momentId))) {
           throw makeRepositoryConflict({ domain: 'activities', operation: 'create', record: next, reason: 'parent-moment-missing', fields: ['momentId'] });
         }
       },
@@ -85,7 +85,7 @@ export const activityRepository = {
       domain: 'activities',
       transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
       beforeUpdate: async (_existing, record) => {
-        if (!(await momentRepository.getById(userId, record.momentId))) {
+        if (record.momentId && !(await momentRepository.getById(userId, record.momentId))) {
           throw makeRepositoryConflict({ domain: 'activities', operation: 'update', record, reason: 'parent-moment-missing', fields: ['momentId'] });
         }
       },
@@ -107,10 +107,12 @@ export const activityRepository = {
           .where('[userId+parentType+parentId]').equals([userId, 'activity', match.id]).toArray();
         for (const link of linkedAttachments) {
           await db.table(DATABASE_TABLES.ATTACHMENT_LINKS).delete(link.id);
-          const momentLinkId = `${link.attachmentId}:moment:${match.momentId}`;
-          await db.table(DATABASE_TABLES.ATTACHMENT_LINKS).put({ id: momentLinkId, attachmentId: link.attachmentId, userId, parentType: 'moment', parentId: match.momentId, createdAt: new Date().toISOString() });
-          const attachment = await db.table(DATABASE_TABLES.ATTACHMENTS).get(link.attachmentId);
-          if (attachment?.userId === userId) await db.table(DATABASE_TABLES.ATTACHMENTS).put({ ...attachment, momentId: match.momentId, updatedAt: new Date().toISOString() });
+          if (match.momentId) {
+            const momentLinkId = `${link.attachmentId}:moment:${match.momentId}`;
+            await db.table(DATABASE_TABLES.ATTACHMENT_LINKS).put({ id: momentLinkId, attachmentId: link.attachmentId, userId, parentType: 'moment', parentId: match.momentId, createdAt: new Date().toISOString() });
+            const attachment = await db.table(DATABASE_TABLES.ATTACHMENTS).get(link.attachmentId);
+            if (attachment?.userId === userId) await db.table(DATABASE_TABLES.ATTACHMENTS).put({ ...attachment, momentId: match.momentId, updatedAt: new Date().toISOString() });
+          }
         }
         await activityTable().delete(match.id);
         return true;
@@ -137,7 +139,7 @@ export const activityRepository = {
       transactionTables: [db.table(DATABASE_TABLES.MOMENTS)],
       beforeInsert: async (records) => {
         for (const record of records) {
-          if (!(await momentRepository.getById(userId, record.momentId))) {
+          if (record.momentId && !(await momentRepository.getById(userId, record.momentId))) {
             throw makeRepositoryConflict({ domain: 'activities', operation: 'bulk-create', record, reason: 'parent-moment-missing', fields: ['momentId'] });
           }
         }

@@ -2,47 +2,35 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Check,
   CheckCircle2,
-  Circle,
   Clock,
-  Filter,
   Flame,
   Image as ImageIcon,
-  Paperclip,
   Plus,
   Search,
-  SlidersHorizontal,
   Trash2,
   Edit2,
   Calendar,
   AlertCircle,
-  Eye,
   X,
   Camera,
-  FolderOpen,
+  Layers,
+  ListChecks,
+  Eye,
 } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
-import ModalDialog from '../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
 import DateField from '../components/common/DateField';
-import { ACTIVITY_PRIORITY_OPTIONS } from '../utils/codeLists';
+import StatePanel from '../components/common/StatePanel';
+import SortControl from '../components/common/SortControl';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import { ACTIVITY_PRIORITY_OPTIONS, getActivityPriorityLabel } from '../utils/codeLists';
 
-const PRIORITY_COLORS = {
-  high: {
-    badge: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
-    dot: 'bg-rose-500',
-    label: 'High',
-  },
-  medium: {
-    badge: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
-    dot: 'bg-amber-500',
-    label: 'Medium',
-  },
-  low: {
-    badge: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700',
-    dot: 'bg-slate-400',
-    label: 'Low',
-  },
+const PRIORITY_BADGE_CLASSES = {
+  high: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
+  medium: 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
+  low: 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/60 dark:text-slate-300 dark:border-slate-700',
 };
 
 const formatDateLabel = (dateStr) => {
@@ -71,22 +59,26 @@ export default function ActivitiesPage() {
 
   const {
     events,
+    standaloneActivities = [],
     loading,
+    loadedFor,
+    error,
     loadEvents,
     toggleActivityCompletion,
     saveActivity,
     deleteActivity,
-    createAttachment,
   } = useEventStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all'); // 'today' | 'upcoming' | 'high-priority' | 'completed' | 'all'
-  const [sortOption, setSortOption] = useState('date'); // 'date' | 'priority' | 'recently-updated'
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'today' | 'upcoming' | 'high-priority' | 'standalone' | 'completed'
+  const [sortOption, setSortOption] = useState('date'); // 'date' | 'priority' | 'title' | 'recently-updated'
+  const [sortDirection, setSortDirection] = useState('asc');
 
   // Modal states
-  const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | 'view' | 'delete'
+  const [modalMode, setModalMode] = useState(null); // 'create' | 'edit' | 'view'
   const [selectedActivity, setSelectedActivity] = useState(null);
-  const [selectedEventId, setSelectedEventId] = useState('');
+  const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
+  const [selectedEventId, setSelectedEventId] = useState(''); // '' means Standalone Activity!
 
   // Form draft
   const [draftTitle, setDraftTitle] = useState('');
@@ -105,7 +97,7 @@ export default function ActivitiesPage() {
     }
   }, [user?.uid, events.length, isGuest, loadEvents]);
 
-  // Aggregate all activities across all events
+  // Aggregate all activities: those tied to events + standalone activities
   const allActivities = useMemo(() => {
     const list = [];
     for (const event of events) {
@@ -119,13 +111,25 @@ export default function ActivitiesPage() {
         });
       }
     }
+    for (const act of standaloneActivities) {
+      list.push({
+        ...act,
+        eventId: null,
+        eventName: 'Standalone Activity',
+        eventCategory: 'Standalone',
+      });
+    }
     return list;
-  }, [events]);
+  }, [events, standaloneActivities]);
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  const toggleSortDirection = () => {
+    setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+  };
 
   // Filtered and Sorted
   const filteredActivities = useMemo(() => {
-    const todayIso = new Date().toISOString().slice(0, 10);
-
     return allActivities
       .filter((activity) => {
         // Search query
@@ -147,33 +151,37 @@ export default function ActivitiesPage() {
         if (activeFilter === 'high-priority') {
           return activity.priority === 'high' && !activity.completed;
         }
+        if (activeFilter === 'standalone') {
+          return !activity.eventId && !activity.completed;
+        }
         if (activeFilter === 'completed') {
           return Boolean(activity.completed);
         }
         return true;
       })
       .sort((a, b) => {
+        let comp = 0;
         if (sortOption === 'date') {
           const dateA = a.date || '9999-99-99';
           const dateB = b.date || '9999-99-99';
-          if (dateA !== dateB) return dateA.localeCompare(dateB);
-          return (a.time || '').localeCompare(b.time || '');
-        }
-        if (sortOption === 'priority') {
+          if (dateA !== dateB) comp = dateA.localeCompare(dateB);
+          else comp = (a.time || '').localeCompare(b.time || '');
+        } else if (sortOption === 'priority') {
           const weights = { high: 3, medium: 2, low: 1 };
           const pA = weights[a.priority] || 2;
           const pB = weights[b.priority] || 2;
-          if (pB !== pA) return pB - pA;
-          return (a.date || '').localeCompare(b.date || '');
-        }
-        if (sortOption === 'recently-updated') {
+          if (pB !== pA) comp = pB - pA;
+          else comp = (a.date || '').localeCompare(b.date || '');
+        } else if (sortOption === 'title') {
+          comp = (a.title || '').localeCompare(b.title || '');
+        } else if (sortOption === 'recently-updated') {
           const tA = new Date(a.updatedAt || a.createdAt || 0).getTime();
           const tB = new Date(b.updatedAt || b.createdAt || 0).getTime();
-          return tB - tA;
+          comp = tB - tA;
         }
-        return 0;
+        return sortDirection === 'desc' ? -comp : comp;
       });
-  }, [allActivities, searchQuery, activeFilter, sortOption]);
+  }, [allActivities, searchQuery, activeFilter, sortOption, sortDirection, todayIso]);
 
   // Handlers
   const handleToggleComplete = async (activity, e) => {
@@ -191,7 +199,7 @@ export default function ActivitiesPage() {
 
   const openCreateModal = () => {
     setSelectedActivity(null);
-    setSelectedEventId(events[0]?.id || events[0]?.firestoreId || '');
+    setSelectedEventId(''); // Standalone by default, or user selects moment
     setDraftTitle('');
     setDraftDate(new Date().toISOString().slice(0, 10));
     setDraftTime('');
@@ -205,7 +213,7 @@ export default function ActivitiesPage() {
   const openEditModal = (activity, e) => {
     e?.stopPropagation();
     setSelectedActivity(activity);
-    setSelectedEventId(activity.eventId);
+    setSelectedEventId(activity.eventId || '');
     setDraftTitle(activity.title || '');
     setDraftDate(activity.date || new Date().toISOString().slice(0, 10));
     setDraftTime(activity.time || '');
@@ -223,8 +231,7 @@ export default function ActivitiesPage() {
 
   const openDeleteModal = (activity, e) => {
     e?.stopPropagation();
-    setSelectedActivity(activity);
-    setModalMode('delete');
+    setPendingDeleteActivity(activity);
   };
 
   const handlePhotoSelect = (event) => {
@@ -262,10 +269,6 @@ export default function ActivitiesPage() {
 
   const handleSaveActivityForm = async (e) => {
     e.preventDefault();
-    if (!selectedEventId) {
-      setFormError('Please select a Life Moment for this activity.');
-      return;
-    }
     if (!draftTitle.trim()) {
       setFormError('Please provide an activity title.');
       return;
@@ -284,7 +287,8 @@ export default function ActivitiesPage() {
         attachments: draftAttachments,
       };
 
-      await saveActivity(user?.uid, isGuest, selectedEventId, activityPayload);
+      // If selectedEventId is empty, it saves as a standalone activity!
+      await saveActivity(user?.uid, isGuest, selectedEventId || null, activityPayload);
       setModalMode(null);
       showToast(
         modalMode === 'create' ? 'Activity created successfully' : 'Activity updated',
@@ -296,10 +300,13 @@ export default function ActivitiesPage() {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!selectedActivity) return;
+    if (!pendingDeleteActivity) return;
     try {
-      await deleteActivity(user?.uid, isGuest, selectedActivity.eventId, selectedActivity.id);
-      setModalMode(null);
+      await deleteActivity(user?.uid, isGuest, pendingDeleteActivity.eventId, pendingDeleteActivity.id);
+      setPendingDeleteActivity(null);
+      if (modalMode === 'view' && selectedActivity?.id === pendingDeleteActivity.id) {
+        setModalMode(null);
+      }
       showToast('Activity deleted', 'success');
     } catch {
       showToast('Could not delete activity', 'danger');
@@ -307,159 +314,171 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <div className="activities-page max-w-5xl mx-auto px-4 py-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+    <div className="feature-page activities-page">
+      {/* Header matching LifeHub modules */}
+      <header className="financial-module-heading">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            Activities
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h3>Activities</h3>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
             Manage your daily tasks, plans, and moments across LifeHub.
           </p>
         </div>
         <button
           type="button"
           onClick={openCreateModal}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white text-sm font-semibold shadow-sm shadow-emerald-700/20 transition-all cursor-pointer"
+          className="primaryButton flex items-center gap-1.5"
         >
-          <Plus size={18} strokeWidth={2.5} />
+          <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
           <span>New Activity</span>
         </button>
+      </header>
+
+      {/* Search and Filters Toolbar matching other pages */}
+      <div className="financial-module-toolbar flex-wrap gap-2.5">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search activities, notes, or moments…"
+            aria-label="Search activities"
+            className="w-full pl-9"
+          />
+        </div>
+
+        <DropdownSelect
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value)}
+          aria-label="Filter activities"
+        >
+          <option value="all">All activities ({allActivities.length})</option>
+          <option value="today">Today's activities</option>
+          <option value="upcoming">Upcoming activities</option>
+          <option value="high-priority">High priority</option>
+          <option value="standalone">Standalone activities</option>
+          <option value="completed">Completed activities</option>
+        </DropdownSelect>
+
+        <SortControl
+          field={sortOption}
+          direction={sortDirection}
+          onFieldChange={setSortOption}
+          onToggleDirection={toggleSortDirection}
+          options={[
+            { value: 'date', label: 'Due date' },
+            { value: 'priority', label: 'Priority' },
+            { value: 'title', label: 'Title' },
+            { value: 'recently-updated', label: 'Recently updated' },
+          ]}
+          label="Sort activities"
+        />
       </div>
 
-      {/* Search and Filters Bar */}
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-3 shadow-xs mb-6 space-y-3">
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
-          <div className="relative flex-1">
-            <Search
-              size={18}
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-            />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search activities, notes, or moments…"
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder:text-slate-400"
-            />
-          </div>
-
-          <div className="flex items-center gap-2">
-            <SlidersHorizontal size={16} className="text-slate-400 shrink-0" />
-            <select
-              value={sortOption}
-              onChange={(e) => setSortOption(e.target.value)}
-              className="px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+      {/* Filter Rail with Quick Access Tabs */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 mb-4 no-scrollbar">
+        {[
+          { id: 'all', label: 'All', count: allActivities.length },
+          {
+            id: 'today',
+            label: 'Today',
+            count: allActivities.filter((a) => a.date === todayIso && !a.completed).length,
+          },
+          {
+            id: 'upcoming',
+            label: 'Upcoming',
+            count: allActivities.filter((a) => a.date >= todayIso && !a.completed).length,
+          },
+          {
+            id: 'high-priority',
+            label: 'High Priority',
+            count: allActivities.filter((a) => a.priority === 'high' && !a.completed).length,
+          },
+          {
+            id: 'standalone',
+            label: 'Standalone',
+            count: allActivities.filter((a) => !a.eventId && !a.completed).length,
+          },
+          {
+            id: 'completed',
+            label: 'Completed',
+            count: allActivities.filter((a) => a.completed).length,
+          },
+        ].map((tab) => {
+          const isActive = activeFilter === tab.id;
+          return (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveFilter(tab.id)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${
+                isActive
+                  ? 'bg-emerald-600 text-white shadow-xs'
+                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+              }`}
             >
-              <option value="date">Sort by Date</option>
-              <option value="priority">Sort by Priority</option>
-              <option value="recently-updated">Recently Updated</option>
-            </select>
-          </div>
-        </div>
-
-        {/* Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 no-scrollbar">
-          {[
-            { id: 'all', label: 'All Activities', count: allActivities.length },
-            {
-              id: 'today',
-              label: 'Today',
-              count: allActivities.filter(
-                (a) => a.date === new Date().toISOString().slice(0, 10) && !a.completed
-              ).length,
-            },
-            {
-              id: 'upcoming',
-              label: 'Upcoming',
-              count: allActivities.filter(
-                (a) => a.date >= new Date().toISOString().slice(0, 10) && !a.completed
-              ).length,
-            },
-            {
-              id: 'high-priority',
-              label: 'High Priority',
-              count: allActivities.filter((a) => a.priority === 'high' && !a.completed).length,
-            },
-            {
-              id: 'completed',
-              label: 'Completed',
-              count: allActivities.filter((a) => a.completed).length,
-            },
-          ].map((tab) => {
-            const isActive = activeFilter === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveFilter(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${
+              <span>{tab.label}</span>
+              <span
+                className={`text-[10px] px-1.5 py-0.2 rounded-full ${
                   isActive
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
+                    ? 'bg-emerald-700 text-emerald-100'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
                 }`}
               >
-                <span>{tab.label}</span>
-                <span
-                  className={`text-[10px] px-1.5 py-0.5 rounded-full ${
-                    isActive
-                      ? 'bg-emerald-700 text-emerald-100'
-                      : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
-                  }`}
-                >
-                  {tab.count}
-                </span>
-              </button>
-            );
-          })}
-        </div>
+                {tab.count}
+              </span>
+            </button>
+          );
+        })}
       </div>
 
       {/* Activity List */}
-      {filteredActivities.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-12 text-center">
-          <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center mx-auto mb-3 text-slate-400">
-            <CheckCircle2 size={24} />
-          </div>
-          <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">
-            No activities found
-          </h3>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
-            {searchQuery
-              ? `No activities match "${searchQuery}". Try a different search term.`
+      {loading && !allActivities.length ? (
+        <LoadingSkeleton rows={4} variant="financial" label="Loading activities" />
+      ) : filteredActivities.length === 0 ? (
+        <StatePanel
+          variant="empty"
+          icon={ListChecks}
+          title={
+            searchQuery
+              ? `No activities match "${searchQuery}"`
               : activeFilter === 'today'
-              ? 'You have no activities scheduled for today. Create one to stay organized!'
+              ? 'No activities scheduled for today'
               : activeFilter === 'high-priority'
-              ? 'No high-priority activities pending. Great job staying on track!'
+              ? 'No high-priority activities pending'
+              : activeFilter === 'standalone'
+              ? 'No standalone activities'
               : activeFilter === 'completed'
-              ? 'No completed activities yet.'
-              : 'Add your first activity to track your plans and life moments.'}
-          </p>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs cursor-pointer"
-          >
-            <Plus size={16} /> Create Activity
-          </button>
-        </div>
+              ? 'No completed activities yet'
+              : 'No activities found'
+          }
+          description="Keep your plans organized by creating a standalone or moment-linked activity."
+          actionLabel="Create Activity"
+          onAction={openCreateModal}
+        />
       ) : (
         <div className="space-y-2.5">
           {filteredActivities.map((activity) => {
             const isCompleted = Boolean(activity.completed);
-            const priorityInfo = PRIORITY_COLORS[activity.priority] || PRIORITY_COLORS.medium;
-            const hasAttachments = activity.attachments && activity.attachments.length > 0;
+            const isOverdue = !isCompleted && activity.date && activity.date < todayIso;
+            const priorityBadge = PRIORITY_BADGE_CLASSES[activity.priority] || PRIORITY_BADGE_CLASSES.medium;
+            const isStandalone = !activity.eventId;
 
             return (
               <div
                 key={activity.id}
                 onClick={() => openViewModal(activity)}
-                className={`group flex items-start sm:items-center justify-between gap-3 p-3.5 bg-white dark:bg-slate-900 border border-slate-200/90 dark:border-slate-800 rounded-2xl hover:border-emerald-300 dark:hover:border-emerald-700 hover:shadow-xs transition-all cursor-pointer ${
-                  isCompleted ? 'opacity-70 bg-slate-50/50 dark:bg-slate-900/50' : ''
+                className={`group flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                  isCompleted
+                    ? 'opacity-70 bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800'
+                    : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-xs'
                 }`}
               >
-                {/* Left: Checkbox + Title + Metadata */}
+                {/* Checkbox + Title + Meta */}
                 <div className="flex items-start sm:items-center gap-3.5 min-w-0 flex-1">
                   <button
                     type="button"
@@ -488,24 +507,40 @@ export default function ActivitiesPage() {
 
                       {/* Priority Tag */}
                       <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[10px] font-semibold border ${priorityInfo.badge}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold border ${priorityBadge}`}
                       >
-                        <span className={`w-1.5 h-1.5 rounded-full ${priorityInfo.dot}`} />
-                        {priorityInfo.label}
+                        {getActivityPriorityLabel(activity.priority)}
                       </span>
 
+                      {/* Moment or Standalone Tag */}
+                      {isStandalone ? (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 dark:bg-indigo-950/40 dark:text-indigo-300 dark:border-indigo-800">
+                          <Layers size={10} />
+                          Standalone
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center gap-1 text-[10px] text-slate-500 dark:text-slate-400 truncate max-w-[150px]">
+                          in <span className="font-medium text-slate-700 dark:text-slate-300">{activity.eventName}</span>
+                        </span>
+                      )}
+
                       {/* Photo indicator */}
-                      {hasAttachments && (
+                      {activity.attachments && activity.attachments.length > 0 && (
                         <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 dark:text-slate-400">
-                          <ImageIcon size={13} className="text-emerald-600" />
+                          <ImageIcon size={12} className="text-emerald-600" />
                           <span>{activity.attachments.length}</span>
                         </span>
                       )}
                     </div>
 
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-1 text-xs text-slate-500 dark:text-slate-400">
-                      <span className="flex items-center gap-1 font-medium">
+                      <span
+                        className={`flex items-center gap-1 font-medium ${
+                          isOverdue ? 'text-rose-600 dark:text-rose-400 font-semibold' : ''
+                        }`}
+                      >
                         <Calendar size={13} className="text-slate-400" />
+                        {isOverdue ? 'Overdue · ' : ''}
                         {formatDateLabel(activity.date)}
                       </span>
                       {activity.time && (
@@ -514,14 +549,11 @@ export default function ActivitiesPage() {
                           {activity.time}
                         </span>
                       )}
-                      <span className="text-slate-400 truncate max-w-[160px]">
-                        in <span className="font-medium text-slate-600 dark:text-slate-300">{activity.eventName}</span>
-                      </span>
                     </div>
                   </div>
                 </div>
 
-                {/* Right: Actions */}
+                {/* Actions */}
                 <div className="flex items-center gap-1 shrink-0">
                   <button
                     type="button"
@@ -546,116 +578,119 @@ export default function ActivitiesPage() {
         </div>
       )}
 
-      {/* Create / Edit Modal */}
+      {/* Create / Edit Modal using LifeHub form-surface and standard fields */}
       {(modalMode === 'create' || modalMode === 'edit') && (
         <ModalDialog
           title={modalMode === 'create' ? 'Create Activity' : 'Edit Activity'}
           onClose={() => setModalMode(null)}
         >
-          {formError && (
-            <p className="mb-3 text-xs text-rose-600 bg-rose-50 dark:bg-rose-950/30 p-2 rounded-lg" role="alert">
-              {formError}
-            </p>
-          )}
+          <form onSubmit={handleSaveActivityForm} className="form-surface space-y-3.5" noValidate>
+            {formError && (
+              <p className="quick-create-error" role="alert">
+                {formError}
+              </p>
+            )}
 
-          <form onSubmit={handleSaveActivityForm} className="space-y-3.5">
+            {/* Moment Selection (Optional / Standalone allowed) */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Moment
+              <label htmlFor="activity-moment-select">
+                Life Moment <span className="event-form-optional">Optional</span>
               </label>
-              <select
+              <DropdownSelect
+                id="activity-moment-select"
                 value={selectedEventId}
                 onChange={(e) => setSelectedEventId(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
+                <option value="">None (Standalone Activity)</option>
                 {events.map((ev) => (
                   <option key={ev.id || ev.firestoreId} value={ev.id || ev.firestoreId}>
                     {ev.name || 'Untitled Moment'}
                   </option>
                 ))}
-              </select>
+              </DropdownSelect>
             </div>
 
+            {/* Title */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Activity Title
-              </label>
+              <label htmlFor="activity-title-input">Activity title</label>
               <input
+                id="activity-title-input"
                 type="text"
                 value={draftTitle}
                 onChange={(e) => setDraftTitle(e.target.value)}
                 placeholder="e.g. Confirm dinner reservation"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                required
                 autoFocus
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Date
-                </label>
-                <input
-                  type="date"
+            {/* Date & Time */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="form-field-wrap">
+                <DateField
+                  label="Date"
+                  id="activity-date-input"
+                  name="activity-date"
                   value={draftDate}
                   onChange={(e) => setDraftDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                  Scheduled Time <span className="font-normal text-slate-400">(optional)</span>
+                <label htmlFor="activity-time-input">
+                  Scheduled time <span className="event-form-optional">Optional</span>
                 </label>
                 <input
+                  id="activity-time-input"
                   type="time"
                   value={draftTime}
                   onChange={(e) => setDraftTime(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
             </div>
 
+            {/* Priority */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Priority
-              </label>
-              <select
+              <label htmlFor="activity-priority-select">Priority</label>
+              <DropdownSelect
+                id="activity-priority-select"
                 value={draftPriority}
                 onChange={(e) => setDraftPriority(e.target.value)}
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
-                <option value="low">Low Priority</option>
-                <option value="medium">Medium Priority</option>
-                <option value="high">High Priority</option>
-              </select>
+                {ACTIVITY_PRIORITY_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </DropdownSelect>
             </div>
 
+            {/* Description */}
             <div>
-              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Notes & Context <span className="font-normal text-slate-400">(optional)</span>
+              <label htmlFor="activity-desc-input">
+                Notes &amp; Context <span className="event-form-optional">Optional</span>
               </label>
               <textarea
+                id="activity-desc-input"
                 value={draftDescription}
                 onChange={(e) => setDraftDescription(e.target.value)}
                 rows={3}
                 placeholder="Add helpful details, locations, contact info…"
-                className="w-full px-3 py-2 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
 
-            {/* Photo Attachments from Gallery */}
+            {/* Photos & Attachments */}
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300">
-                  Photos & Attachments
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                  Photos &amp; Attachments
                 </label>
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   className="inline-flex items-center gap-1 text-xs font-medium text-emerald-600 hover:text-emerald-700 cursor-pointer"
                 >
-                  <Camera size={14} /> Add photo from gallery
+                  <Camera size={14} /> Add photo
                 </button>
               </div>
 
@@ -672,7 +707,7 @@ export default function ActivitiesPage() {
                   {draftAttachments.map((att) => (
                     <div
                       key={att.id}
-                      className="relative group rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video"
+                      className="relative rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden bg-slate-100 dark:bg-slate-800 aspect-video"
                     >
                       {att.previewReference ? (
                         <img
@@ -701,18 +736,16 @@ export default function ActivitiesPage() {
               )}
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+            {/* Dialog Actions */}
+            <div className="dialog-actions pt-2 flex items-center justify-end gap-2">
               <button
                 type="button"
                 onClick={() => setModalMode(null)}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                className="secondaryButton"
               >
                 Cancel
               </button>
-              <button
-                type="submit"
-                className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold shadow-xs"
-              >
+              <button type="submit" className="primaryButton">
                 {modalMode === 'create' ? 'Save Activity' : 'Update Activity'}
               </button>
             </div>
@@ -722,10 +755,7 @@ export default function ActivitiesPage() {
 
       {/* View Detail Modal */}
       {modalMode === 'view' && selectedActivity && (
-        <ModalDialog
-          title="Activity Details"
-          onClose={() => setModalMode(null)}
-        >
+        <ModalDialog title="Activity Details" onClose={() => setModalMode(null)}>
           <div className="space-y-4">
             <div className="flex items-start justify-between gap-3">
               <div>
@@ -733,29 +763,45 @@ export default function ActivitiesPage() {
                   {selectedActivity.title}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  In Moment: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedActivity.eventName}</span>
+                  {selectedActivity.eventId ? (
+                    <>
+                      Moment:{' '}
+                      <span className="font-semibold text-slate-700 dark:text-slate-300">
+                        {selectedActivity.eventName}
+                      </span>
+                    </>
+                  ) : (
+                    <span className="inline-flex items-center gap-1 font-semibold text-indigo-600 dark:text-indigo-400">
+                      <Layers size={12} /> Standalone Activity
+                    </span>
+                  )}
                 </p>
               </div>
 
               <span
-                className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold border ${
-                  PRIORITY_COLORS[selectedActivity.priority]?.badge || PRIORITY_COLORS.medium.badge
+                className={`inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-semibold border ${
+                  PRIORITY_BADGE_CLASSES[selectedActivity.priority] || PRIORITY_BADGE_CLASSES.medium
                 }`}
               >
-                {PRIORITY_COLORS[selectedActivity.priority]?.label || 'Medium'} Priority
+                {getActivityPriorityLabel(selectedActivity.priority)} Priority
               </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3 p-3 bg-slate-50 dark:bg-slate-800/60 rounded-xl text-xs">
               <div>
-                <span className="text-slate-400 block mb-0.5">Date & Time</span>
+                <span className="text-slate-400 block mb-0.5">Date &amp; Time</span>
                 <span className="font-medium text-slate-800 dark:text-slate-200">
-                  {formatDateLabel(selectedActivity.date)} {selectedActivity.time ? `· ${selectedActivity.time}` : ''}
+                  {formatDateLabel(selectedActivity.date)}{' '}
+                  {selectedActivity.time ? `· ${selectedActivity.time}` : ''}
                 </span>
               </div>
               <div>
                 <span className="text-slate-400 block mb-0.5">Status</span>
-                <span className={`font-semibold ${selectedActivity.completed ? 'text-emerald-600' : 'text-amber-600'}`}>
+                <span
+                  className={`font-semibold ${
+                    selectedActivity.completed ? 'text-emerald-600' : 'text-amber-600'
+                  }`}
+                >
                   {selectedActivity.completed ? 'Completed' : 'Pending'}
                 </span>
               </div>
@@ -801,32 +847,30 @@ export default function ActivitiesPage() {
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
+            <div className="dialog-actions pt-3 flex items-center justify-between border-t border-slate-100 dark:border-slate-800">
               <button
                 type="button"
                 onClick={(e) => handleToggleComplete(selectedActivity, e)}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer ${
-                  selectedActivity.completed
-                    ? 'bg-amber-100 text-amber-800 hover:bg-amber-200'
-                    : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                className={`primaryButton flex items-center gap-1.5 ${
+                  selectedActivity.completed ? 'bg-amber-600 hover:bg-amber-700' : ''
                 }`}
               >
                 <Check size={14} />
-                {selectedActivity.completed ? 'Reopen Activity' : 'Mark Complete'}
+                <span>{selectedActivity.completed ? 'Reopen Activity' : 'Mark Complete'}</span>
               </button>
 
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={() => openEditModal(selectedActivity)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-medium bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300"
+                  className="secondaryButton"
                 >
                   Edit
                 </button>
                 <button
                   type="button"
-                  onClick={() => openDeleteModal(selectedActivity)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
+                  onClick={(e) => openDeleteModal(selectedActivity, e)}
+                  className="secondaryButton text-rose-600 hover:text-rose-700"
                 >
                   Delete
                 </button>
@@ -836,35 +880,15 @@ export default function ActivitiesPage() {
         </ModalDialog>
       )}
 
-      {/* Delete Confirmation Modal */}
-      {modalMode === 'delete' && selectedActivity && (
-        <ModalDialog
-          title="Delete Activity"
-          onClose={() => setModalMode(null)}
-        >
-          <div className="space-y-4">
-            <p className="text-sm text-slate-600 dark:text-slate-300">
-              Are you sure you want to delete &ldquo;<strong>{selectedActivity.title}</strong>&rdquo;? This cannot be undone.
-            </p>
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setModalMode(null)}
-                className="px-4 py-2 rounded-xl text-sm font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-300"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={handleDeleteConfirm}
-                className="px-5 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold shadow-xs"
-              >
-                Delete
-              </button>
-            </div>
-          </div>
-        </ModalDialog>
-      )}
+      {/* Delete Confirmation Dialog using standard ConfirmDialog */}
+      {pendingDeleteActivity ? (
+        <ConfirmDialog
+          title="Delete activity?"
+          message={`Delete “${pendingDeleteActivity.title || 'Untitled activity'}”? This cannot be undone.`}
+          onCancel={() => setPendingDeleteActivity(null)}
+          onConfirm={handleDeleteConfirm}
+        />
+      ) : null}
 
       {/* Full Image Preview Modal */}
       {previewImage && (

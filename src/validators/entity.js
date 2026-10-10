@@ -13,8 +13,11 @@ export const validateMomentRecord = (record = {}) => {
 
 export const validateActivityRecord = (record = {}) => {
   const errors = [];
-  if (!hasRequiredFields(record, ['id', 'momentId', 'title', 'date', 'createdAt', 'updatedAt'])) {
+  if (!hasRequiredFields(record, ['id', 'title', 'date', 'createdAt', 'updatedAt'])) {
     errors.push('Activity record is missing required fields.');
+  }
+  if (record.momentId && typeof record.momentId !== 'string') {
+    errors.push('Activity momentId must be a string or null.');
   }
   if (!isNonEmptyString(record.title)) errors.push('Activity title must be a non-empty string.');
   if (!isIsoDate(record.date)) errors.push('Activity date must be an ISO date string.');

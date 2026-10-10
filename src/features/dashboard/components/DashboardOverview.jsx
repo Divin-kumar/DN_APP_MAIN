@@ -464,44 +464,58 @@ export default function DashboardOverview() {
   }, [events.length, isGuest, loadEvents, user]);
 
   const todayIso = new Date().toISOString().slice(0, 10);
+  const standaloneActivities = useEventStore((state) => state.standaloneActivities || []);
 
-  // All activities projected from all events
+  // All activities projected from all events plus standalone activities
   const allActivities = useMemo(() => {
-    return events.flatMap((event) =>
-      (event.activities || []).map((activity) => ({
+    const list = [];
+    for (const event of events) {
+      for (const activity of event.activities || []) {
+        list.push({
+          ...activity,
+          eventId: event.id || event.firestoreId,
+          eventName: event.name || 'Untitled Moment',
+        });
+      }
+    }
+    for (const activity of standaloneActivities) {
+      list.push({
         ...activity,
-        eventId: event.id || event.firestoreId,
-        eventName: event.name || 'Untitled Moment',
-      }))
-    );
-  }, [events]);
+        eventId: null,
+        eventName: 'Standalone Activity',
+      });
+    }
+    return list;
+  }, [events, standaloneActivities]);
 
-  // A. Today's Activities
-  const todayActivities = useMemo(() => {
-    return allActivities.filter((activity) => activity.date === todayIso);
-  }, [allActivities, todayIso]);
-
-  // For deduplication: IDs of activities shown in Today's section
-  const todayActivityIds = useMemo(() => {
-    return new Set(todayActivities.map((a) => a.id));
-  }, [todayActivities]);
-
-  // B. High-Priority Activities: incomplete, including overdue, excluding today's activities to prevent duplicates
-  const highPriorityActivities = useMemo(() => {
+  // Merged: Today's activities (work as usual: show pending & completed for today)
+  // + High priority activities: if incomplete, they show here; if marked completed, they disappear UNLESS they are today's activities!
+  const mergedActivities = useMemo(() => {
     return allActivities
-      .filter(
-        (activity) =>
-          activity.priority === 'high' &&
-          !activity.completed &&
-          !activity.cancelled &&
-          !todayActivityIds.has(activity.id)
-      )
+      .filter((activity) => {
+        if (activity.cancelled || activity.status === 'cancelled') return false;
+        const isToday = activity.date === todayIso;
+        if (isToday) {
+          // Today's activities will work as usual (includes completed & incomplete)
+          return true;
+        }
+        // For non-today activities: ONLY include if high priority AND NOT completed
+        return activity.priority === 'high' && !activity.completed;
+      })
       .sort((a, b) => {
+        // Show incomplete activities before completed
+        if (Boolean(a.completed) !== Boolean(b.completed)) {
+          return a.completed ? 1 : -1;
+        }
+        // High priority first, then by date
+        const isHighA = a.priority === 'high';
+        const isHighB = b.priority === 'high';
+        if (isHighA !== isHighB) return isHighB ? 1 : -1;
         const dateA = a.date || '9999-99-99';
         const dateB = b.date || '9999-99-99';
         return dateA.localeCompare(dateB);
       });
-  }, [allActivities, todayActivityIds]);
+  }, [allActivities, todayIso]);
 
   const handleToggleActivity = async (activity, e) => {
     e?.stopPropagation();
@@ -592,15 +606,15 @@ export default function DashboardOverview() {
           ) : null}
         </section>
 
-        {/* Section A: Today's Activities */}
-        <section className="dashboard-upcoming-card" aria-label="Today’s activities">
+        {/* Merged Section: Today & High-Priority Activities */}
+        <section className="dashboard-upcoming-card" aria-label="Today and High-Priority activities">
           <header style={styles.upcomingHeader}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ListChecks size={18} className="text-emerald-600" />
-              <span>Today’s Activities</span>
-              {todayActivities.length > 0 && (
+              <span>Today &amp; High-Priority Activities</span>
+              {mergedActivities.length > 0 && (
                 <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">
-                  {todayActivities.filter((a) => a.completed).length}/{todayActivities.length}
+                  {mergedActivities.filter((a) => !a.completed).length} pending
                 </span>
               )}
             </span>
@@ -612,17 +626,22 @@ export default function DashboardOverview() {
               All activities <span aria-hidden="true">→</span>
             </button>
           </header>
-          {todayActivities.length ? (
+          {mergedActivities.length ? (
             <div className="space-y-2">
-              {todayActivities.map((activity) => {
+              {mergedActivities.map((activity) => {
                 const isCompleted = Boolean(activity.completed);
+                const isToday = activity.date === todayIso;
+                const isOverdue = !isCompleted && activity.date && activity.date < todayIso;
+
                 return (
                   <div
                     key={activity.id}
                     className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${
                       isCompleted
                         ? 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'
-                        : 'bg-white dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700 shadow-xs'
+                        : activity.priority === 'high'
+                        ? 'bg-white dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-rose-300 dark:hover:border-rose-700'
+                        : 'bg-white dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700'
                     }`}
                   >
                     <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -633,92 +652,9 @@ export default function DashboardOverview() {
                         className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
                           isCompleted
                             ? 'bg-emerald-600 text-white shadow-xs'
-                            : 'border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 text-transparent'
+                            : 'border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 text-transparent hover:text-emerald-600'
                         }`}
-                      >
-                        <Check size={14} strokeWidth={3} />
-                      </button>
-                      <div className="min-w-0 flex-1">
-                        <span
-                          className={`text-sm font-semibold block truncate ${
-                            isCompleted
-                              ? 'line-through text-slate-400 dark:text-slate-500'
-                              : 'text-slate-900 dark:text-slate-100'
-                          }`}
-                        >
-                          {activity.title}
-                        </span>
-                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                          {activity.time && (
-                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
-                              <Clock size={11} /> {activity.time}
-                            </span>
-                          )}
-                          <span className="truncate max-w-[150px] text-slate-400">
-                            in {activity.eventName}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <span
-                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${
-                        activity.priority === 'high'
-                          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
-                          : activity.priority === 'low'
-                          ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
-                          : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
-                      }`}
-                    >
-                      {activity.priority === 'high' ? 'High' : activity.priority === 'low' ? 'Low' : 'Medium'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <p className="dashboard-upcoming-empty">
-              No activities scheduled for today. Enjoy your day or add a plan in Activities!
-            </p>
-          )}
-        </section>
-
-        {/* Section B: High-Priority Activities */}
-        <section className="dashboard-upcoming-card" aria-label="High-priority activities">
-          <header style={styles.upcomingHeader}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Flame size={18} className="text-rose-600" />
-              <span>High-Priority Activities</span>
-              {highPriorityActivities.length > 0 && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-semibold">
-                  {highPriorityActivities.length} pending
-                </span>
-              )}
-            </span>
-            <button
-              type="button"
-              className="dashboard-upcoming-all-button"
-              onClick={() => navigate('/activities')}
-            >
-              All activities <span aria-hidden="true">→</span>
-            </button>
-          </header>
-          {highPriorityActivities.length ? (
-            <div className="space-y-2">
-              {highPriorityActivities.map((activity) => {
-                const isOverdue = activity.date && activity.date < todayIso;
-                return (
-                  <div
-                    key={activity.id}
-                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-rose-300 dark:hover:border-rose-700 transition-all"
-                  >
-                    <div className="flex items-center gap-3 min-w-0 flex-1">
-                      <button
-                        type="button"
-                        onClick={(e) => handleToggleActivity(activity, e)}
-                        aria-label="Mark complete"
-                        className="w-6 h-6 rounded-lg border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 flex items-center justify-center transition-all shrink-0 cursor-pointer text-transparent hover:text-emerald-600"
-                        title="Mark complete"
+                        title={isCompleted ? 'Mark incomplete' : 'Mark complete'}
                       >
                         <Check size={14} strokeWidth={3} />
                       </button>
@@ -726,26 +662,47 @@ export default function DashboardOverview() {
                         className="min-w-0 flex-1 cursor-pointer"
                         onClick={() => navigate('/activities')}
                       >
-                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 block truncate hover:text-emerald-600 transition-colors">
+                        <span
+                          className={`text-sm font-semibold block truncate ${
+                            isCompleted
+                              ? 'line-through text-slate-400 dark:text-slate-500'
+                              : 'text-slate-900 dark:text-slate-100 hover:text-emerald-600'
+                          }`}
+                        >
                           {activity.title}
                         </span>
                         <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
-                          <span
-                            className={`font-medium ${
-                              isOverdue ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'
-                            }`}
-                          >
-                            {isOverdue ? 'Overdue · ' : 'Due '}{activity.date ? formatDisplayDate(new Date(activity.date)) : 'Soon'}
+                          {isToday ? (
+                            <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                              Today {activity.time ? `· ${activity.time}` : ''}
+                            </span>
+                          ) : isOverdue ? (
+                            <span className="font-semibold text-rose-600 dark:text-rose-400">
+                              Overdue · {formatDisplayDate(new Date(activity.date))}
+                            </span>
+                          ) : (
+                            <span className="text-slate-500 dark:text-slate-400">
+                              Due {activity.date ? formatDisplayDate(new Date(activity.date)) : 'Soon'} {activity.time ? `· ${activity.time}` : ''}
+                            </span>
+                          )}
+                          <span className="truncate max-w-[150px]">
+                            {activity.eventId ? `in ${activity.eventName}` : 'Standalone Activity'}
                           </span>
-                          {activity.time && <span>· {activity.time}</span>}
-                          <span className="truncate max-w-[130px]">in {activity.eventName}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
-                        High
+                      <span
+                        className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
+                          activity.priority === 'high'
+                            ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
+                            : activity.priority === 'low'
+                            ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                            : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+                        }`}
+                      >
+                        {activity.priority === 'high' ? 'High' : activity.priority === 'low' ? 'Low' : 'Medium'}
                       </span>
                       <button
                         type="button"
@@ -762,7 +719,7 @@ export default function DashboardOverview() {
             </div>
           ) : (
             <p className="dashboard-upcoming-empty">
-              No outstanding high-priority activities. All urgent items are completed!
+              No pending high-priority or today's activities. Enjoy your day or add a plan in Activities!
             </p>
           )}
         </section>

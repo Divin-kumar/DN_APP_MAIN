@@ -180,7 +180,7 @@ export default function App() {
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
             <Route path="profile" element={loadScreen(<Profile />, 'profile')} />
             <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
-            <Route path="settings/sync" element={loadScreen(<CloudSyncSettings />, 'cloud sync')} />
+            <Route path="settings/sync" element={<Navigate to="/settings/data-backup?section=sync" replace />} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />
           </Route>
