@@ -13,6 +13,10 @@ export const settingsRepository = {
     return settingsTable().where('userId').equals(userId).toArray();
   },
 
+  async getSettings(userId = null) {
+    return this.getAll(userId);
+  },
+
   async getByKey(userId, key) {
     if (!userId || !key) return null;
     const rows = await settingsTable().where('[userId+key]').equals([userId, key]).toArray();

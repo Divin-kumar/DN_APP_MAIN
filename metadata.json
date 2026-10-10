@@ -1,0 +1,6 @@
+{
+  "name": "LifeHub",
+  "description": "Personal life and finance workspace to manage moments, follow-up actions, memories, and financial tracking in one place.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

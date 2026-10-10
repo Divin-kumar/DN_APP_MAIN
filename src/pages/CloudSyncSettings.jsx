@@ -277,9 +277,19 @@ export default function CloudSyncSettings() {
 
                 {/* Error */}
                 {syncConfig.googleDrive.syncError && !googleProgress && (
-                  <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-start gap-2">
-                    <AlertCircle size={15} className="shrink-0 mt-0.5" />
-                    <span>{syncConfig.googleDrive.syncError}</span>
+                  <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between gap-2">
+                    <div className="flex items-start gap-1.5">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                      <span>{syncConfig.googleDrive.syncError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSyncGoogle}
+                      disabled={googleSyncing}
+                      className="px-2 py-1 text-[11px] font-semibold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200 rounded-lg shrink-0 cursor-pointer"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
 
@@ -416,6 +426,24 @@ export default function CloudSyncSettings() {
                         style={{ width: `${iCloudProgress.percent || 20}%` }}
                       />
                     </div>
+                  </div>
+                )}
+
+                {/* Error */}
+                {syncConfig.iCloud.syncError && !iCloudProgress && (
+                  <div className="p-2.5 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 rounded-xl text-xs text-rose-700 dark:text-rose-300 flex items-center justify-between gap-2">
+                    <div className="flex items-start gap-1.5">
+                      <AlertCircle size={15} className="shrink-0 mt-0.5" />
+                      <span>{syncConfig.iCloud.syncError}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSyncICloud}
+                      disabled={iCloudSyncing}
+                      className="px-2 py-1 text-[11px] font-semibold bg-rose-100 hover:bg-rose-200 text-rose-800 dark:bg-rose-900/40 dark:text-rose-200 rounded-lg shrink-0 cursor-pointer"
+                    >
+                      Retry
+                    </button>
                   </div>
                 )}
 

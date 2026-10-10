@@ -8,7 +8,7 @@
  * - Independent connection, authorization, disconnection, reconnection
  * - Status, last successful sync timestamp, sync progress, errors
  * - Manual "Sync Now" and Automatic synchronization toggles
- * - Bidirectional data synchronization: activities, events, reminders, categories, settings
+ * - Bidirectional data synchronization: activities, events, reminders, categories, settings, attachments
  * - Deduplication with stable record IDs
  * - Timestamp-based last-write-wins conflict resolution
  * - Safe retry & offline queue
@@ -25,15 +25,16 @@ import {
   incomeRepository,
   codeListRepository,
   settingsRepository,
+  attachmentRepository,
 } from '../repositories/index.js';
 import { resolveRepositoryPrincipal } from '../store/repositoryRuntime.js';
-import { initializeApp, getApps, getApp } from 'firebase/app';
+import useEventStore from '../store/useEventStore.js';
+import { initializeApp, getApps } from 'firebase/app';
 import {
   getAuth,
   signInWithPopup,
   signOut as firebaseSignOut,
   GoogleAuthProvider,
-  onAuthStateChanged,
 } from 'firebase/auth';
 
 const firebaseConfig = {
@@ -55,10 +56,11 @@ const OFFLINE_QUEUE_KEY = 'lifehub_offline_sync_queue';
 let cachedGoogleToken = null;
 let googleAuthInstance = null;
 
-// Initialize Firebase Auth app singleton
+// Initialize named Firebase Auth app singleton to isolate from other Firebase instances
 const getFirebaseAuth = () => {
   if (!googleAuthInstance) {
-    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const existing = getApps().find((a) => a.name === 'lifehub-cloud-sync');
+    const app = existing || initializeApp(firebaseConfig, 'lifehub-cloud-sync');
     googleAuthInstance = getAuth(app);
   }
   return googleAuthInstance;
@@ -149,33 +151,133 @@ export const saveCloudSyncConfig = (config) => {
 };
 
 // -------------------------------------------------------------
-// Google Drive Provider
+// Google Drive Token & Identity Management
 // -------------------------------------------------------------
+
+let gisScriptLoadingPromise = null;
+
+const loadGisScript = () => {
+  if (typeof window === 'undefined') return Promise.reject(new Error('Window unavailable'));
+  if (window.google?.accounts?.oauth2) return Promise.resolve(window.google);
+  if (gisScriptLoadingPromise) return gisScriptLoadingPromise;
+
+  gisScriptLoadingPromise = new Promise((resolve, reject) => {
+    const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
+    if (existing) {
+      existing.addEventListener('load', () => resolve(window.google));
+      existing.addEventListener('error', () => reject(new Error('Google Identity Services failed to load.')));
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = 'https://accounts.google.com/gsi/client';
+    script.async = true;
+    script.defer = true;
+    script.onload = () => resolve(window.google);
+    script.onerror = () => reject(new Error('Google Identity Services script could not be loaded.'));
+    document.head.appendChild(script);
+  });
+  return gisScriptLoadingPromise;
+};
+
+/**
+ * Fetch basic user info from Google Drive about API or userinfo using bearer token
+ */
+const fetchGoogleUserInfo = async (token) => {
+  try {
+    const aboutRes = await fetch('https://www.googleapis.com/drive/v3/about?fields=user', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (aboutRes.ok) {
+      const data = await aboutRes.json();
+      if (data?.user?.emailAddress) {
+        return {
+          email: data.user.emailAddress,
+          name: data.user.displayName || data.user.emailAddress.split('@')[0],
+        };
+      }
+    }
+  } catch {
+    // Fallback to oauth2 userinfo
+  }
+
+  try {
+    const userRes = await fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (userRes.ok) {
+      const info = await userRes.json();
+      return {
+        email: info.email || 'Google User',
+        name: info.name || info.email || 'Authorized Account',
+      };
+    }
+  } catch {
+    // ignore
+  }
+
+  return { email: 'Google Drive Account', name: 'Authorized Account' };
+};
+
+/**
+ * Request Google OAuth Access Token via GIS or Firebase Auth popup
+ */
+const requestGoogleAccessToken = async (promptMode = '') => {
+  // Strategy 1: Google Identity Services token client
+  try {
+    await loadGisScript();
+    const token = await new Promise((resolve, reject) => {
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: firebaseConfig.oAuthClientId,
+        scope: DRIVE_SCOPE,
+        callback: (resp) => {
+          if (resp?.access_token) {
+            resolve(resp.access_token);
+          } else {
+            reject(new Error(resp?.error_description || resp?.error || 'Google Drive authorization not granted.'));
+          }
+        },
+        error_callback: (err) => {
+          reject(new Error(err?.message || 'Google authorization window was closed.'));
+        },
+      });
+      client.requestAccessToken({ prompt: promptMode });
+    });
+    return token;
+  } catch (gisErr) {
+    // Strategy 2: Firebase Auth signInWithPopup on isolated app
+    try {
+      const auth = getFirebaseAuth();
+      const provider = new GoogleAuthProvider();
+      provider.addScope(DRIVE_SCOPE);
+      const result = await signInWithPopup(auth, provider);
+      const credential = GoogleAuthProvider.credentialFromResult(result);
+      if (credential?.accessToken) {
+        return credential.accessToken;
+      }
+    } catch (fbErr) {
+      console.warn('Firebase popup fallback failed:', fbErr);
+    }
+    throw gisErr;
+  }
+};
 
 /**
  * Connect to Google Drive using Google OAuth with drive.file scope
  */
 export const connectGoogleDrive = async () => {
-  const auth = getFirebaseAuth();
-  const provider = new GoogleAuthProvider();
-  provider.addScope(DRIVE_SCOPE);
-
   try {
-    const result = await signInWithPopup(auth, provider);
-    const credential = GoogleAuthProvider.credentialFromResult(result);
-    if (!credential?.accessToken) {
-      throw new Error('Google authorization token not received.');
-    }
+    const token = await requestGoogleAccessToken('select_account');
+    if (!token) throw new Error('Authorization token not received.');
+    cachedGoogleToken = token;
 
-    cachedGoogleToken = credential.accessToken;
-    const user = result.user;
+    const userInfo = await fetchGoogleUserInfo(token);
 
     const currentConfig = getCloudSyncConfig();
     currentConfig.googleDrive = {
       ...currentConfig.googleDrive,
       connected: true,
-      userEmail: user.email || 'Google User',
-      userName: user.displayName || 'Authorized Account',
+      userEmail: userInfo.email,
+      userName: userInfo.name,
       syncStatus: 'idle',
       syncError: null,
     };
@@ -183,14 +285,14 @@ export const connectGoogleDrive = async () => {
 
     return {
       success: true,
-      email: user.email,
-      name: user.displayName,
+      email: userInfo.email,
+      name: userInfo.name,
     };
   } catch (error) {
-    const errorMsg = error?.message?.includes('popup-closed-by-user')
+    const errorMsg = error?.message?.includes('popup-closed') || error?.message?.includes('closed')
       ? 'Sign-in window closed before completing.'
       : (error?.message || 'Google Drive authorization failed.');
-    
+
     const currentConfig = getCloudSyncConfig();
     currentConfig.googleDrive.syncStatus = 'error';
     currentConfig.googleDrive.syncError = errorMsg;
@@ -226,25 +328,19 @@ export const disconnectGoogleDrive = async () => {
 };
 
 /**
- * Get active Google Drive OAuth Access Token (refreshes if needed)
+ * Get active Google Drive OAuth Access Token (requests if needed)
  */
 const getValidGoogleDriveToken = async () => {
   if (cachedGoogleToken) return cachedGoogleToken;
 
-  const auth = getFirebaseAuth();
-  if (!auth.currentUser) {
+  const currentConfig = getCloudSyncConfig();
+  if (!currentConfig.googleDrive.connected) {
     throw new Error('Google Drive is not connected. Please connect your Google account in Settings.');
   }
 
-  // Request fresh token via popup if expired
-  const provider = new GoogleAuthProvider();
-  provider.addScope(DRIVE_SCOPE);
-  const result = await signInWithPopup(auth, provider);
-  const credential = GoogleAuthProvider.credentialFromResult(result);
-  if (!credential?.accessToken) {
-    throw new Error('Could not refresh Google Drive token.');
-  }
-  cachedGoogleToken = credential.accessToken;
+  // Request fresh token silently or prompt user
+  const token = await requestGoogleAccessToken('');
+  cachedGoogleToken = token;
   return cachedGoogleToken;
 };
 
@@ -293,18 +389,21 @@ const uploadDriveSyncEnvelope = async (token, fileId, envelope) => {
   const contentBlob = new Blob([JSON.stringify(envelope, null, 2)], { type: 'application/json' });
 
   if (fileId) {
-    // Update existing file content
-    const updateUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
-    const res = await fetch(updateUrl, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
-      },
-      body: contentBlob,
-    });
-    if (!res.ok) throw new Error(`Google Drive update failed (${res.status}).`);
-    return fileId;
+    try {
+      // Update existing file content
+      const updateUrl = `https://www.googleapis.com/upload/drive/v3/files/${fileId}?uploadType=media`;
+      const res = await fetch(updateUrl, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: contentBlob,
+      });
+      if (res.ok) return fileId;
+    } catch {
+      // If patch fails, fall back to creating a fresh file
+    }
   }
 
   // Create new multipart file
@@ -325,7 +424,10 @@ const uploadDriveSyncEnvelope = async (token, fileId, envelope) => {
     body: form,
   });
 
-  if (!res.ok) throw new Error(`Google Drive file creation failed (${res.status}).`);
+  if (!res.ok) {
+    const errorText = await res.text().catch(() => '');
+    throw new Error(`Google Drive upload failed (${res.status}): ${errorText || res.statusText}`);
+  }
   const data = await res.json();
   return data.id;
 };
@@ -338,14 +440,15 @@ const uploadDriveSyncEnvelope = async (token, fileId, envelope) => {
  * Extract all local LifeHub records for sync
  */
 const collectLocalSyncData = async (principalId) => {
-  const [moments, activities, memories, expenses, incomes, codeLists, settings] = await Promise.all([
-    momentRepository.getAll(principalId),
-    activityRepository.getAll(principalId),
-    memoryRepository.getAll(principalId),
-    expenseRepository.getAll(principalId),
-    incomeRepository.getAll(principalId),
-    codeListRepository.getAll(principalId),
-    settingsRepository.getSettings(principalId),
+  const [moments, activities, memories, expenses, incomes, codeLists, settings, attachments] = await Promise.all([
+    momentRepository.getAll(principalId).catch(() => []),
+    activityRepository.getAll(principalId).catch(() => []),
+    memoryRepository.getAll(principalId).catch(() => []),
+    expenseRepository.getAll(principalId).catch(() => []),
+    incomeRepository.getAll(principalId).catch(() => []),
+    codeListRepository.getAll(principalId).catch(() => []),
+    (settingsRepository.getAll ? settingsRepository.getAll(principalId) : settingsRepository.getSettings(principalId)).catch(() => []),
+    attachmentRepository.getAll(principalId).catch(() => []),
   ]);
 
   return {
@@ -360,6 +463,7 @@ const collectLocalSyncData = async (principalId) => {
       incomes: incomes || [],
       codeLists: codeLists || [],
       settings: settings || null,
+      attachments: attachments || [],
     },
   };
 };
@@ -367,7 +471,7 @@ const collectLocalSyncData = async (principalId) => {
 /**
  * Merge two collections of records with timestamp-based Last-Write-Wins and ID stability
  */
-const mergeRecordCollections = (localItems = [], remoteItems = []) => {
+export const mergeRecordCollections = (localItems = [], remoteItems = []) => {
   const mergedMap = new Map();
 
   // Load local items into map
@@ -397,15 +501,19 @@ const mergeRecordCollections = (localItems = [], remoteItems = []) => {
     }
   }
 
-  const finalRecords = Array.from(mergedMap.values()).map((entry) => entry.record);
-  return finalRecords;
+  return Array.from(mergedMap.values()).map((entry) => entry.record);
 };
 
 /**
- * Reconcile merged records back into the local database
+ * Reconcile merged records back into the local database atomically using bulkPut
  */
 const reconcileMergedDataLocally = async (principalId, mergedData) => {
-  const { moments, activities, memories, expenses, incomes, codeLists, settings } = mergedData;
+  const { moments, activities, memories, expenses, incomes, codeLists, settings, attachments } = mergedData;
+
+  const prepare = (items) => (items || []).map((item) => ({
+    ...item,
+    userId: item.userId || principalId,
+  }));
 
   await db.transaction(
     'rw',
@@ -416,16 +524,54 @@ const reconcileMergedDataLocally = async (principalId, mergedData) => {
     db.table(DATABASE_TABLES.INCOMES),
     db.table(DATABASE_TABLES.CODE_LISTS),
     db.table(DATABASE_TABLES.SETTINGS),
+    db.table(DATABASE_TABLES.ATTACHMENTS),
     async () => {
-      if (moments?.length) await momentRepository.bulkUpsert(principalId, moments);
-      if (activities?.length) await activityRepository.bulkUpsert(principalId, activities);
-      if (memories?.length) await memoryRepository.bulkUpsert(principalId, memories);
-      if (expenses?.length) await expenseRepository.bulkUpsert(principalId, expenses);
-      if (incomes?.length) await incomeRepository.bulkUpsert(principalId, incomes);
-      if (codeLists?.length) await codeListRepository.bulkUpsert(principalId, codeLists);
-      if (settings) await settingsRepository.saveSettings(principalId, settings);
+      if (moments?.length) {
+        await db.table(DATABASE_TABLES.MOMENTS).bulkPut(prepare(moments));
+      }
+      if (activities?.length) {
+        await db.table(DATABASE_TABLES.ACTIVITIES).bulkPut(prepare(activities));
+      }
+      if (memories?.length) {
+        await db.table(DATABASE_TABLES.MEMORIES).bulkPut(prepare(memories));
+      }
+      if (expenses?.length) {
+        await db.table(DATABASE_TABLES.EXPENSES).bulkPut(prepare(expenses));
+      }
+      if (incomes?.length) {
+        await db.table(DATABASE_TABLES.INCOMES).bulkPut(prepare(incomes));
+      }
+      if (codeLists?.length) {
+        await db.table(DATABASE_TABLES.CODE_LISTS).bulkPut(prepare(codeLists));
+      }
+      if (attachments?.length) {
+        await db.table(DATABASE_TABLES.ATTACHMENTS).bulkPut(prepare(attachments));
+      }
+      if (settings) {
+        if (Array.isArray(settings)) {
+          await db.table(DATABASE_TABLES.SETTINGS).bulkPut(prepare(settings));
+        } else if (typeof settings === 'object') {
+          const rows = Object.entries(settings).map(([key, value]) => ({
+            id: `${principalId}:${key}`,
+            userId: principalId,
+            key,
+            value,
+            updatedAt: new Date().toISOString(),
+          }));
+          if (rows.length) {
+            await db.table(DATABASE_TABLES.SETTINGS).bulkPut(rows);
+          }
+        }
+      }
     }
   );
+
+  // Trigger reactive store reload
+  try {
+    await useEventStore.getState().loadEvents(principalId);
+  } catch {
+    // Ignore store reload error
+  }
 };
 
 // -------------------------------------------------------------
@@ -439,7 +585,7 @@ export const syncWithGoogleDrive = async (onProgress = () => {}) => {
   }
 
   // Check offline state
-  if (!navigator.onLine) {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
     queueOfflineSync('googleDrive');
     const msg = 'You are currently offline. Changes are queued and will sync when reconnected.';
     currentConfig.googleDrive.syncStatus = 'error';
@@ -484,6 +630,7 @@ export const syncWithGoogleDrive = async (onProgress = () => {}) => {
       incomes: mergeRecordCollections(localEnvelope.data.incomes, remoteData.incomes),
       codeLists: mergeRecordCollections(localEnvelope.data.codeLists, remoteData.codeLists),
       settings: localEnvelope.data.settings || remoteData.settings,
+      attachments: mergeRecordCollections(localEnvelope.data.attachments, remoteData.attachments),
     };
 
     onProgress({ stage: 'writing-remote', percent: 90, message: 'Updating Google Drive storage…' });
@@ -509,7 +656,11 @@ export const syncWithGoogleDrive = async (onProgress = () => {}) => {
     saveCloudSyncConfig(currentConfig);
 
     onProgress({ stage: 'completed', percent: 100, message: 'Sync completed successfully!' });
-    window.dispatchEvent(new CustomEvent('lifehub:data-synced', { detail: { provider: 'googleDrive', timestamp: finishTime } }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lifehub:data-synced', { detail: { provider: 'googleDrive', timestamp: finishTime } }));
+      window.dispatchEvent(new CustomEvent('lifehub:events-updated'));
+      window.dispatchEvent(new CustomEvent('lifehub:activities-updated'));
+    }
 
     return {
       success: true,
@@ -538,14 +689,13 @@ export const syncWithGoogleDrive = async (onProgress = () => {}) => {
  * and clearly designates browser capabilities vs native app container.
  */
 export const connectICloud = async ({ appleId = '', containerId = 'iCloud.com.lifehub.personal' } = {}) => {
-  // In pure browser/PWA, verify capability:
-  const isIos = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+  const isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
   const currentConfig = getCloudSyncConfig();
   currentConfig.iCloud = {
     ...currentConfig.iCloud,
     connected: true,
-    appleId: appleId || (isIos ? 'Apple ID (iOS Device)' : 'Apple ID (CloudKit Web)'),
+    appleId: appleId || (isIos ? 'Apple ID (iOS Device Container)' : 'Apple ID (CloudKit Web Services)'),
     containerId: containerId || 'iCloud.com.lifehub.personal',
     syncStatus: 'idle',
     syncError: null,
@@ -585,7 +735,7 @@ export const syncWithICloud = async (onProgress = () => {}) => {
     throw new Error('iCloud is not connected. Please connect your Apple account in Settings first.');
   }
 
-  if (!navigator.onLine) {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
     queueOfflineSync('iCloud');
     const msg = 'You are currently offline. Changes are queued and will sync when reconnected.';
     currentConfig.iCloud.syncStatus = 'error';
@@ -603,18 +753,19 @@ export const syncWithICloud = async (onProgress = () => {}) => {
     saveCloudSyncConfig(currentConfig);
 
     onProgress({ stage: 'connecting', percent: 20, message: 'Connecting to iCloud container…' });
-    await new Promise((r) => setTimeout(r, 400));
+    await new Promise((r) => setTimeout(r, 300));
 
     onProgress({ stage: 'collecting', percent: 50, message: 'Collecting local activities and events…' });
     const localEnvelope = await collectLocalSyncData(principalId);
 
     onProgress({ stage: 'uploading', percent: 80, message: 'Synchronizing with iCloud container…' });
-    
+
     // Store container snapshot in secure storage
     const containerKey = `icloud_container_${currentConfig.iCloud.containerId}`;
     let remoteData = {};
     try {
-      const existing = localStorage.getItem(containerKey);
+      const storage = getStorage();
+      const existing = storage?.getItem(containerKey);
       if (existing) remoteData = JSON.parse(existing)?.data || {};
     } catch {
       remoteData = {};
@@ -628,14 +779,19 @@ export const syncWithICloud = async (onProgress = () => {}) => {
       incomes: mergeRecordCollections(localEnvelope.data.incomes, remoteData.incomes),
       codeLists: mergeRecordCollections(localEnvelope.data.codeLists, remoteData.codeLists),
       settings: localEnvelope.data.settings || remoteData.settings,
+      attachments: mergeRecordCollections(localEnvelope.data.attachments, remoteData.attachments),
     };
 
-    localStorage.setItem(containerKey, JSON.stringify({
-      version: 2,
-      lastSyncTimestamp: new Date().toISOString(),
-      principalId,
-      data: merged,
-    }));
+    const storage = getStorage();
+    storage?.setItem(
+      containerKey,
+      JSON.stringify({
+        version: 2,
+        lastSyncTimestamp: new Date().toISOString(),
+        principalId,
+        data: merged,
+      })
+    );
 
     onProgress({ stage: 'reconciling', percent: 95, message: 'Updating local records…' });
     await reconcileMergedDataLocally(principalId, merged);
@@ -651,7 +807,11 @@ export const syncWithICloud = async (onProgress = () => {}) => {
     saveCloudSyncConfig(currentConfig);
 
     onProgress({ stage: 'completed', percent: 100, message: 'iCloud sync completed successfully!' });
-    window.dispatchEvent(new CustomEvent('lifehub:data-synced', { detail: { provider: 'iCloud', timestamp: finishTime } }));
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('lifehub:data-synced', { detail: { provider: 'iCloud', timestamp: finishTime } }));
+      window.dispatchEvent(new CustomEvent('lifehub:events-updated'));
+      window.dispatchEvent(new CustomEvent('lifehub:activities-updated'));
+    }
 
     return {
       success: true,
@@ -688,7 +848,7 @@ export const queueOfflineSync = (provider) => {
 };
 
 export const processOfflineSyncQueue = async () => {
-  if (!navigator.onLine) return;
+  if (typeof navigator !== 'undefined' && !navigator.onLine) return;
   try {
     const storage = getStorage();
     const queue = JSON.parse(storage?.getItem(OFFLINE_QUEUE_KEY) || '[]');
