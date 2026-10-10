@@ -2594,8 +2594,8 @@ html[data-theme="dark"] {
 @media (max-width: 760px) {
   [data-theme="dark"] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px) + 10px); padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important; padding-right: max(13px, env(safe-area-inset-right, 0px)) !important; padding-bottom: 6px !important; padding-left: max(13px, env(safe-area-inset-left, 0px)) !important; }
   [data-theme="dark"] .lifehub-header .menu-button { display: none; }
-  [data-theme="dark"] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px); height: auto; }
-  [data-theme="dark"] .lifehub-content { padding: 10px max(13px, env(safe-area-inset-right, 0px)) 94px max(13px, env(safe-area-inset-left, 0px)) !important; }
+  [data-theme="dark"] .lifehub-main { display: flex !important; flex-direction: column !important; flex: 1 1 0% !important; min-height: 0 !important; height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px); max-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px); overflow: hidden; }
+  [data-theme="dark"] .lifehub-content { flex: 1 1 0% !important; min-height: 0 !important; height: 100% !important; max-height: 100% !important; overflow-y: auto !important; overflow-x: hidden !important; -webkit-overflow-scrolling: touch !important; padding: 10px max(13px, env(safe-area-inset-right, 0px)) 94px max(13px, env(safe-area-inset-left, 0px)) !important; }
   [data-theme="dark"] .lifehub-banner { margin-bottom: 9px !important; font-size: .58rem; }
   [data-theme="dark"] .dashboard-overview { gap: 12px; }
   [data-theme="dark"] .dashboard-greeting { max-height: 18dvh; min-height: 0; padding: 15px 16px; border-radius: 19px; }

@@ -479,7 +479,10 @@ export default function DashboardLayout() {
 
 const styles = {
   appShell: {
-    minHeight: '100dvh',
+    height: '100dvh',
+    display: 'flex',
+    flexDirection: 'column',
+    overflow: 'hidden',
     background: '#f2f7f3',
     color: '#1d3f2c',
   },
@@ -548,7 +551,10 @@ const styles = {
   },
   mainContent: {
     display: 'flex',
-    minHeight: 'calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px)',
+    flex: '1 1 0%',
+    height: 'calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px)',
+    minHeight: 0,
+    overflow: 'hidden',
   },
   sidebar: {
     width: '220px',
@@ -580,7 +586,12 @@ const styles = {
     border: '1px solid #b7d7c0',
   },
   contentPane: {
-    flex: 1,
+    flex: '1 1 0%',
+    height: '100%',
+    minHeight: 0,
+    overflowY: 'auto',
+    overflowX: 'hidden',
+    WebkitOverflowScrolling: 'touch',
     padding: '22px',
   },
   banner: {
