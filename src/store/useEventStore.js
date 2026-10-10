@@ -398,6 +398,87 @@ const useEventStore = create((set, get) => {
     if (!principalId) return null;
     return db.table(DATABASE_TABLES.ATTACHMENT_FILES).get(attachmentId).then((row) => row?.userId === principalId ? row.blob : null);
   },
+  toggleActivityCompletion: async (userId, isGuest, activityId, targetEventId = null) => {
+    const currentEvents = get().events;
+    let foundEvent = null;
+    let targetActivity = null;
+
+    for (const event of currentEvents) {
+      if (targetEventId && event.id !== targetEventId && event.firestoreId !== targetEventId) continue;
+      const act = (event.activities || []).find((a) => a.id === activityId);
+      if (act) {
+        foundEvent = event;
+        targetActivity = act;
+        break;
+      }
+    }
+
+    if (!foundEvent || !targetActivity) {
+      throw new Error(`Activity ${activityId} not found.`);
+    }
+
+    const nextCompleted = !targetActivity.completed;
+    const updatedActivity = {
+      ...targetActivity,
+      completed: nextCompleted,
+      completedAt: nextCompleted ? (targetActivity.completedAt || new Date().toISOString()) : null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    const updatedActivities = (foundEvent.activities || []).map((a) =>
+      a.id === activityId ? updatedActivity : a
+    );
+
+    return get().updateEventItem(userId, isGuest, {
+      ...foundEvent,
+      activities: updatedActivities,
+    });
+  },
+  saveActivity: async (userId, isGuest, eventId, activityData) => {
+    const currentEvents = get().events;
+    const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
+    if (!foundEvent) throw new Error(`Parent moment ${eventId} not found.`);
+
+    const existingActivities = foundEvent.activities || [];
+    const existingIndex = existingActivities.findIndex((a) => a.id === activityData.id);
+
+    let nextActivities;
+    if (existingIndex >= 0) {
+      nextActivities = existingActivities.map((a, i) => (i === existingIndex ? { ...a, ...activityData, updatedAt: new Date().toISOString() } : a));
+    } else {
+      const newActivity = {
+        id: activityData.id || crypto.randomUUID(),
+        eventId: foundEvent.id || foundEvent.firestoreId,
+        title: activityData.title || '',
+        description: activityData.description || '',
+        date: activityData.date || new Date().toISOString().slice(0, 10),
+        time: activityData.time || '',
+        priority: activityData.priority || 'medium',
+        completed: Boolean(activityData.completed),
+        completedAt: activityData.completed ? (activityData.completedAt || new Date().toISOString()) : null,
+        createdAt: activityData.createdAt || new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        attachments: activityData.attachments || [],
+      };
+      nextActivities = [...existingActivities, newActivity];
+    }
+
+    return get().updateEventItem(userId, isGuest, {
+      ...foundEvent,
+      activities: nextActivities,
+    });
+  },
+  deleteActivity: async (userId, isGuest, eventId, activityId) => {
+    const currentEvents = get().events;
+    const foundEvent = currentEvents.find((e) => e.id === eventId || e.firestoreId === eventId);
+    if (!foundEvent) return;
+
+    const nextActivities = (foundEvent.activities || []).filter((a) => a.id !== activityId);
+    return get().updateEventItem(userId, isGuest, {
+      ...foundEvent,
+      activities: nextActivities,
+    });
+  },
   });
 });
 

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
-import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Database, Download, FileCheck2, HardDrive, Heart, Layers3, ShieldCheck, Smartphone, Upload, WalletCards } from 'lucide-react';
+import { Activity, Archive, CalendarDays, Check, CheckCircle2, ChevronRight, CircleAlert, Cloud, Database, Download, FileCheck2, HardDrive, Heart, Layers3, ShieldCheck, Smartphone, Upload, WalletCards } from 'lucide-react';
 import { db } from '../database/index.js';
 import { DATABASE_TABLES } from '../database/tables.js';
 import { getDatabaseVersionInfo } from '../database/versioning.js';
@@ -414,6 +414,10 @@ export default function DataBackup() {
       {activeSection === 'overview' ? <>
         {renderProtection()}
         <nav className="db-secondary-nav" aria-label="Data and backup navigation">
+          <Link to="/settings/sync" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 16px', background: '#edf7f2', borderRadius: '12px', border: '1px solid #1f6f5d', color: '#1f6f5d', fontWeight: 600, textDecoration: 'none', marginBottom: '8px' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}><Cloud size={18} /><span>Sync with Google Drive &amp; iCloud</span></span>
+            <ChevronRight size={17} aria-hidden="true" />
+          </Link>
           {Object.entries(sectionLabels).map(([key, label]) => (
               <button key={key} type="button" onClick={() => { setActiveSection(key); setStatus(''); if (key === 'backup') void primeGoogleDrive().catch(() => {}); }}>
               <span>{label}</span><ChevronRight size={17} aria-hidden="true" />

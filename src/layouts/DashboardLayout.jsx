@@ -26,7 +26,7 @@ import ConnectivityBanner from '../components/common/ConnectivityBanner';
 const navItems = [
   { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Moments', path: '/events', icon: CalendarDays },
-  { label: 'Attachments', path: '/attachments', icon: FileImage },
+  { label: 'Activities', path: '/activities', icon: ListChecks },
   { label: 'Financials', path: '/financials', icon: WalletCards },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
@@ -126,7 +126,7 @@ export default function DashboardLayout() {
     const currentLocation = {
       key: location.key || location.pathname,
       pathname: location.pathname,
-      primaryRoute: ['dashboard', 'events', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
+      primaryRoute: ['dashboard', 'events', 'activities', 'attachments', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
     };
     const previousLocation = previousLocationRef.current;
 

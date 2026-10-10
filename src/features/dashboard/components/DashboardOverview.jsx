@@ -1,7 +1,7 @@
 // This component is the main dashboard summary screen.
 // It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, CalendarDays, Copy, Download, Sparkles } from 'lucide-react';
+import { Activity, CalendarDays, Check, CheckCircle2, ChevronRight, Clock, Copy, Download, Flame, ListChecks, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -454,7 +454,7 @@ export default function DashboardOverview() {
   const profile = useAppStore((state) => state.profile);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
-  const { events, loading, loadEvents } = useEventStore();
+  const { events, loading, loadEvents, toggleActivityCompletion } = useEventStore();
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
 
@@ -462,6 +462,59 @@ export default function DashboardOverview() {
     if (!user && !isGuest) return;
     if (!events.length) loadEvents(user?.uid, isGuest);
   }, [events.length, isGuest, loadEvents, user]);
+
+  const todayIso = new Date().toISOString().slice(0, 10);
+
+  // All activities projected from all events
+  const allActivities = useMemo(() => {
+    return events.flatMap((event) =>
+      (event.activities || []).map((activity) => ({
+        ...activity,
+        eventId: event.id || event.firestoreId,
+        eventName: event.name || 'Untitled Moment',
+      }))
+    );
+  }, [events]);
+
+  // A. Today's Activities
+  const todayActivities = useMemo(() => {
+    return allActivities.filter((activity) => activity.date === todayIso);
+  }, [allActivities, todayIso]);
+
+  // For deduplication: IDs of activities shown in Today's section
+  const todayActivityIds = useMemo(() => {
+    return new Set(todayActivities.map((a) => a.id));
+  }, [todayActivities]);
+
+  // B. High-Priority Activities: incomplete, including overdue, excluding today's activities to prevent duplicates
+  const highPriorityActivities = useMemo(() => {
+    return allActivities
+      .filter(
+        (activity) =>
+          activity.priority === 'high' &&
+          !activity.completed &&
+          !activity.cancelled &&
+          !todayActivityIds.has(activity.id)
+      )
+      .sort((a, b) => {
+        const dateA = a.date || '9999-99-99';
+        const dateB = b.date || '9999-99-99';
+        return dateA.localeCompare(dateB);
+      });
+  }, [allActivities, todayActivityIds]);
+
+  const handleToggleActivity = async (activity, e) => {
+    e?.stopPropagation();
+    try {
+      await toggleActivityCompletion(user?.uid, isGuest, activity.id, activity.eventId);
+      showToast(
+        activity.completed ? 'Activity marked incomplete' : 'Activity completed!',
+        'success'
+      );
+    } catch {
+      showToast('Could not update activity', 'danger');
+    }
+  };
 
   const upcomingEvents = useMemo(() => {
     const today = new Date();
@@ -537,6 +590,181 @@ export default function DashboardOverview() {
               <span>Greeting preview</span><strong>{spotlightGreeting.title}</strong><span className="dashboard-greeting-open">View greeting <span aria-hidden="true">→</span></span>
             </button>
           ) : null}
+        </section>
+
+        {/* Section A: Today's Activities */}
+        <section className="dashboard-upcoming-card" aria-label="Today’s activities">
+          <header style={styles.upcomingHeader}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <ListChecks size={18} className="text-emerald-600" />
+              <span>Today’s Activities</span>
+              {todayActivities.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 font-semibold">
+                  {todayActivities.filter((a) => a.completed).length}/{todayActivities.length}
+                </span>
+              )}
+            </span>
+            <button
+              type="button"
+              className="dashboard-upcoming-all-button"
+              onClick={() => navigate('/activities')}
+            >
+              All activities <span aria-hidden="true">→</span>
+            </button>
+          </header>
+          {todayActivities.length ? (
+            <div className="space-y-2">
+              {todayActivities.map((activity) => {
+                const isCompleted = Boolean(activity.completed);
+                return (
+                  <div
+                    key={activity.id}
+                    className={`flex items-center justify-between gap-3 p-3 rounded-xl border transition-all ${
+                      isCompleted
+                        ? 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'
+                        : 'bg-white dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700 shadow-xs'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleActivity(activity, e)}
+                        aria-label={isCompleted ? 'Mark incomplete' : 'Mark complete'}
+                        className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
+                          isCompleted
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 text-transparent'
+                        }`}
+                      >
+                        <Check size={14} strokeWidth={3} />
+                      </button>
+                      <div className="min-w-0 flex-1">
+                        <span
+                          className={`text-sm font-semibold block truncate ${
+                            isCompleted
+                              ? 'line-through text-slate-400 dark:text-slate-500'
+                              : 'text-slate-900 dark:text-slate-100'
+                          }`}
+                        >
+                          {activity.title}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          {activity.time && (
+                            <span className="flex items-center gap-1 text-slate-500 dark:text-slate-400 font-medium">
+                              <Clock size={11} /> {activity.time}
+                            </span>
+                          )}
+                          <span className="truncate max-w-[150px] text-slate-400">
+                            in {activity.eventName}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <span
+                      className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border shrink-0 ${
+                        activity.priority === 'high'
+                          ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800'
+                          : activity.priority === 'low'
+                          ? 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800 dark:text-slate-400 dark:border-slate-700'
+                          : 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+                      }`}
+                    >
+                      {activity.priority === 'high' ? 'High' : activity.priority === 'low' ? 'Low' : 'Medium'}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="dashboard-upcoming-empty">
+              No activities scheduled for today. Enjoy your day or add a plan in Activities!
+            </p>
+          )}
+        </section>
+
+        {/* Section B: High-Priority Activities */}
+        <section className="dashboard-upcoming-card" aria-label="High-priority activities">
+          <header style={styles.upcomingHeader}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Flame size={18} className="text-rose-600" />
+              <span>High-Priority Activities</span>
+              {highPriorityActivities.length > 0 && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300 font-semibold">
+                  {highPriorityActivities.length} pending
+                </span>
+              )}
+            </span>
+            <button
+              type="button"
+              className="dashboard-upcoming-all-button"
+              onClick={() => navigate('/activities')}
+            >
+              All activities <span aria-hidden="true">→</span>
+            </button>
+          </header>
+          {highPriorityActivities.length ? (
+            <div className="space-y-2">
+              {highPriorityActivities.map((activity) => {
+                const isOverdue = activity.date && activity.date < todayIso;
+                return (
+                  <div
+                    key={activity.id}
+                    className="flex items-center justify-between gap-3 p-3 rounded-xl bg-white dark:bg-slate-800/90 border border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-rose-300 dark:hover:border-rose-700 transition-all"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <button
+                        type="button"
+                        onClick={(e) => handleToggleActivity(activity, e)}
+                        aria-label="Mark complete"
+                        className="w-6 h-6 rounded-lg border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 flex items-center justify-center transition-all shrink-0 cursor-pointer text-transparent hover:text-emerald-600"
+                        title="Mark complete"
+                      >
+                        <Check size={14} strokeWidth={3} />
+                      </button>
+                      <div
+                        className="min-w-0 flex-1 cursor-pointer"
+                        onClick={() => navigate('/activities')}
+                      >
+                        <span className="text-sm font-semibold text-slate-900 dark:text-slate-100 block truncate hover:text-emerald-600 transition-colors">
+                          {activity.title}
+                        </span>
+                        <div className="flex items-center gap-2 text-xs text-slate-400 mt-0.5">
+                          <span
+                            className={`font-medium ${
+                              isOverdue ? 'text-rose-600 dark:text-rose-400 font-semibold' : 'text-slate-500 dark:text-slate-400'
+                            }`}
+                          >
+                            {isOverdue ? 'Overdue · ' : 'Due '}{activity.date ? formatDisplayDate(new Date(activity.date)) : 'Soon'}
+                          </span>
+                          {activity.time && <span>· {activity.time}</span>}
+                          <span className="truncate max-w-[130px]">in {activity.eventName}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800">
+                        High
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/activities')}
+                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                        title="View activity details"
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <p className="dashboard-upcoming-empty">
+              No outstanding high-priority activities. All urgent items are completed!
+            </p>
+          )}
         </section>
         <section className="dashboard-upcoming-card" aria-label="Upcoming moments">
           <header style={styles.upcomingHeader}>

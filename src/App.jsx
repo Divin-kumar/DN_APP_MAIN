@@ -22,6 +22,7 @@ const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const Events = lazy(() => import('./pages/Events'));
 const Attachments = lazy(() => import('./pages/Attachments'));
 const AttachmentDetail = lazy(() => import('./pages/AttachmentDetail'));
+const Activities = lazy(() => import('./pages/Activities'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
@@ -30,6 +31,7 @@ const Expenses = lazy(() => import('./pages/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
 const Profile = lazy(() => import('./pages/Profile'));
 const DataBackup = lazy(() => import('./pages/DataBackup'));
+const CloudSyncSettings = lazy(() => import('./pages/CloudSyncSettings'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
@@ -159,7 +161,7 @@ export default function App() {
             <Route path="events" element={loadScreen(<Events />, 'moments')} />
             <Route path="attachments" element={loadScreen(<Attachments />, 'attachments')} />
             <Route path="attachments/:attachmentId" element={loadScreen(<AttachmentDetail />, 'attachment details')} />
-            <Route path="activities" element={<Navigate to="/events" replace />} />
+            <Route path="activities" element={loadScreen(<Activities />, 'activities')} />
             <Route path="insights" element={loadScreen(<Insights />, 'insights')} />
 
             {/* Each event has its own workspace and sub-pages for overview, activities, timeline, etc. */}
@@ -178,6 +180,7 @@ export default function App() {
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
             <Route path="profile" element={loadScreen(<Profile />, 'profile')} />
             <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
+            <Route path="settings/sync" element={loadScreen(<CloudSyncSettings />, 'cloud sync')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />
           </Route>

@@ -1,6 +1,6 @@
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Trash2, Bell, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
+import { UserCircle, Settings2, Database, Trash2, Bell, Info, ChevronRight, RotateCcw, Plus, Cloud } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -418,6 +418,14 @@ export default function Settings() {
       })}
 
       <div className="settings-navigation-hub settings-about-footer">
+        <Link to="/settings/sync" className="settings-hub-card" aria-label="Open Sync & Cloud Backup page">
+          <span className="settings-hub-icon"><Cloud size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>Sync &amp; Cloud Backup</strong>
+            <small>Sync with Google Drive &amp; iCloud, conflict handling, and automatic sync</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
         <Link to="/settings/data-backup" className="settings-hub-card" aria-label="Open Data and Backup page">
           <span className="settings-hub-icon"><Database size={18} /></span>
           <span className="settings-hub-copy"><strong>Data &amp; Backup</strong><small>Database health, storage, backup, restore, and device information</small></span>
