@@ -306,7 +306,7 @@ export default function DashboardLayout() {
   return (
     <div className="lifehub-shell" style={styles.appShell}>
       <header className="lifehub-header" style={styles.header}>
-        <div style={styles.topBarLeft}>
+        <div className="topBarLeft" style={styles.topBarLeft}>
           <button
             type="button"
             className="menu-button"
@@ -489,10 +489,15 @@ const styles = {
     justifyContent: 'space-between',
     background: '#ffffff',
     borderBottom: '1px solid #dfeae3',
-    padding: '16px 24px',
+    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingRight: 'max(24px, env(safe-area-inset-right, 0px))',
+    paddingBottom: 0,
+    paddingLeft: 'max(24px, env(safe-area-inset-left, 0px))',
+    minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
     position: 'sticky',
     top: 0,
-    zIndex: 10,
+    zIndex: 20,
+    boxSizing: 'border-box',
   },
   topBarLeft: {
     display: 'flex',
@@ -543,7 +548,7 @@ const styles = {
   },
   mainContent: {
     display: 'flex',
-    minHeight: 'calc(100dvh - 82px)',
+    minHeight: 'calc(100dvh - 56px - env(safe-area-inset-top, 0px))',
   },
   sidebar: {
     width: '220px',

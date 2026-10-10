@@ -84,17 +84,18 @@ html[data-theme] body,
 html[data-theme] #root,
 html[data-theme] .lifehub-shell,
 html[data-theme] .lifehub-main { background: var(--color-bg) !important; color: var(--color-text); }
-html[data-theme] .lifehub-main { height: calc(100dvh - 64px) !important; }
-html[data-theme] .lifehub-header { min-height: 56px !important; height: 56px; padding: 0 var(--space-xl) !important; border-bottom: 1px solid var(--color-border) !important; background: var(--color-glass) !important; color: var(--color-text) !important; backdrop-filter: blur(20px) saturate(1.15); }
+html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important; height: auto !important; }
+html[data-theme] .lifehub-header { position: sticky !important; top: 0 !important; z-index: 20 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; min-height: calc(56px + env(safe-area-inset-top, 0px)) !important; height: auto !important; padding-top: env(safe-area-inset-top, 0px) !important; padding-bottom: 0 !important; padding-left: max(var(--space-xl), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-xl), env(safe-area-inset-right, 0px)) !important; border-bottom: 1px solid var(--color-border) !important; background: var(--color-glass) !important; color: var(--color-text) !important; backdrop-filter: blur(20px) saturate(1.15) !important; -webkit-backdrop-filter: blur(20px) saturate(1.15) !important; box-sizing: border-box !important; }
 html[data-theme] .lifehub-header h1 { margin: 0; color: var(--color-text) !important; font-size: var(--font-title) !important; font-weight: 700; letter-spacing: -.04em; }
-html[data-theme] .lifehub-header { position: relative; }
+html[data-theme] .lifehub-header .topBarLeft,
+html[data-theme] .lifehub-header > div:first-child { display: flex !important; align-items: center !important; gap: 12px !important; min-height: 56px !important; height: 56px !important; }
 html[data-theme] .brand-lockup { position: relative; z-index: 1; display: flex; width: max-content; align-items: center; gap: 10px; transform: none; pointer-events: none; }
 html[data-theme] .brand-mark { display: grid; width: 38px; height: 38px; flex: 0 0 38px; place-items: center; border: 1px solid color-mix(in srgb,var(--color-primary) 48%,transparent); border-radius: 13px; background: linear-gradient(145deg,color-mix(in srgb,var(--color-primary) 24%,var(--color-card)),var(--color-card)); color: var(--color-primary); font-size: 1.02rem; font-weight: 900; letter-spacing: -.1em; box-shadow: inset 0 1px 0 color-mix(in srgb,var(--color-text) 10%,transparent),0 6px 16px color-mix(in srgb,var(--color-primary) 16%,transparent); }
 html[data-theme] .brand-lockup-copy { display: grid; gap: 1px; }
 html[data-theme] .brand-eyebrow { color: var(--color-text-muted); font-size: .48rem; font-weight: 750; letter-spacing: .16em; line-height: 1; text-transform: uppercase; }
 html[data-theme] .brand-lockup-copy h1 { font-size: 1.28rem !important; font-weight: 900 !important; letter-spacing: -.075em !important; line-height: 1.02; }
 html[data-theme] .brand-lockup-title { display: block; color: var(--color-text); font-size: clamp(.88rem,1.3vw,1.05rem); font-weight: 800; letter-spacing: -.035em; line-height: 1.1; white-space: nowrap; }
-html[data-theme] .header-user-controls { position: absolute; top: 50%; right: var(--space-lg); z-index: 2; display: flex; align-items: center; gap: var(--space-sm); transform: translateY(-50%); }
+html[data-theme] .header-user-controls { position: relative !important; top: auto !important; right: auto !important; transform: none !important; z-index: 2; display: flex !important; align-items: center !important; gap: var(--space-sm) !important; min-height: 56px !important; height: 56px !important; }
 html[data-theme] .lifehub-header .topBarLeft > div > div,
 html[data-theme] .lifehub-header [style*="Workspace"] { color: var(--color-text-muted) !important; }
 html[data-theme] .lifehub-sidebar { gap: var(--space-sm) !important; padding: var(--space-lg) var(--space-md) !important; border-color: var(--color-border) !important; background: var(--color-surface) !important; }
@@ -621,11 +622,11 @@ html[data-theme] .mobile-dock-create-trigger,
 html[data-theme] .lifehub-quick-create-trigger { border-color: var(--color-border); background: var(--color-primary); color: #fff; }
 
 @media (max-width: 760px) {
-  html[data-theme] .lifehub-header { min-height: 60px !important; height: 60px; padding: 0 var(--space-md) !important; }
+  html[data-theme] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px)) !important; height: auto !important; padding-top: env(safe-area-inset-top, 0px) !important; padding-bottom: 0 !important; padding-left: max(var(--space-md), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-md), env(safe-area-inset-right, 0px)) !important; }
   html[data-theme] .lifehub-header .menu-button { display: none !important; }
   html[data-theme] .lifehub-sidebar { display: none !important; }
-  html[data-theme] .lifehub-main { height: calc(100dvh - 60px) !important; }
-  html[data-theme] .lifehub-content { padding: var(--space-md) var(--space-md) 94px !important; }
+  html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important; height: auto !important; }
+  html[data-theme] .lifehub-content { padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right, 0px)) calc(var(--mobile-tabbar-bottom, 8px) + var(--mobile-tabbar-height, 72px) + 18px) max(var(--space-md), env(safe-area-inset-left, 0px)) !important; }
   html[data-theme] .lifehub-banner { min-height: 22px; margin-bottom: var(--space-sm) !important; font-size: var(--font-caption) !important; }
   html[data-theme] .dashboard-overview { gap: var(--space-lg) !important; }
   html[data-theme] .dashboard-greeting { padding: var(--space-lg) !important; }
@@ -1581,7 +1582,7 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
 /* Keep the mobile quick-create FAB spatially separate from the navigation dock. */
 @media (max-width: 760px) {
   html[data-theme] {
-    --mobile-tabbar-bottom: 8px;
+    --mobile-tabbar-bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 8px));
     --mobile-tabbar-height: 72px;
     --mobile-fab-gap: 14px;
     --mobile-fab-size: 56px;
@@ -1645,7 +1646,7 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
 
 @media (max-width: 900px) and (max-height: 500px) {
   html[data-theme] {
-    --mobile-tabbar-bottom: 6px;
+    --mobile-tabbar-bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) + 6px));
     --mobile-tabbar-height: 54px;
     --mobile-fab-gap: 10px;
     --mobile-fab-size: 48px;
