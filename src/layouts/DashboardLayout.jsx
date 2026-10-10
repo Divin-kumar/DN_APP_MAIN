@@ -489,11 +489,11 @@ const styles = {
     justifyContent: 'space-between',
     background: '#ffffff',
     borderBottom: '1px solid #dfeae3',
-    paddingTop: 'env(safe-area-inset-top, 0px)',
+    paddingTop: 'calc(env(safe-area-inset-top, 0px) + 10px)',
     paddingRight: 'max(24px, env(safe-area-inset-right, 0px))',
-    paddingBottom: 0,
+    paddingBottom: '6px',
     paddingLeft: 'max(24px, env(safe-area-inset-left, 0px))',
-    minHeight: 'calc(56px + env(safe-area-inset-top, 0px))',
+    minHeight: 'calc(56px + env(safe-area-inset-top, 0px) + 10px)',
     position: 'sticky',
     top: 0,
     zIndex: 20,
@@ -548,7 +548,7 @@ const styles = {
   },
   mainContent: {
     display: 'flex',
-    minHeight: 'calc(100dvh - 56px - env(safe-area-inset-top, 0px))',
+    minHeight: 'calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px)',
   },
   sidebar: {
     width: '220px',

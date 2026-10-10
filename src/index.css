@@ -2592,9 +2592,9 @@ html[data-theme="dark"] {
 [data-theme="dark"] .event-story-copy > strong { overflow: hidden; text-overflow: ellipsis; }
 
 @media (max-width: 760px) {
-  [data-theme="dark"] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px)); padding-top: env(safe-area-inset-top, 0px) !important; padding-right: max(13px, env(safe-area-inset-right, 0px)) !important; padding-bottom: 0 !important; padding-left: max(13px, env(safe-area-inset-left, 0px)) !important; }
+  [data-theme="dark"] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px) + 10px); padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important; padding-right: max(13px, env(safe-area-inset-right, 0px)) !important; padding-bottom: 6px !important; padding-left: max(13px, env(safe-area-inset-left, 0px)) !important; }
   [data-theme="dark"] .lifehub-header .menu-button { display: none; }
-  [data-theme="dark"] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)); height: auto; }
+  [data-theme="dark"] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px); height: auto; }
   [data-theme="dark"] .lifehub-content { padding: 10px max(13px, env(safe-area-inset-right, 0px)) 94px max(13px, env(safe-area-inset-left, 0px)) !important; }
   [data-theme="dark"] .lifehub-banner { margin-bottom: 9px !important; font-size: .58rem; }
   [data-theme="dark"] .dashboard-overview { gap: 12px; }
@@ -8210,10 +8210,10 @@ button {
   }
 
   .lifehub-header {
-    min-height: calc(56px + env(safe-area-inset-top, 0px));
-    padding-top: env(safe-area-inset-top, 0px) !important;
+    min-height: calc(56px + env(safe-area-inset-top, 0px) + 10px);
+    padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important;
     padding-right: max(16px, env(safe-area-inset-right, 0px)) !important;
-    padding-bottom: 0 !important;
+    padding-bottom: 6px !important;
     padding-left: max(16px, env(safe-area-inset-left, 0px)) !important;
     background: rgba(250, 251, 248, 0.84) !important;
     border-bottom-color: rgba(46, 78, 60, 0.07);

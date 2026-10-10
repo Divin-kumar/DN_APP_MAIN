@@ -84,8 +84,8 @@ html[data-theme] body,
 html[data-theme] #root,
 html[data-theme] .lifehub-shell,
 html[data-theme] .lifehub-main { background: var(--color-bg) !important; color: var(--color-text); }
-html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important; height: auto !important; }
-html[data-theme] .lifehub-header { position: sticky !important; top: 0 !important; z-index: 20 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; min-height: calc(56px + env(safe-area-inset-top, 0px)) !important; height: auto !important; padding-top: env(safe-area-inset-top, 0px) !important; padding-bottom: 0 !important; padding-left: max(var(--space-xl), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-xl), env(safe-area-inset-right, 0px)) !important; border-bottom: 1px solid var(--color-border) !important; background: var(--color-glass) !important; color: var(--color-text) !important; backdrop-filter: blur(20px) saturate(1.15) !important; -webkit-backdrop-filter: blur(20px) saturate(1.15) !important; box-sizing: border-box !important; }
+html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px) !important; height: auto !important; }
+html[data-theme] .lifehub-header { position: sticky !important; top: 0 !important; z-index: 20 !important; display: flex !important; align-items: center !important; justify-content: space-between !important; min-height: calc(56px + env(safe-area-inset-top, 0px) + 10px) !important; height: auto !important; padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important; padding-bottom: 6px !important; padding-left: max(var(--space-xl), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-xl), env(safe-area-inset-right, 0px)) !important; border-bottom: 1px solid var(--color-border) !important; background: var(--color-glass) !important; color: var(--color-text) !important; backdrop-filter: blur(20px) saturate(1.15) !important; -webkit-backdrop-filter: blur(20px) saturate(1.15) !important; box-sizing: border-box !important; }
 html[data-theme] .lifehub-header h1 { margin: 0; color: var(--color-text) !important; font-size: var(--font-title) !important; font-weight: 700; letter-spacing: -.04em; }
 html[data-theme] .lifehub-header .topBarLeft,
 html[data-theme] .lifehub-header > div:first-child { display: flex !important; align-items: center !important; gap: 12px !important; min-height: 56px !important; height: 56px !important; }
@@ -622,11 +622,11 @@ html[data-theme] .mobile-dock-create-trigger,
 html[data-theme] .lifehub-quick-create-trigger { border-color: var(--color-border); background: var(--color-primary); color: #fff; }
 
 @media (max-width: 760px) {
-  html[data-theme] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px)) !important; height: auto !important; padding-top: env(safe-area-inset-top, 0px) !important; padding-bottom: 0 !important; padding-left: max(var(--space-md), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-md), env(safe-area-inset-right, 0px)) !important; }
+  html[data-theme] .lifehub-header { min-height: calc(56px + env(safe-area-inset-top, 0px) + 10px) !important; height: auto !important; padding-top: calc(env(safe-area-inset-top, 0px) + 10px) !important; padding-bottom: 6px !important; padding-left: max(var(--space-md), env(safe-area-inset-left, 0px)) !important; padding-right: max(var(--space-md), env(safe-area-inset-right, 0px)) !important; }
   html[data-theme] .lifehub-header .menu-button { display: none !important; }
   html[data-theme] .lifehub-sidebar { display: none !important; }
-  html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px)) !important; height: auto !important; }
-  html[data-theme] .lifehub-content { padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right, 0px)) calc(var(--mobile-tabbar-bottom, 8px) + var(--mobile-tabbar-height, 72px) + 18px) max(var(--space-md), env(safe-area-inset-left, 0px)) !important; }
+  html[data-theme] .lifehub-main { min-height: calc(100dvh - 56px - env(safe-area-inset-top, 0px) - 10px) !important; height: auto !important; }
+  html[data-theme] .lifehub-content { padding: var(--space-md) max(var(--space-md), env(safe-area-inset-right, 0px)) calc(var(--mobile-tabbar-bottom, 10px) + var(--mobile-tabbar-height, 68px) + 18px) max(var(--space-md), env(safe-area-inset-left, 0px)) !important; }
   html[data-theme] .lifehub-banner { min-height: 22px; margin-bottom: var(--space-sm) !important; font-size: var(--font-caption) !important; }
   html[data-theme] .dashboard-overview { gap: var(--space-lg) !important; }
   html[data-theme] .dashboard-greeting { padding: var(--space-lg) !important; }
@@ -1582,9 +1582,9 @@ html[data-theme] .life-journey-cards .event-story-main > .event-story-status.sta
 /* Keep the mobile quick-create FAB spatially separate from the navigation dock. */
 @media (max-width: 760px) {
   html[data-theme] {
-    --mobile-tabbar-bottom: max(8px, calc(env(safe-area-inset-bottom, 0px) + 8px));
-    --mobile-tabbar-height: 72px;
-    --mobile-fab-gap: 14px;
+    --mobile-tabbar-bottom: 10px;
+    --mobile-tabbar-height: 68px;
+    --mobile-fab-gap: 12px;
     --mobile-fab-size: 56px;
   }
 
