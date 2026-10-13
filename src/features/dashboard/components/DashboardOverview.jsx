@@ -9,6 +9,7 @@ import useEventStore from '../../../store/useEventStore';
 import { getDashboardVisibleEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { downloadBlob } from '../../../utils/download';
 import { getMomentTypeLabel } from '../../../utils/codeLists';
+import '../../../pages/activities-page.css';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
