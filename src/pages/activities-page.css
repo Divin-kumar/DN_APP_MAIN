@@ -498,3 +498,86 @@
   .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .space-y-2 > div { align-items: flex-start; }
   .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .space-y-2 > div > div:last-child { gap: .25rem; }
 }
+
+
+/* Activity entry points inside event workspaces and quick-create overlays. */
+.activities-create-button {
+  min-height: 34px;
+  padding: .42rem .72rem;
+  gap: .38rem;
+  border-radius: 9px;
+  font-size: .8rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.activities-create-button svg { width: 14px; height: 14px; }
+.quick-create-activity-form,
+.activities-drawer-form {
+  display: grid;
+  gap: .75rem;
+  min-width: 0;
+}
+.quick-create-activity-form input,
+.quick-create-activity-form select,
+.quick-create-activity-form textarea,
+.activities-drawer-form input,
+.activities-drawer-form select,
+.activities-drawer-form textarea {
+  width: 100%;
+  min-height: 38px;
+  padding: .55rem .7rem;
+  border-radius: 9px;
+  font-size: .86rem;
+  border: 1px solid var(--border-strong, #d6e2da);
+  background: var(--surface-strong, #fff);
+  color: var(--ink, #183a30);
+  box-shadow: none;
+}
+.quick-create-activity-form textarea,
+.activities-drawer-form textarea { min-height: 78px; resize: vertical; }
+.quick-create-activity-form .form-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: .5rem;
+  margin-top: .2rem;
+}
+.quick-create-activity-form .form-actions button,
+.activities-drawer-form > button {
+  min-height: 34px;
+  padding: .42rem .72rem;
+  border-radius: 9px;
+  font-size: .8rem;
+  font-weight: 600;
+  box-shadow: none;
+}
+.activities-drawer-form .form-field-label { display: grid; gap: .35rem; }
+[data-theme="dark"] .quick-create-activity-form input,
+[data-theme="dark"] .quick-create-activity-form select,
+[data-theme="dark"] .quick-create-activity-form textarea,
+[data-theme="dark"] .activities-drawer-form input,
+[data-theme="dark"] .activities-drawer-form select,
+[data-theme="dark"] .activities-drawer-form textarea,
+.dark .quick-create-activity-form input,
+.dark .quick-create-activity-form select,
+.dark .quick-create-activity-form textarea,
+.dark .activities-drawer-form input,
+.dark .activities-drawer-form select,
+.dark .activities-drawer-form textarea {
+  color: #edf5f0;
+  background: #111b17;
+  border-color: #40534a;
+  color-scheme: dark;
+}
+[data-theme="dark"] .quick-create-activity-form input::placeholder,
+[data-theme="dark"] .quick-create-activity-form textarea::placeholder,
+[data-theme="dark"] .activities-drawer-form input::placeholder,
+[data-theme="dark"] .activities-drawer-form textarea::placeholder,
+.dark .quick-create-activity-form input::placeholder,
+.dark .quick-create-activity-form textarea::placeholder,
+.dark .activities-drawer-form input::placeholder,
+.dark .activities-drawer-form textarea::placeholder { color: #91a59a; opacity: 1; }
+@media (max-width: 640px) {
+  .quick-create-activity-form .form-actions { justify-content: stretch; }
+  .quick-create-activity-form .form-actions button { flex: 1; }
+}
