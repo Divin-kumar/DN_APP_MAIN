@@ -408,12 +408,28 @@ export const restoreBackupArtifact = async (artifact, { database = db, allowOver
 
     return { success: true, preview, restored: true, snapshot };
   } catch (error) {
-    for (const [tableName, rows] of Object.entries(snapshot)) {
-      const table = database.table(tableName);
-      if (!table) continue;
-      await table.clear();
-      if (rows.length) await table.bulkAdd(rows);
+    // Roll back all snapshotted tables in one IndexedDB transaction. Restoring
+    // tables one by one could itself be interrupted and leave a mixed database.
+    const snapshotTables = Object.keys(snapshot)
+      .map((tableName) => database.table(tableName))
+      .filter(Boolean);
+
+    try {
+      if (snapshotTables.length) {
+        await database.transaction('rw', ...snapshotTables, async () => {
+          for (const table of snapshotTables) {
+            const rows = snapshot[table.name];
+            await table.clear();
+            if (rows.length) await table.bulkAdd(rows);
+          }
+        });
+      }
+    } catch (rollbackError) {
+      // Preserve the original restore failure while exposing rollback failure
+      // for diagnostics; do not mask the cause that initiated recovery.
+      error.rollbackError = rollbackError;
     }
+
     error.snapshot = snapshot;
     throw error;
   }
