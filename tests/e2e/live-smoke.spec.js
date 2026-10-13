@@ -53,3 +53,48 @@ test('mobile viewport does not introduce document-level horizontal overflow', as
   expect(dimensions.documentWidth, JSON.stringify(dimensions)).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
   expect(pageErrors).toEqual([]);
 });
+
+
+test('Activities page opens its create form and keeps controls usable on mobile', async ({ page }) => {
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.message));
+  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 15000 });
+
+  await page.getByRole('button', { name: /New Activity/i }).click();
+  await expect(page.getByRole('heading', { name: 'Create Activity' })).toBeVisible();
+  await expect(page.getByLabel('Activity title')).toBeVisible();
+  await expect(page.getByLabel('Date')).toBeVisible();
+  await expect(page.getByLabel('Priority')).toBeVisible();
+  await expect(page.getByLabel(/Notes & Context/)).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Save Activity' })).toBeVisible();
+
+  const layout = await page.evaluate(() => {
+    const dialog = document.querySelector('[role="dialog"]');
+    const rect = dialog?.getBoundingClientRect();
+    return {
+      viewportWidth: document.documentElement.clientWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      dialogLeft: rect?.left ?? 0,
+      dialogRight: rect?.right ?? 0,
+      dialogWidth: rect?.width ?? 0,
+      viewportHeight: window.innerHeight,
+    };
+  });
+  expect(layout.documentWidth, JSON.stringify(layout)).toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(layout.dialogWidth, 'Create form dialog should be rendered').toBeGreaterThan(0);
+  expect(layout.dialogLeft, 'Dialog should not extend beyond the left edge').toBeGreaterThanOrEqual(-1);
+  expect(layout.dialogRight, 'Dialog should not extend beyond the right edge').toBeLessThanOrEqual(layout.viewportWidth + 1);
+  expect(pageErrors).toEqual([]);
+  await page.getByRole('button', { name: 'Cancel' }).click();
+  await expect(page.getByRole('heading', { name: 'Create Activity' })).toHaveCount(0);
+});
+
+test('Activities form validates a blank title without saving anything', async ({ page }) => {
+  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 15000 });
+  await page.getByRole('button', { name: /New Activity/i }).click();
+  await page.getByRole('button', { name: 'Save Activity' }).click();
+  await expect(page.getByRole('alert')).toContainText('Please provide an activity title.');
+  await expect(page.getByRole('heading', { name: 'Create Activity' })).toBeVisible();
+});
