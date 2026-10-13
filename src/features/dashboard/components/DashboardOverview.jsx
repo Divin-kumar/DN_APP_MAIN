@@ -650,7 +650,7 @@ export default function DashboardOverview() {
                         type="button"
                         onClick={(e) => handleToggleActivity(activity, e)}
                         aria-label={isCompleted ? 'Mark incomplete' : 'Mark complete'}
-                        className={`w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
+                        className={`dashboard-activity-check w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
                           isCompleted
                             ? 'bg-emerald-600 text-white shadow-xs'
                             : 'border-2 border-slate-300 dark:border-slate-500 hover:border-emerald-500 hover:bg-emerald-50 text-transparent hover:text-emerald-600'
@@ -708,7 +708,8 @@ export default function DashboardOverview() {
                       <button
                         type="button"
                         onClick={() => navigate('/activities')}
-                        className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                        className="dashboard-activity-open p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
+                        aria-label={`Open activities for ${activity.title || "activity"}`}
                         title="View activity details"
                       >
                         <ChevronRight size={16} />
