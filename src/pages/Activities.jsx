@@ -327,7 +327,7 @@ export default function ActivitiesPage() {
         <button
           type="button"
           onClick={openCreateModal}
-          className="primaryButton flex items-center gap-1.5"
+          className="primaryButton activities-create-button flex items-center gap-1.5"
         >
           <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
           <span>New Activity</span>
@@ -585,7 +585,7 @@ export default function ActivitiesPage() {
           title={modalMode === 'create' ? 'Create Activity' : 'Edit Activity'}
           onClose={() => setModalMode(null)}
         >
-          <form onSubmit={handleSaveActivityForm} className="form-surface space-y-3.5" noValidate>
+          <form onSubmit={handleSaveActivityForm} className="form-surface activities-form space-y-3.5" noValidate>
             {formError && (
               <p className="quick-create-error" role="alert">
                 {formError}
@@ -757,8 +757,8 @@ export default function ActivitiesPage() {
       {/* View Detail Modal */}
       {modalMode === 'view' && selectedActivity && (
         <ModalDialog title="Activity Details" onClose={() => setModalMode(null)}>
-          <div className="space-y-4">
-            <div className="flex items-start justify-between gap-3">
+          <div className="activities-detail space-y-4">
+            <div className="activities-detail-header flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
                   {selectedActivity.title}
