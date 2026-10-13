@@ -26,6 +26,7 @@ import StatePanel from '../components/common/StatePanel';
 import SortControl from '../components/common/SortControl';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { ACTIVITY_PRIORITY_OPTIONS, getActivityPriorityLabel } from '../utils/codeLists';
+import './activities-page.css';
 
 const PRIORITY_BADGE_CLASSES = {
   high: 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800',
@@ -316,7 +317,7 @@ export default function ActivitiesPage() {
   return (
     <div className="feature-page activities-page">
       {/* Header matching LifeHub modules */}
-      <header className="financial-module-heading">
+      <header className="financial-module-heading activities-heading">
         <div>
           <h3>Activities</h3>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -334,8 +335,8 @@ export default function ActivitiesPage() {
       </header>
 
       {/* Search and Filters Toolbar matching other pages */}
-      <div className="financial-module-toolbar flex-wrap gap-2.5">
-        <div className="relative flex-1 min-w-[200px]">
+      <div className="financial-module-toolbar activities-toolbar flex-wrap gap-2.5">
+        <div className="relative flex-1 min-w-[200px] activities-search">
           <Search
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -380,7 +381,7 @@ export default function ActivitiesPage() {
       </div>
 
       {/* Filter Rail with Quick Access Tabs */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 mb-4 no-scrollbar">
+      <div className="activities-filter-rail flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 mb-4 no-scrollbar">
         {[
           { id: 'all', label: 'All', count: allActivities.length },
           {
@@ -461,7 +462,7 @@ export default function ActivitiesPage() {
           onAction={openCreateModal}
         />
       ) : (
-        <div className="space-y-2.5">
+        <div className="activities-list space-y-2.5">
           {filteredActivities.map((activity) => {
             const isCompleted = Boolean(activity.completed);
             const isOverdue = !isCompleted && activity.date && activity.date < todayIso;
@@ -472,7 +473,7 @@ export default function ActivitiesPage() {
               <div
                 key={activity.id}
                 onClick={() => openViewModal(activity)}
-                className={`group flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                className={`activity-list-card group flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
                   isCompleted
                     ? 'opacity-70 bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800'
                     : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-xs'
