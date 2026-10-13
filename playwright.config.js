@@ -16,10 +16,20 @@ export default defineConfig({
     trace: 'retain-on-failure',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    ...devices['Desktop Chrome'],
   },
   projects: [
     { name: 'desktop-chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'mobile-chromium', use: { ...devices['iPhone 13'] } },
+    {
+      // Simulate a phone-sized viewport and touch input in Chromium.
+      // The iPhone device preset launches WebKit, which isn't installed in CI.
+      name: 'mobile-chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 390, height: 844 },
+        screen: { width: 390, height: 844 },
+        isMobile: true,
+        hasTouch: true,
+      },
+    },
   ],
 });
