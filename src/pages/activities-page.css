@@ -481,3 +481,223 @@
   .activities-page .activities-create-button { gap: 5px; padding-inline: 8px; }
   .activities-page .activities-total-count { font-size: 10px; }
 }
+
+
+/* Activity editor form: intentional, consistent controls for the installed PWA. */
+.lifehub-modal:has(.activities-form) {
+  width: min(600px, calc(100vw - 28px)) !important;
+  max-height: min(88dvh, 820px) !important;
+  padding: 22px !important;
+  overflow-x: hidden !important;
+  overflow-y: auto !important;
+  border: 1px solid var(--color-border, #dce5e1) !important;
+  border-radius: 22px !important;
+  background: var(--color-card, #fff) !important;
+  color: var(--color-text, #17221e) !important;
+  box-shadow: 0 24px 80px rgba(10, 28, 22, .2) !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+.lifehub-modal:has(.activities-form) > div:first-child {
+  position: sticky;
+  top: -22px;
+  z-index: 4;
+  margin: -2px 0 18px !important;
+  padding: 2px 0 13px;
+  background: var(--color-card, #fff);
+  border-bottom: 1px solid var(--color-border, #e1e8e4);
+}
+.lifehub-modal:has(.activities-form) > div:first-child h3 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -.025em;
+}
+.activities-page .activities-form {
+  display: grid;
+  gap: 17px;
+  min-width: 0;
+  padding: 0 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+}
+.activities-page .activities-form > div {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+}
+.activities-page .activities-form label {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin: 0;
+  color: var(--color-text, #17221e);
+  font-size: 13px;
+  font-weight: 750;
+  line-height: 1.35;
+}
+.activities-page .activities-form .event-form-optional {
+  color: var(--color-text-muted, #78857f);
+  font-size: 11px;
+  font-weight: 500;
+}
+.activities-page .activities-form input:not([type="file"]),
+.activities-page .activities-form select,
+.activities-page .activities-form textarea {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  box-sizing: border-box;
+  padding: 12px 13px;
+  border: 1px solid var(--color-border, #d8e2dc) !important;
+  border-radius: 12px !important;
+  background: var(--color-surface, #f8faf9) !important;
+  color: var(--color-text, #17221e) !important;
+  font-family: inherit;
+  font-size: 16px !important;
+  line-height: 1.35;
+  box-shadow: none !important;
+  transition: border-color .16s ease, box-shadow .16s ease, background-color .16s ease;
+}
+.activities-page .activities-form input:not([type="file"]):focus,
+.activities-page .activities-form select:focus,
+.activities-page .activities-form textarea:focus {
+  outline: none;
+  border-color: var(--color-primary, #178365) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary, #178365) 16%, transparent) !important;
+}
+.activities-page .activities-form input::placeholder,
+.activities-page .activities-form textarea::placeholder {
+  color: var(--color-text-muted, #89958f);
+  opacity: .9;
+}
+.activities-page .activities-form textarea {
+  min-height: 112px;
+  resize: vertical;
+  line-height: 1.5;
+}
+.activities-page .activities-form .activities-date-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.activities-page .activities-form .activities-date-time-grid > div { min-width: 0; }
+.activities-page .activities-form .activities-date-time-grid label { min-height: 18px; }
+.activities-page .activities-form .dialog-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 2px;
+  padding: 14px 0 0 !important;
+  border-top: 1px solid var(--color-border, #e1e8e4);
+  background: var(--color-card, #fff) !important;
+}
+.activities-page .activities-form .dialog-actions button {
+  min-height: 44px;
+  padding: 0 17px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 750;
+  box-shadow: none;
+}
+.activities-page .activities-form .dialog-actions .secondaryButton {
+  border: 1px solid var(--color-border, #d8e2dc);
+  background: var(--color-surface, #f8faf9);
+  color: var(--color-text, #17221e);
+}
+.activities-page .activities-form .dialog-actions .primaryButton {
+  min-width: 142px;
+}
+.activities-page .activities-form .quick-create-error {
+  margin: 0;
+  padding: 11px 12px;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #be123c;
+  font-size: 13px;
+  line-height: 1.45;
+}
+.activities-page .activities-form input[type="radio"],
+.activities-page .activities-form input[type="checkbox"] {
+  width: 19px;
+  height: 19px;
+  min-height: 19px;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--color-primary, #178365);
+  flex: 0 0 auto;
+  box-shadow: none !important;
+}
+.activities-page .activities-form input[type="radio"]:focus-visible,
+.activities-page .activities-form input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--color-primary, #178365);
+  outline-offset: 3px;
+}
+html[data-theme="dark"] .lifehub-modal:has(.activities-form) > div:first-child {
+  background: var(--color-card, #111827);
+  border-color: var(--color-border, rgba(151,171,205,.2));
+}
+html[data-theme="dark"] .activities-page .activities-form input:not([type="file"]),
+html[data-theme="dark"] .activities-page .activities-form select,
+html[data-theme="dark"] .activities-page .activities-form textarea {
+  background: #0d1525 !important;
+  border-color: rgba(151,171,205,.24) !important;
+  color: #edf3ff !important;
+}
+html[data-theme="dark"] .activities-page .activities-form .dialog-actions {
+  background: var(--color-card, #111827) !important;
+  border-color: rgba(151,171,205,.2);
+}
+html[data-theme="dark"] .activities-page .activities-form .dialog-actions .secondaryButton {
+  background: #162033 !important;
+  border-color: rgba(151,171,205,.24) !important;
+  color: #edf3ff !important;
+}
+@media (max-width: 600px) {
+  .lifehub-modal-backdrop:has(.activities-form) {
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: max(10px, env(safe-area-inset-top)) 10px max(10px, env(safe-area-inset-bottom)) !important;
+    overflow-y: auto !important;
+  }
+  .lifehub-modal:has(.activities-form) {
+    width: 100% !important;
+    max-height: calc(100dvh - max(20px, env(safe-area-inset-top) + env(safe-area-inset-bottom))) !important;
+    margin: 0 auto !important;
+    padding: 17px 15px !important;
+    border-radius: 19px !important;
+  }
+  .lifehub-modal:has(.activities-form) > div:first-child {
+    top: -17px;
+    margin: -1px 0 15px !important;
+    padding-bottom: 12px;
+  }
+  .activities-page .activities-form { gap: 15px; }
+  .activities-page .activities-form .activities-date-time-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 15px;
+  }
+  .activities-page .activities-form .dialog-actions {
+    position: sticky;
+    bottom: -17px;
+    z-index: 3;
+    margin-top: 0;
+    padding: 12px 0 max(3px, env(safe-area-inset-bottom)) !important;
+  }
+  .activities-page .activities-form .dialog-actions button {
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 10px;
+  }
+  .activities-page .activities-form .dialog-actions .primaryButton { min-width: 0; }
+}
+@media (max-width: 360px) {
+  .lifehub-modal:has(.activities-form) { padding-inline: 12px !important; }
+  .activities-page .activities-form .dialog-actions { gap: 8px; }
+  .activities-page .activities-form .dialog-actions button { font-size: 12px; }
+}
