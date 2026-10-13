@@ -707,7 +707,7 @@ export default function DashboardOverview() {
                       </span>
                       <button
                         type="button"
-                        onClick={() => navigate('/activities')}
+                        onClick={() => navigate('/activities', { state: { activityId: activity.id } })}
                         className="dashboard-activity-open p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
                         aria-label={`Open activities for ${activity.title || "activity"}`}
                         title="View activity details"
