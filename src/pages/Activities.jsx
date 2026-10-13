@@ -129,14 +129,16 @@ export default function ActivitiesPage() {
 
   // Dashboard activity shortcuts can open the matching activity directly.
   useEffect(() => {
-    if (!dashboardActivityId || loading) return;
+    if (!dashboardActivityId) return;
     const target = allActivities.find((activity) => activity.id === dashboardActivityId);
+    // Wait for the first data load before deciding that the requested activity is missing.
+    if (!target && !loadedFor && !error) return;
     if (target) {
       setSelectedActivity(target);
       setModalMode('view');
     }
     navigate(location.pathname, { replace: true, state: null });
-  }, [dashboardActivityId, loading, allActivities, navigate, location.pathname]);
+  }, [dashboardActivityId, allActivities, loadedFor, error, navigate, location.pathname]);
 
   const todayIso = new Date().toISOString().slice(0, 10);
 
