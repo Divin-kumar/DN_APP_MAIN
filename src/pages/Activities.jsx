@@ -411,11 +411,8 @@ export default function ActivitiesPage() {
               key={tab.id}
               type="button"
               onClick={() => setActiveFilter(tab.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${
-                isActive
-                  ? 'bg-emerald-600 text-white shadow-xs'
-                  : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300'
-              }`}
+              aria-pressed={isActive}
+              className={`activities-filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${isActive ? 'is-active' : ''}`}
             >
               <span>{tab.label}</span>
               <span
