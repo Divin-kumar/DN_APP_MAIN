@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Check,
   CheckCircle2,
@@ -53,6 +54,9 @@ const formatDateLabel = (dateStr) => {
 };
 
 export default function ActivitiesPage() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const dashboardActivityId = location.state?.activityId;
   const principal = useAppStore((state) => state.principal);
   const user = principal ? { uid: principal.principalId, displayName: principal.deviceName } : null;
   const isGuest = false;
@@ -97,6 +101,17 @@ export default function ActivitiesPage() {
       loadEvents(user.uid, isGuest);
     }
   }, [user?.uid, events.length, isGuest, loadEvents]);
+
+  // Dashboard activity shortcuts can open the matching activity directly.
+  useEffect(() => {
+    if (!dashboardActivityId || loading) return;
+    const target = allActivities.find((activity) => activity.id === dashboardActivityId);
+    if (target) {
+      setSelectedActivity(target);
+      setModalMode('view');
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [dashboardActivityId, loading, allActivities, navigate, location.pathname]);
 
   // Aggregate all activities: those tied to events + standalone activities
   const allActivities = useMemo(() => {
