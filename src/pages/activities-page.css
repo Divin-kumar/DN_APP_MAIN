@@ -29,6 +29,9 @@
   font-size: var(--font-caption); font-weight: 600; box-shadow: none; white-space: nowrap;
 }
 .activities-page .activities-filter-rail > button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.activities-page .activities-filter-rail > button.is-active { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+.activities-page .activities-filter-rail > button.is-active span:last-child { background: color-mix(in srgb, #fff 18%, transparent); color: #fff; }
+.activities-page .activities-filter-rail > button:not(.is-active):hover { border-color: var(--color-primary); color: var(--color-primary); }
 .activities-page .activities-filter-rail > button span:last-child {
   min-width: 18px; padding: 1px 4px; border-radius: 999px; background: var(--color-card-raised);
   color: var(--color-text-muted); font-size: 10px; line-height: 1.3; text-align: center;
