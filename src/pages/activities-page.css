@@ -784,3 +784,67 @@ html[data-theme="dark"] .activities-page .activities-filter-chip.activities-stat
     font-size: 13px;
   }
 }
+
+
+/* Fix the actual completion toggles in the Activities list.
+   Use high-specificity declarations to beat shared/global button styles. */
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-sizing: border-box !important;
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+  padding: 0 !important;
+  border: 2px solid #7b8da8 !important;
+  border-radius: 10px !important;
+  background: #111b2d !important;
+  color: transparent !important;
+  box-shadow: none !important;
+  opacity: 1 !important;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle svg {
+  display: block !important;
+  width: 19px !important;
+  height: 19px !important;
+  stroke: currentColor !important;
+  opacity: 0 !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle[aria-label="Mark incomplete"] {
+  border-color: #22a879 !important;
+  background: #16835f !important;
+  color: #fff !important;
+  box-shadow: 0 2px 7px rgba(22, 131, 95, .28) !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle[aria-label="Mark incomplete"] svg {
+  opacity: 1 !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle[aria-label="Mark complete"]:hover {
+  border-color: #4b8cf5 !important;
+  background: #1c2b43 !important;
+  color: #cfe0ff !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle[aria-label="Mark complete"]:hover svg {
+  opacity: 1 !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle:focus-visible {
+  outline: 3px solid #76a8ff !important;
+  outline-offset: 3px !important;
+}
+.activities-page .activities-list .activity-list-card button.activity-completion-toggle:active {
+  transform: scale(.96);
+}
+@media (max-width: 600px) {
+  .activities-page .activities-list .activity-list-card button.activity-completion-toggle {
+    width: 36px !important;
+    height: 36px !important;
+    min-width: 36px !important;
+    min-height: 36px !important;
+  }
+}
