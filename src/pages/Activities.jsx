@@ -329,42 +329,37 @@ export default function ActivitiesPage() {
         </button>
       </header>
 
-      {/* At-a-glance summary: real counts derived from the activity collection. */}
-      <section className="activities-overview" aria-label="Activity summary">
-        <article className="activities-stat">
-          <span className="activities-stat-label">Open</span>
-          <strong>{allActivities.filter((activity) => !activity.completed).length}</strong>
-          <span className="activities-stat-hint">Still to do</span>
-        </article>
-        <article className="activities-stat activities-stat-today">
-          <span className="activities-stat-label">Due today</span>
-          <strong>{allActivities.filter((activity) => activity.date === todayIso && !activity.completed).length}</strong>
-          <span className="activities-stat-hint">Needs attention today</span>
-        </article>
-        <article className="activities-stat activities-stat-overdue">
-          <span className="activities-stat-label">Overdue</span>
-          <strong>{allActivities.filter((activity) => activity.date && activity.date < todayIso && !activity.completed).length}</strong>
-          <span className="activities-stat-hint">Past due date</span>
-        </article>
-        <article className="activities-stat activities-stat-completed">
-          <span className="activities-stat-label">Completed</span>
-          <strong>{allActivities.filter((activity) => activity.completed).length}</strong>
-          <span className="activities-stat-hint">Already finished</span>
-        </article>
-      </section>
-
-      {/* Search and sort stay in one predictable toolbar; quick filters live below. */}
+      {/* Search and Filters Toolbar matching other pages */}
       <div className="financial-module-toolbar activities-toolbar">
         <div className="activities-search">
-          <Search size={16} className="activities-search-icon" aria-hidden="true" />
+          <Search
+            size={16}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+            aria-hidden="true"
+          />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search activities, notes, or moments…"
             aria-label="Search activities"
+            className="w-full pl-9"
           />
         </div>
+
+        <DropdownSelect
+          value={activeFilter}
+          onChange={(e) => setActiveFilter(e.target.value)}
+          aria-label="Filter activities"
+        >
+          <option value="all">All activities ({allActivities.length})</option>
+          <option value="today">Today's activities</option>
+          <option value="upcoming">Upcoming activities</option>
+          <option value="high-priority">High priority</option>
+          <option value="standalone">Standalone activities</option>
+          <option value="completed">Completed activities</option>
+        </DropdownSelect>
+
         <SortControl
           field={sortOption}
           direction={sortDirection}
@@ -380,10 +375,8 @@ export default function ActivitiesPage() {
         />
       </div>
 
-      {/* Quick filters */}
-      <div className="activities-filter-section">
-        <span className="activities-filter-label">Show</span>
-        <div className="activities-filter-rail">
+      {/* Filter Rail with Quick Access Tabs */}
+      <div className="activities-filter-rail">
         {[
           { id: 'all', label: 'All', count: allActivities.length },
           {
@@ -434,7 +427,6 @@ export default function ActivitiesPage() {
             </button>
           );
         })}
-        </div>
       </div>
 
       {/* Activity List: use the same inset history surface as Expenses. */}
