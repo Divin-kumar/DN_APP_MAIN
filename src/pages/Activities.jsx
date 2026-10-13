@@ -75,7 +75,7 @@ export default function ActivitiesPage() {
   } = useEventStore();
 
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'today' | 'upcoming' | 'high-priority' | 'standalone' | 'completed'
+  const [activeFilter, setActiveFilter] = useState('all'); // 'all' | 'today' | 'upcoming' | 'high-priority' | 'standalone' | 'completed' | 'incomplete'
   const [sortOption, setSortOption] = useState('date'); // 'date' | 'priority' | 'title' | 'recently-updated'
   const [sortDirection, setSortDirection] = useState('asc');
 
@@ -174,6 +174,9 @@ export default function ActivitiesPage() {
         }
         if (activeFilter === 'completed') {
           return Boolean(activity.completed);
+        }
+        if (activeFilter === 'incomplete') {
+          return !activity.completed;
         }
         return true;
       })
@@ -382,6 +385,7 @@ export default function ActivitiesPage() {
           <option value="high-priority">High priority</option>
           <option value="standalone">Standalone activities</option>
           <option value="completed">Completed activities</option>
+          <option value="incomplete">Incomplete activities</option>
         </DropdownSelect>
 
         <SortControl
@@ -424,9 +428,16 @@ export default function ActivitiesPage() {
             count: allActivities.filter((a) => !a.eventId && !a.completed).length,
           },
           {
+            id: 'incomplete',
+            label: 'Incomplete',
+            count: allActivities.filter((a) => !a.completed).length,
+            status: true,
+          },
+          {
             id: 'completed',
             label: 'Completed',
             count: allActivities.filter((a) => a.completed).length,
+            status: true,
           },
         ].map((tab) => {
           const isActive = activeFilter === tab.id;
@@ -436,7 +447,7 @@ export default function ActivitiesPage() {
               type="button"
               onClick={() => setActiveFilter(tab.id)}
               aria-pressed={isActive}
-              className={`activities-filter-chip flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${isActive ? 'is-active' : ''}`}
+              className={`activities-filter-chip ${tab.status ? 'activities-status-filter' : ''} flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${isActive ? 'is-active' : ''}`}
             >
               <span>{tab.label}</span>
               <span
@@ -472,6 +483,8 @@ export default function ActivitiesPage() {
               ? 'No standalone activities'
               : activeFilter === 'completed'
               ? 'No completed activities yet'
+              : activeFilter === 'incomplete'
+              ? 'No incomplete activities'
               : 'No activities found'
           }
           description="Keep your plans organized by creating a standalone or moment-linked activity."
