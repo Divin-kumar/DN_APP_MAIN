@@ -1,0 +1,161 @@
+/* Activities page visual refinement — scoped to this page only. */
+.activities-page {
+  --activity-accent: var(--primary, #16866b);
+  gap: 1.1rem;
+  width: 100%;
+  min-width: 0;
+}
+.activities-page .activities-heading {
+  align-items: center;
+  gap: 1rem;
+  padding: 1.35rem 1.45rem;
+  border: 1px solid var(--border, #e2ebe6);
+  border-radius: 22px;
+  background: linear-gradient(125deg, var(--surface-strong, #fff) 0%, var(--surface-soft, #f4faf6) 100%);
+  box-shadow: 0 12px 30px rgba(22, 65, 51, .055);
+}
+.activities-page .activities-heading h3 {
+  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  line-height: 1.15;
+  letter-spacing: -.045em;
+}
+.activities-page .activities-heading p {
+  margin-top: .45rem;
+  color: var(--ink-soft, #64756d);
+  font-size: .9rem;
+  line-height: 1.5;
+}
+.activities-page .activities-heading .primaryButton {
+  min-height: 44px;
+  padding: .7rem 1rem;
+  border-radius: 13px;
+  white-space: nowrap;
+  box-shadow: 0 7px 16px rgba(30, 134, 109, .16);
+}
+.activities-page .activities-toolbar {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  padding: .85rem;
+  border: 1px solid var(--border, #e2ebe6);
+  border-radius: 18px;
+  background: var(--surface, rgba(255,255,255,.8));
+  box-shadow: 0 8px 22px rgba(22, 65, 51, .035);
+}
+.activities-page .activities-search { min-width: min(260px, 100%); }
+.activities-page .activities-search input {
+  min-height: 44px;
+  padding-top: .65rem;
+  padding-bottom: .65rem;
+  border-radius: 12px;
+  background: var(--surface-strong, #fff);
+}
+.activities-page .activities-toolbar select {
+  min-height: 44px;
+  max-width: 100%;
+  border-radius: 12px;
+}
+.activities-page .activities-filter-rail {
+  gap: .5rem;
+  margin: 0;
+  padding: .15rem 0 .45rem;
+  scrollbar-width: thin;
+}
+.activities-page .activities-filter-rail button {
+  min-height: 37px;
+  padding: .55rem .8rem;
+  border: 1px solid var(--border, #e2ebe6);
+  border-radius: 999px;
+  font-size: .78rem;
+  font-weight: 650;
+  white-space: nowrap;
+  transition: background .18s ease, border-color .18s ease, color .18s ease;
+}
+.activities-page .activities-filter-rail button:focus-visible {
+  outline: 3px solid var(--primary-glow, rgba(30,134,109,.18));
+  outline-offset: 2px;
+}
+.activities-page .activities-filter-rail button span:last-child {
+  min-width: 1.35rem;
+  text-align: center;
+  line-height: 1.4;
+}
+.activities-page .activities-list { display: grid; gap: .7rem; }
+.activities-page .activity-list-card {
+  min-width: 0;
+  padding: 1rem 1.1rem;
+  gap: 1rem;
+  border-color: var(--border, #e2ebe6);
+  border-radius: 17px;
+  background: var(--surface-strong, #fff);
+  box-shadow: 0 5px 18px rgba(20, 58, 45, .035);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+.activities-page .activity-list-card:not(.opacity-70):hover {
+  border-color: rgba(30, 134, 109, .38);
+  box-shadow: 0 10px 26px rgba(20, 58, 45, .075);
+  transform: translateY(-1px);
+}
+.activities-page .activity-list-card > div:first-child { min-width: 0; }
+.activities-page .activity-list-card button[aria-label="Mark complete"],
+.activities-page .activity-list-card button[aria-label="Mark incomplete"] {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  margin-top: .1rem;
+}
+.activities-page .activity-list-card button[title="Edit"],
+.activities-page .activity-list-card button[title="Delete"] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+}
+.activities-page .activity-list-card button[title="Edit"]:hover { border-color: var(--border, #e2ebe6); }
+.activities-page .activity-list-card button[title="Delete"]:hover { border-color: rgba(220, 38, 38, .15); }
+.activities-page .activity-list-card .text-sm.font-semibold {
+  overflow-wrap: anywhere;
+  line-height: 1.45;
+}
+.activities-page .activity-list-card .text-xs { line-height: 1.5; }
+.activities-page .activity-list-card .rounded-md { letter-spacing: .01em; }
+[data-theme="dark"] .activities-page .activities-heading {
+  background: linear-gradient(125deg, var(--surface-strong, #1d2d2d), var(--surface-soft, #142523));
+}
+[data-theme="dark"] .activities-page .activities-toolbar { background: var(--surface, rgba(20,31,31,.8)); }
+[data-theme="dark"] .activities-page .activity-list-card { background: var(--surface-strong, #1d2d2d); }
+@media (max-width: 760px) {
+  .activities-page { gap: .85rem; }
+  .activities-page .activities-heading {
+    align-items: stretch;
+    flex-direction: column;
+    padding: 1rem;
+    border-radius: 17px;
+  }
+  .activities-page .activities-heading .primaryButton { width: 100%; justify-content: center; }
+  .activities-page .activities-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+    padding: .7rem;
+  }
+  .activities-page .activities-search { min-width: 0; width: 100%; }
+  .activities-page .activities-toolbar select { width: 100%; }
+  .activities-page .activities-filter-rail { margin-inline: -.1rem; padding-bottom: .6rem; }
+  .activities-page .activity-list-card {
+    align-items: flex-start;
+    padding: .85rem;
+    gap: .6rem;
+    border-radius: 14px;
+  }
+  .activities-page .activity-list-card > div:first-child { gap: .65rem; }
+  .activities-page .activity-list-card > div:last-child { gap: .1rem; }
+  .activities-page .activity-list-card button[title="Edit"],
+  .activities-page .activity-list-card button[title="Delete"] { width: 32px; height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .activities-page .activity-list-card,
+  .activities-page .activities-filter-rail button { transition: none; }
+}
