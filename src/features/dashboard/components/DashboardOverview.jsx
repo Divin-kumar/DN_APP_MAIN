@@ -661,7 +661,15 @@ export default function DashboardOverview() {
                       </button>
                       <div
                         className="min-w-0 flex-1 cursor-pointer"
-                        onClick={() => navigate('/activities')}
+                        role="link"
+                        tabIndex={0}
+                        aria-label={`View ${activity.title || 'activity'}`}
+                        onClick={() => navigate('/activities', { state: { activityId: activity.id } })}
+                        onKeyDown={(event) => {
+                          if (event.key === 'Enter') {
+                            navigate('/activities', { state: { activityId: activity.id } });
+                          }
+                        }}
                       >
                         <span
                           className={`text-sm font-semibold block truncate ${
