@@ -335,15 +335,22 @@ export default function ActivitiesPage() {
     <div className="financial-module-page activities-page">
       {/* Header matching LifeHub modules */}
       <header className="financial-module-heading activities-heading">
-        <h3>Activities</h3>
-        <button
-          type="button"
-          onClick={openCreateModal}
-          className="primaryButton activities-create-button"
-        >
-          <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
-          <span>New Activity</span>
-        </button>
+        <div className="activities-heading-copy">
+          <span className="activities-heading-eyebrow"><ListChecks size={13} aria-hidden="true" /> YOUR PLANS</span>
+          <h3>Activities</h3>
+          <p>Keep every next step clear, from small tasks to important plans.</p>
+        </div>
+        <div className="activities-heading-actions">
+          <span className="activities-total-count">{allActivities.length} {allActivities.length === 1 ? 'activity' : 'activities'}</span>
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="primaryButton activities-create-button"
+          >
+            <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
+            <span>New Activity</span>
+          </button>
+        </div>
       </header>
 
       {/* Search and Filters Toolbar matching other pages */}
