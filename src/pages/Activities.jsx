@@ -447,7 +447,7 @@ export default function ActivitiesPage() {
               type="button"
               onClick={() => setActiveFilter(tab.id)}
               aria-pressed={isActive}
-              className={`activities-filter-chip ${tab.status ? 'activities-status-filter' : ''} flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${isActive ? 'is-active' : ''}`}
+              className={`activities-filter-chip ${tab.status ? `activities-status-filter activities-status-filter-${tab.id}` : ''} flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors shrink-0 cursor-pointer ${isActive ? 'is-active' : ''}`}
             >
               <span>{tab.label}</span>
               <span
