@@ -1,0 +1,64 @@
+name: Playwright live smoke tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'Deployed app URL to test'
+        required: false
+        default: 'https://dn-10.web.app'
+  push:
+    branches:
+      - Post_V2_Cancel
+    paths:
+      - 'playwright.config.js'
+      - 'tests/e2e/**'
+      - '.github/workflows/playwright-live.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: playwright-live-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  live-smoke:
+    name: Live smoke tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out test branch
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install application dependencies
+        run: npm ci
+
+      - name: Install Playwright
+        run: npm install --no-save @playwright/test
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run read-only live tests
+        env:
+          CI: 'true'
+          PLAYWRIGHT_BASE_URL: ${{ inputs.target_url || 'https://dn-10.web.app' }}
+        run: npx playwright test
+
+      - name: Upload Playwright report and failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-live-results
+          path: |
+            playwright-report/
+            test-results/
+          if-no-files-found: ignore
+          retention-days: 14
