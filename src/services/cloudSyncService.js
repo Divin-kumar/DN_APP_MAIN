@@ -453,44 +453,25 @@ const uploadDriveSyncEnvelope = async (token, fileId, envelope) => {
  * Extract all local LifeHub records for sync using the complete backup artifact engine
  */
 const collectLocalSyncData = async (principalId) => {
-  let artifact = null;
-  try {
-    artifact = await createBackupArtifact({
-      database: db,
-      principalId,
-      reason: 'cloud-sync',
-      attachmentMode: 'include-attachments',
-    });
-  } catch (err) {
-    console.warn('Backup artifact generation fallback:', err);
-  }
+  // Fail closed: a partial/empty fallback can be uploaded as the new remote
+  // state and make a temporary local read failure look like intentional deletion.
+  const artifact = await createBackupArtifact({
+    database: db,
+    principalId,
+    reason: 'cloud-sync',
+    attachmentMode: 'include-attachments',
+  });
 
-  const [moments, activities, memories, expenses, incomes, codeLists, settings, attachments] = await Promise.all([
-    momentRepository.getAll(principalId).catch(() => []),
-    activityRepository.getAll(principalId).catch(() => []),
-    memoryRepository.getAll(principalId).catch(() => []),
-    expenseRepository.getAll(principalId).catch(() => []),
-    incomeRepository.getAll(principalId).catch(() => []),
-    codeListRepository.getAll(principalId).catch(() => []),
-    (settingsRepository.getAll ? settingsRepository.getAll(principalId) : settingsRepository.getSettings(principalId)).catch(() => []),
-    attachmentRepository.getAll(principalId).catch(() => []),
-  ]);
+  if (!artifact?.payload || typeof artifact.payload !== 'object' || Array.isArray(artifact.payload)) {
+    throw new Error('Local data could not be safely prepared for synchronization. No remote changes were made.');
+  }
 
   return {
     version: 2,
     syncTimestamp: new Date().toISOString(),
     principalId,
     artifact,
-    data: artifact?.payload || {
-      moments: moments || [],
-      activities: activities || [],
-      memories: memories || [],
-      expenses: expenses || [],
-      incomes: incomes || [],
-      codeLists: codeLists || [],
-      settings: settings || null,
-      attachments: attachments || [],
-    },
+    data: artifact.payload,
   };
 };
 
