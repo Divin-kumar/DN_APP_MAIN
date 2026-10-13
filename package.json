@@ -7,7 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
-    "deploy:hosting": "node scripts/deploy-hosting.mjs"
+    "deploy:hosting": "node scripts/deploy-hosting.mjs",
+    "test": "node --test"
   },
   "dependencies": {
     "dexie": "^4.4.6",
