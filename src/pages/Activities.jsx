@@ -315,19 +315,14 @@ export default function ActivitiesPage() {
   };
 
   return (
-    <div className="feature-page activities-page">
+    <div className="financial-module-page activities-page">
       {/* Header matching LifeHub modules */}
       <header className="financial-module-heading activities-heading">
-        <div>
-          <h3>Activities</h3>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Manage your daily tasks, plans, and moments across LifeHub.
-          </p>
-        </div>
+        <h3>Activities</h3>
         <button
           type="button"
           onClick={openCreateModal}
-          className="primaryButton activities-create-button flex items-center gap-1.5"
+          className="primaryButton activities-create-button"
         >
           <Plus size={16} strokeWidth={2.5} aria-hidden="true" />
           <span>New Activity</span>
@@ -335,8 +330,8 @@ export default function ActivitiesPage() {
       </header>
 
       {/* Search and Filters Toolbar matching other pages */}
-      <div className="financial-module-toolbar activities-toolbar flex-wrap gap-2.5">
-        <div className="relative flex-1 min-w-[200px] activities-search">
+      <div className="financial-module-toolbar activities-toolbar">
+        <div className="activities-search">
           <Search
             size={16}
             className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
@@ -381,7 +376,7 @@ export default function ActivitiesPage() {
       </div>
 
       {/* Filter Rail with Quick Access Tabs */}
-      <div className="activities-filter-rail flex items-center gap-1.5 overflow-x-auto pb-1 pt-1 mb-4 no-scrollbar">
+      <div className="activities-filter-rail">
         {[
           { id: 'all', label: 'All', count: allActivities.length },
           {
@@ -437,7 +432,8 @@ export default function ActivitiesPage() {
         })}
       </div>
 
-      {/* Activity List */}
+      {/* Activity List: use the same inset history surface as Expenses. */}
+      <section className="financial-module-history activities-history" aria-label="Activity history">
       {loading && !allActivities.length ? (
         <LoadingSkeleton rows={4} variant="financial" label="Loading activities" />
       ) : filteredActivities.length === 0 ? (
@@ -462,7 +458,7 @@ export default function ActivitiesPage() {
           onAction={openCreateModal}
         />
       ) : (
-        <div className="activities-list space-y-2.5">
+        <div className="activities-list">
           {filteredActivities.map((activity) => {
             const isCompleted = Boolean(activity.completed);
             const isOverdue = !isCompleted && activity.date && activity.date < todayIso;
@@ -473,7 +469,7 @@ export default function ActivitiesPage() {
               <div
                 key={activity.id}
                 onClick={() => openViewModal(activity)}
-                className={`activity-list-card group flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                className={`history-row activity-list-card group flex items-start sm:items-center justify-between gap-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
                   isCompleted
                     ? 'opacity-70 bg-slate-50/50 dark:bg-slate-900/40 border-slate-200/60 dark:border-slate-800'
                     : 'bg-white dark:bg-slate-900 border-slate-200/90 dark:border-slate-800 hover:border-emerald-300 dark:hover:border-emerald-700 shadow-xs'
@@ -578,14 +574,15 @@ export default function ActivitiesPage() {
           })}
         </div>
       )}
+      </section>
 
-      {/* Create / Edit Modal using LifeHub form-surface and standard fields */}
+      {/* Create / Edit Modal using the shared financial-entry form treatment */}
       {(modalMode === 'create' || modalMode === 'edit') && (
         <ModalDialog
           title={modalMode === 'create' ? 'Create Activity' : 'Edit Activity'}
           onClose={() => setModalMode(null)}
         >
-          <form onSubmit={handleSaveActivityForm} className="form-surface activities-form space-y-3.5" noValidate>
+          <form onSubmit={handleSaveActivityForm} className="form-surface financial-entry-form activities-form" noValidate>
             {formError && (
               <p className="quick-create-error" role="alert">
                 {formError}
