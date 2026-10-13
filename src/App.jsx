@@ -11,6 +11,7 @@
 import { Component, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
+import { Analytics } from '@vercel/analytics/react';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -188,6 +189,7 @@ export default function App() {
           {/* If a user types an unknown URL, send them to home. */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
+        <Analytics />
     </AuthProvider>
   );
 }
