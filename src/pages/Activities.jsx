@@ -478,7 +478,7 @@ export default function ActivitiesPage() {
                     type="button"
                     onClick={(e) => handleToggleComplete(activity, e)}
                     aria-label={isCompleted ? 'Mark incomplete' : 'Mark complete'}
-                    className={`mt-0.5 sm:mt-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
+                    className={`activity-completion-toggle mt-0.5 sm:mt-0 w-6 h-6 rounded-lg flex items-center justify-center transition-all shrink-0 cursor-pointer ${
                       isCompleted
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'border-2 border-slate-300 dark:border-slate-600 hover:border-emerald-500 hover:bg-emerald-50 dark:hover:bg-emerald-950/30 text-transparent'
@@ -552,16 +552,18 @@ export default function ActivitiesPage() {
                   <button
                     type="button"
                     onClick={(e) => openEditModal(activity, e)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                    className="activity-row-action p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                     title="Edit"
+                    aria-label={`Edit ${activity.title || "activity"}`}
                   >
                     <Edit2 size={15} />
                   </button>
                   <button
                     type="button"
                     onClick={(e) => openDeleteModal(activity, e)}
-                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
+                    className="activity-row-action p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 transition-colors"
                     title="Delete"
+                    aria-label={`Delete ${activity.title || "activity"}`}
                   >
                     <Trash2 size={15} />
                   </button>
