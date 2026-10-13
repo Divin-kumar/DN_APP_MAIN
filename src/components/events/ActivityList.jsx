@@ -8,6 +8,7 @@
 // Import React's state hook so the component can remember which expense list is currently expanded.
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import '../../pages/activities-page.css';
 
 // Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, Images, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
@@ -54,7 +55,7 @@ export default function ActivityList({
   if (!allActivities.length) {
     return (
       // Empty-state box for a clean, encouraging message.
-      <div className="event-activity-empty">
+      <div className="event-activity-empty activities-shared-empty">
         {/* Decorative icon area to make the empty state feel friendly and not blank. */}
         <span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
 
