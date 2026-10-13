@@ -102,17 +102,6 @@ export default function ActivitiesPage() {
     }
   }, [user?.uid, events.length, isGuest, loadEvents]);
 
-  // Dashboard activity shortcuts can open the matching activity directly.
-  useEffect(() => {
-    if (!dashboardActivityId || loading) return;
-    const target = allActivities.find((activity) => activity.id === dashboardActivityId);
-    if (target) {
-      setSelectedActivity(target);
-      setModalMode('view');
-    }
-    navigate(location.pathname, { replace: true, state: null });
-  }, [dashboardActivityId, loading, allActivities, navigate, location.pathname]);
-
   // Aggregate all activities: those tied to events + standalone activities
   const allActivities = useMemo(() => {
     const list = [];
@@ -137,6 +126,17 @@ export default function ActivitiesPage() {
     }
     return list;
   }, [events, standaloneActivities]);
+
+  // Dashboard activity shortcuts can open the matching activity directly.
+  useEffect(() => {
+    if (!dashboardActivityId || loading) return;
+    const target = allActivities.find((activity) => activity.id === dashboardActivityId);
+    if (target) {
+      setSelectedActivity(target);
+      setModalMode('view');
+    }
+    navigate(location.pathname, { replace: true, state: null });
+  }, [dashboardActivityId, loading, allActivities, navigate, location.pathname]);
 
   const todayIso = new Date().toISOString().slice(0, 10);
 
