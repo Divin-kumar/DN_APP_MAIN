@@ -637,7 +637,7 @@ export default function DashboardOverview() {
                 return (
                   <div
                     key={activity.id}
-                    className={`flex items-start justify-between gap-3 p-3 sm:p-3.5 rounded-xl border transition-all leading-normal ${
+                    className={`flex flex-col gap-2.5 p-3.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3 rounded-xl border transition-all leading-normal ${
                       isCompleted
                         ? 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/60 dark:border-slate-800'
                         : activity.priority === 'high'
@@ -645,7 +645,7 @@ export default function DashboardOverview() {
                         : 'bg-white dark:bg-slate-800/90 border-slate-200/90 dark:border-slate-700 shadow-xs hover:border-emerald-300 dark:hover:border-emerald-700'
                     }`}
                   >
-                    <div className="flex items-start gap-3 min-w-0 flex-1">
+                    <div className="flex w-full min-w-0 flex-1 items-start gap-3 sm:w-auto">
                       <button
                         type="button"
                         onClick={(e) => handleToggleActivity(activity, e)}
@@ -660,7 +660,7 @@ export default function DashboardOverview() {
                         <Check size={14} strokeWidth={3} />
                       </button>
                       <div
-                        className="flex min-w-0 flex-1 flex-col gap-1 cursor-pointer"
+                        className="flex min-w-0 flex-1 flex-col gap-1.5 cursor-pointer"
                         role="link"
                         tabIndex={0}
                         aria-label={`View ${activity.title || 'activity'}`}
@@ -672,7 +672,7 @@ export default function DashboardOverview() {
                         }}
                       >
                         <span
-                          className={`block truncate text-sm font-semibold leading-5 ${
+                          className={`block truncate text-sm font-semibold leading-[1.4] ${
                             isCompleted
                               ? 'line-through text-slate-400 dark:text-slate-500'
                               : 'text-slate-900 dark:text-slate-100 hover:text-emerald-600'
@@ -680,7 +680,7 @@ export default function DashboardOverview() {
                         >
                           {activity.title}
                         </span>
-                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-4 text-slate-400">
+                        <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-1 text-xs leading-[1.2] text-slate-400">
                           {isToday ? (
                             <span className="font-medium text-emerald-600 dark:text-emerald-400">
                               Today {activity.time ? `· ${activity.time}` : ''}
@@ -701,7 +701,7 @@ export default function DashboardOverview() {
                       </div>
                     </div>
 
-                    <div className="flex shrink-0 items-center gap-2 pt-0.5">
+                    <div className="flex w-full shrink-0 items-center justify-end gap-2 pt-1 sm:w-auto sm:pt-0.5">
                       <span
                         className={`text-[10px] font-semibold px-2 py-0.5 rounded-md border ${
                           activity.priority === 'high'
