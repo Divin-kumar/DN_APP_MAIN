@@ -159,3 +159,130 @@
   .activities-page .activity-list-card,
   .activities-page .activities-filter-rail button { transition: none; }
 }
+
+
+/* Follow-up: explicit theme tokens and a strict single-row filter rail. */
+.activities-page .activities-filter-rail {
+  display: flex;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  padding: .35rem .15rem .65rem;
+}
+.activities-page .activities-filter-rail > button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  flex-wrap: nowrap;
+  align-items: center;
+  white-space: nowrap;
+  min-height: 38px;
+}
+.activities-page .activities-filter-rail > button > span {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+.activities-page .activities-toolbar,
+.activities-page .activities-heading,
+.activities-page .activity-list-card {
+  color: var(--text-primary, #17221d);
+}
+.activities-page .activities-toolbar input,
+.activities-page .activities-toolbar select {
+  color: var(--text-primary, #17221d);
+  border-color: var(--border, #d9e4dd);
+}
+.activities-page .activities-toolbar input::placeholder {
+  color: var(--text-muted, #75837b);
+  opacity: 1;
+}
+/* Support both common app theme conventions: .dark and data-theme="dark". */
+.dark .activities-page .activities-heading,
+[data-theme="dark"] .activities-page .activities-heading {
+  color: #edf5f0;
+  border-color: #344640;
+  background: linear-gradient(125deg, #1c2925 0%, #17231f 100%);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
+}
+.dark .activities-page .activities-heading p,
+[data-theme="dark"] .activities-page .activities-heading p {
+  color: #a8bbb0;
+}
+.dark .activities-page .activities-toolbar,
+[data-theme="dark"] .activities-page .activities-toolbar {
+  color: #edf5f0;
+  background: #192521;
+  border-color: #344640;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .14);
+}
+.dark .activities-page .activities-toolbar input,
+.dark .activities-page .activities-toolbar select,
+[data-theme="dark"] .activities-page .activities-toolbar input,
+[data-theme="dark"] .activities-page .activities-toolbar select {
+  color: #edf5f0;
+  background-color: #111b17;
+  border-color: #40534a;
+  color-scheme: dark;
+}
+.dark .activities-page .activities-toolbar input::placeholder,
+[data-theme="dark"] .activities-page .activities-toolbar input::placeholder {
+  color: #91a59a;
+}
+.dark .activities-page .activities-filter-rail > button:not(.bg-emerald-600),
+[data-theme="dark"] .activities-page .activities-filter-rail > button:not(.bg-emerald-600) {
+  color: #d1ded6;
+  background: #202e28;
+  border-color: #3a4b42;
+}
+.dark .activities-page .activities-filter-rail > button:not(.bg-emerald-600):hover,
+[data-theme="dark"] .activities-page .activities-filter-rail > button:not(.bg-emerald-600):hover {
+  background: #293a32;
+  border-color: #557063;
+}
+.dark .activities-page .activities-filter-rail > button:not(.bg-emerald-600) span:last-child,
+[data-theme="dark"] .activities-page .activities-filter-rail > button:not(.bg-emerald-600) span:last-child {
+  color: #d1ded6;
+  background: #35483e;
+}
+.dark .activities-page .activity-list-card,
+[data-theme="dark"] .activities-page .activity-list-card {
+  color: #edf5f0;
+  background: #192521;
+  border-color: #344640;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, .14);
+}
+.dark .activities-page .activity-list-card:not(.opacity-70):hover,
+[data-theme="dark"] .activities-page .activity-list-card:not(.opacity-70):hover {
+  border-color: #398b70;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, .23);
+}
+.dark .activities-page .activity-list-card .text-slate-900,
+.dark .activities-page .activity-list-card .text-slate-800,
+.dark .activities-page .activity-list-card .text-slate-700,
+[data-theme="dark"] .activities-page .activity-list-card .text-slate-900,
+[data-theme="dark"] .activities-page .activity-list-card .text-slate-800,
+[data-theme="dark"] .activities-page .activity-list-card .text-slate-700 {
+  color: #e5efe9;
+}
+.dark .activities-page .activity-list-card .text-slate-500,
+.dark .activities-page .activity-list-card .text-slate-400,
+[data-theme="dark"] .activities-page .activity-list-card .text-slate-500,
+[data-theme="dark"] .activities-page .activity-list-card .text-slate-400 {
+  color: #a0b2a8;
+}
+@media (max-width: 760px) {
+  .activities-page .activities-filter-rail {
+    flex-wrap: nowrap !important;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+  .activities-page .activities-filter-rail > button {
+    flex: 0 0 auto;
+  }
+}
