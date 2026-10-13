@@ -11,6 +11,7 @@
 import { Component, lazy, Suspense, useEffect } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import { AuthProvider } from './context/AuthContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import DashboardLayout from './layouts/DashboardLayout';
@@ -142,6 +143,7 @@ export default function App() {
   return (
     // The provider bootstraps the local Device Principal before protected routes render.
     <AuthProvider>
+        <SpeedInsights />
         <GlobalToast />
         <Routes>
           {/* Public route: anyone can view the login screen. */}
