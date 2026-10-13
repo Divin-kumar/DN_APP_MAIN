@@ -137,3 +137,147 @@
   .quick-create-activity-form .form-actions button { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: reduce) { .activities-page .activity-list-card { transition: none; } }
+
+
+/* Final mobile polish: these rules live with Activities so they win over older
+   page-level responsive overrides regardless of stylesheet import order. */
+.activities-page .activities-heading { min-width: 0; }
+.activities-page .activities-create-button { min-height: 42px; }
+.activities-page .activity-completion-toggle {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 9px;
+  border-width: 1.5px;
+}
+.activities-page .activity-row-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+}
+.activities-page .activity-completion-toggle:focus-visible,
+.activities-page .activity-row-action:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+.activities-page .activities-form .activities-date-time-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.activities-page .activities-form input,
+.activities-page .activities-form select,
+.activities-page .activities-form textarea { font-size: 16px; }
+
+.dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .dashboard-activity-check {
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  border-radius: 9px;
+  border-width: 1.5px;
+}
+.dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .dashboard-activity-open {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-card);
+}
+@media (max-width: 760px) {
+  .activities-page .activities-heading {
+    align-items: center;
+    gap: 12px;
+    padding-inline: 1px;
+  }
+  .activities-page .activities-heading h3 {
+    font-size: clamp(1.35rem, 5vw, 1.65rem);
+    line-height: 1.2;
+  }
+  .activities-page .activities-create-button {
+    min-height: 42px;
+    padding-inline: 12px;
+    border-radius: 12px;
+  }
+  .activities-page .activities-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 10px;
+  }
+  .activities-page .activities-toolbar > * { width: 100%; min-width: 0; }
+  .activities-page .activities-search input,
+  .activities-page .activities-toolbar select,
+  .activities-page .activities-toolbar button { min-height: 44px; }
+  .activities-page .activities-filter-rail {
+    gap: 7px;
+    padding-block: 2px 4px;
+    scroll-snap-type: x proximity;
+  }
+  .activities-page .activities-filter-rail > button {
+    min-height: 36px;
+    padding-inline: 12px;
+    border-radius: 999px;
+    scroll-snap-align: start;
+  }
+  .activities-page .activities-history {
+    padding: 12px !important;
+    border-radius: 16px;
+  }
+  .activities-page .activities-list { gap: 10px; }
+  .activities-page .activity-list-card {
+    align-items: flex-start;
+    gap: 10px;
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+  .activities-page .activity-list-card > div:first-child {
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .activities-page .activity-completion-toggle { margin-top: 2px !important; }
+  .activities-page .activity-list-card .text-sm.font-semibold {
+    white-space: normal;
+    overflow: visible;
+    display: block;
+  }
+  .activities-page .activity-row-action { width: 34px; height: 34px; }
+  .activities-page .activities-form { gap: 14px; }
+  .activities-page .activities-form .activities-date-time-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 14px;
+  }
+  .activities-page .activities-form .dialog-actions {
+    position: sticky;
+    bottom: 0;
+    padding: 12px 0 2px;
+    background: var(--color-card);
+  }
+  .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] header {
+    align-items: flex-start !important;
+    flex-wrap: wrap;
+    gap: 10px !important;
+  }
+  .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] header > span:first-child {
+    min-width: 0;
+    flex-wrap: wrap;
+    line-height: 1.35;
+  }
+  .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .dashboard-upcoming-all-button {
+    min-height: 36px;
+    flex-shrink: 0;
+  }
+  .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .dashboard-activity-check {
+    width: 30px;
+    height: 30px;
+    min-width: 30px;
+  }
+  .dashboard-upcoming-card[aria-label="Today and High-Priority activities"] .dashboard-activity-open {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+  }
+}
