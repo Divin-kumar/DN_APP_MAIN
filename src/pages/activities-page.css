@@ -137,3 +137,56 @@
   .quick-create-activity-form .form-actions button { flex: 1 1 auto; }
 }
 @media (prefers-reduced-motion: reduce) { .activities-page .activity-list-card { transition: none; } }
+
+
+/* Activities v2: clearer hierarchy, less duplicated control UI, and a more useful scan pattern. */
+.activities-page { gap: 14px; }
+.activities-page .activities-heading { padding-bottom: 2px; }
+.activities-page .activities-heading h3 { font-size: clamp(1.25rem, 2vw, 1.55rem); letter-spacing: -0.025em; }
+.activities-page .activities-create-button { min-height: 38px; padding-inline: 15px; }
+.activities-overview {
+  display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; min-width: 0;
+}
+.activities-stat {
+  display: grid; grid-template-columns: 1fr auto; align-content: start; align-items: center;
+  gap: 4px 10px; min-width: 0; padding: 13px 15px;
+  border: 1px solid var(--color-border); border-radius: var(--radius-md, 10px);
+  background: var(--color-card); box-shadow: none;
+}
+.activities-stat-label { color: var(--color-text-muted); font-size: 12px; font-weight: 650; }
+.activities-stat strong { grid-column: 1; grid-row: 2; color: var(--color-text); font-size: 25px; line-height: 1.15; letter-spacing: -0.04em; font-weight: 750; }
+.activities-stat-hint { grid-column: 1 / -1; color: var(--color-text-muted); font-size: 11px; line-height: 1.35; }
+.activities-stat-today { border-top: 3px solid var(--color-primary); }
+.activities-stat-overdue { border-top: 3px solid var(--color-danger); }
+.activities-stat-completed { border-top: 3px solid #4b9a72; }
+.activities-page .activities-toolbar { grid-template-columns: minmax(0, 1fr) minmax(190px, 250px); gap: 10px; }
+.activities-page .activities-search { display: flex; align-items: center; }
+.activities-page .activities-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--color-text-muted); pointer-events: none; }
+.activities-page .activities-search input { min-height: 42px; border-radius: var(--radius-sm); background: var(--color-card); }
+.activities-filter-section { display: flex; flex-direction: column; gap: 7px; min-width: 0; }
+.activities-filter-label { color: var(--color-text-muted); font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.activities-page .activities-filter-rail { padding-bottom: 2px; gap: 6px; }
+.activities-page .activities-filter-rail > button { min-height: 34px; padding-inline: 11px; border-radius: 999px; }
+.activities-page .activities-history { padding: 10px; border-radius: var(--radius-md, 10px); }
+.activities-page .activities-list { gap: 7px; }
+.activities-page .activity-list-card { min-height: 68px; padding: 12px 14px !important; border-radius: 9px !important; background: var(--color-card) !important; }
+.activities-page .activity-list-card:hover { background: var(--color-card-raised) !important; }
+.activities-page .activity-list-card [aria-label="Mark complete"],
+.activities-page .activity-list-card [aria-label="Mark incomplete"] { width: 21px; height: 21px; border-radius: 50%; }
+.activities-page .activity-list-card .text-sm.font-semibold { font-size: 13px; }
+.activities-page .activity-list-card .text-xs { font-size: 11px; }
+.activities-page .activity-list-card button[title="Edit"],
+.activities-page .activity-list-card button[title="Delete"] { width: 30px; height: 30px; }
+@media (max-width: 760px) {
+  .activities-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .activities-stat { padding: 11px 12px; }
+  .activities-stat strong { font-size: 22px; }
+  .activities-page .activities-toolbar { grid-template-columns: minmax(0, 1fr); }
+}
+@media (max-width: 420px) {
+  .activities-page .activities-heading { align-items: flex-start; }
+  .activities-page .activities-create-button { padding-inline: 10px; }
+  .activities-stat-hint { font-size: 10px; }
+  .activities-page .activities-history { padding: 7px; }
+  .activities-page .activity-list-card { padding: 10px !important; }
+}
