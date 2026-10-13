@@ -701,3 +701,86 @@ html[data-theme="dark"] .activities-page .activities-form .dialog-actions .secon
   .activities-page .activities-form .dialog-actions { gap: 8px; }
   .activities-page .activities-form .dialog-actions button { font-size: 12px; }
 }
+
+
+/* Complete / Incomplete status choices: radio-like segmented filter buttons. */
+.activities-page .activities-filter-rail {
+  align-items: center;
+}
+.activities-page .activities-filter-chip.activities-status-filter {
+  min-height: 42px;
+  justify-content: center;
+  gap: 8px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border, #dbe5df);
+  border-radius: 12px;
+  background: var(--color-card, #fff);
+  color: var(--color-text, #33443c);
+  font-weight: 700;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+}
+.activities-page .activities-filter-chip.activities-status-filter > span:first-child {
+  line-height: 1;
+}
+.activities-page .activities-filter-chip.activities-status-filter > span:last-child {
+  min-width: 23px;
+  padding: 4px 6px;
+  text-align: center;
+  border-radius: 7px;
+  background: var(--color-surface, #f1f5f2);
+  color: var(--color-text-muted, #66756d);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.activities-page .activities-filter-chip.activities-status-filter[aria-pressed="true"] {
+  border-color: #16835f;
+  background: #e8f7ef;
+  color: #126747;
+  box-shadow: inset 0 0 0 1px rgba(22, 131, 95, .12);
+}
+.activities-page .activities-filter-chip.activities-status-filter[aria-pressed="true"] > span:last-child {
+  background: #16835f;
+  color: #fff;
+}
+.activities-page .activities-filter-chip.activities-status-filter-completed[aria-pressed="true"] {
+  border-color: #16835f;
+  background: #e8f7ef;
+  color: #126747;
+}
+.activities-page .activities-filter-chip.activities-status-filter-incomplete[aria-pressed="true"] {
+  border-color: #3978db;
+  background: #edf4ff;
+  color: #2058ad;
+  box-shadow: inset 0 0 0 1px rgba(57, 120, 219, .12);
+}
+.activities-page .activities-filter-chip.activities-status-filter-incomplete[aria-pressed="true"] > span:last-child {
+  background: #3978db;
+  color: #fff;
+}
+html[data-theme="dark"] .activities-page .activities-filter-chip.activities-status-filter {
+  border-color: rgba(151,171,205,.24);
+  background: #111827;
+  color: #dbe6f7;
+}
+html[data-theme="dark"] .activities-page .activities-filter-chip.activities-status-filter > span:last-child {
+  background: #1f2937;
+  color: #a7b3c8;
+}
+html[data-theme="dark"] .activities-page .activities-filter-chip.activities-status-filter-completed[aria-pressed="true"] {
+  border-color: #269d72;
+  background: rgba(22,131,95,.2);
+  color: #9ce7c5;
+}
+html[data-theme="dark"] .activities-page .activities-filter-chip.activities-status-filter-incomplete[aria-pressed="true"] {
+  border-color: #5793f1;
+  background: rgba(57,120,219,.2);
+  color: #b7d2ff;
+}
+@media (max-width: 600px) {
+  .activities-page .activities-filter-chip.activities-status-filter {
+    min-height: 44px;
+    padding: 0 13px;
+    border-radius: 12px;
+    font-size: 13px;
+  }
+}
