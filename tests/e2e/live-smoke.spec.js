@@ -8,12 +8,22 @@ async function openActivitiesWithFreshDevice(page) {
   // GitHub Actions uses a fresh browser profile with no local device principal.
   // Complete setup only inside this disposable Playwright context.
   const continueButton = page.getByRole('button', { name: 'Continue on this device' });
-  if (await continueButton.isVisible({ timeout: 2500 }).catch(() => false)) {
+  // The login page is lazy-loaded, so give it the same full render timeout as the app.
+  const activitiesHeading = page.getByRole('heading', { name: 'Activities' }).first();
+  const setupVisible = await continueButton.isVisible().catch(() => false);
+  if (!setupVisible) {
+    await Promise.race([
+      continueButton.waitFor({ state: 'visible', timeout: 20000 }),
+      activitiesHeading.waitFor({ state: 'visible', timeout: 20000 }),
+    ]).catch(() => {});
+  }
+
+  if (await continueButton.isVisible().catch(() => false)) {
     await page.getByLabel('Device name').fill('Playwright test device');
     await continueButton.click();
   }
 
-  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 15000 });
+  await expect(activitiesHeading).toBeVisible({ timeout: 20000 });
 }
 
 test('Firebase site serves the app document', async ({ page, request }) => {
@@ -104,8 +114,7 @@ test('Activities page opens its create form and keeps controls usable on mobile'
 });
 
 test('Activities form validates a blank title without saving anything', async ({ page }) => {
-  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 15000 });
+  await openActivitiesWithFreshDevice(page);
   await page.getByRole('button', { name: /New Activity/i }).click();
   await page.getByRole('button', { name: 'Save Activity' }).click();
   await expect(page.getByRole('alert')).toContainText('Please provide an activity title.');
