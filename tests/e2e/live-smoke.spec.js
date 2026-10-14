@@ -3,27 +3,24 @@ import { test, expect } from '@playwright/test';
 const APP_NAME = /DN|LifeHub/i;
 
 async function openActivitiesWithFreshDevice(page) {
-  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
-
-  // GitHub Actions uses a fresh browser profile with no local device principal.
-  // Complete setup only inside this disposable Playwright context.
+  // Use the public setup route explicitly so protected-route bootstrap timing
+  // cannot leave this test waiting forever on a loading screen.
+  await page.goto('/login', { waitUntil: 'domcontentloaded' });
   const continueButton = page.getByRole('button', { name: 'Continue on this device' });
-  // The login page is lazy-loaded, so give it the same full render timeout as the app.
-  const activitiesHeading = page.getByRole('heading', { name: 'Activities' }).first();
-  const setupVisible = await continueButton.isVisible().catch(() => false);
-  if (!setupVisible) {
-    await Promise.race([
-      continueButton.waitFor({ state: 'visible', timeout: 20000 }),
-      activitiesHeading.waitFor({ state: 'visible', timeout: 20000 }),
-    ]).catch(() => {});
-  }
+  await expect(continueButton).toBeVisible({ timeout: 30000 });
+  await page.getByLabel('Device name').fill('Playwright isolated test device');
+  await expect(continueButton).toBeEnabled({ timeout: 30000 });
+  await continueButton.click();
 
-  if (await continueButton.isVisible().catch(() => false)) {
-    await page.getByLabel('Device name').fill('Playwright test device');
-    await continueButton.click();
-  }
-
-  await expect(activitiesHeading).toBeVisible({ timeout: 20000 });
+  // If setup fails, surface the app's actual message rather than a generic
+  // missing-heading timeout.
+  const setupError = page.getByRole('alert');
+  await expect(page).toHaveURL(/dashboard/, { timeout: 30000 }).catch(async () => {
+    const message = await setupError.allInnerTexts().catch(() => []);
+    throw new Error('Device setup did not navigate to the dashboard. Setup message: ' + message.join(' | '));
+  });
+  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
+  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 30000 });
 }
 
 test('Firebase site serves the app document', async ({ page, request }) => {
