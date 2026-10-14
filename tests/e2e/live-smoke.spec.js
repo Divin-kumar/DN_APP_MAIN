@@ -3,24 +3,40 @@ import { test, expect } from '@playwright/test';
 const APP_NAME = /DN|LifeHub/i;
 
 async function openActivitiesWithFreshDevice(page) {
-  // Use the public setup route explicitly so protected-route bootstrap timing
-  // cannot leave this test waiting forever on a loading screen.
-  await page.goto('/login', { waitUntil: 'domcontentloaded' });
+  // Start at the protected target. If this browser context already has a
+  // device principal, the app should let us straight through; otherwise the
+  // guard sends us to the local-device setup screen.
+  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
+
+  const activitiesHeading = page.getByRole('heading', { name: 'Activities' }).first();
   const continueButton = page.getByRole('button', { name: 'Continue on this device' });
-  await expect(continueButton).toBeVisible({ timeout: 30000 });
+
+  // Wait for either the protected page or the setup screen to finish rendering.
+  await page.waitForFunction(() => {
+    const text = document.body?.innerText || '';
+    return text.includes('Activities') || text.includes('Continue on this device');
+  }, { timeout: 30000 }).catch(async () => {
+    throw new Error(
+      'Neither Activities nor device setup rendered. URL: ' + page.url() +
+      '; page text: ' + (await page.locator('body').innerText().catch(() => '')).slice(0, 500)
+    );
+  });
+
+  if (await activitiesHeading.isVisible().catch(() => false)) return;
+
+  await expect(continueButton).toBeVisible({ timeout: 10000 });
   await page.getByLabel('Device name').fill('Playwright isolated test device');
-  await expect(continueButton).toBeEnabled({ timeout: 30000 });
+  await expect(continueButton).toBeEnabled({ timeout: 10000 });
   await continueButton.click();
 
-  // If setup fails, surface the app's actual message rather than a generic
-  // missing-heading timeout.
-  const setupError = page.getByRole('alert');
-  await expect(page).toHaveURL(/dashboard/, { timeout: 30000 }).catch(async () => {
-    const message = await setupError.allInnerTexts().catch(() => []);
-    throw new Error('Device setup did not navigate to the dashboard. Setup message: ' + message.join(' | '));
+  // Setup returns to the originally requested protected route.
+  await expect(activitiesHeading).toBeVisible({ timeout: 30000 }).catch(async () => {
+    const message = await page.getByRole('alert').allInnerTexts().catch(() => []);
+    throw new Error(
+      'Device setup did not open Activities. URL: ' + page.url() +
+      '; setup message: ' + message.join(' | ')
+    );
   });
-  await page.goto('/activities', { waitUntil: 'domcontentloaded' });
-  await expect(page.getByRole('heading', { name: 'Activities' }).first()).toBeVisible({ timeout: 30000 });
 }
 
 test('Firebase site serves the app document', async ({ page, request }) => {
