@@ -5,8 +5,8 @@
 ## 1. Current snapshot
 
 - **Branch:** `OldVersion`
-- **Observed head:** `0db33d3814f822e10cd7fd4a6730a7f511fc632b`
-- **Latest commit message:** `Architecture_Approved_Pre_Dexie_Foundation`
+- **Application-source audit baseline:** `0db33d3814f822e10cd7fd4a6730a7f511fc632b` (`Architecture_Approved_Pre_Dexie_Foundation`), the code state inspected before this documentation set.
+- **Initial documentation verification checkpoint:** `9b711b807276aa24c5e8bfdad858e054b416115c` (`docs(OldVersion): capture long-term project context`). This is a historical checkpoint, not a claim about the current branch head.
 - **Stack:** React 18 + Vite 5 + React Router + Zustand + Firebase Auth/Firestore.
 - **PWA:** manifest and generated service worker are present.
 - **Automated tests:** several Node test files exist; no test script is defined in package.json.
@@ -80,7 +80,7 @@
 
 ### P0 — correctness and data safety
 - [ ] **Security review:** inspect deployed Firestore rules; verify users can only read/write their own documents.
-- [ ] **Guest merge resilience:** test interrupted merges, duplicate callbacks, already-merged records, and cleanup timing.
+- [ ] **Guest merge resilience and recovery:** test interrupted merges, duplicate/concurrent auth callbacks, duplicate writes, and cleanup timing. `AuthContext.jsx` currently logs merge failure and still transitions to signed-in state without a visible retry/recovery prompt.
 - [ ] **Financial integrity:** add tests for all master/nested expense combinations, duplicate IDs, updates, and deletes.
 - [ ] **Storage failures:** handle localStorage quota/unavailable errors for guest writes and preferences.
 - [ ] **Destructive action safety:** confirm delete/reset operations have clear confirmation and recoverable failure handling.
