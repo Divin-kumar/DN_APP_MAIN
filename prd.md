@@ -192,6 +192,8 @@ The repository has evolved from an expense-tracking application into a broader l
 - Event activities and nested expenses remain associated after reload.
 - Financial reporting does not double-count activity-linked costs.
 - Theme and code-list preferences survive reload and migrate safely.
+- Settings backup exports all app-prefixed local storage plus the effective event, expense, and income datasets for the active guest/sample/account storage mode; export failures are surfaced to the user.
+- Versioned backup files distinguish settings/local storage from exported account records, and restore never silently writes cloud records into local storage or Firebase.
 - Direct navigation to nested routes works after Hosting rewrites.
 - A production build generates `dist/sw.js`, and an installed PWA can receive a controlled update prompt.
 - No documentation claims are made for unverified behavior such as file upload limits, push notifications, full offline writes, or automatic backups.
