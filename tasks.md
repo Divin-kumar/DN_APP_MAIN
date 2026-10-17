@@ -147,3 +147,14 @@ A task is done only when:
 - [x] **Memory rule adopted:** record durable technical choices, workarounds, environment/configuration changes, and architecture decisions in `memory.md` when they occur.
 - [ ] **Ongoing:** include the relevant `tasks.md` and `memory.md` updates in the same work session as the implementation where practical; verify the updated Markdown on `OldVersion` before reporting completion.
 - [ ] **Ongoing:** distinguish verified completion from work merely attempted; do not mark tests, builds, browser checks, deployments, or security checks complete unless actually run and checked.
+
+## 8. Session work log
+
+### 2026-10-17 — documentation review and maintenance rules
+- [x] Re-read and cross-checked all six root documentation files against the `OldVersion` repository tree and inspected source files.
+- [x] Corrected stale branch-head wording by separating the application-source audit baseline from the historical documentation checkpoint.
+- [x] Documented the observed guest-merge failure path in the PRD, architecture, rules, task backlog, and project memory: failures are logged while the signed-in state still completes, without a visible retry/recovery flow.
+- [x] Added recurring documentation-maintenance requirements: update task status/follow-ups and record durable technical decisions in `memory.md`.
+- [x] Re-read changed files and verified that changes in this work remain confined to the six Markdown documentation files on `OldVersion`.
+- [ ] **Follow-up:** implement and test visible guest-merge failure feedback and a safe retry/recovery flow; keep guest data until migration success is confirmed.
+- [ ] **Follow-up:** run the repository test suite/build and live guest/authenticated journeys in a suitable environment; documentation-only verification is not a substitute for runtime validation.
