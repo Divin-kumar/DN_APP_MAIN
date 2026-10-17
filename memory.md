@@ -165,3 +165,14 @@ Update the relevant file when a meaningful behavior or architectural decision ch
 - The export includes account identity metadata (UID/display name/email only), not authentication credentials or Firebase security rules.
 - Backup format version 2 separates `data.localStorage` from `data.collections`. Restore remains backward-compatible with the previous flat backup shape; v2 restore applies local settings only and intentionally does not write cloud records into Firestore. Full cloud import remains an explicit follow-up to avoid accidental overwrites/duplicates.
 - No dependencies or environment variables added. GitHub source edits only; automated tests, build, and live Firebase/browser validation have not yet been run.
+
+
+### 2026-10-17 — full backup restore and branch guardrail
+
+- Implemented a confirmation-first restore for backup format v2 in `src/pages/Settings.jsx`. It restores app-owned settings and merges missing event groups, expenses, and incomes into guest-local storage or the currently signed-in user's Firestore collections.
+- Duplicate handling is based on the app-level `id`: matching IDs are skipped, never intentionally overwritten. Firestore writes go through existing `createEvent`, `createExpense`, and `createIncome` service functions scoped to the current UID. Retrying after partial failure is intended to skip IDs already written.
+- Event groups preserve embedded activities, memories, attachments, greeting-card data, and nested activity expenses. Nested expenses remain represented by their parent event and are not imported a second time as master expense records when already present in the restored event data.
+- Imported local settings are restricted to `lifehub_*` keys; guest record keys, guest-mode/session backup, and development sample fixture keys are excluded to avoid clobbering active records or switching modes. Backup files over 50 MB and malformed v2 collection payloads are rejected. Active sample-data mode must be cleared before restore.
+- Restore is a merge, not a destructive replace. A backup from another account is merged into the currently signed-in UID after explicit confirmation; existing records with matching app IDs are skipped. Verify behavior against actual Firestore rules/schema before production use.
+- **Branch/deploy rule reaffirmed by user:** all implementation and build-related changes for this task belong only on `OldVersion`. Never push or merge to `main` or any other branch unless the user explicitly changes this instruction. Do not deploy hosting unless separately authorized.
+- Verification status: GitHub source and documentation edits only. No build, automated tests, browser test, live Firebase import, or deployment was run during this task.
