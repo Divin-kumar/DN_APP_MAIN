@@ -8,6 +8,9 @@ import DropdownSelect from '../components/common/DropdownSelect';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
+import { getEventsForUser, getGuestEvents } from '../services/eventService';
+import { getExpensesForUser, getGuestExpenses } from '../services/expenseService';
+import { getIncomesForUser, getGuestIncomes } from '../services/incomeService';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
 import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
@@ -225,22 +228,86 @@ export default function Settings() {
     });
   };
 
-  const exportBackup = () => {
-    const snapshot = {
-      exportedAt: new Date().toISOString(),
-      app: 'DN',
-      data: {
-        lifehub_admin_values: JSON.parse(localStorage.getItem('lifehub_admin_values') || 'null'),
-        lifehub_admin_values_schema_version: localStorage.getItem('lifehub_admin_values_schema_version'),
+  const exportBackup = async () => {
+    try {
+      setBackupMessage('Preparing a complete backup…');
 
-        lifehub_guest_incomes: JSON.parse(localStorage.getItem('lifehub_guest_incomes') || '[]'),
-      },
-    };
+      const localStorageData = Object.fromEntries(
+        Object.keys(localStorage)
+          .filter((key) => key.startsWith('lifehub_'))
+          .sort()
+          .map((key) => {
+            const value = localStorage.getItem(key);
+            try {
+              return [key, JSON.parse(value)];
+            } catch {
+              return [key, value];
+            }
+          })
+      );
 
-    const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-    downloadBlob(blob, `dn-backup-${new Date().toISOString().slice(0, 10)}.json`);
-    setBackupMessage('Backup downloaded successfully.');
-    showToast('Backup exported', 'success');
+      let events;
+      let expenses;
+      let incomes;
+      let dataSource;
+
+      const sampleData = getActiveSampleData(user?.uid || null);
+      if (sampleData) {
+        ({ events, expenses, incomes } = sampleData);
+        dataSource = 'development-sample';
+      } else if (isGuest) {
+        events = getGuestEvents();
+        expenses = getGuestExpenses();
+        incomes = getGuestIncomes();
+        dataSource = 'guest-local';
+      } else if (user?.uid) {
+        [events, expenses, incomes] = await Promise.all([
+          getEventsForUser(user.uid),
+          getExpensesForUser(user.uid),
+          getIncomesForUser(user.uid),
+        ]);
+        dataSource = 'firebase-account';
+      } else {
+        events = getGuestEvents();
+        expenses = getGuestExpenses();
+        incomes = getGuestIncomes();
+        dataSource = 'local-browser';
+      }
+
+      const snapshot = {
+        app: 'DN',
+        backupFormatVersion: 2,
+        exportedAt: new Date().toISOString(),
+        dataSource,
+        account: user?.uid ? {
+          uid: user.uid,
+          displayName: user.displayName || null,
+          email: user.email || null,
+        } : null,
+        data: {
+          localStorage: localStorageData,
+          collections: {
+            eventGroups: events,
+            expenses,
+            incomes,
+          },
+          notes: [
+            'Activities, memories, greeting cards, and attachments stored inside event records are included with eventGroups.',
+            'Expenses linked to activities may also be nested in eventGroups; the expenses collection contains deduplicated effective expense records.',
+            'This file exports application data and settings. It does not contain authentication credentials or Firebase security rules.',
+          ],
+        },
+      };
+
+      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+      downloadBlob(blob, `dn-complete-backup-${new Date().toISOString().slice(0, 10)}.json`);
+      setBackupMessage('Complete backup downloaded successfully.');
+      showToast('Complete backup exported', 'success');
+    } catch (error) {
+      console.error('Failed to export complete backup:', error);
+      setBackupMessage('Backup could not be created. Check your connection and try again.');
+      showToast('Backup export failed', 'danger');
+    }
   };
 
   const importBackup = async (event) => {
@@ -250,7 +317,15 @@ export default function Settings() {
     try {
       const text = await file.text();
       const parsed = JSON.parse(text);
-      const target = parsed.data || parsed;
+      // Version 2 backups keep app-local settings separate from exported account records.
+      // Restore local settings only; do not silently write cloud records into Firestore.
+      const target = parsed.backupFormatVersion >= 2
+        ? parsed.data?.localStorage
+        : (parsed.data || parsed);
+
+      if (!target || typeof target !== 'object' || Array.isArray(target)) {
+        throw new Error('Backup data is missing or invalid.');
+      }
 
       Object.entries(target).forEach(([key, value]) => {
         if (value === undefined || value === null) {
@@ -260,8 +335,10 @@ export default function Settings() {
         localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
       });
 
-      setBackupMessage('Backup restored successfully. Reloading app...');
-      showToast('Backup restored', 'success');
+      setBackupMessage(parsed.backupFormatVersion >= 2
+        ? 'Local settings restored. Exported account records are preserved in the file but are not imported into Firebase.'
+        : 'Backup restored successfully. Reloading app...');
+      showToast(parsed.backupFormatVersion >= 2 ? 'Local settings restored' : 'Backup restored', 'success');
       event.target.value = '';
       window.location.reload();
     } catch (error) {
