@@ -137,3 +137,13 @@ The six root files are the working documentation system:
 - `memory.md`: durable context and operational quirks.
 
 Update the relevant file when a meaningful behavior or architectural decision changes. Keep observed facts separate from recommendations and verify status claims against code/tests.
+
+## 10. Session log and operating agreements
+
+### 2026-10-17 — automatic documentation maintenance
+
+- **Task tracking:** after each completed feature, bug fix, or executed task, update `tasks.md`; check off only work whose completion is verified and add follow-up tasks discovered during implementation or review.
+- **Durable memory:** record new technical choices, workarounds, environment/configuration changes, and architecture decisions in `memory.md` during the same work session.
+- **Editing workflow:** repository file-writing access is available through the connected GitHub tools, so update the files directly on the requested branch rather than returning replacement Markdown for manual copying. Re-read the changed files after writes.
+- **Verification discipline:** distinguish changes made from checks actually run. Never claim tests, builds, browser/device validation, deployments, or security checks succeeded unless executed and verified.
+- **Branch safety:** for this work, the target is `OldVersion`; do not change `main` or other branches unless the user explicitly changes the target.
