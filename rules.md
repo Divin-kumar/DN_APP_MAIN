@@ -46,6 +46,7 @@ These standards are based on the current `OldVersion` source. They distinguish e
 - Do not sum both master and nested representations without deduplication.
 - Keep delete/update semantics explicit for nested-only financial records.
 - Guest-to-account migration must be safe to retry; do not clear guest data before writes are confirmed or otherwise safely recoverable.
+- Expose a user-visible migration outcome and a safe retry/recovery path when guest-data migration fails; logging alone is insufficient. `AuthContext.jsx` does not currently provide this visible flow, so track it as a known gap until implemented.
 - Code-list migrations must preserve user-defined values and values referenced by existing records where existing helper logic requires it.
 
 ## 6. Error handling and logging
