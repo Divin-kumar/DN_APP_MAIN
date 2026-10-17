@@ -227,3 +227,10 @@ For a new domain feature:
 7. Run build and existing Node tests.
 8. Check mobile/desktop layouts, both themes, and installed-PWA update behavior.
 9. Update root documentation when architecture or user-visible behavior changes.
+
+
+## 12. Settings backup export
+
+The Settings > Data & Backup export produces a versioned JSON snapshot. It combines all app-prefixed `lifehub_*` localStorage entries with the effective records for `eventGroups`, `expenses`, and `incomes`. For authenticated sessions, the existing Firestore service readers fetch the current user's records; guest sessions read local guest records; active development sample mode exports its isolated sample dataset. Event documents include embedded activities, memories, attachments, and greeting-card data. Expenses are exported as the deduplicated effective list returned by the expense service, so activity-linked expenses may also be represented inside their parent event/activity.
+
+Format v2 separates `data.localStorage` from `data.collections` and records source metadata. It must not include auth credentials or Firebase security rules. The current restore action restores local settings from v2 but deliberately does not import cloud collections into Firestore; a cloud restore needs a separately designed, explicitly confirmed, duplicate-safe import flow. Legacy flat backup files remain supported.
