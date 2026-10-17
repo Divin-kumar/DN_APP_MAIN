@@ -366,8 +366,13 @@ export default function Settings() {
       }
 
       // Settings restore is restricted to app-owned keys; imported files cannot write arbitrary browser storage.
+      const recordStorageKeys = new Set([
+        'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes',
+        'lifehub_session_backup', 'lifehub_guest_mode', 'lifehub_dev_fixture_scenario',
+        'lifehub_dev_fixture_data',
+      ]);
       Object.entries(localStorageData).forEach(([key, value]) => {
-        if (!key.startsWith('lifehub_')) return;
+        if (!key.startsWith('lifehub_') || recordStorageKeys.has(key)) return;
         if (value === undefined || value === null) {
           localStorage.removeItem(key);
         } else {
@@ -414,17 +419,17 @@ export default function Settings() {
           });
           setGuestExpenses(nextExpenses);
 
+          const nextIncomes = [...existingIncomes];
           collections.incomes.forEach((item) => {
             if (!item || typeof item !== 'object' || !item.id || incomeIds.has(item.id)) {
               imported.skipped += 1;
               return;
             }
             incomeIds.add(item.id);
+            nextIncomes.push(item);
             imported.incomes += 1;
           });
-          setGuestIncomes([...existingIncomes, ...collections.incomes.filter((item) => (
-            item && typeof item === 'object' && item.id && !existingIncomes.some((existing) => existing.id === item.id)
-          ))]);
+          setGuestIncomes(nextIncomes);
         } else {
           // Read first, then add only missing app-level IDs. Existing records are never overwritten.
           const [existingEvents, existingExpenses, existingIncomes] = await Promise.all([
