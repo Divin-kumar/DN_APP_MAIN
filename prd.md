@@ -192,8 +192,11 @@ The repository has evolved from an expense-tracking application into a broader l
 - Event activities and nested expenses remain associated after reload.
 - Financial reporting does not double-count activity-linked costs.
 - Theme and code-list preferences survive reload and migrate safely.
-- Settings backup exports all app-prefixed local storage plus the effective event, expense, and income datasets for the active guest/sample/account storage mode; export failures are surfaced to the user.
-- Versioned backup files distinguish settings/local storage from exported account records, and restore never silently writes cloud records into local storage or Firebase.
+- Settings backup exports app settings plus the effective event, expense, and income datasets for the active guest/sample/account storage mode; export failures are surfaced to the user.
+- Restore validates versioned backup files and displays a review/confirmation step before changing data.
+- Version 2 restore merges missing event groups, expenses, and incomes into the active guest storage or the currently signed-in Firebase account; it skips matching record IDs rather than overwriting existing records.
+- Settings restore only writes app-owned `lifehub_*` settings keys and excludes guest data, session backups, and development fixtures. Nested event activities, memories, attachments, greeting-card data, and expenses are preserved with their event groups.
+- Malformed/oversized files are rejected, and partial restore failures are explained with retry guidance. Automated and live runtime validation is still required before treating these criteria as verified.
 - Direct navigation to nested routes works after Hosting rewrites.
 - A production build generates `dist/sw.js`, and an installed PWA can receive a controlled update prompt.
 - No documentation claims are made for unverified behavior such as file upload limits, push notifications, full offline writes, or automatic backups.
