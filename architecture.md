@@ -170,7 +170,8 @@ Preferences are JSON stored in localStorage and merged with defaults on load. Co
 - Store actions normalize input, update Zustand state, and call service functions.
 - Service functions implement guest-local or Firebase persistence and normalize data returned from persistence.
 - Authenticated create/update/delete paths often use optimistic updates and restore previous state on failures.
-- Service functions log diagnostic errors; stores also expose user-friendly error state.
+- Service functions log diagnostic errors; stores also expose user-friendly error state for many domain operations.
+- **Guest-merge exception:** `AuthContext.jsx` catches/logs `mergeGuestDataIntoAccount` errors and updates the app-level user in `.finally()`. The inspected path has no visible merge-failure/retry UI, so a signed-in screen does not prove that guest data was migrated successfully.
 - Event/expense data has cross-domain coupling: expenses may be nested in event activities and are reconciled for reporting.
 
 ## 8. PWA and deployment
