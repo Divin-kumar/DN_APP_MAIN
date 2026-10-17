@@ -158,3 +158,13 @@ A task is done only when:
 - [x] Re-read changed files and verified that changes in this work remain confined to the six Markdown documentation files on `OldVersion`.
 - [ ] **Follow-up:** implement and test visible guest-merge failure feedback and a safe retry/recovery flow; keep guest data until migration success is confirmed.
 - [ ] **Follow-up:** run the repository test suite/build and live guest/authenticated journeys in a suitable environment; documentation-only verification is not a substitute for runtime validation.
+
+
+## 9. Complete application backup export — 2026-10-17
+- [x] Replace the three-key export with a versioned JSON backup containing all `lifehub_*` local-storage settings/data, event groups (including embedded activities, memories, and attachments), effective deduplicated expenses, and incomes.
+- [x] Export records from the active storage mode: Firebase account collections for signed-in users, guest-local records for guest sessions, or active development sample data when present.
+- [x] Add export error handling and a clear progress/success/failure message.
+- [x] Keep restore compatibility with older backups and prevent v2 cloud records from being silently written to localStorage; v2 restore restores local settings only.
+- [ ] **Follow-up:** add tests for authenticated, guest, sample-data, malformed-storage, and export-failure paths.
+- [ ] **Follow-up:** decide and implement a deliberate, separately confirmed import flow for v2 Firestore records if full cloud restore is required; current v2 restore does not import cloud records.
+- [ ] **Follow-up:** run existing tests, production build, and manual export checks in guest and authenticated sessions.
