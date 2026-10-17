@@ -8,9 +8,9 @@ import DropdownSelect from '../components/common/DropdownSelect';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
-import { getEventsForUser, getGuestEvents } from '../services/eventService';
-import { getExpensesForUser, getGuestExpenses } from '../services/expenseService';
-import { getIncomesForUser, getGuestIncomes } from '../services/incomeService';
+import { createEvent, getEventsForUser, getGuestEvents, setGuestEvents } from '../services/eventService';
+import { createExpense, getExpensesForUser, getGuestExpenses, setGuestExpenses } from '../services/expenseService';
+import { createIncome, getIncomesForUser, getGuestIncomes, setGuestIncomes } from '../services/incomeService';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
 import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
@@ -141,6 +141,8 @@ export default function Settings() {
     },
   });
   const [backupMessage, setBackupMessage] = useState('');
+  const [pendingBackup, setPendingBackup] = useState(null);
+  const [importingBackup, setImportingBackup] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
@@ -315,37 +317,174 @@ export default function Settings() {
     if (!file) return;
 
     try {
-      const text = await file.text();
-      const parsed = JSON.parse(text);
-      // Version 2 backups keep app-local settings separate from exported account records.
-      // Restore local settings only; do not silently write cloud records into Firestore.
-      const target = parsed.backupFormatVersion >= 2
-        ? parsed.data?.localStorage
-        : (parsed.data || parsed);
-
-      if (!target || typeof target !== 'object' || Array.isArray(target)) {
-        throw new Error('Backup data is missing or invalid.');
+      if (file.size > 50 * 1024 * 1024) {
+        throw new Error('Backup files must be 50 MB or smaller.');
+      }
+      const parsed = JSON.parse(await file.text());
+      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        throw new Error('Backup root must be a JSON object.');
       }
 
-      Object.entries(target).forEach(([key, value]) => {
+      const isVersionTwo = Number(parsed.backupFormatVersion) >= 2;
+      const localStorageData = isVersionTwo ? parsed.data?.localStorage : (parsed.data || parsed);
+      if (!localStorageData || typeof localStorageData !== 'object' || Array.isArray(localStorageData)) {
+        throw new Error('Backup local settings are missing or invalid.');
+      }
+
+      const collections = isVersionTwo ? parsed.data?.collections : null;
+      if (isVersionTwo && (!collections || !Array.isArray(collections.eventGroups)
+        || !Array.isArray(collections.expenses) || !Array.isArray(collections.incomes))) {
+        throw new Error('This version 2 backup is missing one or more data collections.');
+      }
+
+      setPendingBackup({
+        parsed,
+        fileName: file.name,
+        isVersionTwo,
+        localStorageData,
+        collections: collections || null,
+      });
+      setBackupMessage('Backup checked. Review its contents before restoring.');
+    } catch (error) {
+      console.error('Unable to read backup file:', error);
+      setBackupMessage(error.message || 'That file is not a valid DN backup.');
+      showToast('Backup file could not be read', 'danger');
+    } finally {
+      event.target.value = '';
+    }
+  };
+
+  const restorePendingBackup = async () => {
+    if (!pendingBackup || importingBackup) return;
+    setImportingBackup(true);
+    const { parsed, localStorageData, collections, isVersionTwo } = pendingBackup;
+
+    try {
+      const sampleData = getActiveSampleData(user?.uid || null);
+      if (sampleData) {
+        throw new Error('Clear the isolated development sample scenario before restoring a backup.');
+      }
+
+      // Settings restore is restricted to app-owned keys; imported files cannot write arbitrary browser storage.
+      Object.entries(localStorageData).forEach(([key, value]) => {
+        if (!key.startsWith('lifehub_')) return;
         if (value === undefined || value === null) {
           localStorage.removeItem(key);
-          return;
+        } else {
+          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
         }
-        localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
       });
 
-      setBackupMessage(parsed.backupFormatVersion >= 2
-        ? 'Local settings restored. Exported account records are preserved in the file but are not imported into Firebase.'
-        : 'Backup restored successfully. Reloading app...');
-      showToast(parsed.backupFormatVersion >= 2 ? 'Local settings restored' : 'Backup restored', 'success');
-      event.target.value = '';
+      let importSummary = 'Local settings restored.';
+      if (isVersionTwo && collections) {
+        const imported = { events: 0, expenses: 0, incomes: 0, skipped: 0 };
+
+        if (isGuest || !user?.uid) {
+          const existingEvents = getGuestEvents();
+          const existingExpenses = getGuestExpenses();
+          const existingIncomes = getGuestIncomes();
+          const eventIds = new Set(existingEvents.map((item) => item.id).filter(Boolean));
+          const expenseIds = new Set(existingExpenses.map((item) => item.id).filter(Boolean));
+          const incomeIds = new Set(existingIncomes.map((item) => item.id).filter(Boolean));
+
+          const nextEvents = [...existingEvents];
+          collections.eventGroups.forEach((item) => {
+            if (!item || typeof item !== 'object' || !item.id || eventIds.has(item.id)) {
+              imported.skipped += 1;
+              return;
+            }
+            eventIds.add(item.id);
+            nextEvents.push(item);
+            imported.events += 1;
+          });
+          setGuestEvents(nextEvents);
+
+          const nestedExpenseIds = new Set(nextEvents.flatMap((eventItem) => (
+            (eventItem.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
+          )));
+          const nextExpenses = [...existingExpenses.filter((item) => !nestedExpenseIds.has(item.id))];
+          collections.expenses.forEach((item) => {
+            if (!item || typeof item !== 'object' || !item.id || expenseIds.has(item.id) || nestedExpenseIds.has(item.id)) {
+              imported.skipped += 1;
+              return;
+            }
+            expenseIds.add(item.id);
+            nextExpenses.push(item);
+            imported.expenses += 1;
+          });
+          setGuestExpenses(nextExpenses);
+
+          collections.incomes.forEach((item) => {
+            if (!item || typeof item !== 'object' || !item.id || incomeIds.has(item.id)) {
+              imported.skipped += 1;
+              return;
+            }
+            incomeIds.add(item.id);
+            imported.incomes += 1;
+          });
+          setGuestIncomes([...existingIncomes, ...collections.incomes.filter((item) => (
+            item && typeof item === 'object' && item.id && !existingIncomes.some((existing) => existing.id === item.id)
+          ))]);
+        } else {
+          // Read first, then add only missing app-level IDs. Existing records are never overwritten.
+          const [existingEvents, existingExpenses, existingIncomes] = await Promise.all([
+            getEventsForUser(user.uid),
+            getExpensesForUser(user.uid),
+            getIncomesForUser(user.uid),
+          ]);
+          const eventIds = new Set(existingEvents.map((item) => item.id).filter(Boolean));
+          const expenseIds = new Set(existingExpenses.map((item) => item.id).filter(Boolean));
+          const incomeIds = new Set(existingIncomes.map((item) => item.id).filter(Boolean));
+
+          for (const item of collections.eventGroups) {
+            if (!item || typeof item !== 'object' || !item.id || eventIds.has(item.id)) {
+              imported.skipped += 1;
+              continue;
+            }
+            await createEvent(user.uid, item);
+            eventIds.add(item.id);
+            imported.events += 1;
+          }
+
+          const nestedExpenseIds = new Set(collections.eventGroups.flatMap((eventItem) => (
+            (eventItem?.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
+          )));
+          for (const item of collections.expenses) {
+            if (!item || typeof item !== 'object' || !item.id || expenseIds.has(item.id) || nestedExpenseIds.has(item.id)) {
+              imported.skipped += 1;
+              continue;
+            }
+            await createExpense(user.uid, item);
+            expenseIds.add(item.id);
+            imported.expenses += 1;
+          }
+
+          for (const item of collections.incomes) {
+            if (!item || typeof item !== 'object' || !item.id || incomeIds.has(item.id)) {
+              imported.skipped += 1;
+              continue;
+            }
+            await createIncome(user.uid, item);
+            incomeIds.add(item.id);
+            imported.incomes += 1;
+          }
+        }
+
+        importSummary = `Restore complete: ${imported.events} event groups, ${imported.expenses} standalone expenses, and ${imported.incomes} incomes imported; ${imported.skipped} duplicate or invalid records skipped. Existing records were not overwritten.`;
+      } else {
+        importSummary = 'Legacy backup settings restored. This older format does not contain a separate cloud-record snapshot.';
+      }
+
+      setPendingBackup(null);
+      setBackupMessage(`${importSummary} Reloading app…`);
+      showToast('Backup restore finished', 'success');
       window.location.reload();
     } catch (error) {
       console.error('Failed to restore backup:', error);
-      setBackupMessage('That file is not a valid DN backup.');
-      showToast('Backup restore failed', 'danger');
-      event.target.value = '';
+      setBackupMessage(`Restore incomplete: ${error.message || 'check your connection and try again'}. Records already imported were kept; re-importing this file skips matching IDs.`);
+      showToast('Backup restore incomplete', 'danger');
+    } finally {
+      setImportingBackup(false);
     }
   };
 
@@ -598,7 +737,7 @@ export default function Settings() {
       <div className="settings-admin-grid">
         <div className="settings-input-block">
           <span>Local backup</span>
-          <p className="settings-helper">Export your current local DN data as a JSON file or restore it later on the same device.</p>
+          <p className="settings-helper">Export app settings and records to JSON. Restore merges missing records into the active guest or signed-in account; matching record IDs are skipped and existing records are never overwritten.</p>
         </div>
       </div>
 
@@ -695,6 +834,34 @@ export default function Settings() {
           <RotateCcw size={15} /> Reset all settings
         </button>
       </section>
+
+      {pendingBackup ? (
+        <ModalDialog title="Review backup restore" onClose={() => { if (!importingBackup) setPendingBackup(null); }}>
+          <div className="settings-reset-warning">
+            <p><strong>File:</strong> {pendingBackup.fileName}</p>
+            <p><strong>Format:</strong> {pendingBackup.isVersionTwo ? `Version ${pendingBackup.parsed.backupFormatVersion}` : 'Legacy backup'}</p>
+            {pendingBackup.isVersionTwo ? (
+              <>
+                <p><strong>Exported:</strong> {pendingBackup.parsed.exportedAt || 'Unknown date'}</p>
+                <ul>
+                  <li>{pendingBackup.collections.eventGroups.length} event groups (including embedded activities, memories, and attachments)</li>
+                  <li>{pendingBackup.collections.expenses.length} effective expenses</li>
+                  <li>{pendingBackup.collections.incomes.length} income records</li>
+                  <li>{Object.keys(pendingBackup.localStorageData).filter((key) => key.startsWith('lifehub_')).length} app settings/local-storage entries</li>
+                </ul>
+                <p>Missing records will be added. Records with matching IDs will be skipped; existing cloud records will not be overwritten. If an import is interrupted, you can safely retry this file.</p>
+              </>
+            ) : <p>Only compatible local settings can be restored from this older backup format.</p>}
+            {user?.uid ? <p>The records will be merged into the currently signed-in account, not necessarily the account that created the backup.</p> : <p>Records will be merged into this browser's guest data.</p>}
+          </div>
+          <div className="settings-actions">
+            <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
+            <button type="button" className="settings-primary-button" onClick={restorePendingBackup} disabled={importingBackup}>
+              {importingBackup ? 'Restoring backup…' : 'Confirm restore'}
+            </button>
+          </div>
+        </ModalDialog>
+      ) : null}
 
       {confirmClearData ? (
         <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
