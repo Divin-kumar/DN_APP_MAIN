@@ -164,7 +164,18 @@ A task is done only when:
 - [x] Replace the three-key export with a versioned JSON backup containing all `lifehub_*` local-storage settings/data, event groups (including embedded activities, memories, and attachments), effective deduplicated expenses, and incomes.
 - [x] Export records from the active storage mode: Firebase account collections for signed-in users, guest-local records for guest sessions, or active development sample data when present.
 - [x] Add export error handling and a clear progress/success/failure message.
-- [x] Keep restore compatibility with older backups and prevent v2 cloud records from being silently written to localStorage; v2 restore restores local settings only.
-- [ ] **Follow-up:** add tests for authenticated, guest, sample-data, malformed-storage, and export-failure paths.
-- [ ] **Follow-up:** decide and implement a deliberate, separately confirmed import flow for v2 Firestore records if full cloud restore is required; current v2 restore does not import cloud records.
-- [ ] **Follow-up:** run existing tests, production build, and manual export checks in guest and authenticated sessions.
+- [x] Keep restore compatibility with older backups and validate the version 2 collection structure before offering restore.
+- [x] Add a review/confirmation dialog with file name, export timestamp, record counts, and destination-account warning.
+- [x] Restore settings only from app-owned `lifehub_*` keys and exclude guest data, session backups, and development fixtures from settings writes.
+- [x] Merge missing event groups, expenses, and incomes into guest-local storage or the currently signed-in user's Firestore collections; skip duplicate IDs and never intentionally overwrite matching records.
+- [x] Keep nested activity expenses inside their event and avoid importing the same nested expense as a second master record; keep import retry-safe after partial failure by skipping already-created IDs.
+- [x] Reject oversized files and malformed v2 collection payloads; surface progress, completion, and partial-failure messages.
+- [ ] Add automated tests for authenticated, guest, duplicate, partial-failure, malformed-file, and export-failure paths.
+- [ ] Run the existing test suite, production build, and manual guest/authenticated restore journeys; verify Firestore rules and record schemas in a suitable runtime.
+
+
+### 2026-10-17 — full backup restore implementation
+- [x] Implemented review-before-restore and merge-only restore on `OldVersion`; existing matching record IDs are skipped rather than overwritten.
+- [x] Kept account record writes scoped to the currently authenticated UID through the existing Firestore service functions.
+- [x] Updated architecture, PRD, rules, and memory documentation for import semantics and branch/deployment safety.
+- [ ] Runtime tests/build and live guest/authenticated Firebase validation remain pending; no deployment was performed.
