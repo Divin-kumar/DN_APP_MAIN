@@ -140,3 +140,10 @@ A task is done only when:
 6. Errors and failed writes do not silently lose user-visible state.
 7. Documentation is updated if product behavior, architecture, setup, or known limitations changed.
 8. No unrelated branch or production deployment was changed unintentionally.
+
+## 7. Automatic documentation maintenance
+
+- [x] **Maintenance rule adopted:** after completing a feature, fixing a bug, or executing a task, update this file. Check off only items whose completion has been verified, and add newly discovered follow-up work.
+- [x] **Memory rule adopted:** record durable technical choices, workarounds, environment/configuration changes, and architecture decisions in `memory.md` when they occur.
+- [ ] **Ongoing:** include the relevant `tasks.md` and `memory.md` updates in the same work session as the implementation where practical; verify the updated Markdown on `OldVersion` before reporting completion.
+- [ ] **Ongoing:** distinguish verified completion from work merely attempted; do not mark tests, builds, browser checks, deployments, or security checks complete unless actually run and checked.
