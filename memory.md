@@ -156,3 +156,12 @@ Update the relevant file when a meaningful behavior or architectural decision ch
 - Added a session work log to `tasks.md` with verified documentation work marked complete and runtime validation/guest-merge recovery retained as open follow-ups.
 - No new runtime dependencies, environment variables, components, source directories, or architectural changes were introduced in this documentation-only session. `architecture.md` and `rules.md` were adjusted only to accurately describe the existing behavior and its safety requirement.
 - Verification performed: re-read changed files and checked the GitHub branch/tree/compare metadata. Tests, production build, browser journeys, deployed Firebase rules, and deployment were **not** run as part of this documentation pass.
+
+
+### 2026-10-17 — complete backup export
+- Replaced the Settings backup's three-key allowlist with a versioned JSON export of all `lifehub_*` localStorage entries plus effective eventGroups, expenses, and incomes.
+- Signed-in exports fetch the user's Firestore-backed records through existing service functions; guest exports use guest-local service readers; active development sample data is exported from its isolated fixture source.
+- Event-group export includes data embedded in event documents (activities, memories, attachments, and greeting-card data). Expense service output is deduplicated against nested activity expenses for reporting/export.
+- The export includes account identity metadata (UID/display name/email only), not authentication credentials or Firebase security rules.
+- Backup format version 2 separates `data.localStorage` from `data.collections`. Restore remains backward-compatible with the previous flat backup shape; v2 restore applies local settings only and intentionally does not write cloud records into Firestore. Full cloud import remains an explicit follow-up to avoid accidental overwrites/duplicates.
+- No dependencies or environment variables added. GitHub source edits only; automated tests, build, and live Firebase/browser validation have not yet been run.
