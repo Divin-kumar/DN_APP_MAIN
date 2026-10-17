@@ -451,8 +451,10 @@ export default function Settings() {
             imported.events += 1;
           }
 
-          const nestedExpenseIds = new Set(collections.eventGroups.flatMap((eventItem) => (
-            (eventItem?.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
+          // Only treat nested expenses as already represented if their parent event now exists in this account.
+          const refreshedEvents = await getEventsForUser(user.uid);
+          const nestedExpenseIds = new Set(refreshedEvents.flatMap((eventItem) => (
+            (eventItem.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
           )));
           for (const item of collections.expenses) {
             if (!item || typeof item !== 'object' || !item.id || expenseIds.has(item.id) || nestedExpenseIds.has(item.id)) {
