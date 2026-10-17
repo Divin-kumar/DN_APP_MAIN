@@ -43,7 +43,7 @@ The repository has evolved from an expense-tracking application into a broader l
 - Listen to Firebase auth state and expose a consistent session state to the app.
 - When a user authenticates, attempt to merge locally stored guest records into the account before finalizing the app-level user state.
 - Protect authenticated application routes while allowing login/public entry routes.
-- On merge failure, log the error and still complete the user session transition; the UI must not imply that a failed merge succeeded.
+- **Observed limitation:** the auth listener logs merge failures and still completes the signed-in session transition. The inspected code does not expose a user-facing merge-failure/retry state. Explicit failure feedback and safe retry/recovery should be treated as release requirements; do not present a failed merge as complete.
 
 ### 4.2 Dashboard
 - Present an overview of relevant events, activities, and financial summaries.
