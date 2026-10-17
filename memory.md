@@ -6,8 +6,8 @@ This file records stable engineering context for future work on the `OldVersion`
 
 - Repository: `Divin-kumar/DN_APP_MAIN`
 - Active requested branch: `OldVersion`
-- Inspected branch head: `0db33d3814f822e10cd7fd4a6730a7f511fc632b`
-- Head commit: `Architecture_Approved_Pre_Dexie_Foundation` (2026-10-04T11:29:15Z)
+- **Application-source audit baseline:** `0db33d3814f822e10cd7fd4a6730a7f511fc632b` (`Architecture_Approved_Pre_Dexie_Foundation`, 2026-10-04T11:29:15Z), the code state inspected before this documentation set was added.
+- **Initial documentation verification checkpoint:** `9b711b807276aa24c5e8bfdad858e054b416115c` (`docs(OldVersion): capture long-term project context`). This is historical, not the current branch head; check GitHub before relying on a current SHA.
 - Product: LifeHub, a personal life-planning and finance PWA.
 - Runtime: React 18 + Vite 5, React Router, Zustand, Firebase Auth/Firestore.
 - Deployment: Firebase Hosting site `dn-10`; output directory `dist`.
@@ -40,8 +40,9 @@ The app brings life moments, activities, memories/attachments, income, expenses,
 
 ### Guest mode
 - Guest session and guest records use localStorage.
-- Guest data can be merged into an authenticated account.
-- This dual persistence model increases complexity and requires explicit testing of merge idempotency, cleanup, and partial failures.
+- Guest data can be merged into an authenticated account by `guestMergeService.js` using a Firestore batch; guest keys are removed after the batch commit completes.
+- **Known recovery gap:** `AuthContext.jsx` logs a merge failure but sets the signed-in user in `.finally()` regardless. No visible retry/failure UI is wired in that path, so the app's signed-in state alone does not prove that guest data was migrated.
+- This dual persistence model increases complexity and requires explicit testing of idempotency, concurrent/repeated auth callbacks, cleanup, and partial failures.
 
 ### Embedded activity model and expenses
 - Activities are embedded in event documents, not a separate collection in the inspected service.
