@@ -98,6 +98,9 @@ These standards are based on the current `OldVersion` source. They distinguish e
 - No lint/type-check gate is configured; do not imply these checks have run unless separately installed and executed.
 
 ## 12. Do-not rules
+- For this project/task, all implementation commits and build-related changes must target `OldVersion` only. Never push, merge, cherry-pick into, or otherwise modify `main` or any other branch unless the user explicitly changes this instruction.
+- Do not deploy Firebase Hosting as part of a branch-only implementation task unless the user separately authorizes deployment.
+- Backup restore must require explicit confirmation, validate the file, scope cloud writes to the currently authenticated UID, skip matching record IDs, preserve nested activity data, and clearly report partial failures. Do not silently overwrite records or claim atomic rollback when Firestore writes have already succeeded.
 - Do not modify `main` or other branches when assigned to `OldVersion`.
 - Do not rewrite the Firestore data model without migration/backward-compatibility analysis.
 - Do not remove existing localStorage keys or change their schema without a migration.
