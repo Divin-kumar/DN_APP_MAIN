@@ -147,3 +147,12 @@ Update the relevant file when a meaningful behavior or architectural decision ch
 - **Editing workflow:** repository file-writing access is available through the connected GitHub tools, so update the files directly on the requested branch rather than returning replacement Markdown for manual copying. Re-read the changed files after writes.
 - **Verification discipline:** distinguish changes made from checks actually run. Never claim tests, builds, browser/device validation, deployments, or security checks succeeded unless executed and verified.
 - **Branch safety:** for this work, the target is `OldVersion`; do not change `main` or other branches unless the user explicitly changes the target.
+
+### 2026-10-17 — follow-up documentation audit
+
+- Re-read `prd.md`, `architecture.md`, `rules.md`, `design.md`, `tasks.md`, and this file on `OldVersion`, and cross-checked documented repository paths against the branch tree. No missing source paths were found in the sampled path references.
+- Corrected documentation to treat `0db33d3814f822e10cd7fd4a6730a7f511fc632b` as the **application-source audit baseline**, and `9b711b807276aa24c5e8bfdad858e054b416115c` as a **historical documentation checkpoint**—neither should be assumed to be the live branch head.
+- Confirmed the key guest-merge quirk in the docs: merge failures are logged, but the auth listener still finalizes signed-in state; the inspected flow has no visible failure/retry prompt. Follow-up work must design a safe, idempotent retry/recovery flow and avoid implying migration success when it failed.
+- Added a session work log to `tasks.md` with verified documentation work marked complete and runtime validation/guest-merge recovery retained as open follow-ups.
+- No new runtime dependencies, environment variables, components, source directories, or architectural changes were introduced in this documentation-only session. `architecture.md` and `rules.md` were adjusted only to accurately describe the existing behavior and its safety requirement.
+- Verification performed: re-read changed files and checked the GitHub branch/tree/compare metadata. Tests, production build, browser journeys, deployed Firebase rules, and deployment were **not** run as part of this documentation pass.
