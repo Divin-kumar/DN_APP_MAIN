@@ -47,6 +47,8 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const adminValues = useAppStore((state) => state.adminValues);
   const preferences = useAppStore((state) => state.preferences);
   const setAdminValues = useAppStore((state) => state.setAdminValues);
+  const showToast = useAppStore((state) => state.showToast);
+  const isGuest = useAppStore((state) => state.isGuest);
   const events = useEventStore((state) => state.events);
   const expenses = useExpenseStore((state) => state.expenses);
   const incomes = useIncomeStore((state) => state.incomes);
@@ -96,7 +98,17 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     entries.map((entry) => [entry.value, getRecordUsageCount(listKey, entry.value, { events, expenses, incomes, preferences })]),
   ), [entries, events, expenses, incomes, preferences, listKey]);
 
-  const updateEntries = (nextEntries) => setAdminValues({ [listKey]: nextEntries });
+  const updateEntries = async (nextEntries) => {
+    try {
+      await setAdminValues({ [listKey]: nextEntries });
+      showToast(isGuest ? 'Code List saved on this device' : 'Code List saved to your account', 'success');
+      return true;
+    } catch (error) {
+      console.error('Unable to save Code List:', error);
+      showToast(error.message || 'Code List could not be saved', 'danger');
+      return false;
+    }
+  };
 
   const upsertEntry = (nextValue, nextLabel) => {
     const normalizedValue = nextValue.trim();
@@ -127,7 +139,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     });
   };
 
-  const saveMomentTypeEditor = () => {
+  const saveMomentTypeEditor = async () => {
     const title = momentTypeEditor?.title?.trim();
     if (!title) return;
 
@@ -145,8 +157,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       ? entries.map((entry) => (entry.value === (momentTypeEditor.existingValue || title) ? { ...entry, ...nextEntry } : entry))
       : [...entries, nextEntry];
 
-    updateEntries(nextEntries);
-    setMomentTypeEditor(null);
+    if (await updateEntries(nextEntries)) setMomentTypeEditor(null);
   };
 
   const getGreetingTemplatePreview = (template) => {
@@ -438,6 +449,19 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
 export default function CodeLists() {
   const navigate = useNavigate();
+  const user = useAppStore((state) => state.user);
+  const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
+  const adminValuesError = useAppStore((state) => state.adminValuesError);
+  const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
+
+  const retryCodeLists = async () => {
+    if (!user?.uid) return;
+    try {
+      await hydrateAdminValuesForUser(user.uid);
+    } catch {
+      // The error panel remains visible and allows another explicit retry.
+    }
+  };
 
   return (
     <div className="feature-page settings-page about-page">
@@ -451,11 +475,23 @@ export default function CodeLists() {
         </div>
       </header>
 
-      <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
-      <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
-      <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
-      <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
-      <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
+      {adminValuesLoading ? <section className="settings-section" role="status">Loading account Code Lists…</section> : null}
+      {adminValuesError ? (
+        <section className="settings-section" role="alert" aria-live="assertive">
+          <h3>Code Lists could not be synchronized</h3>
+          <p>Your account values were not replaced with browser defaults. Check your connection and retry before editing.</p>
+          <button type="button" className="settings-primary-button" onClick={retryCodeLists} disabled={adminValuesLoading}>
+            Retry loading Code Lists
+          </button>
+        </section>
+      ) : null}
+      {!adminValuesLoading && !adminValuesError ? <>
+        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
+        <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
+        <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
+        <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
+      </> : null}
 
       <section className="settings-section">
         <div className="settings-section-heading">

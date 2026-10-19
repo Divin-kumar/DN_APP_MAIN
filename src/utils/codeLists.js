@@ -22,6 +22,75 @@ export const CODE_LIST_MIGRATIONS = Object.freeze({
   1: Object.freeze({ additions: Object.freeze({}) }),
 });
 
+export const LEGACY_CODE_LISTS_STORAGE_KEY = 'lifehub_admin_values';
+export const LEGACY_CODE_LISTS_VERSION_KEY = 'lifehub_admin_values_schema_version';
+export const GUEST_CODE_LISTS_STORAGE_KEY = 'lifehub_guest_admin_values';
+export const GUEST_CODE_LISTS_VERSION_KEY = 'lifehub_guest_admin_values_schema_version';
+
+const isCodeListRecord = (value) => Boolean(
+  value && typeof value === 'object' && !Array.isArray(value)
+  && Object.keys(DEFAULT_CODE_LISTS).some((key) => Array.isArray(value[key])),
+);
+
+export const resolveCodeListSettings = (remoteSettings, legacySettings) => {
+  const remoteValues = remoteSettings?.adminValues;
+  const legacyValues = legacySettings?.adminValues;
+  const source = isCodeListRecord(remoteValues)
+    ? 'remote'
+    : isCodeListRecord(legacyValues) ? 'legacy' : 'defaults';
+  const selectedSettings = source === 'remote' ? remoteSettings : legacySettings;
+  const storedValues = source === 'defaults' ? null : selectedSettings.adminValues;
+  const storedVersion = source === 'defaults' ? 0 : selectedSettings.schemaVersion || 0;
+  const migrated = migrateStoredCodeLists(storedValues, storedVersion);
+
+  return {
+    adminValues: migrated.adminValues,
+    schemaVersion: migrated.version,
+    source,
+  };
+};
+
+export const readLegacyCodeListSettings = (storage) => {
+  try {
+    const targetStorage = storage || globalThis.localStorage;
+    const raw = targetStorage?.getItem(LEGACY_CODE_LISTS_STORAGE_KEY);
+    if (raw === null || raw === undefined) return null;
+    const adminValues = JSON.parse(raw);
+    if (!isCodeListRecord(adminValues)) return null;
+    return {
+      adminValues,
+      schemaVersion: Number.parseInt(targetStorage.getItem(LEGACY_CODE_LISTS_VERSION_KEY) || '0', 10) || 0,
+    };
+  } catch {
+    return null;
+  }
+};
+
+export const readGuestCodeListSettings = (storage) => {
+  try {
+    const targetStorage = storage || globalThis.localStorage;
+    const raw = targetStorage?.getItem(GUEST_CODE_LISTS_STORAGE_KEY);
+    if (raw !== null && raw !== undefined) {
+      const adminValues = JSON.parse(raw);
+      if (isCodeListRecord(adminValues)) {
+        return resolveCodeListSettings({ adminValues, schemaVersion: targetStorage.getItem(GUEST_CODE_LISTS_VERSION_KEY) || 0 }, null);
+      }
+    }
+  } catch {
+    // A malformed guest setting falls back to the legacy value or current defaults.
+  }
+
+  return resolveCodeListSettings(null, readLegacyCodeListSettings(storage));
+};
+
+export const writeGuestCodeListSettings = (adminValues, storage) => {
+  const targetStorage = storage || globalThis.localStorage;
+  const migrated = migrateStoredCodeLists(adminValues, CODE_LIST_SCHEMA_VERSION);
+  targetStorage.setItem(GUEST_CODE_LISTS_STORAGE_KEY, JSON.stringify(migrated.adminValues));
+  targetStorage.setItem(GUEST_CODE_LISTS_VERSION_KEY, String(migrated.version));
+  return migrated.adminValues;
+};
+
 export const migrateStoredCodeLists = (
   storedValues,
   storedVersion = 0,

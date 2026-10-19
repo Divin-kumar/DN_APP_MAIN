@@ -170,7 +170,7 @@ Guest-mode records are stored in browser localStorage, then merged into the auth
 
 - If routes fail to load, check for a chunk-load error and confirm the browser cache is refreshed
 - If data is missing after login, verify guest-to-account merge and Firestore access
-- If settings do not persist, check localStorage keys like `lifehub_preferences` and `lifehub_admin_values`
+- If guest settings do not persist, check the guest Code List key `lifehub_guest_admin_values` and `lifehub_preferences`; authenticated Code Lists load from Firestore at `users/{uid}/settings/codelists`. See [Code List persistence and migration](docs/CODE_LIST_PERSISTENCE.md).
 - If a new version does not appear, verify service worker registration and cache versioning
 
 ## 4. Related documentation

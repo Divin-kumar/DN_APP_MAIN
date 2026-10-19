@@ -9,10 +9,8 @@
   can access it when needed.
 */
 import { create } from 'zustand';
-import { CODE_LIST_SCHEMA_VERSION, DEFAULT_CODE_LISTS, migrateStoredCodeLists, resetCodeListsPreservingReferences, serializeCodeListEntries } from '../utils/codeLists';
-
-const ADMIN_VALUES_STORAGE_KEY = 'lifehub_admin_values';
-const ADMIN_VALUES_VERSION_KEY = 'lifehub_admin_values_schema_version';
+import { DEFAULT_CODE_LISTS, LEGACY_CODE_LISTS_STORAGE_KEY, LEGACY_CODE_LISTS_VERSION_KEY, resetCodeListsPreservingReferences, serializeCodeListEntries, readGuestCodeListSettings, writeGuestCodeListSettings } from '../utils/codeLists';
+import { loadCodeListsForUser, saveCodeListsForUser } from '../services/codeListService';
 
 // Default app preferences such as theme, currency, and notification settings.
 const defaultPreferences = {
@@ -40,20 +38,11 @@ const createDefaultAdminValues = () => Object.fromEntries(
   Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]),
 );
 
-// Load and migrate admin values without replacing user-maintained entries on application updates.
-const loadAdminValues = () => {
-  try {
-    const storedJson = localStorage.getItem(ADMIN_VALUES_STORAGE_KEY);
-    const storedValues = storedJson === null ? null : JSON.parse(storedJson);
-    const storedVersion = localStorage.getItem(ADMIN_VALUES_VERSION_KEY) || 0;
-    const { adminValues, version } = migrateStoredCodeLists(storedValues, storedVersion);
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(version));
-    return adminValues;
-  } catch {
-    return createDefaultAdminValues();
-  }
-};
+let adminLoadRevision = 0;
+let adminWriteRevision = 0;
+let adminWriteQueue = Promise.resolve();
+let persistedAdminValues = null;
+let persistedAdminValuesOwner = null;
 
 // Load the saved user preferences from localStorage.
 const loadPreferences = () => {
@@ -77,7 +66,7 @@ const loadPreferences = () => {
   }
 };
 
-const useAppStore = create((set) => ({
+const useAppStore = create((set, get) => ({
   // User information and session status.
   user: null,
   authReady: false,
@@ -86,37 +75,106 @@ const useAppStore = create((set) => ({
   sessionType: 'unauthenticated',
 
   // Saved app configuration and temporary popup messages.
-  adminValues: loadAdminValues(),
+  adminValues: createDefaultAdminValues(),
+  adminValuesOwner: null,
+  adminValuesLoading: false,
+  adminValuesError: null,
   preferences: loadPreferences(),
   toast: null,
 
-  // Update custom values such as event labels and expense categories.
-  setAdminValues: (nextValues) => set((state) => {
-    const merged = {
-      ...state.adminValues,
-      ...nextValues,
-    };
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(merged));
-    return { adminValues: merged };
-  }),
+  hydrateAdminValuesForUser: async (uid) => {
+    const revision = ++adminLoadRevision;
+    set({
+      adminValues: createDefaultAdminValues(),
+      adminValuesOwner: null,
+      adminValuesLoading: true,
+      adminValuesError: null,
+    });
 
-  // Reset admin-defined values back to the default list.
-  resetAdminValues: () => set(() => {
-    const adminValues = createDefaultAdminValues();
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
-    return { adminValues };
-  }),
+    try {
+      const adminValues = await loadCodeListsForUser(uid);
+      if (revision === adminLoadRevision) {
+        persistedAdminValues = adminValues;
+        persistedAdminValuesOwner = uid;
+        set({ adminValues, adminValuesOwner: uid, adminValuesLoading: false, adminValuesError: null });
+      }
+      return adminValues;
+    } catch (error) {
+      if (revision === adminLoadRevision) {
+        set({ adminValuesOwner: null, adminValuesLoading: false, adminValuesError: error });
+      }
+      throw error;
+    }
+  },
 
-  resetAllSettings: (referencedValues) => set((state) => {
-    const adminValues = resetCodeListsPreservingReferences(state.adminValues, referencedValues);
+  hydrateGuestAdminValues: () => {
+    adminLoadRevision += 1;
+    const { adminValues, schemaVersion } = readGuestCodeListSettings();
+    try {
+      localStorage.setItem(LEGACY_CODE_LISTS_STORAGE_KEY, JSON.stringify(adminValues));
+      localStorage.setItem(LEGACY_CODE_LISTS_VERSION_KEY, String(schemaVersion));
+    } catch {
+      // The in-memory guest configuration remains usable if browser storage is unavailable.
+    }
+    persistedAdminValues = adminValues;
+    persistedAdminValuesOwner = 'guest';
+    set({ adminValues, adminValuesOwner: 'guest', adminValuesLoading: false, adminValuesError: null });
+    return adminValues;
+  },
+
+  // Authenticated lists are written to the account document; guest lists stay device-local.
+  setAdminValues: (nextValues) => {
+    const current = get();
+    const merged = { ...current.adminValues, ...nextValues };
+    const owner = current.user?.uid || (current.isGuest ? 'guest' : null);
+    const revision = ++adminWriteRevision;
+
+    if (owner === 'guest') {
+      const saved = writeGuestCodeListSettings(merged);
+      persistedAdminValues = saved;
+      persistedAdminValuesOwner = 'guest';
+      set({ adminValues: saved, adminValuesOwner: 'guest', adminValuesError: null });
+      return Promise.resolve(saved);
+    }
+
+    if (!owner || current.adminValuesOwner !== owner || current.adminValuesError) {
+      return Promise.reject(new Error('Code Lists are not ready to save. Reload them before making changes.'));
+    }
+
+    set({ adminValues: merged, adminValuesError: null });
+    const write = adminWriteQueue.catch(() => undefined).then(() => saveCodeListsForUser(owner, merged));
+    adminWriteQueue = write;
+
+    return write.then((saved) => {
+      if (get().user?.uid === owner) {
+        persistedAdminValues = saved;
+        persistedAdminValuesOwner = owner;
+      }
+      if (revision === adminWriteRevision && get().user?.uid === owner) {
+        set({ adminValues: saved, adminValuesError: null });
+      }
+      return saved;
+    }).catch((error) => {
+      if (revision === adminWriteRevision && get().user?.uid === owner) {
+        const fallback = persistedAdminValuesOwner === owner ? persistedAdminValues : current.adminValues;
+        set({ adminValues: fallback, adminValuesOwner: owner, adminValuesError: error });
+      }
+      throw error;
+    });
+  },
+
+  // Reset admin-defined values through the same persistence path as normal edits.
+  resetAdminValues: () => get().setAdminValues(createDefaultAdminValues()),
+
+  resetAllSettings: async (referencedValues) => {
+    const adminValues = resetCodeListsPreservingReferences(get().adminValues, referencedValues);
+    await get().setAdminValues(adminValues);
     const preferences = createDefaultPreferences();
-    localStorage.setItem(ADMIN_VALUES_STORAGE_KEY, JSON.stringify(adminValues));
-    localStorage.setItem(ADMIN_VALUES_VERSION_KEY, String(CODE_LIST_SCHEMA_VERSION));
     localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
     localStorage.setItem('lifehub_theme_choice', '1');
+    set({ preferences });
     return { adminValues, preferences };
-  }),
+  },
 
   // Save preferences and persist them so they survive page refreshes.
   setPreferences: (nextPreferences) => set((state) => {
@@ -134,6 +192,22 @@ const useAppStore = create((set) => ({
     return { preferences: merged };
   }),
 
+  restorePreferences: (restoredPreferences) => {
+    const preferences = {
+      ...createDefaultPreferences(),
+      ...(restoredPreferences || {}),
+      notifications: {
+        ...defaultPreferences.notifications,
+        ...(restoredPreferences?.notifications || {}),
+      },
+      listSort: { ...(restoredPreferences?.listSort || {}) },
+    };
+    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
+    localStorage.setItem('lifehub_theme_choice', '1');
+    set({ preferences });
+    return preferences;
+  },
+
   // Restore the original app defaults for theme and user preferences.
   resetPreferences: () => set(() => {
     const preferences = createDefaultPreferences();
@@ -143,6 +217,21 @@ const useAppStore = create((set) => ({
   }),
 
   // Mark the current user as logged in and clear guest mode.
+  beginAccountLoad: () => {
+    adminLoadRevision += 1;
+    set({
+      user: null,
+      isGuest: false,
+      sessionType: 'unauthenticated',
+      authReady: false,
+      appLoading: true,
+      adminValues: createDefaultAdminValues(),
+      adminValuesOwner: null,
+      adminValuesLoading: true,
+      adminValuesError: null,
+    });
+  },
+
   setUser: (user) =>
     set({
       user,
@@ -153,14 +242,16 @@ const useAppStore = create((set) => ({
     }),
 
   // Switch app to guest mode when no real account is active.
-  setGuestMode: (value) =>
+  setGuestMode: (value) => {
+    if (value) get().hydrateGuestAdminValues();
     set({
       isGuest: value,
       user: null,
       sessionType: value ? 'guest' : 'unauthenticated',
       authReady: true,
       appLoading: false,
-    }),
+    });
+  },
 
   // Small success/error popups shown throughout the app.
   showToast: (message, type = 'success', action = null) => set({ toast: { message, type, action, duration: action?.duration || 2600 } }),
@@ -171,14 +262,22 @@ const useAppStore = create((set) => ({
   setAppLoading: (value) => set({ appLoading: value }),
 
   // Clear the session back to a logged-out state.
-  clearSession: () =>
+  clearSession: () => {
+    adminLoadRevision += 1;
+    persistedAdminValues = null;
+    persistedAdminValuesOwner = null;
     set({
       user: null,
       isGuest: false,
       sessionType: 'unauthenticated',
       authReady: true,
       appLoading: false,
-    }),
+      adminValues: createDefaultAdminValues(),
+      adminValuesOwner: null,
+      adminValuesError: null,
+      adminValuesLoading: false,
+    });
+  },
 }));
 
 export default useAppStore;

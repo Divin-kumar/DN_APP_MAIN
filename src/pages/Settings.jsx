@@ -8,13 +8,14 @@ import DropdownSelect from '../components/common/DropdownSelect';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
-import { createEvent, getEventsForUser, getGuestEvents, setGuestEvents } from '../services/eventService';
+import { createEvent, getEventsForUser, getGuestEvents, setGuestEvents, updateEvent } from '../services/eventService';
 import { createExpense, getExpensesForUser, getGuestExpenses, setGuestExpenses } from '../services/expenseService';
 import { createIncome, getIncomesForUser, getGuestIncomes, setGuestIncomes } from '../services/incomeService';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
-import { collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
+import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
+import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, createBackupDocument, mergeEventGroupsForRestore, mergeRecordsById, parseBackupDocument } from '../services/backupService';
 
 const normalizeList = (value) =>
   value
@@ -114,6 +115,7 @@ export default function Settings() {
   const preferences = useAppStore((state) => state.preferences);
   const showToast = useAppStore((state) => state.showToast);
   const setAdminValues = useAppStore((state) => state.setAdminValues);
+  const restorePreferences = useAppStore((state) => state.restorePreferences);
   const resetAdminValues = useAppStore((state) => state.resetAdminValues);
   const setPreferences = useAppStore((state) => state.setPreferences);
   const resetPreferences = useAppStore((state) => state.resetPreferences);
@@ -232,21 +234,7 @@ export default function Settings() {
 
   const exportBackup = async () => {
     try {
-      setBackupMessage('Preparing a complete backup…');
-
-      const localStorageData = Object.fromEntries(
-        Object.keys(localStorage)
-          .filter((key) => key.startsWith('lifehub_'))
-          .sort()
-          .map((key) => {
-            const value = localStorage.getItem(key);
-            try {
-              return [key, JSON.parse(value)];
-            } catch {
-              return [key, value];
-            }
-          })
-      );
+      setBackupMessage('Preparing an application data backup…');
 
       let events;
       let expenses;
@@ -276,37 +264,44 @@ export default function Settings() {
         dataSource = 'local-browser';
       }
 
-      const snapshot = {
-        app: 'DN',
-        backupFormatVersion: 2,
-        exportedAt: new Date().toISOString(),
-        dataSource,
-        account: user?.uid ? {
-          uid: user.uid,
-          displayName: user.displayName || null,
-          email: user.email || null,
-        } : null,
-        data: {
-          localStorage: localStorageData,
-          collections: {
-            eventGroups: events,
-            expenses,
-            incomes,
-          },
-          notes: [
-            'Activities, memories, greeting cards, and attachments stored inside event records are included with eventGroups.',
-            'Expenses linked to activities may also be nested in eventGroups; the expenses collection contains deduplicated effective expense records.',
-            'This file exports application data and settings. It does not contain authentication credentials or Firebase security rules.',
-          ],
-        },
+      const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
+      const readIdList = (key) => {
+        try {
+          const value = JSON.parse(localStorage.getItem(key) || '[]');
+          return Array.isArray(value) ? value.filter((id) => typeof id === 'string') : [];
+        } catch {
+          return [];
+        }
       };
+      const snapshot = createBackupDocument({
+        moments: events,
+        expenses,
+        incomes,
+        codeLists: adminValues,
+        codeListSchemaVersion: CODE_LIST_SCHEMA_VERSION,
+        preferences,
+        settings: { themeChoiceEnabled: Boolean(localStorage.getItem('lifehub_theme_choice')) },
+        dashboardConfiguration: {
+          favorites: readIdList(`lifehub_favorite_event_ids_${pickerStorageId}`),
+          recent: readIdList(`lifehub_recent_event_ids_${pickerStorageId}`),
+        },
+        metadata: {
+          source: dataSource,
+          sourceAccount: user?.uid ? {
+            uid: user.uid,
+            displayName: user.displayName || null,
+            email: user.email || null,
+          } : null,
+          appVersion: String(import.meta.env.VITE_APP_VERSION || 'dev'),
+        },
+      });
 
       const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-      downloadBlob(blob, `dn-complete-backup-${new Date().toISOString().slice(0, 10)}.json`);
-      setBackupMessage('Complete backup downloaded successfully.');
-      showToast('Complete backup exported', 'success');
+      downloadBlob(blob, `dn-backup-${snapshot.createdDate.slice(0, 10)}.json`);
+      setBackupMessage('Backup downloaded. Attachment records contain metadata only; original file bytes are not stored by this app.');
+      showToast('Backup exported', 'success');
     } catch (error) {
-      console.error('Failed to export complete backup:', error);
+      console.error('Failed to export application backup:', error);
       setBackupMessage('Backup could not be created. Check your connection and try again.');
       showToast('Backup export failed', 'danger');
     }
@@ -321,30 +316,16 @@ export default function Settings() {
         throw new Error('Backup files must be 50 MB or smaller.');
       }
       const parsed = JSON.parse(await file.text());
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        throw new Error('Backup root must be a JSON object.');
-      }
-
-      const isVersionTwo = Number(parsed.backupFormatVersion) >= 2;
-      const localStorageData = isVersionTwo ? parsed.data?.localStorage : (parsed.data || parsed);
-      if (!localStorageData || typeof localStorageData !== 'object' || Array.isArray(localStorageData)) {
-        throw new Error('Backup local settings are missing or invalid.');
-      }
-
-      const collections = isVersionTwo ? parsed.data?.collections : null;
-      if (isVersionTwo && (!collections || !Array.isArray(collections.eventGroups)
-        || !Array.isArray(collections.expenses) || !Array.isArray(collections.incomes))) {
-        throw new Error('This version 2 backup is missing one or more data collections.');
-      }
+      const backup = parseBackupDocument(parsed);
+      const referenceWarnings = collectBackupReferenceWarnings(backup);
 
       setPendingBackup({
-        parsed,
+        backup,
         fileName: file.name,
-        isVersionTwo,
-        localStorageData,
-        collections: collections || null,
+        referenceWarnings,
+        legacySettingsOnly: Boolean(backup.metadata.legacySettingsOnly),
       });
-      setBackupMessage('Backup checked. Review its contents before restoring.');
+      setBackupMessage('Backup schema and required relationships validated. Review the import and conflict policy before restoring.');
     } catch (error) {
       console.error('Unable to read backup file:', error);
       setBackupMessage(error.message || 'That file is not a valid DN backup.');
@@ -357,7 +338,7 @@ export default function Settings() {
   const restorePendingBackup = async () => {
     if (!pendingBackup || importingBackup) return;
     setImportingBackup(true);
-    const { parsed, localStorageData, collections, isVersionTwo } = pendingBackup;
+    const { backup } = pendingBackup;
 
     try {
       const sampleData = getActiveSampleData(user?.uid || null);
@@ -365,125 +346,100 @@ export default function Settings() {
         throw new Error('Clear the isolated development sample scenario before restoring a backup.');
       }
 
-      // Settings restore is restricted to app-owned keys; imported files cannot write arbitrary browser storage.
-      const recordStorageKeys = new Set([
-        'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes',
-        'lifehub_session_backup', 'lifehub_guest_mode', 'lifehub_dev_fixture_scenario',
-        'lifehub_dev_fixture_data',
-      ]);
-      Object.entries(localStorageData).forEach(([key, value]) => {
-        if (!key.startsWith('lifehub_') || recordStorageKeys.has(key)) return;
-        if (value === undefined || value === null) {
-          localStorage.removeItem(key);
-        } else {
-          localStorage.setItem(key, typeof value === 'string' ? value : JSON.stringify(value));
-        }
-      });
+      const importedGroups = buildEventGroupsFromBackup(backup);
+      const imported = { moments: 0, activities: 0, memories: 0, attachments: 0, expenses: 0, incomes: 0, conflicts: 0 };
+      let restoredGroups;
+      let resultingExpenses;
+      let resultingIncomes;
 
-      let importSummary = 'Local settings restored.';
-      if (isVersionTwo && collections) {
-        const imported = { events: 0, expenses: 0, incomes: 0, skipped: 0 };
+      if (isGuest || !user?.uid) {
+        const existingGroups = getGuestEvents();
+        const existingExpenses = getGuestExpenses();
+        const existingIncomes = getGuestIncomes();
+        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups);
+        restoredGroups = merged.eventGroups;
+        Object.assign(imported, merged.counts);
+        setGuestEvents(restoredGroups);
 
-        if (isGuest || !user?.uid) {
-          const existingEvents = getGuestEvents();
-          const existingExpenses = getGuestExpenses();
-          const existingIncomes = getGuestIncomes();
-          const eventIds = new Set(existingEvents.map((item) => item.id).filter(Boolean));
-          const expenseIds = new Set(existingExpenses.map((item) => item.id).filter(Boolean));
-          const incomeIds = new Set(existingIncomes.map((item) => item.id).filter(Boolean));
+        const nestedExpenseIds = new Set(restoredGroups.flatMap((moment) => (
+          (moment.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
+        )));
+        const existingExpenseIds = new Set(existingExpenses.map((expense) => expense.id).filter(Boolean));
+        const standaloneBackupExpenses = backup.expenses.filter((expense) => (
+          !nestedExpenseIds.has(expense.id) && !existingExpenseIds.has(expense.id)
+        ));
+        imported.conflicts += backup.expenses.length - standaloneBackupExpenses.length
+          - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
+        resultingExpenses = mergeRecordsById(existingExpenses.filter((expense) => !nestedExpenseIds.has(expense.id)), standaloneBackupExpenses).items;
+        setGuestExpenses(resultingExpenses);
 
-          const nextEvents = [...existingEvents];
-          collections.eventGroups.forEach((item) => {
-            if (!item || typeof item !== 'object' || !item.id || eventIds.has(item.id)) {
-              imported.skipped += 1;
-              return;
-            }
-            eventIds.add(item.id);
-            nextEvents.push(item);
-            imported.events += 1;
-          });
-          setGuestEvents(nextEvents);
-
-          const nestedExpenseIds = new Set(nextEvents.flatMap((eventItem) => (
-            (eventItem.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
-          )));
-          const nextExpenses = [...existingExpenses.filter((item) => !nestedExpenseIds.has(item.id))];
-          collections.expenses.forEach((item) => {
-            if (!item || typeof item !== 'object' || !item.id || expenseIds.has(item.id) || nestedExpenseIds.has(item.id)) {
-              imported.skipped += 1;
-              return;
-            }
-            expenseIds.add(item.id);
-            nextExpenses.push(item);
-            imported.expenses += 1;
-          });
-          setGuestExpenses(nextExpenses);
-
-          const nextIncomes = [...existingIncomes];
-          collections.incomes.forEach((item) => {
-            if (!item || typeof item !== 'object' || !item.id || incomeIds.has(item.id)) {
-              imported.skipped += 1;
-              return;
-            }
-            incomeIds.add(item.id);
-            nextIncomes.push(item);
-            imported.incomes += 1;
-          });
-          setGuestIncomes(nextIncomes);
-        } else {
-          // Read first, then add only missing app-level IDs. Existing records are never overwritten.
-          const [existingEvents, existingExpenses, existingIncomes] = await Promise.all([
-            getEventsForUser(user.uid),
-            getExpensesForUser(user.uid),
-            getIncomesForUser(user.uid),
-          ]);
-          const eventIds = new Set(existingEvents.map((item) => item.id).filter(Boolean));
-          const expenseIds = new Set(existingExpenses.map((item) => item.id).filter(Boolean));
-          const incomeIds = new Set(existingIncomes.map((item) => item.id).filter(Boolean));
-
-          for (const item of collections.eventGroups) {
-            if (!item || typeof item !== 'object' || !item.id || eventIds.has(item.id)) {
-              imported.skipped += 1;
-              continue;
-            }
-            await createEvent(user.uid, item);
-            eventIds.add(item.id);
-            imported.events += 1;
-          }
-
-          // Only treat nested expenses as already represented if their parent event now exists in this account.
-          const refreshedEvents = await getEventsForUser(user.uid);
-          const nestedExpenseIds = new Set(refreshedEvents.flatMap((eventItem) => (
-            (eventItem.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
-          )));
-          for (const item of collections.expenses) {
-            if (!item || typeof item !== 'object' || !item.id || expenseIds.has(item.id) || nestedExpenseIds.has(item.id)) {
-              imported.skipped += 1;
-              continue;
-            }
-            await createExpense(user.uid, item);
-            expenseIds.add(item.id);
-            imported.expenses += 1;
-          }
-
-          for (const item of collections.incomes) {
-            if (!item || typeof item !== 'object' || !item.id || incomeIds.has(item.id)) {
-              imported.skipped += 1;
-              continue;
-            }
-            await createIncome(user.uid, item);
-            incomeIds.add(item.id);
-            imported.incomes += 1;
-          }
-        }
-
-        importSummary = `Restore complete: ${imported.events} event groups, ${imported.expenses} standalone expenses, and ${imported.incomes} incomes imported; ${imported.skipped} duplicate or invalid records skipped. Existing records were not overwritten.`;
+        const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
+        resultingIncomes = mergedIncomes.items;
+        imported.incomes = mergedIncomes.added;
+        imported.conflicts += backup.incomes.length - mergedIncomes.added;
       } else {
-        importSummary = 'Legacy backup settings restored. This older format does not contain a separate cloud-record snapshot.';
+        const [existingGroups, existingExpenses, existingIncomes] = await Promise.all([
+          getEventsForUser(user.uid),
+          getExpensesForUser(user.uid),
+          getIncomesForUser(user.uid),
+        ]);
+        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups);
+        restoredGroups = merged.eventGroups;
+        Object.assign(imported, merged.counts);
+
+        const existingById = new Map(existingGroups.map((moment) => [moment.id, moment]));
+        for (const moment of restoredGroups) {
+          const previous = existingById.get(moment.id);
+          if (!previous) {
+            await createEvent(user.uid, moment);
+            continue;
+          }
+          if (JSON.stringify(previous) !== JSON.stringify(moment)) await updateEvent(user.uid, moment);
+        }
+
+        const nestedExpenseIds = new Set(restoredGroups.flatMap((moment) => (
+          (moment.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => expense.id).filter(Boolean))
+        )));
+        const existingExpenseIds = new Set(existingExpenses.map((expense) => expense.id).filter(Boolean));
+        const standaloneBackupExpenses = backup.expenses.filter((expense) => (
+          !nestedExpenseIds.has(expense.id) && !existingExpenseIds.has(expense.id)
+        ));
+        imported.conflicts += backup.expenses.length - standaloneBackupExpenses.length
+          - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
+        for (const expense of standaloneBackupExpenses) await createExpense(user.uid, expense);
+        imported.expenses = standaloneBackupExpenses.length;
+
+        const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
+        for (const income of backup.incomes) {
+          if (existingIncomes.some((current) => current.id === income.id)) continue;
+          await createIncome(user.uid, income);
+        }
+        imported.incomes = mergedIncomes.added;
+        imported.conflicts += backup.incomes.length - mergedIncomes.added;
       }
 
+      // Configuration is restored only after record writes succeed. Existing record values win on ID conflicts.
+      if (backup.settings.restoreCodeLists !== false) await setAdminValues(backup.codeLists);
+      if (Object.keys(backup.preferences).length) {
+        restorePreferences(backup.preferences);
+        setTheme(backup.preferences.theme || 'dark');
+        document.documentElement.dataset.theme = backup.preferences.theme === 'light' ? 'light' : 'dark';
+        document.querySelector('meta[name="theme-color"]')?.setAttribute(
+          'content', backup.preferences.theme === 'light' ? '#f3f6fb' : '#0b1020',
+        );
+      }
+
+      const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
+      const validMomentIds = new Set(restoredGroups.map((moment) => moment.id));
+      const favorites = [...new Set((backup.dashboardConfiguration.favorites || []).filter((id) => validMomentIds.has(id)))];
+      const recent = [...new Set((backup.dashboardConfiguration.recent || []).filter((id) => validMomentIds.has(id)))].slice(0, 8);
+      localStorage.setItem(`lifehub_favorite_event_ids_${pickerStorageId}`, JSON.stringify(favorites));
+      localStorage.setItem(`lifehub_recent_event_ids_${pickerStorageId}`, JSON.stringify(recent));
+
+      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, and Code Lists were restored where present.`;
+
       setPendingBackup(null);
-      setBackupMessage(`${importSummary} Reloading app…`);
+      setBackupMessage(`${importSummary} Reloading app. Original attachment files are not included because the application stores attachment metadata only.`);
       showToast('Backup restore finished', 'success');
       window.location.reload();
     } catch (error) {
@@ -496,7 +452,7 @@ export default function Settings() {
   };
 
   const clearLocalData = () => {
-    ['lifehub_admin_values', 'lifehub_admin_values_schema_version', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
+    ['lifehub_admin_values', 'lifehub_admin_values_schema_version', 'lifehub_guest_admin_values', 'lifehub_guest_admin_values_schema_version', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
     setBackupMessage('Local app data cleared. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
@@ -527,7 +483,7 @@ export default function Settings() {
         expenses: expenseState.expenses,
         incomes: incomeState.incomes,
       });
-      resetAllSettings(referencedValues);
+      await resetAllSettings(referencedValues);
       setTheme('dark');
       document.documentElement.dataset.theme = 'dark';
       setPrefForm({
@@ -846,19 +802,27 @@ export default function Settings() {
         <ModalDialog title="Review backup restore" onClose={() => { if (!importingBackup) setPendingBackup(null); }}>
           <div className="settings-reset-warning">
             <p><strong>File:</strong> {pendingBackup.fileName}</p>
-            <p><strong>Format:</strong> {pendingBackup.isVersionTwo ? `Version ${pendingBackup.parsed.backupFormatVersion}` : 'Legacy backup'}</p>
-            {pendingBackup.isVersionTwo ? (
+            <p><strong>Format:</strong> {pendingBackup.legacySettingsOnly ? 'Legacy settings-only backup' : `Version ${pendingBackup.backup.backupVersion}`}</p>
+            {!pendingBackup.legacySettingsOnly ? (
               <>
-                <p><strong>Exported:</strong> {pendingBackup.parsed.exportedAt || 'Unknown date'}</p>
+                <p><strong>Created:</strong> {pendingBackup.backup.createdDate}</p>
                 <ul>
-                  <li>{pendingBackup.collections.eventGroups.length} event groups (including embedded activities, memories, and attachments)</li>
-                  <li>{pendingBackup.collections.expenses.length} effective expenses</li>
-                  <li>{pendingBackup.collections.incomes.length} income records</li>
-                  <li>{Object.keys(pendingBackup.localStorageData).filter((key) => key.startsWith('lifehub_')).length} app settings/local-storage entries</li>
+                  <li>{pendingBackup.backup.moments.length} Moments</li>
+                  <li>{pendingBackup.backup.activities.length} Activities</li>
+                  <li>{pendingBackup.backup.memories.length} Memories</li>
+                  <li>{pendingBackup.backup.attachments.length} attachment metadata records (no file bytes)</li>
+                  <li>{pendingBackup.backup.expenses.length} Expenses</li>
+                  <li>{pendingBackup.backup.incomes.length} Income records</li>
+                  <li>Code Lists, preferences, and dashboard configuration</li>
                 </ul>
-                <p>Missing records will be added. Records with matching IDs will be skipped; existing cloud records will not be overwritten. If an import is interrupted, you can safely retry this file.</p>
+                <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration from the backup replaces the destination configuration. An interrupted restore can be retried; completed records are recognized by ID.</p>
+                <p><strong>Attachment limitation:</strong> original files are not in this backup because the app currently stores attachment metadata only.</p>
+                {pendingBackup.referenceWarnings.length ? (
+                  <div role="alert"><strong>Relationship warnings</strong><ul>{pendingBackup.referenceWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>
+                ) : null}
               </>
-            ) : <p>Only compatible local settings can be restored from this older backup format.</p>}
+            ) : <p>This legacy file contains settings only; it cannot restore Moments or financial records.</p>}
+            {pendingBackup.backup.metadata.sourceAccount?.uid ? <p>Backup source account: {pendingBackup.backup.metadata.sourceAccount.displayName || pendingBackup.backup.metadata.sourceAccount.uid}. Its authentication account is not recreated.</p> : null}
             {user?.uid ? <p>The records will be merged into the currently signed-in account, not necessarily the account that created the backup.</p> : <p>Records will be merged into this browser's guest data.</p>}
           </div>
           <div className="settings-actions">

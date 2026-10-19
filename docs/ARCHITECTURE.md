@@ -1,5 +1,7 @@
 # LifeHub architecture and repository review
 
+> For the production-readiness assessment, target design, risk register, roadmap, and diagrams, see [DN / LifeHub Enterprise Architecture Review](ARCHITECTURE_REVIEW.md).
+
 ## 1. Application overview
 
 LifeHub is a personal life-management application that combines life planning, memory tracking, and personal finance in one workspace. The business goal is not just record keeping; it is to help people keep important life events connected to the tasks, memories, and spending that belong with them.
@@ -205,6 +207,8 @@ Key workflows:
 Dependencies:
 
 - `DEFAULT_CODE_LISTS`
+- Firestore `users/{uid}/settings/codelists` for authenticated accounts
+- guest-specific localStorage keys for guest mode
 - `collectReferencedCodeListValues`
 - settings and dynamic filters
 
@@ -362,6 +366,10 @@ Key data points:
 - default event type
 - notifications
 - list sorting
+
+Authenticated Code Lists are stored separately from browser preferences in `users/{uid}/settings/codelists`; the account document is loaded before protected routes become ready. Guest Code Lists remain local. The legacy `lifehub_admin_values` key is used only to initialize an account whose Firestore document does not yet contain Code Lists. See [Code List persistence and migration](CODE_LIST_PERSISTENCE.md).
+
+Backup uses an explicit versioned schema rather than exporting arbitrary localStorage keys. It covers user records, Code Lists, preferences, and picker configuration, while attachment file bytes and Firebase Auth credentials are intentionally unavailable. See [Backup and Restore coverage review](BACKUP_RESTORE_REVIEW.md) for source inventory, conflict policy, limitations, and recovery drills.
 
 ## 5. Firebase documentation
 

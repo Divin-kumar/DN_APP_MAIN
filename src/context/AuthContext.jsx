@@ -16,37 +16,60 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const setUser = useAppStore((state) => state.setUser);
+  const beginAccountLoad = useAppStore((state) => state.beginAccountLoad);
   const clearSession = useAppStore((state) => state.clearSession);
   const setGuestMode = useAppStore((state) => state.setGuestMode);
+  const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
 
   useEffect(() => {
+    let authChangeRevision = 0;
+
     // Subscribe to auth changes so the app always knows the current login state.
     const unsubscribe = authService.onAuthChange((user) => {
       if (user) {
-        // If a real login exists, merge guest-only data into the account before storing user info.
-        mergeGuestDataIntoAccount(user.uid)
-          .catch((error) => {
+        const revision = ++authChangeRevision;
+        beginAccountLoad();
+        const initializeAccount = async () => {
+          // Read guest settings before the record merge clears the guest-mode marker.
+          try {
+            await hydrateAdminValuesForUser(user.uid);
+          } catch (error) {
+            console.error('Failed to load account Code Lists:', error);
+          }
+
+          if (revision !== authChangeRevision) return;
+
+          try {
+            await mergeGuestDataIntoAccount(user.uid);
+          } catch (error) {
             console.error('Failed to merge guest data:', error);
-          })
-          .finally(() => {
-            setUser({
+          }
+
+          if (revision !== authChangeRevision) return;
+          setUser({
               uid: user.uid,
               email: user.email,
               displayName: user.displayName,
               photoURL: user.photoURL,
-            });
           });
+        };
+        void initializeAccount();
       } else if (localStorage.getItem('lifehub_guest_mode') === 'true') {
+        authChangeRevision += 1;
         // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
         setGuestMode(true);
       } else {
+        authChangeRevision += 1;
         // If no account and no guest mode, reset session to a logged-out state.
         clearSession();
       }
     });
 
-    return () => unsubscribe?.();
-  }, [clearSession, setGuestMode, setUser]);
+    return () => {
+      authChangeRevision += 1;
+      unsubscribe?.();
+    };
+  }, [beginAccountLoad, clearSession, hydrateAdminValuesForUser, setGuestMode, setUser]);
 
   return <AuthContext.Provider value={{}}>{children}</AuthContext.Provider>;
 }

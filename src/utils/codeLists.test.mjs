@@ -10,7 +10,10 @@ import {
   collectReferencedCodeListValues,
   getCodeListMeta,
   migrateStoredCodeLists,
+  readGuestCodeListSettings,
+  resolveCodeListSettings,
   resetCodeListsPreservingReferences,
+  writeGuestCodeListSettings,
 } from './codeLists.js';
 
 test('default code lists include the required domains', () => {
@@ -142,4 +145,78 @@ test('moment-type metadata is preserved with legacy entries', () => {
   assert.equal(meta[0].canGenerateGreetingCards, false);
   assert.equal(meta[0].showInDashboardUpcoming, false);
   assert.equal(meta[0].greetingTemplate, 'Custom');
+});
+
+test('remote Code Lists are authoritative over legacy browser-local values', () => {
+  const remote = {
+    schemaVersion: CODE_LIST_SCHEMA_VERSION,
+    adminValues: {
+      ...DEFAULT_CODE_LISTS,
+      eventTypes: [{ value: 'Learning', label: 'Learning', active: true }],
+      expenseCategories: [],
+    },
+  };
+  const legacy = {
+    schemaVersion: CODE_LIST_SCHEMA_VERSION,
+    adminValues: { ...DEFAULT_CODE_LISTS, eventTypes: ['Old local value'] },
+  };
+
+  const result = resolveCodeListSettings(remote, legacy);
+
+  assert.equal(result.source, 'remote');
+  assert.deepEqual(result.adminValues.eventTypes.map((item) => item.value), ['Learning']);
+  assert.deepEqual(result.adminValues.expenseCategories, []);
+});
+
+test('first authenticated sync migrates legacy browser Code Lists when no remote document exists', () => {
+  const legacy = {
+    schemaVersion: CODE_LIST_SCHEMA_VERSION,
+    adminValues: { ...DEFAULT_CODE_LISTS, eventTypes: ['Birthday', 'Learning'] },
+  };
+
+  const result = resolveCodeListSettings(null, legacy);
+
+  assert.equal(result.source, 'legacy');
+  assert.deepEqual(result.adminValues.eventTypes.map((item) => item.value), ['Birthday', 'Learning']);
+});
+
+test('new accounts receive defaults when neither remote nor legacy Code Lists exist', () => {
+  const result = resolveCodeListSettings(null, null);
+
+  assert.equal(result.source, 'defaults');
+  assert.deepEqual(result.adminValues.eventTypes.map((item) => item.value), DEFAULT_CODE_LISTS.eventTypes);
+  assert.deepEqual(result.adminValues.expenseCategories.map((item) => item.value), DEFAULT_CODE_LISTS.expenseCategories);
+});
+
+test('guest Code Lists use their own localStorage keys and retain legacy values on first use', () => {
+  const values = new Map([['lifehub_admin_values', JSON.stringify({
+    ...DEFAULT_CODE_LISTS,
+    expenseCategories: ['Food', 'Investments'],
+  })]]);
+  const storage = {
+    getItem: (key) => values.has(key) ? values.get(key) : null,
+    setItem: (key, value) => values.set(key, value),
+  };
+
+  const initial = readGuestCodeListSettings(storage);
+  assert.equal(initial.source, 'legacy');
+  assert.deepEqual(initial.adminValues.expenseCategories.map((item) => item.value), ['Food', 'Investments']);
+
+  writeGuestCodeListSettings(initial.adminValues, storage);
+  const reloaded = readGuestCodeListSettings(storage);
+  assert.equal(reloaded.source, 'remote');
+  assert.deepEqual(reloaded.adminValues.expenseCategories.map((item) => item.value), ['Food', 'Investments']);
+});
+
+test('existing remote empty lists are not repopulated from legacy values or defaults', () => {
+  const result = resolveCodeListSettings({
+    schemaVersion: CODE_LIST_SCHEMA_VERSION,
+    adminValues: Object.fromEntries(Object.keys(DEFAULT_CODE_LISTS).map((key) => [key, []])),
+  }, {
+    schemaVersion: CODE_LIST_SCHEMA_VERSION,
+    adminValues: DEFAULT_CODE_LISTS,
+  });
+
+  assert.equal(result.source, 'remote');
+  Object.values(result.adminValues).forEach((values) => assert.deepEqual(values, []));
 });

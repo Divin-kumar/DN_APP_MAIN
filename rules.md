@@ -90,7 +90,7 @@ These standards are based on the current `OldVersion` source. They distinguish e
 
 ## 11. Tests and quality gates
 - Existing tests use Node's built-in test APIs in `*.test.mjs`.
-- Run tests using `node --test` (or the explicit targeted test file) because no `test` script is declared in `package.json`.
+- Run the full Node test suite using `npm test` (equivalent to `node --test`), or run an explicit targeted test file.
 - Run `npm run build` for every change that affects runtime code or imports.
 - Add pure unit tests for normalization, date/status logic, code-list migrations, deduplication, visibility rules, and update-version decisions.
 - Test guest mode and authenticated mode independently; mock or isolate Firebase dependencies for unit tests.
