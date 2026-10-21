@@ -1,5 +1,7 @@
 # LifeHub
 
+> **Authoritative project reference:** [Master Source of Truth](docs/MASTER_SOURCE_OF_TRUTH.md) (v1.0.0, 2026-10-21). For AI sessions see the [AI-ready knowledge base](docs/AI_READY_KNOWLEDGE_BASE.md). This README is an introduction, not a competing policy or architecture authority. The DOCX reconciliation and live runtime/security checks remain open.
+
 LifeHub is a personal life and finance workspace designed to help people keep track of meaningful moments, follow-up activities, financial records, and personal preferences in one place. The product blends life planning with lightweight money tracking, all inside a mobile-friendly web app.
 
 ## 1. Application overview
