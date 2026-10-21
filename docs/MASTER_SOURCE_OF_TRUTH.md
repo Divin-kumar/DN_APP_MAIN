@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.3** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -199,6 +199,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 
 **For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks both files **only on pushes to `OldVersion` and pull requests targeting `OldVersion`**; it also runs `npm ci`, `npm test` and `npm run build` as a smoke gate. These checks do not validate browser UX, real Firebase access, deployed rules or offline data. Quality and append-only integrity still need human review and branch protections.
 
+**Executed CI verification for DN branding (2026-10-21):** GitHub Actions [run 39642206927](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39642206927), commit `22aa6403bbbc86f0e589d57d0a475571e38a320f`, passed `npm ci`, `npm test` (**48/48 passed**), and `npm run build` (**success**, generated static bundle and `dist/sw.js`). The governance job also passed. This validates unit tests and compilation of the changed source only; it is not a browser/device test, hosted release, or Firebase security/recovery verification. `npm ci` reported **9 dependency advisories (3 moderate, 6 high)**, requiring a separate dependency security review. Production deployment remains unauthorized.
+
 ## 8. Approved engineering and AI governance
 
 **MANDATORY: [AGENTS.md](../AGENTS.md) governs every future AI session.**
@@ -246,7 +248,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | K-10 | P1 | PLANNED | Regression tests for recurring dates, timezone, financial reconciliation and code-list migrations |
 | K-11 | P2 | PLANNED | Decompose oversized feature screens and reconcile overlapping styles without visual regressions |
 | K-12 | P2 | UNKNOWN | If unique requirements from archived Word files are needed, recover old versions from Git and review manually |
-| K-13 | P1 | PLANNED | Make `documentation-governance` check required in GitHub branch protection; validate workflow execution |
+| K-13 | P1 | PARTIAL | Documentation workflow ran successfully; require it in `OldVersion` branch protection to prevent bypass |
+| K-14 | P1 | PLANNED | Review and triage dependency security advisories from CI (`npm ci`: 9 total, 3 moderate/6 high); avoid unreviewed breaking `npm audit fix --force` |
 
 ## 11. Evidence and source traceability
 
@@ -290,7 +293,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.3** | **2026-10-21** | Repaired backup v1/v2 parser syntax after GitHub CI identified duplicated replacement text; restored original implementation plus DN/legacy compatibility | **CHG-20261021-012** |
+| **2.4.4** | **2026-10-21** | Verified repaired DN implementation through GitHub CI (48 unit tests pass, Vite build succeeds); tracked dependency advisories and remaining runtime checks | **CHG-20261021-013** |
+| 2.4.3 | 2026-10-21 | Repaired backup v1/v2 parser syntax after GitHub CI identified duplicated replacement text; restored original implementation plus DN/legacy compatibility | **CHG-20261021-012** |
 | 2.4.2 | 2026-10-21 | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
 | 2.4.1 | 2026-10-21 | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |
 | 2.4.0 | 2026-10-21 | Switched account/guest storage, settings, and backups to DN keys; resolved guest-merge resynchronization trap; preserved legacy backup reads | **CHG-20261021-009** |

@@ -182,3 +182,16 @@
 - Risk/rollback: Restore original pre-migration service via Git commit if needed; missing import or regex issues are covered by existing backup tests plus new DN v2 test.
 - Master sections: §5, §7, §13; version 2.4.3.
 - Status: SOURCE FIX COMMITTED, CI RERUN PENDING.
+
+## CHG-20261021-013 | Record verified DN CI pass and dependency warning
+- Date (UTC): 2026-10-21.
+- Actor/requester: GitHub CI verification captured during owner's DN branding task.
+- Branch / commit / CI: `OldVersion`; application source SHA `22aa6403bbbc86f0e589d57d0a475571e38a320f`, GitHub Actions run [39642206927](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39642206927); this documentation-only commit SHA available in history.
+- Changed paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`. No new Markdown files or app code changes.
+- Before -> after: Previous audit entry marked parser repair CI pending -> confirmed `npm ci` SUCCESS, `npm test` **48 passed / 0 failed**, `npm run build` SUCCESS, documentation governance SUCCESS. The earlier CI failure was resolved.
+- Why: Full traceability of actual verification outcomes rather than assuming passing tests.
+- User/data/security impact: Documentation only. No production deployment or user data writes. Package installation warned of 9 dependency advisories (3 moderate, 6 high), not automatically fixed.
+- Verification: GitHub workflow job logs inspected. Browser/device UX, guest/account data migration on real browsers, Firebase Security Rules and live restore NOT RUN.
+- Risk and rollback: New code path passed Node/build; production security and data migration still require manual validation. Log is append-only; correct errors via new entries only.
+- Master: §§7, 10, 13; version 2.4.4.
+- Status: **CI VERIFIED**, browser/Firebase acceptance outstanding.
