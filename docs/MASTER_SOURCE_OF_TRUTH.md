@@ -1,8 +1,8 @@
 # DN / LifeHub — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.0.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.0.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
-> **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document**. `README.md` provides navigation; it does not override this file.
+> **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
 > **Inspected application baseline:** commit `f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb` on `OldVersion` (2026-10-19). The 2026-10-21 source audit re-read the major code modules on `OldVersion`. Documentation-only commits after the baseline do not imply a new app build or runtime test. Always check current HEAD before editing.
 
@@ -37,7 +37,7 @@
 
 **Authority/owners:** Repository owner authorizes product priorities and branch/deploy actions; engineering owns source and compatibility; a security reviewer is required before sensitive production-data assurances. These roles are responsibilities, not claims that designated individuals have signed off.
 
-**Long-term AI policy:** Every future AI session starts with `AGENTS.md`, **this document**, the latest `CHANGE_AUDIT_LOG.md`, then the latest relevant code. Project/chat memory is not a substitute for these files. Git history is the audit-proof source when historical text has been retired.
+**Long-term AI policy for `OldVersion` only:** Every AI session editing this branch starts with `AGENTS.md`, **this document**, the latest `CHANGE_AUDIT_LOG.md`, then the latest relevant code. Project/chat memory is not a substitute for these files. Git history is the audit-proof source when historical text has been retired.
 
 ## 2. Product scope and terminology
 
@@ -193,21 +193,21 @@ npm run preview
 ```
 Existing Node test files cover selected backup, event, code-list, greeting, dashboard and version/update utilities. `npm test` maps to `node --test`; `npm run build` to `vite build`. There is no claim that this audit ran either command.
 
-**For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks that both master and audit-log files change; quality and append-only integrity still need human review and branch protections.
+**For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks both files **only on pushes to `OldVersion` and pull requests targeting `OldVersion`**; quality and append-only integrity still need human review and branch protections.
 
 ## 8. Approved engineering and AI governance
 
 **MANDATORY: [AGENTS.md](../AGENTS.md) governs every future AI session.**
 1. Work only on **`OldVersion`** unless explicitly directed otherwise. `main` remains protected. PR #6 is open historical context, not merge permission.
-2. **Every repository/app change must update this master and append a record to [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) in the same change/PR.** This includes features, fixes, styling, refactors, dependencies, test/config changes, deployments and documentation policy/cleanup.
+2. **Every change on `OldVersion` must update this master and append a record to [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) in the same change/PR. These requirements do not apply to `main` or other branches.** This includes features, fixes, styling, refactors, dependencies, test/config changes, deployments and documentation policy/cleanup.
 3. Audit entry must include UTC date, actor, branch, commit/PR, exact paths, reason, before/after, user/data/security impact, commands and actual outcomes, rollback and follow-ups. Never erase old entries; issue a correction entry.
-4. **All future plans, decisions and pending work go into this document** §10. No separate `tasks.md`, `memory.md` or sprint specifications in the repo.
+4. **All future plans, decisions and pending work for `OldVersion` go into this document** §10. No separate `tasks.md`, `memory.md` or sprint specifications in the repo.
 5. Keep source-inspected facts separate from desired changes. Source files and operational tests must be checked before changing existing logic; no assertions by analogy.
 6. Do not edit production, perform destructive data operations, force-push protected branches or merge without explicit user authorization.
 7. If an AI cannot write the files, it must plainly report the blocker and produce the proposed master/audit edits. **Never claim undocumented work complete.**
 8. Prefer scoped JSX/JavaScript edits, Zustand/store/service patterns, two-space indentation and existing design tokens; preserve migration/rollback behavior. Add context-oriented comments explaining why rather than restating syntax.
 9. Update master **semver** (major policy/product contract change; minor substantive implementation; patch correction) and keep change log current.
-10. Do not create additional Markdown knowledge-base files. Exactly four active `.md` files: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+10. Do not create additional Markdown knowledge-base files. Exactly four active `.md` files on `OldVersion`: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
 
 ## 9. Decisions, conflicts and explicit unknowns
 
@@ -266,9 +266,9 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 
 **COMPLETED inventory:** The `OldVersion` working tree contains **exactly four Markdown documentation files**, and **zero DOCX files**, as confirmed by GitHub recursive tree inspection on 2026-10-21. The four and their distinct responsibilities are:
 1. `README.md`: orientation, run commands and navigation, never normative app behavior.
-2. `AGENTS.md`: mandatory instructions for every future AI/coding agent.
+2. `AGENTS.md`: mandatory instructions for AI/coding agents editing `OldVersion`.
 3. `docs/MASTER_SOURCE_OF_TRUTH.md`: this sole authoritative product/architecture/plans and operational contract.
-4. `docs/CHANGE_AUDIT_LOG.md`: append-only factual history of all repository changes.
+4. `docs/CHANGE_AUDIT_LOG.md`: append-only factual history of changes to `OldVersion`.
 
 **Retired Markdown documents (16 total):**
 - Previous cleanup: `docs/ARCHITECTURE.md` and `memory.md`.
@@ -286,7 +286,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.0.1** | **2026-10-21** | **Four-file cleanup confirmed (16 Markdown and 4 DOCX retired), deletion ledger, CI append-only protection** | **CHG-20261021-004** |
+| **2.0.2** | **2026-10-21** | Scope correction: AI instructions and CI audit policy apply to `OldVersion` only | **CHG-20261021-005** |
+| 2.0.1 | 2026-10-21 | **Four-file cleanup confirmed (16 Markdown and 4 DOCX retired), deletion ledger, CI append-only protection** | **CHG-20261021-004** |
 | 2.0.0 | 2026-10-21 | Code-inspected master, one-document authority, 4-file policy, mandatory AI/audit workflow, planned work moved into master | CHG-20261021-003 (completion recorded in later entry) |
 
 **Version discipline:** major version for major scope/governance/contract change; minor for implemented feature changes and approved new behavior; patch for corrections. Every update links to an **append-only** audit record; do not retrospectively edit log entries. No unverified plans are promoted into factual current state.

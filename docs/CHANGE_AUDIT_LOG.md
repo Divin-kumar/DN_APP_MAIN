@@ -75,3 +75,17 @@
 - Master sections updated: §1, §8, §11, §12, §13.
 - Status: **IMPLEMENTED — working-tree cleanup verified**; runtime quality and CI execution remain open.
 - Follow-ups: Enable required GitHub check, validate Actions, execute `npm test` and `npm run build`, audit Firestore security rules, recover historical Word content only if a need emerges.
+
+## CHG-20261021-005 | Correct documentation governance scope to OldVersion only
+- Date (UTC): 2026-10-21.
+- Actor/requester: Repository owner clarification, implemented through connected GitHub tools.
+- Branch / commit / PR: `OldVersion`; this atomic commit (SHA recorded in Git history). `main` and all other branches untouched.
+- Scope and changed paths: `AGENTS.md`, `.github/workflows/documentation-governance.yml`, `README.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Earlier instructions and workflow implied all-branch governance, and workflow listened on `**` -> AI documentation/change logging applies **only to changes on `OldVersion`**; workflow triggers only on pushes to `OldVersion` and PRs whose base is `OldVersion`.
+- Why: Owner explicitly rejected all-repository/branch enforcement.
+- User/data/security/compatibility impact: Branch-scoping of documentation and GitHub Actions only; no application runtime or persisted user data changed. Other branches are out of scope.
+- Verification: Source and GitHub branch/tree inspection completed. GitHub Actions run, `npm test`, `npm run build`, deployment and live Firebase tests: NOT RUN.
+- Risk and rollback: Enforcement through GitHub Actions requires the workflow/check to be enabled and, for non-bypassable protection, required checks on `OldVersion`. Revert this commit on `OldVersion` if needed.
+- Master sections updated: introduction, §§1, 7, 8, 12–13.
+- Status: IMPLEMENTED (GitHub branch update subject to final read-back).
+- Follow-ups: Verify GitHub Actions workflow execution and configure `OldVersion` required status checks if desired. No action on `main`.

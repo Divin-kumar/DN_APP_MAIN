@@ -4,16 +4,16 @@
 
 LifeHub is a personal life-planning and finance web app for moments/events, activities, memories, income, expenses, dashboards, insights and settings. It supports Google sign-in and browser-local guest sessions. Production security and complete backup recovery are **not validated** by this README.
 
-## Documentation: exactly four Markdown files
+## Documentation on `OldVersion`: exactly four Markdown files
 
 | File | Role |
 |---|---|
 | [`README.md`](README.md) | This short orientation and developer quick start |
-| [`AGENTS.md`](AGENTS.md) | **Mandatory for every AI/coding agent**: change control and documentation requirements |
+| [`AGENTS.md`](AGENTS.md) | **Mandatory for AI/coding agents editing `OldVersion`**: branch-scoped change control and documentation requirements |
 | [`docs/MASTER_SOURCE_OF_TRUTH.md`](docs/MASTER_SOURCE_OF_TRUTH.md) | **Single authoritative app/product/architecture document**, with current state and future backlog |
 | [`docs/CHANGE_AUDIT_LOG.md`](docs/CHANGE_AUDIT_LOG.md) | **Append-only** record for every app, code, config, test and governance change |
 
-**Rule:** No app change is complete unless `docs/MASTER_SOURCE_OF_TRUTH.md` is updated and a dated entry is appended to `docs/CHANGE_AUDIT_LOG.md` as part of the **same change/PR**. Future plans belong in the master; do not create another PRD, task list, memory file or architecture Markdown. See `AGENTS.md` for required fields and review gates. A GitHub Actions workflow checks for both documentation changes.
+**Rule on `OldVersion` only:** No change on this branch is complete unless `docs/MASTER_SOURCE_OF_TRUTH.md` is updated and a dated entry is appended to `docs/CHANGE_AUDIT_LOG.md` as part of the **same change/PR**. Future plans belong in the master; do not create another PRD, task list, memory file or architecture Markdown. See `AGENTS.md` for required fields and review gates. A GitHub Actions workflow checks for these documentation changes **only for pushes to `OldVersion` and pull requests targeting `OldVersion`**. Other branches are not subject to these rules.
 
 ## Developer commands
 
