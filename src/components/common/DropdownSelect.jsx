@@ -78,8 +78,13 @@ export default function DropdownSelect({
   useLayoutEffect(() => {
     if (!open) return undefined;
     reposition();
-    const onViewportChange = () => reposition();
-    // Capture nested scroll, including modal content and internal app scrolling.
+    const onViewportChange = (event) => {
+      // The options list scrolls independently. Repositioning it on its own
+      // scroll event would repeatedly jump back to the highlighted option.
+      if (event?.target && menuRef.current?.contains(event.target)) return;
+      reposition();
+    };
+    // Capture nested page/modal scrolling, but ignore the menu's own scrollbar.
     window.addEventListener('resize', onViewportChange);
     window.addEventListener('scroll', onViewportChange, true);
     window.addEventListener('orientationchange', onViewportChange);

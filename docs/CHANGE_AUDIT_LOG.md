@@ -288,3 +288,16 @@
 - Risks/rollback: None beyond usual UI regression risk; revert this commit to restore wording.
 - Master: §3.1a and §13; version 2.6.2.
 - Status: SOURCE UPDATED / CI PENDING.
+
+## CHG-20261021-021 | Prevent dropdown menu scroll from snapping back to selection
+- Date (UTC): 2026-10-21.
+- Actor/requester: AI follow-up to user's requirement to scroll and select every option.
+- Branch / commit: `OldVersion`, this atomic Git commit; `main` untouched.
+- Paths: `src/components/common/DropdownSelect.jsx`, master, audit.
+- Before -> after: Window capture-phase scroll listener could call `reposition` when scrolling the menu's own option list, creating a new placement object and retriggering selected-option scroll logic. Listener now ignores scroll events arising inside the menu while still tracking page/modal/viewport scroll, resize and orientation.
+- Why: Ensure long menus remain independently scrollable and don't jump back to the selected item while the user browses other options.
+- Data/UX/security: Shared UI only, no value/filter/data behavior changed.
+- Verification: Source review completed; prior GitHub Actions source change 68860bb passed 60 Node tests and Vite build; this change awaits its own CI. Mobile browser touch scrolling NOT RUN.
+- Risk / rollback: Browser-specific scroll propagation and touch input need manual checks; rollback via this commit if needed.
+- Master: §§6.4 and 13; version 2.6.3.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
