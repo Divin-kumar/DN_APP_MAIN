@@ -30,7 +30,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
-const CHUNK_RELOAD_KEY = `lifehub-chunk-reload:${APP_VERSION}`;
+const CHUNK_RELOAD_KEY = `dn-chunk-reload:${APP_VERSION}`;
 
 class RouteErrorBoundary extends Component {
   state = { error: null };
@@ -79,7 +79,7 @@ class RouteErrorBoundary extends Component {
     return (
       <main className="route-error-screen" role="alert">
         <div className="route-error-card">
-          <span className="route-error-eyebrow">LifeHub</span>
+          <span className="route-error-eyebrow">DN</span>
           <h1>This page couldn’t load</h1>
           <p>The page encountered a loading error. Refresh to try again.</p>
           <details className="route-error-details">

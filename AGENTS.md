@@ -1,5 +1,7 @@
 # Mandatory AI Operating Contract — DN_APP_MAIN / OldVersion
 
+**PERMANENT PRODUCT NAME: DN.** Always call the application **DN**, never **LifeHub**, in future AI sessions, answers, user-facing labels, code additions, PR titles, plans and documentation. The old product name is **deprecated and incorrect**. Older internal strings may exist solely as compatibility keys for previously stored user data and historic Git evidence; they are **never product branding**. If you encounter older naming in source, prefer DN and update the canonical master and audit entry with the correction.
+
 **Scope: `OldVersion` branch of `Divin-kumar/DN_APP_MAIN` only.** These mandatory AI/change-control rules **do not apply to `main`, any other branch, or other repositories.** For factual product/application truth, read [docs/MASTER_SOURCE_OF_TRUTH.md](docs/MASTER_SOURCE_OF_TRUTH.md) before edits. This document is not a replacement for verification of current code.
 
 ## 0. Repository documentation budget

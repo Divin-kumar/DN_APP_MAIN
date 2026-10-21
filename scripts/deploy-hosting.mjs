@@ -34,6 +34,6 @@ const run = (command, args) => {
   if (result.status !== 0) process.exit(result.status ?? 1);
 };
 
-console.log(`Releasing LifeHub v${nextVersion} to Firebase Hosting (Production)`);
+console.log(`Releasing DN v${nextVersion} to Firebase Hosting (Production)`);
 run('npm', ['run', 'build']);
 run('npm', ['exec', '--', 'firebase-tools', 'deploy', '--only', 'hosting']);

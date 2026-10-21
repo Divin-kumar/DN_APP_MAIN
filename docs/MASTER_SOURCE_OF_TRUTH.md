@@ -1,6 +1,6 @@
-# DN / LifeHub — MASTER SOURCE OF TRUTH
+# DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.0.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.1.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -42,8 +42,8 @@
 ## 2. Product scope and terminology
 
 ### 2.1 Product identity
-- **LifeHub** is the predominant implemented source/product name, package `lifehub-react`, package version **1.0.15** at audited baseline; **DN** appears in repo name, PWA naming and some UI/backups.
-- **Decision pending:** official public brand; do not rename globally without explicit approval.
+- **DN is the confirmed and only authoritative product name**, explicitly established by the repository owner on 2026-10-21. The package name is `dn` (version 1.0.15 at this audit). No future AI session may refer to the product using its former name. Legacy storage key prefixes and historic filenames exist only for compatibility or evidence.
+- **Brand decision: APPROVED.** Preserve external Firebase project IDs and existing user data while standardizing user-facing and newly written code on DN.
 - Purpose: responsive personal life planning and lightweight household/personal finance. Supports account and guest experiences. Not a banking ledger or certified archival/notification service.
 
 ### 2.2 Canonical domain words
@@ -213,7 +213,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 
 | Topic | Canonical current answer | Decision status and rationale |
 |---|---|---|
-| Product naming | `LifeHub` runtime, `DN` repo/partial branding | Pending brand decision; changing names without migration may break keys/PWA |
+| Product naming | **DN only** | Owner-approved 2026-10-21. Deprecated historic names are not permitted in UI, product documentation or future AI answers. Migrate storage prefixes safely. |
 | Cloud vs local-first | Account = Firestore, guest = localStorage, service worker = shell | **Current reality**; IndexedDB/outbox proposal not shipped |
 | Backup v2 vs v3 | **v3 current**; v2 import compatibility | Source constant supersedes stale v2 text |
 | Event vs Moment | UI/domain Moment/Event, storage aggregate `eventGroups` | Both names defined; no forced renaming |
@@ -235,7 +235,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | K-03 | P0 | PLANNED | Exercise real account and guest backup-v3 export/restore, duplicate-ID retry, partial failure and cross-device recovery |
 | K-04 | P0 | PLANNED | Decide expense canonical ownership and validate nested/standalone deletion/migration semantics |
 | K-05 | P0 | PLANNED | Add explicit user-facing failure/retry workflow for guest-account data merge |
-| K-06 | P1 | DECISION NEEDED | Finalize official LifeHub/DN brand before mass rename/storage-key migrations |
+| K-06 | P1 | APPROVED / IN PROGRESS | Official brand is DN only. Finish compatibility-safe migration of stored keys and remove obsolete visible/internal naming without losing user records |
 | K-07 | P1 | DECISION NEEDED | Choose cloud-first vs offline-first goals; design sync/outbox only if required |
 | K-08 | P1 | PLANNED | Improve CI checks, versioning, deployment approval and Firebase rules test automation |
 | K-09 | P1 | DECISION NEEDED | Decide original-file attachment storage, encryption, export, retention and deletion policy |
@@ -250,7 +250,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 
 **Historical documentation reviewed and consolidated:** `README.md`, `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/DOCUMENTATION_STANDARDS.md`, `memory.md`, `prd.md`, `rules.md`, `tasks.md`. Retrieve pre-cleanup versions by browsing [audit baseline commit](https://github.com/Divin-kumar/DN_APP_MAIN/tree/f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb).
 
-**Binary provenance:** `LifeHub_Product_Spec_and_User_Guide.docx`, `LifeHub_System_Overview.docx`, `Bugs_OCT26/New Microsoft Word Document.docx` and `Bugs_OCT26/~$w Microsoft Word Document.docx` were inventoried but not text-readable through this connection. No claims from their bodies appear in this master. Git history, not this summarized document, is their recovery mechanism.
+**Binary provenance:** archived Word product-spec file (exact original path in Git history), archived Word system-overview file (exact original path in Git history), `Bugs_OCT26/New Microsoft Word Document.docx` and `Bugs_OCT26/~$w Microsoft Word Document.docx` were inventoried but not text-readable through this connection. No claims from their bodies appear in this master. Git history, not this summarized document, is their recovery mechanism.
 
 **Section-to-source index:**
 - §2: `src/App.jsx`, `src/pages/`, `src/features/`, prior PRD/business guide.
@@ -274,7 +274,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 - Previous cleanup: `docs/ARCHITECTURE.md` and `memory.md`.
 - Current governance reset: `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/AI_READY_KNOWLEDGE_BASE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/CONSOLIDATION_SUMMARY.md`, `docs/DOCUMENTATION_STANDARDS.md`, `docs/DUPLICATE_OBSOLETE_REPORT.md`, `docs/RETENTION_DELETION_MATRIX.md`, `prd.md`, `rules.md`, `tasks.md`.
 
-**Retired Word documents (4 total):** `LifeHub_Product_Spec_and_User_Guide.docx`, `LifeHub_System_Overview.docx`, `Bugs_OCT26/New Microsoft Word Document.docx`, `Bugs_OCT26/~$w Microsoft Word Document.docx`. These were **not text-reviewed**, because the connected GitHub reader could not decode the binary contents. They were removed from the *working tree only* under the owner's cleanup instruction; their original binary versions remain in Git history at `f5919b8`. **Important completeness caveat:** The master was built from inspected code and 13 read Markdown source files, *not* a completed content reconciliation of the archived Word files.
+**Retired Word documents (4 total):** archived Word product-spec file (exact original path in Git history), archived Word system-overview file (exact original path in Git history), `Bugs_OCT26/New Microsoft Word Document.docx`, `Bugs_OCT26/~$w Microsoft Word Document.docx`. These were **not text-reviewed**, because the connected GitHub reader could not decode the binary contents. They were removed from the *working tree only* under the owner's cleanup instruction; their original binary versions remain in Git history at `f5919b8`. **Important completeness caveat:** The master was built from inspected code and 13 read Markdown source files, *not* a completed content reconciliation of the archived Word files.
 
 **Removal provenance:** full per-path SHA ledger in [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) under `CHG-20261021-002` and `CHG-20261021-004`. Do not restore historic sources as new active documents; extract relevant approved facts into this master and record the import as a new audit entry instead.
 
@@ -286,7 +286,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.0.2** | **2026-10-21** | Scope correction: AI instructions and CI audit policy apply to `OldVersion` only | **CHG-20261021-005** |
+| **2.1.0** | **2026-10-21** | Owner-approved canonical brand **DN**; renamed visible application copy and package metadata; deprecated former product name for future AI work | **CHG-20261021-006** |
+| 2.0.2 | 2026-10-21 | Scope correction: AI instructions and CI audit policy apply to `OldVersion` only | **CHG-20261021-005** |
 | 2.0.1 | 2026-10-21 | **Four-file cleanup confirmed (16 Markdown and 4 DOCX retired), deletion ledger, CI append-only protection** | **CHG-20261021-004** |
 | 2.0.0 | 2026-10-21 | Code-inspected master, one-document authority, 4-file policy, mandatory AI/audit workflow, planned work moved into master | CHG-20261021-003 (completion recorded in later entry) |
 

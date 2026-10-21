@@ -1,8 +1,8 @@
-# LifeHub (DN_APP_MAIN)
+# DN
 
 **Active development branch:** [`OldVersion`](https://github.com/Divin-kumar/DN_APP_MAIN/tree/OldVersion) · **Frontend:** React 18 + Vite 5 · **Firebase:** Auth/Firestore · **State:** Zustand.
 
-LifeHub is a personal life-planning and finance web app for moments/events, activities, memories, income, expenses, dashboards, insights and settings. It supports Google sign-in and browser-local guest sessions. Production security and complete backup recovery are **not validated** by this README.
+DN is a personal life-planning and finance web app for moments/events, activities, memories, income, expenses, dashboards, insights and settings. It supports Google sign-in and browser-local guest sessions. Production security and complete backup recovery are **not validated** by this README.
 
 ## Documentation on `OldVersion`: exactly four Markdown files
 

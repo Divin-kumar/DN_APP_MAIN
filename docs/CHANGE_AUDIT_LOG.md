@@ -89,3 +89,17 @@
 - Master sections updated: introduction, §§1, 7, 8, 12–13.
 - Status: IMPLEMENTED (GitHub branch update subject to final read-back).
 - Follow-ups: Verify GitHub Actions workflow execution and configure `OldVersion` required status checks if desired. No action on `main`.
+
+## CHG-20261021-006 | Establish DN as the only authoritative product brand
+- Date (UTC): 2026-10-21.
+- Actor/requester: Repository owner, implementation via connected GitHub tools.
+- Branch/commit/PR: `OldVersion`; this commit (Git history contains exact SHA). `main` untouched.
+- Changed paths: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`, `src/pages/About.jsx`, `src/App.jsx`, `scripts/deploy-hosting.mjs`, `package.json`, `package-lock.json`.
+- Before -> after: Outdated product name in About UI, error fallback, release wording, package metadata and canonical docs -> **DN**; AI instructions explicitly prohibit former branding in future sessions.
+- Rationale: Product owner states official app name is DN and forbids future mistaken naming.
+- Data/security/compatibility: User-facing copy and package metadata only in this commit; original auth identifiers and historical storage keys not removed. CSS selectors and persistent storage keys require compatibility-aware follow-up.
+- Verification: GitHub source review and branch commit; runtime build/tests NOT RUN; Firebase/deployment NOT RUN. Review final changed-file diff before release.
+- Risks/rollback: App CSS classes and historical storage prefixes may still contain deprecated strings as implementation details pending safe migration. Restore this commit via Git revert if needed.
+- Master sections updated: title, §2.1 product identity, §9 decisions, §10 backlog, §13 versioning.
+- Status: PARTIAL BRAND MIGRATION; public-facing UI and canonical product name updated in this commit, remaining technical identifiers tracked for follow-up.
+- Follow-ups: Rename remaining nonpersistent CSS classes consistently; safely migrate localStorage keys and preserve old backups; update master and append new log record. Maintain exactly four Markdown files.
