@@ -248,3 +248,17 @@
 - Risks/rollback: CSS/browser viewport variations, keyboard and focus behavior in modal contexts require real-device checks. Revert commit if regression detected; no data migration required.
 - Master: §6.4 and version 2.5.0.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-018 | Responsive combined Transactions search and two filters
+- Date (UTC): 2026-10-21.
+- User request: Replace the single Transactions category selector with independently combinable Type and Month filters; keep search and existing transaction presentation.
+- Branch/commit: `OldVersion`, exact atomic SHA in Git history; `main` unchanged.
+- Changed paths: `src/pages/Financials.jsx`, `src/components/financials/TransactionHistory.jsx`, `src/utils/transactionFilters.js`, `src/utils/transactionFilters.test.mjs`, `src/design-system.css`, master and audit.
+- Before -> after: Inspected branch has no standalone Transactions route or existing “All transactions” dropdown: Financials overview has separate income/expense preview sections. A new combined Transactions section was added **below** existing overview previews, without removing or changing navigation, cards, or add controls. Search field first, equal two-column Type (All/Income/Expense) and Month filters after, 12px gap; stack only at <=310px. Month options include recent months and recorded older months; abbreviated selected mobile labels.
+- Behavior: Filters compose conjunctively, search includes description/category/type/amount/date, empty state handles zero matches, scoped sessionStorage preserves filters across store refresh/add/reload. Income/expense key namespace avoids collisions.
+- Why: Match requested filtering while preserving current app architecture and visual system.
+- User/data/security impact: Read-only combined view; no transaction mutations, cloud schema, Firestore Rules, or production deployments. Session-storage keys scoped by active account.
+- Verification: Added five pure filtering/month regression tests. `npm test`/Vite build/real browser tests PENDING CI; no direct Firebase/browser testing.
+- Risk/rollback: Date availability, narrow viewport layout, screen-reader behavior and mobile dropdown interactions need browser/device verification. Revert relevant commit if needed without affecting stored transaction records.
+- Master updated: §3.1a and version 2.6.0.
+- Status: SOURCE IMPLEMENTED, CI PENDING.

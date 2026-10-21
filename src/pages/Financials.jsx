@@ -6,6 +6,7 @@ import { Landmark, Receipt, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
+import TransactionHistory from '../components/financials/TransactionHistory';
 
 const currency = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency',
@@ -81,6 +82,7 @@ export default function Financials() {
             <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." isExpense />
           </div>
         ) : <Outlet />}
+        {isOverview ? <TransactionHistory incomes={incomes} expenses={expenses} scope={user?.uid || (isGuest ? 'guest' : 'local')} /> : null}
       </section>
     </main>
   );

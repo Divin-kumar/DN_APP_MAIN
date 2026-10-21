@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.5.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.6.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -90,6 +90,9 @@
 | Offline shell | Custom Vite-generated production service worker and `public/manifest.webmanifest` |
 
 A custom separately deployed application REST/GraphQL server is **not present in the inspected repo**. Browser clients call Firebase services directly.
+
+### 3.1a Transactions view and filtering
+The current `src/pages/Financials.jsx` has an Overview, Income and Expense navigation rather than a separate Transactions route. The Overview now includes an **additional combined Transactions history** beneath its existing preview cards, preserving the current overview/header/nav. `src/components/financials/TransactionHistory.jsx` merges income and expense store records, retains the original source records and stable ID namespaces, and applies **Search, Transaction Type (All/Income/Expense), and Month (All months/Month Year)** conjunctively via `src/utils/transactionFilters.js`. The search stays in the first toolbar row; the two equal-width filters appear side-by-side with 12px gap, stacking only below 310px. Month options include recorded months plus the previous 12 months, with responsive abbreviated mobile labels. Type and month selections are scoped to the current account/guest and kept in sessionStorage, independent of store refresh or new records. When nothing matches, an empty state appears. Existing preview cards, income/expense modules, navigation and add controls are unchanged. This is source-inspected, with Node filters tests; verify on real mobile/tablet after CI.
 
 ### 3.2 Runtime flow
 ```text
@@ -300,7 +303,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.5.0** | **2026-10-21** | Added portaled, viewport-aware shared dropdown positioning and option search; preserved native calendar controls and theme | **CHG-20261021-017** |
+| **2.6.0** | **2026-10-21** | Added combined Transactions history to existing Financials overview, paired Type and Month filters, search integration and session persistence | **CHG-20261021-018** |
+| 2.5.0 | 2026-10-21 | Added portaled, viewport-aware shared dropdown positioning and option search; preserved native calendar controls and theme | **CHG-20261021-017** |
 | 2.4.7 | 2026-10-21 | Verified three new DN identity/Markdown tests and build in GitHub Actions (51 pass); removed retired product label from normative AGENTS instructions | **CHG-20261021-016** |
 | 2.4.6 | 2026-10-21 | Corrected Node brand-regression test escaping and made source/Markdown scans robust on paths | **CHG-20261021-015** |
 | 2.4.5 | 2026-10-21 | Add source-based DN branding and four-file budget regression checks to Node test suite | **CHG-20261021-014** |
