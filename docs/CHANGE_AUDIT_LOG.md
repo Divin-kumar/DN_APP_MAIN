@@ -327,3 +327,16 @@
 - Risk/rollback: Secret may be missing, service account lacks Hosting permissions, Google Auth may reject preview hostname, URL is shareable/public to recipients. Remove/expire preview channel; live Hosting unchanged.
 - Master sections: §6.5 and §13; version 2.6.5.
 - Status: WORKFLOW COMMITTED, DEPLOYMENT RESULT PENDING. Append a subsequent audit entry with actual result, never invent a URL.
+
+## CHG-20261021-024 | Firebase preview blocked by missing GitHub Actions credential
+- Date (UTC): 2026-10-21.
+- Actor/requester: Repository owner requested Firebase-hosted usability test; connected GitHub CI recorded results.
+- Branch / commit / runs: `OldVersion` source commit `29e22b8441cad058548836c02b82f6d7a076f853`; preview run https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39648814699; documentation run https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39648814283. This documentation-only update commit recorded in Git history. `main` unchanged.
+- Changed paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Deployment attempt pending -> confirmed credential-check failure, no Firebase upload, no preview URL. User can configure `FIREBASE_SERVICE_ACCOUNT` in GitHub Actions or connect Firebase to enable a retry.
+- Rationale: Must preserve accurate audit of failed external deployment without claiming an inaccessible preview exists.
+- Verification: Preview run `npm ci` PASS, `npm test` PASS 60/60, `npm run build` PASS. `Verify Firebase deploy credentials` FAIL: `FIREBASE_SERVICE_ACCOUNT` environment was empty. `FirebaseExtended/action-hosting-deploy` SKIPPED; preview URL publication SKIPPED. Separate governance workflow PASS. Firebase-hosted behavior NOT TESTED.
+- User/data/security/compatibility impact: No upload, no release, no Firebase Auth/Firestore operations, no changes to live Hosting, no `main` modification. No secret value recorded.
+- Risk and rollback: Credential must be added by an authorized operator with limited Hosting permissions; private secret must never be posted in chat or source. Once configured, rerun the failed GitHub job, verify URL, then append success/failure evidence. No live channel changes required.
+- Master: §6.5 and §13, version 2.6.6.
+- Status: DEPLOYMENT BLOCKED, NOT DEPLOYED.

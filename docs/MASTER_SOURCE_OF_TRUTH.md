@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.6.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.6.6** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -206,7 +206,7 @@ Shared `src/components/common/DropdownSelect.jsx` renders options in a body-leve
 - **Success criteria:** npm dependency install, tests and build pass; Firebase Hosting action reports success and provides a real preview URL. A passing build alone is not a deployment.
 - **Risk:** Firebase preview URLs are public to anyone holding the link. A preview app still accesses the same Firebase Auth/Firestore backend as the project, so guest/sample mode is recommended for usability sessions. Google OAuth may need a preview authorized domain.
 - **Rollback:** let the channel expire or delete it in Firebase Console. Do not promote to `live` without new approval.
-- **Actual deployment status:** unverified until deployment workflow run returns a successful Firebase preview URL. This configuration is not proof of a live site.
+- **Actual deployment status (2026-10-21): BLOCKED.** GitHub Actions preview attempt [run 39648814699](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39648814699), source commit `29e22b8441cad058548836c02b82f6d7a076f853`, passed `npm ci`, 60/60 Node tests and Vite build, then **failed** at `Verify Firebase deploy credentials`: the repository did not supply `FIREBASE_SERVICE_ACCOUNT`. The Firebase deployment and URL publication steps were **skipped**; **no files uploaded and no preview URL created**. In parallel, [documentation governance run 39648814283](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39648814283) passed smoke tests and documentation checks. To resume, connect Firebase in ChatGPT or configure the repository Actions secret `FIREBASE_SERVICE_ACCOUNT` with appropriately scoped Firebase Hosting deployment rights, then rerun the failed preview job. Never invent a URL or represent this as deployed.
 
 ## 7. Testing and release contract
 
@@ -319,6 +319,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.6.6** | **2026-10-21** | Logged failed Firebase preview attempt: tests/build passed, deployment blocked by missing credential, no upload | **CHG-20261021-024** |
 | **2.6.5** | **2026-10-21** | Added opt-in non-live Firebase Hosting usability-preview workflow scoped to OldVersion, with credential and validation gates | **CHG-20261021-023** |
 | **2.6.4** | **2026-10-21** | Captured verified 60-test/build/governance pass after final dropdown-scroll correction; recorded browser/mobile limitations | **CHG-20261021-022** |
 | 2.6.3 | 2026-10-21 | Prevented dropdown internal scrolling from triggering viewport reposition and selected-option jump | **CHG-20261021-021** |
