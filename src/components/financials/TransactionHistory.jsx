@@ -1,83 +1,139 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, Ellipsis, Pencil, Plus, Trash2 } from 'lucide-react';
 import DropdownSelect from '../common/DropdownSelect';
-import { filterTransactions, toTransactions, transactionMonthOptions } from '../../utils/transactionFilters';
-
-const STORAGE_PREFIX = 'dn_transactions_filters_';
-const defaultFilters = { type: 'all', month: 'all', search: '' };
-const getSaved = (scope) => {
-  try {
-    const raw = window.sessionStorage.getItem(STORAGE_PREFIX + scope);
-    const stored = raw ? JSON.parse(raw) : {};
-    return {
-      type: ['all', 'income', 'expense'].includes(stored.type) ? stored.type : 'all',
-      month: stored.month === 'all' || /^\d{4}-\d{2}$/.test(stored.month || '') ? stored.month : 'all',
-      search: typeof stored.search === 'string' ? stored.search : '',
-    };
-  } catch { return { ...defaultFilters }; }
-};
 
 const money = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(amount) || 0);
 const dateLabel = (date) => {
-  const parsed = new Date(date);
-  return Number.isFinite(parsed.getTime()) ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date not set';
+  if (!date) return 'Date not set';
+  const parsed = new Date(`${String(date).slice(0, 10)}T00:00:00`);
+  return Number.isFinite(parsed.getTime())
+    ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    : 'Date not set';
 };
 
-export default function TransactionHistory({ incomes, expenses, scope = 'guest' }) {
-  const [filters, setFilters] = useState(() => getSaved(scope));
-  useEffect(() => setFilters(getSaved(scope)), [scope]);
-  const changeFilter = (patch) => {
-    setFilters((current) => {
-      const next = { ...current, ...patch };
-      try { window.sessionStorage.setItem(STORAGE_PREFIX + scope, JSON.stringify(next)); } catch { /* Session storage optional */ }
-      return next;
-    });
+export function TransactionCard({ transaction, events = [], onEdit, onDelete, compact = false }) {
+  const [open, setOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
+  const isIncome = transaction.transactionKind === 'income';
+  const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
+  const activity = event?.activities?.find((item) => item.id === transaction.activityId);
+  const eventTitle = event?.name || transaction.eventTitle;
+  const activityTitle = activity?.title || transaction.activityTitle;
+  const category = isIncome ? transaction.type : transaction.category;
+  const reveal = (next) => {
+    if (next && !open) navigator.vibrate?.(8);
+    setOpen(next);
   };
-  const transactions = useMemo(() => toTransactions(incomes, expenses), [incomes, expenses]);
-  const monthOptions = useMemo(() => transactionMonthOptions(transactions), [transactions]);
-  const filtered = useMemo(() => filterTransactions(transactions, filters), [transactions, filters]);
+
+  if (compact) {
+    return (
+      <article className="dn-transaction-card dn-transaction-card-compact" role="listitem">
+        <div className="dn-transaction-card-core">
+          <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
+            {isIncome ? <ArrowDownLeft size={19} /> : <ArrowUpRight size={19} />}
+          </span>
+          <span className="dn-transaction-copy">
+            <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
+            <small>{dateLabel(transaction.date)} · {category || 'Other'}</small>
+          </span>
+          <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
+            {isIncome ? '+' : '−'} {money(transaction.amount)}
+          </strong>
+        </div>
+      </article>
+    );
+  }
 
   return (
-    <section className="transactions-panel" aria-labelledby="dn-transactions-heading">
+    <article className={`dn-transaction-card${open ? ' is-actions-open' : ''}`} role="listitem">
+      <div className="dn-transaction-card-actions">
+        <button type="button" className="dn-transaction-edit" onClick={() => { reveal(false); onEdit(transaction); }}
+          tabIndex={open ? 0 : -1} aria-hidden={!open}><Pencil size={17} />Edit</button>
+        <button type="button" className="dn-transaction-delete" onClick={() => { reveal(false); onDelete(transaction); }}
+          tabIndex={open ? 0 : -1} aria-hidden={!open}><Trash2 size={17} />Delete</button>
+      </div>
+      <motion.div className="dn-transaction-card-core" drag={reducedMotion ? false : 'x'}
+        dragDirectionLock dragConstraints={{ left: -152, right: 0 }} dragElastic={0.12} dragMomentum={false}
+        style={{ touchAction: 'pan-y' }}
+        animate={{ x: open ? -152 : 0 }}
+        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 33 }}
+        onDragEnd={(_, info) => {
+          if (info.offset.x < -58 || info.velocity.x < -500) reveal(true);
+          else if (info.offset.x > 40) reveal(false);
+          else reveal(open);
+        }}>
+        <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
+          {isIncome ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+        </span>
+        <div className="dn-transaction-copy">
+          <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
+          <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
+          {activityTitle ? <small>Activity: {eventTitle ? `${eventTitle} · ` : ''}{activityTitle}</small> : null}
+          {transaction.notes || transaction.description ? <small className="dn-transaction-note">{transaction.notes || transaction.description}</small> : null}
+        </div>
+        <div className="dn-transaction-card-side">
+          <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
+            {isIncome ? '+' : '−'} {money(transaction.amount)}
+          </strong>
+          <button type="button" className="dn-transaction-overflow" aria-expanded={open}
+            aria-label={`${open ? 'Hide' : 'Show'} actions for ${transaction.name || transaction.title || 'transaction'}`}
+            onClick={() => reveal(!open)}><Ellipsis size={20} /></button>
+        </div>
+      </motion.div>
+    </article>
+  );
+}
+
+export default function TransactionHistory({
+  transactions, filters, onFilters, monthOptions, events, onAdd, onEdit, onDelete,
+}) {
+  return (
+    <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
-        <h3 id="dn-transactions-heading">Transactions</h3>
-        <span aria-live="polite">{filtered.length} {filtered.length === 1 ? 'transaction' : 'transactions'}</span>
+        <div>
+          <h2 id="dn-transactions-heading">Transactions</h2>
+          <p>Every income and expense, in one place.</p>
+        </div>
+        <button type="button" className="primaryButton dn-transaction-add" onClick={onAdd}>
+          <Plus size={18} /> Add Transaction
+        </button>
       </header>
       <div className="transactions-toolbar">
         <input type="search" aria-label="Search transactions" placeholder="Search transactions"
-          value={filters.search} onChange={(event) => changeFilter({ search: event.target.value })} />
+          value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />
         <div className="transactions-filter-pair" role="group" aria-label="Transaction filters">
           <DropdownSelect aria-label="Transaction Type" value={filters.type}
-            onChange={(event) => changeFilter({ type: event.target.value })}>
+            onChange={(event) => onFilters({ type: event.target.value })}>
             <option value="all" data-short-label="All">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </DropdownSelect>
           <DropdownSelect aria-label="Month" value={filters.month}
-            onChange={(event) => changeFilter({ month: event.target.value })}>
-            <option value="all" data-short-label="All">All months</option>
-            {monthOptions.map((month) => (
-              <option key={month.value} value={month.value} data-short-label={month.shortLabel}>{month.label}</option>
-            ))}
+            onChange={(event) => onFilters({ month: event.target.value })}>
+            <option value="all" data-short-label="All">All Months</option>
+            {monthOptions.map((month) => <option key={month.value} value={month.value} data-short-label={month.shortLabel}>{month.label}</option>)}
+          </DropdownSelect>
+          <DropdownSelect aria-label="Sort transactions" value={filters.sort}
+            onChange={(event) => onFilters({ sort: event.target.value })}>
+            <option value="date-desc" data-short-label="Newest">Newest first</option>
+            <option value="date-asc" data-short-label="Oldest">Oldest first</option>
+            <option value="amount-desc" data-short-label="Amount ↓">Highest amount</option>
+            <option value="amount-asc" data-short-label="Amount ↑">Lowest amount</option>
+            <option value="title-asc" data-short-label="Title">Title A–Z</option>
           </DropdownSelect>
         </div>
       </div>
-      <div className="transactions-results" role="list" aria-label="Filtered transactions">
-        {filtered.length ? filtered.map((item) => (
-          <div className="financial-preview-row transaction-result-row" role="listitem" key={item.stableTransactionKey}>
-            <span>
-              <strong>{item.name || item.title || (item.transactionKind === 'income' ? 'Income' : 'Expense')}</strong>
-              <small>{item.category || item.type || (item.transactionKind === 'income' ? 'Income' : 'Expense')} · {dateLabel(item.date)}</small>
-            </span>
-            <strong className={item.transactionKind === 'income' ? 'transaction-amount-income' : 'transaction-amount-expense'}>
-              {item.transactionKind === 'income' ? '+' : '−'}{money(item.amount)}
-            </strong>
-          </div>
+      <div className="dn-transactions-results" role="list" aria-label="Filtered transactions">
+        {transactions.length ? transactions.map((item) => (
+          <TransactionCard key={item.stableTransactionKey} transaction={item}
+            events={events} onEdit={onEdit} onDelete={onDelete} />
         )) : (
           <div className="transactions-empty" role="status">
             <strong>No matching transactions</strong>
-            <p>{transactions.length ? 'Try a different type, month, or search term.' : 'Your income and expenses will appear here once added.'}</p>
+            <p>Try clearing a filter or search. Newly added transactions will appear here.</p>
           </div>
         )}
       </div>

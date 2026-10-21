@@ -378,3 +378,14 @@
 - Risk: Activity-link changes and simultaneous cloud writes may partially succeed. Preserve IDs and notify user on incomplete sync. Rollback via Git history.
 - Master: §9.1, §13; 2.7.2.
 - Status: SOURCE INTEGRATED, UI FOLLOW-UP AND CI PENDING.
+
+## CHG-20261021-028 | Unified premium transaction cards and filter panel
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, commit SHA in history. `main` untouched.
+- Paths: `src/components/financials/TransactionHistory.jsx`, master and append-only audit.
+- Before/after: Plain transaction list -> premium cards with signed income/expense coloring, activity/date/categories, left-swipe spring Edit/Delete reveal and always-available overflow button, optional haptic where supported; filters Search, Type, data-only Month and Sort in shared component.
+- UX/data impact: Rendering only, existing transaction IDs/persistence unaffected; accessibility controls available without swiping. Honours reduced-motion preference.
+- Verification: Parent integration and CI test pending. No deployment.
+- Risk/rollback: Touch gesture interference and actual frame rate require device testing.
+- Master: §9.1, §13, v2.7.3.
+- Status: SOURCE CREATED, PARENT INTEGRATION PENDING.
