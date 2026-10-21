@@ -47,6 +47,7 @@ export default function Financials() {
   const [editing, setEditing] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [defaultKind, setDefaultKind] = useState('expense');
+  const [activityPreset, setActivityPreset] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savingError, setSavingError] = useState('');
@@ -93,16 +94,20 @@ export default function Financials() {
     const requested = new URLSearchParams(location.search).get('create');
     if (requested !== 'expense' && requested !== 'income' && requested !== 'transaction') return;
     setDefaultKind(requested === 'income' ? 'income' : 'expense');
+    const params = new URLSearchParams(location.search);
+    const eventId = params.get('event');
+    const activityId = params.get('activity');
+    setActivityPreset(eventId && activityId ? { eventId, activityId } : null);
     setEditing(null);
     setDialogOpen(true);
     navigate('/financials/transactions', { replace: true });
   }, [isTransactions, location.search, navigate]);
 
   const openAdd = (kind = 'expense') => {
-    setEditing(null); setDefaultKind(kind); setSavingError(''); setDialogOpen(true);
+    setEditing(null); setActivityPreset(null); setDefaultKind(kind); setSavingError(''); setDialogOpen(true);
   };
   const openEdit = (transaction) => {
-    setEditing(transaction); setDefaultKind(transaction.transactionKind);
+    setEditing(transaction); setActivityPreset(null); setDefaultKind(transaction.transactionKind);
     setSavingError(''); setDialogOpen(true);
   };
   const handleSave = async (form) => {
@@ -184,7 +189,7 @@ export default function Financials() {
         <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"
           onClose={() => { if (!busy) { setDialogOpen(false); setEditing(null); } }}>
           {savingError ? <p className="dn-transaction-form-error" role="alert">{savingError}</p> : null}
-          <TransactionForm initialTransaction={editing} defaultKind={defaultKind} events={events}
+          <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
             onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
         </ModalDialog>
       ) : null}

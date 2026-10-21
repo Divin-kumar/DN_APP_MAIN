@@ -530,3 +530,14 @@
 - Risk/rollback: Gesture thresholds may require user tuning; screenshot/touch/browser verification needed. Revert commit to recover previous behavior.
 - Master: §§6, 9, 13; v2.9.5.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-041 | Link activity context into the unified Add Transaction form
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only; commit recorded in Git history. `main` untouched.
+- Changed paths: `src/pages/Financials.jsx`, `src/components/financials/TransactionForm.jsx`, Master Source of Truth and append-only audit.
+- Before -> after: Unified add form could not initialize a linked activity from an Event shortcut -> `/financials/transactions?create=transaction&event=<id>&activity=<id>` now preselects the event and activity, with existing authenticated/guest scoping and user-visible review before save.
+- Data/security: No new collection, authorization grant, or schema change. Form still uses existing user-specific event list and records. Deep link parameters only prefill a selection, not bypass access.
+- Verification: GitHub CI pending after commit; guest/account end-to-end link creation and browser navigation NOT RUN.
+- Risks: Missing/deleted linked event remains a form validation/UX edge case; require data consistency checks before saving financial links. Revert commit for rollback.
+- Master: §3.1a, version 2.9.6.
+- Status: SOURCE IMPLEMENTED / CI AND USER QA PENDING.

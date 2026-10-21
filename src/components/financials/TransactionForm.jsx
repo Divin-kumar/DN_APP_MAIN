@@ -20,7 +20,7 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
 });
 
 export default function TransactionForm({
-  initialTransaction = null, defaultKind = 'expense', events = [],
+  initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [],
   onSubmit, onCancel, busy = false,
 }) {
   const preferences = useAppStore((state) => state.preferences);
@@ -32,6 +32,7 @@ export default function TransactionForm({
     const kind = initialTransaction?.transactionKind || defaultKind;
     setForm({
       ...defaultValues(preferences, kind),
+      ...(!initialTransaction && presetLink ? { eventId: presetLink.eventId, activityId: presetLink.activityId } : {}),
       ...(initialTransaction ? {
         transactionKind: kind,
         title: initialTransaction.name || initialTransaction.title || '',
@@ -44,7 +45,7 @@ export default function TransactionForm({
       } : {}),
     });
     setError('');
-  }, [initialTransaction, defaultKind, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);
+  }, [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);
 
   const categories = useMemo(() => {
     const isIncome = form.transactionKind === 'income';
