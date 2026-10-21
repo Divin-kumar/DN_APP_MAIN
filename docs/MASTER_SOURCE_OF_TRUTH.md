@@ -1,113 +1,281 @@
-# LifeHub / DN — Master Source of Truth
-**Version:** 1.0.1 | **Status:** Authoritative documentation baseline (source-verified with exceptions) | **As of:** 2026-10-21
-**Repository:** `Divin-kumar/DN_APP_MAIN` | **Development branch:** `OldVersion` | **Inspected branch head:** `f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb`
-**Owners:** Product owner (product policy); engineering maintainer (technical accuracy); security owner (security sign-off, pending assignment).
+# DN / LifeHub — MASTER SOURCE OF TRUTH
 
-> **AI entry point:** Read this document first, then [AI-ready knowledge base](AI_READY_KNOWLEDGE_BASE.md). Treat implementation source and successful runtime verification as more authoritative than prose for actual behavior. Historic review reports describe risks and proposals, not approved implementation. Do not assume this file overrides GitHub branch state or live Firebase configuration.
+> **AUTHORITATIVE REFERENCE** · Version **2.0.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+>
+> **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document**. `README.md` provides navigation; it does not override this file.
+>
+> **Inspected application baseline:** commit `f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb` on `OldVersion` (2026-10-19). The 2026-10-21 source audit re-read the major code modules on `OldVersion`. Documentation-only commits after the baseline do not imply a new app build or runtime test. Always check current HEAD before editing.
 
-## 1. Authority, scope, and evidence
-This document is the **single normative documentation entry point** for product scope, implemented architecture, operating boundaries and governance. Supporting deep-dive reports remain *non-normative evidence* until archived or retired. Deleted source paths below are historical provenance recoverable in Git history, not current document links. It consolidates `README.md`, `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/DOCUMENTATION_STANDARDS.md`, `memory.md`, `prd.md`, `rules.md`, and `tasks.md`. Three substantive DOCX files and a transient Word lock file were inventoried but **their binary content could not be extracted through the connected GitHub reader**; their claims are NOT asserted here. See [review report](DUPLICATE_OBSOLETE_REPORT.md).
+## Contents
 
-**Precedence for factual disputes:** (1) inspected code/config at the specified commit, (2) verified tests and runtime evidence when supplied, (3) scoped recent implementation reviews, (4) older architecture/requirements narratives, (5) aspirational design. Product policies not specified in code require owner sign-off. Never confuse code presence with successful production verification.
+1. [Truth, ownership and verification vocabulary](#1-truth-ownership-and-verification-vocabulary)
+2. [Product scope and terminology](#2-product-scope-and-terminology)
+3. [Live application architecture](#3-live-application-architecture)
+4. [Business behavior and data ownership](#4-business-behavior-and-data-ownership)
+5. [Backup, restore and migration](#5-backup-restore-and-migration)
+6. [Security, reliability, PWA and operations](#6-security-reliability-pwa-and-operations)
+7. [Testing and release contract](#7-testing-and-release-contract)
+8. [Approved engineering and AI governance](#8-approved-engineering-and-ai-governance)
+9. [Decisions, conflicts and explicit unknowns](#9-decisions-conflicts-and-explicit-unknowns)
+10. [Planned and unverified backlog](#10-planned-and-unverified-backlog)
+11. [Evidence and source traceability](#11-evidence-and-source-traceability)
+12. [Document lifecycle and cleanup record](#12-document-lifecycle-and-cleanup-record)
+13. [Version and change history](#13-version-and-change-history)
 
-**Terminology:** **LifeHub** = implemented product/application name; **DN** = repository/project or prospective brand, not a completed rebrand. **Moment / Event** = user-facing life event; **event group** = current persistence entity. **Activity** = task associated with an event. **Memory** = related note/keepsake metadata. **Account** = Firebase-authenticated profile; **guest** = browser-local mode. **Backup v3** = current JSON export/restore contract.
+## 1. Truth, ownership and verification vocabulary
 
-## 2. Product and users
-LifeHub is a mobile-friendly personal life and lightweight-finance workspace. Its implemented scope covers life milestones (birthdays, anniversaries, festivals, plans), linked activities, memories and attachment metadata, income and expenses, dashboard summaries, insights, configurable categories, and settings. Target users include individuals, families and guest trial users. Do **not** market it as a banking system, guaranteed reminder delivery service, full attachment vault, or production-grade sensitive-data system of record without validation and product approval.
+**Scope:** Describes the **currently inspected application**, not a prospective redesign. This document consolidates the prior README, business guide, PRD, architecture descriptions, UI guide, enterprise architecture review, backup/restore review, code-list migration note, engineering rules, project memory and task backlog. The original versions are retained in **Git history** at the audited baseline and are **not alternate authorities**.
 
-**Functional domains**
-| Domain | Implemented purpose | Primary source |
+**Evidence priority:**
+1. Current code, schemas and configuration for **implemented** behavior.
+2. Executed tests, live Firebase Rules and deployed environment evidence for **verified** behavior.
+3. Product-owner-approved requirements or architecture decisions for intent/policy.
+4. This master, updated to agree with (1)–(3).
+5. Historical reviews, documents and AI-generated plans, used as provenance only.
+
+**Evidence labels:** `SOURCE-INSPECTED` = code exists, not necessarily exercised; `RUNTIME-VERIFIED` = repeatable executed evidence exists; `PLANNED` = desired, not implemented; `UNKNOWN` = no adequate evidence; `DEPRECATED` = historical and not authoritative. Never silently promote `PLANNED` to `RUNTIME-VERIFIED`.
+
+**Authority/owners:** Repository owner authorizes product priorities and branch/deploy actions; engineering owns source and compatibility; a security reviewer is required before sensitive production-data assurances. These roles are responsibilities, not claims that designated individuals have signed off.
+
+**Long-term AI policy:** Every future AI session starts with `AGENTS.md`, **this document**, the latest `CHANGE_AUDIT_LOG.md`, then the latest relevant code. Project/chat memory is not a substitute for these files. Git history is the audit-proof source when historical text has been retired.
+
+## 2. Product scope and terminology
+
+### 2.1 Product identity
+- **LifeHub** is the predominant implemented source/product name, package `lifehub-react`, package version **1.0.15** at audited baseline; **DN** appears in repo name, PWA naming and some UI/backups.
+- **Decision pending:** official public brand; do not rename globally without explicit approval.
+- Purpose: responsive personal life planning and lightweight household/personal finance. Supports account and guest experiences. Not a banking ledger or certified archival/notification service.
+
+### 2.2 Canonical domain words
+- **Moment / Event:** user-facing occasion or milestone (birthday, anniversary, festival, trip or personal plan).
+- **Event group:** actual persistent aggregate named `eventGroups` containing moment details and related activities/memories/attachment metadata.
+- **Activity:** a task/action within a moment, with dates, completion, priority and potentially nested expenses.
+- **Memory:** note or remembrance linked to a moment.
+- **Attachment:** currently **metadata** associated with a moment. Do not promise restoration of file bytes.
+- **Expense:** outgoing amount, either independent record or nested under an activity and projected into expense totals.
+- **Income:** incoming amount stored independently.
+- **Code Lists:** customizable values (event types, income types, expense categories, activity priorities, reminder presets).
+- **Guest:** browser-local trial mode; **account:** Firebase-authenticated UID; **sample mode:** isolated developer fixture mode.
+
+### 2.3 Available modules (source-inspected)
+| Module | Current implementation | Key source |
 |---|---|---|
-| Dashboard | Upcoming moments, tasks, financial summaries | `src/features/dashboard/components/DashboardOverview.jsx`; `README.md` |
-| Moments and events | Create/organize milestones and related records | `src/features/events/components/EventWorkspaceShell.jsx`; `prd.md` |
-| Activities and memories | Linked tasks and personal notes/metadata | `src/components/events/`; `prd.md` |
-| Income and expenses | Record, categorize and summarize finances | `src/components/income/`, `src/components/expenses/`; `prd.md` |
-| Settings and code lists | Preferences, categories, backups, import/export | `src/pages/Settings.jsx`, `src/pages/CodeLists.jsx`; `docs/CODE_LIST_PERSISTENCE.md` |
-| Insights and PWA | Derived reports, installable app shell and updates | `src/pages/Insights.jsx`, `src/main.jsx`; `README.md` |
+| Login / guest | Google sign-in, guest session, protected route shell | `src/pages/LoginPage.jsx`, `src/context/AuthContext.jsx`, `src/context/GuestContext.jsx`, `src/routes/ProtectedRoute.jsx` |
+| Dashboard | Upcoming moment and financial overview; dashboard widgets | `src/pages/DashboardHome.jsx`, `src/features/dashboard/components/DashboardOverview.jsx` |
+| Moments / Events | CRUD, nested workspace, activities, timelines, memories, attachment metadata | `src/pages/Events.jsx`, `src/features/events/components/EventWorkspaceShell.jsx`, `src/store/useEventStore.js` |
+| Income | CRUD, category/type and summaries | `src/pages/Income.jsx`, `src/services/incomeService.js`, `src/store/useIncomeStore.js` |
+| Expenses | CRUD, financial summaries and nested expense aggregation | `src/pages/Expenses.jsx`, `src/services/expenseService.js`, `src/store/useExpenseStore.js` |
+| Insights | Derived event/activity/money summaries, client-side search and JSON export | `src/pages/Insights.jsx` |
+| Settings | Preferences, reminder defaults, appearance, backup/export/import, sample scenarios | `src/pages/Settings.jsx`, `src/store/useAppStore.js` |
+| Code Lists | Account/guest configurable values and usage-sensitive updates | `src/pages/CodeLists.jsx`, `src/services/codeListService.js`, `src/utils/codeLists.js` |
+| About / PWA | App information, install shell, refresh/update notification | `src/pages/About.jsx`, `src/main.jsx`, `vite.config.js` |
 
-## 3. Implemented technology and boundaries
-- Frontend: React 18, Vite 5, JavaScript/JSX, React Router 6, Zustand 5, plain CSS, Lucide, optional Framer Motion.
-- Backend services: Firebase JS SDK 12, Firebase Authentication (Google sign-in), Cloud Firestore. Source inspection does not reveal a separately deployed custom API server.
-- Entry and navigation: `src/main.jsx` mounts the app and registers the production service worker; `src/App.jsx` defines lazy-loaded public/protected routes; `src/routes/ProtectedRoute` gates account pages in the client.
-- State and persistence: `src/store/` and `src/context/` coordinate UI, session and domains; `src/services/` performs persistence; authenticated records go to UID-scoped Firestore paths; guest records/preferences reside in browser localStorage.
-- PWA: manifest under `public/`, production service-worker registration/version prompt; cached application shell **does not prove reliable offline data writes**.
-- UI: theme uses root `data-theme`, with `src/index.css` and subsequently loaded `src/design-system.css`; test both themes and viewport sizes before broad CSS edits.
-- Infrastructure: `firebase.json`, `.firebaserc`, `scripts/deploy-hosting.mjs`. Do not deploy without explicit authorization.
+**Do not claim shipped:** cloud-wide full-text indexing, durable local-first outbox synchronization, reliable scheduled push reminders, production original-file storage, or comprehensive automatic remote backups. Some routes labelled timeline/PDF are part of a moment workspace; they are not proof of a global timeline engine or archival PDF service.
 
-### 3.1 Data ownership and conceptual relationships
-An **event group** represents a Moment/Event and may embed Activities, Memories, attachment metadata and nested Activity Expenses. Independent Expenses and Incomes have separate account collections. Dashboard/Insights are generally computed views, not separate persisted domain sets. Reconcile embedded expenses with standalone expense records by stable app IDs before exports or migrations. Avoid introducing two authoritative copies of the same financial transaction.
+## 3. Live application architecture
 
-**Authenticated paths identified in source/docs:** `users/{uid}/eventGroups`, `users/{uid}/expenses`, `users/{uid}/incomes`, `users/{uid}/settings/codelists`. Browser-local keys include `lifehub_preferences`, guest domain keys and guest code-list keys. **Security Rules are not present in the inspected repository tree**; UID-scoped client paths alone are not access controls.
-
-### 3.2 Code lists
-Authenticated list configuration uses `users/{uid}/settings/codelists` with `adminValues`, `schemaVersion` and `updatedAt`; guest configuration remains local. The code-list implementation supports migration from legacy browser values, but multi-device and Rules behavior need actual Firebase tests. Source: `src/services/codeListService.js`, `src/store/useAppStore.js`, `docs/CODE_LIST_PERSISTENCE.md`.
-
-## 4. Backup, restore and recoverability
-**Current version is 3** (`CURRENT_BACKUP_VERSION = 3` in `src/services/backupService.js`). Version 2 is legacy input compatibility and must not be described as current. The v3 export includes domain records, linked child metadata, code lists and relevant app configuration. Authenticated exports draw from Firestore, guest exports from guest storage. Restore uses a review/validation process, rebuilds linked records, merges **missing stable IDs** and skips conflicting existing IDs instead of silently overwriting them. Future unsupported versions are rejected.
-
-**Limits:** Restores are not atomic across the entire dataset; partial writes and retry may be required. Attachment metadata does not reconstruct original binary files that were never stored. Firebase Auth identities, rules, external service credentials, caches and production environment state are not backed up. The currently signed-in UID is the destination for account restores. Runtime recovery drills, Firestore Rules and multi-device behavior remain unverified. Sources: `src/services/backupService.js`, `src/services/backupService.test.mjs`, `docs/BACKUP_RESTORE_REVIEW.md`, `architecture.md`.
-
-## 5. Security, privacy and production readiness
-**Do not claim production-grade confidentiality, durability or recovery.** The 2026-10-19 enterprise architecture review rated sensitive-data production readiness 3.5/10 as a *reviewer's assessment*, not a live audit finding. Highest-priority gaps: inspect and version Firebase Security Rules; run cross-user deny tests; verify OAuth domains, project access and deployment configuration; validate restore failure/retry and guest-to-account merge recovery; establish release CI checks and retention/privacy decisions. Browser route guards are UX controls, not authorization.
-
-Known risks include inconsistent branding (LifeHub/DN), large mixed-responsibility components, overlapping CSS, legacy storage migration, potential guest merge failure visibility, absent verified durable offline sync, lack of a canonical transaction ownership policy, and absent original-file attachment storage. Do not infer that roadmap designs (IndexedDB, full-text search, global timeline, notifications or sync outbox) are shipped.
-
-## 6. Engineering and documentation operating rules
-1. **Branch discipline:** all requested implementation/documentation work targets `OldVersion` explicitly. The open PR #6 targets `main`; do not merge it or change `main` without instruction. No deployment without separate permission.
-2. Prefer small domain-scoped edits, existing JavaScript/JSX patterns, services/stores, and existing CSS tokens. Add targeted tests for behavior changes. Validate domain referential integrity, errors, date handling and guest/account separation.
-3. For migration or data format changes, specify schema/version, idempotency, backups, compatibility, rollback, error handling and source-of-truth ownership.
-4. Never embed private credentials. Confirm live Firebase Rules rather than extrapolating from client services.
-5. Run `npm test` and `npm run build` when an executable workspace is available. Report what was actually run; do not turn planned/manual validation into a pass.
-6. Document *why*, user impact, invariants and edge cases; avoid obvious syntax narration. Update this master and the AI-ready extract for substantive verified changes. Keep change history and traceability in this document.
-7. Use labels: **Implemented (source-inspected)**, **Verified (test/runtime)**, **Proposed**, **Unknown** and **Deprecated**.
-
-## 7. Architecture decisions and conflicts resolved
-| Decision | Canonical resolution | Evidence and reasoning |
-|---|---|---|
-| LifeHub vs DN | LifeHub describes current runtime; DN is project/possible future brand | Source/docs acknowledge mixed manifest branding; rename requires product approval |
-| Cloud-first vs local-first | **Current:** Firebase-backed authenticated records, guest localStorage, shell offline cache. **Target:** undecided | Actual client services prevail over proposed IndexedDB/local-first diagrams |
-| Backup v2 vs v3 | **Current:** v3; **Legacy:** v1/v2 normalization where supported | `src/services/backupService.js` constant takes priority over older migration prose |
-| Event vs Moment vs eventGroup | Moment/Event = UI/domain; event group = current storage aggregate | Preserves both user meaning and actual persistence |
-| Restore overwrite | Merge missing IDs; skip existing conflicts, partial failure possible | Current service and 2026-10-19 backup review; not full destructive restore |
-| Security readiness | Not production-verified | Missing in-repo Security Rules/runtime validation outweigh optimistic prose |
-| Deep architecture reviews | Historical evidence and proposed targets, not separate normative standards | Long-form reviews contain recommendations not implemented capabilities |
-
-## 8. Open decisions, information gaps and verification queue
-| ID | Question or required proof | Owner | Priority |
-|---|---|---|---|
-| G-01 | Read and reconcile three substantive DOCX sources and identify requirements unique to them | Product/engineering | P0 documentation completeness |
-| G-02 | Confirm canonical product brand (DN or LifeHub) and terminology in app/manifest | Product owner | P1 |
-| G-03 | Obtain deployed Firestore Rules and perform emulator plus cross-account authorization tests | Security/engineering | P0 |
-| G-04 | Choose cloud-first or local-first target; define offline and sync promises | Product/architecture | P0 architecture |
-| G-05 | Run build, unit tests, browser/mobile checks and real guest/authenticated backup/restore recovery drills | QA/engineering | P0 |
-| G-06 | Define canonical ownership and reconciliation rules for nested vs standalone expenses | Product/engineering | P0 |
-| G-07 | Verify guest merge failure UX and retry procedure | Engineering | P1 |
-| G-08 | Define original-file storage, backup expectations and retention/privacy model | Product/security | P1 |
-| G-09 | Decide authoritative hosting environment, approvals and deployment protections | Operations | P1 |
-| G-10 | Confirm retention/deletion of detailed historic audit reports once binary documents are reviewed | Product owner | P2 |
-
-## 9. Source-to-section traceability
-| Major section | Primary source(s) |
+### 3.1 Stack
+| Layer | Observed |
 |---|---|
-| Authority and governance | `memory.md`, `rules.md`, `docs/DOCUMENTATION_STANDARDS.md` |
-| Product and features | `README.md`, `BUSINESS_GUIDE.md`, `prd.md`, `docs/ARCHITECTURE.md` |
-| Architecture and data | `architecture.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `src/App.jsx`, `src/main.jsx` |
-| UX and branding | `design.md`, `src/design-system.css`, `public/manifest.webmanifest` |
-| Code lists | `docs/CODE_LIST_PERSISTENCE.md`, `src/services/codeListService.js` |
-| Backup/restore | `docs/BACKUP_RESTORE_REVIEW.md`, `src/services/backupService.js` |
-| Risks/roadmap | `docs/ARCHITECTURE_REVIEW.md`, `tasks.md`, `memory.md` |
-| Standards/workflow | `rules.md`, `docs/DOCUMENTATION_STANDARDS.md`, `tasks.md` |
+| UI | React `^18.3.1`, JSX/ES modules, Lucide; Framer Motion installed |
+| Build / test | Vite `^5.4.10`, `@vitejs/plugin-react`; Node built-in test runner (`npm test`) |
+| Navigation | `react-router-dom` `^6.28.0`; lazy routes and protected shell |
+| Client state | Zustand `^5.0.0`, session contexts and domain stores |
+| Account identity/data | Firebase JS SDK `^12.19.0`, Google Auth, Cloud Firestore |
+| Guest/preferences | Browser `localStorage` |
+| Styling | `src/index.css` followed by `src/design-system.css`, theme via root `data-theme` |
+| Hosting | Firebase Hosting configured by `firebase.json`; SPA rewrite to `/index.html`, static `dist` |
+| Offline shell | Custom Vite-generated production service worker and `public/manifest.webmanifest` |
 
-## 10. Change history and governance
-| Version | Date | Change | Validation |
+A custom separately deployed application REST/GraphQL server is **not present in the inspected repo**. Browser clients call Firebase services directly.
+
+### 3.2 Runtime flow
+```text
+index.html -> src/main.jsx -> BrowserRouter -> src/App.jsx
+  -> AuthProvider + GuestProvider -> ProtectedRoute/DashboardLayout
+  -> pages / feature components -> Zustand domain stores
+  -> service adapters -> Firebase Firestore (account) OR localStorage (guest)
+                                  \-> isolated dev sample fixtures when active
+```
+Firebase Analytics is optional and lazy-loaded in production if supported. The production service worker manages shell caching and checks for updates; it is not a durable domain-write queue.
+
+### 3.3 Route contract
+`/login` public; protected application shell: `/`, `/dashboard`, `/events`, `/events/:eventId`, `/events/:eventId/overview`, `/events/:eventId/activities`, `/events/:eventId/timeline`, `/events/:eventId/memories`, `/events/:eventId/attachments`, `/events/:eventId/pdf`, `/financials/income`, `/financials/expenses`, `/insights`, `/settings`, `/settings/code-lists`, `/settings/about`. Standalone `/activities` redirects to `/events`; unknown paths redirect to root. Source: `src/App.jsx`.
+
+### 3.4 Domain stores and services
+- `src/store/useAppStore.js`: account, guest, preferences, code-list hydration/writes, notifications.
+- `src/store/useEventStore.js`: event lifecycle across sample, guest and account modes, optimistic cloud updates and error rollback.
+- `src/store/useExpenseStore.js`, `useIncomeStore.js`: domain CRUD, async loads, sample/guest/account behavior, optimistic cloud updates/rollback.
+- `src/store/useDashboardStore.js`: small UI dashboard state.
+- `src/services/eventService.js`, `expenseService.js`, `incomeService.js`: schema normalization, Firestore and guest-local persistence.
+- `src/services/codeListService.js`, `backupService.js`, `guestMergeService.js`: account settings, backup format, transition from guest data to account.
+
+**Cross-cutting rule:** UI should coordinate via store/service boundaries; do not scatter direct Firestore writes across unrelated components.
+
+## 4. Business behavior and data ownership
+
+### 4.1 Account, guest and sample separation
+**Account:** Firebase Auth emits state through `authService.onAuthChange`. Account settings/code lists are hydrated; guest data merge is attempted; account user then becomes active. **Important observed limitation:** `src/context/AuthContext.jsx` logs guest-merge failures to console and then proceeds with `setUser`; a visible recovery/retry UX is not evident in this inspected path. Treat as risk, not successful migration guarantee.
+
+**Guest:** `lifehub_guest_mode` flag; events, expenses, incomes and code lists are stored in browser localStorage. Changing devices or clearing site storage can lose guest data absent a separate backup. Existing guest event service also uses a session backup key.
+
+**Sample:** `src/dev/sampleData.js` provides an isolated scenario used by stores/settings; **clear it before restoring a real backup**. Sample data is not the same persistence environment as either account or guest.
+
+### 4.2 Firestore paths and keys
+| Domain | Account location | Guest/browser location |
+|---|---|---|
+| Moments / eventGroups | `users/{uid}/eventGroups` | `lifehub_guest_eventGroups` |
+| Standalone expenses | `users/{uid}/expenses` | `lifehub_guest_expenses` |
+| Income | `users/{uid}/incomes` | `lifehub_guest_incomes` |
+| Code Lists | `users/{uid}/settings/codelists` | guest code-list state/localStorage (see `src/utils/codeLists.js`) |
+| Preferences / theme | browser-local, including for signed-in users | `lifehub_preferences`, `lifehub_theme_choice` |
+| Favorite/recent IDs | browser-local and scoped by account ID | `lifehub_favorite_event_ids_{uid|guest|local}` and `lifehub_recent_event_ids_{uid|guest|local}` |
+
+UID-scoped collection paths are **client conventions**; they do not replace deployed server-enforced security rules. The repo does not include auditable Firestore Rules in its tree.
+
+### 4.3 Invariants and data risks
+- Stable **application record IDs** identify entities across backup/guest merges; Firestore document IDs (`firestoreId`) may differ.
+- Event groups can embed activities, memories, metadata and activity-linked expense records. Normalizers provide defaults and computed status.
+- `expenseService.js` reads standalone expenses and embedded activity expenses, merging/deduplicating by identifier. **Open decision:** authoritative ownership of nested versus standalone expenses; deleting nested-only projected records may not delete a separate Firestore document.
+- Income and expense stores perform optimistic updates with error rollback, but rollback behavior is not a substitute for full integration tests.
+- Code-list persistence: Firestore document with `adminValues`, `schemaVersion`, `updatedAt`; transaction-based hydration can incorporate legacy browser values. Guest values remain local; test cross-device consistency and permissions in live Firebase.
+- Dashboard and Insights generally derive summaries from domain records; they are not a documented independent persisted system of record.
+- UI permits recurring event logic and settings-driven reminder/greeting parameters, but these are **not** evidence of a delivered background notification scheduler.
+
+## 5. Backup, restore and migration
+
+### 5.1 Current schema
+**Source-inspected:** `CURRENT_BACKUP_VERSION = 3` in `src/services/backupService.js`. Current exports normalize: `moments`, `activities`, `memories`, `attachments`, `expenses`, `incomes`, `codeLists`, preferences/settings and dashboard configuration. Nested moment fields are flattened into a portable representation and reconstructed on import. Legacy unversioned/v2 shapes have conversion logic; unknown future versions are rejected.
+
+### 5.2 Backup behavior
+`src/pages/Settings.jsx` exports from active sample fixtures, account Firestore readers or guest local readers as appropriate, then downloads JSON (name `dn-backup-<date>.json`). Attachment **records and metadata** may be exported, **not original bytes**. Firebase Auth identities, credentials, deployed security rules, Firebase environment and service worker cache are not backed up.
+
+### 5.3 Restore behavior and limits
+- Import validates schema/relationships, shows a review state, then merges into the **current** account or guest storage.
+- New IDs are added. Existing IDs retain destination record values; missing nested children may be merged into existing event groups. Record counts/conflicts are reported.
+- Account restore writes in multiple asynchronous steps, **not an atomic transaction spanning all data**; failures can leave partial state. Retry and reconciliation require manual/automated validation.
+- Development sample scenario blocks restore until cleared.
+- Settings/code lists and preferences are applied after core record writes succeed. The browser-local configuration is distinct from Firestore account data.
+- Real-world data recovery, cross-account isolation, device migrations and retry paths are **NOT RUNTIME-VERIFIED** by this documentation audit.
+
+## 6. Security, reliability, PWA and operations
+
+### 6.1 Security and privacy boundaries
+- Client-side route guards, UID paths and optimistic UI are not server authorization.
+- **UNKNOWN:** actual deployed Firestore security rules, their test coverage, OAuth allowed domains, Firebase project access roles, App Check policy and production data-retention requirements.
+- Do not store admin credentials in frontend, log sensitive payloads without necessity or imply the app is a certified sensitive-data system of record.
+- The 2026-10-19 enterprise architecture review previously assessed production readiness unfavorably, but its numerical risk score is an *historical opinion*, not a live penetration test.
+
+### 6.2 Reliability and known hazards
+- Nested/standalone expense reconciliation and duplicate IDs need an approved canonical policy.
+- Guest->account migration failure is caught/logged; user-facing visibility/retry is insufficiently verified.
+- Backup restore can partially succeed; original attachment files are not restored by current schema.
+- Browser-local preferences/guest data are not synchronized automatically between devices.
+- Large components (notably Settings, EventWorkspaceShell and dashboard) and overlapping CSS require scoped changes and regression checks.
+- Date/time and recurrence logic should be covered with timezone and edge-case tests.
+
+### 6.3 PWA and deployment
+- `vite.config.js` generates a build-stamped app-shell service worker; `src/main.jsx` registers it in production and prompts to refresh on update.
+- No evidence of a durable client outbox, cross-device conflict resolution or guaranteed offline Firestore writes. Describe current offline scope as shell/assets.
+- `firebase.json` serves `dist` via Firebase Hosting site `dn-10`, SPA rewrite; several JS/CSS/HTML resources use no-cache headers. Actual deployed target must be verified before deployment.
+- **Do not deploy** or change production Firebase configuration without explicit instruction.
+
+## 7. Testing and release contract
+
+**Available commands from `package.json`:**
+```bash
+npm install
+npm run dev
+npm test
+npm run build
+npm run preview
+# npm run deploy:hosting  # EXPLICIT DEPLOYMENT AUTHORIZATION REQUIRED
+```
+Existing Node test files cover selected backup, event, code-list, greeting, dashboard and version/update utilities. `npm test` maps to `node --test`; `npm run build` to `vite build`. There is no claim that this audit ran either command.
+
+**For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks that both master and audit-log files change; quality and append-only integrity still need human review and branch protections.
+
+## 8. Approved engineering and AI governance
+
+**MANDATORY: [AGENTS.md](../AGENTS.md) governs every future AI session.**
+1. Work only on **`OldVersion`** unless explicitly directed otherwise. `main` remains protected. PR #6 is open historical context, not merge permission.
+2. **Every repository/app change must update this master and append a record to [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) in the same change/PR.** This includes features, fixes, styling, refactors, dependencies, test/config changes, deployments and documentation policy/cleanup.
+3. Audit entry must include UTC date, actor, branch, commit/PR, exact paths, reason, before/after, user/data/security impact, commands and actual outcomes, rollback and follow-ups. Never erase old entries; issue a correction entry.
+4. **All future plans, decisions and pending work go into this document** §10. No separate `tasks.md`, `memory.md` or sprint specifications in the repo.
+5. Keep source-inspected facts separate from desired changes. Source files and operational tests must be checked before changing existing logic; no assertions by analogy.
+6. Do not edit production, perform destructive data operations, force-push protected branches or merge without explicit user authorization.
+7. If an AI cannot write the files, it must plainly report the blocker and produce the proposed master/audit edits. **Never claim undocumented work complete.**
+8. Prefer scoped JSX/JavaScript edits, Zustand/store/service patterns, two-space indentation and existing design tokens; preserve migration/rollback behavior. Add context-oriented comments explaining why rather than restating syntax.
+9. Update master **semver** (major policy/product contract change; minor substantive implementation; patch correction) and keep change log current.
+10. Do not create additional Markdown knowledge-base files. Exactly four active `.md` files: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+
+## 9. Decisions, conflicts and explicit unknowns
+
+| Topic | Canonical current answer | Decision status and rationale |
+|---|---|---|
+| Product naming | `LifeHub` runtime, `DN` repo/partial branding | Pending brand decision; changing names without migration may break keys/PWA |
+| Cloud vs local-first | Account = Firestore, guest = localStorage, service worker = shell | **Current reality**; IndexedDB/outbox proposal not shipped |
+| Backup v2 vs v3 | **v3 current**; v2 import compatibility | Source constant supersedes stale v2 text |
+| Event vs Moment | UI/domain Moment/Event, storage aggregate `eventGroups` | Both names defined; no forced renaming |
+| Expense source | Standalone + nested activity expenses read and deduplicated | Canonical write ownership unresolved |
+| Restore conflicts | Existing stable-ID records preserved; absent IDs added | Merge-only at high level, can update aggregate with missing child records |
+| Security | Firestore Rules unverified, client paths not sufficient | P0 release gap |
+| Attachments | Metadata present; original file recovery unsupported | New storage feature requires design and privacy review |
+| Automated reminders | UI preferences do not establish background push scheduler | Do not describe as shipped |
+| DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
+
+## 10. Planned and unverified backlog
+
+**Backlog policy:** Only product-owner-approved work should be represented as committed scope; other rows are **candidate work / verification obligations**. Track progress by changing this table and appending an audit entry, not by creating another file.
+
+| ID | Priority | Status | Work / acceptance criterion |
 |---|---|---|---|
-| 1.0.1 | 2026-10-21 | Retired superseded `docs/ARCHITECTURE.md` and `memory.md`; documented blocked deletions and updated README links | GitHub deletion commits; no runtime tests |
-| 1.0.0 | 2026-10-21 | Consolidated markdown authority, resolved v3 backup/architecture/naming conflicts, added source matrix and gaps | GitHub source/document inspection; **DOCX, runtime and live Firebase not verified** |
+| K-01 | P0 | UNKNOWN | Obtain and review deployed Firestore Rules; emulate unauthorized cross-UID access and document results |
+| K-02 | P0 | PLANNED | Run existing `npm test` and `npm run build`, record outputs and regressions |
+| K-03 | P0 | PLANNED | Exercise real account and guest backup-v3 export/restore, duplicate-ID retry, partial failure and cross-device recovery |
+| K-04 | P0 | PLANNED | Decide expense canonical ownership and validate nested/standalone deletion/migration semantics |
+| K-05 | P0 | PLANNED | Add explicit user-facing failure/retry workflow for guest-account data merge |
+| K-06 | P1 | DECISION NEEDED | Finalize official LifeHub/DN brand before mass rename/storage-key migrations |
+| K-07 | P1 | DECISION NEEDED | Choose cloud-first vs offline-first goals; design sync/outbox only if required |
+| K-08 | P1 | PLANNED | Improve CI checks, versioning, deployment approval and Firebase rules test automation |
+| K-09 | P1 | DECISION NEEDED | Decide original-file attachment storage, encryption, export, retention and deletion policy |
+| K-10 | P1 | PLANNED | Regression tests for recurring dates, timezone, financial reconciliation and code-list migrations |
+| K-11 | P2 | PLANNED | Decompose oversized feature screens and reconcile overlapping styles without visual regressions |
+| K-12 | P2 | UNKNOWN | If unique requirements from archived Word files are needed, recover old versions from Git and review manually |
+| K-13 | P1 | PLANNED | Make `documentation-governance` check required in GitHub branch protection; validate workflow execution |
 
-**Change protocol:** Any feature affecting product behavior, persistence, architecture, security or documentation policy must update this master (version, affected sections, evidence paths, decision owner and verification state), update [AI extract](AI_READY_KNOWLEDGE_BASE.md), and record deprecation in [report](DUPLICATE_OBSOLETE_REPORT.md). Historic sources must not silently overrule this master. Version major for incompatible policy/schema/terminology, minor for substantive approved behavior, patch for corrections. Review after material changes and before releases.
+## 11. Evidence and source traceability
 
-## 11. Companion deliverables
-- [Duplicate & obsolete document report](DUPLICATE_OBSOLETE_REPORT.md)
-- [Merge and consolidation summary](CONSOLIDATION_SUMMARY.md)
-- [Retention/deletion matrix](RETENTION_DELETION_MATRIX.md)
-- [AI-ready knowledge base](AI_READY_KNOWLEDGE_BASE.md)
+**Application code inspected (GitHub `OldVersion`, 2026-10-21):** `package.json`, `firebase.json`, `vite.config.js`, `src/App.jsx`, `src/main.jsx`, `src/firebase/config.js`, `src/context/AuthContext.jsx`, `src/context/GuestContext.jsx`, `src/routes/ProtectedRoute.jsx`, `src/services/firebase.js`, `src/services/eventService.js`, `src/services/expenseService.js`, `src/services/incomeService.js`, `src/services/codeListService.js`, `src/services/guestMergeService.js`, `src/services/backupService.js`, `src/store/useAppStore.js`, `src/store/useEventStore.js`, `src/store/useExpenseStore.js`, `src/store/useIncomeStore.js`, `src/store/useDashboardStore.js`, `src/pages/Settings.jsx`, `src/pages/CodeLists.jsx`, `src/pages/Insights.jsx`. Remaining page/component trees were inventoried; not all were line-by-line inspected.
+
+**Historical documentation reviewed and consolidated:** `README.md`, `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/DOCUMENTATION_STANDARDS.md`, `memory.md`, `prd.md`, `rules.md`, `tasks.md`. Retrieve pre-cleanup versions by browsing [audit baseline commit](https://github.com/Divin-kumar/DN_APP_MAIN/tree/f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb).
+
+**Binary provenance:** `LifeHub_Product_Spec_and_User_Guide.docx`, `LifeHub_System_Overview.docx`, `Bugs_OCT26/New Microsoft Word Document.docx` and `Bugs_OCT26/~$w Microsoft Word Document.docx` were inventoried but not text-readable through this connection. No claims from their bodies appear in this master. Git history, not this summarized document, is their recovery mechanism.
+
+**Section-to-source index:**
+- §2: `src/App.jsx`, `src/pages/`, `src/features/`, prior PRD/business guide.
+- §3: `package.json`, `src/main.jsx`, `src/App.jsx`, `vite.config.js`, `src/firebase/config.js`, `firebase.json`.
+- §4: `src/context/`, `src/store/`, `src/services/*Service.js`, `src/dev/sampleData.js`.
+- §5: `src/services/backupService.js`, `src/pages/Settings.jsx`, historic backup review.
+- §6: `src/routes/ProtectedRoute.jsx`, `src/context/AuthContext.jsx`, `vite.config.js`, `firebase.json`, historic architecture review.
+- §7: `package.json`, `src/**/*.test.mjs`; tests not executed by this audit.
+- §8: `AGENTS.md`, `.github/workflows/documentation-governance.yml`, change audit.
+- §9–10: source evidence plus prior architecture/backup reviews; future decisions not yet approved.
+
+## 12. Document lifecycle and cleanup record
+
+**Active documentation contract: four Markdown files only:** `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+
+**Historical governance-cleanup source files (originally active and proposed for retirement):** `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/CONSOLIDATION_SUMMARY.md`, `docs/DOCUMENTATION_STANDARDS.md`, `docs/DUPLICATE_OBSOLETE_REPORT.md`, `docs/RETENTION_DELETION_MATRIX.md`, `docs/AI_READY_KNOWLEDGE_BASE.md`, `memory.md`, `prd.md`, `rules.md`, `tasks.md`, plus four old DOCX paths (see §11). Deletions are recorded **only when GitHub confirms**; do not claim blocked deletions occurred. Prior pre-cleanup deletions: `docs/ARCHITECTURE.md` (`fca658b`) and `memory.md` (`e8f1079`). Git history remains accessible and is *not* an active specification.
+
+**Clean repository rule:** no future `.md` policy/roadmap duplicates. Keep `.json`, `.js`, `.jsx`, `.css`, `.yml` and required app assets as code/config, not duplicate knowledge docs. Any unavoidable compliance artifact must be explicitly approved and indexed here.
+
+## 13. Version and change history
+
+| Master version | UTC date | Meaning | Audit evidence |
+|---|---|---|---|
+| 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
+| 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.0.0** | **2026-10-21** | Code-inspected master, one-document authority, 4-file policy, mandatory AI/audit workflow, planned work moved into master | CHG-20261021-003 (completion recorded in later entry) |
+
+**Version discipline:** major version for major scope/governance/contract change; minor for implemented feature changes and approved new behavior; patch for corrections. Every update links to an **append-only** audit record; do not retrospectively edit log entries. No unverified plans are promoted into factual current state.
