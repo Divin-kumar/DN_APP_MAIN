@@ -221,3 +221,17 @@
 - Risk/rollback: The scanning test intentionally excludes legacy compatibility code, fixture files and audit-history material. Revert this commit if it causes false positives; the core app behavior remains unchanged.
 - Master: §2 naming and §13 history; version 2.4.6.
 - Status: SOURCE FIXED, CI VERIFY PENDING.
+
+## CHG-20261021-016 | Record passing DN safeguards and eliminate obsolete name from AI rules
+- Date (UTC): 2026-10-21.
+- Actor/requester: Owner's follow-up request to retry and fully verify DN branding.
+- Branch/commits: `OldVersion`; verified source commit `ecafb3f6b3818d9caa4efc08202db7e9cb454dd8`, GitHub Actions [run 39643523554](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39643523554). This documentation-and-agent wording commit identifiable in Git history. `main` untouched.
+- Paths changed: `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Post-fix brand tests were awaiting CI, and normative agent instructions contained an obsolete product label even in a prohibition -> CI outcome captured and normative instruction uses DN exclusively, referring to previous branding only generically. Historical audit entries remain append-only and unchanged.
+- Reason: Prevent reintroduction of deprecated product identity in future AI sessions, while maintaining traceable verified results.
+- Data/UX/security: Documentation and agent wording only, no application behavior, stored data, security rules, or deployment change. Old browser keys and old-backup test fixtures remain for backward compatibility.
+- Verification: OldVersion GitHub Actions run 39643523554 **PASS**, `npm test` **51 passed / 0 failed**, `npm run build` **PASS** (Vite), documentation-contract **PASS**; results from job logs. Dependency installation lists 9 advisories (3 moderate/6 high) not fixed. New commit's own subsequent CI run requires its own verification. Browser/device tests, live Firebase permission tests and backup/guest data migration with real user data: NOT RUN.
+- Risk and rollback: CI validates source and compilation, not the live Firebase/data migration. Restore AGENTS wording from previous Git commit only with an audited owner-approved change.
+- Master updated: §7 CI evidence, §13 version 2.4.7.
+- Status: PREVIOUS BRAND-REGRESSION COMMIT VERIFIED; THIS DOC-ONLY COMMIT REQUIRES CI READ-BACK.
+- Follow-ups: Browser-based old-device guest-data/backup validation, dependency security review, required checks on OldVersion.
