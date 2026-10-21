@@ -177,6 +177,7 @@ Guest-mode records are stored in browser localStorage, then merged into the auth
 
 ## 4. Related documentation
 
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/DOCUMENTATION_STANDARDS.md](docs/DOCUMENTATION_STANDARDS.md)
-- [BUSINESS_GUIDE.md](BUSINESS_GUIDE.md)
+- [Master Source of Truth](docs/MASTER_SOURCE_OF_TRUTH.md)
+- [AI-ready knowledge base](docs/AI_READY_KNOWLEDGE_BASE.md)
+- [Architecture review (historical evidence)](docs/ARCHITECTURE_REVIEW.md)
+- [Retention and deletion matrix](docs/RETENTION_DELETION_MATRIX.md)
