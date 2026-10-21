@@ -28,7 +28,11 @@ const useExpenseStore = create((set, get) => {
   loadedFor: null,
   activeLoadKey: null,
 
+  // A complete replacement (restore/account switch) resets ownership metadata.
   setExpenses: (items) => set({ expenses: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
+  // An in-memory edit of a nested-only expense must retain the account/guest
+  // scope already verified by loadExpenses, or Financials hides every record.
+  patchLoadedExpenses: (items) => set({ expenses: items, loading: false, error: null }),
 
   loadExpenses: async (uid, isGuest) => {
     const loadKey = getLoadKey(uid, isGuest);

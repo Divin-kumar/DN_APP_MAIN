@@ -15,7 +15,7 @@ export default function useTransactionManager() {
   const expenseActions = useExpenseStore();
   const eventActions = useEventStore();
   const { addIncome, updateIncomeItem, deleteIncomeItem } = incomeActions;
-  const { addExpense, updateExpenseItem, deleteExpenseItem, setExpenses } = expenseActions;
+  const { addExpense, updateExpenseItem, deleteExpenseItem, patchLoadedExpenses } = expenseActions;
   const { updateEventItem } = eventActions;
   const uid = user?.uid;
 
@@ -42,7 +42,7 @@ export default function useTransactionManager() {
         throw new Error('The linked activity is unavailable. Reload Events and try again.');
       }
       await updateMirrors(original, current);
-      setExpenses(useExpenseStore.getState().expenses.map((item) => (
+      patchLoadedExpenses(useExpenseStore.getState().expenses.map((item) => (
         sameRecord(item, original) ? { ...item, ...current } : item
       )));
       return current;
@@ -75,7 +75,7 @@ export default function useTransactionManager() {
         else if (!isNestedOnlyAccountExpense(original, isGuest)) {
           await deleteExpenseItem(uid, isGuest, original.id || original.firestoreId);
         } else {
-          setExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
+          patchLoadedExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
         }
       } else await updateMirrors(null, created);
     } catch {
@@ -92,7 +92,7 @@ export default function useTransactionManager() {
     }
     return created;
   }, [uid, isGuest, addIncome, updateIncomeItem, deleteIncomeItem, addExpense,
-    updateExpenseItem, deleteExpenseItem, setExpenses, updateMirrors]);
+    updateExpenseItem, deleteExpenseItem, patchLoadedExpenses, updateMirrors]);
 
   const removeTransaction = useCallback(async (original) => {
     if (!original) return;
@@ -106,7 +106,7 @@ export default function useTransactionManager() {
     requireLinkedActivity(useEventStore.getState().events, original);
     await updateMirrors(original, null);
     if (isNestedOnlyAccountExpense(original, isGuest)) {
-      setExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
+      patchLoadedExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
     } else {
       try { await deleteExpenseItem(uid, isGuest, id); }
       catch (err) {
@@ -114,7 +114,7 @@ export default function useTransactionManager() {
         throw err;
       }
     }
-  }, [uid, isGuest, deleteIncomeItem, deleteExpenseItem, setExpenses, updateMirrors]);
+  }, [uid, isGuest, deleteIncomeItem, deleteExpenseItem, patchLoadedExpenses, updateMirrors]);
 
   return { saveTransaction, removeTransaction };
 }

@@ -658,3 +658,17 @@
 - Master: §§9.1,13, v2.10.4.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
 - Follow-ups: Test multiple guest incomes, nested-only records, account scoped updates and backup restore.
+
+## CHG-20261021-052 | Preserve Financials scope when patching nested activity expenses
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; continued financial simplification reliability pass.
+- Branch/commit: `OldVersion` only; SHA recorded in Git commit. `main` unchanged.
+- Exact paths: `src/store/useExpenseStore.js`, `src/hooks/useTransactionManager.js`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Nested-only expense editing, type conversion, and deletion called `setExpenses` that reset loadedFor/activeLoadKey. Financials then hid ALL ledger items because owner-scoped loads appeared invalid. Added `patchLoadedExpenses` that updates only the list and status without invalidating user-scoped load tracking; retained `setExpenses` for full restores.
+- Why: Keep the unified Transactions screen stable after activity-linked mutations without bypassing owner isolation.
+- User/data/security/compatibility impact: State-cache coordination only; no Firestore schema, business data, guest keys or backup changes. Scope-switch logic remains intact.
+- Verification: Code inspection performed. GitHub application Node unit tests and Vite production build: PENDING CI. Browser guest/cloud transaction mutation tests: NOT RUN. No deployment.
+- Risk/rollback: Concurrent cloud writes still non-atomic and require live integration testing. Revert this commit to restore previous state behavior.
+- Master sections: §9.1 and §13, 2.10.5.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
+- Follow-ups: Exercise nested-only create/edit/delete, type conversion, account switch and backup restore on devices.
