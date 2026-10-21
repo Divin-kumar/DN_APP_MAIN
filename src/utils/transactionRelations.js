@@ -46,3 +46,18 @@ export const isNestedOnlyAccountExpense = (record, isGuest) => Boolean(
   record?.transactionKind === 'expense' && !isGuest &&
   !record.firestoreId && record.eventId && record.activityId
 );
+
+
+// A deep-link query parameter is not proof that a financial relationship exists.
+// Never commit orphan transaction links or leave nested expense copies behind.
+export const requireLinkedActivity = (events, record) => {
+  const eventId = record?.eventId;
+  const activityId = record?.activityId;
+  if (!eventId && !activityId) return;
+  if (!eventId || !activityId) {
+    throw new Error('Select a valid linked activity, or clear the activity link.');
+  }
+  const event = events.find((entry) => entry.id === eventId || entry.firestoreId === eventId);
+  const activity = event?.activities?.find((entry) => entry.id === activityId);
+  if (!activity) throw new Error('This activity is unavailable. Reload Events, or clear the linked activity.');
+};

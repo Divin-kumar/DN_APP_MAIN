@@ -30,3 +30,14 @@ test('only Firestore nested-only expense uses event-only update path', () => {
   assert.equal(isNestedOnlyAccountExpense({ ...oldExpense, firestoreId: 'doc-x' }, false), false);
   assert.equal(isNestedOnlyAccountExpense(oldExpense, true), false);
 });
+
+
+test('linked transactions reject missing/unknown activity but allow unlinked transactions', async () => {
+  const { requireLinkedActivity } = await import('./transactionRelations.js');
+  const known = [{ id: 'e1', activities: [{ id: 'a1' }] }];
+  assert.doesNotThrow(() => requireLinkedActivity(known, { eventId: null, activityId: null }));
+  assert.doesNotThrow(() => requireLinkedActivity(known, { eventId: 'e1', activityId: 'a1' }));
+  assert.throws(() => requireLinkedActivity(known, { eventId: 'e1', activityId: null }), /valid linked activity/);
+  assert.throws(() => requireLinkedActivity(known, { eventId: 'e1', activityId: 'removed' }), /unavailable/);
+  assert.throws(() => requireLinkedActivity([], { eventId: 'e1', activityId: 'a1' }), /unavailable/);
+});

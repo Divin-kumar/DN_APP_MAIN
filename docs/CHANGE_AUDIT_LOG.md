@@ -575,3 +575,14 @@
 - Risk/rollback: If an unexpected dynamic import references removed files, restore specific source blobs from Git history; CI should catch compile-time imports.
 - Master: §2 module source table and §13, v2.9.9.
 - Status: SOURCE REMOVED, CI PENDING.
+
+## CHG-20261021-045 | Prevent orphan activity-linked transactions and stale expense copies
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only; `main` unchanged.
+- Changed paths: `src/utils/transactionRelations.js`, regression tests, `src/hooks/useTransactionManager.js`, Master and audit.
+- Before -> after: Unified transaction saves accepted an arbitrary or stale activity prefill and deletes could silently skip removing nested expenses if events were not loaded -> now validates event/activity existence before committing linked transactions or deleting linked expenses, returning a recoverable error instead of leaving an orphan financial record.
+- Data/security: Form URL query params remain untrusted hints, no authorization changes; the Firestore collection structure, guest storage and IDs are untouched. Linked-expense edits still use existing non-atomic cross-record coordination, requiring live tests.
+- Verification: Added one Node regression test with valid, partial and stale associations. CI/build pending, no live Firebase/test-device access.
+- Risks: Transactions referencing already-deleted activities must be unlinked before editing or deletion; user can clear a broken link in the form. Future reconciliation may automate cleanup.
+- Master: §9.1, version 2.9.10.
+- Status: SOURCE VERIFIED BY INSPECTION / CI PENDING.

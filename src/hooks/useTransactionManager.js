@@ -4,7 +4,7 @@ import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import { transactionPayload } from '../utils/transactionFilters';
-import { isNestedOnlyAccountExpense, reconcileExpenseActivities, sameRecord } from '../utils/transactionRelations';
+import { isNestedOnlyAccountExpense, reconcileExpenseActivities, requireLinkedActivity, sameRecord } from '../utils/transactionRelations';
 
 // One mutation pathway for Financials and global quick-create. The two existing
 // collections stay intact for backups and account/guest compatibility.
@@ -27,6 +27,8 @@ export default function useTransactionManager() {
 
   const saveTransaction = useCallback(async (form, original = null) => {
     const payload = transactionPayload(form);
+    // Avoid orphan links, including forged/stale navigation prefill parameters.
+    requireLinkedActivity(useEventStore.getState().events, payload);
     const nextKind = form.transactionKind;
     const oldKind = original?.transactionKind;
     const current = original && oldKind === nextKind
@@ -91,6 +93,9 @@ export default function useTransactionManager() {
       await deleteIncomeItem(uid, isGuest, id);
       return;
     }
+    // Never delete a linked master expense while its activity is not loaded:
+    // a nested copy could survive and reappear after refresh.
+    requireLinkedActivity(useEventStore.getState().events, original);
     await updateMirrors(original, null);
     if (isNestedOnlyAccountExpense(original, isGuest)) {
       setExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
