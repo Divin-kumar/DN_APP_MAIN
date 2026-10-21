@@ -27,3 +27,6 @@
 
 ## Limitations and next acceptance criteria
 This is a **provisional comprehensive Markdown consolidation**, not a claim that unread DOCX content was analyzed. Before full certification: extract and review 3 substantive Word files, reconcile their unique requirements, check deployed Firebase Rules, run builds/tests and recovery drills, get product ownership sign-off on DN/LifeHub branding and future offline strategy. No PR merge or deployment is part of this exercise.
+
+## Cleanup execution addendum — 2026-10-21
+`docs/ARCHITECTURE.md` and `memory.md` were deleted on `OldVersion` after consolidation. Four other deletions were blocked by safety checks and remain pending; no substantive DOCX was deleted. README navigation was corrected. See retention matrix for exact commit IDs.
