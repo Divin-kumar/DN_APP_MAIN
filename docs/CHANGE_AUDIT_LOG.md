@@ -208,3 +208,16 @@
 - Risk/rollback: The source scanner intentionally excludes the dedicated storage migration bridge and historical test/audit evidence to avoid deleting compatibility. CI enforcement relies on GitHub Actions; revert this commit if the validator incorrectly rejects a legitimate case.
 - Master sections updated: §2 product naming, §8 no-new-Markdown governance, §13 version history.
 - Status: SOURCE COMMITTED; POST-COMMIT CI VERIFICATION PENDING.
+
+## CHG-20261021-015 | Repair DN branding regression test before claiming validation
+- Date (UTC): 2026-10-21.
+- Actor/requester: AI correction during owner's repeat DN branding verification request.
+- Branch / commit: `OldVersion`, associated atomic commit in Git history; `main` remains unchanged.
+- Changed paths: `src/brandIdentity.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: New test had double-escaped regular expressions and path separators; corrected to valid JavaScript regexes, portable path handling, and explicit checks for the DN product title, About screen, source styling, and exactly four Markdown files.
+- Reason: A newly created test must not be advertised as enforced until it parses and passes in CI.
+- User/data/security/compatibility impact: Tests and documentation only. Legacy storage migration and data remain unchanged. The old brand is forbidden in active app copy, not in compatibility identifiers or historical audit/fixture data.
+- Verification: Source correction committed; GitHub Actions `npm test` and `npm run build` pending at time of commit. No production deployment or live Firebase/browser test.
+- Risk/rollback: The scanning test intentionally excludes legacy compatibility code, fixture files and audit-history material. Revert this commit if it causes false positives; the core app behavior remains unchanged.
+- Master: §2 naming and §13 history; version 2.4.6.
+- Status: SOURCE FIXED, CI VERIFY PENDING.

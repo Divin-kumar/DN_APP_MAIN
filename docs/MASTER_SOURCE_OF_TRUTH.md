@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.6** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -295,7 +295,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.5** | **2026-10-21** | Add source-based DN branding and four-file budget regression checks to Node test suite | **CHG-20261021-014** |
+| **2.4.6** | **2026-10-21** | Corrected Node brand-regression test escaping and made source/Markdown scans robust on paths | **CHG-20261021-015** |
+| 2.4.5 | 2026-10-21 | Add source-based DN branding and four-file budget regression checks to Node test suite | **CHG-20261021-014** |
 | 2.4.4 | 2026-10-21 | Verified repaired DN implementation through GitHub CI (48 unit tests pass, Vite build succeeds); tracked dependency advisories and remaining runtime checks | **CHG-20261021-013** |
 | 2.4.3 | 2026-10-21 | Repaired backup v1/v2 parser syntax after GitHub CI identified duplicated replacement text; restored original implementation plus DN/legacy compatibility | **CHG-20261021-012** |
 | 2.4.2 | 2026-10-21 | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
