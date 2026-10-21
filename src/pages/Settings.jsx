@@ -1,3 +1,4 @@
+import { clearDnLocalData } from '../utils/storageMigration';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
 import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
@@ -280,10 +281,10 @@ export default function Settings() {
         codeLists: adminValues,
         codeListSchemaVersion: CODE_LIST_SCHEMA_VERSION,
         preferences,
-        settings: { themeChoiceEnabled: Boolean(localStorage.getItem('lifehub_theme_choice')) },
+        settings: { themeChoiceEnabled: Boolean(localStorage.getItem('dn_theme_choice')) },
         dashboardConfiguration: {
-          favorites: readIdList(`lifehub_favorite_event_ids_${pickerStorageId}`),
-          recent: readIdList(`lifehub_recent_event_ids_${pickerStorageId}`),
+          favorites: readIdList(`dn_favorite_event_ids_${pickerStorageId}`),
+          recent: readIdList(`dn_recent_event_ids_${pickerStorageId}`),
         },
         metadata: {
           source: dataSource,
@@ -433,8 +434,8 @@ export default function Settings() {
       const validMomentIds = new Set(restoredGroups.map((moment) => moment.id));
       const favorites = [...new Set((backup.dashboardConfiguration.favorites || []).filter((id) => validMomentIds.has(id)))];
       const recent = [...new Set((backup.dashboardConfiguration.recent || []).filter((id) => validMomentIds.has(id)))].slice(0, 8);
-      localStorage.setItem(`lifehub_favorite_event_ids_${pickerStorageId}`, JSON.stringify(favorites));
-      localStorage.setItem(`lifehub_recent_event_ids_${pickerStorageId}`, JSON.stringify(recent));
+      localStorage.setItem(`dn_favorite_event_ids_${pickerStorageId}`, JSON.stringify(favorites));
+      localStorage.setItem(`dn_recent_event_ids_${pickerStorageId}`, JSON.stringify(recent));
 
       const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, and Code Lists were restored where present.`;
 
@@ -452,7 +453,7 @@ export default function Settings() {
   };
 
   const clearLocalData = () => {
-    ['lifehub_admin_values', 'lifehub_admin_values_schema_version', 'lifehub_guest_admin_values', 'lifehub_guest_admin_values_schema_version', 'lifehub_preferences', 'lifehub_guest_eventGroups', 'lifehub_guest_expenses', 'lifehub_guest_incomes', 'lifehub_guest_mode', 'lifehub_session_backup', 'lifehub_dev_fixture_scenario', 'lifehub_dev_fixture_data'].forEach((key) => localStorage.removeItem(key));
+    clearDnLocalData();
     setBackupMessage('Local app data cleared. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
@@ -510,7 +511,7 @@ export default function Settings() {
       return;
     }
     const data = activateSampleScenario(sampleScenario);
-    localStorage.setItem('lifehub_guest_mode', 'true');
+    localStorage.setItem('dn_guest_mode', 'true');
     setGuestMode(true);
     useEventStore.getState().setEvents(data.events);
     useExpenseStore.getState().setExpenses(data.expenses);

@@ -9,8 +9,8 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-const GUEST_EXPENSES_KEY = 'lifehub_guest_expenses';
-const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
+const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
+const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
 
 const expenseKey = (expense) => expense.id || expense.firestoreId;
 

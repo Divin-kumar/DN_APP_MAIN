@@ -1,7 +1,8 @@
+import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration';
 // This file creates realistic demo data for development and testing.
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
-const ACTIVE_SCENARIO_KEY = 'lifehub_dev_fixture_scenario';
-const FIXTURE_DATA_KEY = 'lifehub_dev_fixture_data';
+const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
+const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
 ANCHOR_DATE.setHours(12, 0, 0, 0);
 
@@ -249,8 +250,10 @@ export const saveActiveSampleData = (data) => {
 
 export const clearActiveSampleScenario = () => {
   if (!import.meta.env.DEV) return;
-  localStorage.removeItem(ACTIVE_SCENARIO_KEY);
-  localStorage.removeItem(FIXTURE_DATA_KEY);
+  [ACTIVE_SCENARIO_KEY, FIXTURE_DATA_KEY].forEach((key) => {
+    localStorage.removeItem(key);
+    localStorage.removeItem(LEGACY_STORAGE_PREFIX + key.slice(DN_STORAGE_PREFIX.length));
+  });
 };
 
 export const getSampleScenarioLabel = (scenario) => scenarioDefinitions[scenario]?.label || scenario;

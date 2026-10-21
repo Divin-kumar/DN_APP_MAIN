@@ -15,8 +15,8 @@ import {
 import { db } from '../firebase/config';
 import { getEventStatus } from '../utils/eventStatus';
 
-const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
-const GUEST_SESSION_BACKUP_KEY = 'lifehub_session_backup';
+const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
+const GUEST_SESSION_BACKUP_KEY = 'dn_session_backup';
 
 export { getEventStatus };
 

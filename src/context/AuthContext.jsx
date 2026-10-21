@@ -54,7 +54,7 @@ export function AuthProvider({ children }) {
           });
         };
         void initializeAccount();
-      } else if (localStorage.getItem('lifehub_guest_mode') === 'true') {
+      } else if (localStorage.getItem('dn_guest_mode') === 'true') {
         authChangeRevision += 1;
         // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
         setGuestMode(true);

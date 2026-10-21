@@ -1,3 +1,4 @@
+import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration';
 /*
   Controls guest-mode persistence and session transitions.
 
@@ -9,7 +10,7 @@ import { createContext, useContext } from 'react';
 import useAppStore from '../store/useAppStore';
 
 const GuestContext = createContext(null);
-const GUEST_MODE_KEY = 'lifehub_guest_mode';
+const GUEST_MODE_KEY = 'dn_guest_mode';
 
 export function GuestProvider({ children }) {
   const isGuest = useAppStore((state) => state.isGuest);
@@ -25,6 +26,7 @@ export function GuestProvider({ children }) {
   const exitGuestMode = () => {
     // Remove guest session state and clear the app session.
     localStorage.removeItem(GUEST_MODE_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_PREFIX + GUEST_MODE_KEY.slice(DN_STORAGE_PREFIX.length));
     clearSession();
   };
 

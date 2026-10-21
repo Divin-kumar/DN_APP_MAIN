@@ -88,6 +88,30 @@ test('legacy v2 backups are upgraded into the v3 restore envelope', () => {
   assert.equal(upgraded.activities[0].momentId, 'moment-1');
 });
 
+test('v2 backups accept DN-prefixed browser settings and dashboard identifiers', () => {
+  const upgraded = parseBackupDocument({
+    backupFormatVersion: 2,
+    data: {
+      localStorage: {
+        dn_preferences: { theme: 'dark', currency: 'INR' },
+        dn_admin_values: DEFAULT_CODE_LISTS,
+        dn_theme_choice: '1',
+        dn_favorite_event_ids_guest: '["moment-dn"]',
+        dn_recent_event_ids_guest: '["moment-dn"]',
+      },
+      collections: {
+        eventGroups: [{ id: 'moment-dn', name: 'DN milestone', activities: [], memories: [], attachments: [] }],
+        expenses: [],
+        incomes: [],
+      },
+    },
+  });
+  assert.equal(upgraded.preferences.theme, 'dark');
+  assert.equal(upgraded.settings.themeChoiceEnabled, true);
+  assert.deepEqual(upgraded.dashboardConfiguration.favorites, ['moment-dn']);
+  assert.deepEqual(upgraded.dashboardConfiguration.recent, ['moment-dn']);
+});
+
 test('merge preserves existing Moment fields while adding missing child records idempotently', () => {
   const imported = buildEventGroupsFromBackup(fixture());
   const existing = [{

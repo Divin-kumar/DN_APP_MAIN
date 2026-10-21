@@ -17,7 +17,7 @@ export const loadCodeListsForUser = async (uid) => {
   const ref = settingsDocument(uid);
   let legacySettings = readLegacyCodeListSettings();
   try {
-    if (globalThis.localStorage?.getItem('lifehub_guest_mode') === 'true') {
+    if (globalThis.localStorage?.getItem('dn_guest_mode') === 'true') {
       legacySettings = readGuestCodeListSettings();
     }
   } catch {

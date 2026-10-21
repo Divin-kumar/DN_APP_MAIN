@@ -1,3 +1,4 @@
+import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration';
 /*
   Migrates guest-local records into the signed-in user's Firestore account.
 
@@ -10,10 +11,10 @@ import { getGuestExpenses } from './expenseService';
 import { getGuestIncomes } from './incomeService';
 import { getGuestEvents } from './eventService';
 
-const GUEST_MODE_KEY = 'lifehub_guest_mode';
-const GUEST_EXPENSES_KEY = 'lifehub_guest_expenses';
-const GUEST_INCOMES_KEY = 'lifehub_guest_incomes';
-const GUEST_EVENTS_KEY = 'lifehub_guest_eventGroups';
+const GUEST_MODE_KEY = 'dn_guest_mode';
+const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
+const GUEST_INCOMES_KEY = 'dn_guest_incomes';
+const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
 
 const removeFirestoreOnlyFields = ({ firestoreId, ...item }) => item;
 
@@ -44,10 +45,12 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     await batch.commit();
   }
 
-  localStorage.removeItem(GUEST_MODE_KEY);
-  localStorage.removeItem(GUEST_EXPENSES_KEY);
-  localStorage.removeItem(GUEST_INCOMES_KEY);
-  localStorage.removeItem(GUEST_EVENTS_KEY);
+  // Clear both naming generations after the batch commits. Otherwise a later
+  // startup migration could resurrect old guest records and reimport duplicates.
+  [GUEST_MODE_KEY, GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY].forEach((key) => {
+    localStorage.removeItem(key);
+    localStorage.removeItem(LEGACY_STORAGE_PREFIX + key.slice(DN_STORAGE_PREFIX.length));
+  });
 
   return {
     expenses: expenses.length,

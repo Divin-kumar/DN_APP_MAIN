@@ -1,3 +1,4 @@
+import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
 
 export const CURRENT_BACKUP_VERSION = 3;
@@ -126,6 +127,11 @@ export const validateBackupDocument = (backup) => {
   return backup;
 };
 
+// Preserve import compatibility with both retired and current browser-key names.
+const backedUpValue = (record, suffix) => (
+  record?.[DN_STORAGE_PREFIX + suffix] ?? record?.[LEGACY_STORAGE_PREFIX + suffix]
+);
+
 const normalizeV2Backup = (parsed) => {
   const collections = parsed.data?.collections;
   if (!isRecord(collections) || !Array.isArray(collections.eventGroups)
@@ -133,14 +139,456 @@ const normalizeV2Backup = (parsed) => {
     throw new Error('Version 2 backup is missing one or more data collections.');
   }
   const localData = isRecord(parsed.data?.localStorage) ? parsed.data.localStorage : {};
-  const localCodeLists = parseStoredValue(localData.lifehub_admin_values);
+  const localCodeLists = parseStoredValue(backedUpValue(localData, 'admin_values'));
   const codeLists = collections.codeLists || localCodeLists
     || Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]));
-  const preferences = parseStoredValue(localData.lifehub_preferences) || {};
+  const preferences = parseStoredValue(backedUpValue(localData, 'preferences')) || {};
   const dashboardConfiguration = {};
   Object.entries(localData).forEach(([key, value]) => {
-    const favoriteMatch = key.match(/^lifehub_favorite_event_ids_(.+)$/);
-    const recentMatch = key.match(/^lifehub_recent_event_ids_(.+)$/);
+    const favoriteMatch = key.match(new RegExp(`^(?:${DN_STORAGE_PREFIX}|${LEGACY_STORAGE_PREFIX})favorite_event_ids_(.+)import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
+import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
+
+export const CURRENT_BACKUP_VERSION = 3;
+const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
+const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
+const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
+const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
+
+const parseStoredValue = (value) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const uniqueById = (items, label) => {
+  const ids = new Set();
+  items.forEach((item) => {
+    if (!hasId(item)) throw new Error(`Backup ${label} contains a record without a valid ID.`);
+    if (ids.has(item.id)) throw new Error(`Backup ${label} contains duplicate ID "${item.id}".`);
+    ids.add(item.id);
+  });
+  return ids;
+};
+
+const flattenMoments = (moments) => {
+  const normalizedMoments = [];
+  const activities = [];
+  const memories = [];
+  const attachments = [];
+
+  moments.forEach((moment) => {
+    if (!hasId(moment)) throw new Error('Backup Moments must have stable IDs.');
+    const { firestoreId: _firestoreId, activities: momentActivities = [], memories: momentMemories = [], attachments: momentAttachments = [], ...momentFields } = moment;
+    normalizedMoments.push(momentFields);
+    momentActivities.forEach((activity) => activities.push({ ...activity, momentId: activity.momentId || activity.eventId || moment.id }));
+    momentMemories.forEach((memory) => memories.push({ ...memory, momentId: memory.momentId || moment.id }));
+    momentAttachments.forEach((attachment) => attachments.push({ ...attachment, momentId: attachment.momentId || moment.id }));
+  });
+
+  return { moments: normalizedMoments, activities, memories, attachments };
+};
+
+export const createBackupDocument = ({
+  moments = [],
+  expenses = [],
+  incomes = [],
+  codeLists,
+  codeListSchemaVersion = 1,
+  preferences = {},
+  dashboardConfiguration = {},
+  settings = {},
+  metadata = {},
+  createdDate = new Date().toISOString(),
+}) => {
+  const flattened = flattenMoments(moments);
+  const document = {
+    app: 'DN',
+    backupVersion: CURRENT_BACKUP_VERSION,
+    createdDate,
+    moments: flattened.moments,
+    activities: flattened.activities,
+    memories: flattened.memories,
+    attachments: flattened.attachments,
+    expenses: expenses.map(({ firestoreId: _firestoreId, ...expense }) => expense),
+    incomes: incomes.map(({ firestoreId: _firestoreId, ...income }) => income),
+    codeLists: codeLists || {},
+    codeListSchemaVersion,
+    settings,
+    preferences,
+    dashboardConfiguration,
+    metadata: {
+      ...metadata,
+      relationships: 'activities, memories and attachments reference moments by momentId',
+      attachmentDataIncluded: false,
+      attachmentLimitation: 'The current app stores attachment metadata only; original file bytes are not available to back up.',
+    },
+  };
+  validateBackupDocument(document);
+  return document;
+};
+
+export const validateBackupDocument = (backup) => {
+  if (!isRecord(backup)) throw new Error('Backup root must be a JSON object.');
+  if (backup.backupVersion !== CURRENT_BACKUP_VERSION) {
+    throw new Error(`Unsupported backup version: ${String(backup.backupVersion)}.`);
+  }
+  if (typeof backup.createdDate !== 'string' || Number.isNaN(Date.parse(backup.createdDate))) {
+    throw new Error('Backup createdDate must be a valid ISO date string.');
+  }
+  COLLECTION_KEYS.forEach((key) => {
+    if (!Array.isArray(backup[key])) throw new Error(`Backup ${key} must be an array.`);
+  });
+  ['settings', 'preferences', 'dashboardConfiguration', 'metadata', 'codeLists'].forEach((key) => {
+    if (!isRecord(backup[key])) throw new Error(`Backup ${key} must be an object.`);
+  });
+  if (!Number.isInteger(backup.codeListSchemaVersion) || backup.codeListSchemaVersion < 1) {
+    throw new Error('Backup Code List schema version is invalid.');
+  }
+  REQUIRED_LIST_KEYS.forEach((key) => {
+    if (!Array.isArray(backup.codeLists[key])) throw new Error(`Backup Code Lists are missing ${key}.`);
+    backup.codeLists[key].forEach((entry) => {
+      const value = typeof entry === 'string' ? entry.trim() : String(entry?.value ?? entry?.id ?? '').trim();
+      if (!value) throw new Error(`Backup Code List "${key}" contains an invalid entry.`);
+    });
+  });
+
+  const momentIds = uniqueById(backup.moments, 'Moments');
+  uniqueById(backup.activities, 'Activities');
+  uniqueById(backup.memories, 'Memories');
+  uniqueById(backup.attachments, 'Attachments');
+  uniqueById(backup.expenses, 'Expenses');
+  uniqueById(backup.incomes, 'Income');
+
+  backup.activities.forEach((activity) => {
+    if (!momentIds.has(activity.momentId)) throw new Error(`Activity "${activity.id}" references a missing Moment.`);
+  });
+  backup.memories.forEach((memory) => {
+    if (!momentIds.has(memory.momentId)) throw new Error(`Memory "${memory.id}" references a missing Moment.`);
+  });
+  backup.attachments.forEach((attachment) => {
+    if (!momentIds.has(attachment.momentId)) throw new Error(`Attachment "${attachment.id}" references a missing Moment.`);
+  });
+  return backup;
+};
+
+// Preserve import compatibility with both retired and current browser-key names.
+const backedUpValue = (record, suffix) => (
+  record?.[DN_STORAGE_PREFIX + suffix] ?? record?.[LEGACY_STORAGE_PREFIX + suffix]
+);
+
+const normalizeV2Backup = (parsed) => {
+  const collections = parsed.data?.collections;
+  if (!isRecord(collections) || !Array.isArray(collections.eventGroups)
+    || !Array.isArray(collections.expenses) || !Array.isArray(collections.incomes)) {
+    throw new Error('Version 2 backup is missing one or more data collections.');
+  }
+  const localData = isRecord(parsed.data?.localStorage) ? parsed.data.localStorage : {};
+  const localCodeLists = parseStoredValue(backedUpValue(localData, 'admin_values'));
+  const codeLists = collections.codeLists || localCodeLists
+    || Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]));
+  const preferences = parseStoredValue(backedUpValue(localData, 'preferences')) || {};
+  const dashboardConfiguration = {};
+  Object.entries(localData).forEach(([key, value]) => {
+    const favoriteMatch = ));
+    const recentMatch = key.match(new RegExp(`^(?:${DN_STORAGE_PREFIX}|${LEGACY_STORAGE_PREFIX})recent_event_ids_(.+)import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
+import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
+
+export const CURRENT_BACKUP_VERSION = 3;
+const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
+const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
+const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
+const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
+
+const parseStoredValue = (value) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const uniqueById = (items, label) => {
+  const ids = new Set();
+  items.forEach((item) => {
+    if (!hasId(item)) throw new Error(`Backup ${label} contains a record without a valid ID.`);
+    if (ids.has(item.id)) throw new Error(`Backup ${label} contains duplicate ID "${item.id}".`);
+    ids.add(item.id);
+  });
+  return ids;
+};
+
+const flattenMoments = (moments) => {
+  const normalizedMoments = [];
+  const activities = [];
+  const memories = [];
+  const attachments = [];
+
+  moments.forEach((moment) => {
+    if (!hasId(moment)) throw new Error('Backup Moments must have stable IDs.');
+    const { firestoreId: _firestoreId, activities: momentActivities = [], memories: momentMemories = [], attachments: momentAttachments = [], ...momentFields } = moment;
+    normalizedMoments.push(momentFields);
+    momentActivities.forEach((activity) => activities.push({ ...activity, momentId: activity.momentId || activity.eventId || moment.id }));
+    momentMemories.forEach((memory) => memories.push({ ...memory, momentId: memory.momentId || moment.id }));
+    momentAttachments.forEach((attachment) => attachments.push({ ...attachment, momentId: attachment.momentId || moment.id }));
+  });
+
+  return { moments: normalizedMoments, activities, memories, attachments };
+};
+
+export const createBackupDocument = ({
+  moments = [],
+  expenses = [],
+  incomes = [],
+  codeLists,
+  codeListSchemaVersion = 1,
+  preferences = {},
+  dashboardConfiguration = {},
+  settings = {},
+  metadata = {},
+  createdDate = new Date().toISOString(),
+}) => {
+  const flattened = flattenMoments(moments);
+  const document = {
+    app: 'DN',
+    backupVersion: CURRENT_BACKUP_VERSION,
+    createdDate,
+    moments: flattened.moments,
+    activities: flattened.activities,
+    memories: flattened.memories,
+    attachments: flattened.attachments,
+    expenses: expenses.map(({ firestoreId: _firestoreId, ...expense }) => expense),
+    incomes: incomes.map(({ firestoreId: _firestoreId, ...income }) => income),
+    codeLists: codeLists || {},
+    codeListSchemaVersion,
+    settings,
+    preferences,
+    dashboardConfiguration,
+    metadata: {
+      ...metadata,
+      relationships: 'activities, memories and attachments reference moments by momentId',
+      attachmentDataIncluded: false,
+      attachmentLimitation: 'The current app stores attachment metadata only; original file bytes are not available to back up.',
+    },
+  };
+  validateBackupDocument(document);
+  return document;
+};
+
+export const validateBackupDocument = (backup) => {
+  if (!isRecord(backup)) throw new Error('Backup root must be a JSON object.');
+  if (backup.backupVersion !== CURRENT_BACKUP_VERSION) {
+    throw new Error(`Unsupported backup version: ${String(backup.backupVersion)}.`);
+  }
+  if (typeof backup.createdDate !== 'string' || Number.isNaN(Date.parse(backup.createdDate))) {
+    throw new Error('Backup createdDate must be a valid ISO date string.');
+  }
+  COLLECTION_KEYS.forEach((key) => {
+    if (!Array.isArray(backup[key])) throw new Error(`Backup ${key} must be an array.`);
+  });
+  ['settings', 'preferences', 'dashboardConfiguration', 'metadata', 'codeLists'].forEach((key) => {
+    if (!isRecord(backup[key])) throw new Error(`Backup ${key} must be an object.`);
+  });
+  if (!Number.isInteger(backup.codeListSchemaVersion) || backup.codeListSchemaVersion < 1) {
+    throw new Error('Backup Code List schema version is invalid.');
+  }
+  REQUIRED_LIST_KEYS.forEach((key) => {
+    if (!Array.isArray(backup.codeLists[key])) throw new Error(`Backup Code Lists are missing ${key}.`);
+    backup.codeLists[key].forEach((entry) => {
+      const value = typeof entry === 'string' ? entry.trim() : String(entry?.value ?? entry?.id ?? '').trim();
+      if (!value) throw new Error(`Backup Code List "${key}" contains an invalid entry.`);
+    });
+  });
+
+  const momentIds = uniqueById(backup.moments, 'Moments');
+  uniqueById(backup.activities, 'Activities');
+  uniqueById(backup.memories, 'Memories');
+  uniqueById(backup.attachments, 'Attachments');
+  uniqueById(backup.expenses, 'Expenses');
+  uniqueById(backup.incomes, 'Income');
+
+  backup.activities.forEach((activity) => {
+    if (!momentIds.has(activity.momentId)) throw new Error(`Activity "${activity.id}" references a missing Moment.`);
+  });
+  backup.memories.forEach((memory) => {
+    if (!momentIds.has(memory.momentId)) throw new Error(`Memory "${memory.id}" references a missing Moment.`);
+  });
+  backup.attachments.forEach((attachment) => {
+    if (!momentIds.has(attachment.momentId)) throw new Error(`Attachment "${attachment.id}" references a missing Moment.`);
+  });
+  return backup;
+};
+
+// Preserve import compatibility with both retired and current browser-key names.
+const backedUpValue = (record, suffix) => (
+  record?.[DN_STORAGE_PREFIX + suffix] ?? record?.[LEGACY_STORAGE_PREFIX + suffix]
+);
+
+const normalizeV2Backup = (parsed) => {
+  const collections = parsed.data?.collections;
+  if (!isRecord(collections) || !Array.isArray(collections.eventGroups)
+    || !Array.isArray(collections.expenses) || !Array.isArray(collections.incomes)) {
+    throw new Error('Version 2 backup is missing one or more data collections.');
+  }
+  const localData = isRecord(parsed.data?.localStorage) ? parsed.data.localStorage : {};
+  const localCodeLists = parseStoredValue(backedUpValue(localData, 'admin_values'));
+  const codeLists = collections.codeLists || localCodeLists
+    || Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]));
+  const preferences = parseStoredValue(backedUpValue(localData, 'preferences')) || {};
+  const dashboardConfiguration = {};
+  Object.entries(localData).forEach(([key, value]) => {
+    const favoriteMatch = key.match(new RegExp(`^(?:${DN_STORAGE_PREFIX}|${LEGACY_STORAGE_PREFIX})favorite_event_ids_(.+)import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
+import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
+
+export const CURRENT_BACKUP_VERSION = 3;
+const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
+const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
+const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
+const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
+
+const parseStoredValue = (value) => {
+  if (typeof value !== 'string') return value;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return value;
+  }
+};
+
+const uniqueById = (items, label) => {
+  const ids = new Set();
+  items.forEach((item) => {
+    if (!hasId(item)) throw new Error(`Backup ${label} contains a record without a valid ID.`);
+    if (ids.has(item.id)) throw new Error(`Backup ${label} contains duplicate ID "${item.id}".`);
+    ids.add(item.id);
+  });
+  return ids;
+};
+
+const flattenMoments = (moments) => {
+  const normalizedMoments = [];
+  const activities = [];
+  const memories = [];
+  const attachments = [];
+
+  moments.forEach((moment) => {
+    if (!hasId(moment)) throw new Error('Backup Moments must have stable IDs.');
+    const { firestoreId: _firestoreId, activities: momentActivities = [], memories: momentMemories = [], attachments: momentAttachments = [], ...momentFields } = moment;
+    normalizedMoments.push(momentFields);
+    momentActivities.forEach((activity) => activities.push({ ...activity, momentId: activity.momentId || activity.eventId || moment.id }));
+    momentMemories.forEach((memory) => memories.push({ ...memory, momentId: memory.momentId || moment.id }));
+    momentAttachments.forEach((attachment) => attachments.push({ ...attachment, momentId: attachment.momentId || moment.id }));
+  });
+
+  return { moments: normalizedMoments, activities, memories, attachments };
+};
+
+export const createBackupDocument = ({
+  moments = [],
+  expenses = [],
+  incomes = [],
+  codeLists,
+  codeListSchemaVersion = 1,
+  preferences = {},
+  dashboardConfiguration = {},
+  settings = {},
+  metadata = {},
+  createdDate = new Date().toISOString(),
+}) => {
+  const flattened = flattenMoments(moments);
+  const document = {
+    app: 'DN',
+    backupVersion: CURRENT_BACKUP_VERSION,
+    createdDate,
+    moments: flattened.moments,
+    activities: flattened.activities,
+    memories: flattened.memories,
+    attachments: flattened.attachments,
+    expenses: expenses.map(({ firestoreId: _firestoreId, ...expense }) => expense),
+    incomes: incomes.map(({ firestoreId: _firestoreId, ...income }) => income),
+    codeLists: codeLists || {},
+    codeListSchemaVersion,
+    settings,
+    preferences,
+    dashboardConfiguration,
+    metadata: {
+      ...metadata,
+      relationships: 'activities, memories and attachments reference moments by momentId',
+      attachmentDataIncluded: false,
+      attachmentLimitation: 'The current app stores attachment metadata only; original file bytes are not available to back up.',
+    },
+  };
+  validateBackupDocument(document);
+  return document;
+};
+
+export const validateBackupDocument = (backup) => {
+  if (!isRecord(backup)) throw new Error('Backup root must be a JSON object.');
+  if (backup.backupVersion !== CURRENT_BACKUP_VERSION) {
+    throw new Error(`Unsupported backup version: ${String(backup.backupVersion)}.`);
+  }
+  if (typeof backup.createdDate !== 'string' || Number.isNaN(Date.parse(backup.createdDate))) {
+    throw new Error('Backup createdDate must be a valid ISO date string.');
+  }
+  COLLECTION_KEYS.forEach((key) => {
+    if (!Array.isArray(backup[key])) throw new Error(`Backup ${key} must be an array.`);
+  });
+  ['settings', 'preferences', 'dashboardConfiguration', 'metadata', 'codeLists'].forEach((key) => {
+    if (!isRecord(backup[key])) throw new Error(`Backup ${key} must be an object.`);
+  });
+  if (!Number.isInteger(backup.codeListSchemaVersion) || backup.codeListSchemaVersion < 1) {
+    throw new Error('Backup Code List schema version is invalid.');
+  }
+  REQUIRED_LIST_KEYS.forEach((key) => {
+    if (!Array.isArray(backup.codeLists[key])) throw new Error(`Backup Code Lists are missing ${key}.`);
+    backup.codeLists[key].forEach((entry) => {
+      const value = typeof entry === 'string' ? entry.trim() : String(entry?.value ?? entry?.id ?? '').trim();
+      if (!value) throw new Error(`Backup Code List "${key}" contains an invalid entry.`);
+    });
+  });
+
+  const momentIds = uniqueById(backup.moments, 'Moments');
+  uniqueById(backup.activities, 'Activities');
+  uniqueById(backup.memories, 'Memories');
+  uniqueById(backup.attachments, 'Attachments');
+  uniqueById(backup.expenses, 'Expenses');
+  uniqueById(backup.incomes, 'Income');
+
+  backup.activities.forEach((activity) => {
+    if (!momentIds.has(activity.momentId)) throw new Error(`Activity "${activity.id}" references a missing Moment.`);
+  });
+  backup.memories.forEach((memory) => {
+    if (!momentIds.has(memory.momentId)) throw new Error(`Memory "${memory.id}" references a missing Moment.`);
+  });
+  backup.attachments.forEach((attachment) => {
+    if (!momentIds.has(attachment.momentId)) throw new Error(`Attachment "${attachment.id}" references a missing Moment.`);
+  });
+  return backup;
+};
+
+// Preserve import compatibility with both retired and current browser-key names.
+const backedUpValue = (record, suffix) => (
+  record?.[DN_STORAGE_PREFIX + suffix] ?? record?.[LEGACY_STORAGE_PREFIX + suffix]
+);
+
+const normalizeV2Backup = (parsed) => {
+  const collections = parsed.data?.collections;
+  if (!isRecord(collections) || !Array.isArray(collections.eventGroups)
+    || !Array.isArray(collections.expenses) || !Array.isArray(collections.incomes)) {
+    throw new Error('Version 2 backup is missing one or more data collections.');
+  }
+  const localData = isRecord(parsed.data?.localStorage) ? parsed.data.localStorage : {};
+  const localCodeLists = parseStoredValue(backedUpValue(localData, 'admin_values'));
+  const codeLists = collections.codeLists || localCodeLists
+    || Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]));
+  const preferences = parseStoredValue(backedUpValue(localData, 'preferences')) || {};
+  const dashboardConfiguration = {};
+  Object.entries(localData).forEach(([key, value]) => {
+    const favoriteMatch = ));
+    const recentMatch = ));
     if (favoriteMatch) dashboardConfiguration.favorites = parseStoredValue(value) || [];
     if (recentMatch) dashboardConfiguration.recent = parseStoredValue(value) || [];
   });
@@ -154,7 +602,7 @@ const normalizeV2Backup = (parsed) => {
     preferences,
     dashboardConfiguration,
     settings: {
-      themeChoiceEnabled: Boolean(localData.lifehub_theme_choice),
+      themeChoiceEnabled: Boolean(backedUpValue(localData, 'theme_choice')),
       restoreCodeLists: Boolean(collections.codeLists || localCodeLists),
     },
     createdDate: parsed.exportedAt || new Date().toISOString(),
@@ -164,14 +612,14 @@ const normalizeV2Backup = (parsed) => {
 
 const normalizeLegacyBackup = (parsed) => {
   const legacyData = isRecord(parsed.data) ? parsed.data : parsed;
-  const preferences = parseStoredValue(legacyData.lifehub_preferences) || {};
-  const localCodeLists = parseStoredValue(legacyData.lifehub_admin_values);
+  const preferences = parseStoredValue(backedUpValue(legacyData, 'preferences')) || {};
+  const localCodeLists = parseStoredValue(backedUpValue(legacyData, 'admin_values'));
   const codeLists = localCodeLists
     || Object.fromEntries(Object.entries(DEFAULT_CODE_LISTS).map(([key, values]) => [key, serializeCodeListEntries(values)]));
   return createBackupDocument({
     codeLists,
     preferences,
-    settings: { themeChoiceEnabled: Boolean(legacyData.lifehub_theme_choice), restoreCodeLists: Boolean(localCodeLists) },
+    settings: { themeChoiceEnabled: Boolean(backedUpValue(legacyData, 'theme_choice')), restoreCodeLists: Boolean(localCodeLists) },
     createdDate: parsed.exportedAt || new Date().toISOString(),
     metadata: { sourceFormatVersion: 1, legacySettingsOnly: true },
   });

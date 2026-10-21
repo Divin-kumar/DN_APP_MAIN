@@ -13,7 +13,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 
-const GUEST_INCOMES_KEY = 'lifehub_guest_incomes';
+const GUEST_INCOMES_KEY = 'dn_guest_incomes';
 
 export const normalizeIncome = (item) => ({
   id: item.id || crypto.randomUUID(),

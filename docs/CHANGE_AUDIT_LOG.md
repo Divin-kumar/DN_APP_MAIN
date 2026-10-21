@@ -129,3 +129,16 @@
 - Risk/rollback: Partial migration may occur under storage quota denial, fails safely without deleting old keys. Rollback via Git commit; retain legacy values until verification.
 - Master updated: §§4.1, 13.
 - Status: SOURCE MODIFIED, RUNTIME UNVERIFIED.
+
+## CHG-20261021-009 | Switch guest data, settings and backup reads to DN keys
+- Date (UTC): 2026-10-21.
+- Requester: Repository owner (DN-only naming).
+- Branch/commit: `OldVersion`; exact atomic commit in Git history; no `main` change.
+- Changed paths: Auth/Guest Contexts, event/expense/income services, guest merge, Code List service, dev sample fixtures, Settings, Events, backup parser and backup tests, master and audit.
+- Before -> after: Old prefixed app-owned browser keys -> `dn_` keys for active reads/writes; previously saved data copied by earlier migration before access. Legacy keys retained strictly for migration. Backup v1/v2 import accepts both generations. Successful account merge, guest exit and sample-data cleanup remove obsolete keys to prevent later reimport.
+- Why: Finish compatibility-safe brand change across runtime state and prevent guest data resurrection.
+- Data/security: No Firestore path/schema migration. Existing browser records never overwritten by old ones; explicit local-app-data deletion now removes both generations including dashboard favorites/recent. Original historic backup formats remain supported.
+- Validation: Additional Node test created for DN-prefixed v2 backups; runtime `npm test`, `npm run build`, browser and live Firebase tests NOT RUN here.
+- Risks/rollback: Compatibility logic needs real browser testing; older client versions may still expect old keys. Recover with Git history. Marked SOURCE MODIFIED, RUNTIME UNVERIFIED.
+- Master: §§4.1, 4.2, 5, 13.
+- Status: IMPLEMENTED IN SOURCE / VALIDATION PENDING.
