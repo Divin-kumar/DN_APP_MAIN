@@ -1,89 +1,188 @@
-// This page is the financial hub for the app.
-// It shows income, expenses, and the current balance and also routes to income/expense detail screens.
-import { useEffect } from 'react';
-import { NavLink, Outlet, useLocation, Link } from 'react-router-dom';
-import { Landmark, Receipt, WalletCards } from 'lucide-react';
+// Single financial workspace. Existing Firestore and guest collections remain unchanged.
+import { useEffect, useMemo, useState } from 'react';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Plus, WalletCards, ArrowLeftRight } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
-import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
-import TransactionHistory from '../components/financials/TransactionHistory';
+import useExpenseStore from '../store/useExpenseStore';
+import useEventStore from '../store/useEventStore';
+import useTransactionManager from '../hooks/useTransactionManager';
+import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
+import TransactionHistory, { TransactionCard } from '../components/financials/TransactionHistory';
+import TransactionForm from '../components/financials/TransactionForm';
+import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import LoadingSkeleton from '../components/common/LoadingSkeleton';
 
-const currency = (value) => new Intl.NumberFormat('en-IN', {
-  style: 'currency',
-  currency: 'INR',
-  maximumFractionDigits: 0,
-}).format(Number(value || 0));
-
-const dateLabel = (value) => {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 'Date not set' : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
+  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+}).format(Number(value) || 0);
+const defaultFilters = { type: 'all', month: 'all', search: '', sort: 'date-desc' };
+const storageKey = (scope) => 'dn_transactions_filters_' + scope;
+const readFilters = (scope) => {
+  try {
+    const parsed = JSON.parse(sessionStorage.getItem(storageKey(scope)) || '{}');
+    return {
+      type: ['all', 'income', 'expense'].includes(parsed.type) ? parsed.type : 'all',
+      month: parsed.month === 'all' || /^\d{4}-\d{2}$/.test(parsed.month || '') ? parsed.month : 'all',
+      search: typeof parsed.search === 'string' ? parsed.search : '',
+      sort: ['date-desc', 'date-asc', 'amount-asc', 'amount-desc', 'title-asc'].includes(parsed.sort) ? parsed.sort : 'date-desc',
+    };
+  } catch { return { ...defaultFilters }; }
 };
-
-const views = [
-  { label: 'Overview', path: '/financials', icon: WalletCards },
-  { label: 'Income', path: '/financials/income', icon: Landmark },
-  { label: 'Expense', path: '/financials/expenses', icon: Receipt },
-];
-
-function PreviewGroup({ title, path, entries, emptyLabel, isExpense = false }) {
-  return (
-    <section className={`financials-overview-group${isExpense ? ' is-expense' : ' is-income'}`}>
-      <header><h3>{title}</h3><Link to={path}>View all</Link></header>
-      {entries.length ? entries.map((entry) => (
-        <div className="financial-preview-row" key={entry.id || entry.firestoreId}>
-          <span><strong>{entry.name || title}</strong><small>{entry.category || entry.type || 'General'} · {dateLabel(entry.date)}</small></span>
-          <strong>{currency(entry.amount)}</strong>
-        </div>
-      )) : <p className="financial-empty-copy">{emptyLabel}</p>}
-    </section>
-  );
-}
 
 export default function Financials() {
   const location = useLocation();
-  const isOverview = location.pathname === '/financials';
+  const navigate = useNavigate();
+  const isTransactions = location.pathname.startsWith('/financials/transactions');
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  const { incomes, loadIncomes } = useIncomeStore();
-  const { expenses, loadExpenses } = useExpenseStore();
+  const showToast = useAppStore((state) => state.showToast);
+  const uid = user?.uid;
+  const scope = uid || (isGuest ? 'guest' : 'local');
+  const { incomes, loading: loadingIncome, error: incomeError, loadIncomes } = useIncomeStore();
+  const { expenses, loading: loadingExpense, error: expenseError, loadExpenses } = useExpenseStore();
+  const { events, loadEvents } = useEventStore();
+  const { saveTransaction, removeTransaction } = useTransactionManager();
+  const [filters, setFilters] = useState(() => readFilters(scope));
+  const [editing, setEditing] = useState(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [defaultKind, setDefaultKind] = useState('expense');
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [savingError, setSavingError] = useState('');
 
   useEffect(() => {
     if (!user && !isGuest) return;
-    loadIncomes(user?.uid, isGuest);
-    loadExpenses(user?.uid, isGuest);
-  }, [user, isGuest, loadIncomes, loadExpenses]);
+    loadIncomes(uid, isGuest);
+    loadExpenses(uid, isGuest);
+    loadEvents(uid, isGuest);
+  }, [uid, isGuest, user, loadIncomes, loadExpenses, loadEvents]);
 
-  const totalIncome = incomes.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const totalExpenses = expenses.reduce((sum, item) => sum + Number(item.amount || 0), 0);
-  const currentBalance = totalIncome - totalExpenses;
-  const recentIncome = [...incomes].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
-  const recentExpenses = [...expenses].sort((a, b) => String(b.date || '').localeCompare(String(a.date || ''))).slice(0, 3);
+  useEffect(() => { setFilters(readFilters(scope)); }, [scope]);
+  const changeFilters = (patch) => {
+    setFilters((current) => {
+      const next = { ...current, ...patch };
+      try { sessionStorage.setItem(storageKey(scope), JSON.stringify(next)); } catch { /* Optional persistence */ }
+      return next;
+    });
+  };
+
+  const allTransactions = useMemo(() => toTransactions(incomes, expenses), [incomes, expenses]);
+  const monthOptions = useMemo(() => transactionMonthOptions(allTransactions), [allTransactions]);
+  useEffect(() => {
+    if (filters.month !== 'all' && !monthOptions.some((item) => item.value === filters.month)) {
+      changeFilters({ month: 'all' });
+    }
+  }, [filters.month, monthOptions]);
+  const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
+  const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
+  const totals = useMemo(() => summarizeTransactions(filtered), [filtered]);
+  const hasLoadError = Boolean(incomeError || expenseError);
+
+  useEffect(() => {
+    if (!isTransactions) return;
+    const requested = new URLSearchParams(location.search).get('create');
+    if (requested !== 'expense' && requested !== 'income' && requested !== 'transaction') return;
+    setDefaultKind(requested === 'income' ? 'income' : 'expense');
+    setEditing(null);
+    setDialogOpen(true);
+    navigate('/financials/transactions', { replace: true });
+  }, [isTransactions, location.search, navigate]);
+
+  const openAdd = (kind = 'expense') => {
+    setEditing(null); setDefaultKind(kind); setSavingError(''); setDialogOpen(true);
+  };
+  const openEdit = (transaction) => {
+    setEditing(transaction); setDefaultKind(transaction.transactionKind);
+    setSavingError(''); setDialogOpen(true);
+  };
+  const handleSave = async (form) => {
+    setBusy(true); setSavingError('');
+    try {
+      await saveTransaction(form, editing);
+      setDialogOpen(false); setEditing(null);
+      showToast(editing ? 'Transaction updated' : 'Transaction added', 'success');
+    } catch (error) {
+      setSavingError(error?.message || 'Unable to save this transaction.');
+      throw error;
+    } finally { setBusy(false); }
+  };
+  const handleDelete = async () => {
+    if (!deleteTarget || busy) return;
+    setBusy(true);
+    try {
+      await removeTransaction(deleteTarget);
+      setDeleteTarget(null);
+      showToast('Transaction deleted', 'success');
+    } catch (error) {
+      showToast(error?.message || 'Could not delete this transaction', 'danger');
+    } finally { setBusy(false); }
+  };
 
   return (
-    <main className="financials-page feature-page">
-      <section className="financial-overview-summary" aria-label="Income, expense and balance summary">
-        <div><span>Income</span><strong>{currency(totalIncome)}</strong></div>
-        <div><span>Expense</span><strong>{currency(totalExpenses)}</strong></div>
-        <div className={`financial-overview-balance${currentBalance < 0 ? ' is-negative' : ''}`}><span>Balance</span><strong>{currency(currentBalance)}</strong></div>
+    <main className="financials-page feature-page dn-financial-workspace">
+      <section className="financial-overview-summary" aria-label="Filtered income, expense and balance summary">
+        <div><span>Income</span><strong>{formatMoney(totals.income)}</strong></div>
+        <div><span>Expense</span><strong>{formatMoney(totals.expense)}</strong></div>
+        <div className={'financial-overview-balance' + (totals.balance < 0 ? ' is-negative' : '')}>
+          <span>Balance</span><strong>{formatMoney(totals.balance)}</strong>
+        </div>
       </section>
-
-      <nav className="financials-nav" aria-label="Financial views">
-        {views.map(({ label, path, icon: Icon }) => (
-          <NavLink key={path} to={path} end={path === '/financials'} className={({ isActive }) => `financials-nav-card${isActive ? ' financials-nav-card-active' : ''}`} aria-current={location.pathname === path ? 'page' : undefined}>
-            <Icon size={16} aria-hidden="true" /><span><strong>{label}</strong></span>
-          </NavLink>
-        ))}
+      <nav className="financials-nav dn-financial-tabs" aria-label="Financial views">
+        <NavLink to="/financials" end className={({ isActive }) => 'financials-nav-card' + (isActive ? ' financials-nav-card-active' : '')}>
+          <WalletCards size={17} aria-hidden="true" /><strong>Overview</strong>
+        </NavLink>
+        <NavLink to="/financials/transactions" className={({ isActive }) => 'financials-nav-card' + (isActive ? ' financials-nav-card-active' : '')}>
+          <ArrowLeftRight size={17} aria-hidden="true" /><strong>Transactions</strong>
+        </NavLink>
       </nav>
-
-      <section className="financials-content-panel" aria-live="polite">
-        {isOverview ? (
-          <div className="financials-overview-grid">
-            <PreviewGroup title="Income" path="/financials/income" entries={recentIncome} emptyLabel="Your recent income will appear here." />
-            <PreviewGroup title="Expenses" path="/financials/expenses" entries={recentExpenses} emptyLabel="Your recent expenses will appear here." isExpense />
-          </div>
-        ) : <Outlet />}
-        {isOverview ? <TransactionHistory incomes={incomes} expenses={expenses} scope={user?.uid || (isGuest ? 'guest' : 'local')} /> : null}
+      {hasLoadError ? <div role="alert" className="financial-load-error">
+        Unable to load all transactions. <button type="button" onClick={() => { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }}>Retry</button>
+      </div> : null}
+      {(loadingIncome || loadingExpense) && !allTransactions.length ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" /> : null}
+      <section className="financials-content-panel">
+        {isTransactions ? (
+          <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}
+            monthOptions={monthOptions} events={events} onAdd={() => openAdd()} onEdit={openEdit}
+            onDelete={setDeleteTarget} />
+        ) : (
+          <section className="dn-financial-overview" aria-labelledby="dn-overview-title">
+            <div className="dn-overview-topline">
+              <div><h2 id="dn-overview-title">Your money at a glance</h2>
+                <p>{filters.month === 'all' ? 'All months' : monthOptions.find((o) => o.value === filters.month)?.label || 'Filtered month'}
+                  {filters.type !== 'all' ? ' · ' + (filters.type === 'income' ? 'Income' : 'Expense') + ' only' : ''}</p>
+              </div>
+              <button type="button" className="primaryButton dn-transaction-add" onClick={() => openAdd()}>
+                <Plus size={17} /> Add Transaction
+              </button>
+            </div>
+            <div className="dn-overview-recent-heading">
+              <h3>Recent transactions</h3>
+              <Link to="/financials/transactions">View all transactions</Link>
+            </div>
+            <div className="dn-transactions-results" role="list">
+              {sorted.length ? sorted.slice(0, 5).map((item) => (
+                <TransactionCard key={item.stableTransactionKey} transaction={item} events={events} compact />
+              )) : <div className="transactions-empty" role="status">
+                <strong>No matching transactions</strong>
+                <p>Adjust the filters in Transactions or add your first record.</p>
+              </div>}
+            </div>
+          </section>
+        )}
       </section>
+      {dialogOpen ? (
+        <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"
+          onClose={() => { if (!busy) { setDialogOpen(false); setEditing(null); } }}>
+          {savingError ? <p className="dn-transaction-form-error" role="alert">{savingError}</p> : null}
+          <TransactionForm initialTransaction={editing} defaultKind={defaultKind} events={events}
+            onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
+        </ModalDialog>
+      ) : null}
+      {deleteTarget ? <ConfirmDialog title="Delete transaction?"
+        message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
+        onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}
+        confirmLabel={busy ? 'Deleting…' : 'Delete'} /> : null}
     </main>
   );
 }

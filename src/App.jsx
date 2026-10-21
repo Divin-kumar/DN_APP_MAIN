@@ -24,8 +24,6 @@ const Events = lazy(() => import('./pages/Events'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
-const Income = lazy(() => import('./pages/Income'));
-const Expenses = lazy(() => import('./pages/Expenses'));
 const Settings = lazy(() => import('./pages/Settings'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
@@ -167,10 +165,11 @@ export default function App() {
             <Route path="events/:eventId/attachments" element={loadScreen(<EventWorkspaceShell />, 'attachments')} />
             <Route path="events/:eventId/pdf" element={loadScreen(<EventWorkspaceShell />, 'document')} />
 
-            <Route path="financials" element={loadScreen(<Financials />, 'financials')}>
-              <Route path="income" element={loadScreen(<Income />, 'income')} />
-              <Route path="expenses" element={loadScreen(<Expenses />, 'expenses')} />
-            </Route>
+            <Route path="financials" element={loadScreen(<Financials />, 'financials')} />
+            <Route path="financials/transactions" element={loadScreen(<Financials />, 'transactions')} />
+            {/* Preserve existing bookmarks without exposing duplicate modules. */}
+            <Route path="financials/income" element={<Navigate to="/financials/transactions" replace />} />
+            <Route path="financials/expenses" element={<Navigate to="/financials/transactions" replace />} />
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />

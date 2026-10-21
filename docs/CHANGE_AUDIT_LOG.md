@@ -389,3 +389,16 @@
 - Risk/rollback: Touch gesture interference and actual frame rate require device testing.
 - Master: §9.1, §13, v2.7.3.
 - Status: SOURCE CREATED, PARENT INTEGRATION PENDING.
+
+## CHG-20261021-029 | Replace legacy financial navigation with Overview / Transactions
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, financial module consolidation.
+- Branch / commit: `OldVersion`, commit SHA in Git history; `main` untouched.
+- Changed paths: `src/App.jsx`, `src/pages/Financials.jsx`, master, audit.
+- Before -> after: Separate income/expense routes and summary previews -> Overview and Transactions only; old paths redirect; unified Add/Edit/Delete modal, shared filter state and responsive card view, summary totals update from the same filtered set, session-scoped filters survive reloading.
+- Rationale: Consolidate records without a destructive data migration.
+- User/data/security impact: Existing income/expense collections and guest storage are preserved; no production deployment or Firestore rules change. New transaction edits and type transitions are coordinated through existing stores.
+- Verification: Source code committed; Node/Vite CI and real device/Firebase tests pending. No deployment.
+- Risks: User data must be verified in guest/account flows; activity-linked mirrors are not atomic. Old links redirect.
+- Master: §3.1a and §13, v2.8.0.
+- Status: SOURCE IMPLEMENTED, CI PENDING.

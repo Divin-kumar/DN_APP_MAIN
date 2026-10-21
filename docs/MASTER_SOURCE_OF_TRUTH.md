@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.7.3** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.8.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -92,6 +92,9 @@
 A custom separately deployed application REST/GraphQL server is **not present in the inspected repo**. Browser clients call Firebase services directly.
 
 ### 3.1a Transactions view and filtering
+**Current source implementation:** The financial navigation is now **Overview | Transactions**, with the separate Income/Expense UI tabs and forms removed from routes. Old `/financials/income` and `/financials/expenses` URLs redirect to Transactions for bookmark compatibility. The overview displays filtered summary Income, Expense and Balance (Income − Expense), plus compact recent transactions. Transactions displays Search, Type, Month and Sort with a responsive shared dropdown filter row and a single Add Transaction CTA. All filters intersect; month values originate **only from months holding existing records**. `src/components/financials/TransactionHistory.jsx` renders accessible premium cards with optional activity labels, green/red signed values, Framer swipe-left Edit/Delete reveal, explicit overflow button and optional haptics. Selected filters persist per account/guest session. New/edited transactions use `TransactionForm` with original separate stores beneath the unified UI.
+
+### 3.1a superseded historical context
 The current `src/pages/Financials.jsx` has an Overview, Income and Expense navigation rather than a separate Transactions route. The Overview now includes an **additional combined Transactions history** beneath its existing preview cards, preserving the current overview/header/nav. `src/components/financials/TransactionHistory.jsx` merges income and expense store records, retains the original source records and stable ID namespaces, and applies **Search, Transaction Type (All/Income/Expense), and Month (All months/Month Year)** conjunctively via `src/utils/transactionFilters.js`. The search stays in the first toolbar row; the two equal-width filters appear side-by-side with 12px gap, stacking only below 310px. Month options include recorded months plus the previous 12 months, with responsive abbreviated mobile labels. Type and month selections are scoped to the current account/guest and kept in sessionStorage, independent of store refresh or new records. When nothing matches, an empty state appears. Existing preview cards, income/expense modules, navigation and add controls are unchanged. This is source-inspected, with Node filters tests; verify on real mobile/tablet after CI.
 
 ### 3.2 Runtime flow
@@ -322,7 +325,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.7.3** | **2026-10-21** | Introduced premium unified Transaction cards with swipe/keyboard actions, plus combined filter controls | **CHG-20261021-028** |
+| **2.8.0** | **2026-10-21** | Updated financial routing to Overview and Transactions, connected the unified form, dynamic filtered summaries, and premium transaction cards | **CHG-20261021-029** |
+| 2.7.3 | 2026-10-21 | Introduced premium unified Transaction cards with swipe/keyboard actions, plus combined filter controls | **CHG-20261021-028** |
 | 2.7.2 | 2026-10-21 | Introduced unified transaction mutation coordination, linked-expense reconciliation and nested-only expense safe path | **CHG-20261021-027** |
 | 2.7.1 | 2026-10-21 | Created unified, validated transaction form with activity linking for both income and expenses | **CHG-20261021-026** |
 | 2.7.0 | 2026-10-21 | Began unified transaction layer without migrating existing account/guest records; removed empty months and added dynamic totals/sorting/notes/link preservation | **CHG-20261021-025** |
