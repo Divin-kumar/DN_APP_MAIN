@@ -353,3 +353,16 @@
 - Risk/rollback: Consumers using old transactionsMonthOptions signature are updated in a subsequent UI commit. No destructive migration; revert commit if needed.
 - Master: §§9.1 and 13; version 2.7.0.
 - Status: DATA-LAYER IMPLEMENTED, UI FOLLOW-UP REQUIRED.
+
+## CHG-20261021-026 | Introduce a unified Add/Edit Transaction form
+- Date (UTC): 2026-10-21.
+- Requester: DN owner, financial premium redesign.
+- Branch/commit: `OldVersion`; atomic SHA in Git history; `main` untouched.
+- Files: `src/components/financials/TransactionForm.jsx`, master, append-only audit.
+- Before/after: Separate income and expense field forms -> shared UI for Income/Expense type, positive amount, title, category, optional linked activity, date, notes. Category choices come from existing Code Lists; uses the established shared dropdown and date controls.
+- Why: Single form for new/edited financial transactions without changing Firestore or guest data schema.
+- Data/privacy: Existing `type` and `category` persisted keys remain differentiated via the transaction mapper. No write path changed by this commit alone.
+- Verification: Source added, pending integration, CI and manual mobile review. No deployment.
+- Rollback: Revert file/commit, historical forms remain in Git.
+- Master: §9.1, §13, version 2.7.1.
+- Status: FORM CREATED, PARENT INTEGRATION PENDING.

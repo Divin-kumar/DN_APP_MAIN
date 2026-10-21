@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.7.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.7.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -322,7 +322,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.7.0** | **2026-10-21** | Began unified transaction layer without migrating existing account/guest records; removed empty months and added dynamic totals/sorting/notes/link preservation | **CHG-20261021-025** |
+| **2.7.1** | **2026-10-21** | Created unified, validated transaction form with activity linking for both income and expenses | **CHG-20261021-026** |
+| 2.7.0 | 2026-10-21 | Began unified transaction layer without migrating existing account/guest records; removed empty months and added dynamic totals/sorting/notes/link preservation | **CHG-20261021-025** |
 | 2.6.6 | 2026-10-21 | Logged failed Firebase preview attempt: tests/build passed, deployment blocked by missing credential, no upload | **CHG-20261021-024** |
 | **2.6.5** | **2026-10-21** | Added opt-in non-live Firebase Hosting usability-preview workflow scoped to OldVersion, with credential and validation gates | **CHG-20261021-023** |
 | **2.6.4** | **2026-10-21** | Captured verified 60-test/build/governance pass after final dropdown-scroll correction; recorded browser/mobile limitations | **CHG-20261021-022** |
