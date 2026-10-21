@@ -275,3 +275,16 @@
 - Risk/rollback: Browser focus and mobile keyboard interactions still need manual checks; source commit can be reverted without persisted data effects. Known npm dependency advisories remain 9 (3 moderate, 6 high).
 - Master: §§6.4, 13; version 2.6.1.
 - Status: SOURCE COMMITTED, FOLLOW-UP CI PENDING.
+
+## CHG-20261021-020 | Align the Transaction Type reset option with the requested All label
+- Date (UTC): 2026-10-21.
+- Actor/requester: AI refinement of owner's exact option requirements.
+- Branch/commit: `OldVersion`, identify commit in Git history; `main` untouched.
+- Paths: `src/components/financials/TransactionHistory.jsx`, master and this audit.
+- Before -> after: First type option displayed “All transactions” in desktop menu -> now “All” at all breakpoints, with unchanged `all` value. The Month filter retains “All months”.
+- Why: Exact Transaction Type option names: All, Income and Expense, with matching short mobile label.
+- User/data/security: Presentation-only label change, filter behavior and stored values unchanged.
+- Verification: Automated CI and build on previous source commit 68860bb succeeded with 60 tests, 0 failures. New commit test/build pending. No browser or Firebase tests.
+- Risks/rollback: None beyond usual UI regression risk; revert this commit to restore wording.
+- Master: §3.1a and §13; version 2.6.2.
+- Status: SOURCE UPDATED / CI PENDING.

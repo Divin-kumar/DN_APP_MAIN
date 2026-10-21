@@ -50,7 +50,7 @@ export default function TransactionHistory({ incomes, expenses, scope = 'guest' 
         <div className="transactions-filter-pair" role="group" aria-label="Transaction filters">
           <DropdownSelect aria-label="Transaction Type" value={filters.type}
             onChange={(event) => changeFilter({ type: event.target.value })}>
-            <option value="all" data-short-label="All">All transactions</option>
+            <option value="all" data-short-label="All">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
           </DropdownSelect>

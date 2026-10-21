@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.6.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.6.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -304,7 +304,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.6.1** | **2026-10-21** | Verified overlay/transaction CI success (60 tests and production build); scoped accessible listbox role to options list | **CHG-20261021-019** |
+| **2.6.2** | **2026-10-21** | Aligned Transaction Type reset option label exactly with All; combined filters unchanged | **CHG-20261021-020** |
+| 2.6.1 | 2026-10-21 | Verified overlay/transaction CI success (60 tests and production build); scoped accessible listbox role to options list | **CHG-20261021-019** |
 | 2.6.0 | 2026-10-21 | Added combined Transactions history to existing Financials overview, paired Type and Month filters, search integration and session persistence | **CHG-20261021-018** |
 | 2.5.0 | 2026-10-21 | Added portaled, viewport-aware shared dropdown positioning and option search; preserved native calendar controls and theme | **CHG-20261021-017** |
 | 2.4.7 | 2026-10-21 | Verified three new DN identity/Markdown tests and build in GitHub Actions (51 pass); removed retired product label from normative AGENTS instructions | **CHG-20261021-016** |
