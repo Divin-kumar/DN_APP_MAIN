@@ -798,3 +798,17 @@
 - Master sections updated: §9.1 and §13 version 2.12.1.
 - Status: SOURCE IMPLEMENTED / CI PENDING; PRIOR CI VERIFIED.
 - Follow-ups: Test moment-only create/edit/delete when the Moment is missing, prior activity links with deleted children, card wrapping and keyboard gestures on small viewports.
+
+## CHG-20261021-062 | Verify final Finance Moment-link CI and build
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; AI verification closeout for the restored Finance totals, Moment-linked transaction dropdown and premium UX safeguards.
+- Branch / commit / PR: `OldVersion` only; documentation commit SHA in Git history. Verified application code commit `9ff53068e213e52e97e84e05ee1193258a33f3b3`. `main` untouched; PR #6 not merged.
+- Exact paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md` only.
+- Before -> after: Prior source entry 061 documented two new regression cases with CI pending. GitHub Actions run https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39664033801 succeeded on exact source SHA `9ff53068e213e52e97e84e05ee1193258a33f3b3`, confirming that transaction Moment-only card, deletion safeguard, related helper tests and existing UI contract compile and pass automated checks.
+- Why: Preserve verifiable implementation outcomes, avoid confusing pending source tests with actual pass/fail status, and maintain canonical documentation governance.
+- User/data/security/compatibility impact: Documentation only, no account/guest data edits, Firestore mutation, migrations, rules change or deployment.
+- Verification (exact commands, PASS/FAIL/NOT RUN): CI `npm test` **99 passed, 0 failed**; Vite `npm run build` **PASS**; documentation-contract checks **PASS**, all recorded in run 39664033801. Earlier run 39663726896 passed 97/97 after initial 2.12.0. Manual real-browser/mobile, accessibility, native haptics, 60fps performance, live Firebase accounts/guest and Security Rules tests NOT RUN. Nine known npm vulnerabilities and chunk-size advisory remain.
+- Risk and rollback: No runtime impact for this documentation update; CI does not certify mobile polish or data/security in deployment. Any correction must append a new audit entry rather than rewriting historic entries.
+- Master sections updated: §9.1 and §13, version 2.12.2.
+- Status: AUTOMATED CI VERIFIED; MANUAL DEVICE/PRODUCTION QA OPEN.
+- Follow-ups: Test transaction Moment→Activity cascade on device with long lists and imported stale links, confirm wallet summary responsive layout, check production Firestore rules and performance separately.
