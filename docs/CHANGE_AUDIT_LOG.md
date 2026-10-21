@@ -402,3 +402,15 @@
 - Risks: User data must be verified in guest/account flows; activity-linked mirrors are not atomic. Old links redirect.
 - Master: §3.1a and §13, v2.8.0.
 - Status: SOURCE IMPLEMENTED, CI PENDING.
+
+## CHG-20261021-030 | Premium responsive financial styling pass
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, atomic SHA in Git history, `main` untouched.
+- Paths: `src/design-system.css`, master, audit.
+- Before/after: Added scoped token-based premium Transactions/Overview layout, 3 controls in flexible grid, two columns on narrow phones, one at extreme width, 44px action targets, income-green/expense-red amounts, frosted swipe actions, reduced-motion handling, consistent modal/form controls and dark/light tokens.
+- Why: Remove fractured financial presentation while respecting existing app visual tokens.
+- User/data/security impact: CSS only, no business logic or persistence changes.
+- Verification: CI build pending; manual mobile and dark/light device QA not run.
+- Risk/rollback: Older global CSS specificity may override new rules in certain screens; append-only styling can be reverted by commit.
+- Master: §6.4 and §13, v2.8.1.
+- Status: SOURCE COMMITTED, CI/DEVICE QA PENDING.

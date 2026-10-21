@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.8.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.8.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -325,7 +325,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.8.0** | **2026-10-21** | Updated financial routing to Overview and Transactions, connected the unified form, dynamic filtered summaries, and premium transaction cards | **CHG-20261021-029** |
+| **2.8.1** | **2026-10-21** | Added premium theme-adaptive financial card, filter, button, and unified form styles with mobile breakpoints | **CHG-20261021-030** |
+| 2.8.0 | 2026-10-21 | Updated financial routing to Overview and Transactions, connected the unified form, dynamic filtered summaries, and premium transaction cards | **CHG-20261021-029** |
 | 2.7.3 | 2026-10-21 | Introduced premium unified Transaction cards with swipe/keyboard actions, plus combined filter controls | **CHG-20261021-028** |
 | 2.7.2 | 2026-10-21 | Introduced unified transaction mutation coordination, linked-expense reconciliation and nested-only expense safe path | **CHG-20261021-027** |
 | 2.7.1 | 2026-10-21 | Created unified, validated transaction form with activity linking for both income and expenses | **CHG-20261021-026** |
