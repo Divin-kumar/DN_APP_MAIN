@@ -301,3 +301,16 @@
 - Risk / rollback: Browser-specific scroll propagation and touch input need manual checks; rollback via this commit if needed.
 - Master: §§6.4 and 13; version 2.6.3.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-022 | Record final CI verification for shared dropdowns and Transactions filters
+- Date (UTC): 2026-10-21.
+- Actor/requester: AI result verification for owner's responsive transactions and overlays request.
+- Branch / commits: `OldVersion`. Verified `f735cf9a2e3c94c1a6301cc097ee3a21840de6d6` via GitHub Actions [run 39646417362](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39646417362). This audit-only commit has its own Git SHA. No changes to `main`.
+- Paths changed: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md` only.
+- Before -> after: Runtime/test validation previously marked CI pending -> GitHub Node tests, Vite production build and documentation audit now verified successful after menu scroll bug fix and filter label correction.
+- Why: Record actual evidence for later AI sessions and avoid misrepresenting browser tests.
+- Verification: `npm ci` PASS; `npm test` PASS **60/60**; `npm run build` PASS; governance PASS, as reported by job logs. New audit-only commit's own CI requires read-back. Real Android/iOS/tablet responsive visual/browser inspection, keyboard+native date picker UX, actual Firestore/guest integration: NOT RUN.
+- User/data/security/compatibility impact: Documentation-only; no code, schema, live transaction or deployment changes. Nine dependency advisories (3 moderate, 6 high), Vite chunk warning remain unrelated open review items.
+- Risks/rollback: Mobile-specific viewport quirks still require testing; rollback source commits via Git revert if issues appear, use historical audit for traceability.
+- Master: §6.4, §13, version 2.6.4.
+- Status: PREVIOUS SOURCE COMMIT CI VERIFIED, MANUAL MOBILE QA PENDING.
