@@ -1,6 +1,6 @@
 # DN / LifeHub — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.0.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.0.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document**. `README.md` provides navigation; it does not override this file.
 >
@@ -264,11 +264,21 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 
 ## 12. Document lifecycle and cleanup record
 
-**Active documentation contract: four Markdown files only:** `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+**COMPLETED inventory:** The `OldVersion` working tree contains **exactly four Markdown documentation files**, and **zero DOCX files**, as confirmed by GitHub recursive tree inspection on 2026-10-21. The four and their distinct responsibilities are:
+1. `README.md`: orientation, run commands and navigation, never normative app behavior.
+2. `AGENTS.md`: mandatory instructions for every future AI/coding agent.
+3. `docs/MASTER_SOURCE_OF_TRUTH.md`: this sole authoritative product/architecture/plans and operational contract.
+4. `docs/CHANGE_AUDIT_LOG.md`: append-only factual history of all repository changes.
 
-**Historical governance-cleanup source files (originally active and proposed for retirement):** `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/CONSOLIDATION_SUMMARY.md`, `docs/DOCUMENTATION_STANDARDS.md`, `docs/DUPLICATE_OBSOLETE_REPORT.md`, `docs/RETENTION_DELETION_MATRIX.md`, `docs/AI_READY_KNOWLEDGE_BASE.md`, `memory.md`, `prd.md`, `rules.md`, `tasks.md`, plus four old DOCX paths (see §11). Deletions are recorded **only when GitHub confirms**; do not claim blocked deletions occurred. Prior pre-cleanup deletions: `docs/ARCHITECTURE.md` (`fca658b`) and `memory.md` (`e8f1079`). Git history remains accessible and is *not* an active specification.
+**Retired Markdown documents (16 total):**
+- Previous cleanup: `docs/ARCHITECTURE.md` and `memory.md`.
+- Current governance reset: `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/AI_READY_KNOWLEDGE_BASE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/CONSOLIDATION_SUMMARY.md`, `docs/DOCUMENTATION_STANDARDS.md`, `docs/DUPLICATE_OBSOLETE_REPORT.md`, `docs/RETENTION_DELETION_MATRIX.md`, `prd.md`, `rules.md`, `tasks.md`.
 
-**Clean repository rule:** no future `.md` policy/roadmap duplicates. Keep `.json`, `.js`, `.jsx`, `.css`, `.yml` and required app assets as code/config, not duplicate knowledge docs. Any unavoidable compliance artifact must be explicitly approved and indexed here.
+**Retired Word documents (4 total):** `LifeHub_Product_Spec_and_User_Guide.docx`, `LifeHub_System_Overview.docx`, `Bugs_OCT26/New Microsoft Word Document.docx`, `Bugs_OCT26/~$w Microsoft Word Document.docx`. These were **not text-reviewed**, because the connected GitHub reader could not decode the binary contents. They were removed from the *working tree only* under the owner's cleanup instruction; their original binary versions remain in Git history at `f5919b8`. **Important completeness caveat:** The master was built from inspected code and 13 read Markdown source files, *not* a completed content reconciliation of the archived Word files.
+
+**Removal provenance:** full per-path SHA ledger in [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) under `CHG-20261021-002` and `CHG-20261021-004`. Do not restore historic sources as new active documents; extract relevant approved facts into this master and record the import as a new audit entry instead.
+
+**Clean repository rule:** no future `.md` policy/roadmap duplicates. `docs/` contains only the master and audit. Keep `.json`, `.js`, `.jsx`, `.css`, `.yml` and required app assets as executable code/config, not duplicate knowledge docs. Any unavoidable compliance artifact requires owner sign-off and an indexed master/audit entry.
 
 ## 13. Version and change history
 
@@ -276,6 +286,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.0.0** | **2026-10-21** | Code-inspected master, one-document authority, 4-file policy, mandatory AI/audit workflow, planned work moved into master | CHG-20261021-003 (completion recorded in later entry) |
+| **2.0.1** | **2026-10-21** | **Four-file cleanup confirmed (16 Markdown and 4 DOCX retired), deletion ledger, CI append-only protection** | **CHG-20261021-004** |
+| 2.0.0 | 2026-10-21 | Code-inspected master, one-document authority, 4-file policy, mandatory AI/audit workflow, planned work moved into master | CHG-20261021-003 (completion recorded in later entry) |
 
 **Version discipline:** major version for major scope/governance/contract change; minor for implemented feature changes and approved new behavior; patch for corrections. Every update links to an **append-only** audit record; do not retrospectively edit log entries. No unverified plans are promoted into factual current state.

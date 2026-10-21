@@ -39,3 +39,39 @@
 - Master sections: Current state, source traceability, gaps, backlog, version/governance.
 - Status: PARTIAL until end-of-task inventory/verification; completion should be recorded in follow-up log entry.
 - Follow-ups: Read any archived DOCX from Git history if resolving historic requirements; run tests and enable required governance check in branch protections.
+
+## CHG-20261021-004 | Complete four-file documentation cleanup and verify controls
+- Date (UTC): 2026-10-21.
+- Actor/requester: Repository owner; implementation via authorized GitHub connector operations.
+- Branch / commit / PR: `OldVersion`; final master+audit commit is this Git revision (its own SHA is available from Git history and is not embedded in its content); earlier PR #6 remained open and was **not** merged.
+- Scope: Rewrote `README.md`; created `AGENTS.md`, `docs/CHANGE_AUDIT_LOG.md`, `.github/workflows/documentation-governance.yml`; rewrote `docs/MASTER_SOURCE_OF_TRUTH.md` based on source. Removed the retired docs listed below, all on `OldVersion`.
+- Before -> after: 20 redundant/historical source documents beyond the four planned Markdown files -> **exactly four active Markdown files and zero Word docs**. Original material remains available in Git history.
+- Rationale: Enforce one canonical source for app behavior, one prospective planning section, mandatory AI instructions and a complete append-only change register without competing PRDs/memory/task specs.
+- Application behavior/data impact: **None**: no `src/` app source, dependencies or Firebase config modified; no deployment, merge or runtime migration. GitHub Actions documentation governance workflow added; its live operation has not yet been observed in an Actions run.
+- Before/after version: Master **2.0.0 -> 2.0.1**; `README.md` becomes an orientation-only pointer.
+- Deleted paths / exact deletion commits:
+  - `docs/ARCHITECTURE.md`: `fca658b40b24017805579ddfd22d572f892fe077` (earlier CHG-002).
+  - `memory.md`: `e8f107961515746a29cc9cdcd60f1e3a654d9e1b` (earlier CHG-002).
+  - `BUSINESS_GUIDE.md`: `fb89178d4a08b9a0d2db3d283f7d0eb4bb61d4c3`.
+  - `architecture.md`: `5d6ebb453a460a0ba978f2697a80e58e42773c84`.
+  - `design.md`: `2cdc8427883b1d880a2d064b36f50955b7e116aa`.
+  - `docs/AI_READY_KNOWLEDGE_BASE.md`: `80cc2137f8c32be38938383798b6d8eaf8d33770`.
+  - `docs/ARCHITECTURE_REVIEW.md`: `05e00f7bd5789bf90d268c32e295fcca5f09f9ef`.
+  - `docs/BACKUP_RESTORE_REVIEW.md`: `5d65389388569b8094b332fbda4b9c19b9d5e445`.
+  - `docs/CODE_LIST_PERSISTENCE.md`: `e1a5237a8d70fa70c95bea47f791dc4223d2eb4c`.
+  - `docs/CONSOLIDATION_SUMMARY.md`: `bea0785cc65aa198115892e110089d56fa22fefe`.
+  - `docs/DOCUMENTATION_STANDARDS.md`: `723c316442e9892a5eb61c31082da1fd8a86d2f3`.
+  - `docs/DUPLICATE_OBSOLETE_REPORT.md`: `73b80dbfd1dcc46b72a4910ce5d3f7df510a236f`.
+  - `docs/RETENTION_DELETION_MATRIX.md`: `20dc21e45fa08c882759f81f5f316fa3c4f89320`.
+  - `prd.md`: `e2b3456e866e7e46c4255f23ac750704d5ba662f`.
+  - `rules.md`: `3214178187581f835cd863d3fe8615d6e6eaab0d`.
+  - `tasks.md`: `315aa52e82fba50e8cefedcd7a74be3340d2a4f9`.
+  - `Bugs_OCT26/New Microsoft Word Document.docx`: `bcfea1e10f7bf10b815da7523be1fd57df7c5099`.
+  - `Bugs_OCT26/~$w Microsoft Word Document.docx`: `4dad079011fadea851220470f3662813190b5138`.
+  - `LifeHub_Product_Spec_and_User_Guide.docx`: `3cc792c3607cc5f7a73a511e1198c365fd5e1bef`.
+  - `LifeHub_System_Overview.docx`: `a47d4603c98a9f2d0f6ee603a12ca372d9c506e0`.
+- Validation and evidence: GitHub recursive tree listed only `AGENTS.md`, `README.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md` as Markdown, no DOCX; PASS (prior to this documentation-only finalization). `main` head stayed `5b056933287e6b3f6fc5f3e62d5f6b6ce439b543`; PASS. Source inspection of stores/services/routes/backup; PASS. **Automated tests/build: NOT RUN** because no executable repository checkout was available. **Live Firebase authorization/recovery: NOT RUN. GitHub Actions governance execution: NOT RUN / not verified**.
+- Risks and rollback: Unread DOCX files might contain unique old requirements; recover via Git history at `f5919b8` and reconcile when needed. CI only enforces documented diffs/audit preservation when GitHub Actions is enabled; require the check in branch protection to prevent bypass. Individual intermediate cleanup pushes may have failing documentation checks; final combined master+audit revision aligns with the policy.
+- Master sections updated: §1, §8, §11, §12, §13.
+- Status: **IMPLEMENTED — working-tree cleanup verified**; runtime quality and CI execution remain open.
+- Follow-ups: Enable required GitHub check, validate Actions, execute `npm test` and `npm run build`, audit Firestore security rules, recover historical Word content only if a need emerges.
