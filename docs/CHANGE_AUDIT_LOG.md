@@ -699,3 +699,17 @@
 - Master sections updated: §9.1, §13, version 2.10.7.
 - Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
 - Follow-ups: Verify A → B → A switching with slow requests and account/guest/fixture modes; validate backup restore, expense edits and deployed rules.
+
+## CHG-20261021-055 | Record passing account-switch isolation CI
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; AI CI follow-up for Financials regression prevention.
+- Branch / commit / PR: `OldVersion` only; documentation commit SHA in Git history. Verified code commit `2a4433a6bf2cce1657cf05627bf93199aec7bba9`; `main` unchanged, no PR merged.
+- Scope and changed paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md` only; no application, Firebase or business-data writes.
+- Before -> after: CHG-20261021-054 correctly recorded source-level scope isolation while automated CI was pending; now confirmed GitHub Actions run https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39659935648 completed successfully on that exact code SHA.
+- Why: Keep the canonical source of truth and immutable-style audit evidence aligned with completed verification.
+- User/data/security/compatibility impact: Documentation only. No data changes, deployments, new schema, or permission modifications.
+- Verification (exact commands, PASS/FAIL/NOT RUN): GitHub CI `npm test` PASS **85/85, zero failed**; `npm run build` PASS; mandatory documentation contract PASS. Run 39659935648 completed `success`. Real devices, overlapping live Firebase account switches, Firestore Security Rules, backup integration NOT RUN. Nine npm advisories (3 moderate, 6 high) were reported.
+- Risk and rollback: No runtime change. Revert this documentation commit if the verification evidence is superseded, preserving the audit append-only convention with a correction rather than deleting history.
+- Master sections updated: §9.1, §13, v2.10.8.
+- Status: VERIFIED AUTOMATED CI; LIVE QA STILL OPEN.
+- Follow-ups: Verify account/guest and A → B → A request overlap in a browser, plus live activity transaction edits/deletes and security rules.
