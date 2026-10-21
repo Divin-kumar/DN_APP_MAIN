@@ -685,3 +685,17 @@
 - Risks and rollback: Persisted eventGroups may be larger by small metadata values; backend rules/quotas and cloud concurrency require live testing. Revert commit to restore previous normalizer.
 - Master: §9.1 and §13, v2.10.6.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-054 | Isolate income and expense caches on account switches
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; continued financial reliability work in the new chat.
+- Branch / commit / PR: `OldVersion` only; pending commit (Git history will identify SHA). `main` untouched, PR #6 not merged.
+- Scope and changed paths: `src/store/useIncomeStore.js`, `src/store/useExpenseStore.js`, `src/utils/financialLoadScope.js`, `src/utils/financialLoadScope.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Income cleared stale visible records on a scope change but retained old `loadedFor`; Expense did not clear old records at all. Both could incorrectly treat an old scope as cached after A → B → A navigation while requests overlapped; joining an in-flight request did not reactivate its scope. Both stores now clear scoped projections and `loadedFor` together on ownership change, check both keys before reusing cache, and reactivate pending loads before awaiting them.
+- Why: Prevent cross-account/guest stale financial data from leaking into non-Financials screens or leaving an empty/stale transaction list after rapid session changes.
+- User/data/security/compatibility impact: Client in-memory state only. Existing account Firestore paths, guest storage keys, transaction IDs and backup schema are unchanged; no data migration/deletion/deployment. This is defense in depth, not a substitute for server-side Firestore Security Rules.
+- Verification (exact commands, PASS/FAIL/NOT RUN): Added six pure Node regression cases (`src/utils/financialLoadScope.test.mjs`); `npm test` and `npm run build` PENDING GitHub Actions; multi-account mobile browsers, overlapping live Firebase requests and Firestore Security Rules NOT RUN.
+- Risk and rollback: Scope changes may temporarily show loading/empty lists until the selected account is fetched, intentionally avoiding previous-owner projection. Concurrent writes and live-account integration still need review. Revert this commit to roll back.
+- Master sections updated: §9.1, §13, version 2.10.7.
+- Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
+- Follow-ups: Verify A → B → A switching with slow requests and account/guest/fixture modes; validate backup restore, expense edits and deployed rules.

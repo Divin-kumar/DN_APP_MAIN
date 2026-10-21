@@ -15,6 +15,7 @@ import {
 } from '../services/expenseService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
+import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -36,10 +37,10 @@ const useExpenseStore = create((set, get) => {
 
   loadExpenses: async (uid, isGuest) => {
     const loadKey = getLoadKey(uid, isGuest);
-    if (get().loadedFor === loadKey) return get().expenses;
+    if (isFinancialScopeLoaded(get(), loadKey)) return get().expenses;
+    set(beginFinancialLoad(get(), loadKey, 'expenses'));
+    // Re-select an in-flight account when rapidly switching A → B → A.
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
-
-    set({ loading: true, error: null, activeLoadKey: loadKey });
 
     const request = Promise.resolve().then(async () => {
       try {

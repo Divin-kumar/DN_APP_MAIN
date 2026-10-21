@@ -15,6 +15,7 @@ import {
 } from '../services/incomeService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
+import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -32,11 +33,10 @@ const useIncomeStore = create((set, get) => {
 
   loadIncomes: async (uid, isGuest) => {
     const loadKey = getLoadKey(uid, isGuest);
-    if (get().loadedFor === loadKey) return get().incomes;
+    if (isFinancialScopeLoaded(get(), loadKey)) return get().incomes;
+    set(beginFinancialLoad(get(), loadKey, 'incomes'));
+    // Re-select an in-flight account when rapidly switching A → B → A.
     if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
-
-    const accountChanged = get().activeLoadKey && get().activeLoadKey !== loadKey;
-    set({ loading: true, error: null, activeLoadKey: loadKey, ...(accountChanged ? { incomes: [] } : {}) });
 
     const request = Promise.resolve().then(async () => {
       try {
