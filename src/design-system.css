@@ -2129,3 +2129,32 @@ html[data-theme] .code-list-item .code-list-actions-other { width:var(--code-lis
 html[data-theme] .code-list-item.is-open-delete .code-list-actions-delete { inset:0 auto 0 0 !important; width:76px !important; visibility:visible !important; pointer-events:auto !important; }
 html[data-theme] .code-list-item.is-open-delete .code-list-row { transform:translateX(76px) !important; }
 @media (prefers-reduced-motion:reduce) { html[data-theme] .dn-swipe-main { transition:none !important; } }
+
+/* v2.13.1 visual corrections: all totals share one row on narrow devices. */
+html[data-theme] .dn-finance-summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:clamp(4px,1.3vw,12px) !important; }
+html[data-theme] .dn-finance-summary-grid .dn-finance-metric { grid-column:auto !important; min-width:0; min-height:86px; padding:clamp(7px,1.4vw,16px) !important; gap:7px; }
+html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading { gap:4px; font-size:clamp(.61rem,1.8vw,.8rem) !important; }
+html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading svg { width:clamp(12px,2.3vw,18px); height:clamp(12px,2.3vw,18px); }
+html[data-theme] .dn-finance-summary-grid .dn-finance-metric strong { font-size:clamp(.81rem,2.9vw,1.58rem) !important; letter-spacing:-.03em; overflow-wrap:anywhere; }
+/* Code Lists: reveal glass overlay without sliding the text card horizontally. */
+html[data-theme] .code-list-item.is-open-other .code-list-row,
+html[data-theme] .code-list-item.is-open-delete .code-list-row,
+html[data-theme] .code-list-item:hover .code-list-row,
+html[data-theme] .code-list-item.is-open-other:hover .code-list-row,
+html[data-theme] .code-list-item.is-open-delete:hover .code-list-row {
+  transform:none !important; padding-left:var(--space-lg) !important; padding-right:var(--space-lg) !important;
+}
+html[data-theme] .code-list-item .code-list-actions { z-index:3 !important; transition:opacity .24s ease,visibility .24s ease !important; }
+html[data-theme] .code-list-item .code-list-row { transition:background .25s ease,box-shadow .25s ease !important; }
+html[data-theme] .code-list-item.is-open-other .code-list-row,
+html[data-theme] .code-list-item.is-open-delete .code-list-row { filter:brightness(.97); }
+html[data-theme] .code-list-item.is-open-other .code-list-actions-other,
+html[data-theme] .code-list-item.is-open-delete .code-list-actions-delete {
+  opacity:1 !important; visibility:visible !important; pointer-events:auto !important;
+}
+html[data-theme] .code-list-item .code-list-actions-other,
+html[data-theme] .code-list-item .code-list-actions-delete {
+  background:color-mix(in srgb,var(--color-card-raised) 94%,transparent) !important;
+  backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
+}
+html[data-theme] .dn-swipe-surface .dn-swipe-main { touch-action:pan-y; }

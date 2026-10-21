@@ -78,3 +78,18 @@ test('moment-only expenses can be deleted without requiring an expired activity 
   assert.match(manager, /await updateMirrors\(original, null\)/);
   assert.match(manager, /await deleteExpenseItem\(uid, isGuest, id\)/);
 });
+
+test('swipe implementation uses a defined transaction resolver and Moment pointer handlers', () => {
+  const finance = read('../components/financials/TransactionHistory.jsx');
+  assert.match(finance, /const next = resolveDirectionalSwipe\(/);
+  assert.doesNotMatch(finance, /resolveTransactionSwipe/);
+  const moment = read('../components/common/SwipeActionCard.jsx');
+  assert.match(moment, /onPointerUp=\{handlePointerUp\}/);
+  assert.match(moment, /resolveSwipeGesture\(start/);
+  assert.match(moment, /onPointerCancel=/);
+});
+test('Finance totals stay on one row and Code Lists no longer translate whole rows', () => {
+  const css = read('../design-system.css');
+  assert.match(css, /\.dn-finance-summary-grid \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(css, /\.code-list-item\.is-open-delete \.code-list-row,[\s\S]*?transform:none !important/);
+});

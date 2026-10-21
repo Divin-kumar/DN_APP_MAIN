@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Trash2 } from 'lucide-react';
-import { resolveDirectionalSwipe } from '../../utils/swipeGestures';
+import { resolveSwipeGesture } from '../../utils/swipeGestures';
 
 export default function SwipeActionCard({ as: Root = 'article', className = '', mainClassName = '', label = 'Card', otherActions = [], onDelete, children }) {
   const [open, setOpen] = useState(null);
   const rootRef = useRef(null);
   const pointer = useRef('mouse');
   const suppressClick = useRef(false);
+  const pointerStart = useRef(null);
   const reduced = useReducedMotion();
   useEffect(() => {
     if (!open) return undefined;
@@ -21,6 +22,22 @@ export default function SwipeActionCard({ as: Root = 'article', className = '', 
   };
   const perform = (cb) => { setOpen(null); cb?.(); };
   const otherWidth = otherActions.length ? Math.min(otherActions.length * 74, 222) : 0;
+  const handlePointerDown = (e) => {
+    if (e.target.closest('button, a, input, textarea, select')) return;
+    pointerStart.current = { x: e.clientX, y: e.clientY, id: e.pointerId };
+    pointer.current = e.pointerType;
+  };
+  const handlePointerUp = (e) => {
+    const start = pointerStart.current;
+    pointerStart.current = null;
+    if (!start || start.id !== e.pointerId) return;
+    const dx = e.clientX - start.x;
+    const dy = e.clientY - start.y;
+    const result = resolveSwipeGesture(start, { x: e.clientX, y: e.clientY });
+    if (!result.action) return;
+    suppressClick.current = true;
+    reveal(result.action, e.pointerType === 'touch');
+  };
   return (
     <Root ref={rootRef} tabIndex={0} role="group" className={`dn-swipe-surface ${className}${open ? ` dn-swipe-open-${open}` : ''}`}
       aria-label={`${label}. Left swipe for actions, right swipe for Delete. Arrow keys reveal trays.`}
@@ -43,15 +60,15 @@ export default function SwipeActionCard({ as: Root = 'article', className = '', 
         {onDelete ? <button type="button" className="dn-swipe-action is-danger" tabIndex={open === 'delete' ? 0 : -1}
           onClick={() => perform(onDelete)}><Trash2 size={17} aria-hidden="true" /><span>Delete</span></button> : null}
       </div>
-      <motion.div className={`dn-swipe-main ${mainClassName}`} drag={reduced ? false : 'x'} dragDirectionLock
-        dragConstraints={{ left: -otherWidth, right: onDelete ? 76 : 0 }} dragElastic={0.14} dragMomentum={false}
+      <motion.div className={`dn-swipe-main ${mainClassName}`}
         style={{ touchAction: 'pan-y' }}
-        onPointerDown={(e) => { pointer.current = e.pointerType; suppressClick.current = false; }}
-        onDragStart={() => { suppressClick.current = true; }}
+        onPointerDown={(e) => { suppressClick.current = false; handlePointerDown(e); }}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={() => { pointerStart.current = null; }}
         onClickCapture={(e) => { if (suppressClick.current) { e.preventDefault(); e.stopPropagation(); suppressClick.current = false; } }}
         animate={{ x: open === 'other' ? -otherWidth : open === 'delete' ? 76 : 0 }}
         transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34, mass: .82 }}
-        onDragEnd={(_, info) => reveal(resolveDirectionalSwipe({ offsetX: info.offset.x, velocityX: info.velocity.x, wasOpen: open }), pointer.current === 'touch')}>
+>
         {children}
       </motion.div>
     </Root>

@@ -85,7 +85,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
         animate={{ x: open === 'other' ? -76 : open === 'delete' ? 76 : 0 }}
         transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34, mass: 0.82 }}
         onDragEnd={(_, info) => {
-          const next = resolveTransactionSwipe({
+          const next = resolveDirectionalSwipe({
             offsetX: info.offset.x, velocityX: info.velocity.x, wasOpen: open,
           });
           reveal(next, pointerType.current === 'touch');

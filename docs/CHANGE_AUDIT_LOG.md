@@ -823,3 +823,13 @@
 - Verification: Node tests, build, governance PENDING GitHub Actions. Real-device, iOS Safari, accessibility and measured FPS NOT RUN.
 - Risk: Narrow Grid card tray may need horizontal scrolling/device QA; legacy CSS specificity requires later cleanup. Rollback by reverting this commit.
 - Master sections: §9.1 and §13, version 2.13.0.
+
+## CHG-20261021-064 | One-line financial totals and swipe reliability repair
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, UI bug report.
+- Branch: OldVersion only; main unaffected. No deployment or stored data changes.
+- Paths: src/design-system.css, src/components/common/SwipeActionCard.jsx, src/components/financials/TransactionHistory.jsx, src/utils/premiumUxContract.test.mjs, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before -> after: Narrow Finance breakpoints split Balance onto a second row; now all three cards stay on one responsive row. Transaction drag-end referenced removed resolver causing runtime swipe failure; corrected. Moment swipe release uses pointer gesture intent rather than gesture-library drag tracking. Code List row transform disabled, actions animate on top of a stationary row.
+- Validation: New source-contract tests; npm test/build and governance pending GitHub CI. Manual browser/swipe/performance QA not run.
+- Risk/rollback: Very narrow widths may wrap currency figures; swipe click suppression and Code List overlay behavior need device review. Revert this commit to roll back. No migration.
+- Master: §9.1 and §13, version 2.13.1.
