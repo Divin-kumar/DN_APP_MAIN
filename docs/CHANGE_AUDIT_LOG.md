@@ -610,3 +610,14 @@
 - Risk/rollback: Do not claim full premium production quality until device/browser/security acceptance; update master and append future audit entries after measured validations.
 - Master: §9.2 and §13, version 2.10.0.
 - Status: SOURCE REVIEW DOCUMENTED / REAL-DEVICE QA PENDING.
+
+## CHG-20261021-048 | Improve partial-write recovery for financial activity links
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only; main unchanged.
+- Paths: `src/hooks/useTransactionManager.js`, `src/utils/transactionRelations.test.mjs`, master and audit.
+- Before -> after: If a type conversion failed after changing an activity mirror, rollback removed the replacement ledger record but could leave nested expense records missing or duplicated. Added best-effort inverse mirror reconciliation before deleting replacement. Same-type expense edits now attempt to restore the previous ledger record if activity mirror persistence fails. Errors remain visible and require inspection if compensation fails.
+- Data/compatibility: No destructive data migration or schema changes. This reduces inconsistent multi-record writes but is NOT atomic across Firestore collections; live fault-injection and concurrency tests remain required.
+- Verification: Added pure regression for a failed expense-to-income conversion and mirror restoration. CI build/Node tests pending.
+- Risk/rollback: Compensation is best-effort and errors may still require manual reconciliation. Revert commit if regression detected.
+- Master: §9.1, version 2.10.1.
+- Status: SOURCE IMPLEMENTED, CI AND FIREBASE INTEGRATION PENDING.

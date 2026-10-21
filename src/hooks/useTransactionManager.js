@@ -53,8 +53,13 @@ export default function useTransactionManager() {
       else await updateExpenseItem(uid, isGuest, current);
       try { await updateMirrors(original, current); }
       catch {
-        // Do not imply an activity relationship was updated when the second write failed.
-        throw new Error('Transaction saved, but its linked activity did not sync. Please retry.');
+        // Restore the previous master record whenever the nested relationship
+        // update fails. Neither write is atomic across Firestore collections.
+        try {
+          if (nextKind === 'income') await updateIncomeItem(uid, isGuest, original);
+          else await updateExpenseItem(uid, isGuest, original);
+        } catch { /* Keep the failure visible; manual reconciliation may be needed. */ }
+        throw new Error('Transaction could not sync its linked activity. Check the record before retrying.');
       }
       return current;
     }
@@ -74,13 +79,16 @@ export default function useTransactionManager() {
         }
       } else await updateMirrors(null, created);
     } catch {
-      // Best-effort compensation: do not leave a second typed record if conversion
-      // failed. Old source record is never deleted before the new one is saved.
+      // A failed type conversion may have already changed an event's nested
+      // expense mirror. Reverse that update BEFORE rolling back the replacement,
+      // so a failed source deletion cannot strand an expense in the activity.
+      try { await updateMirrors(created, original); }
+      catch { /* Retain visible error if cross-collection compensation also fails. */ }
       try {
         if (nextKind === 'income') await deleteIncomeItem(uid, isGuest, saved.id || saved.firestoreId);
         else await deleteExpenseItem(uid, isGuest, saved.id || saved.firestoreId);
-      } catch { /* Preserve visible error; recovery requires reconciliation. */ }
-      throw new Error('Transaction could not be fully synchronized. Check activity links and retry.');
+      } catch { /* The user must check for incomplete conversion. */ }
+      throw new Error('Transaction conversion was incomplete and recovery was attempted. Check both types and activity links before retrying.');
     }
     return created;
   }, [uid, isGuest, addIncome, updateIncomeItem, deleteIncomeItem, addExpense,

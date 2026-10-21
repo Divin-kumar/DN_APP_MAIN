@@ -41,3 +41,18 @@ test('linked transactions reject missing/unknown activity but allow unlinked tra
   assert.throws(() => requireLinkedActivity(known, { eventId: 'e1', activityId: 'removed' }), /unavailable/);
   assert.throws(() => requireLinkedActivity([], { eventId: 'e1', activityId: 'a1' }), /unavailable/);
 });
+
+
+test('reversing a failed expense to income conversion restores the nested expense mirror', () => {
+  const existing = {
+    id: 'e1', name: 'Career',
+    activities: [{ id: 'a1', expenses: [{ id: 'expense-old', amount: 500, date: '2026-10-02' }] }],
+  };
+  const original = { id: 'expense-old', transactionKind: 'expense', eventId: 'e1', activityId: 'a1', amount: 500, date: '2026-10-02' };
+  const replacement = { id: 'income-new', transactionKind: 'income', eventId: 'e1', activityId: 'a1', amount: 500 };
+  const removed = reconcileExpenseActivities([existing], original, replacement);
+  assert.deepEqual(removed[0].activities[0].expenses, []);
+  const restored = reconcileExpenseActivities(removed, replacement, original);
+  assert.equal(restored[0].activities[0].expenses[0].id, original.id);
+  assert.equal(restored[0].activities[0].expenses[0].amount, 500);
+});
