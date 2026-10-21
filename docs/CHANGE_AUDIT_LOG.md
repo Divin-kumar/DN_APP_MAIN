@@ -597,3 +597,16 @@
 - Risks/rollback: Browser pointer behavior needs mobile QA; revert this commit if gesture compatibility problems arise.
 - Master: version 2.9.11.
 - Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
+
+## CHG-20261021-047 | Cross-application premium UX source audit and release acceptance matrix
+- Date (UTC): 2026-10-21.
+- Requester: DN owner, premium UI/UX redesign implementation brief.
+- Branch/commit: `OldVersion`, this documentation commit SHA in Git history; `main` untouched.
+- Paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`. No new Markdown.
+- Before/after: Source findings scattered among code and historic comments -> consolidated §9.2 matrix for Dashboard, Events, Activities, Financials, Timeline, Memories, Insights, Settings, Code Lists, forms, overlays, navigation and gesture QA; explicit design conventions and test/approval gates.
+- Evidence: Reviewed source modules, existing CI and build. This is a source-only audit; **not** manual browser/device testing or a certified performance/security assessment.
+- User/data/security: Documentation-only change. Existing Firestore/guest records untouched, no production deployment.
+- Verification: Prior implementation build/test CI completed on earlier commits; this audit commit's CI pending. Real iOS/Android, WCAG, frame rate, cross-account Security Rules and Firebase preview usability tests NOT RUN. 9 dependency advisories remain.
+- Risk/rollback: Do not claim full premium production quality until device/browser/security acceptance; update master and append future audit entries after measured validations.
+- Master: §9.2 and §13, version 2.10.0.
+- Status: SOURCE REVIEW DOCUMENTED / REAL-DEVICE QA PENDING.

@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.9.11** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.10.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -262,6 +262,28 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 ### 9.1 Unified transaction implementation (source migration stage)
 The product-owner-approved financial simplification keeps *two underlying existing Firestore collections* (`users/{uid}/incomes` and `users/{uid}/expenses`) and browser guest keys for data compatibility, while the UI transitions to one Transactions flow. `src/utils/transactionFilters.js` now supplies data-only month options, intersection filters, dynamic income/expense/balance totals, sorting, and normalized form payloads. Existing income normalization now preserves optional linked `eventId`, `activityId`, and notes, with the same note preservation for expenses. **No Firestore migration or record deletion** is needed. Activity-linked expense records may also exist nested within event groups; the UI must avoid deleting/editing their only copy and must reconcile relationships. UI work and cross-collection type transitions require follow-up and browser validation.
 
+### 9.2 DN full-system premium UX audit and release acceptance
+**Evidence level:** Source-inspected on OldVersion on 2026-10-21. GitHub Node tests/build verify source compilation and unit behavior, not physical mobile interaction, screenshot quality, 60fps performance, Firebase security or live data recovery.
+
+| Screen / system | Reviewed current implementation | Open verification or design gap |
+|---|---|---|
+| Dashboard | Existing dashboard summary cards and responsive shell | Measure actual viewport balance, skeletons, empty states and dark/light consistency |
+| Events | One event overflow menu for Edit/Duplicate/Share/Archive/Delete, reversible archive filter | Confirm card/menu tap targets, keyboard focus, authentication of shared deep links and no duplicated financial data |
+| Activities | Shared swipe hook with axis detection, haptic fallback, unified transaction activity deep link | Validate vertical scroll vs swipe, safe action thresholds and child-expense mirror recovery |
+| Financials | Overview/Transactions, unified form, filtered income/expense/balance, only data-month choices | Account/guest create/edit/delete, type conversions, preserving IDs and months after reload, old backup recovery |
+| Timeline | Event timeline and activity sorting in existing Event workspace | Check very long histories, native date behavior and event archive awareness |
+| Memories / attachments | Notes, keepsakes metadata and memory dialogs | Test keyboard/scroll behavior, original attachment file limitations and empty states |
+| Insights | Derived summaries, filters/search and Lucide icons | Cross-check financial totals against unified Transactions for matching periods |
+| Settings / Code Lists | Shared DropdownSelect; Code Lists shared gesture controls | Inspect long lists, touch targets, disabling values, focus semantics, mobile keyboard and schema migrations |
+| Modals / forms | Shared ModalDialog, DateField (native browser picker), portaled DropdownSelect | iOS/Android viewport, safe areas, reduced-motion, screen readers, validation, 200% zoom |
+| Navigation | Desktop and mobile dock, unified financial quick-create | Check bottom navigation occlusion, landscape rotation, keyboard overlap and browser back behavior |
+
+**Design rules adopted for incremental maintenance:** Reuse the existing Lucide family and theme tokens in \`src/design-system.css\`; prefer 44px minimum touch targets; consistent responsive spacing, radii, button hierarchy and focus-visible outlines; destructive actions require confirmation; real transaction amount indicators use theme success/danger colors; overlays use portal placement while native calendar UI belongs to browser/OS; respect prefers-reduced-motion; gestures have an explicit non-swipe action fallback. Optional navigator.vibrate is not a guarantee of iOS haptics. Smooth 60fps is an acceptance target, **not a measured result**.
+
+**Required usability acceptance matrix (NOT RUN in this audit):** 320/375/390/430px phones, 768/1024px tablets, desktop >=1280px; light/dark; keyboard only; VoiceOver/TalkBack; browser zoom to 200%; iOS Safari/Android Chrome; portrait/landscape; visible keyboard; 20+ dropdown values and native calendar interactions; accidental swipe vs page scrolling; guest and logged-in financial create/edit/delete, history filters and backup retry; linked income/expense activity reconciliation; tooltip/overlay clearance above bottom navigation.
+
+**Outstanding production blockers:** Deployed Firestore Security Rules and cross-user tests remain unknown; real account/guest restore-and-migration drills absent; expense/activity cross-collection mutations are non-atomic; automated npm audits reported 9 advisories; no Firebase usability preview URL because deployment credentials are unavailable; no device-level accessibility/performance certification. These stay open until repeatable evidence exists.
+
 ## 10. Planned and unverified backlog
 
 **Backlog policy:** Only product-owner-approved work should be represented as committed scope; other rows are **candidate work / verification obligations**. Track progress by changing this table and appending an audit entry, not by creating another file.
@@ -325,6 +347,7 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.10.0** | **2026-10-21** | Consolidated full DN source-based premium UX findings, design-system standards and device QA acceptance matrix | **CHG-20261021-047** |
 | **2.9.11** | **2026-10-21** | Unified Code Lists swipe thresholds/axis locking and haptics with shared activity gesture contract | **CHG-20261021-046** |
 | **2.9.10** | **2026-10-21** | Added activity relationship validation preventing orphan transaction links and stale nested expense deletion | **CHG-20261021-045** |
 | **2.9.9** | **2026-10-21** | Removed obsolete standalone Income/Expense pages and their eight old display/form components after reference audit | **CHG-20261021-044** |
