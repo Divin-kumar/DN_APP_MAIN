@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.6.6** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.7.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -256,6 +256,9 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | Automated reminders | UI preferences do not establish background push scheduler | Do not describe as shipped |
 | DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
 
+### 9.1 Unified transaction implementation (source migration stage)
+The product-owner-approved financial simplification keeps *two underlying existing Firestore collections* (`users/{uid}/incomes` and `users/{uid}/expenses`) and browser guest keys for data compatibility, while the UI transitions to one Transactions flow. `src/utils/transactionFilters.js` now supplies data-only month options, intersection filters, dynamic income/expense/balance totals, sorting, and normalized form payloads. Existing income normalization now preserves optional linked `eventId`, `activityId`, and notes, with the same note preservation for expenses. **No Firestore migration or record deletion** is needed. Activity-linked expense records may also exist nested within event groups; the UI must avoid deleting/editing their only copy and must reconcile relationships. UI work and cross-collection type transitions require follow-up and browser validation.
+
 ## 10. Planned and unverified backlog
 
 **Backlog policy:** Only product-owner-approved work should be represented as committed scope; other rows are **candidate work / verification obligations**. Track progress by changing this table and appending an audit entry, not by creating another file.
@@ -319,7 +322,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.6.6** | **2026-10-21** | Logged failed Firebase preview attempt: tests/build passed, deployment blocked by missing credential, no upload | **CHG-20261021-024** |
+| **2.7.0** | **2026-10-21** | Began unified transaction layer without migrating existing account/guest records; removed empty months and added dynamic totals/sorting/notes/link preservation | **CHG-20261021-025** |
+| 2.6.6 | 2026-10-21 | Logged failed Firebase preview attempt: tests/build passed, deployment blocked by missing credential, no upload | **CHG-20261021-024** |
 | **2.6.5** | **2026-10-21** | Added opt-in non-live Firebase Hosting usability-preview workflow scoped to OldVersion, with credential and validation gates | **CHG-20261021-023** |
 | **2.6.4** | **2026-10-21** | Captured verified 60-test/build/governance pass after final dropdown-scroll correction; recorded browser/mobile limitations | **CHG-20261021-022** |
 | 2.6.3 | 2026-10-21 | Prevented dropdown internal scrolling from triggering viewport reposition and selected-option jump | **CHG-20261021-021** |

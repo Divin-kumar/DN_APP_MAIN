@@ -22,6 +22,10 @@ export const normalizeIncome = (item) => ({
   amount: Number(item.amount ?? 0),
   date: item.date || new Date().toISOString().slice(0, 10),
   createdAt: item.createdAt || new Date().toISOString(),
+  description: String(item.description ?? item.notes ?? '').trim(),
+  notes: String(item.notes ?? item.description ?? '').trim(),
+  eventId: item.eventId || null,
+  activityId: item.activityId || null,
 });
 
 export const getGuestIncomes = () => {

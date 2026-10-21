@@ -340,3 +340,16 @@
 - Risk and rollback: Credential must be added by an authorized operator with limited Hosting permissions; private secret must never be posted in chat or source. Once configured, rerun the failed GitHub job, verify URL, then append success/failure evidence. No live channel changes required.
 - Master: §6.5 and §13, version 2.6.6.
 - Status: DEPLOYMENT BLOCKED, NOT DEPLOYED.
+
+## CHG-20261021-025 | Add backwards-compatible unified transaction data model
+- Date (UTC): 2026-10-21.
+- Actor/requester: Owner's Financial Module Simplification and Premium UX request.
+- Branch/commit: `OldVersion`; this atomic commit in Git history. `main` unchanged.
+- Files changed: `src/utils/transactionFilters.js`, its Node tests, `src/services/incomeService.js`, `src/services/expenseService.js`, master and audit.
+- Before -> after: Filter months included empty 12-month ranges; summary totals did not follow composed filters; older income/expense models dropped some new transaction fields. Now month options use actual record dates only; composed search/type/month filters feed reconciled income/expense/balance; sort supports date, amount and title; unified form adapter writes into the existing typed records; notes/activity relationships persist.
+- Rationale: Consolidate income and expenses at UI level while preserving stable account/guest backup contracts.
+- UX/data/security/compatibility: No Firestore collection changes, old documents remain readable, no record rewrites. Income adds optional notes/eventId/activityId fields; expenses preserve optional notes. Existing nested expenses require subsequent reconciliation.
+- Verification: Added eight pure Node tests; GitHub CI/build not yet verified for this commit, browser/backend NOT RUN.
+- Risk/rollback: Consumers using old transactionsMonthOptions signature are updated in a subsequent UI commit. No destructive migration; revert commit if needed.
+- Master: §§9.1 and 13; version 2.7.0.
+- Status: DATA-LAYER IMPLEMENTED, UI FOLLOW-UP REQUIRED.

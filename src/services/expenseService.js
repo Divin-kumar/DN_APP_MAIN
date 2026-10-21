@@ -34,6 +34,7 @@ export const normalizeExpense = (item) => ({
   amount: Number(item.amount ?? 0),
   category: item.category || 'Other',
   description: String(item.description ?? '').trim(),
+  notes: String(item.notes ?? item.description ?? '').trim(),
   date: item.date || new Date().toISOString().slice(0, 10),
   createdAt: item.createdAt || new Date().toISOString(),
   eventId: item.eventId || null,
