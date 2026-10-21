@@ -1834,3 +1834,86 @@ html[data-theme] .dn-transaction-form-error { color: var(--color-danger); font-w
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-transaction-card { transition: none; }
 }
+
+
+/* DN shared premium event action menu: one overflow instead of detached icon rows. */
+html[data-theme] .dn-event-story-with-menu { position: relative; isolation: isolate; }
+html[data-theme] .dn-event-action-anchor.is-story {
+  position: absolute; z-index: 12; top: 12px; right: 12px;
+}
+html[data-theme] .dn-event-action-anchor.is-hero {
+  display: inline-flex; position: relative; z-index: 8;
+}
+html[data-theme] .dn-event-overflow-trigger {
+  display: grid; place-items: center;
+  width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  padding: 0; border-radius: 14px; cursor: pointer;
+  color: var(--color-text); border: 1px solid var(--color-border);
+  background: color-mix(in srgb,var(--color-card-raised) 88%,transparent);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 5px 16px color-mix(in srgb,var(--color-text) 9%,transparent);
+  transition: background .18s ease,transform .18s ease,border-color .18s ease;
+}
+html[data-theme] .dn-event-overflow-trigger:hover,
+html[data-theme] .dn-event-overflow-trigger[aria-expanded="true"] {
+  border-color: color-mix(in srgb,var(--color-primary) 44%,var(--color-border));
+  background: color-mix(in srgb,var(--color-primary) 9%,var(--color-card));
+}
+html[data-theme] .dn-event-overflow-menu {
+  display: grid; gap: 3px; box-sizing: border-box;
+  padding: 7px; min-width: 0; min-height: 0; overflow-x: hidden; overflow-y: auto;
+  border: 1px solid color-mix(in srgb,var(--color-primary) 16%,var(--color-border));
+  border-radius: 17px; background: var(--color-card-raised);
+  color: var(--color-text); z-index: 2147483001;
+  box-shadow: 0 20px 48px color-mix(in srgb,var(--color-text) 19%,transparent);
+  backdrop-filter: blur(20px); overscroll-behavior: contain;
+}
+html[data-theme] .dn-event-overflow-menu button {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; min-height: 44px; padding: 10px 12px;
+  background: transparent; border: 1px solid transparent;
+  border-radius: 11px; text-align: left; font: inherit; font-weight: 650;
+  font-size: .88rem; color: var(--color-text); cursor: pointer;
+}
+html[data-theme] .dn-event-overflow-menu button:hover,
+html[data-theme] .dn-event-overflow-menu button:focus-visible {
+  background: color-mix(in srgb,var(--color-primary) 9%,var(--color-card));
+  border-color: color-mix(in srgb,var(--color-primary) 20%,transparent);
+}
+html[data-theme] .dn-event-overflow-menu button.is-danger {
+  color: var(--color-danger);
+}
+html[data-theme] .dn-event-overflow-menu button.is-danger:hover {
+  background: color-mix(in srgb,var(--color-danger) 11%,var(--color-card));
+  border-color: color-mix(in srgb,var(--color-danger) 30%,transparent);
+}
+html[data-theme] .dn-event-story-with-menu .event-story-main {
+  box-sizing: border-box; padding-right: max(60px,1.2rem);
+}
+html[data-theme] .event-story-status.status-archived,
+html[data-theme] .event-moment-kicker.status-archived {
+  color: var(--color-text-muted);
+  background: color-mix(in srgb,var(--color-text-muted) 13%,var(--color-card));
+}
+html[data-theme] .dn-transaction-card-actions { z-index: 0; }
+html[data-theme] .dn-transaction-card-core { z-index: 1; }
+/* Design-system button / keyboard contract for interactive primary areas. */
+html[data-theme] .primaryButton,
+html[data-theme] .secondaryButton,
+html[data-theme] .modal-danger-button {
+  min-height: 44px;
+  border-radius: var(--radius-md);
+}
+html[data-theme] .primaryButton:focus-visible,
+html[data-theme] .secondaryButton:focus-visible,
+html[data-theme] .modal-danger-button:focus-visible,
+html[data-theme] .dn-event-overflow-trigger:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 3px;
+}
+@media (max-width: 760px) {
+  html[data-theme] .dn-event-action-anchor.is-story { top: 9px; right: 9px; }
+  html[data-theme] .dn-event-overflow-menu { max-width: calc(100vw - 16px); }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-event-overflow-trigger { transition: none; }
+}

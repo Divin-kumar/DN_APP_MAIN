@@ -495,3 +495,14 @@
 - Risk/rollback: Modal positioning/portal focus and guest share behavior require browser testing. Revert commit if necessary.
 - Master: §9, §13, v2.9.2.
 - Status: SOURCE IMPLEMENTED, CI PENDING.
+
+## CHG-20261021-038 | Shared premium event action overlays and button targets
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`; `main` unchanged.
+- Paths: `src/design-system.css`, master, audit.
+- Before/after: New event menu had no styles; now token-driven frosted popover, high viewport-aware overlay, 44px trigger/options, focus states, reduced-motion support and a muted Archived badge; important buttons share minimum touch height. Transaction swipe action stacking corrected.
+- Why: Consistent premium Lucide-based UI across Events and Financials without altering business data.
+- Verification: CSS committed, Node/Vite CI and manual light/dark mobile checks pending.
+- Risk/rollback: Existing global selectors may conflict at some responsive breakpoints, verify on device; revert commit to rollback.
+- Master: §§6/9/13, v2.9.3.
+- Status: SOURCE IMPLEMENTED, QA PENDING.
