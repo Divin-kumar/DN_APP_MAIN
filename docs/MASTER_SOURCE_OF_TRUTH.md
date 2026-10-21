@@ -1,12 +1,12 @@
 # LifeHub / DN — Master Source of Truth
-**Version:** 1.0.0 | **Status:** Authoritative documentation baseline (source-verified with exceptions) | **As of:** 2026-10-21
+**Version:** 1.0.1 | **Status:** Authoritative documentation baseline (source-verified with exceptions) | **As of:** 2026-10-21
 **Repository:** `Divin-kumar/DN_APP_MAIN` | **Development branch:** `OldVersion` | **Inspected branch head:** `f5919b8e4758e4ebadc6cebb85bb54ae3e414dbb`
 **Owners:** Product owner (product policy); engineering maintainer (technical accuracy); security owner (security sign-off, pending assignment).
 
 > **AI entry point:** Read this document first, then [AI-ready knowledge base](AI_READY_KNOWLEDGE_BASE.md). Treat implementation source and successful runtime verification as more authoritative than prose for actual behavior. Historic review reports describe risks and proposals, not approved implementation. Do not assume this file overrides GitHub branch state or live Firebase configuration.
 
 ## 1. Authority, scope, and evidence
-This document is the **single normative documentation entry point** for product scope, implemented architecture, operating boundaries and governance. Supporting deep-dive reports remain *non-normative evidence* until archived or retired. It consolidates `README.md`, `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/DOCUMENTATION_STANDARDS.md`, `memory.md`, `prd.md`, `rules.md`, and `tasks.md`. Three substantive DOCX files and a transient Word lock file were inventoried but **their binary content could not be extracted through the connected GitHub reader**; their claims are NOT asserted here. See [review report](DUPLICATE_OBSOLETE_REPORT.md).
+This document is the **single normative documentation entry point** for product scope, implemented architecture, operating boundaries and governance. Supporting deep-dive reports remain *non-normative evidence* until archived or retired. Deleted source paths below are historical provenance recoverable in Git history, not current document links. It consolidates `README.md`, `BUSINESS_GUIDE.md`, `architecture.md`, `design.md`, `docs/ARCHITECTURE.md`, `docs/ARCHITECTURE_REVIEW.md`, `docs/BACKUP_RESTORE_REVIEW.md`, `docs/CODE_LIST_PERSISTENCE.md`, `docs/DOCUMENTATION_STANDARDS.md`, `memory.md`, `prd.md`, `rules.md`, and `tasks.md`. Three substantive DOCX files and a transient Word lock file were inventoried but **their binary content could not be extracted through the connected GitHub reader**; their claims are NOT asserted here. See [review report](DUPLICATE_OBSOLETE_REPORT.md).
 
 **Precedence for factual disputes:** (1) inspected code/config at the specified commit, (2) verified tests and runtime evidence when supplied, (3) scoped recent implementation reviews, (4) older architecture/requirements narratives, (5) aspirational design. Product policies not specified in code require owner sign-off. Never confuse code presence with successful production verification.
 
@@ -101,6 +101,7 @@ Known risks include inconsistent branding (LifeHub/DN), large mixed-responsibili
 ## 10. Change history and governance
 | Version | Date | Change | Validation |
 |---|---|---|---|
+| 1.0.1 | 2026-10-21 | Retired superseded `docs/ARCHITECTURE.md` and `memory.md`; documented blocked deletions and updated README links | GitHub deletion commits; no runtime tests |
 | 1.0.0 | 2026-10-21 | Consolidated markdown authority, resolved v3 backup/architecture/naming conflicts, added source matrix and gaps | GitHub source/document inspection; **DOCX, runtime and live Firebase not verified** |
 
 **Change protocol:** Any feature affecting product behavior, persistence, architecture, security or documentation policy must update this master (version, affected sections, evidence paths, decision owner and verification state), update [AI extract](AI_READY_KNOWLEDGE_BASE.md), and record deprecation in [report](DUPLICATE_OBSOLETE_REPORT.md). Historic sources must not silently overrule this master. Version major for incompatible policy/schema/terminology, minor for substantive approved behavior, patch for corrections. Review after material changes and before releases.
