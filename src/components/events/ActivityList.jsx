@@ -110,16 +110,17 @@ export default function ActivityList({
             ? `${activityExpenses.length} linked ${activityExpenses.length === 1 ? 'expense' : 'expenses'} · ₹${totalSpent.toLocaleString('en-IN')}`
             : '';
 
-          const isDeleteOpen = openActivityId === activity.id && action === 'delete';
           const isOtherOpen = openActivityId === activity.id && action === 'other';
-          const isOpen = isDeleteOpen || isOtherOpen;
+          const isOpen = isOtherOpen;
+          const trayWidth = [onAddExpense, onEdit, onToggleCancelled, onDelete].filter(Boolean).length * 68;
 
           return (
             <article
               key={activity.id}
               role="group"
               tabIndex={0}
-              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe left for other actions or right for delete'}`}
+              style={{ '--dn-activity-tray-width': `${trayWidth}px` }}
+              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe left or press Enter for actions'}`}
               className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}${isOpen ? ` is-open-${action}` : ''}`}
               onPointerDown={(event) => {
                 handlePointerDown(event);
@@ -165,9 +166,7 @@ export default function ActivityList({
                 {onToggleCancelled ? <button type="button" className={`event-activity-action-cancel ${isCancelled ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onToggleCancelled(activity.id); close(); }} aria-label={`${isCancelled ? 'Restore' : 'Cancel'} ${activity.title}`}>
                   {isCancelled ? <RotateCcw size={15} /> : <XCircle size={15} />}<span>{isCancelled ? 'Restore' : 'Cancel'}</span>
                 </button> : null}
-              </div>
-              <div className="event-activity-actions event-activity-actions-delete" aria-hidden={!isDeleteOpen}>
-                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => { onDelete(activity.id); close(); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
+                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onDelete(activity.id); close(); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
               </div>
 
               <div className="event-activity-main">

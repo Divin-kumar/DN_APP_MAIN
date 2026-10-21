@@ -728,3 +728,17 @@
 - Master sections updated: §§2,3.1a,9.1,9.2,13 to version 2.11.0.
 - Status: SOURCE IMPLEMENTED / CI AND REAL-DEVICE QA PENDING.
 - Follow-ups: Inspect screenshots at 320/375/390/430/768/1024px and 200% zoom; verify gesture vs vertical scrolling, safe area/keyboard, modal/dropdown collision, real iOS haptic limitation, accessibility, cross-theme shadows and actual frame-time. Resolve CSS duplication, security rules, data integrity and dependency advisories separately.
+
+## CHG-20261021-057 | Unify left-swipe edit/delete for Activities and Code Lists
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, premium swipe consistency follow-up.
+- Branch / commit / PR: `OldVersion` only; SHA pending Git commit. `main` unchanged.
+- Exact changed paths: `src/utils/swipeGestures.js`, `src/utils/swipeGestures.test.mjs`, `src/hooks/useSwipeActions.js`, `src/components/events/ActivityList.jsx`, `src/pages/CodeLists.jsx`, `src/design-system.css`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Activities and Code Lists used split left-for-other/right-for-delete gestures, inconsistent with Transactions. Now all expose their non-destructive action tray via a deliberate left swipe; both Edit and Delete exist in the same revealed tray with original extra actions retained. Right swipes dismiss rather than expose destructive actions. Code Lists' variable-width action geometry and activity card tray follow shared swipe intent/44px targets, glass treatment and safe motion fallback.
+- Why: Consistent thumb interaction reduces the chance of unexpected destructive affordances and avoids hidden opposite-direction gestures.
+- User/data/security/compatibility impact: Existing action callbacks, delete confirmation, status deactivation validation, transaction linking, event/activity storage and Firestore paths unchanged. No data migration or deployment. Swipe itself never invokes Delete.
+- Verification: Added Node swipe direction test; updated existing direction test. `npm test`, `npm run build` and documentation checks PENDING GitHub Actions. Browser vertical scrolling, haptics, 320px geometry, hover, screen readers and performance NOT RUN. Haptics are optional, not supported on all iOS browsers.
+- Risk and rollback: Tray widths on narrow screens need on-device review; source retains older unused swipe CSS until a broader style deduplication. Revert this commit if interactions regress.
+- Master sections updated: §9.1, §13, version 2.11.1.
+- Status: SOURCE IMPLEMENTED / CI AND MOBILE QA PENDING.
+- Follow-ups: Check real touch/keyboard interactions, archive of CSS specificity conflicts and actual 60fps frame-time profiling.

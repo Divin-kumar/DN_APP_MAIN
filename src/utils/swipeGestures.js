@@ -8,7 +8,7 @@ export const resolveSwipeGesture = (start, point, axis = null, threshold = 56) =
   }
   if (axis !== 'horizontal') return { axis, action: null, moved: false };
   const moved = Math.abs(dx) > 12;
-  return { axis, moved, action: Math.abs(dx) >= threshold ? (dx > 0 ? 'delete' : 'other') : null };
+  return { axis, moved, action: Math.abs(dx) >= threshold ? (dx > 0 ? 'close' : 'other') : null };
 };
 
 // Finance cards only reveal actions; a gesture must never execute Edit/Delete.

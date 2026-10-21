@@ -243,8 +243,10 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     if (result.moved) swipeMovedRef.current = true;
     if (result.action && swipeActionRef.current !== result.action) {
       swipeActionRef.current = result.action;
-      if (event.pointerType === 'touch') navigator.vibrate?.(8);
-      setSwipedRow({ value: gesture.value, action: result.action });
+      if (result.action === 'other' && event.pointerType === 'touch') {
+        try { navigator.vibrate?.(8); } catch { /* Haptics optional */ }
+      }
+      setSwipedRow(result.action === 'close' ? null : { value: gesture.value, action: result.action });
     }
   };
 
@@ -258,12 +260,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const usageCount = usageMap[entry.value] || 0;
     const swipedRowMatches = swipedRow?.value === entry.value;
     const isOtherOpen = swipedRowMatches && swipedRow.action === 'other';
-    const isDeleteOpen = swipedRowMatches && swipedRow.action === 'delete';
     const isInactive = entry.active === false || entry.isActive === false;
     const hasStatusAction = isInactive || usageCount > 0;
 
     return (
-      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
+      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '216px' : '144px' }}>
         <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
           <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => {
             if (listKey === 'eventTypes') {
@@ -284,9 +285,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
               <ShieldOff size={14} /> Disable
             </button>
           ) : null}
-        </div>
-        <div className="code-list-actions code-list-actions-delete" aria-hidden={!isDeleteOpen}>
-          <button type="button" className="code-list-action code-list-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => handleDelete(entry)}>
+          <button type="button" className="code-list-action code-list-delete" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleDelete(entry)}>
             <Trash2 size={14} /> Delete
           </button>
         </div>
@@ -294,7 +293,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         <button
           type="button"
           className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left for edit or status actions, right for delete.`}
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left or tap for Edit, Delete and status actions.`}
           aria-expanded={Boolean(swipedRowMatches)}
           onClick={(event) => {
             if (swipeMovedRef.current) {

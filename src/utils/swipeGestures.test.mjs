@@ -16,7 +16,7 @@ test('small horizontal motion does not reveal destructive actions', () => {
 });
 test('horizontal thresholds reveal existing directions consistently', () => {
   assert.equal(resolveSwipeGesture(start, { x: 85, y: 152 }).action, 'other');
-  assert.equal(resolveSwipeGesture(start, { x: 216, y: 153 }).action, 'delete');
+  assert.equal(resolveSwipeGesture(start, { x: 216, y: 153 }).action, 'close');
 });
 test('diagonal motion without dominant horizontal axis is not a swipe', () => {
   const result = resolveSwipeGesture(start, { x: 112, y: 114 });
@@ -36,4 +36,12 @@ test('right swipe dismisses revealed actions without triggering delete', () => {
   assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 40, velocityX: 0 }), false);
   assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 24, velocityX: 650 }), false);
   assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 2, velocityX: 0 }), true);
+});
+
+test('right swipe is dismiss-only; it cannot reveal a destructive action', () => {
+  const right = resolveSwipeGesture(start, { x: 207, y: 151 });
+  assert.equal(right.axis, 'horizontal');
+  assert.equal(right.action, 'close');
+  const left = resolveSwipeGesture(start, { x: 93, y: 151 });
+  assert.equal(left.action, 'other');
 });
