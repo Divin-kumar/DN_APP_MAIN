@@ -155,3 +155,16 @@
 - Risk/rollback: Existing links to the renamed historical JSON file would need updating, but none identified in inspected application sources; restore from Git history as needed.
 - Master sections: §§2, 4, 12, 13.
 - Status: IMPLEMENTED IN SOURCE, RUNTIME UNVERIFIED.
+
+## CHG-20261021-011 | Lock DN-only terminology and add OldVersion build verification
+- Date (UTC): 2026-10-21.
+- Owner instruction: DN is the only app brand, not the retired historic name.
+- Branch/commit: `OldVersion`; exact SHA is the Git commit containing this entry. No `main` changes.
+- Changed files: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`, `.github/workflows/documentation-governance.yml`.
+- Before -> after: Residual historic class-prefix wording removed from normative master; AI naming rule clarified; OldVersion CI upgraded to run locked install, Node unit tests and Vite build in addition to governance checks.
+- Rationale: Preserve DN as the exclusive user-facing identity and validate that storage compatibility and stylesheet renames compile successfully.
+- User/data/security/compatibility: Docs/CI only; tests install packages in GitHub Actions runner but do not deploy to Firebase. No modifications to `main` or app persistence in this commit.
+- Verification: GitHub Actions success/failure must be verified separately after push; app unit/build/browser/Firebase verification is NOT YET KNOWN at time of commit.
+- Risk/rollback: CI may detect preexisting failures; resolve in audited follow-up. GitHub required checks depend on repository protection settings.
+- Master: §§3, 7, 10, 13; version 2.4.2.
+- Status: IMPLEMENTED IN SOURCE / CI PENDING.

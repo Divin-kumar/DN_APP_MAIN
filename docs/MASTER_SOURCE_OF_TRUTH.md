@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -103,7 +103,7 @@ Firebase Analytics is optional and lazy-loaded in production if supported. The p
 `/login` public; protected application shell: `/`, `/dashboard`, `/events`, `/events/:eventId`, `/events/:eventId/overview`, `/events/:eventId/activities`, `/events/:eventId/timeline`, `/events/:eventId/memories`, `/events/:eventId/attachments`, `/events/:eventId/pdf`, `/financials/income`, `/financials/expenses`, `/insights`, `/settings`, `/settings/code-lists`, `/settings/about`. Standalone `/activities` redirects to `/events`; unknown paths redirect to root. Source: `src/App.jsx`.
 
 ### 3.4 Domain stores and services
-**CSS branding migration (2026-10-21):** Shared `lifehub-` class selectors were renamed consistently to `dn-` across both CSS stylesheets and their React consumers. This is a class-name contract change, not a user-data schema change; confirm both light/dark themes and mobile layouts in a browser before deployment.
+**CSS branding migration (2026-10-21):** Shared deprecated-prefix class selectors were renamed consistently to `dn-` across both CSS stylesheets and their React consumers. This is a class-name contract change, not a user-data schema change; confirm both light/dark themes and mobile layouts in a browser before deployment.
 
 - `src/store/useAppStore.js`: account, guest, preferences, code-list hydration/writes, notifications.
 - `src/store/useEventStore.js`: event lifecycle across sample, guest and account modes, optimistic cloud updates and error rollback.
@@ -197,7 +197,7 @@ npm run preview
 ```
 Existing Node test files cover selected backup, event, code-list, greeting, dashboard and version/update utilities. `npm test` maps to `node --test`; `npm run build` to `vite build`. There is no claim that this audit ran either command.
 
-**For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks both files **only on pushes to `OldVersion` and pull requests targeting `OldVersion`**; quality and append-only integrity still need human review and branch protections.
+**For any functional change:** check path-specific unit tests, build, guest and authenticated journeys where relevant, mobile and light/dark styling, negative data paths, IDs and Firestore rules where applicable; record **PASS/FAIL/NOT RUN with evidence**. Run deployed security and full restore tests before production assertions. The GitHub documentation governance workflow checks both files **only on pushes to `OldVersion` and pull requests targeting `OldVersion`**; it also runs `npm ci`, `npm test` and `npm run build` as a smoke gate. These checks do not validate browser UX, real Firebase access, deployed rules or offline data. Quality and append-only integrity still need human review and branch protections.
 
 ## 8. Approved engineering and AI governance
 
@@ -239,7 +239,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | K-03 | P0 | PLANNED | Exercise real account and guest backup-v3 export/restore, duplicate-ID retry, partial failure and cross-device recovery |
 | K-04 | P0 | PLANNED | Decide expense canonical ownership and validate nested/standalone deletion/migration semantics |
 | K-05 | P0 | PLANNED | Add explicit user-facing failure/retry workflow for guest-account data merge |
-| K-06 | P1 | APPROVED / IN PROGRESS | Official brand is DN only. Finish compatibility-safe migration of stored keys and remove obsolete visible/internal naming without losing user records |
+| K-06 | P1 | SOURCE-INSPECTED; VERIFY | Official brand is DN only. Visible branding and new localStorage keys migrated in source; run browser tests to verify saved settings, guest session, data and v1/v2 backup compatibility |
 | K-07 | P1 | DECISION NEEDED | Choose cloud-first vs offline-first goals; design sync/outbox only if required |
 | K-08 | P1 | PLANNED | Improve CI checks, versioning, deployment approval and Firebase rules test automation |
 | K-09 | P1 | DECISION NEEDED | Decide original-file attachment storage, encryption, export, retention and deletion policy |
@@ -290,7 +290,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.1** | **2026-10-21** | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |
+| **2.4.2** | **2026-10-21** | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
+| 2.4.1 | 2026-10-21 | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |
 | 2.4.0 | 2026-10-21 | Switched account/guest storage, settings, and backups to DN keys; resolved guest-merge resynchronization trap; preserved legacy backup reads | **CHG-20261021-009** |
 | 2.3.0 | 2026-10-21 | Introduced DN browser-key migration and canonical preferences/Code Lists; never overwrite existing DN records or delete legacy data implicitly | **CHG-20261021-008** |
 | 2.2.0 | 2026-10-21 | Renamed internal CSS class selectors and matching React classNames from deprecated brand prefix to DN, without changing layout behavior | **CHG-20261021-007** |

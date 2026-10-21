@@ -1,5 +1,7 @@
 # DN
 
+**Canonical and sole product name: DN.** Future AI work on this branch must use DN; historical storage-key aliases are not alternate branding.
+
 **Active development branch:** [`OldVersion`](https://github.com/Divin-kumar/DN_APP_MAIN/tree/OldVersion) · **Frontend:** React 18 + Vite 5 · **Firebase:** Auth/Firestore · **State:** Zustand.
 
 DN is a personal life-planning and finance web app for moments/events, activities, memories, income, expenses, dashboards, insights and settings. It supports Google sign-in and browser-local guest sessions. Production security and complete backup recovery are **not validated** by this README.
