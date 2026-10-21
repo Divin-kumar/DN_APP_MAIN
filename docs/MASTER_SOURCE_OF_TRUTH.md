@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -45,6 +45,8 @@
 - **DN is the confirmed and only authoritative product name**, explicitly established by the repository owner on 2026-10-21. The package name is `dn` (version 1.0.15 at this audit). No future AI session may refer to the product using its former name. PWA manifest name and short name are both exactly `DN`, and package name is `dn`. Legacy storage key prefixes and historic filenames exist only for compatibility or evidence.
 - **Brand decision: APPROVED.** Preserve external Firebase project IDs and existing user data while standardizing user-facing and newly written code on DN.
 - Purpose: responsive personal life planning and lightweight household/personal finance. Supports account and guest experiences. Not a banking ledger or certified archival/notification service.
+
+**Regression enforcement:** `src/brandIdentity.test.mjs` is included in `npm test`. It validates DN in metadata and visible About copy, rejects the retired brand in application files outside the explicitly preserved storage-compatibility bridge, and enforces exactly four Markdown files on `OldVersion`. The audit-history and legacy-data tests remain exempt because they must preserve accurate historical evidence. The test result is not reported as passed until CI executes it.
 
 ### 2.2 Canonical domain words
 - **Moment / Event:** user-facing occasion or milestone (birthday, anniversary, festival, trip or personal plan).
@@ -213,7 +215,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 7. If an AI cannot write the files, it must plainly report the blocker and produce the proposed master/audit edits. **Never claim undocumented work complete.**
 8. Prefer scoped JSX/JavaScript edits, Zustand/store/service patterns, two-space indentation and existing design tokens; preserve migration/rollback behavior. Add context-oriented comments explaining why rather than restating syntax.
 9. Update master **semver** (major policy/product contract change; minor substantive implementation; patch correction) and keep change log current.
-10. Do not create additional Markdown knowledge-base files. Exactly four active `.md` files on `OldVersion`: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+10. **Strict rule:** never create an additional Markdown file on `OldVersion`, including `.markdown` and alternate casing. Accommodate all knowledge, decisions, requirements, plans and test plans within the existing four. Exactly four active `.md` files on `OldVersion`: `README.md`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
 
 ## 9. Decisions, conflicts and explicit unknowns
 
@@ -293,7 +295,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.4** | **2026-10-21** | Verified repaired DN implementation through GitHub CI (48 unit tests pass, Vite build succeeds); tracked dependency advisories and remaining runtime checks | **CHG-20261021-013** |
+| **2.4.5** | **2026-10-21** | Add source-based DN branding and four-file budget regression checks to Node test suite | **CHG-20261021-014** |
+| 2.4.4 | 2026-10-21 | Verified repaired DN implementation through GitHub CI (48 unit tests pass, Vite build succeeds); tracked dependency advisories and remaining runtime checks | **CHG-20261021-013** |
 | 2.4.3 | 2026-10-21 | Repaired backup v1/v2 parser syntax after GitHub CI identified duplicated replacement text; restored original implementation plus DN/legacy compatibility | **CHG-20261021-012** |
 | 2.4.2 | 2026-10-21 | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
 | 2.4.1 | 2026-10-21 | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |

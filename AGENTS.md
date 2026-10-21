@@ -5,6 +5,8 @@
 **Scope: `OldVersion` branch of `Divin-kumar/DN_APP_MAIN` only.** These mandatory AI/change-control rules **do not apply to `main`, any other branch, or other repositories.** For factual product/application truth, read [docs/MASTER_SOURCE_OF_TRUTH.md](docs/MASTER_SOURCE_OF_TRUTH.md) before edits. This document is not a replacement for verification of current code.
 
 ## 0. Repository documentation budget
+**Strict DN branding and documentation gate:** No AI may add the retired app name to user-visible content. New or changed UI source must name the product DN. Never create a fifth Markdown file on `OldVersion`, including `.markdown` or case variants: add all proposed features, designs, decisions, tasks, specs and plans to the Master, and all executed work to the audit log. The only old-prefix exception is data compatibility, not a second product identity. `src/brandIdentity.test.mjs` checks these rules in `npm test`.
+
 Only four Markdown files are authorized in the `OldVersion` working tree:
 1. `README.md` — short entry point and run commands.
 2. `AGENTS.md` — this mandatory AI change-control contract.

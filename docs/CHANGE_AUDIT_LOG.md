@@ -195,3 +195,16 @@
 - Risk and rollback: New code path passed Node/build; production security and data migration still require manual validation. Log is append-only; correct errors via new entries only.
 - Master: §§7, 10, 13; version 2.4.4.
 - Status: **CI VERIFIED**, browser/Firebase acceptance outstanding.
+
+## CHG-20261021-014 | Prevent recurrence of retired product branding
+- Date (UTC): 2026-10-21.
+- Requester/actor: Repository owner; implementation and review via connected GitHub tools.
+- Branch / commit / PR: `OldVersion`; exact SHA of this atomic commit in Git history. `main` unchanged.
+- Changed paths: `src/brandIdentity.test.mjs`, `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Brand migration passed previous 48 unit tests and build, but there was no automated check to prevent a future agent from reintroducing deprecated UI branding. Added Node tests asserting DN in package/manifest/HTML/About, banning the retired name in production app source outside its narrow data-compatibility bridge, and enforcing the exact four-file Markdown budget. AI rules reinforced.
+- Reason: The owner explicitly requests that future AI work never misidentify the product; old saved keys and test fixtures must remain readable without becoming visible branding.
+- User/data/security/compatibility impact: Tests/documentation only. No app runtime, existing browser data, Firebase configuration, or deployment changes. Historical records remain intact.
+- Verification: New tests added to `npm test`; CI execution for this commit PENDING when written. Previously verified baseline (48 passed, Vite build passed) is in CHG-20261021-013. Browser/device and live Firebase tests NOT RUN.
+- Risk/rollback: The source scanner intentionally excludes the dedicated storage migration bridge and historical test/audit evidence to avoid deleting compatibility. CI enforcement relies on GitHub Actions; revert this commit if the validator incorrectly rejects a legitimate case.
+- Master sections updated: §2 product naming, §8 no-new-Markdown governance, §13 version history.
+- Status: SOURCE COMMITTED; POST-COMMIT CI VERIFICATION PENDING.
