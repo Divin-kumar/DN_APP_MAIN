@@ -438,3 +438,14 @@
 - Risk: Duplication of attachments deliberately unsupported until a real file-ownership model exists; rollback via Git.
 - Master: §9 and §13, v2.8.3.
 - Status: HELPER IMPLEMENTED / MENU INTEGRATION PENDING.
+
+## CHG-20261021-033 | Shared event overflow action control
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`; `main` untouched.
+- Paths: `src/components/events/EventActionMenu.jsx`, master and audit.
+- Before/after: Detached event icon actions -> shared popup with Edit, Duplicate, Share, Archive/Restore and Delete actions, viewport-aware portal, 44px intended targets and Escape/Tab/arrow/home/end keyboard behavior.
+- Rationale: Premium compact event card and workspace actions.
+- UX/security: Existing business actions provided by parents; no direct Firestore operations in menu itself. URL sharing depends on account permissions.
+- Verification: Source created; parent wiring/CI/mobile browser tests pending. Rollback by git revert.
+- Master: §9 and §13, v2.8.4.
+- Status: COMPONENT CREATED, INTEGRATION PENDING.
