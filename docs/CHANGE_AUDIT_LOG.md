@@ -541,3 +541,14 @@
 - Risks: Missing/deleted linked event remains a form validation/UX edge case; require data consistency checks before saving financial links. Revert commit for rollback.
 - Master: §3.1a, version 2.9.6.
 - Status: SOURCE IMPLEMENTED / CI AND USER QA PENDING.
+
+## CHG-20261021-042 | Eliminate remaining duplicate activity expense creation forms
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only, `main` unchanged; atomic Git commit in history.
+- Paths: `src/pages/Events.jsx`, `src/features/events/components/EventWorkspaceShell.jsx`, `src/components/events/ActivityList.jsx`, master and audit.
+- Before -> after: Event focus drawer and activity workspace had separate expense-only forms, duplicating financial entry. Activity Add Transaction now opens `/financials/transactions?create=transaction&event=<id>&activity=<id>` with editable Income/Expense type, prelinked activity and a single shared transaction form. Removed old event drawer expense-only UI and workspace ExpenseForm modal. Existing 'link an existing expense' capability retained for existing ledger records.
+- Data/security: All financial writes continue through unified transaction coordinator, retaining existing collections and account/guest constraints. Event ID is a form prefill only, not authorization. No backend migration or existing records deleted.
+- Verification: Source reviewed; GitHub Node/Vite CI and actual Firebase/guest/mobile navigation tests pending.
+- Risk and rollback: Navigation switches to Transactions rather than inline event drawer; user can return via navigation; manual usability test required. Existing expense listing/reconciliation unchanged.
+- Master: §3.1a and version 2.9.7.
+- Status: SOURCE IMPLEMENTED / CI PENDING.

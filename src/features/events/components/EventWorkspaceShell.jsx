@@ -13,7 +13,6 @@ import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
-import ExpenseForm from '../../../components/expenses/ExpenseForm';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
@@ -58,7 +57,7 @@ export default function EventWorkspaceShell() {
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
-  const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
+  const { expenses, loadExpenses, updateExpenseItem } = useExpenseStore();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
@@ -80,7 +79,6 @@ export default function EventWorkspaceShell() {
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
   const [eventEditOpen, setEventEditOpen] = useState(false);
-  const [expenseDialogActivity, setExpenseDialogActivity] = useState(null);
   const [linkExpenseActivity, setLinkExpenseActivity] = useState(null);
   const [expenseError, setExpenseError] = useState('');
   const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
@@ -260,22 +258,6 @@ export default function EventWorkspaceShell() {
     setActivityDate(activity.date || new Date().toISOString().slice(0, 10));
     setActivityPriority(activity.priority || 'medium');
     setActivityDialogOpen(true);
-  };
-
-  const saveActivityExpense = async (formData) => {
-    if (!expenseDialogActivity) return;
-    try {
-      await addExpense(user?.uid, isGuest, {
-        ...formData,
-        eventId,
-        activityId: expenseDialogActivity.id,
-        source: 'event-activity',
-      });
-      setExpenseDialogActivity(null);
-      setExpenseError('');
-    } catch {
-      setExpenseError('Could not save this expense. Please try again.');
-    }
   };
 
   const linkExistingExpense = async (expense) => {
@@ -491,7 +473,7 @@ export default function EventWorkspaceShell() {
             expensesByActivity={expensesByActivity}
             onToggleComplete={toggleActivity}
             onToggleCancelled={toggleActivityCancellation}
-            onAddExpense={(activity) => { setExpenseError(''); setExpenseDialogActivity(activity); }}
+            onAddExpense={(activity) => navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(eventId) + '&activity=' + encodeURIComponent(activity.id))}
             onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
             onEdit={editActivity}
             onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
@@ -619,23 +601,11 @@ export default function EventWorkspaceShell() {
           </form>
         </ModalDialog>
       ) : null}
-      {expenseDialogActivity ? (
-        <ModalDialog title={`Add expense · ${expenseDialogActivity.title || 'Activity'}`} onClose={() => setExpenseDialogActivity(null)}>
-          {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
-          <ExpenseForm
-            initialValues={{ name: expenseDialogActivity.title || '', category: 'Food', date: new Date().toISOString().slice(0, 10), eventId, activityId: expenseDialogActivity.id }}
-            events={[event]}
-            submitLabel="Save linked expense"
-            onSubmit={saveActivityExpense}
-            onCancel={() => setExpenseDialogActivity(null)}
-          />
-        </ModalDialog>
-      ) : null}
       {linkExpenseActivity ? (
         <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
           {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
-          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Create an expense for this activity instead.</p>}
-          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); setExpenseDialogActivity(activity); }}><Plus size={15} aria-hidden="true" /> Create expense</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
+          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Add a transaction for this activity instead.</p>}
+          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(eventId) + '&activity=' + encodeURIComponent(activity.id)); }}><Plus size={15} aria-hidden="true" /> Add transaction</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
         </ModalDialog>
       ) : null}
       {notesDialogOpen ? (

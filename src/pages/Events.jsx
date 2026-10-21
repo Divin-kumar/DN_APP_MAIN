@@ -159,10 +159,6 @@ export default function Events() {
   const [activityDescription, setActivityDescription] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityPriority, setActivityPriority] = useState('medium');
-  const [expenseActivity, setExpenseActivity] = useState(null);
-  const [expenseAmount, setExpenseAmount] = useState('');
-  const [expenseDescription, setExpenseDescription] = useState('');
-  const [expenseDate, setExpenseDate] = useState(new Date().toISOString().slice(0, 10));
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const [summaryEvent, setSummaryEvent] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
@@ -445,41 +441,6 @@ export default function Events() {
     closeDrawer();
   };
 
-  const saveExpense = async () => {
-    if (!focusedEvent || !expenseActivity || !expenseAmount) return;
-    // Keep the master expense record and the activity-local history in sync.
-    const savedExpense = await addExpense(user?.uid, isGuest, {
-      name: expenseActivity.title,
-      description: expenseDescription.trim(),
-      amount: Number(expenseAmount),
-      category: 'Event',
-      date: expenseDate,
-      eventId: focusedId,
-      activityId: expenseActivity.id,
-      source: 'event-activity',
-    });
-
-    const nestedExpense = {
-      id: savedExpense.id || savedExpense.firestoreId || crypto.randomUUID(),
-      description: savedExpense.description || expenseDescription.trim(),
-      amount: Number(savedExpense.amount || expenseAmount),
-      date: savedExpense.date || expenseDate,
-      createdAt: savedExpense.createdAt || new Date().toISOString(),
-      eventId: focusedId,
-      activityId: expenseActivity.id,
-    };
-
-    const activities = (focusedEvent.activities || []).map((activity) => (
-      activity.id === expenseActivity.id
-        ? { ...activity, expenses: [...(activity.expenses || []), nestedExpense] }
-        : activity
-    ));
-
-    await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities });
-    showToast('Expense saved', 'success');
-    closeDrawer();
-  };
-
   const removeActivity = async (activityId) => {
     if (!focusedEvent) return;
     await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: (focusedEvent.activities || []).filter((item) => item.id !== activityId) });
@@ -558,9 +519,9 @@ export default function Events() {
           <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
         </div>
         <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{focusedEvent.type}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => { setExpenseActivity(activity); setDrawer('expense'); }} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
+        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(focusedEvent.id || focusedEvent.firestoreId) + '&activity=' + encodeURIComponent(activity.id))} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
         {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
-        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} expenseActivity={expenseActivity} expenseAmount={expenseAmount} expenseDescription={expenseDescription} expenseDate={expenseDate} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} setExpenseAmount={setExpenseAmount} setExpenseDescription={setExpenseDescription} setExpenseDate={setExpenseDate} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} onSaveExpense={saveExpense} /> : null}
+        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} /> : null}
       </div>
     );
   }
@@ -697,35 +658,32 @@ export default function Events() {
   );
 }
 
-function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, activityPriority, expenseActivity, expenseAmount, expenseDescription, expenseDate, setActivityTitle, setActivityDescription, setActivityDate, setActivityPriority, setExpenseAmount, setExpenseDescription, setExpenseDate, onClose, onSaveEvent, onSaveActivity, onSaveExpense }) {
-  const heading = type === 'event' ? (editingEvent?.name || 'New event') : type === 'activity' ? (editingActivity?.title || 'New activity') : expenseActivity?.title;
-
+function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, activityPriority, setActivityTitle, setActivityDescription, setActivityDate, setActivityPriority, onClose, onSaveEvent, onSaveActivity }) {
+  const heading = type === 'event' ? (editingEvent?.name || 'New event') : (editingActivity?.title || 'New activity');
   return (
     <ModalDialog title={heading} onClose={onClose} variant="drawer">
       <div className="event-drawer-content">
         {type === 'event' ? (
-          <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose} submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />
+          <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose}
+            submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />
         ) : type === 'activity' ? (
           <div style={styles.formStack}>
-            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" style={styles.input} />
-            <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description" style={styles.input} />
-            <DateField label="Date" name="activity-date" value={activityDate || ''} onChange={(event) => setActivityDate(event.target.value)} />
-            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
+            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)}
+              placeholder="Activity title" style={styles.input} />
+            <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)}
+              placeholder="Description" style={styles.input} />
+            <DateField label="Date" name="activity-date" value={activityDate || ''}
+              onChange={(event) => setActivityDate(event.target.value)} />
+            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)}
+              aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
-            <button type="button" className="primaryButton" onClick={onSaveActivity} style={styles.primaryButton}>Save Activity</button>
+            <button type="button" className="primaryButton" onClick={onSaveActivity}
+              style={styles.primaryButton}>Save Activity</button>
           </div>
-        ) : (
-          <div style={styles.formStack}>
-            <div style={styles.linkedContext}>Event and activity are linked automatically.<br /><strong>{expenseActivity?.title}</strong></div>
-            <input type="number" min="0" value={expenseAmount} onChange={(event) => setExpenseAmount(event.target.value)} placeholder="Actual amount" style={styles.input} />
-            <textarea value={expenseDescription} onChange={(event) => setExpenseDescription(event.target.value)} placeholder="What was this expense for?" style={styles.input} rows={3} />
-            <DateField label="Date" name="expense-date" value={expenseDate} onChange={(event) => setExpenseDate(event.target.value)} />
-            <button type="button" className="primaryButton" onClick={onSaveExpense} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Expense</button>
-          </div>
-        )}
+        ) : null}
       </div>
     </ModalDialog>
   );

@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.9.6** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.9.7** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -325,6 +325,7 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.9.7** | **2026-10-21** | Removed activity-level expense-only creation forms and routed all activity financial creation to unified Add Transaction with preserved activity context | **CHG-20261021-042** |
 | **2.9.6** | **2026-10-21** | Supported activity-to-unified-transaction deep links with preselected linked event and activity | **CHG-20261021-041** |
 | **2.9.5** | **2026-10-21** | Refined shared Activity swipe detection with axis lock, safe thresholds, and touch-only optional haptics | **CHG-20261021-040** |
 | 2.9.4 | 2026-10-21 | Preserve saved month until scoped data loads, suppress cross-account stale transactions, format dates locally for forms | **CHG-20261021-039** |

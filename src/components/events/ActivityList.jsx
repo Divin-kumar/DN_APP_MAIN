@@ -160,7 +160,7 @@ export default function ActivityList({
               }}
             >
               <div className="event-activity-actions event-activity-actions-other" aria-hidden={!isOtherOpen}>
-                {onAddExpense ? <button type="button" className="event-activity-action-expense" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onAddExpense(activity); close(); }} aria-label={`Add expense to ${activity.title}`}><IndianRupee size={15} /><span>Expense</span></button> : null}
+                {onAddExpense ? <button type="button" className="event-activity-action-expense" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onAddExpense(activity); close(); }} aria-label={`Add transaction to ${activity.title}`}><IndianRupee size={15} /><span>Transaction</span></button> : null}
                 {onEdit ? <button type="button" className="event-activity-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onEdit(activity); close(); }} aria-label={`Edit ${activity.title}`}><Pencil size={15} /><span>Edit</span></button> : null}
                 {onToggleCancelled ? <button type="button" className={`event-activity-action-cancel ${isCancelled ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onToggleCancelled(activity.id); close(); }} aria-label={`${isCancelled ? 'Restore' : 'Cancel'} ${activity.title}`}>
                   {isCancelled ? <RotateCcw size={15} /> : <XCircle size={15} />}<span>{isCancelled ? 'Restore' : 'Cancel'}</span>
@@ -214,7 +214,7 @@ export default function ActivityList({
 
                         {/* Actions inside the expense panel: create new expense or link an existing one. */}
                         <div className="event-activity-expense-actions">
-                          {onAddExpense ? <button type="button" onClick={() => onAddExpense(activity)}><Plus size={13} /> Create expense</button> : null}
+                          {onAddExpense ? <button type="button" onClick={() => onAddExpense(activity)}><Plus size={13} /> Add transaction</button> : null}
                           {onLinkExpense ? <button type="button" onClick={() => onLinkExpense(activity)}>Link existing</button> : null}
                         </div>
                       </div>
