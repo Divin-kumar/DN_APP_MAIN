@@ -1,3 +1,4 @@
+import { migrateLegacyStorage } from './utils/storageMigration';
 /*
   This is the very first code that runs when the app loads.
   It mounts the React app into the browser, enables client-side routing,
@@ -28,7 +29,8 @@ const applyDocumentTheme = (theme) => {
 };
 
 try {
-  const storedPreferences = JSON.parse(localStorage.getItem('lifehub_preferences') || '{}');
+  migrateLegacyStorage();
+  const storedPreferences = JSON.parse(localStorage.getItem('dn_preferences') || '{}');
   applyDocumentTheme(storedPreferences.theme || 'dark');
 } catch {
   applyDocumentTheme('dark');

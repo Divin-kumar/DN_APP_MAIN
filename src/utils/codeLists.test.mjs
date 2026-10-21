@@ -196,6 +196,7 @@ test('guest Code Lists use their own localStorage keys and retain legacy values 
   const storage = {
     getItem: (key) => values.has(key) ? values.get(key) : null,
     setItem: (key, value) => values.set(key, value),
+    removeItem: (key) => values.delete(key),
   };
 
   const initial = readGuestCodeListSettings(storage);

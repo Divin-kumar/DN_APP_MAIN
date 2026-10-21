@@ -116,3 +116,16 @@
 - Risk / rollback: Missing selector dependencies could alter styling; run mobile/desktop light/dark regression tests, rollback through Git commit if needed.
 - Master section: §3.4 and version history.
 - Status: SOURCE MODIFIED, RUNTIME UNVERIFIED.
+
+## CHG-20261021-008 | Introduce non-destructive DN localStorage key migration
+- Date (UTC): 2026-10-21.
+- Actor/requester: Owner-directed DN brand rename.
+- Branch / commit: `OldVersion`; atomic Git commit (SHA in repository history).
+- Scope: `src/utils/storageMigration.js`, `src/utils/storageMigration.test.mjs`, `src/utils/codeLists.js`, `src/utils/codeLists.test.mjs`, `src/store/useAppStore.js`, `src/main.jsx`, master and audit.
+- Before -> after: Preferences/Code Lists read or wrote old-prefixed browser keys -> copy old values into missing DN keys once (without deleting originals), read and write canonical DN preferences/Code Lists. Modern keys take precedence. Direct legacy code-list read also calls migration.
+- Why: Change internal app branding without discarding existing browser data.
+- Data/security/compatibility: Old data retained for downgrade, new canonical values never overwritten; guest/session and financial services will switch to new keys in the next commit. Only app-owned keys are eligible; modern keys win. No Firestore schema changes.
+- Verification: Added four Node regression tests for copy/idempotency/clear/minimal-storage. Test execution and production build NOT RUN in this GitHub-connected environment; live Firebase NOT RUN. Source-reviewed.
+- Risk/rollback: Partial migration may occur under storage quota denial, fails safely without deleting old keys. Rollback via Git commit; retain legacy values until verification.
+- Master updated: §§4.1, 13.
+- Status: SOURCE MODIFIED, RUNTIME UNVERIFIED.

@@ -1,3 +1,5 @@
+import { migrateLegacyStorage } from './storageMigration';
+
 export const DEFAULT_CODE_LISTS = Object.freeze({
   eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
   incomeTypes: ['Salary', 'Freelance', 'Bonus'],
@@ -22,10 +24,10 @@ export const CODE_LIST_MIGRATIONS = Object.freeze({
   1: Object.freeze({ additions: Object.freeze({}) }),
 });
 
-export const LEGACY_CODE_LISTS_STORAGE_KEY = 'lifehub_admin_values';
-export const LEGACY_CODE_LISTS_VERSION_KEY = 'lifehub_admin_values_schema_version';
-export const GUEST_CODE_LISTS_STORAGE_KEY = 'lifehub_guest_admin_values';
-export const GUEST_CODE_LISTS_VERSION_KEY = 'lifehub_guest_admin_values_schema_version';
+export const LEGACY_CODE_LISTS_STORAGE_KEY = 'dn_admin_values';
+export const LEGACY_CODE_LISTS_VERSION_KEY = 'dn_admin_values_schema_version';
+export const GUEST_CODE_LISTS_STORAGE_KEY = 'dn_guest_admin_values';
+export const GUEST_CODE_LISTS_VERSION_KEY = 'dn_guest_admin_values_schema_version';
 
 const isCodeListRecord = (value) => Boolean(
   value && typeof value === 'object' && !Array.isArray(value)
@@ -53,6 +55,7 @@ export const resolveCodeListSettings = (remoteSettings, legacySettings) => {
 export const readLegacyCodeListSettings = (storage) => {
   try {
     const targetStorage = storage || globalThis.localStorage;
+    migrateLegacyStorage(targetStorage);
     const raw = targetStorage?.getItem(LEGACY_CODE_LISTS_STORAGE_KEY);
     if (raw === null || raw === undefined) return null;
     const adminValues = JSON.parse(raw);
@@ -69,6 +72,7 @@ export const readLegacyCodeListSettings = (storage) => {
 export const readGuestCodeListSettings = (storage) => {
   try {
     const targetStorage = storage || globalThis.localStorage;
+    migrateLegacyStorage(targetStorage);
     const raw = targetStorage?.getItem(GUEST_CODE_LISTS_STORAGE_KEY);
     if (raw !== null && raw !== undefined) {
       const adminValues = JSON.parse(raw);
@@ -85,6 +89,7 @@ export const readGuestCodeListSettings = (storage) => {
 
 export const writeGuestCodeListSettings = (adminValues, storage) => {
   const targetStorage = storage || globalThis.localStorage;
+    migrateLegacyStorage(targetStorage);
   const migrated = migrateStoredCodeLists(adminValues, CODE_LIST_SCHEMA_VERSION);
   targetStorage.setItem(GUEST_CODE_LISTS_STORAGE_KEY, JSON.stringify(migrated.adminValues));
   targetStorage.setItem(GUEST_CODE_LISTS_VERSION_KEY, String(migrated.version));

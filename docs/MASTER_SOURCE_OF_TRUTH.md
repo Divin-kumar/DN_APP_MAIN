@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.2.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.3.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -117,6 +117,8 @@ Firebase Analytics is optional and lazy-loaded in production if supported. The p
 ## 4. Business behavior and data ownership
 
 ### 4.1 Account, guest and sample separation
+**Brand-data migration:** `src/utils/storageMigration.js` copies known former browser-storage keys into canonical `dn_` keys only where no DN key exists; it keeps the old values as a recovery path. New preferences and guest Code Lists are written under `dn_` keys. The compatibility module is the only permitted location for the former storage prefix, and it does not define the product name. This is source-inspected, not runtime-tested. Explicit local-data clearing removes both generations of app-owned keys.
+
 **Account:** Firebase Auth emits state through `authService.onAuthChange`. Account settings/code lists are hydrated; guest data merge is attempted; account user then becomes active. **Important observed limitation:** `src/context/AuthContext.jsx` logs guest-merge failures to console and then proceeds with `setUser`; a visible recovery/retry UX is not evident in this inspected path. Treat as risk, not successful migration guarantee.
 
 **Guest:** `lifehub_guest_mode` flag; events, expenses, incomes and code lists are stored in browser localStorage. Changing devices or clearing site storage can lose guest data absent a separate backup. Existing guest event service also uses a session backup key.
@@ -288,7 +290,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.2.0** | **2026-10-21** | Renamed internal CSS class selectors and matching React classNames from deprecated brand prefix to DN, without changing layout behavior | **CHG-20261021-007** |
+| **2.3.0** | **2026-10-21** | Introduced DN browser-key migration and canonical preferences/Code Lists; never overwrite existing DN records or delete legacy data implicitly | **CHG-20261021-008** |
+| 2.2.0 | 2026-10-21 | Renamed internal CSS class selectors and matching React classNames from deprecated brand prefix to DN, without changing layout behavior | **CHG-20261021-007** |
 | 2.1.0 | 2026-10-21 | Owner-approved canonical brand **DN**; renamed visible application copy and package metadata; deprecated former product name for future AI work | **CHG-20261021-006** |
 | 2.0.2 | 2026-10-21 | Scope correction: AI instructions and CI audit policy apply to `OldVersion` only | **CHG-20261021-005** |
 | 2.0.1 | 2026-10-21 | **Four-file cleanup confirmed (16 Markdown and 4 DOCX retired), deletion ledger, CI append-only protection** | **CHG-20261021-004** |

@@ -1,3 +1,4 @@
+import { migrateLegacyStorage } from '../utils/storageMigration';
 /*
   This is the app's global memory.
   It stores session info, theme settings, feature defaults, and small UI notifications
@@ -47,11 +48,12 @@ let persistedAdminValuesOwner = null;
 // Load the saved user preferences from localStorage.
 const loadPreferences = () => {
   try {
-    const stored = JSON.parse(localStorage.getItem('lifehub_preferences') || '{}');
+    migrateLegacyStorage();
+    const stored = JSON.parse(localStorage.getItem('dn_preferences') || '{}');
     return {
       ...defaultPreferences,
       ...stored,
-      theme: localStorage.getItem('lifehub_theme_choice') ? (stored.theme || defaultPreferences.theme) : 'dark',
+      theme: localStorage.getItem('dn_theme_choice') ? (stored.theme || defaultPreferences.theme) : 'dark',
       notifications: {
         ...defaultPreferences.notifications,
         ...(stored.notifications || {}),
@@ -170,8 +172,8 @@ const useAppStore = create((set, get) => ({
     const adminValues = resetCodeListsPreservingReferences(get().adminValues, referencedValues);
     await get().setAdminValues(adminValues);
     const preferences = createDefaultPreferences();
-    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
-    localStorage.setItem('lifehub_theme_choice', '1');
+    localStorage.setItem('dn_preferences', JSON.stringify(preferences));
+    localStorage.setItem('dn_theme_choice', '1');
     set({ preferences });
     return { adminValues, preferences };
   },
@@ -186,9 +188,9 @@ const useAppStore = create((set, get) => ({
       } : {}),
     };
     if (Object.prototype.hasOwnProperty.call(nextPreferences, 'theme')) {
-      localStorage.setItem('lifehub_theme_choice', '1');
+      localStorage.setItem('dn_theme_choice', '1');
     }
-    localStorage.setItem('lifehub_preferences', JSON.stringify(merged));
+    localStorage.setItem('dn_preferences', JSON.stringify(merged));
     return { preferences: merged };
   }),
 
@@ -202,8 +204,8 @@ const useAppStore = create((set, get) => ({
       },
       listSort: { ...(restoredPreferences?.listSort || {}) },
     };
-    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
-    localStorage.setItem('lifehub_theme_choice', '1');
+    localStorage.setItem('dn_preferences', JSON.stringify(preferences));
+    localStorage.setItem('dn_theme_choice', '1');
     set({ preferences });
     return preferences;
   },
@@ -211,8 +213,8 @@ const useAppStore = create((set, get) => ({
   // Restore the original app defaults for theme and user preferences.
   resetPreferences: () => set(() => {
     const preferences = createDefaultPreferences();
-    localStorage.setItem('lifehub_preferences', JSON.stringify(preferences));
-    localStorage.setItem('lifehub_theme_choice', '1');
+    localStorage.setItem('dn_preferences', JSON.stringify(preferences));
+    localStorage.setItem('dn_theme_choice', '1');
     return { preferences };
   }),
 
