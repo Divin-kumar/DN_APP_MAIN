@@ -586,3 +586,14 @@
 - Risks: Transactions referencing already-deleted activities must be unlinked before editing or deletion; user can clear a broken link in the form. Future reconciliation may automate cleanup.
 - Master: §9.1, version 2.9.10.
 - Status: SOURCE VERIFIED BY INSPECTION / CI PENDING.
+
+## CHG-20261021-046 | Unify Code Lists swipe behavior with shared premium gesture rules
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only; `main` untouched.
+- Paths: `src/pages/CodeLists.jsx`, Master Source of Truth, append-only audit.
+- Before -> after: Code Lists used a hard-coded 40px swipe without axis locking and pointer capture that could interfere with vertical scrolling. Now shares `resolveSwipeGesture` (56px threshold, horizontal-axis lock, vertical-scroll cancellation), emits optional touch haptics once per revealed action and preserves tap-to-open keyboard action alternatives.
+- Functional/security impact: Existing Code List edit/deactivate/delete handlers and confirmation remain unchanged. No configuration values or user data changed.
+- Verification: Gesture utility already covered by Node tests. Full GitHub CI and actual phone scrolling not yet verified for this commit.
+- Risks/rollback: Browser pointer behavior needs mobile QA; revert this commit if gesture compatibility problems arise.
+- Master: version 2.9.11.
+- Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.

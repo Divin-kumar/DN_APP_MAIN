@@ -21,6 +21,7 @@ import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists';
+import { resolveSwipeGesture } from '../utils/swipeGestures';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -61,6 +62,8 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const isMomentTypeEditorOpen = Boolean(momentTypeEditor);
   const swipeStartRef = useRef(null);
   const swipeMovedRef = useRef(false);
+  const swipeAxisRef = useRef(null);
+  const swipeActionRef = useRef(null);
   const sectionRef = useRef(null);
   const momentTypeTitleRef = useRef(null);
 
@@ -225,21 +228,30 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const handlePointerDown = (event, value) => {
     swipeStartRef.current = { value, x: event.clientX, y: event.clientY };
     swipeMovedRef.current = false;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    swipeAxisRef.current = null;
+    swipeActionRef.current = null;
+    // Do not capture the pointer: the document must remain vertically scrollable.
   };
 
   const handlePointerMove = (event) => {
     const gesture = swipeStartRef.current;
     if (!gesture) return;
-    const deltaX = event.clientX - gesture.x;
-    const deltaY = event.clientY - gesture.y;
-    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) swipeMovedRef.current = true;
-    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-    setSwipedRow({ value: gesture.value, action: deltaX > 0 ? 'delete' : 'other' });
+    const result = resolveSwipeGesture(
+      gesture, { x: event.clientX, y: event.clientY }, swipeAxisRef.current,
+    );
+    swipeAxisRef.current = result.axis;
+    if (result.moved) swipeMovedRef.current = true;
+    if (result.action && swipeActionRef.current !== result.action) {
+      swipeActionRef.current = result.action;
+      if (event.pointerType === 'touch') navigator.vibrate?.(8);
+      setSwipedRow({ value: gesture.value, action: result.action });
+    }
   };
 
   const handlePointerUp = () => {
     swipeStartRef.current = null;
+    swipeAxisRef.current = null;
+    swipeActionRef.current = null;
   };
 
   const renderEntry = (entry) => {
