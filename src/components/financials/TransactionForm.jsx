@@ -4,7 +4,10 @@ import DateField from '../common/DateField';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 
-const today = () => new Date().toLocaleDateString('en-CA');
+const today = () => {
+  const date = new Date();
+  return [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'), String(date.getDate()).padStart(2, '0')].join('-');
+};
 const defaultValues = (preferences, defaultKind = 'expense') => ({
   transactionKind: defaultKind,
   title: '',

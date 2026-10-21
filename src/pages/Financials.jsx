@@ -39,8 +39,8 @@ export default function Financials() {
   const showToast = useAppStore((state) => state.showToast);
   const uid = user?.uid;
   const scope = uid || (isGuest ? 'guest' : 'local');
-  const { incomes, loading: loadingIncome, error: incomeError, loadIncomes } = useIncomeStore();
-  const { expenses, loading: loadingExpense, error: expenseError, loadExpenses } = useExpenseStore();
+  const { incomes, loading: loadingIncome, error: incomeError, loadedFor: incomeScope, loadIncomes } = useIncomeStore();
+  const { expenses, loading: loadingExpense, error: expenseError, loadedFor: expenseScope, loadExpenses } = useExpenseStore();
   const { events, loadEvents } = useEventStore();
   const { saveTransaction, removeTransaction } = useTransactionManager();
   const [filters, setFilters] = useState(() => readFilters(scope));
@@ -67,13 +67,22 @@ export default function Financials() {
     });
   };
 
-  const allTransactions = useMemo(() => toTransactions(incomes, expenses), [incomes, expenses]);
+  const expectedScope = (isGuest ? 'guest' : 'user') + ':' + (uid || 'anonymous');
+  // Never display transactions belonging to a previous signed-in user while
+  // the new account's stores are still loading.
+  const ready = incomeScope === expectedScope && expenseScope === expectedScope;
+  const allTransactions = useMemo(
+    () => ready ? toTransactions(incomes, expenses) : [],
+    [ready, incomes, expenses],
+  );
   const monthOptions = useMemo(() => transactionMonthOptions(allTransactions), [allTransactions]);
   useEffect(() => {
-    if (filters.month !== 'all' && !monthOptions.some((item) => item.value === filters.month)) {
+    // Keep a saved month across reloads until BOTH store loads have completed.
+    if (!ready || filters.month === 'all') return;
+    if (!monthOptions.some((item) => item.value === filters.month)) {
       changeFilters({ month: 'all' });
     }
-  }, [filters.month, monthOptions]);
+  }, [ready, filters.month, monthOptions]);
   const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
   const totals = useMemo(() => summarizeTransactions(filtered), [filtered]);
@@ -139,7 +148,7 @@ export default function Financials() {
       {hasLoadError ? <div role="alert" className="financial-load-error">
         Unable to load all transactions. <button type="button" onClick={() => { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }}>Retry</button>
       </div> : null}
-      {(loadingIncome || loadingExpense) && !allTransactions.length ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" /> : null}
+      {(!ready || loadingIncome || loadingExpense) && !allTransactions.length ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" /> : null}
       <section className="financials-content-panel">
         {isTransactions ? (
           <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}

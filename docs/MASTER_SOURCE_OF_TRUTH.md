@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.9.3** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.9.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -325,7 +325,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.9.3** | **2026-10-21** | Added theme-token overflow menu styling and shared 44px button/focus targets | **CHG-20261021-038** |
+| **2.9.4** | **2026-10-21** | Preserve saved month until scoped data loads, suppress cross-account stale transactions, format dates locally for forms | **CHG-20261021-039** |
+| 2.9.3 | 2026-10-21 | Added theme-token overflow menu styling and shared 44px button/focus targets | **CHG-20261021-038** |
 | 2.9.2 | 2026-10-21 | Replaced event workspace hero delete icon with unified five-action menu and edit modal | **CHG-20261021-037** |
 | 2.9.1 | 2026-10-21 | Corrected grouping in archived-safe activity picker filter | **CHG-20261021-036** |
 | 2.9.0 | 2026-10-21 | Replaced detached Event card swipe icons with overflow menu, archive filtering and duplicate/share actions | **CHG-20261021-035** |

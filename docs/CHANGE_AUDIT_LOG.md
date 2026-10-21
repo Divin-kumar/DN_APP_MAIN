@@ -506,3 +506,16 @@
 - Risk/rollback: Existing global selectors may conflict at some responsive breakpoints, verify on device; revert commit to rollback.
 - Master: §§6/9/13, v2.9.3.
 - Status: SOURCE IMPLEMENTED, QA PENDING.
+
+## CHG-20261021-039 | Guard filter retention and account-scoped financial data during refresh
+- Date (UTC): 2026-10-21.
+- Actor: AI integration review for owner's unified Transactions request.
+- Branch/commit: `OldVersion` (SHA in commit history); no `main` changes.
+- Paths: `src/pages/Financials.jsx`, `src/components/financials/TransactionForm.jsx`, master and audit.
+- Before -> after: A saved month could reset to All before async stores reloaded; records from an old account might display during a user switch because expense store retains cached data; locale-dependent default date may not be ISO. Now selected month is cleared only after both stores finish loading current account/guest scope. Records are suppressed until both scoped stores match. Default form date is generated as local YYYY-MM-DD.
+- Why: User requests stable filters, accurate scoped summaries and safe transactions during refresh/switch.
+- Data/security: No Firestore schema changes or record writes. Prevents stale cross-account UI disclosure while loading.
+- Verification: Node/Vite CI pending for this commit, guest/account browser integration NOT RUN.
+- Risk/rollback: Loading spinner may appear until both stores successfully load; failures show the existing Retry banner. Revert this commit if necessary.
+- Master: §3.1a, §13; version 2.9.4.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
