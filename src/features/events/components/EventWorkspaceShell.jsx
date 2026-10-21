@@ -2,9 +2,9 @@
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Copy, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Share2, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
-import EventActionMenu from '../../../components/events/EventActionMenu';
+import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
 import { duplicateEventData, eventShareDetails } from '../../../utils/eventActions';
 import DateField from '../../../components/common/DateField';
@@ -527,16 +527,20 @@ export default function EventWorkspaceShell() {
       <div className="event-workspace-back-row">
         <Link to="/events" className="event-moment-back"><ArrowLeft size={15} /> All moments</Link>
       </div>
+      <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
+        otherActions={[
+          { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
+          { label: 'Duplicate', icon: Copy, onClick: duplicateMoment },
+          { label: 'Share', icon: Share2, onClick: shareMoment },
+          { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: archiveMoment },
+        ]} onDelete={() => setPendingDeleteEvent(true)}>
       <header className={`event-moment-hero mood-${eventMood}`}>
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
           <div className="event-moment-top-actions">
             <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={15} /><span>Add memory</span></button>
             <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={15} /><span>Greeting card</span></button>
-            <EventActionMenu className="is-hero" event={event}
-              onEdit={() => setEventEditOpen(true)} onDuplicate={duplicateMoment}
-              onShare={shareMoment} onArchive={archiveMoment}
-              onDelete={() => setPendingDeleteEvent(true)} />
+
           </div>
         </div>
         <div className="event-moment-content">
@@ -550,6 +554,7 @@ export default function EventWorkspaceShell() {
           <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Memories <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
         </div>
       </header>
+      </SwipeActionCard>
 
       <nav className="event-workspace-nav" aria-label={`${event.name} sections`}>
         {sections.map((section) => (

@@ -111,8 +111,9 @@ export default function ActivityList({
             : '';
 
           const isOtherOpen = openActivityId === activity.id && action === 'other';
-          const isOpen = isOtherOpen;
-          const trayWidth = [onAddExpense, onEdit, onToggleCancelled, onDelete].filter(Boolean).length * 68;
+          const isDeleteOpen = openActivityId === activity.id && action === 'delete';
+          const isOpen = isOtherOpen || isDeleteOpen;
+          const trayWidth = [onAddExpense, onEdit, onToggleCancelled].filter(Boolean).length * 68;
 
           return (
             <article
@@ -120,7 +121,7 @@ export default function ActivityList({
               role="group"
               tabIndex={0}
               style={{ '--dn-activity-tray-width': `${trayWidth}px` }}
-              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe left or press Enter for actions'}`}
+              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe left for actions or right for Delete'}`}
               className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}${isOpen ? ` is-open-${action}` : ''}`}
               onPointerDown={(event) => {
                 handlePointerDown(event);
@@ -148,6 +149,9 @@ export default function ActivityList({
               }}
               onKeyDown={(event) => {
                 if (event.target !== event.currentTarget) return;
+                if (event.key === 'Escape') { close(); setOpenActivityId(null); return; }
+                if (event.key === 'ArrowLeft') { event.preventDefault(); setOpenActivityId(activity.id); setAction('other'); return; }
+                if (event.key === 'ArrowRight') { event.preventDefault(); setOpenActivityId(activity.id); setAction('delete'); return; }
                 if (event.key === 'Enter' || event.key === ' ') {
                   event.preventDefault();
                   if (openActivityId === activity.id && action) {
@@ -166,7 +170,10 @@ export default function ActivityList({
                 {onToggleCancelled ? <button type="button" className={`event-activity-action-cancel ${isCancelled ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onToggleCancelled(activity.id); close(); }} aria-label={`${isCancelled ? 'Restore' : 'Cancel'} ${activity.title}`}>
                   {isCancelled ? <RotateCcw size={15} /> : <XCircle size={15} />}<span>{isCancelled ? 'Restore' : 'Cancel'}</span>
                 </button> : null}
-                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onDelete(activity.id); close(); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
+                
+              </div>
+              <div className="event-activity-actions event-activity-actions-delete" aria-hidden={!isDeleteOpen}>
+                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => { onDelete(activity.id); close(); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
               </div>
 
               <div className="event-activity-main">

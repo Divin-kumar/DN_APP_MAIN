@@ -43,10 +43,10 @@ export default function useSwipeActions({ surfaceSelector } = {}) {
     if (result.moved) gestureMovedRef.current = true;
     if (result.action && lastActionRef.current !== result.action) {
       lastActionRef.current = result.action;
-      if (result.action === 'other' && event.pointerType === 'touch') {
+      if (event.pointerType === 'touch') {
         try { navigator.vibrate?.(8); } catch { /* Unsupported on this browser */ }
       }
-      setAction(result.action === 'close' ? null : result.action);
+      setAction(result.action);
     }
   };
 

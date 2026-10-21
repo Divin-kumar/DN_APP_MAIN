@@ -21,25 +21,33 @@ test('Finance supports both legacy financials URL and Transactions deep links', 
 });
 test('transaction cards reveal Edit and Delete with no overflow three-dot button', () => {
   const component = read('../components/financials/TransactionHistory.jsx');
-  assert.match(component, /resolveTransactionSwipe/);
+  assert.match(component, /resolveDirectionalSwipe/);
   assert.match(component, /className="dn-transaction-edit"/);
   assert.match(component, /className="dn-transaction-delete"/);
   assert.match(component, /onKeyDown=\{/);
   assert.doesNotMatch(component, /Ellipsis|dn-transaction-overflow/);
 });
-test('Events keep their five-action overflow; other swipe lists retain Delete in left tray', () => {
-  const actions = read('../components/events/EventActionMenu.jsx');
-  for (const name of ['Edit','Duplicate','Share','Archive','Delete']) {
-    assert.match(actions, new RegExp("label: .*" + name));
-  }
-  const activities = read('../components/events/ActivityList.jsx');
-  assert.match(activities, /className="event-activity-actions event-activity-actions-other"/);
-  assert.doesNotMatch(activities, /className="event-activity-actions event-activity-actions-delete"/);
-  const lists = read('../pages/CodeLists.jsx');
-  assert.match(lists, /className="code-list-actions code-list-actions-other"/);
-  assert.doesNotMatch(lists, /className="code-list-actions code-list-actions-delete"/);
+test('Moment card and detail header remove three-dot menu', () => {
+  const events = read('../pages/Events.jsx');
+  const hero = read('../features/events/components/EventWorkspaceShell.jsx');
+  assert.doesNotMatch(events, /EventActionMenu/);
+  assert.doesNotMatch(hero, /EventActionMenu/);
+  assert.match(events, /<SwipeActionCard/);
+  assert.match(hero, /<SwipeActionCard as="section"/);
+  assert.match(read('../components/events/ActivityList.jsx'), /event-activity-actions-delete/);
+  assert.match(read('../pages/CodeLists.jsx'), /code-list-actions-delete/);
 });
-
+test('Flat Moment list removes timeline rail and dots, Grid selector remains', () => {
+  assert.match(read('../pages/Events.jsx'), /life-journey-cards/);
+  assert.match(read('../design-system.css'), /border-left:0 !important/);
+  assert.match(read('../design-system.css'), /event-story-card::before \{ display:none !important/);
+});
+test('Finance separates left Edit and right Delete', () => {
+  const c = read('../components/financials/TransactionHistory.jsx');
+  assert.match(c, /dn-transaction-actions-other/);
+  assert.match(c, /dn-transaction-actions-delete/);
+  assert.match(c, /resolveDirectionalSwipe/);
+});
 test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
   const page = read('../pages/Financials.jsx');
   assert.match(page, /summarizeTransactions\(/);

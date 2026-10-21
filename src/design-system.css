@@ -2098,3 +2098,34 @@ html[data-theme] .dn-transaction-field-hint {
   html[data-theme] .dn-finance-metric > strong { font-size: clamp(1.02rem,4.3vw,1.3rem); }
   html[data-theme] .dn-finance-metric-balance { grid-column: 1 / -1; min-height: 88px; }
 }
+
+/* v2.13 swipe surfaces; flat Moment list, Grid columns/galleries retained. */
+html[data-theme] .life-journey:not(.life-journey-cards) .life-journey-items { margin-left:0 !important; padding-left:0 !important; border-left:0 !important; }
+html[data-theme] .life-journey .event-story-card::before { display:none !important; content:none !important; }
+html[data-theme] .life-journey:not(.life-journey-cards) .event-story-card { padding:0 !important; overflow:hidden; border:1px solid var(--color-border); background:var(--color-card); border-radius:var(--radius-md); }
+html[data-theme] .dn-swipe-surface { position:relative; isolation:isolate; overflow:hidden; border-radius:var(--radius-md); touch-action:pan-y; }
+html[data-theme] .dn-swipe-surface:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+html[data-theme] .dn-swipe-main { position:relative; z-index:1; display:flex; width:100%; min-width:0; will-change:transform; background:var(--color-card); touch-action:pan-y; }
+html[data-theme] .dn-swipe-tray { position:absolute; top:0; bottom:0; display:flex; gap:4px; padding:5px; box-sizing:border-box; visibility:hidden; pointer-events:none; width:76px; background:color-mix(in srgb,var(--color-glass) 84%,var(--color-card-raised)); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); }
+html[data-theme] .dn-swipe-tray-other { right:0; width:222px; overflow-x:auto; overscroll-behavior-inline:contain; }
+html[data-theme] .dn-swipe-tray-delete { left:0; }
+html[data-theme] .dn-swipe-open-other .dn-swipe-tray-other, html[data-theme] .dn-swipe-open-delete .dn-swipe-tray-delete { visibility:visible; pointer-events:auto; }
+html[data-theme] .dn-swipe-action { display:grid; flex:0 0 70px; align-content:center; justify-items:center; gap:4px; min-height:44px; min-width:68px; border:1px solid var(--color-border); border-radius:11px; padding:4px; background:var(--color-card-raised); color:var(--color-primary); font-size:.68rem; font-weight:700; }
+html[data-theme] .dn-swipe-action.is-danger { color:var(--color-danger); background:color-mix(in srgb,var(--color-danger) 11%,var(--color-card-raised)); }
+html[data-theme] .dn-swipe-surface .event-story-main, html[data-theme] .dn-swipe-surface:hover .event-story-main, html[data-theme] .life-journey-cards .dn-swipe-surface .event-story-main { transform:none !important; transition:none !important; }
+html[data-theme] .dn-swipe-surface .event-story-main { width:100%; min-height:92px; }
+html[data-theme] .dn-swipe-surface .event-story-main-viewport { overflow:hidden; }
+html[data-theme] .life-journey-cards .dn-swipe-surface .dn-swipe-main { display:block; }
+html[data-theme] .life-journey-cards .dn-swipe-surface .event-story-main { min-height:0 !important; padding:0 !important; }
+html[data-theme] .dn-moment-hero-swipe .dn-swipe-main > .event-moment-hero { flex:1; width:100%; min-width:0; margin:0; }
+html[data-theme] .dn-transaction-card-actions { width:76px !important; visibility:hidden; pointer-events:none; }
+html[data-theme] .dn-transaction-actions-other { right:0; left:auto; }
+html[data-theme] .dn-transaction-actions-delete { left:0; right:auto; }
+html[data-theme] .dn-transaction-card.is-actions-other .dn-transaction-actions-other, html[data-theme] .dn-transaction-card.is-actions-delete .dn-transaction-actions-delete { visibility:visible; pointer-events:auto; }
+html[data-theme] .event-activity-card .event-activity-actions-delete { inset:0 auto 0 0 !important; width:76px !important; }
+html[data-theme] .event-activity-card.is-open-delete .event-activity-actions-delete { visibility:visible !important; opacity:1 !important; pointer-events:auto !important; }
+html[data-theme] .event-activity-card.is-open-delete .event-activity-main { transform:translateX(76px) !important; }
+html[data-theme] .code-list-item .code-list-actions-other { width:var(--code-list-actions-width,144px) !important; }
+html[data-theme] .code-list-item.is-open-delete .code-list-actions-delete { inset:0 auto 0 0 !important; width:76px !important; visibility:visible !important; pointer-events:auto !important; }
+html[data-theme] .code-list-item.is-open-delete .code-list-row { transform:translateX(76px) !important; }
+@media (prefers-reduced-motion:reduce) { html[data-theme] .dn-swipe-main { transition:none !important; } }

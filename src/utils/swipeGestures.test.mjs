@@ -1,47 +1,25 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveSwipeGesture } from './swipeGestures.js';
-
+import { resolveSwipeGesture, resolveDirectionalSwipe } from './swipeGestures.js';
 const start = { x: 150, y: 150 };
-test('vertical scroll locks out accidental swipe action', () => {
-  const vertical = resolveSwipeGesture(start, { x: 140, y: 184 });
-  assert.equal(vertical.axis, 'vertical');
-  assert.equal(resolveSwipeGesture(start, { x: 80, y: 190 }, vertical.axis).action, null);
+test('vertical scrolling prevents accidental swipe', () => {
+  const a = resolveSwipeGesture(start, { x:140, y:184 });
+  assert.equal(a.axis,'vertical');
+  assert.equal(resolveSwipeGesture(start,{x:80,y:190},a.axis).action,null);
 });
-test('small horizontal motion does not reveal destructive actions', () => {
-  const result = resolveSwipeGesture(start, { x: 117, y: 154 });
-  assert.equal(result.axis, 'horizontal');
-  assert.equal(result.action, null);
-  assert.equal(result.moved, true);
+test('only sufficiently deliberate horizontal motion reveals actions', () => {
+  assert.equal(resolveSwipeGesture(start,{x:117,y:154}).action,null);
+  assert.equal(resolveSwipeGesture(start,{x:112,y:114}).action,null);
+  assert.equal(resolveDirectionalSwipe({offsetX:23,velocityX:1700}),null);
 });
-test('horizontal thresholds reveal existing directions consistently', () => {
-  assert.equal(resolveSwipeGesture(start, { x: 85, y: 152 }).action, 'other');
-  assert.equal(resolveSwipeGesture(start, { x: 216, y: 153 }).action, 'close');
+test('left is other and right is delete', () => {
+  assert.equal(resolveSwipeGesture(start,{x:85,y:152}).action,'other');
+  assert.equal(resolveSwipeGesture(start,{x:216,y:153}).action,'delete');
+  assert.equal(resolveDirectionalSwipe({offsetX:-56}),'other');
+  assert.equal(resolveDirectionalSwipe({offsetX:56}),'delete');
+  assert.equal(resolveDirectionalSwipe({offsetX:24,velocityX:700}),'delete');
 });
-test('diagonal motion without dominant horizontal axis is not a swipe', () => {
-  const result = resolveSwipeGesture(start, { x: 112, y: 114 });
-  assert.equal(result.action, null);
-});
-
-import { resolveTransactionSwipe } from './swipeGestures.js';
-test('finance swipe only reveals after deliberate left displacement', () => {
-  assert.equal(resolveTransactionSwipe({ offsetX: -12, velocityX: -1600 }), false);
-  assert.equal(resolveTransactionSwipe({ offsetX: -23, velocityX: -900 }), false);
-  assert.equal(resolveTransactionSwipe({ offsetX: -56, velocityX: 0 }), true);
-  assert.equal(resolveTransactionSwipe({ offsetX: -25, velocityX: -700 }), true);
-  assert.equal(resolveTransactionSwipe({ offsetX: -40, velocityX: -100 }), false);
-});
-test('right swipe dismisses revealed actions without triggering delete', () => {
-  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 39, velocityX: 0 }), true);
-  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 40, velocityX: 0 }), false);
-  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 24, velocityX: 650 }), false);
-  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 2, velocityX: 0 }), true);
-});
-
-test('right swipe is dismiss-only; it cannot reveal a destructive action', () => {
-  const right = resolveSwipeGesture(start, { x: 207, y: 151 });
-  assert.equal(right.axis, 'horizontal');
-  assert.equal(right.action, 'close');
-  const left = resolveSwipeGesture(start, { x: 93, y: 151 });
-  assert.equal(left.action, 'other');
+test('opposite drag dismisses open tray without deleting', () => {
+  assert.equal(resolveDirectionalSwipe({wasOpen:'other',offsetX:40}),null);
+  assert.equal(resolveDirectionalSwipe({wasOpen:'delete',offsetX:-40}),null);
 });

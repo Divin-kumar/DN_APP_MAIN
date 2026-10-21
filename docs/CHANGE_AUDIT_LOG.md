@@ -812,3 +812,14 @@
 - Master sections updated: §9.1 and §13, version 2.12.2.
 - Status: AUTOMATED CI VERIFIED; MANUAL DEVICE/PRODUCTION QA OPEN.
 - Follow-ups: Test transaction Moment→Activity cascade on device with long lists and imported stale links, confirm wallet summary responsive layout, check production Firestore rules and performance separately.
+
+## CHG-20261021-063 | Consistent left-other/right-Delete gestures and clean Moments list
+- Date (UTC): 2026-10-21.
+- Owner request: no card three-dot menus, right swipe reveals Delete, left swipe reveals other actions; remove Moment List timeline line/dots, retain Grid.
+- Branch: OldVersion only. main unchanged. No deployment or database/schema writes.
+- Paths: src/pages/Events.jsx, src/features/events/components/EventWorkspaceShell.jsx, src/components/common/SwipeActionCard.jsx, src/components/financials/TransactionHistory.jsx, src/components/events/ActivityList.jsx, src/pages/CodeLists.jsx, src/hooks/useSwipeActions.js, src/utils/swipeGestures.js, src/utils/swipeGestures.test.mjs, src/utils/premiumUxContract.test.mjs, src/design-system.css, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before/after: Moments overflow replaced with gesture trays on list and detail hero; Finance, Activities, Code Lists use left contextual/right Delete reveal; decorative list rail/dots removed while Grid untouched.
+- Safety: Swipe never directly deletes. Existing confirmation callbacks retained. No storage or Firebase changes; native haptics optional.
+- Verification: Node tests, build, governance PENDING GitHub Actions. Real-device, iOS Safari, accessibility and measured FPS NOT RUN.
+- Risk: Narrow Grid card tray may need horizontal scrolling/device QA; legacy CSS specificity requires later cleanup. Rollback by reverting this commit.
+- Master sections: §9.1 and §13, version 2.13.0.

@@ -7,7 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, FileText, Heart, House, LayoutGrid, List, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, Copy, FileText, Heart, House, LayoutGrid, List, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Share2, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -20,7 +20,7 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
-import EventActionMenu from '../components/events/EventActionMenu';
+import SwipeActionCard from '../components/common/SwipeActionCard';
 import { duplicateEventData, eventShareDetails } from '../utils/eventActions';
 import usePersistentSort from '../hooks/usePersistentSort';
 import SortControl from '../components/common/SortControl';
@@ -84,10 +84,15 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
   const GalleryIcon = getMomentGalleryIcon(event.type === 'Other' ? event.customType : event.type);
   const galleryMood = getMomentGalleryMood(event.type === 'Other' ? event.customType : event.type);
   return (
-    <article className={'event-story-card dn-event-story-with-menu ' + (viewMode === 'cards' ? 'event-story-card-grid' : '')}>
-      <EventActionMenu className="is-story" event={event} onEdit={onEdit} onDuplicate={onDuplicate}
-        onShare={onShare} onArchive={onArchive} onDelete={onDelete} onSummary={onSummary} />
-      <div className="event-story-main-viewport">
+    <SwipeActionCard className={'event-story-card ' + (viewMode === 'cards' ? 'event-story-card-grid' : '')}
+      mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
+      otherActions={[
+        { label: 'Edit', icon: Pencil, onClick: onEdit },
+        { label: 'Duplicate', icon: Copy, onClick: onDuplicate },
+        { label: 'Share', icon: Share2, onClick: onShare },
+        ...(onSummary ? [{ label: 'Summary', icon: ClipboardList, onClick: onSummary }] : []),
+        { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
+      ]} onDelete={onDelete}>
         <button type="button" className="event-story-main" onClick={onOpen}
           aria-label={'Open ' + (event.name || 'event')}>
           <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
@@ -115,8 +120,7 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
             </span>
           </span>
         </button>
-      </div>
-    </article>
+    </SwipeActionCard>
   );
 }
 
@@ -561,7 +565,7 @@ export default function Events() {
         <label className="event-search"><Search size={17} /><input value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment or memory" aria-label="Search events" /></label>
         <div className="event-discovery-actions">
           <div className="event-view-toggle" aria-label="Choose event view">
-            <button type="button" className={viewMode === 'timeline' ? 'active' : ''} onClick={() => setViewMode('timeline')} aria-pressed={viewMode === 'timeline'}><List size={16} /><span>Timeline</span></button>
+            <button type="button" className={viewMode === 'timeline' ? 'active' : ''} onClick={() => setViewMode('timeline')} aria-pressed={viewMode === 'timeline'}><List size={16} /><span>List</span></button>
             <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')} aria-pressed={viewMode === 'cards'}><LayoutGrid size={16} /><span>Cards</span></button>
           </div>
           <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />

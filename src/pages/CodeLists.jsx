@@ -243,10 +243,10 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     if (result.moved) swipeMovedRef.current = true;
     if (result.action && swipeActionRef.current !== result.action) {
       swipeActionRef.current = result.action;
-      if (result.action === 'other' && event.pointerType === 'touch') {
+      if (event.pointerType === 'touch') {
         try { navigator.vibrate?.(8); } catch { /* Haptics optional */ }
       }
-      setSwipedRow(result.action === 'close' ? null : { value: gesture.value, action: result.action });
+      setSwipedRow({ value: gesture.value, action: result.action });
     }
   };
 
@@ -260,11 +260,12 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const usageCount = usageMap[entry.value] || 0;
     const swipedRowMatches = swipedRow?.value === entry.value;
     const isOtherOpen = swipedRowMatches && swipedRow.action === 'other';
+    const isDeleteOpen = swipedRowMatches && swipedRow.action === 'delete';
     const isInactive = entry.active === false || entry.isActive === false;
     const hasStatusAction = isInactive || usageCount > 0;
 
     return (
-      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '216px' : '144px' }}>
+      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
         <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
           <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => {
             if (listKey === 'eventTypes') {
@@ -285,16 +286,18 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
               <ShieldOff size={14} /> Disable
             </button>
           ) : null}
-          <button type="button" className="code-list-action code-list-delete" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleDelete(entry)}>
-            <Trash2 size={14} /> Delete
-          </button>
+
+        </div>
+        <div className="code-list-actions code-list-actions-delete" aria-hidden={!isDeleteOpen}>
+          <button type="button" className="code-list-action code-list-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => handleDelete(entry)}><Trash2 size={14} /> Delete</button>
         </div>
 
         <button
           type="button"
           className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left or tap for Edit, Delete and status actions.`}
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left for Edit/status, right for Delete.`}
           aria-expanded={Boolean(swipedRowMatches)}
+          onKeyDown={(event) => { if (event.key === 'Escape') setSwipedRow(null); if (event.key === 'ArrowLeft') { event.preventDefault(); setSwipedRow({ value: entry.value, action: 'other' }); } if (event.key === 'ArrowRight') { event.preventDefault(); setSwipedRow({ value: entry.value, action: 'delete' }); } } }
           onClick={(event) => {
             if (swipeMovedRef.current) {
               event.preventDefault();

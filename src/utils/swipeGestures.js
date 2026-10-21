@@ -8,13 +8,15 @@ export const resolveSwipeGesture = (start, point, axis = null, threshold = 56) =
   }
   if (axis !== 'horizontal') return { axis, action: null, moved: false };
   const moved = Math.abs(dx) > 12;
-  return { axis, moved, action: Math.abs(dx) >= threshold ? (dx > 0 ? 'close' : 'other') : null };
+  return { axis, moved, action: Math.abs(dx) >= threshold ? (dx > 0 ? 'delete' : 'other') : null };
 };
 
 // Finance cards only reveal actions; a gesture must never execute Edit/Delete.
 // A fast flick still needs meaningful horizontal displacement to avoid taps.
-export const resolveTransactionSwipe = ({ offsetX = 0, velocityX = 0, wasOpen = false } = {}) => {
-  if (offsetX <= -56 || (offsetX <= -24 && velocityX <= -650)) return true;
-  if (offsetX >= 40 || (offsetX >= 24 && velocityX >= 650)) return false;
-  return Boolean(wasOpen);
+export const resolveDirectionalSwipe = ({ offsetX = 0, velocityX = 0, wasOpen = null } = {}) => {
+  if (offsetX <= -56 || (offsetX <= -24 && velocityX <= -650)) return 'other';
+  if (offsetX >= 56 || (offsetX >= 24 && velocityX >= 650)) return 'delete';
+  if (wasOpen === 'other' && offsetX >= 36) return null;
+  if (wasOpen === 'delete' && offsetX <= -36) return null;
+  return wasOpen;
 };
