@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.8.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.8.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -325,7 +325,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.8.4** | **2026-10-21** | Added shared accessible five-action event overflow menu with viewport-aware popup placement | **CHG-20261021-033** |
+| **2.8.5** | **2026-10-21** | Implemented reversible archived event metadata and status, separate from canceled/completed | **CHG-20261021-034** |
+| 2.8.4 | 2026-10-21 | Added shared accessible five-action event overflow menu with viewport-aware popup placement | **CHG-20261021-033** |
 | 2.8.3 | 2026-10-21 | Created safe event duplication/share helpers; duplicates exclude booked money and binary attachments | **CHG-20261021-032** |
 | 2.8.2 | 2026-10-21 | Unified the global quick-create financial flow under Add Transaction, removed Expense-only quick-create form | **CHG-20261021-031** |
 | 2.8.1 | 2026-10-21 | Added premium theme-adaptive financial card, filter, button, and unified form styles with mobile breakpoints | **CHG-20261021-030** |

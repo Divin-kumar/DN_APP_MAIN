@@ -449,3 +449,15 @@
 - Verification: Source created; parent wiring/CI/mobile browser tests pending. Rollback by git revert.
 - Master: §9 and §13, v2.8.4.
 - Status: COMPONENT CREATED, INTEGRATION PENDING.
+
+## CHG-20261021-034 | Persist a reversible event archive state
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, SHA in Git history; `main` unchanged.
+- Files: `src/utils/eventStatus.js`, `src/utils/eventStatus.test.mjs`, `src/services/eventService.js`, master, audit.
+- Before/after: Event domain only recognized completed/cancelled/in-progress -> preserves boolean archived state and resolves archived status without destroying prior completion/cancelled details. Unarchive reverses flag.
+- Rationale: The owner requests an Archive/Restore action in the event overflow menu.
+- Data/security: Adds optional archival metadata to existing event documents and guest eventGroups. Old records default to not archived; no migration.
+- Verification: Unit status test added, CI and event UI integration pending. No deployment.
+- Risk: Event list/overview filters must deliberately expose an Archived view so records are not stranded; subsequent commit handles this.
+- Master: §§4, 9 and 13, v2.8.5.
+- Status: SOURCE IMPLEMENTED, EVENT UI WIRING PENDING.

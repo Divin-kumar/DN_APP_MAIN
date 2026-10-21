@@ -65,6 +65,7 @@ export const normalizeEvent = (item = {}) => ({
   activities: Array.isArray(item.activities)
     ? item.activities.map(normalizeActivity)
     : [],
+  archived: Boolean(item.archived),
   status: getEventStatus(item),
   createdAt: item.createdAt || new Date().toISOString(),
 });
