@@ -14,6 +14,7 @@ import {
   updateIncome,
 } from '../services/incomeService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { sameRecord } from '../utils/transactionRelations';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -118,9 +119,9 @@ const useIncomeStore = create((set, get) => {
     }
 
     const current = get().incomes;
-    const previous = current.find((item) => item.id === income.id || item.firestoreId === income.firestoreId);
+    const previous = current.find((item) => sameRecord(item, income));
     const optimistic = current.map((item) =>
-      item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...income } : item
+      sameRecord(item, income) ? { ...item, ...income } : item
     );
     set({ incomes: optimistic, error: null });
 
@@ -128,7 +129,7 @@ const useIncomeStore = create((set, get) => {
       const updated = await updateIncome(uid, income);
       set({
         incomes: get().incomes.map((item) =>
-          item.id === income.id || item.firestoreId === income.firestoreId ? { ...item, ...updated } : item
+          sameRecord(item, income) ? { ...item, ...updated } : item
         ),
         error: null,
       });
@@ -137,7 +138,7 @@ const useIncomeStore = create((set, get) => {
       console.error('Failed to update income:', error);
       set({
         incomes: previous
-          ? get().incomes.map((item) => (item.id === income.id || item.firestoreId === income.firestoreId ? previous : item))
+          ? get().incomes.map((item) => (sameRecord(item, income) ? previous : item))
           : get().incomes,
         error: 'Unable to save the income. Your changes were restored.',
       });
@@ -173,7 +174,7 @@ const useIncomeStore = create((set, get) => {
     } catch (error) {
       console.error('Failed to delete income:', error);
       set({
-        incomes: get().incomes.some((item) => item.id === income.id || item.firestoreId === income.firestoreId)
+        incomes: get().incomes.some((item) => sameRecord(item, income))
           ? get().incomes
           : [income, ...get().incomes],
         error: 'Unable to delete the income. It has been restored.',

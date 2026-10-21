@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.10.3** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.10.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -259,7 +259,10 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | Automated reminders | UI preferences do not establish background push scheduler | Do not describe as shipped |
 | DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
 
-### 9.1 Unified transaction implementation (source migration stage)
+### 9.1 Unified transaction implementation
+**Identity and guest-ledger invariant (2.10.4, SOURCE-INSPECTED):** Account and guest income/expense updates match only actual present IDs; two missing `firestoreId` fields never identify a record. Guest expense writes persist only to the original `dn_guest_expenses` master list, while nested activity expenses remain read-compatible for display/backup. Old duplicated guest rows are preserved for explicit review, not destructively pruned. No Firestore migration, backup format change, or business-record deletion.
+
+### 9.1 Historical transaction notes (source migration stage)
 The product-owner-approved financial simplification keeps *two underlying existing Firestore collections* (`users/{uid}/incomes` and `users/{uid}/expenses`) and browser guest keys for data compatibility, while the UI transitions to one Transactions flow. `src/utils/transactionFilters.js` now supplies data-only month options, intersection filters, dynamic income/expense/balance totals, sorting, and normalized form payloads. Existing income normalization now preserves optional linked `eventId`, `activityId`, and notes, with the same note preservation for expenses. **No Firestore migration or record deletion** is needed. Activity-linked expense records may also exist nested within event groups; the UI must avoid deleting/editing their only copy and must reconcile relationships. UI work and cross-collection type transitions require follow-up and browser validation.
 
 ### 9.1b Implemented premium-finance and event CI verification (2026-10-21)
@@ -350,6 +353,7 @@ The current `OldVersion` source commit `c22b3ddf87afb964e4a72004647306bc6f6d8e05
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.10.4** | **2026-10-21** | Corrected missing-ID income/expense matching and stopped guest expense writes from persisting nested-only projection rows | **CHG-20261021-051** |
 | **2.10.3** | **2026-10-21** | Recorded verified 76-test/build/governance pass for completed finance and event premium changes; retained live/mobile QA blockers | **CHG-20261021-050** |
 | **2.10.2** | **2026-10-21** | Routed event-workspace Link Existing Expense through unified transaction mutation and activity-mirror reconciliation | **CHG-20261021-049** |
 | 2.10.1 | 2026-10-21 | Added compensating nested mirror rollback to failed transaction type conversion and same-type linked edits | **CHG-20261021-048** |

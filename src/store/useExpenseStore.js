@@ -14,6 +14,7 @@ import {
   updateExpense,
 } from '../services/expenseService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { sameRecord } from '../utils/transactionRelations';
 
 const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
 
@@ -122,9 +123,9 @@ const useExpenseStore = create((set, get) => {
     }
 
     const current = get().expenses;
-    const previous = current.find((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
+    const previous = current.find((item) => sameRecord(item, expense));
     const optimistic = current.map((item) =>
-      item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...expense } : item
+      sameRecord(item, expense) ? { ...item, ...expense } : item
     );
     set({ expenses: optimistic, error: null });
 
@@ -132,7 +133,7 @@ const useExpenseStore = create((set, get) => {
       const updated = await updateExpense(uid, expense);
       set({
         expenses: get().expenses.map((item) =>
-          item.id === expense.id || item.firestoreId === expense.firestoreId ? { ...item, ...updated } : item
+          sameRecord(item, expense) ? { ...item, ...updated } : item
         ),
         error: null,
       });
@@ -141,7 +142,7 @@ const useExpenseStore = create((set, get) => {
       console.error('Failed to update expense:', error);
       set({
         expenses: previous
-          ? get().expenses.map((item) => (item.id === expense.id || item.firestoreId === expense.firestoreId ? previous : item))
+          ? get().expenses.map((item) => (sameRecord(item, expense) ? previous : item))
           : get().expenses,
         error: 'Unable to save the expense. Your changes were restored.',
       });
@@ -180,7 +181,7 @@ const useExpenseStore = create((set, get) => {
     } catch (error) {
       console.error('Failed to delete expense:', error);
       set({
-        expenses: get().expenses.some((item) => item.id === expense.id || item.firestoreId === expense.firestoreId)
+        expenses: get().expenses.some((item) => sameRecord(item, expense))
           ? get().expenses
           : [expense, ...get().expenses],
         error: 'Unable to delete the expense. It has been restored.',

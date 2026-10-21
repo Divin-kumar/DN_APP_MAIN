@@ -56,3 +56,18 @@ test('reversing a failed expense to income conversion restores the nested expens
   assert.equal(restored[0].activities[0].expenses[0].id, original.id);
   assert.equal(restored[0].activities[0].expenses[0].amount, 500);
 });
+
+
+test('financial matches require real IDs and upserts do not clobber unrelated rows', async () => {
+  const { sameRecord, upsertRecord } = await import('./transactionRelations.js');
+  assert.equal(sameRecord({ id: 'a' }, { id: 'b' }), false);
+  assert.equal(sameRecord({ id: 'a' }, { id: 'a' }), true);
+  assert.equal(sameRecord({ firestoreId: undefined }, { firestoreId: undefined }), false);
+  assert.equal(sameRecord({ id: 'a', firestoreId: undefined }, { id: 'b', firestoreId: undefined }), false);
+  assert.equal(sameRecord({ firestoreId: 'doc' }, { firestoreId: 'doc' }), true);
+  const original = [{ id: 'a', amount: 1 }, { id: 'b', amount: 2 }];
+  const inserted = upsertRecord(original, { id: 'c', amount: 3 });
+  const updated = upsertRecord(inserted, { id: 'b', amount: 99 });
+  assert.deepEqual(updated.map((item) => [item.id,item.amount]), [['a',1],['b',99],['c',3]]);
+  assert.deepEqual(original.map((item) => item.amount), [1,2]);
+});

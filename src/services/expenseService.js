@@ -8,9 +8,17 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { upsertRecord } from '../utils/transactionRelations';
 
 const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
 const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
+
+// Never persist the merged activity-expense projection to the guest master ledger.
+const getGuestExpenseMasters = () => {
+  const parsed = JSON.parse(localStorage.getItem(GUEST_EXPENSES_KEY) || '[]');
+  if (!Array.isArray(parsed)) throw new Error('Guest expense storage is invalid; no changes were made.');
+  return parsed;
+};
 
 const expenseKey = (expense) => expense.id || expense.firestoreId;
 
@@ -112,21 +120,14 @@ export const deleteExpense = async (uid, expense) => {
 };
 
 export const saveGuestExpense = (expense) => {
-  const list = getGuestExpenses();
-  const index = list.findIndex((item) => item.id === expense.id || item.firestoreId === expense.firestoreId);
-
-  if (index >= 0) {
-    list[index] = normalizeExpense(expense);
-  } else {
-    list.push(normalizeExpense(expense));
-  }
-
-  setGuestExpenses(list);
-  return list;
+  const record = { ...normalizeExpense(expense), ...(expense.firestoreId ? { firestoreId: expense.firestoreId } : {}) };
+  setGuestExpenses(upsertRecord(getGuestExpenseMasters(), record));
+  return getGuestExpenses();
 };
 
 export const removeGuestExpense = (expenseId) => {
-  const list = getGuestExpenses().filter((item) => item.id !== expenseId);
-  setGuestExpenses(list);
-  return list;
+  setGuestExpenses(getGuestExpenseMasters().filter((item) =>
+    item.id !== expenseId && item.firestoreId !== expenseId
+  ));
+  return getGuestExpenses();
 };

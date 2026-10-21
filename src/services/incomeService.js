@@ -12,6 +12,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
+import { upsertRecord } from '../utils/transactionRelations';
 
 const GUEST_INCOMES_KEY = 'dn_guest_incomes';
 
@@ -77,17 +78,9 @@ export const deleteIncome = async (uid, income) => {
 };
 
 export const saveGuestIncome = (income) => {
-  const list = getGuestIncomes();
-  const index = list.findIndex((item) => item.id === income.id || item.firestoreId === income.firestoreId);
-
-  if (index >= 0) {
-    list[index] = normalizeIncome(income);
-  } else {
-    list.push(normalizeIncome(income));
-  }
-
-  setGuestIncomes(list);
-  return list;
+  const next = upsertRecord(getGuestIncomes(), normalizeIncome(income));
+  setGuestIncomes(next);
+  return next;
 };
 
 export const removeGuestIncome = (incomeId) => {

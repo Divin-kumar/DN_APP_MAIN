@@ -1,9 +1,16 @@
 // Mirror activity-linked expense records without creating a second financial ledger.
 // Master income/expense collections remain the accounting source of truth.
+// Never equate absent Firestore IDs. Both compared identifiers must exist.
 export const sameRecord = (a, b) => Boolean(a && b && (
-  (a.id && b.id && a.id === b.id) ||
-  (a.firestoreId && b.firestoreId && a.firestoreId === b.firestoreId)
+  (a.id != null && b.id != null && String(a.id).length && String(a.id) === String(b.id)) ||
+  (a.firestoreId != null && b.firestoreId != null && String(a.firestoreId).length && String(a.firestoreId) === String(b.firestoreId))
 ));
+
+export const upsertRecord = (items, record) => {
+  const index = items.findIndex((item) => sameRecord(item, record));
+  return index < 0 ? [...items, record]
+    : items.map((item, i) => i === index ? record : item);
+};
 
 export const reconcileExpenseActivities = (events, previous = null, current = null) => {
   const touched = [];

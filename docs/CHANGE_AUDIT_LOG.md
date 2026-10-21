@@ -644,3 +644,17 @@
 - Rollback: Use prior Git commits on OldVersion; no DB migration was performed. This documentation-only change has no runtime effects.
 - Master: §9.1b, §13, version 2.10.3.
 - Status: SOURCE CI VERIFIED, PRODUCTION/DEVICE ACCEPTANCE NOT COMPLETE.
+
+## CHG-20261021-051 | Fix missing-ID financial collisions and guest nested projection persistence
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, continued Financials implementation and safety review.
+- Branch / commit / PR: `OldVersion`, Git SHA in history; `main` untouched.
+- Scope: `src/utils/transactionRelations.js`, its Node tests, `src/services/incomeService.js`, `src/services/expenseService.js`, `src/store/useIncomeStore.js`, `src/store/useExpenseStore.js`, master and audit.
+- Before -> after: Missing `firestoreId` values could be compared as equal, causing an edit to target an unrelated ledger row. Guest expense updates/deletes operated on merged master+nested histories, persisting activity-only expenses as new master rows. Now matching requires real equal IDs; shared immutable upsert preserves unrelated rows; guest writes target master records only and continue showing legacy nested history.
+- Why: Prevent incorrect balances, stale activity expenses and guest data contamination.
+- User/data/security/compatibility: No data migration, deletion, schema change or Firebase deployment. Existing guest keys and restored data remain readable, and prior duplicates are not automatically removed.
+- Verification: Pure Node test added, CI Node/Vite run PENDING; real Firebase, guest browser, backup/restore and device QA NOT RUN.
+- Risk/rollback: Existing contaminated ledgers may contain historical duplicates, which need owner-reviewed reconciliation; cross-record event writes remain non-atomic. Revert the code commit to roll back.
+- Master: §§9.1,13, v2.10.4.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
+- Follow-ups: Test multiple guest incomes, nested-only records, account scoped updates and backup restore.
