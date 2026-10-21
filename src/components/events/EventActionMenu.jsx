@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Archive, ArchiveRestore, Copy, Ellipsis, Pencil, Share2, Trash2 } from 'lucide-react';
+import { Archive, ArchiveRestore, ClipboardList, Copy, Ellipsis, Pencil, Share2, Trash2 } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
 
 // One accessible viewport-aware action surface, reused by list cards and event hero.
-export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, onArchive, onDelete, className = '' }) {
+export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, onArchive, onDelete, onSummary, className = '' }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState(null);
   const anchor = useRef(null);
@@ -14,6 +14,7 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
     { label: 'Edit', icon: Pencil, run: onEdit },
     { label: 'Duplicate', icon: Copy, run: onDuplicate },
     { label: 'Share', icon: Share2, run: onShare },
+    ...(onSummary ? [{ label: 'View Summary', icon: ClipboardList, run: onSummary }] : []),
     { label: isArchived ? 'Restore' : 'Archive', icon: isArchived ? ArchiveRestore : Archive, run: onArchive },
     { label: 'Delete', icon: Trash2, run: onDelete, danger: true },
   ];
@@ -29,7 +30,7 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
     const rect = el.getBoundingClientRect();
     const viewport = getVisibleViewport(window);
     setPosition(computeOverlayPlacement({
-      anchor: rect, viewport, preferredHeight: 250, minimumWidth: 190, gap: 6,
+      anchor: rect, viewport, preferredHeight: onSummary ? 300 : 250, minimumWidth: 190, gap: 6,
     }));
   }, []);
 
@@ -51,6 +52,10 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
       window.visualViewport?.removeEventListener('scroll', move);
     };
   }, [open, reposition]);
+
+  useEffect(() => {
+    if (open && position) menu.current?.querySelector('button')?.focus({ preventScroll: true });
+  }, [open, Boolean(position)]);
 
   useEffect(() => {
     if (!open) return undefined;

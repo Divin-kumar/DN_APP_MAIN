@@ -20,7 +20,8 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
-import useSwipeActions from '../hooks/useSwipeActions';
+import EventActionMenu from '../components/events/EventActionMenu';
+import { duplicateEventData, eventShareDetails } from '../utils/eventActions';
 import usePersistentSort from '../hooks/usePersistentSort';
 import SortControl from '../components/common/SortControl';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
@@ -68,59 +69,34 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEdit, onCancel, onDelete }) {
+function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEdit, onDuplicate, onShare, onArchive, onDelete }) {
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
-  const statusLabel = status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
+  const statusLabel = status === 'archived' ? 'Archived' : status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
   const activities = event.activities || [];
   const memories = event.memories || [];
   const attachments = event.attachments || [];
   const galleryImage = typeof event.coverImage === 'string'
     ? event.coverImage
-    : event.coverImage?.url || event.coverImageUrl || event.coverUrl || event.attachments?.find((attachment) => String(attachment.type || '').startsWith('image/'))?.url || null;
+    : event.coverImage?.url || event.coverImageUrl || event.coverUrl
+      || event.attachments?.find((attachment) => String(attachment.type || '').startsWith('image/'))?.url || null;
   const GalleryIcon = getMomentGalleryIcon(event.type === 'Other' ? event.customType : event.type);
   const galleryMood = getMomentGalleryMood(event.type === 'Other' ? event.customType : event.type);
-  const { action, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close, toggleOther } = useSwipeActions();
-  const isOtherOpen = action === 'other';
-  const isDeleteOpen = action === 'delete';
-
   return (
-    <article ref={swipeRootRef} className={`event-story-card ${viewMode === 'cards' ? 'event-story-card-grid' : ''} ${action ? `is-open-${action}` : ''}`}>
-      <div className="event-story-actions event-story-actions-other" aria-hidden={!isOtherOpen}>
-        <button type="button" className="event-story-action-summary" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onSummary(); }} aria-label={`View summary for ${event.name || 'event'}`}><ClipboardList size={14} /><span>Summary</span></button>
-        <button type="button" className="event-story-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onEdit(); }} aria-label={`Edit ${event.name || 'event'}`}><Pencil size={14} /><span>Edit</span></button>
-        <button type="button" className={`event-story-action-cancel ${status === 'cancelled' ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { close(); onCancel(); }} aria-label={status === 'cancelled' ? `Restore ${event.name || 'event'}` : `Cancel ${event.name || 'event'}`}>
-          {status === 'cancelled' ? <CalendarDays size={14} /> : <XCircle size={14} />}<span>{status === 'cancelled' ? 'Restore' : 'Cancel'}</span>
-        </button>
-      </div>
-      <div className="event-story-actions event-story-actions-delete" aria-hidden={!isDeleteOpen}>
-        <button type="button" className="event-story-action-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => { close(); onDelete(); }} aria-label={`Delete ${event.name || 'event'}`}><Trash2 size={14} /><span>Delete</span></button>
-      </div>
+    <article className={'event-story-card dn-event-story-with-menu ' + (viewMode === 'cards' ? 'event-story-card-grid' : '')}>
+      <EventActionMenu className="is-story" event={event} onEdit={onEdit} onDuplicate={onDuplicate}
+        onShare={onShare} onArchive={onArchive} onDelete={onDelete} onSummary={onSummary} />
       <div className="event-story-main-viewport">
-        <button
-          type="button"
-          className="event-story-main"
-          onClick={(clickEvent) => {
-            if (viewMode === 'cards') {
-              onOpen();
-              return;
-            }
-            if (consumeSwipeClick(clickEvent)) return;
-            if (action) close();
-            else onOpen();
-          }}
-          onPointerDown={viewMode === 'cards' ? undefined : handlePointerDown}
-          onPointerMove={viewMode === 'cards' ? undefined : handlePointerMove}
-          onPointerUp={viewMode === 'cards' ? undefined : handlePointerUp}
-          onPointerCancel={viewMode === 'cards' ? undefined : handlePointerUp}
-          aria-label={viewMode === 'cards' ? `Open ${event.name || 'event'}` : `Open ${event.name || 'event'}. Swipe left for edit and cancel, right for delete.`}
-        >
-          <span className={`event-story-status status-${status}`} aria-label={`Status: ${statusLabel}`}>{statusLabel}</span>
-          <span className={`event-story-art${viewMode === 'cards' ? ` event-story-gallery-cover mood-${galleryMood}` : ''}`} aria-hidden="true">
+        <button type="button" className="event-story-main" onClick={onOpen}
+          aria-label={'Open ' + (event.name || 'event')}>
+          <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
+          <span className={'event-story-art' + (viewMode === 'cards' ? ' event-story-gallery-cover mood-' + galleryMood : '')} aria-hidden="true">
             {viewMode === 'cards' && galleryImage ? <img src={galleryImage} alt="" loading="lazy" /> : null}
             {viewMode === 'cards' && !galleryImage ? <GalleryIcon className="event-story-gallery-fallback-icon" size={32} strokeWidth={1.5} /> : null}
-            <span className={viewMode === 'cards' ? 'event-story-gallery-date' : ''}>{validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</span>
+            <span className={viewMode === 'cards' ? 'event-story-gallery-date' : ''}>
+              {validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}
+            </span>
             <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
             <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
           </span>
@@ -247,12 +223,12 @@ export default function Events() {
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
     + eventExpenses.filter((expense) => !expense.activityId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-  const categories = useMemo(() => ['All moments', ...new Set(events.map((event) => event.type || 'Personal').filter(Boolean))], [events]);
+  const categories = useMemo(() => ['All moments', 'Archived', ...new Set(events.filter((event) => !event.archived).map((event) => event.type || 'Personal').filter(Boolean))], [events]);
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
     return [...events]
       .filter((event) => {
-        const matchesCategory = category === 'All moments' || (event.type || 'Personal') === category;
+        const matchesCategory = category === 'Archived' ? Boolean(event.archived) : !event.archived && (category === 'All moments' || (event.type || 'Personal') === category);
         const matchesSearch = !query || [event.name, event.type, event.customType, event.notes]
           .some((value) => String(value || '').toLowerCase().includes(query));
         return matchesCategory && matchesSearch;
@@ -260,6 +236,7 @@ export default function Events() {
       .sort((first, second) => new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime());
   }, [events, category, search]);
   const upcomingCount = events.filter((event) => {
+    if (event.archived) return false;
     const date = getTimelineDate(event);
     return date && date >= new Date(new Date().setHours(0, 0, 0, 0));
   }).length;
@@ -288,24 +265,27 @@ export default function Events() {
     return eventSortDirection === 'desc' ? -secondary : secondary;
   };
   const nextMoments = visibleEvents.filter((event) => {
-    if (getEventStatus(event) === 'cancelled') return false;
+    if (event.archived || getEventStatus(event) === 'cancelled') return false;
     const date = getTimelineDate(event);
     return date && date >= todayStart;
   }).sort(compareEvents);
   const pastMoments = visibleEvents.filter((event) => {
+    if (event.archived) return false;
     if (getEventStatus(event) === 'cancelled') return true;
     const date = getTimelineDate(event);
     return date && date < todayStart;
   }).sort(compareEvents);
+  const archivedMoments = visibleEvents.filter((event) => event.archived).sort(compareEvents);
   const statusMomentGroups = [
     { label: 'In Progress', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) < todayStart },
     { label: 'Upcoming / Planned', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) >= todayStart },
     { label: 'Completed', matches: (event) => getEventStatus(event) === 'completed' },
     { label: 'Cancelled', matches: (event) => getEventStatus(event) === 'cancelled' },
+    { label: 'Archived', matches: (event) => getEventStatus(event) === 'archived' },
   ].map((group) => ({ ...group, events: visibleEvents.filter(group.matches).sort(compareEvents) })).filter((group) => group.events.length);
   if (eventSortDirection === 'desc') statusMomentGroups.reverse();
   const pickerQuery = activityEventSearch.trim().toLowerCase();
-  const pickerEvents = events.filter((event) => !pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery)));
+  const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery)));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
   const pickerFavorites = favoriteEventIds.map((id) => pickerById.get(id)).filter(Boolean);
   const pickerRecentIds = (() => {
@@ -414,6 +394,32 @@ export default function Events() {
       showToast(nextStatus === 'cancelled' ? 'Event cancelled' : 'Event restored', 'success');
     } catch {
       showToast('Could not update event status', 'danger');
+    }
+  };
+
+  const duplicateMoment = async (event) => {
+    try {
+      const saved = await addEvent(user?.uid, isGuest, duplicateEventData(event));
+      showToast('Moment duplicated without copying expenses', 'success');
+      navigate('/events/' + (saved.id || saved.firestoreId));
+    } catch { showToast('Could not duplicate moment', 'danger'); }
+  };
+  const archiveMoment = async (event) => {
+    try {
+      await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
+      showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
+    } catch { showToast('Could not update archive state', 'danger'); }
+  };
+  const shareMoment = async (event) => {
+    const details = eventShareDetails(event, isGuest, window.location.origin);
+    try {
+      if (navigator.share) await navigator.share(details);
+      else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText([details.text, details.url].filter(Boolean).join('\n'));
+        showToast('Moment details copied', 'success');
+      } else showToast('Sharing is not supported in this browser', 'danger');
+    } catch (error) {
+      if (error?.name !== 'AbortError') showToast('Could not share this moment', 'danger');
     }
   };
 
@@ -568,7 +574,9 @@ export default function Events() {
       onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
       onSummary={() => setSummaryEvent(event)}
       onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
-      onCancel={() => toggleEventCancellation(event)}
+      onDuplicate={() => duplicateMoment(event)}
+      onShare={() => shareMoment(event)}
+      onArchive={() => archiveMoment(event)}
       onDelete={() => setPendingDeleteEvent(event)}
     />
   );
@@ -626,6 +634,12 @@ export default function Events() {
               <div className="life-journey-items">
                 {pastMoments.map(renderEventCard)}
               </div>
+            </section>
+          ) : null}
+          {archivedMoments.length ? (
+            <section className="life-journey-section">
+              <div className="life-journey-label"><CalendarDays size={16} /><div><span>Archived</span><small>Stored moments, ready to restore</small></div><b>{archivedMoments.length}</b></div>
+              <div className="life-journey-items">{archivedMoments.map(renderEventCard)}</div>
             </section>
           ) : null}
           </>}

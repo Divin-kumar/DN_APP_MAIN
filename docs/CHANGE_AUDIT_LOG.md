@@ -461,3 +461,15 @@
 - Risk: Event list/overview filters must deliberately expose an Archived view so records are not stranded; subsequent commit handles this.
 - Master: §§4, 9 and 13, v2.8.5.
 - Status: SOURCE IMPLEMENTED, EVENT UI WIRING PENDING.
+
+## CHG-20261021-035 | Event story cards use single action overflow and archived view
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, SHA in Git history; `main` untouched.
+- Files: `src/pages/Events.jsx`, `src/components/events/EventActionMenu.jsx`, master and audit.
+- Before/after: Tiny detached swipe action controls on event story cards -> single 44px overflow menu (Edit, Duplicate, Share, View Summary, Archive/Restore, Delete) positioned above content. Archived items appear under explicit Archived filter and group; active filters exclude archived by default.
+- Business semantics: Archive is reversible and does not delete activity/financial records. Duplicate creates fresh event/task IDs but excludes actual booked expense records to avoid double counting. Guest sharing text-only, account link subject to sign-in access.
+- UX: Menu options keyboard accessible and viewport aware; current primary event open/card rendering remains. Swipe no longer required to expose event actions.
+- Verification: CI, guest/account archive/duplicate and device testing pending.
+- Risks: Long menu mobile keyboard/focus and old event status styles need visual testing; using old screenshots may show prior layout. Revert commit if needed.
+- Master: §§4, 9, 13, v2.9.0.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
