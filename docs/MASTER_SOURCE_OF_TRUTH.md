@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.7** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.5.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -186,6 +186,9 @@ UID-scoped collection paths are **client conventions**; they do not replace depl
 - `firebase.json` serves `dist` via Firebase Hosting site `dn-10`, SPA rewrite; several JS/CSS/HTML resources use no-cache headers. Actual deployed target must be verified before deployment.
 - **Do not deploy** or change production Firebase configuration without explicit instruction.
 
+### 6.4 Responsive overlays (source-inspected; browser verification pending)
+Shared `src/components/common/DropdownSelect.jsx` renders options in a body-level portal rather than clipping within scrollable cards/modals. `src/utils/overlayPosition.js` computes an above/below position, clamps to visual viewport (including mobile keyboard offsets), and caps panel height; the scrollable options list has wheel/touch containment, selected-option reveal, long-value search and keyboard Arrow/Home/End/Enter/Escape/Tab behavior. Menu geometry is refreshed for trigger resize, document scroll, orientation and visualViewport resize/scroll. Trigger focus is restored on selection/Escape. DateField continues using the browser-native `input type="date"` picker so viewport positioning, mobile-sheet adaptation and calendar accessibility are provided by the user agent; unlike custom DOM menus, native picker placement cannot be dictated by application JavaScript. Manual browser testing is required for iOS/Android calendar behavior and modals.
+
 ## 7. Testing and release contract
 
 **Available commands from `package.json`:**
@@ -297,7 +300,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.7** | **2026-10-21** | Verified three new DN identity/Markdown tests and build in GitHub Actions (51 pass); removed retired product label from normative AGENTS instructions | **CHG-20261021-016** |
+| **2.5.0** | **2026-10-21** | Added portaled, viewport-aware shared dropdown positioning and option search; preserved native calendar controls and theme | **CHG-20261021-017** |
+| 2.4.7 | 2026-10-21 | Verified three new DN identity/Markdown tests and build in GitHub Actions (51 pass); removed retired product label from normative AGENTS instructions | **CHG-20261021-016** |
 | 2.4.6 | 2026-10-21 | Corrected Node brand-regression test escaping and made source/Markdown scans robust on paths | **CHG-20261021-015** |
 | 2.4.5 | 2026-10-21 | Add source-based DN branding and four-file budget regression checks to Node test suite | **CHG-20261021-014** |
 | 2.4.4 | 2026-10-21 | Verified repaired DN implementation through GitHub CI (48 unit tests pass, Vite build succeeds); tracked dependency advisories and remaining runtime checks | **CHG-20261021-013** |

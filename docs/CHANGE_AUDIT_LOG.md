@@ -235,3 +235,16 @@
 - Master updated: §7 CI evidence, §13 version 2.4.7.
 - Status: PREVIOUS BRAND-REGRESSION COMMIT VERIFIED; THIS DOC-ONLY COMMIT REQUIRES CI READ-BACK.
 - Follow-ups: Browser-based old-device guest-data/backup validation, dependency security review, required checks on OldVersion.
+
+## CHG-20261021-017 | Shared responsive dropdown and overlay positioning
+- Date (UTC): 2026-10-21.
+- Owner/request: Make every dropdown and calendar responsive and prevent clipping behind app overlays.
+- Branch / commit: `OldVersion`; exact commit SHA in Git history. `main` untouched.
+- Paths: `src/components/common/DropdownSelect.jsx`, `src/utils/overlayPosition.js`, `src/utils/overlayPosition.test.mjs`, `src/design-system.css`, master and audit.
+- Before -> after: Inline absolute-position dropdowns were clipped by cards, modals and scroll panes; now portal to body at computed viewport-aware location, flip above when insufficient space, constrain max height/width, avoid fixed mobile dock, reposition on scroll/resize/orientation/mobile visual-viewport events. Long lists gain option search, selected-item scroll, scroll containment and consistent keyboard/focus controls. Shared date fields continue using native browser pickers (which are managed by OS/browser outside CSS clipping).
+- Why: Fix the root component used across forms and filters without per-page business logic changes.
+- User/data/security/compatibility: UI only; onChange keeps the original synthetic target value/name shape. No persistence, Firebase or backend changes. Portal opens above modal by high stack index; native browser calendar positioning is outside JS control.
+- Verification: Four placement unit assertions introduced. Node tests, Vite build, browser/mobile visual tests NOT YET RUN in this commit. CI verification to follow.
+- Risks/rollback: CSS/browser viewport variations, keyboard and focus behavior in modal contexts require real-device checks. Revert commit if regression detected; no data migration required.
+- Master: §6.4 and version 2.5.0.
+- Status: SOURCE IMPLEMENTED / CI PENDING.
