@@ -14,6 +14,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { getEventStatus } from '../utils/eventStatus';
+import { normalizeActivityExpense } from '../utils/transactionRelations';
 
 const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
 const GUEST_SESSION_BACKUP_KEY = 'dn_session_backup';
@@ -26,15 +27,9 @@ export const normalizeActivity = (item = {}) => ({
   title: String(item.title ?? '').trim(),
   date: item.date || new Date().toISOString().slice(0, 10),
   description: item.description || '',
-  expenses: Array.isArray(item.expenses) ? item.expenses.map((expense) => ({
-    id: expense.id || crypto.randomUUID(),
-    description: String(expense.description ?? '').trim(),
-    amount: Number(expense.amount || 0),
-    date: expense.date || new Date().toISOString().slice(0, 10),
-    createdAt: expense.createdAt || new Date().toISOString(),
-    eventId: expense.eventId || item.eventId || null,
-    activityId: expense.activityId || item.id || null,
-  })) : [],
+  expenses: Array.isArray(item.expenses)
+    ? item.expenses.map((expense) => normalizeActivityExpense(expense, item.eventId, item.id))
+    : [],
   completed: Boolean(item.completed),
   cancelled: Boolean(item.cancelled || String(item.status || '').toLowerCase() === 'cancelled'),
   priority: typeof item.priority === 'string' && item.priority.trim()

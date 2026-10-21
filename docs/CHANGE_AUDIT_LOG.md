@@ -672,3 +672,16 @@
 - Master sections: §9.1 and §13, 2.10.5.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
 - Follow-ups: Exercise nested-only create/edit/delete, type conversion, account switch and backup restore on devices.
+
+## CHG-20261021-053 | Preserve complete transaction metadata in activity expense mirrors
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, continued unified Transactions accuracy and premium UX.
+- Branch/commit: `OldVersion` only, Git SHA in history; `main` unchanged.
+- Paths: `src/utils/transactionRelations.js`, `src/utils/transactionRelations.test.mjs`, `src/services/eventService.js`, Master and audit.
+- Before -> after: Event normalization removed nested expenses' title, category, notes and source, even when transaction reconciliation supplied some of them. A shared `normalizeActivityExpense` now preserves these metadata fields, stable identifier, dates, amounts and event/activity links, and handles legacy partial child records without inventing duplicate master entries.
+- Why: Prevent linked transaction cards and activity histories losing user-entered context on event edits.
+- User/data/security impact: Existing eventGroups and account/guest collection paths unchanged; new mirror objects include backward-compatible optional metadata. No data migration, deletion or Firebase deployment.
+- Verification: Added two pure Node regression tests, CI Node/Vite build PENDING; real guest/account edit and restore on devices NOT RUN.
+- Risks and rollback: Persisted eventGroups may be larger by small metadata values; backend rules/quotas and cloud concurrency require live testing. Revert commit to restore previous normalizer.
+- Master: §9.1 and §13, v2.10.6.
+- Status: SOURCE IMPLEMENTED / CI PENDING.

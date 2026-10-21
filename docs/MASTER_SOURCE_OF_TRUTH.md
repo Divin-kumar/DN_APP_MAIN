@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.10.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.10.6** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -260,6 +260,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
 
 ### 9.1 Unified transaction implementation
+**Nested expense metadata contract (2.10.6):** `src/utils/transactionRelations.js:normalizeActivityExpense` now defines the shared event/activity expense projection used during transaction mirror reconciliation and event normalization. It retains transaction `id`, `name`, `category`, `description`, `notes`, `source`, amount, date and parent linkage, with safe defaults for older nested records. A save must not silently strip descriptive financial metadata. No migration or deletion occurs; QA of real guest/cloud round trips is still outstanding.
+
 **Nested-only transaction display contract (2.10.5):** The `useTransactionManager` hook now uses `patchLoadedExpenses` for locally editing/removing a nested-only expense. This updates the already-scoped Zustand projection without resetting its `loadedFor` key. `setExpenses` remains intentionally destructive to scope metadata for full import/restore. This prevents newly created/edited transactions from disappearing behind the Financials "waiting for loaded scope" check, while keeping account isolation. Existing multi-document persistence is not atomic; CI build/tests do not substitute for guest/account browser QA.
 
 
@@ -356,6 +358,7 @@ The current `OldVersion` source commit `c22b3ddf87afb964e4a72004647306bc6f6d8e05
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.10.6** | **2026-10-21** | Standardized nested activity expense serialization to preserve transaction titles, categories, notes, source and stable IDs | **CHG-20261021-053** |
 | **2.10.5** | **2026-10-21** | Preserved scoped financial load state across nested-only expense edit/delete and type conversion | **CHG-20261021-052** |
 | **2.10.4** | **2026-10-21** | Corrected missing-ID income/expense matching and stopped guest expense writes from persisting nested-only projection rows | **CHG-20261021-051** |
 | **2.10.3** | **2026-10-21** | Recorded verified 76-test/build/governance pass for completed finance and event premium changes; retained live/mobile QA blockers | **CHG-20261021-050** |

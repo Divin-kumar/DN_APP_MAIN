@@ -71,3 +71,43 @@ test('financial matches require real IDs and upserts do not clobber unrelated ro
   assert.deepEqual(updated.map((item) => [item.id,item.amount]), [['a',1],['b',99],['c',3]]);
   assert.deepEqual(original.map((item) => item.amount), [1,2]);
 });
+
+
+test('nested activity expenses retain transaction title, category, notes and identifier', async () => {
+  const { normalizeActivityExpense } = await import('./transactionRelations.js');
+  const incoming = {
+    id: 'finance-7', name: 'Workshop fee', category: 'Education',
+    description: 'Registration', notes: 'Paid by UPI', source: 'manual',
+    amount: 1500, date: '2026-10-21',
+  };
+  const nested = normalizeActivityExpense(incoming, 'event-3', 'activity-9');
+  assert.equal(nested.id, 'finance-7');
+  assert.equal(nested.name, 'Workshop fee');
+  assert.equal(nested.category, 'Education');
+  assert.equal(nested.notes, 'Paid by UPI');
+  assert.equal(nested.description, 'Registration');
+  assert.equal(nested.source, 'manual');
+  assert.equal(nested.eventId, 'event-3');
+  assert.equal(nested.activityId, 'activity-9');
+  assert.deepEqual(incoming, {
+    id: 'finance-7', name: 'Workshop fee', category: 'Education',
+    description: 'Registration', notes: 'Paid by UPI', source: 'manual',
+    amount: 1500, date: '2026-10-21',
+  });
+  assert.equal(normalizeActivityExpense({ id: 'legacy', amount: 1, description: 'Historical' }).notes, 'Historical');
+});
+
+test('expense mirrors share the transaction metadata normalizer', () => {
+  const incoming = {
+    id: 'x', transactionKind: 'expense', eventId: 'e1', activityId: 'a1',
+    name: 'Registration', category: 'Education', notes: 'Early bird',
+    description: 'Conference pass', amount: 250, date: '2026-10-01',
+  };
+  const updated = reconcileExpenseActivities([{ id: 'e1', activities: [{ id: 'a1', expenses: [] }] }], null, incoming);
+  const expense = updated[0].activities[0].expenses[0];
+  assert.equal(expense.name, 'Registration');
+  assert.equal(expense.category, 'Education');
+  assert.equal(expense.notes, 'Early bird');
+  assert.equal(expense.description, 'Conference pass');
+  assert.equal(expense.id, 'x');
+});

@@ -12,6 +12,23 @@ export const upsertRecord = (items, record) => {
     : items.map((item, i) => i === index ? record : item);
 };
 
+
+// The shared nested expense shape preserves the canonical transaction metadata.
+// Historical child expenses without these optional keys remain readable.
+export const normalizeActivityExpense = (entry = {}, eventId = null, activityId = null) => ({
+  id: entry.id || entry.firestoreId || crypto.randomUUID(),
+  name: String(entry.name ?? '').trim(),
+  category: entry.category || 'Other',
+  description: String(entry.description ?? entry.notes ?? '').trim(),
+  notes: String(entry.notes ?? entry.description ?? '').trim(),
+  amount: Number(entry.amount || 0),
+  date: entry.date || new Date().toISOString().slice(0, 10),
+  createdAt: entry.createdAt || new Date().toISOString(),
+  eventId: entry.eventId || eventId || null,
+  activityId: entry.activityId || activityId || null,
+  source: entry.source || 'event-activity',
+});
+
 export const reconcileExpenseActivities = (events, previous = null, current = null) => {
   const touched = [];
   for (const event of events) {
@@ -30,16 +47,8 @@ export const reconcileExpenseActivities = (events, previous = null, current = nu
         changed = true;
       }
       if (addHere) {
-        expenses = [...expenses.filter((entry) => !sameRecord(entry, current)), {
-          id: current.id || current.firestoreId,
-          name: current.name || '',
-          description: current.description || current.notes || '',
-          amount: Number(current.amount || 0),
-          date: current.date,
-          createdAt: current.createdAt || new Date().toISOString(),
-          eventId,
-          activityId: activity.id,
-        }];
+        expenses = [...expenses.filter((entry) => !sameRecord(entry, current)),
+          normalizeActivityExpense(current, eventId, activity.id)];
         changed = true;
       }
       return { ...activity, expenses };
