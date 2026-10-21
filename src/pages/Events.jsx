@@ -659,6 +659,7 @@ export default function Events() {
 }
 
 function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, activityPriority, setActivityTitle, setActivityDescription, setActivityDate, setActivityPriority, onClose, onSaveEvent, onSaveActivity }) {
+  const adminValues = useAppStore((state) => state.adminValues);
   const heading = type === 'event' ? (editingEvent?.name || 'New event') : (editingActivity?.title || 'New activity');
   return (
     <ModalDialog title={heading} onClose={onClose} variant="drawer">

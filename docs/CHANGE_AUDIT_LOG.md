@@ -552,3 +552,13 @@
 - Risk and rollback: Navigation switches to Transactions rather than inline event drawer; user can return via navigation; manual usability test required. Existing expense listing/reconciliation unchanged.
 - Master: §3.1a and version 2.9.7.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-043 | Restore scoped Code Lists in event activity drawer
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only, main unchanged.
+- Paths: `src/pages/Events.jsx`, master, audit.
+- Before -> after: Focused-event drawer referenced `adminValues` without an in-scope binding after extracting the event/activity-only drawer; now reads canonical Code Lists from `useAppStore` within the component. This prevents priority selector runtime ReferenceError and preserves existing activity editing.
+- Verification: Source review; CI/build pending. Browser activity editing NOT RUN.
+- Data: No persisted event or financial records changed.
+- Risk/rollback: Same UI semantics, no schema change. Revert commit if necessary.
+- Status: SOURCE FIXED / QA PENDING.
