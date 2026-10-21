@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, Ellipsis, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus, Trash2 } from 'lucide-react';
 import DropdownSelect from '../common/DropdownSelect';
+import { resolveTransactionSwipe } from '../../utils/swipeGestures';
 
 const money = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -16,15 +17,28 @@ const dateLabel = (date) => {
 
 export function TransactionCard({ transaction, events = [], onEdit, onDelete, compact = false }) {
   const [open, setOpen] = useState(false);
+  const cardRef = useRef(null);
+  const pointerType = useRef('mouse');
   const reducedMotion = useReducedMotion();
+  useEffect(() => {
+    if (!open) return undefined;
+    const closeOutside = (event) => {
+      if (!cardRef.current?.contains(event.target)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOutside);
+    return () => document.removeEventListener('pointerdown', closeOutside);
+  }, [open]);
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
   const activity = event?.activities?.find((item) => item.id === transaction.activityId);
   const eventTitle = event?.name || transaction.eventTitle;
   const activityTitle = activity?.title || transaction.activityTitle;
   const category = isIncome ? transaction.type : transaction.category;
-  const reveal = (next) => {
-    if (next && !open) navigator.vibrate?.(8);
+  const reveal = (next, touch = false) => {
+    // Vibration is optional and unsupported on iOS Safari; never block the UI.
+    if (next && !open && touch) {
+      try { navigator.vibrate?.(8); } catch { /* Unsupported device */ }
+    }
     setOpen(next);
   };
 
@@ -48,7 +62,15 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
   }
 
   return (
-    <article className={`dn-transaction-card${open ? ' is-actions-open' : ''}`} role="listitem">
+    <article ref={cardRef} className={`dn-transaction-card${open ? ' is-actions-open' : ''}`}
+      role="listitem" tabIndex={0}
+      aria-label={`${transaction.name || transaction.title || 'Transaction'}. Swipe left or press Enter for Edit and Delete.`}
+      onKeyDown={(event) => {
+        if (event.key === 'Escape' && open) { event.stopPropagation(); reveal(false); }
+        if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+          event.preventDefault(); reveal(!open);
+        }
+      }}>
       <div className="dn-transaction-card-actions">
         <button type="button" className="dn-transaction-edit" onClick={() => { reveal(false); onEdit(transaction); }}
           tabIndex={open ? 0 : -1} aria-hidden={!open}><Pencil size={17} />Edit</button>
@@ -56,14 +78,16 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
           tabIndex={open ? 0 : -1} aria-hidden={!open}><Trash2 size={17} />Delete</button>
       </div>
       <motion.div className="dn-transaction-card-core" drag={reducedMotion ? false : 'x'}
-        dragDirectionLock dragConstraints={{ left: -152, right: 0 }} dragElastic={0.12} dragMomentum={false}
+        dragDirectionLock dragConstraints={{ left: -152, right: 0 }} dragElastic={0.16} dragMomentum={false}
         style={{ touchAction: 'pan-y' }}
+        onPointerDown={(event) => { pointerType.current = event.pointerType; }}
         animate={{ x: open ? -152 : 0 }}
-        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 33 }}
+        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34, mass: 0.82 }}
         onDragEnd={(_, info) => {
-          if (info.offset.x < -58 || info.velocity.x < -500) reveal(true);
-          else if (info.offset.x > 40) reveal(false);
-          else reveal(open);
+          const next = resolveTransactionSwipe({
+            offsetX: info.offset.x, velocityX: info.velocity.x, wasOpen: open,
+          });
+          reveal(next, pointerType.current === 'touch');
         }}>
         <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
           {isIncome ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
@@ -78,9 +102,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
             {isIncome ? '+' : '−'} {money(transaction.amount)}
           </strong>
-          <button type="button" className="dn-transaction-overflow" aria-expanded={open}
-            aria-label={`${open ? 'Hide' : 'Show'} actions for ${transaction.name || transaction.title || 'transaction'}`}
-            onClick={() => reveal(!open)}><Ellipsis size={20} /></button>
+
         </div>
       </motion.div>
     </article>
@@ -95,7 +117,7 @@ export default function TransactionHistory({
       <header className="transactions-heading">
         <div>
           <h2 id="dn-transactions-heading">Transactions</h2>
-          <p>Every income and expense, in one place.</p>
+          <p>Every income and expense, in one place. Swipe a card left to edit or delete.</p>
         </div>
         <button type="button" className="primaryButton dn-transaction-add" onClick={onAdd}>
           <Plus size={18} /> Add Transaction

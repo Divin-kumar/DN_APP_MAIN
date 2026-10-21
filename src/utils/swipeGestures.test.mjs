@@ -22,3 +22,18 @@ test('diagonal motion without dominant horizontal axis is not a swipe', () => {
   const result = resolveSwipeGesture(start, { x: 112, y: 114 });
   assert.equal(result.action, null);
 });
+
+import { resolveTransactionSwipe } from './swipeGestures.js';
+test('finance swipe only reveals after deliberate left displacement', () => {
+  assert.equal(resolveTransactionSwipe({ offsetX: -12, velocityX: -1600 }), false);
+  assert.equal(resolveTransactionSwipe({ offsetX: -23, velocityX: -900 }), false);
+  assert.equal(resolveTransactionSwipe({ offsetX: -56, velocityX: 0 }), true);
+  assert.equal(resolveTransactionSwipe({ offsetX: -25, velocityX: -700 }), true);
+  assert.equal(resolveTransactionSwipe({ offsetX: -40, velocityX: -100 }), false);
+});
+test('right swipe dismisses revealed actions without triggering delete', () => {
+  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 39, velocityX: 0 }), true);
+  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 40, velocityX: 0 }), false);
+  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 24, velocityX: 650 }), false);
+  assert.equal(resolveTransactionSwipe({ wasOpen: true, offsetX: 2, velocityX: 0 }), true);
+});

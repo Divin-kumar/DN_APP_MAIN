@@ -2,9 +2,11 @@
 // It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
 import { useEffect, useId, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
+import { X } from 'lucide-react';
 
 export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
+  const reducedMotion = useReducedMotion();
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
   const onCloseRef = useRef(onClose);
@@ -58,15 +60,15 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   return createPortal(
     <motion.div
       className={`dn-modal-backdrop${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}`}
-      initial={{ opacity: 0 }}
+      initial={reducedMotion ? false : { opacity: 0 }}
       animate={{ opacity: 1 }}
-      transition={{ duration: 0.16 }}
+      transition={{ duration: reducedMotion ? 0 : 0.16 }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : 0.2, ease: 'easeOut' }}>
         <div style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
-          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog">×</button>
+          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
         {children}
       </motion.section>

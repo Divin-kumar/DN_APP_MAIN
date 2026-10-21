@@ -32,7 +32,7 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
     setPosition(computeOverlayPlacement({
       anchor: rect, viewport, preferredHeight: onSummary ? 300 : 250, minimumWidth: 190, gap: 6,
     }));
-  }, []);
+  }, [onSummary]);
 
   useLayoutEffect(() => {
     if (!open) return undefined;
