@@ -285,7 +285,7 @@ export default function Events() {
   ].map((group) => ({ ...group, events: visibleEvents.filter(group.matches).sort(compareEvents) })).filter((group) => group.events.length);
   if (eventSortDirection === 'desc') statusMomentGroups.reverse();
   const pickerQuery = activityEventSearch.trim().toLowerCase();
-  const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery)));
+  const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery))));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
   const pickerFavorites = favoriteEventIds.map((id) => pickerById.get(id)).filter(Boolean);
   const pickerRecentIds = (() => {

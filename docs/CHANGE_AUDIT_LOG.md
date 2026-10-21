@@ -473,3 +473,13 @@
 - Risks: Long menu mobile keyboard/focus and old event status styles need visual testing; using old screenshots may show prior layout. Revert commit if needed.
 - Master: §§4, 9, 13, v2.9.0.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-036 | Fix archived-event picker filter grouping
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`; exact SHA in Git history, `main` unchanged.
+- Paths: `src/pages/Events.jsx`, master, audit.
+- Before/after: Adding archived exclusion introduced an extra opening parenthesis in active-event activity picker expression. Closed grouping so search remains constrained to unarchived events, while Archived rail still exposes archived cards.
+- Verification: Source corrected, CI/build pending. Data unchanged, no deployment.
+- Risk/rollback: None beyond existing archive user flow, manual QA needed.
+- Master: §§9,13, v2.9.1.
+- Status: SOURCE FIXED, CI PENDING.
