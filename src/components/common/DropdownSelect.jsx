@@ -179,8 +179,7 @@ export default function DropdownSelect({
         <ChevronDown size={16} aria-hidden="true" />
       </button>
       {open && placement ? createPortal(
-        <div ref={menuRef} id={listboxId} className="dropdown-menu dropdown-menu-portal"
-          role="listbox" aria-label={accessibilityProps['aria-label'] || name || 'Options'}
+        <div ref={menuRef} className="dropdown-menu dropdown-menu-portal"
           style={{ position: 'fixed', top: placement.top, left: placement.left,
             width: placement.width, maxHeight: placement.maxHeight, right: 'auto', bottom: 'auto' }}
           onKeyDown={onKeyDown}>
@@ -192,8 +191,9 @@ export default function DropdownSelect({
                 placeholder="Search options" />
             </label>
           ) : null}
-          <div ref={listRef} className="dropdown-options-scroll" onWheel={(e) => e.stopPropagation()}
-            onTouchMove={(e) => e.stopPropagation()}>
+          <div ref={listRef} id={listboxId} className="dropdown-options-scroll" role="listbox"
+            aria-labelledby={triggerId} aria-label={accessibilityProps['aria-label'] || name || 'Options'}
+            onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
             {visibleIndices.map((index) => {
               const option = options[index];
               return <div id={`${listboxId}-option-${index}`} key={`${option.value}-${index}`}

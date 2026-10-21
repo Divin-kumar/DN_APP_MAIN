@@ -262,3 +262,16 @@
 - Risk/rollback: Date availability, narrow viewport layout, screen-reader behavior and mobile dropdown interactions need browser/device verification. Revert relevant commit if needed without affecting stored transaction records.
 - Master updated: §3.1a and version 2.6.0.
 - Status: SOURCE IMPLEMENTED, CI PENDING.
+
+## CHG-20261021-019 | Verify responsive transaction/overlay changes and correct listbox semantics
+- Date (UTC): 2026-10-21.
+- Actor/requester: AI verification and accessibility follow-up for owner's transaction and overlay task.
+- Branch / commit: `OldVersion`; this atomic commit in Git history, `main` unchanged.
+- Paths changed: `src/components/common/DropdownSelect.jsx`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Portalled menu root owned a listbox role containing an interactive search input. Moved `role=listbox` and `id` to the scrollable options container, keeping the search outside its ARIA hierarchy while the trigger `aria-controls` still refers to the options list. Validated previous source via CI.
+- Why: Improve screen-reader semantics without changing shared filtering/selection or overlay geometry.
+- UX/data/security: Accessibility refinement only; no storage, Firestore or financial data behavior changes.
+- Verification: GitHub Actions run 39645286731 on previous implementation commit 68860bb passed `npm test` **60/60**, `npm run build` PASS and documentation-contract PASS; workflow job logs inspected. This post-verification markup tweak requires its own CI run. Device viewport, touch keyboard, calendar and Firebase manual tests NOT RUN.
+- Risk/rollback: Browser focus and mobile keyboard interactions still need manual checks; source commit can be reverted without persisted data effects. Known npm dependency advisories remain 9 (3 moderate, 6 high).
+- Master: §§6.4, 13; version 2.6.1.
+- Status: SOURCE COMMITTED, FOLLOW-UP CI PENDING.
