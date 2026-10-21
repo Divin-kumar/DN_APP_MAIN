@@ -103,3 +103,16 @@
 - Master sections updated: title, §2.1 product identity, §9 decisions, §10 backlog, §13 versioning.
 - Status: PARTIAL BRAND MIGRATION; public-facing UI and canonical product name updated in this commit, remaining technical identifiers tracked for follow-up.
 - Follow-ups: Rename remaining nonpersistent CSS classes consistently; safely migrate localStorage keys and preserve old backups; update master and append new log record. Maintain exactly four Markdown files.
+
+## CHG-20261021-007 | Rename shared CSS class names to DN
+- Date (UTC): 2026-10-21.
+- Actor/requester: Repository owner DN-only product branding instruction.
+- Branch / commit: `OldVersion`; identify atomic commit from Git history.
+- Scope: `src/index.css`, `src/design-system.css`, `src/layouts/DashboardLayout.jsx`, `src/components/common/ModalDialog.jsx`, `src/pages/Events.jsx`, `docs/MASTER_SOURCE_OF_TRUTH.md` and this audit entry.
+- Before -> after: Legacy CSS selector/class-name prefix and design system comments -> `dn-` / DN. All paired consumers and style definitions changed together, preserving intended presentation.
+- Why: Remove deprecated internal brand naming after DN identity was approved.
+- UX/data/security: CSS class identifiers changed but no domain persistence or externally stored records changed. UI regression risk until visual testing.
+- Verification: Source transformations checked for remaining deprecated brand in these files. Browser, `npm test`, `npm run build`, Firebase: NOT RUN.
+- Risk / rollback: Missing selector dependencies could alter styling; run mobile/desktop light/dark regression tests, rollback through Git commit if needed.
+- Master section: §3.4 and version history.
+- Status: SOURCE MODIFIED, RUNTIME UNVERIFIED.

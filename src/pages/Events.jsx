@@ -198,8 +198,8 @@ export default function Events() {
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
   const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
-  const favoritesKey = `lifehub_favorite_event_ids_${pickerStorageId}`;
-  const recentKey = `lifehub_recent_event_ids_${pickerStorageId}`;
+  const favoritesKey = `dn_favorite_event_ids_${pickerStorageId}`;
+  const recentKey = `dn_recent_event_ids_${pickerStorageId}`;
   const [favoriteEventIds, setFavoriteEventIds] = useState(() => {
     try { return JSON.parse(localStorage.getItem(favoritesKey) || '[]'); } catch { return []; }
   });
@@ -644,7 +644,7 @@ export default function Events() {
       {summaryEvent ? <EventSummaryDialog event={summaryEvent} onClose={() => setSummaryEvent(null)} /> : null}
       {drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
       {activityChooserOpen ? (
-        <ModalDialog title="Choose a life moment" className="lifehub-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
+        <ModalDialog title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
           {events.length ? (
             <div className="activity-event-picker">
               <p>Activities belong to an event. Choose the moment this next step will help with.</p>

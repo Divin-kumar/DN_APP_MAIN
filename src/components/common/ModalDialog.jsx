@@ -18,7 +18,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement;
     document.body.style.overflow = 'hidden';
-    document.body.classList.add('lifehub-modal-open');
+    document.body.classList.add('dn-modal-open');
     closeButtonRef.current?.focus();
 
     const handleKeyDown = (event) => {
@@ -49,7 +49,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
-      document.body.classList.remove('lifehub-modal-open');
+      document.body.classList.remove('dn-modal-open');
       document.removeEventListener('keydown', handleKeyDown);
       if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
     };
@@ -57,13 +57,13 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
 
   return createPortal(
     <motion.div
-      className={`lifehub-modal-backdrop${variant === 'drawer' ? ' lifehub-modal-backdrop-drawer' : ''}`}
+      className={`dn-modal-backdrop${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}`}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       transition={{ duration: 0.16 }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`lifehub-modal${variant === 'drawer' ? ' lifehub-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={{ opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: 0.2, ease: 'easeOut' }}>
         <div style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog">×</button>

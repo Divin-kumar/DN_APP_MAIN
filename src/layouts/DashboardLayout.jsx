@@ -279,8 +279,8 @@ export default function DashboardLayout() {
   // top header, left navigation, content area, and floating quick-create panel.
   // This creates a single app frame so the experience feels consistent throughout the product.
   return (
-    <div className="lifehub-shell" style={styles.appShell}>
-      <header className="lifehub-header" style={styles.header}>
+    <div className="dn-shell" style={styles.appShell}>
+      <header className="dn-header" style={styles.header}>
         <div style={styles.topBarLeft}>
           <button
             type="button"
@@ -327,9 +327,9 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      <main className="lifehub-main" style={styles.mainContent}>
+      <main className="dn-main" style={styles.mainContent}>
         <aside
-          className={`lifehub-sidebar ${sidebarCollapsed ? 'lifehub-sidebar-collapsed' : ''}`}
+          className={`dn-sidebar ${sidebarCollapsed ? 'dn-sidebar-collapsed' : ''}`}
           style={{
             ...styles.sidebar,
             width: `${sidebarWidth}px`,
@@ -342,23 +342,23 @@ export default function DashboardLayout() {
               key={item.path}
               to={item.path}
               end={item.path === '/dashboard'}
-                className="lifehub-nav-link"
+                className="dn-nav-link"
                 style={({ isActive }) => ({
                 ...styles.navCard,
                 ...(isActive ? styles.navCardActive : {}),
               })}
             >
-              <span className="lifehub-nav-icon" aria-hidden="true"><item.icon size={18} strokeWidth={2} /></span>
-              <span className="lifehub-nav-label">{item.label}</span>
+              <span className="dn-nav-icon" aria-hidden="true"><item.icon size={18} strokeWidth={2} /></span>
+              <span className="dn-nav-label">{item.label}</span>
             </NavLink>
           ))}
         </aside>
 
         {!sidebarCollapsed ? <button className="mobile-nav-overlay" type="button" aria-label="Close navigation" onClick={() => setSidebarCollapsed(true)} /> : null}
 
-        <section ref={contentRef} className="lifehub-content" style={styles.contentPane}>
+        <section ref={contentRef} className="dn-content" style={styles.contentPane}>
           <ConnectivityBanner />
-          <div className="lifehub-banner" style={styles.banner}>
+          <div className="dn-banner" style={styles.banner}>
             {isGuest
               ? 'Guest mode active. Your data is stored locally on this device.'
               : 'Authenticated mode active. Your data is synced with Firebase.'}
@@ -366,7 +366,7 @@ export default function DashboardLayout() {
 
           <motion.div
             key={location.pathname}
-            className="lifehub-route-transition"
+            className="dn-route-transition"
             initial={{ opacity: 0.94, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.14, ease: 'easeOut' }}
@@ -403,15 +403,15 @@ export default function DashboardLayout() {
         </div>
       </nav>
 
-      <div ref={quickCreateDesktopRef} className={`lifehub-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
+      <div ref={quickCreateDesktopRef} className={`dn-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
         {quickCreateOpen ? (
-          <div className="lifehub-quick-create-menu" aria-label="Quick create actions">
+          <div className="dn-quick-create-menu" aria-label="Quick create actions">
             <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
             <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
           </div>
         ) : null}
-        <button type="button" className="lifehub-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
+        <button type="button" className="dn-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
           {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
         </button>
       </div>
