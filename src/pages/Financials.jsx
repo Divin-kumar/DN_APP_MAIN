@@ -131,7 +131,7 @@ export default function Financials() {
       {hasLoadError ? <div role="alert" className="financial-load-error">
         Unable to load all transactions. <button type="button" onClick={() => { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }}>Retry</button>
       </div> : null}
-      {!ready || loadingIncome || loadingExpense
+      {hasLoadError ? null : (!ready || loadingIncome || loadingExpense)
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
           <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}

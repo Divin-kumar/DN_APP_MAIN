@@ -742,3 +742,17 @@
 - Master sections updated: §9.1, §13, version 2.11.1.
 - Status: SOURCE IMPLEMENTED / CI AND MOBILE QA PENDING.
 - Follow-ups: Check real touch/keyboard interactions, archive of CSS specificity conflicts and actual 60fps frame-time profiling.
+
+## CHG-20261021-058 | Verify premium finance/swipe CI and lock simplified UX contract
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; AI follow-up to the Finance Overview and three-dot removal plus premium interaction work.
+- Branch / commit / PR: `OldVersion` only, pending commit SHA. Verified source commits `b64078cf11dc09cb653354e175f6cd6ee61c76fe` and `97bc91c1fee8392d19462c137aac70f7cc4b2401`. `main` not modified; PR #6 not merged.
+- Exact changed paths: `src/pages/Financials.jsx`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: When either financial dataset failed to load, Transactions could continue displaying loading skeleton alongside its Retry error. Now an error suppresses the pending skeleton. Four Node source-regression tests guard the Transactions-only Finance view, bookmarked routes, Edit/Delete swipe and keyboard affordance, absence of transaction overflow dots, continued Events overflow actions, and same-direction Activities/Code Lists trays.
+- Why: Make a visible load failure unambiguous, and prevent future source edits silently restoring redundant Overview navigation or hidden opposite-direction Delete.
+- User/data/security/compatibility impact: Presentation and regression tests only. No persisted record edits, Firestore Rules changes, data migration or Firebase Hosting deployment.
+- Verification (exact commands, PASS/FAIL/NOT RUN): GitHub Actions run 39661553142: `npm test` 87/87 PASS, `npm run build` PASS, documentation checks PASS. GitHub Actions run 39662186586: `npm test` 88/88 PASS, `npm run build` PASS, documentation checks PASS. New four source-contract tests and loading skeleton change: PENDING CI. Real phone screen/gesture/frame-rate, live Firebase and Security Rules NOT RUN. Existing npm advisory count: 9 (3 moderate, 6 high); bundle-size warning remains.
+- Risk and rollback: New tests inspect source contracts rather than a rendered browser, so they may need updating when architecture changes legitimately. Suppressing a skeleton on failed load does not discard stored records. Revert this commit for rollback.
+- Master sections updated: §9.1 and §13, version 2.11.2.
+- Status: PRIOR SOURCE CI VERIFIED / CURRENT PATCH CI PENDING.
+- Follow-ups: Run browser/mobile viewport regression, keyboard/screen-reader acceptance, fix CSS cascade duplication and inspect current production data-security rules.
