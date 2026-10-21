@@ -756,3 +756,17 @@
 - Master sections updated: §9.1 and §13, version 2.11.2.
 - Status: PRIOR SOURCE CI VERIFIED / CURRENT PATCH CI PENDING.
 - Follow-ups: Run browser/mobile viewport regression, keyboard/screen-reader acceptance, fix CSS cascade duplication and inspect current production data-security rules.
+
+## CHG-20261021-059 | Confirm premium Finance single-screen UX regression CI
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; completed source QA confirmation for Transactions-only, no swipe three-dot and cross-module swipe consistency.
+- Branch / commit / PR: `OldVersion` only. Verified app commit `4dbc5c92e29ad76fddd91884674a82951fb51af6`, GitHub Actions https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39662531768. This documentation commit SHA in Git history. `main` unchanged and no deployment.
+- Exact changed paths: `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md` only.
+- Before -> after: Previous audit entry 058 truthfully recorded four UX source contract regressions and Finance loading-error change as CI pending. Automated CI now confirms these passed without errors, along with all existing tests and production compilation.
+- Why: Preserve a verifiable record of completion rather than leaving the latest implemented UX contract undocumented as pending.
+- User/data/security/compatibility impact: Documentation-only; no database or storage changes, permissions, app runtime edits, device deployments or backups.
+- Verification (exact commands, PASS/FAIL/NOT RUN): GitHub Actions `npm test` **92/92 PASS**, `npm run build` **PASS**, documentation governance **PASS** at source SHA `4dbc5c92e29ad76fddd91884674a82951fb51af6`. Physical-device scroll, animation frame-time, 200% zoom, VoiceOver/TalkBack, native calendar, browser keyboard and actual Firebase account operations NOT RUN. Known 9 npm advisories (3 moderate, 6 high) and bundle warning remain.
+- Risk and rollback: Source CI does not prove production-grade polish or backend data security. No runtime change to roll back; append future corrections instead of modifying the audit history.
+- Master sections updated: §9.1 and §13, version 2.11.3.
+- Status: AUTOMATED SOURCE CI VERIFIED / MANUAL DEVICE AND PRODUCTION ACCEPTANCE OPEN.
+- Follow-ups: Browser-screen and mobile-gesture acceptance, CSS cascade deduplication, accessible controls and overlay/keyboard/safe-area checks, deployment credential/security review if authorized.
