@@ -73,7 +73,7 @@ jobs:
           current = Path("docs/CHANGE_AUDIT_LOG.md").read_text()
           if not current.startswith(previous):
               raise SystemExit("Audit history was changed or removed. Append a new correction entry instead.")
-          pattern = r"(?m)^## CHG-\\d{8}-\\d{3} \\|"
+          pattern = r"(?m)^## CHG-\d{8}-\d{3} \|"
           if len(re.findall(pattern, current)) <= len(re.findall(pattern, previous)):
               raise SystemExit("Each repository change requires at least one new CHG audit entry.")
           print("Prior audit records are preserved and a new entry was appended.")
