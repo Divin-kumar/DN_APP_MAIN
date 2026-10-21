@@ -64,16 +64,39 @@ export const isNestedOnlyAccountExpense = (record, isGuest) => Boolean(
 );
 
 
+// This selector hierarchy is scoped to a single Moment; never list all activities.
+// Keep archived Moments available so users can edit existing historical links.
+export const getTransactionMoments = (events = []) => (
+  events.filter((event) => event.id || event.firestoreId)
+    .map((event) => ({
+      value: String(event.id || event.firestoreId),
+      label: String(event.name || 'Untitled moment'),
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }))
+);
+
+export const getMomentActivities = (events = [], eventId = '') => {
+  if (!eventId) return [];
+  const event = events.find((entry) => String(entry.id || entry.firestoreId) === String(eventId));
+  return (event?.activities || [])
+    .filter((activity) => activity.id)
+    .map((activity) => ({ value: String(activity.id), label: String(activity.title || 'Untitled activity') }))
+    .sort((a, b) => a.label.localeCompare(b.label, undefined, { sensitivity: 'base' }));
+};
+
 // A deep-link query parameter is not proof that a financial relationship exists.
 // Never commit orphan transaction links or leave nested expense copies behind.
 export const requireLinkedActivity = (events, record) => {
   const eventId = record?.eventId;
   const activityId = record?.activityId;
   if (!eventId && !activityId) return;
-  if (!eventId || !activityId) {
-    throw new Error('Select a valid linked activity, or clear the activity link.');
+  if (!eventId) {
+    throw new Error('Choose a moment before linking an activity.');
   }
-  const event = events.find((entry) => entry.id === eventId || entry.firestoreId === eventId);
-  const activity = event?.activities?.find((entry) => entry.id === activityId);
-  if (!activity) throw new Error('This activity is unavailable. Reload Events, or clear the linked activity.');
+  const event = events.find((entry) => String(entry.id || entry.firestoreId) === String(eventId));
+  if (!event) throw new Error('This moment is unavailable. Reload Moments, or clear the moment link.');
+  // A transaction can belong to a Moment without belonging to an activity.
+  if (!activityId) return;
+  const activity = event.activities?.find((entry) => String(entry.id) === String(activityId));
+  if (!activity) throw new Error('This activity is unavailable in the chosen moment. Choose another activity or clear the link.');
 };

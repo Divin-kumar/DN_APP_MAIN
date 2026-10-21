@@ -6,11 +6,16 @@ import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
-import { filterTransactions, sortTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
+import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
+
+const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
+  style: 'currency', currency: 'INR', maximumFractionDigits: 0,
+}).format(Number(value) || 0);
 
 const defaultFilters = { type: 'all', month: 'all', search: '', sort: 'date-desc' };
 const storageKey = (scope) => 'dn_transactions_filters_' + scope;
@@ -81,6 +86,13 @@ export default function Financials() {
   }, [ready, filters.month, monthOptions]);
   const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
+  // Summary is tied to the selected month, not list search or the type selector.
+  // Selecting Expense must not artificially zero out the Income and Balance cards.
+  const summary = useMemo(() => summarizeTransactions(
+    filterTransactions(allTransactions, { month: filters.month }),
+  ), [allTransactions, filters.month]);
+  const summaryPeriod = filters.month === 'all' ? 'All months'
+    : monthOptions.find((item) => item.value === filters.month)?.label || 'Selected month';
   const hasLoadError = Boolean(incomeError || expenseError);
 
   useEffect(() => {
@@ -90,7 +102,7 @@ export default function Financials() {
     const params = new URLSearchParams(location.search);
     const eventId = params.get('event');
     const activityId = params.get('activity');
-    setActivityPreset(eventId && activityId ? { eventId, activityId } : null);
+    setActivityPreset(eventId ? { eventId, activityId: activityId || '' } : null);
     setEditing(null);
     setDialogOpen(true);
     navigate('/financials/transactions', { replace: true });
@@ -134,6 +146,23 @@ export default function Financials() {
       {hasLoadError ? null : (!ready || loadingIncome || loadingExpense)
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
+          <section className="dn-finance-summary" aria-label={`Financial totals for ${summaryPeriod}`}>
+            <p className="dn-finance-summary-period">{summaryPeriod} · Income, expense and balance</p>
+            <div className="dn-finance-summary-grid">
+              <div className="dn-finance-metric dn-finance-metric-income">
+                <span className="dn-finance-metric-heading"><ArrowDownLeft size={18} aria-hidden="true" /> Income</span>
+                <strong>{formatMoney(summary.income)}</strong>
+              </div>
+              <div className="dn-finance-metric dn-finance-metric-expense">
+                <span className="dn-finance-metric-heading"><ArrowUpRight size={18} aria-hidden="true" /> Expense</span>
+                <strong>{formatMoney(summary.expense)}</strong>
+              </div>
+              <div className={`dn-finance-metric dn-finance-metric-balance${summary.balance < 0 ? ' is-negative' : ''}`}>
+                <span className="dn-finance-metric-heading"><Wallet size={18} aria-hidden="true" /> Balance</span>
+                <strong>{formatMoney(summary.balance)}</strong>
+              </div>
+            </div>
+          </section>
           <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}
             monthOptions={monthOptions} events={events} onAdd={() => openAdd()} onEdit={openEdit}
             onDelete={setDeleteTarget} />

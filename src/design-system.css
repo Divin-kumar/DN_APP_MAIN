@@ -2046,3 +2046,55 @@ html[data-theme] .code-list-actions-other .code-list-action {
   html[data-theme] .event-activity-main,
   html[data-theme] .code-list-row { animation: none !important; transition: none !important; }
 }
+
+/* Finance v2.12: summary is a compact top section, not a second Overview screen. */
+html[data-theme] .dn-finance-summary {
+  display: grid; gap: 10px; min-width: 0;
+}
+html[data-theme] .dn-finance-summary-period {
+  margin: 0; color: var(--color-text-muted);
+  font-size: var(--font-caption); font-weight: 650; line-height: 1.4;
+}
+html[data-theme] .dn-finance-summary-grid {
+  display: grid; grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 12px; min-width: 0;
+}
+html[data-theme] .dn-finance-metric {
+  display: grid; align-content: center; gap: 12px;
+  min-width: 0; min-height: 112px; padding: 16px 18px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg,
+    var(--color-card),
+    color-mix(in srgb,var(--color-primary) 4%,var(--color-card-raised)));
+  box-shadow: var(--shadow-card);
+}
+html[data-theme] .dn-finance-metric-heading {
+  display: inline-flex; align-items: center; gap: 9px;
+  color: var(--color-text-muted); font-size: .82rem; font-weight: 650;
+}
+html[data-theme] .dn-finance-metric-heading svg {
+  flex: 0 0 auto; stroke-width: 1.9;
+}
+html[data-theme] .dn-finance-metric > strong {
+  display: block; min-width: 0;
+  color: var(--color-text); font-size: clamp(1.12rem,2.15vw,1.58rem);
+  font-weight: 780; letter-spacing: -.04em; line-height: 1.24;
+  font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
+}
+html[data-theme] .dn-finance-metric-income .dn-finance-metric-heading svg,
+html[data-theme] .dn-finance-metric-income > strong { color: var(--color-success); }
+html[data-theme] .dn-finance-metric-expense .dn-finance-metric-heading svg,
+html[data-theme] .dn-finance-metric-expense > strong { color: var(--color-danger); }
+html[data-theme] .dn-finance-metric-balance .dn-finance-metric-heading svg { color: var(--color-primary); }
+html[data-theme] .dn-finance-metric-balance.is-negative > strong { color: var(--color-danger); }
+html[data-theme] .dn-transaction-field-hint {
+  display: block; color: var(--color-text-muted);
+  font-size: var(--font-caption); font-weight: 450; line-height: 1.45;
+}
+@media (max-width: 560px) {
+  html[data-theme] .dn-finance-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
+  html[data-theme] .dn-finance-metric { padding: 13px; min-height: 99px; gap: 9px; border-radius: var(--radius-sm); }
+  html[data-theme] .dn-finance-metric > strong { font-size: clamp(1.02rem,4.3vw,1.3rem); }
+  html[data-theme] .dn-finance-metric-balance { grid-column: 1 / -1; min-height: 88px; }
+}

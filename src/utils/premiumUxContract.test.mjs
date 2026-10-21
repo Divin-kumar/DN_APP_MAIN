@@ -39,3 +39,20 @@ test('Events keep their five-action overflow; other swipe lists retain Delete in
   assert.match(lists, /className="code-list-actions code-list-actions-other"/);
   assert.doesNotMatch(lists, /className="code-list-actions code-list-actions-delete"/);
 });
+
+test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
+  const page = read('../pages/Financials.jsx');
+  assert.match(page, /summarizeTransactions\(/);
+  assert.match(page, /filterTransactions\(allTransactions, \{ month: filters\.month \}\)/);
+  for (const label of ['Income','Expense','Balance']) assert.match(page, new RegExp('> ' + label + '</span>'));
+  assert.match(page, /className="dn-finance-summary-grid"/);
+  assert.doesNotMatch(page, /<NavLink|dn-financial-tabs/);
+});
+test('Transaction form chooses a Moment before showing Moment-scoped activities', () => {
+  const form = read('../components/financials/TransactionForm.jsx');
+  assert.match(form, /aria-label="Linked Moment"/);
+  assert.match(form, /getMomentActivities\(events, form\.eventId\)/);
+  assert.match(form, /activityId: eventId === current\.eventId \? current\.activityId : ''/);
+  assert.match(form, /disabled=\{busy \|\| !form\.eventId \|\| !selectedMomentExists\}/);
+  assert.doesNotMatch(form, /events\.flatMap/);
+});

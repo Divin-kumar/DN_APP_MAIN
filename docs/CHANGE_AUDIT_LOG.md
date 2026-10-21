@@ -770,3 +770,17 @@
 - Master sections updated: §9.1 and §13, version 2.11.3.
 - Status: AUTOMATED SOURCE CI VERIFIED / MANUAL DEVICE AND PRODUCTION ACCEPTANCE OPEN.
 - Follow-ups: Browser-screen and mobile-gesture acceptance, CSS cascade deduplication, accessible controls and overlay/keyboard/safe-area checks, deployment credential/security review if authorized.
+
+## CHG-20261021-060 | Restore financial totals and Moment-first linked transactions
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner; requested top Income/Expense/Balance totals without Overview and shorter activity dropdown scoped to selected Moment, while retaining premium UX direction.
+- Branch / commit / PR: `OldVersion` only; pending Git commit SHA, PR #6 untouched; protected `main` unchanged.
+- Exact changed paths: `src/pages/Financials.jsx`, `src/components/financials/TransactionForm.jsx`, `src/utils/transactionRelations.js`, `src/utils/transactionRelations.test.mjs`, `src/utils/premiumUxContract.test.mjs`, `src/design-system.css`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Finance's Transactions-only layout omitted top totals. Now three responsive, theme-token Income/Expense/Balance cards display month-scoped totals independently of type/search, with no Overview tab. Transaction forms formerly flattened every Moment's activities into a very long picker; now optional Moment selects first and only its activities appear in the second picker. On switching Moments, stale activity selection clears. Existing edit/deep-link selections hydrate both fields. Moment-only links supported with explicit validation; broken historical link placeholders remain visible for review rather than silently losing data.
+- Why: Restore at-a-glance finances without duplicative navigation, reduce activity picker cognitive load, preserve safe event/activity relationships on edit and type changes.
+- User/data/security/compatibility impact: Presentation + link validation only; existing `eventId`/`activityId` record keys and Firestore/guest storage unchanged; no migration or deletion. A valid Moment-only expense does not create an activity expense mirror, while unlinking a historical activity removes its nested mirror through existing reconciliation. Invalid stale links continue to produce user-facing errors; no cross-user access changes.
+- Verification (exact commands, PASS/FAIL/NOT RUN): Added updated Node validation tests, derived Moment filter tests, moment-only expense reconciliation test and source-contract coverage for cards/form. `npm test` / `npm run build` / audit governance PENDING GitHub CI. Live iOS/Android, screenshot/safe-area, 60fps gesture measurement, Firebase account/guest create/edit/restore and Security Rules NOT RUN.
+- Risk and rollback: Moment-only links are now allowed by the unified form and validator (intentional owner request), but only activity-linked expenses are mirrored into activities. Read-only source/Node tests cannot guarantee native calendar controls stay inside every mobile viewport. Revert the commit for rollback; no schema or stored-data migration.
+- Master sections updated: §9.1, §9.2, §13 version 2.12.0.
+- Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
+- Follow-ups: Verify link selection and activity resets for both account/guest, invalid deep links, old imported transactions, scroll and popover placement with keyboard, 320-430px cards, and backend security rules.

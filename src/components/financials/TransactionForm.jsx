@@ -3,6 +3,7 @@ import DropdownSelect from '../common/DropdownSelect';
 import DateField from '../common/DateField';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
+import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
 
 const today = () => {
   const date = new Date();
@@ -54,16 +55,17 @@ export default function TransactionForm({
     return [...new Set([...list, form.category, 'Other'].filter(Boolean))];
   }, [adminValues.incomeTypes, adminValues.expenseCategories, form.transactionKind, form.category]);
 
-  const activities = useMemo(() => events.flatMap((event) =>
-    (event.activities || []).map((activity) => ({
-      eventId: event.id || event.firestoreId,
-      activityId: activity.id,
-      label: [event.name, activity.title || 'Untitled activity'].filter(Boolean).join(' · '),
-    }))
-  ), [events]);
-  const activityValue = form.eventId && form.activityId
-    ? JSON.stringify([form.eventId, form.activityId]) : '';
+  const moments = useMemo(() => getTransactionMoments(events), [events]);
+  const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
+  const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
+  const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const changeMoment = (eventId) => setForm((current) => ({
+    ...current,
+    eventId,
+    // Activity identifiers are only meaningful inside the previously chosen Moment.
+    activityId: eventId === current.eventId ? current.activityId : '',
+  }));
 
   const handleType = (kind) => {
     setForm((current) => ({
@@ -115,19 +117,34 @@ export default function TransactionForm({
         </DropdownSelect>
       </label>
       <label className="dn-transaction-field">
-        <span>Linked Activity (optional)</span>
-        <DropdownSelect aria-label="Linked Activity" value={activityValue}
-          onChange={(event) => {
-            if (!event.target.value) { setForm((cur) => ({ ...cur, eventId: '', activityId: '' })); return; }
-            const [eventId, activityId] = JSON.parse(event.target.value);
-            setForm((cur) => ({ ...cur, eventId, activityId }));
-          }} disabled={busy}>
-          <option value="">No linked activity</option>
-          {activities.map((item) => <option key={JSON.stringify([item.eventId, item.activityId])}
-            value={JSON.stringify([item.eventId, item.activityId])}>{item.label}</option>)}
-          {activityValue && !activities.some((item) => JSON.stringify([item.eventId,item.activityId]) === activityValue)
-            ? <option value={activityValue}>Previously linked activity (unavailable)</option> : null}
+        <span>Linked Moment (optional)</span>
+        <DropdownSelect aria-label="Linked Moment" value={form.eventId}
+          onChange={(event) => changeMoment(event.target.value)} disabled={busy}>
+          <option value="">No linked moment</option>
+          {moments.map((moment) => (
+            <option key={moment.value} value={moment.value}>{moment.label}</option>
+          ))}
+          {form.eventId && !selectedMomentExists
+            ? <option value={form.eventId}>Previously linked moment (unavailable)</option> : null}
         </DropdownSelect>
+      </label>
+      <label className="dn-transaction-field">
+        <span>Linked Activity (optional)</span>
+        <DropdownSelect aria-label="Linked Activity" value={form.activityId}
+          onChange={(event) => change('activityId', event.target.value)}
+          disabled={busy || !form.eventId || !selectedMomentExists}
+          placeholder={form.eventId ? 'Choose an activity' : 'Choose a moment first'}>
+          <option value="">No linked activity</option>
+          {activities.map((activity) => (
+            <option key={activity.value} value={activity.value}>{activity.label}</option>
+          ))}
+          {form.activityId && !selectedActivityExists
+            ? <option value={form.activityId}>Previously linked activity (unavailable)</option> : null}
+        </DropdownSelect>
+        {!form.eventId ? <small className="dn-transaction-field-hint">Select a moment to see only its activities.</small>
+          : selectedMomentExists && !activities.length
+            ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
+            : null}
       </label>
       <DateField label="Date *" name="date" required value={form.date}
         onChange={(event) => change('date', event.target.value)} disabled={busy} />
