@@ -519,3 +519,14 @@
 - Risk/rollback: Loading spinner may appear until both stores successfully load; failures show the existing Retry banner. Revert this commit if necessary.
 - Master: §3.1a, §13; version 2.9.4.
 - Status: SOURCE IMPLEMENTED / CI PENDING.
+
+## CHG-20261021-040 | Improve shared swipe gesture safety and mobile touch feedback
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, Git SHA in history; `main` untouched.
+- Changed paths: `src/hooks/useSwipeActions.js`, `src/utils/swipeGestures.js`, `src/utils/swipeGestures.test.mjs`, master and audit.
+- Before -> after: Shared Activity/Code Lists swipe hook revealed actions after 40px with weak axis discrimination. New pure threshold calculation locks vertical scroll, requires dominant horizontal gesture plus 56px travel before action reveal, only haptics on supported touch devices and only on entering an action. Prevents destructive accidental reveal and preserves existing left=other, right=delete API.
+- User/data/security impact: Touch and pointer UX only; same underlying callbacks/state; no database changes. Does not provide or imply real iOS haptics if not supported by browser.
+- Verification: Added 4 gesture unit tests; CI and real-device/60fps performance measurement pending.
+- Risk/rollback: Gesture thresholds may require user tuning; screenshot/touch/browser verification needed. Revert commit to recover previous behavior.
+- Master: §§6, 9, 13; v2.9.5.
+- Status: SOURCE IMPLEMENTED / CI PENDING.

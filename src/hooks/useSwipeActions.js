@@ -1,10 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
+import { resolveSwipeGesture } from '../utils/swipeGestures';
 
 export default function useSwipeActions({ surfaceSelector } = {}) {
   const [action, setAction] = useState(null);
   const swipeRootRef = useRef(null);
   const pointerStartRef = useRef(null);
   const gestureMovedRef = useRef(false);
+  const gestureAxisRef = useRef(null);
+  const lastActionRef = useRef(null);
 
   useEffect(() => {
     if (!action) return undefined;
@@ -25,20 +28,30 @@ export default function useSwipeActions({ surfaceSelector } = {}) {
     if (interactiveTarget && interactiveTarget !== event.currentTarget) return;
     pointerStartRef.current = { x: event.clientX, y: event.clientY };
     gestureMovedRef.current = false;
-    event.currentTarget.setPointerCapture?.(event.pointerId);
+    gestureAxisRef.current = null;
+    lastActionRef.current = null;
   };
 
   const handlePointerMove = (event) => {
     if (!pointerStartRef.current) return;
-    const deltaX = event.clientX - pointerStartRef.current.x;
-    const deltaY = event.clientY - pointerStartRef.current.y;
-    if (Math.abs(deltaX) > 10 && Math.abs(deltaX) > Math.abs(deltaY)) gestureMovedRef.current = true;
-    if (Math.abs(deltaX) < 40 || Math.abs(deltaX) < Math.abs(deltaY)) return;
-    setAction(deltaX > 0 ? 'delete' : 'other');
+    const result = resolveSwipeGesture(
+      pointerStartRef.current,
+      { x: event.clientX, y: event.clientY },
+      gestureAxisRef.current,
+    );
+    gestureAxisRef.current = result.axis;
+    if (result.moved) gestureMovedRef.current = true;
+    if (result.action && lastActionRef.current !== result.action) {
+      lastActionRef.current = result.action;
+      if (event.pointerType === 'touch') navigator.vibrate?.(8);
+      setAction(result.action);
+    }
   };
 
   const handlePointerUp = () => {
     pointerStartRef.current = null;
+    gestureAxisRef.current = null;
+    lastActionRef.current = null;
   };
 
   const consumeSwipeClick = (event) => {
