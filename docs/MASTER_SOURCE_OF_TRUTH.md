@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.0** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -42,7 +42,7 @@
 ## 2. Product scope and terminology
 
 ### 2.1 Product identity
-- **DN is the confirmed and only authoritative product name**, explicitly established by the repository owner on 2026-10-21. The package name is `dn` (version 1.0.15 at this audit). No future AI session may refer to the product using its former name. Legacy storage key prefixes and historic filenames exist only for compatibility or evidence.
+- **DN is the confirmed and only authoritative product name**, explicitly established by the repository owner on 2026-10-21. The package name is `dn` (version 1.0.15 at this audit). No future AI session may refer to the product using its former name. PWA manifest name and short name are both exactly `DN`, and package name is `dn`. Legacy storage key prefixes and historic filenames exist only for compatibility or evidence.
 - **Brand decision: APPROVED.** Preserve external Firebase project IDs and existing user data while standardizing user-facing and newly written code on DN.
 - Purpose: responsive personal life planning and lightweight household/personal finance. Supports account and guest experiences. Not a banking ledger or certified archival/notification service.
 
@@ -117,7 +117,7 @@ Firebase Analytics is optional and lazy-loaded in production if supported. The p
 ## 4. Business behavior and data ownership
 
 ### 4.1 Account, guest and sample separation
-**Brand-data migration (source migration complete): `src/utils/storageMigration.js` copies known former browser-storage keys into canonical `dn_` keys only where no DN key exists; it keeps the old values as a recovery path. New preferences and guest Code Lists are written under `dn_` keys. The compatibility module is the only place that defines the former storage prefix, and it does not define the product name. On successful guest-to-account merge or exit from guest mode, both old and new session keys are cleared, preventing duplicate reimports. Legacy backup v1/v2 settings remain readable. This is source-inspected, not runtime-tested. Explicit local-data clearing removes both generations of app-owned keys.
+**Brand-data migration (source migration complete, runtime validation pending): `src/utils/storageMigration.js` copies known former browser-storage keys into canonical `dn_` keys only where no DN key exists; it keeps the old values as a recovery path. New preferences and guest Code Lists are written under `dn_` keys. The compatibility module is the only place that defines the former storage prefix, and it does not define the product name. On successful guest-to-account merge or exit from guest mode, both old and new session keys are cleared, preventing duplicate reimports. Legacy backup v1/v2 settings remain readable. This is source-inspected, not runtime-tested. Explicit local-data clearing removes both generations of app-owned keys.
 
 **Account:** Firebase Auth emits state through `authService.onAuthChange`. Account settings/code lists are hydrated; guest data merge is attempted; account user then becomes active. **Important observed limitation:** `src/context/AuthContext.jsx` logs guest-merge failures to console and then proceeds with `setUser`; a visible recovery/retry UX is not evident in this inspected path. Treat as risk, not successful migration guarantee.
 
@@ -290,7 +290,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.0** | **2026-10-21** | Switched account/guest storage, settings, and backups to DN keys; resolved guest-merge resynchronization trap; preserved legacy backup reads | **CHG-20261021-009** |
+| **2.4.1** | **2026-10-21** | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |
+| 2.4.0 | 2026-10-21 | Switched account/guest storage, settings, and backups to DN keys; resolved guest-merge resynchronization trap; preserved legacy backup reads | **CHG-20261021-009** |
 | 2.3.0 | 2026-10-21 | Introduced DN browser-key migration and canonical preferences/Code Lists; never overwrite existing DN records or delete legacy data implicitly | **CHG-20261021-008** |
 | 2.2.0 | 2026-10-21 | Renamed internal CSS class selectors and matching React classNames from deprecated brand prefix to DN, without changing layout behavior | **CHG-20261021-007** |
 | 2.1.0 | 2026-10-21 | Owner-approved canonical brand **DN**; renamed visible application copy and package metadata; deprecated former product name for future AI work | **CHG-20261021-006** |

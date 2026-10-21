@@ -142,3 +142,16 @@
 - Risks/rollback: Compatibility logic needs real browser testing; older client versions may still expect old keys. Recover with Git history. Marked SOURCE MODIFIED, RUNTIME UNVERIFIED.
 - Master: §§4.1, 4.2, 5, 13.
 - Status: IMPLEMENTED IN SOURCE / VALIDATION PENDING.
+
+## CHG-20261021-010 | Finalize DN identity and remove stale named artifacts
+- Date (UTC): 2026-10-21.
+- Actor/requester: Owner's explicit DN brand decision.
+- Branch / commit: `OldVersion`, atomic Git commit (SHA in history); `main` unchanged.
+- Changed paths: `src/utils/codeLists.js`, `public/manifest.webmanifest`, `AGENTS.md`, master, audit; renamed old insights JSON filename to `dn-insights-2026-10-01.json` without altering data; removed `extract_requirements.py` (obsolete local Windows-path script referencing a missing Word file).
+- Before -> after: PWA extended display name -> exactly DN; Node ESM import missing `.js` -> explicit file extension; retired named artifact -> DN filename; obsolete extraction script removed; strengthened AI brand rule.
+- Why: Finish canonical product naming and prevent an ESM module resolution failure in the Node unit suite.
+- Data/security: No cloud/guest data removal and no Firebase identifier changes. Renamed a historical JSON file only; its contents retained via the blob SHA and Git history.
+- Verification: Source inspection and GitHub tree read-back pending; build/Node tests/browser and Firebase verification NOT RUN.
+- Risk/rollback: Existing links to the renamed historical JSON file would need updating, but none identified in inspected application sources; restore from Git history as needed.
+- Master sections: §§2, 4, 12, 13.
+- Status: IMPLEMENTED IN SOURCE, RUNTIME UNVERIFIED.

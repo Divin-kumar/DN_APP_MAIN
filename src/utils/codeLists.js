@@ -1,4 +1,4 @@
-import { migrateLegacyStorage } from './storageMigration';
+import { migrateLegacyStorage } from './storageMigration.js';
 
 export const DEFAULT_CODE_LISTS = Object.freeze({
   eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
