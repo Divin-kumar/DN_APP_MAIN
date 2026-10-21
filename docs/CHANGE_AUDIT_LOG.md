@@ -426,3 +426,15 @@
 - Risks/rollback: Existing links to `/financials/expenses` redirect; transaction activity mirror non-atomic. Revert this commit to restore old quick menu if needed.
 - Master: §3.1a, §13, v2.8.2.
 - Status: SOURCE IMPLEMENTED, CI PENDING.
+
+## CHG-20261021-032 | Safe event duplicate and share data helpers
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, SHA in Git history, `main` untouched.
+- Files: `src/utils/eventActions.js` and tests, master, audit.
+- Before/after: Event menu actions were limited; added pure duplicate/share data preparation. Duplicates copy event planning metadata and activity task titles but use fresh IDs and exclude nested expense money, memories, attachments and original Firestore references.
+- Why: Premium overflow menu must not inadvertently duplicate financial ledger amounts.
+- Security/data: Guest share exports text only (not inaccessible cloud deep link). Account deep links still require Firebase authentication.
+- Verification: Two Node tests added; UI wiring and CI pending. No production deployment.
+- Risk: Duplication of attachments deliberately unsupported until a real file-ownership model exists; rollback via Git.
+- Master: §9 and §13, v2.8.3.
+- Status: HELPER IMPLEMENTED / MENU INTEGRATION PENDING.
