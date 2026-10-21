@@ -366,3 +366,15 @@
 - Rollback: Revert file/commit, historical forms remain in Git.
 - Master: §9.1, §13, version 2.7.1.
 - Status: FORM CREATED, PARENT INTEGRATION PENDING.
+
+## CHG-20261021-027 | Coordinate unified Income/Expense writes and linked activity records
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, SHA in history; `main` unchanged.
+- Scope: `src/hooks/useTransactionManager.js`, `src/utils/transactionRelations.js`, tests, master and audit.
+- Before/after: Unified form had no routing logic; hook now dispatches to existing typed stores and synchronizes expense mirrors inside linked activities while preserving income activity IDs as metadata.
+- Edge cases: Authenticated nested-only expense editing/deletion updates event aggregate without writing to nonexistent Firestore expense doc; type conversion writes the replacement first, then removes previous and best-effort rolls back the replacement on failure.
+- Data/security: Existing Firestore collections, guest storage and backup schemas unchanged. Writes spanning expense/event aggregates are **not atomic**, so partial failures require reconciliation.
+- Verification: Four Node reconciliation tests added; awaiting CI and actual Firebase/guest integration. No deployment.
+- Risk: Activity-link changes and simultaneous cloud writes may partially succeed. Preserve IDs and notify user on incomplete sync. Rollback via Git history.
+- Master: §9.1, §13; 2.7.2.
+- Status: SOURCE INTEGRATED, UI FOLLOW-UP AND CI PENDING.

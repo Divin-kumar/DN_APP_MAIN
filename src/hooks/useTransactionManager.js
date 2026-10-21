@@ -1,0 +1,107 @@
+import { useCallback } from 'react';
+import useAppStore from '../store/useAppStore';
+import useIncomeStore from '../store/useIncomeStore';
+import useExpenseStore from '../store/useExpenseStore';
+import useEventStore from '../store/useEventStore';
+import { transactionPayload } from '../utils/transactionFilters';
+import { isNestedOnlyAccountExpense, reconcileExpenseActivities, sameRecord } from '../utils/transactionRelations';
+
+// One mutation pathway for Financials and global quick-create. The two existing
+// collections stay intact for backups and account/guest compatibility.
+export default function useTransactionManager() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const incomeActions = useIncomeStore();
+  const expenseActions = useExpenseStore();
+  const eventActions = useEventStore();
+  const { addIncome, updateIncomeItem, deleteIncomeItem } = incomeActions;
+  const { addExpense, updateExpenseItem, deleteExpenseItem, setExpenses } = expenseActions;
+  const { updateEventItem } = eventActions;
+  const uid = user?.uid;
+
+  const updateMirrors = useCallback(async (previous, current) => {
+    const events = useEventStore.getState().events;
+    const changed = reconcileExpenseActivities(events, previous, current);
+    for (const event of changed) await updateEventItem(uid, isGuest, event);
+  }, [uid, isGuest, updateEventItem]);
+
+  const saveTransaction = useCallback(async (form, original = null) => {
+    const payload = transactionPayload(form);
+    const nextKind = form.transactionKind;
+    const oldKind = original?.transactionKind;
+    const current = original && oldKind === nextKind
+      ? { ...original, ...payload, transactionKind: nextKind }
+      : { ...payload, transactionKind: nextKind };
+
+    // Nested-only Firestore records exist inside an event but not the expenses
+    // collection. Editing them must not call updateDoc on an absent document.
+    if (original && nextKind === oldKind && isNestedOnlyAccountExpense(original, isGuest)) {
+      if (!useEventStore.getState().events.some((ev) => (ev.id || ev.firestoreId) === original.eventId)) {
+        throw new Error('The linked activity is unavailable. Reload Events and try again.');
+      }
+      await updateMirrors(original, current);
+      setExpenses(useExpenseStore.getState().expenses.map((item) => (
+        sameRecord(item, original) ? { ...item, ...current } : item
+      )));
+      return current;
+    }
+
+    if (original && oldKind === nextKind) {
+      if (nextKind === 'income') await updateIncomeItem(uid, isGuest, current);
+      else await updateExpenseItem(uid, isGuest, current);
+      try { await updateMirrors(original, current); }
+      catch {
+        // Do not imply an activity relationship was updated when the second write failed.
+        throw new Error('Transaction saved, but its linked activity did not sync. Please retry.');
+      }
+      return current;
+    }
+
+    const saved = nextKind === 'income'
+      ? await addIncome(uid, isGuest, current)
+      : await addExpense(uid, isGuest, current);
+    const created = { ...saved, transactionKind: nextKind };
+    try {
+      if (original) {
+        await updateMirrors(original, created);
+        if (oldKind === 'income') await deleteIncomeItem(uid, isGuest, original.id || original.firestoreId);
+        else if (!isNestedOnlyAccountExpense(original, isGuest)) {
+          await deleteExpenseItem(uid, isGuest, original.id || original.firestoreId);
+        } else {
+          setExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
+        }
+      } else await updateMirrors(null, created);
+    } catch {
+      // Best-effort compensation: do not leave a second typed record if conversion
+      // failed. Old source record is never deleted before the new one is saved.
+      try {
+        if (nextKind === 'income') await deleteIncomeItem(uid, isGuest, saved.id || saved.firestoreId);
+        else await deleteExpenseItem(uid, isGuest, saved.id || saved.firestoreId);
+      } catch { /* Preserve visible error; recovery requires reconciliation. */ }
+      throw new Error('Transaction could not be fully synchronized. Check activity links and retry.');
+    }
+    return created;
+  }, [uid, isGuest, addIncome, updateIncomeItem, deleteIncomeItem, addExpense,
+    updateExpenseItem, deleteExpenseItem, setExpenses, updateMirrors]);
+
+  const removeTransaction = useCallback(async (original) => {
+    if (!original) return;
+    const id = original.id || original.firestoreId;
+    if (original.transactionKind === 'income') {
+      await deleteIncomeItem(uid, isGuest, id);
+      return;
+    }
+    await updateMirrors(original, null);
+    if (isNestedOnlyAccountExpense(original, isGuest)) {
+      setExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
+    } else {
+      try { await deleteExpenseItem(uid, isGuest, id); }
+      catch (err) {
+        try { await updateMirrors(null, original); } catch { /* Reconciliation may be needed. */ }
+        throw err;
+      }
+    }
+  }, [uid, isGuest, deleteIncomeItem, deleteExpenseItem, setExpenses, updateMirrors]);
+
+  return { saveTransaction, removeTransaction };
+}

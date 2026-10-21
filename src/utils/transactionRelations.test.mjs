@@ -1,0 +1,32 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { isNestedOnlyAccountExpense, reconcileExpenseActivities } from './transactionRelations.js';
+
+const events = [{
+  id: 'e1', name: 'Career', activities: [
+    { id: 'a1', title: 'Training', expenses: [{ id: 'x', amount: 200, eventId: 'e1', activityId: 'a1' }] },
+    { id: 'a2', title: 'Travel', expenses: [] },
+  ],
+}];
+const oldExpense = { id: 'x', transactionKind: 'expense', eventId: 'e1', activityId: 'a1', amount: 200 };
+test('editing linked expense removes stale child and creates one current child', () => {
+  const next = reconcileExpenseActivities(events, oldExpense, { ...oldExpense, activityId: 'a2', amount: 350 });
+  assert.equal(next[0].activities[0].expenses.length, 0);
+  assert.equal(next[0].activities[1].expenses.length, 1);
+  assert.equal(next[0].activities[1].expenses[0].amount, 350);
+  assert.equal(events[0].activities[0].expenses.length, 1);
+});
+test('unlink and delete remove stale child without mutating others', () => {
+  const next = reconcileExpenseActivities(events, oldExpense, null);
+  assert.deepEqual(next[0].activities[0].expenses, []);
+  assert.equal(next[0].activities[1], events[0].activities[1]);
+});
+test('income records do not create expense mirrors', () => {
+  const record = { id: 'i1', transactionKind: 'income', eventId: 'e1', activityId: 'a1', amount: 100 };
+  assert.deepEqual(reconcileExpenseActivities(events, null, record), []);
+});
+test('only Firestore nested-only expense uses event-only update path', () => {
+  assert.equal(isNestedOnlyAccountExpense(oldExpense, false), true);
+  assert.equal(isNestedOnlyAccountExpense({ ...oldExpense, firestoreId: 'doc-x' }, false), false);
+  assert.equal(isNestedOnlyAccountExpense(oldExpense, true), false);
+});
