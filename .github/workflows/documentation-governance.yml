@@ -1,0 +1,54 @@
+name: Documentation governance
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: ['**']
+permissions:
+  contents: read
+jobs:
+  documentation-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout all history needed for diff
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Require canonical documentation and audit for every change
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+          base="$PUSH_BEFORE"
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then base="$BASE_SHA"; fi
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            base="$(git rev-list --max-parents=0 HEAD | tail -1)"
+          fi
+          changed="$(git diff --name-only "$base" "$HEAD_SHA" || true)"
+          echo "Changed files:"
+          printf '%s\n' "$changed"
+          if [[ -z "$changed" ]]; then exit 0; fi
+          if ! grep -Fxq "docs/MASTER_SOURCE_OF_TRUTH.md" <<< "$changed"; then
+            echo "::error::Every repository change requires an update to docs/MASTER_SOURCE_OF_TRUTH.md"
+            exit 1
+          fi
+          if ! grep -Fxq "docs/CHANGE_AUDIT_LOG.md" <<< "$changed"; then
+            echo "::error::Every repository change requires an appended audit entry in docs/CHANGE_AUDIT_LOG.md"
+            exit 1
+          fi
+          echo "Documentation files changed; verify factual quality during review."
+      - name: Enforce four-Markdown-file budget
+        shell: bash
+        run: |
+          set -euo pipefail
+          expected="$(printf '%s\n' README.md AGENTS.md docs/MASTER_SOURCE_OF_TRUTH.md docs/CHANGE_AUDIT_LOG.md | sort)"
+          actual="$(git ls-files '*.md' '*.MD' | sort)"
+          if [[ "$actual" != "$expected" ]]; then
+            echo "::error::Only the four canonical Markdown files are permitted."
+            diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
+            exit 1
+          fi
