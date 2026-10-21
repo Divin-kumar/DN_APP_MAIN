@@ -4,7 +4,7 @@
   In simple language:
   this file is the "parent frame" of the whole app after login.
   It contains the top bar, side menu, mobile navigation, theme switch, profile actions,
-  and quick-create buttons that let the user create events, activities, and expenses without leaving the page.
+  and quick-create buttons for events, activities, and transactions.
 */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
@@ -17,9 +17,9 @@ import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
-import ExpenseForm from '../components/expenses/ExpenseForm';
+import TransactionForm from '../components/financials/TransactionForm';
 import useEventStore from '../store/useEventStore';
-import useExpenseStore from '../store/useExpenseStore';
+import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 
@@ -40,7 +40,7 @@ export default function DashboardLayout() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const { events, loadEvents, addEvent, updateEventItem } = useEventStore();
-  const { loadExpenses, addExpense } = useExpenseStore();
+  const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -183,9 +183,8 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     if (!quickCreateType || (!user && !isGuest)) return;
-    if ((quickCreateType === 'activity' || quickCreateType === 'expense') && !events.length) loadEvents(user?.uid, isGuest);
-    if (quickCreateType === 'expense') loadExpenses(user?.uid, isGuest);
-  }, [quickCreateType, user, isGuest, events.length, loadEvents, loadExpenses]);
+    if ((quickCreateType === 'activity' || quickCreateType === 'transaction') && !events.length) loadEvents(user?.uid, isGuest);
+  }, [quickCreateType, user, isGuest, events.length, loadEvents]);
 
   // Build a readable profile label shown in the top bar.
   // If the user has a name, show it; otherwise show email or simply "Guest".
@@ -210,7 +209,7 @@ export default function DashboardLayout() {
   };
 
   // Quick create opens a lightweight modal for common tasks without leaving the page.
-  // This is a shortcut so users can add a life moment, activity, or expense in a few clicks.
+  // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type) => {
     setQuickCreateOpen(false);
     setQuickCreateError('');
@@ -235,14 +234,15 @@ export default function DashboardLayout() {
     }
   };
 
-  // Save the expense without leaving the current screen.
-  const saveQuickExpense = async (formData) => {
+  // Use the same transaction pathway as the Financials screen.
+  const saveQuickTransaction = async (formData) => {
     try {
-      await addExpense(user?.uid, isGuest, formData);
+      await saveTransaction(formData);
       setQuickCreateType(null);
-      showToast('Expense added successfully', 'success', { label: 'View', to: '/financials/expenses' });
-    } catch {
-      setQuickCreateError('Could not save this expense. Please try again.');
+      showToast('Transaction added', 'success', { label: 'View', to: '/financials/transactions' });
+    } catch (error) {
+      setQuickCreateError(error?.message || 'Could not save this transaction.');
+      throw error;
     }
   };
 
@@ -394,7 +394,7 @@ export default function DashboardLayout() {
             <div className="mobile-dock-create-menu" aria-label="Quick create actions">
               <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
               <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
-              <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
+              <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
             </div>
           ) : null}
           <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
@@ -408,7 +408,7 @@ export default function DashboardLayout() {
           <div className="dn-quick-create-menu" aria-label="Quick create actions">
             <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
-            <button type="button" onClick={() => beginQuickCreate('expense')}><Receipt size={17} /><span>Expense</span></button>
+            <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
           </div>
         ) : null}
         <button type="button" className="dn-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
@@ -422,10 +422,11 @@ export default function DashboardLayout() {
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'expense' ? (
-        <ModalDialog title="Add an expense" onClose={() => setQuickCreateType(null)}>
+      {quickCreateType === 'transaction' ? (
+        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
-          <ExpenseForm events={events} onSubmit={saveQuickExpense} onCancel={() => setQuickCreateType(null)} submitLabel="Save expense" />
+          <TransactionForm events={events} onSubmit={saveQuickTransaction}
+            onCancel={() => setQuickCreateType(null)} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (

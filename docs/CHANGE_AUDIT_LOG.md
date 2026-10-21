@@ -414,3 +414,15 @@
 - Risk/rollback: Older global CSS specificity may override new rules in certain screens; append-only styling can be reverted by commit.
 - Master: §6.4 and §13, v2.8.1.
 - Status: SOURCE COMMITTED, CI/DEVICE QA PENDING.
+
+## CHG-20261021-031 | Replace global Expense quick-create with Add Transaction
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, SHA in Git history; `main` unchanged.
+- Paths: `src/layouts/DashboardLayout.jsx`, master and audit.
+- Before/after: Mobile and desktop quick-create menus offered Expense with a separate form -> Transaction with unified Income/Expense form and same mutation coordinator as Financials. CTA toast links to combined Transactions screen.
+- Why: Remove duplicate financial creation flow, preserve event and activity quick-create.
+- User/data/security: Both typed records still persist in existing account/guest stores; account-only or guest works through shared manager. No migration.
+- Verification: CI compile, unit tests and actual end-to-end account/guest actions pending. No deployment.
+- Risks/rollback: Existing links to `/financials/expenses` redirect; transaction activity mirror non-atomic. Revert this commit to restore old quick menu if needed.
+- Master: §3.1a, §13, v2.8.2.
+- Status: SOURCE IMPLEMENTED, CI PENDING.
