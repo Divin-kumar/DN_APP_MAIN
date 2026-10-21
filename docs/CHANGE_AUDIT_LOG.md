@@ -168,3 +168,17 @@
 - Risk/rollback: CI may detect preexisting failures; resolve in audited follow-up. GitHub required checks depend on repository protection settings.
 - Master: §§3, 7, 10, 13; version 2.4.2.
 - Status: IMPLEMENTED IN SOURCE / CI PENDING.
+
+## CHG-20261021-012 | Repair backup parser syntax detected by CI
+- Date (UTC): 2026-10-21.
+- Trigger: OldVersion CI run `39641812804`, application-smoke-tests failed with SyntaxError in `src/services/backupService.js` line 148; 40 tests passed, one test file failed to load, build was skipped.
+- Actor/requester: AI fix in response to the owner's DN branding request.
+- Branch/commit: `OldVersion`, atomic corrective commit (SHA in history); no `main` changes.
+- Scope: `src/services/backupService.js`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: A malformed string replacement accidentally inserted duplicate module contents into a v2-backup dashboard-key regex -> reconstructed parser from the last clean original source, with explicit DN/legacy prefixed setting lookups and correctly escaped dynamic regexes.
+- Reason: Fix a real automated test failure and preserve old v1/v2 backup import compatibility.
+- Impact: Restores existing backup parser compilation; no schema/version change or backend writes. New DN data remains canonical, older backups continue to import.
+- Verification: CI failure inspected from job log and source rebuilt deterministically; rerun of `npm test`/`npm run build` via GitHub Actions expected after push, actual outcome to be inspected. Live Firebase/browser NOT RUN.
+- Risk/rollback: Restore original pre-migration service via Git commit if needed; missing import or regex issues are covered by existing backup tests plus new DN v2 test.
+- Master sections: §5, §7, §13; version 2.4.3.
+- Status: SOURCE FIX COMMITTED, CI RERUN PENDING.

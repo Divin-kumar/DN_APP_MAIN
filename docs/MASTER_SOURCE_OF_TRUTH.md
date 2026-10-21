@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.4.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.4.3** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -290,7 +290,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.4.2** | **2026-10-21** | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
+| **2.4.3** | **2026-10-21** | Repaired backup v1/v2 parser syntax after GitHub CI identified duplicated replacement text; restored original implementation plus DN/legacy compatibility | **CHG-20261021-012** |
+| 2.4.2 | 2026-10-21 | Clarified DN-exclusive future AI instructions, removed retired selector name from normative prose, added `OldVersion` Node test/build CI verification | **CHG-20261021-011** |
 | 2.4.1 | 2026-10-21 | Finalized DN PWA manifest name and Node-compatible migration import; renamed archival insights filename; removed obsolete local-only requirements extraction script | **CHG-20261021-010** |
 | 2.4.0 | 2026-10-21 | Switched account/guest storage, settings, and backups to DN keys; resolved guest-merge resynchronization trap; preserved legacy backup reads | **CHG-20261021-009** |
 | 2.3.0 | 2026-10-21 | Introduced DN browser-key migration and canonical preferences/Code Lists; never overwrite existing DN records or delete legacy data implicitly | **CHG-20261021-008** |
