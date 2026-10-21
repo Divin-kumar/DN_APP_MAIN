@@ -784,3 +784,17 @@
 - Master sections updated: §9.1, §9.2, §13 version 2.12.0.
 - Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
 - Follow-ups: Verify link selection and activity resets for both account/guest, invalid deep links, old imported transactions, scroll and popover placement with keyboard, 320-430px cards, and backend security rules.
+
+## CHG-20261021-061 | Verify Finance totals/picker CI and safeguard Moment-only cards/deletion
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner, transaction Moment linkage and premium Finance refinements.
+- Branch / commit / PR: `OldVersion` only; SHA pending Git commit. Prior code SHA `cee0baf523f4c9152f4e3aead052e65790763868` verified in GitHub Actions run 39663726896. Protected `main` unchanged and no deployment.
+- Exact changed paths: `src/components/financials/TransactionHistory.jsx`, `src/hooks/useTransactionManager.js`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Moment-only transactions saved valid `eventId` data but their card showed no link without an activity; now shows a Moment line even without Activity, with unavailable fallback for historical deleted Moments. Expense deletion had always called `requireLinkedActivity` and thus blocked a Moment-only expense when that Moment was removed; now strict relationship validation is only required when an activity mirror may exist. Activity-linked deletion safety remains unchanged.
+- Why: Keep Moment-only linked records discoverable and avoid unremovable historical transactions while retaining safeguards against orphan nested child expenses.
+- User/data/security/compatibility impact: Display and conditional validation only. Existing `eventId` and `activityId` keys, Firestore/guest ledger paths, delete confirmation, backups and record IDs unchanged; no migration or production deployment.
+- Verification (exact commands, PASS/FAIL/NOT RUN): Preceding commit `cee0baf523f4c9152f4e3aead052e65790763868` GitHub Actions [39663726896](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39663726896) `npm test` **97/97 PASS**, `npm run build` PASS, documentation governance PASS. New two source-contract tests, build/audit for this commit PENDING CI. Native browser/mobile, guest/account live roundtrip, 60fps profiling, accessibility and Firestore Security Rules NOT RUN. Nine dependency advisories and bundle size warning persist.
+- Risk and rollback: Parent Moment deletion while financial activity links remain is still intentionally blocked to avoid reappearing nested expenses. Source tests verify structure, not end-to-end Firebase requests. Revert this commit to roll back.
+- Master sections updated: §9.1 and §13 version 2.12.1.
+- Status: SOURCE IMPLEMENTED / CI PENDING; PRIOR CI VERIFIED.
+- Follow-ups: Test moment-only create/edit/delete when the Moment is missing, prior activity links with deleted children, card wrapping and keyboard gestures on small viewports.

@@ -31,7 +31,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
   const activity = event?.activities?.find((item) => item.id === transaction.activityId);
-  const eventTitle = event?.name || transaction.eventTitle;
+  const eventTitle = event?.name || transaction.eventTitle || (transaction.eventId ? 'Unavailable moment' : '');
   const activityTitle = activity?.title || transaction.activityTitle;
   const category = isIncome ? transaction.type : transaction.category;
   const reveal = (next, touch = false) => {
@@ -95,7 +95,8 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
           <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
-          {activityTitle ? <small>Activity: {eventTitle ? `${eventTitle} · ` : ''}{activityTitle}</small> : null}
+          {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
+          {activityTitle ? <small>Activity: {activityTitle}</small> : null}
           {transaction.notes || transaction.description ? <small className="dn-transaction-note">{transaction.notes || transaction.description}</small> : null}
         </div>
         <div className="dn-transaction-card-side">

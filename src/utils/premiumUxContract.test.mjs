@@ -56,3 +56,17 @@ test('Transaction form chooses a Moment before showing Moment-scoped activities'
   assert.match(form, /disabled=\{busy \|\| !form\.eventId \|\| !selectedMomentExists\}/);
   assert.doesNotMatch(form, /events\.flatMap/);
 });
+
+test('linked Moment label displays even without an activity and swipe Delete remains explicit', () => {
+  const card = read('../components/financials/TransactionHistory.jsx');
+  assert.match(card, /transaction\.eventId \? <small>Moment: \{eventTitle\}<\/small>/);
+  assert.match(card, /activityTitle \? <small>Activity: \{activityTitle\}<\/small>/);
+  assert.match(card, /onDelete\(transaction\)/);
+  assert.match(card, /className="dn-transaction-delete"/);
+});
+test('moment-only expenses can be deleted without requiring an expired activity mirror', () => {
+  const manager = read('../hooks/useTransactionManager.js');
+  assert.match(manager, /if \(original\.activityId\) requireLinkedActivity/);
+  assert.match(manager, /await updateMirrors\(original, null\)/);
+  assert.match(manager, /await deleteExpenseItem\(uid, isGuest, id\)/);
+});

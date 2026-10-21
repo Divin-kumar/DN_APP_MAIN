@@ -101,9 +101,10 @@ export default function useTransactionManager() {
       await deleteIncomeItem(uid, isGuest, id);
       return;
     }
-    // Never delete a linked master expense while its activity is not loaded:
-    // a nested copy could survive and reappear after refresh.
-    requireLinkedActivity(useEventStore.getState().events, original);
+    // Only activity-linked expenses have nested mirrors that must be reconciled.
+    // Moment-only expenses have no activity child; deletion must still work if
+    // their historical Moment is no longer present.
+    if (original.activityId) requireLinkedActivity(useEventStore.getState().events, original);
     await updateMirrors(original, null);
     if (isNestedOnlyAccountExpense(original, isGuest)) {
       patchLoadedExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));
