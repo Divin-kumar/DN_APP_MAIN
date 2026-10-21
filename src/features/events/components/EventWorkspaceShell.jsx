@@ -4,6 +4,9 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
+import EventActionMenu from '../../../components/events/EventActionMenu';
+import EventForm from '../../../components/events/EventForm';
+import { duplicateEventData, eventShareDetails } from '../../../utils/eventActions';
 import DateField from '../../../components/common/DateField';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
@@ -54,7 +57,7 @@ export default function EventWorkspaceShell() {
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
+  const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
   const { expenses, loadExpenses, addExpense, updateExpenseItem } = useExpenseStore();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
@@ -76,6 +79,7 @@ export default function EventWorkspaceShell() {
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
+  const [eventEditOpen, setEventEditOpen] = useState(false);
   const [expenseDialogActivity, setExpenseDialogActivity] = useState(null);
   const [linkExpenseActivity, setLinkExpenseActivity] = useState(null);
   const [expenseError, setExpenseError] = useState('');
@@ -365,6 +369,39 @@ export default function EventWorkspaceShell() {
     setPendingDeleteAttachment(null);
   };
 
+  const editEventDetails = async (formValues) => {
+    try {
+      await updateEventItem(user?.uid, isGuest, { ...event, ...formValues });
+      setEventEditOpen(false);
+      showToast('Moment updated', 'success');
+    } catch { showToast('Unable to update moment', 'danger'); }
+  };
+  const duplicateMoment = async () => {
+    try {
+      const saved = await addEvent(user?.uid, isGuest, duplicateEventData(event));
+      showToast('Moment duplicated without repeating expenses', 'success');
+      navigate('/events/' + (saved.id || saved.firestoreId));
+    } catch { showToast('Could not duplicate moment', 'danger'); }
+  };
+  const archiveMoment = async () => {
+    try {
+      await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
+      showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
+    } catch { showToast('Could not update archive state', 'danger'); }
+  };
+  const shareMoment = async () => {
+    const details = eventShareDetails(event, isGuest, window.location.origin);
+    try {
+      if (navigator.share) await navigator.share(details);
+      else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText([details.text, details.url].filter(Boolean).join('\n'));
+        showToast('Moment details copied', 'success');
+      } else showToast('Sharing unavailable in this browser', 'danger');
+    } catch (error) {
+      if (error?.name !== 'AbortError') showToast('Could not share moment', 'danger');
+    }
+  };
+
   const printSummary = () => window.print();
 
   const removeEvent = async () => {
@@ -500,7 +537,10 @@ export default function EventWorkspaceShell() {
           <div className="event-moment-top-actions">
             <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={15} /><span>Add memory</span></button>
             <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={15} /><span>Greeting card</span></button>
-            <button type="button" className="event-moment-delete" onClick={() => setPendingDeleteEvent(true)} aria-label="Delete event" title="Delete event"><Trash2 size={16} /></button>
+            <EventActionMenu className="is-hero" event={event}
+              onEdit={() => setEventEditOpen(true)} onDuplicate={duplicateMoment}
+              onShare={shareMoment} onArchive={archiveMoment}
+              onDelete={() => setPendingDeleteEvent(true)} />
           </div>
         </div>
         <div className="event-moment-content">
@@ -627,6 +667,12 @@ export default function EventWorkspaceShell() {
           onCancel={() => setPendingDeleteActivity(null)}
           onConfirm={() => removeActivity(pendingDeleteActivity.id)}
         />
+      ) : null}
+      {eventEditOpen ? (
+        <ModalDialog title="Edit Moment" onClose={() => setEventEditOpen(false)}>
+          <EventForm initialValues={event} onSubmit={editEventDetails}
+            onCancel={() => setEventEditOpen(false)} submitLabel="Save Changes" />
+        </ModalDialog>
       ) : null}
       {pendingDeleteEvent ? (
         <ConfirmDialog

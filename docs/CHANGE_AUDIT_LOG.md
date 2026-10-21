@@ -483,3 +483,15 @@
 - Risk/rollback: None beyond existing archive user flow, manual QA needed.
 - Master: §§9,13, v2.9.1.
 - Status: SOURCE FIXED, CI PENDING.
+
+## CHG-20261021-037 | Unify event detail hero actions with premium overflow menu
+- Date (UTC): 2026-10-21.
+- Branch/commit: `OldVersion`, Git SHA in history, `main` unchanged.
+- Files: `src/features/events/components/EventWorkspaceShell.jsx`, master, audit.
+- Before/after: Tiny detached hero delete icon -> single event overflow action with Edit (existing EventForm in modal), Duplicate (fresh task/event IDs without duplicate expenses), Share (guest text or authenticated deep-link), Archive/Restore, Delete confirmation. Keep Add Memory and Greeting Card visible as dedicated contextual actions.
+- Why: Premium event detail action hierarchy and consistency with story cards.
+- Data/security: Archive reversible; cloned events do not copy real financial transactions; sharing private event links still requires account permissions.
+- Verification: CI build, manual browser and Firestore guest/account checks pending; no deployment.
+- Risk/rollback: Modal positioning/portal focus and guest share behavior require browser testing. Revert commit if necessary.
+- Master: §9, §13, v2.9.2.
+- Status: SOURCE IMPLEMENTED, CI PENDING.
