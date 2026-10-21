@@ -12,6 +12,7 @@ import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
+import useTransactionManager from '../../../hooks/useTransactionManager';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
@@ -57,7 +58,8 @@ export default function EventWorkspaceShell() {
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
   const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
-  const { expenses, loadExpenses, updateExpenseItem } = useExpenseStore();
+  const { expenses, loadExpenses } = useExpenseStore();
+  const { saveTransaction } = useTransactionManager();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
@@ -262,9 +264,21 @@ export default function EventWorkspaceShell() {
 
   const linkExistingExpense = async (expense) => {
     try {
-      await updateExpenseItem(user?.uid, isGuest, { ...expense, eventId, activityId: linkExpenseActivity.id });
+      // Use the same master + activity-mirror coordinator as Transactions.
+      // Directly updating the expense alone leaves nested activity copies stale.
+      await saveTransaction({
+        transactionKind: 'expense',
+        title: expense.name || expense.description || 'Expense',
+        amount: expense.amount,
+        category: expense.category || 'Other',
+        date: expense.date,
+        notes: expense.notes || expense.description || '',
+        eventId,
+        activityId: linkExpenseActivity.id,
+      }, { ...expense, transactionKind: 'expense' });
       setLinkExpenseActivity(null);
       setExpenseError('');
+      showToast('Transaction linked to activity', 'success');
     } catch {
       setExpenseError('Could not link this expense. Please try again.');
     }

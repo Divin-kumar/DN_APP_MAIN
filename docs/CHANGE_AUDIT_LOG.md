@@ -621,3 +621,14 @@
 - Risk/rollback: Compensation is best-effort and errors may still require manual reconciliation. Revert commit if regression detected.
 - Master: §9.1, version 2.10.1.
 - Status: SOURCE IMPLEMENTED, CI AND FIREBASE INTEGRATION PENDING.
+
+## CHG-20261021-049 | Route Link Existing Expense through unified transaction coordinator
+- Date (UTC): 2026-10-21.
+- Branch: `OldVersion` only; `main` unchanged. SHA available in Git history.
+- Paths: `src/features/events/components/EventWorkspaceShell.jsx`, Master Source of Truth, append-only audit.
+- Before -> after: Event workspace linked existing expenses with a direct expense update, leaving its nested activity record unsynchronized. Now `saveTransaction` receives an expense-type payload and original existing record, validating activity existence, updating master expense, and reconciling nested activity expense copy through the unified coordinator. Existing Link Expense workflow and existing transaction ID preserved.
+- Data/security impact: No database collection/schema migration, no new separate form, no permission elevation. Multi-document Firestore operations remain non-atomic and best-effort compensating rollback has limitations.
+- Verification: Source reviewed; CI Node tests and Vite build pending this commit; real guest/account Firebase linking and concurrency not tested.
+- Risk/rollback: Network failure during either write may still require manual reconciliation; application surfaces error and retains modal; revert commit if needed.
+- Master: §9.1, version 2.10.2.
+- Status: SOURCE IMPLEMENTED / LIVE FIREBASE QA PENDING.
