@@ -314,3 +314,16 @@
 - Risks/rollback: Mobile-specific viewport quirks still require testing; rollback source commits via Git revert if issues appear, use historical audit for traceability.
 - Master: §6.4, §13, version 2.6.4.
 - Status: PREVIOUS SOURCE COMMIT CI VERIFIED, MANUAL MOBILE QA PENDING.
+
+## CHG-20261021-023 | Attempt Firebase usability preview deployment from OldVersion
+- Date (UTC): 2026-10-21.
+- Owner/requester: Repository owner requested Firebase deployment of DN OldVersion for usability testing.
+- Branch / commit: `OldVersion`; this atomic commit tagged `[deploy-preview]` (SHA in Git history). `main` not modified.
+- Changed paths: `.github/workflows/dn-oldversion-firebase-preview.yml`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Existing Firebase Hosting production script, but no preview deploy workflow. Added opt-in OldVersion-only GitHub Actions workflow that builds/tests current code and attempts non-live Firebase preview `oldversion-usability` with 14-day expiry.
+- Rationale: Provide a shareable usability-test URL without overwriting the live site or merging branches.
+- User/data/security impact: Hosting frontend preview only, no Firestore schema/rules changes. Preview uses the real Firebase backend of the project. GitHub Actions secret `FIREBASE_SERVICE_ACCOUNT` is required but not visible to the assistant; no credential committed.
+- Verification: Prior source version passed 60/60 tests and production build. Preview job, credentials, URL, hosted UX: PENDING until this workflow runs. No local authenticated Firebase CLI available.
+- Risk/rollback: Secret may be missing, service account lacks Hosting permissions, Google Auth may reject preview hostname, URL is shareable/public to recipients. Remove/expire preview channel; live Hosting unchanged.
+- Master sections: §6.5 and §13; version 2.6.5.
+- Status: WORKFLOW COMMITTED, DEPLOYMENT RESULT PENDING. Append a subsequent audit entry with actual result, never invent a URL.

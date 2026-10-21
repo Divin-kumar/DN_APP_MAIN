@@ -1,0 +1,66 @@
+name: DN OldVersion Firebase usability preview
+# Opt-in: Only commits tagged [deploy-preview] on OldVersion deploy to non-live Hosting.
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy-preview:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[deploy-preview]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Verify tests
+        run: npm test
+      - name: Build Vite app
+        run: npm run build
+      - name: Verify Firebase deploy credentials
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        shell: bash
+        run: |
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT" ]]; then
+            echo "::error::Firebase preview blocked: configure the repository Actions secret FIREBASE_SERVICE_ACCOUNT with service-account JSON, or connect the Firebase plugin in ChatGPT."
+            echo "::error::Nothing was uploaded to Firebase."
+            exit 1
+          fi
+      - name: Deploy to non-live Firebase Hosting preview channel
+        id: firebase_preview
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: expense-tracker-divin
+          channelId: oldversion-usability
+          expires: 14d
+      - name: Publish usability preview URL
+        env:
+          PREVIEW_URL: ${{ steps.firebase_preview.outputs.details_url }}
+          PREVIEW_EXPIRES: ${{ steps.firebase_preview.outputs.expire_time_formatted }}
+        shell: bash
+        run: |
+          if [[ -z "$PREVIEW_URL" ]]; then
+            echo "::error::Hosting action did not return a preview URL."
+            exit 1
+          fi
+          {
+            echo "## DN OldVersion usability preview"
+            echo "- URL: $PREVIEW_URL"
+            echo "- Commit: $GITHUB_SHA"
+            echo "- Firebase project: expense-tracker-divin"
+            echo "- Hosting site: dn-10"
+            echo "- Channel: oldversion-usability"
+            echo "- Expiration: $PREVIEW_EXPIRES"
+            echo "- WARNING: Preview accesses the project's real Firebase backend. Prefer guest/sample data."
+          } >> "$GITHUB_STEP_SUMMARY"

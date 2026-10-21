@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.6.4** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.6.5** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -195,6 +195,19 @@ UID-scoped collection paths are **client conventions**; they do not replace depl
 **Previous automated verification (2026-10-21):** GitHub Actions [run 39645286731](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39645286731), source commit `68860bb693a594db7726b8d2b7e140afed30219c`, passed `npm test` (**60 passed, 0 failed**), `npm run build` and documentation governance. 9 known package audit advisories (3 moderate, 6 high) remain unresolved. Do not infer manual viewport/device coverage.
 Shared `src/components/common/DropdownSelect.jsx` renders options in a body-level portal rather than clipping within scrollable cards/modals. `src/utils/overlayPosition.js` computes an above/below position, clamps to visual viewport (including mobile keyboard offsets), and caps panel height; the scrollable options list has wheel/touch containment, selected-option reveal, long-value search and keyboard Arrow/Home/End/Enter/Escape/Tab behavior. Menu geometry is refreshed for trigger resize, document scroll, orientation and visualViewport resize/scroll. Trigger focus is restored on selection/Escape. DateField continues using the browser-native `input type="date"` picker so viewport positioning, mobile-sheet adaptation and calendar accessibility are provided by the user agent; unlike custom DOM menus, native picker placement cannot be dictated by application JavaScript. Manual browser testing is required for iOS/Android calendar behavior and modals.
 
+### 6.5 Firebase Hosting usability-preview deployment
+**Owner authorization:** 2026-10-21, deploy DN from `OldVersion` for usability testing. Use a separate **Firebase Hosting preview channel**, not the production/live channel.
+
+- **Project:** `expense-tracker-divin` (`.firebaserc`), **Hosting site:** `dn-10` (`firebase.json`).
+- **Branch:** `OldVersion`; `main` is unchanged.
+- **Preview channel:** `oldversion-usability`, expiring 14 days after each deployment.
+- **GitHub Actions:** `.github/workflows/dn-oldversion-firebase-preview.yml` builds and tests, then deploys to the preview channel only for a push whose commit message includes `[deploy-preview]` or an explicit workflow dispatch. Ordinary pushes are not deployments.
+- **Credential prerequisite:** encrypted repository Actions secret `FIREBASE_SERVICE_ACCOUNT` with Firebase service-account JSON and sufficient Hosting permissions. Never put credentials into Git or audit logs. If missing, the deployment job stops before uploading.
+- **Success criteria:** npm dependency install, tests and build pass; Firebase Hosting action reports success and provides a real preview URL. A passing build alone is not a deployment.
+- **Risk:** Firebase preview URLs are public to anyone holding the link. A preview app still accesses the same Firebase Auth/Firestore backend as the project, so guest/sample mode is recommended for usability sessions. Google OAuth may need a preview authorized domain.
+- **Rollback:** let the channel expire or delete it in Firebase Console. Do not promote to `live` without new approval.
+- **Actual deployment status:** unverified until deployment workflow run returns a successful Firebase preview URL. This configuration is not proof of a live site.
+
 ## 7. Testing and release contract
 
 **Available commands from `package.json`:**
@@ -306,6 +319,7 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.6.5** | **2026-10-21** | Added opt-in non-live Firebase Hosting usability-preview workflow scoped to OldVersion, with credential and validation gates | **CHG-20261021-023** |
 | **2.6.4** | **2026-10-21** | Captured verified 60-test/build/governance pass after final dropdown-scroll correction; recorded browser/mobile limitations | **CHG-20261021-022** |
 | 2.6.3 | 2026-10-21 | Prevented dropdown internal scrolling from triggering viewport reposition and selected-option jump | **CHG-20261021-021** |
 | 2.6.2 | 2026-10-21 | Aligned Transaction Type reset option label exactly with All; combined filters unchanged | **CHG-20261021-020** |
