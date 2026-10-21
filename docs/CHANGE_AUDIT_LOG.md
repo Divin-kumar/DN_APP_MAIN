@@ -562,3 +562,16 @@
 - Data: No persisted event or financial records changed.
 - Risk/rollback: Same UI semantics, no schema change. Revert commit if necessary.
 - Status: SOURCE FIXED / QA PENDING.
+
+## CHG-20261021-044 | Remove obsolete separate Income and Expense page/form modules
+- Date (UTC): 2026-10-21.
+- Owner request: Remove separate financial screens, forms and duplicate presentation.
+- Branch/commit: `OldVersion`, this commit in Git history, `main` unchanged.
+- Deleted: `src/pages/Income.jsx`, `src/pages/Expenses.jsx`, `src/components/income/IncomeForm.jsx`, `src/components/income/IncomeList.jsx`, `src/components/income/IncomeSummary.jsx`, `src/components/expenses/ExpenseForm.jsx`, `src/components/expenses/ExpenseList.jsx`, `src/components/expenses/ExpenseSummary.jsx`.
+- Before/after: Eight obsolete route-exclusive/unused legacy UI files -> removed from active source. Financials and event-linked transaction creation use the unified Transactions form; protected legacy URLs redirect. Keep typed Firebase/guest income/expense stores and services to preserve existing data.
+- Rationale: Prevent maintenance of multiple financial forms and eliminate dead code while preserving historical Git auditability.
+- Verification: Inspected current route/component references on `OldVersion`; CI build and unit tests PENDING for this removal commit.
+- Data/security: No data, Firestore collections, backup schemas or Firebase config deleted. Git history retains old source for rollback.
+- Risk/rollback: If an unexpected dynamic import references removed files, restore specific source blobs from Git history; CI should catch compile-time imports.
+- Master: §2 module source table and §13, v2.9.9.
+- Status: SOURCE REMOVED, CI PENDING.

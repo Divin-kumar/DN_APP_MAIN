@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.9.8** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.9.9** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -65,8 +65,8 @@
 | Login / guest | Google sign-in, guest session, protected route shell | `src/pages/LoginPage.jsx`, `src/context/AuthContext.jsx`, `src/context/GuestContext.jsx`, `src/routes/ProtectedRoute.jsx` |
 | Dashboard | Upcoming moment and financial overview; dashboard widgets | `src/pages/DashboardHome.jsx`, `src/features/dashboard/components/DashboardOverview.jsx` |
 | Moments / Events | CRUD, nested workspace, activities, timelines, memories, attachment metadata | `src/pages/Events.jsx`, `src/features/events/components/EventWorkspaceShell.jsx`, `src/store/useEventStore.js` |
-| Income | CRUD, category/type and summaries | `src/pages/Income.jsx`, `src/services/incomeService.js`, `src/store/useIncomeStore.js` |
-| Expenses | CRUD, financial summaries and nested expense aggregation | `src/pages/Expenses.jsx`, `src/services/expenseService.js`, `src/store/useExpenseStore.js` |
+| Income | Income transactions in unified form/list, existing typed account/guest persistence | `src/pages/Financials.jsx`, `src/components/financials/TransactionForm.jsx`, `src/services/incomeService.js`, `src/store/useIncomeStore.js` |
+| Expenses | Expense transactions in unified form/list, nested activity expense compatibility | `src/pages/Financials.jsx`, `src/components/financials/TransactionHistory.jsx`, `src/services/expenseService.js`, `src/store/useExpenseStore.js` |
 | Insights | Derived event/activity/money summaries, client-side search and JSON export | `src/pages/Insights.jsx` |
 | Settings | Preferences, reminder defaults, appearance, backup/export/import, sample scenarios | `src/pages/Settings.jsx`, `src/store/useAppStore.js` |
 | Code Lists | Account/guest configurable values and usage-sensitive updates | `src/pages/CodeLists.jsx`, `src/services/codeListService.js`, `src/utils/codeLists.js` |
@@ -325,7 +325,8 @@ The product-owner-approved financial simplification keeps *two underlying existi
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
-| **2.9.8** | **2026-10-21** | Restored activity editor access to Code Lists after removing duplicate expense drawer | **CHG-20261021-043** |
+| **2.9.9** | **2026-10-21** | Removed obsolete standalone Income/Expense pages and their eight old display/form components after reference audit | **CHG-20261021-044** |
+| 2.9.8 | 2026-10-21 | Restored activity editor access to Code Lists after removing duplicate expense drawer | **CHG-20261021-043** |
 | 2.9.7 | 2026-10-21 | Removed activity-level expense-only creation forms and routed all activity financial creation to unified Add Transaction with preserved activity context | **CHG-20261021-042** |
 | **2.9.6** | **2026-10-21** | Supported activity-to-unified-transaction deep links with preselected linked event and activity | **CHG-20261021-041** |
 | **2.9.5** | **2026-10-21** | Refined shared Activity swipe detection with axis lock, safe thresholds, and touch-only optional haptics | **CHG-20261021-040** |
