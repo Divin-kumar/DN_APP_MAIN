@@ -833,3 +833,17 @@
 - Validation: New source-contract tests; npm test/build and governance pending GitHub CI. Manual browser/swipe/performance QA not run.
 - Risk/rollback: Very narrow widths may wrap currency figures; swipe click suppression and Code List overlay behavior need device review. Revert this commit to roll back. No migration.
 - Master: §9.1 and §13, version 2.13.1.
+
+## CHG-20261021-065 | Rebuild shared card gestures after iPhone screenshot defects
+- Date (UTC): 2026-10-21.
+- Actor/requester: DN owner. Real iPhone Safari screenshots of Moment detail and Code Lists exposed nonworking cards, extra Delete row and tiny hero icons.
+- Branch / commit / PR: `OldVersion` only; pending commit SHA. Protected `main` unchanged; no deployment requested/performed.
+- Exact changed paths: `src/components/common/SwipeActionCard.jsx`, `src/components/events/ActivityList.jsx`, `src/components/financials/TransactionHistory.jsx`, `src/pages/CodeLists.jsx`, `src/features/events/components/EventWorkspaceShell.jsx`, `src/utils/swipeGestures.js`, `src/utils/swipeGestures.test.mjs`, `src/utils/premiumUxContract.test.mjs`, `src/design-system.css`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Separate swipe stacks and conflicting Code List slide/drop-down panels were used by different screens; now all major editable cards share a consistent Touch Events + Pointer Events gesture controller and a stationary glass overlay with visible 48px action buttons. Old Code List separate action divs no longer rendered. Moment header two top-right utility buttons display 21px Lucide icons and text in 48px minimum targets. Card grid/list layout structure retained. Left reveals contextual actions, right reveals Delete; no destructive swipe auto-execution.
+- Why: Automated source tests had passed while actual UI was visibly broken. A common card primitive reduces drift and removes the conflicting sliding-row DOM layouts.
+- User/data/security/compatibility impact: Presentation/event handling only; unchanged financial/guest/account storage and delete confirmation handlers, IDs and backup schema, no migration, Firebase rules change or hosting deployment.
+- Verification: Added gesture direction and source-contract tests; `npm test`, `npm run build`, governance checks PENDING GitHub Actions. Real iPhone/Android/VoiceOver/TalkBack interactions, frame-time 60fps measurement and visual screenshot comparison NOT RUN on the new source.
+- Risks and rollback: Short drag plus accidental tap behavior and horizontal scrolling of multi-action trays require mobile device testing. Underlying old style definitions remain but the final design system overrides the card surfaces. Revert commit on OldVersion to restore previous source; no database rollback.
+- Master sections updated: §9.1 and §13 v2.14.0.
+- Status: SOURCE CHANGES PENDING CI AND MOBILE ACCEPTANCE.
+- Follow-ups: Compare screenshot at 375/390/414px, test iOS touch/vertical scroll, nested action buttons and no accidental activation, inspect both themes and long Moment names; verify live Firebase and security separately.

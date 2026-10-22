@@ -21,32 +21,42 @@ test('Finance supports both legacy financials URL and Transactions deep links', 
 });
 test('transaction cards reveal Edit and Delete with no overflow three-dot button', () => {
   const component = read('../components/financials/TransactionHistory.jsx');
-  assert.match(component, /resolveDirectionalSwipe/);
-  assert.match(component, /className="dn-transaction-edit"/);
-  assert.match(component, /className="dn-transaction-delete"/);
+  assert.match(component, /<SwipeActionCard/);
+  assert.match(component, /label: 'Edit'/);
+  assert.match(component, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
   assert.match(component, /onKeyDown=\{/);
   assert.doesNotMatch(component, /Ellipsis|dn-transaction-overflow/);
 });
-test('Moment card and detail header remove three-dot menu', () => {
-  const events = read('../pages/Events.jsx');
-  const hero = read('../features/events/components/EventWorkspaceShell.jsx');
-  assert.doesNotMatch(events, /EventActionMenu/);
-  assert.doesNotMatch(hero, /EventActionMenu/);
-  assert.match(events, /<SwipeActionCard/);
-  assert.match(hero, /<SwipeActionCard as="section"/);
-  assert.match(read('../components/events/ActivityList.jsx'), /event-activity-actions-delete/);
-  assert.match(read('../pages/CodeLists.jsx'), /code-list-actions-delete/);
+test('all four editable card surfaces share the same overlay component', () => {
+  const moments = read('../pages/Events.jsx');
+  const header = read('../features/events/components/EventWorkspaceShell.jsx');
+  const transactions = read('../components/financials/TransactionHistory.jsx');
+  const activities = read('../components/events/ActivityList.jsx');
+  const lists = read('../pages/CodeLists.jsx');
+  for (const src of [moments, header, transactions, activities, lists]) {
+    assert.match(src, /<SwipeActionCard/);
+    assert.doesNotMatch(src, /EventActionMenu/);
+  }
+  assert.doesNotMatch(lists, /code-list-actions-(other|delete)|translateX/);
+  assert.doesNotMatch(activities, /event-activity-actions-(other|delete)/);
+  assert.doesNotMatch(transactions, /resolveTransactionSwipe|dragConstraints|onDragEnd/);
+  const surface = read('../components/common/SwipeActionCard.jsx');
+  assert.match(surface, /onTouchStartCapture=/);
+  assert.match(surface, /onTouchEndCapture=/);
+  assert.match(surface, /onPointerDownCapture=/);
+  assert.match(surface, /onPointerUpCapture=/);
+  assert.match(surface, /onClickCapture=/);
+  assert.match(surface, /aria-label=\{\`Delete/);
 });
 test('Flat Moment list removes timeline rail and dots, Grid selector remains', () => {
   assert.match(read('../pages/Events.jsx'), /life-journey-cards/);
   assert.match(read('../design-system.css'), /border-left:0 !important/);
   assert.match(read('../design-system.css'), /event-story-card::before \{ display:none !important/);
 });
-test('Finance separates left Edit and right Delete', () => {
-  const c = read('../components/financials/TransactionHistory.jsx');
-  assert.match(c, /dn-transaction-actions-other/);
-  assert.match(c, /dn-transaction-actions-delete/);
-  assert.match(c, /resolveDirectionalSwipe/);
+test('Finance card delegates Edit and Delete through the same surface', () => {
+  const card = read('../components/financials/TransactionHistory.jsx');
+  assert.match(card, /otherActions=\{\[\{ label: 'Edit'/);
+  assert.match(card, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
 });
 test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
   const page = read('../pages/Financials.jsx');
@@ -70,7 +80,7 @@ test('linked Moment label displays even without an activity and swipe Delete rem
   assert.match(card, /transaction\.eventId \? <small>Moment: \{eventTitle\}<\/small>/);
   assert.match(card, /activityTitle \? <small>Activity: \{activityTitle\}<\/small>/);
   assert.match(card, /onDelete\(transaction\)/);
-  assert.match(card, /className="dn-transaction-delete"/);
+  assert.match(card, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
 });
 test('moment-only expenses can be deleted without requiring an expired activity mirror', () => {
   const manager = read('../hooks/useTransactionManager.js');
@@ -79,17 +89,14 @@ test('moment-only expenses can be deleted without requiring an expired activity 
   assert.match(manager, /await deleteExpenseItem\(uid, isGuest, id\)/);
 });
 
-test('swipe implementation uses a defined transaction resolver and Moment pointer handlers', () => {
-  const finance = read('../components/financials/TransactionHistory.jsx');
-  assert.match(finance, /const next = resolveDirectionalSwipe\(/);
-  assert.doesNotMatch(finance, /resolveTransactionSwipe/);
-  const moment = read('../components/common/SwipeActionCard.jsx');
-  assert.match(moment, /onPointerUp=\{handlePointerUp\}/);
-  assert.match(moment, /resolveSwipeGesture\(start/);
-  assert.match(moment, /onPointerCancel=/);
+test('gesture completion is shared across Moment and Transaction button targets', () => {
+  const surface = read('../components/common/SwipeActionCard.jsx');
+  assert.match(surface, /resolveSwipeGesture\(start/);
+  assert.match(surface, /onTouchEndCapture=/);
+  assert.match(surface, /onClickCapture=/);
 });
-test('Finance totals stay on one row and Code Lists no longer translate whole rows', () => {
+test('Finance totals stay in one row and Code Lists keep the label in place', () => {
   const css = read('../design-system.css');
   assert.match(css, /\.dn-finance-summary-grid \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
-  assert.match(css, /\.code-list-item\.is-open-delete \.code-list-row,[\s\S]*?transform:none !important/);
+  assert.match(css, /\.code-list-item \.code-list-row,[\s\S]*?transform:none !important/);
 });

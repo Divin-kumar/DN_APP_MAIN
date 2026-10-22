@@ -1,8 +1,6 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus, Trash2 } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus } from 'lucide-react';
 import DropdownSelect from '../common/DropdownSelect';
-import { resolveDirectionalSwipe } from '../../utils/swipeGestures';
+import SwipeActionCard from '../common/SwipeActionCard';
 
 const money = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -16,31 +14,12 @@ const dateLabel = (date) => {
 };
 
 export function TransactionCard({ transaction, events = [], onEdit, onDelete, compact = false }) {
-  const [open, setOpen] = useState(null);
-  const cardRef = useRef(null);
-  const pointerType = useRef('mouse');
-  const reducedMotion = useReducedMotion();
-  useEffect(() => {
-    if (!open) return undefined;
-    const closeOutside = (event) => {
-      if (!cardRef.current?.contains(event.target)) setOpen(null);
-    };
-    document.addEventListener('pointerdown', closeOutside);
-    return () => document.removeEventListener('pointerdown', closeOutside);
-  }, [open]);
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
   const activity = event?.activities?.find((item) => item.id === transaction.activityId);
   const eventTitle = event?.name || transaction.eventTitle || (transaction.eventId ? 'Unavailable moment' : '');
   const activityTitle = activity?.title || transaction.activityTitle;
   const category = isIncome ? transaction.type : transaction.category;
-  const reveal = (next, touch = false) => {
-    // Vibration is optional and unsupported on iOS Safari; never block the UI.
-    if (next && next !== open && touch) {
-      try { navigator.vibrate?.(8); } catch { /* Unsupported device */ }
-    }
-    setOpen(next);
-  };
 
   if (compact) {
     return (
@@ -62,34 +41,12 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
   }
 
   return (
-    <article ref={cardRef} className={`dn-transaction-card${open ? ` is-actions-${open}` : ''}`}
-      role="listitem" tabIndex={0}
-      aria-label={`${transaction.name || transaction.title || 'Transaction'}. Swipe left for Edit, right for Delete; arrow keys reveal actions.`}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') { reveal(null); return; }
-        if (event.target !== event.currentTarget) return;
-        if (event.key === 'ArrowLeft') { event.preventDefault(); reveal('other'); }
-        if (event.key === 'ArrowRight') { event.preventDefault(); reveal('delete'); }
-        if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); reveal(open === 'other' ? null : 'other'); }
-      }}>
-      <div className="dn-transaction-card-actions dn-transaction-actions-other" aria-hidden={open !== 'other'}>
-        <button type="button" className="dn-transaction-edit" onClick={() => { reveal(null); onEdit(transaction); }} tabIndex={open === 'other' ? 0 : -1}><Pencil size={17} />Edit</button>
-      </div>
-      <div className="dn-transaction-card-actions dn-transaction-actions-delete" aria-hidden={open !== 'delete'}>
-        <button type="button" className="dn-transaction-delete" onClick={() => { reveal(null); onDelete(transaction); }} tabIndex={open === 'delete' ? 0 : -1}><Trash2 size={17} />Delete</button>
-      </div>
-      <motion.div className="dn-transaction-card-core" drag={reducedMotion ? false : 'x'}
-        dragDirectionLock dragConstraints={{ left: -76, right: 76 }} dragElastic={0.16} dragMomentum={false}
-        style={{ touchAction: 'pan-y' }}
-        onPointerDown={(event) => { pointerType.current = event.pointerType; }}
-        animate={{ x: open === 'other' ? -76 : open === 'delete' ? 76 : 0 }}
-        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 380, damping: 34, mass: 0.82 }}
-        onDragEnd={(_, info) => {
-          const next = resolveDirectionalSwipe({
-            offsetX: info.offset.x, velocityX: info.velocity.x, wasOpen: open,
-          });
-          reveal(next, pointerType.current === 'touch');
-        }}>
+    <SwipeActionCard as="article" role="listitem" className="dn-transaction-card"
+      mainClassName="dn-transaction-swipe-content"
+      label={transaction.name || transaction.title || 'Transaction'} openOnTap
+      otherActions={[{ label: 'Edit', icon: Pencil, onClick: () => onEdit(transaction) }]}
+      onDelete={() => onDelete(transaction)}>
+      <div className="dn-transaction-card-core">
         <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
           {isIncome ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
         </span>
@@ -104,10 +61,9 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
             {isIncome ? '+' : '−'} {money(transaction.amount)}
           </strong>
-
         </div>
-      </motion.div>
-    </article>
+      </div>
+    </SwipeActionCard>
   );
 }
 

@@ -2158,3 +2158,133 @@ html[data-theme] .code-list-item .code-list-actions-delete {
   backdrop-filter:blur(18px); -webkit-backdrop-filter:blur(18px);
 }
 html[data-theme] .dn-swipe-surface .dn-swipe-main { touch-action:pan-y; }
+
+/* v2.14: one stable-card gesture system. Glass actions appear in place rather
+   than pushing content, growing the row or translating cards off screen. */
+html[data-theme] .dn-swipe-surface {
+  position:relative !important; display:block; isolation:isolate;
+  min-width:0; overflow:hidden; touch-action:pan-y;
+}
+html[data-theme] .dn-swipe-main {
+  position:relative; z-index:1; display:block; width:100%;
+  min-width:0; touch-action:pan-y; will-change:transform;
+}
+html[data-theme] .dn-swipe-tray,
+html[data-theme] .dn-swipe-surface .dn-swipe-tray-other,
+html[data-theme] .dn-swipe-surface .dn-swipe-tray-delete {
+  position:absolute !important; inset:0 !important; z-index:4 !important;
+  width:100% !important; height:100% !important; min-height:0;
+  box-sizing:border-box; display:flex !important; align-items:center;
+  padding:5px 9px !important; margin:0;
+  opacity:0; visibility:hidden; pointer-events:none;
+  transform:translateY(6px) scale(.985);
+  transition:opacity .23s ease, transform .34s cubic-bezier(.2,.86,.25,1),
+             visibility .23s !important;
+  background:color-mix(in srgb,var(--color-card-raised) 94%,transparent) !important;
+  backdrop-filter:blur(18px) saturate(1.2) !important;
+  -webkit-backdrop-filter:blur(18px) saturate(1.2) !important;
+}
+html[data-theme] .dn-swipe-surface .dn-swipe-tray-other { justify-content:flex-end; }
+html[data-theme] .dn-swipe-surface .dn-swipe-tray-delete { justify-content:flex-start; }
+html[data-theme] .dn-swipe-surface.dn-swipe-open-other .dn-swipe-tray-other,
+html[data-theme] .dn-swipe-surface.dn-swipe-open-delete .dn-swipe-tray-delete {
+  visibility:visible !important; opacity:1 !important; pointer-events:auto !important;
+  transform:translateY(0) scale(1) !important;
+}
+html[data-theme] .dn-swipe-tray-inner {
+  display:flex; align-items:center; justify-content:flex-end;
+  gap:8px; width:max-content; max-width:100%; height:100%;
+  min-width:0; overflow-x:auto; overscroll-behavior-inline:contain;
+  scrollbar-width:none; scroll-snap-type:x proximity;
+}
+html[data-theme] .dn-swipe-tray-inner::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-swipe-tray-delete .dn-swipe-tray-inner { justify-content:flex-start; }
+html[data-theme] .dn-swipe-tray .dn-swipe-action {
+  display:flex !important; flex:0 0 auto !important;
+  width:auto !important; min-width:68px !important; min-height:48px !important;
+  max-width:160px; height:auto !important; align-items:center; justify-content:center;
+  flex-direction:column; gap:5px;
+  padding:7px 11px !important; border-radius:14px !important;
+  border:1px solid var(--color-border) !important;
+  color:var(--color-text) !important; font-size:12px !important;
+  font-weight:700; text-align:center; white-space:nowrap;
+  scroll-snap-align:end; cursor:pointer;
+  background:color-mix(in srgb,var(--color-primary) 12%,var(--color-card)) !important;
+  box-shadow:0 4px 16px color-mix(in srgb,var(--color-bg) 28%,transparent);
+}
+html[data-theme] .dn-swipe-tray .dn-swipe-action svg { width:21px !important; height:21px !important; flex:0 0 auto; stroke-width:1.9; }
+html[data-theme] .dn-swipe-tray .dn-swipe-action.is-danger {
+  color:var(--color-danger) !important;
+  border-color:color-mix(in srgb,var(--color-danger) 40%,var(--color-border)) !important;
+  background:color-mix(in srgb,var(--color-danger) 13%,var(--color-card)) !important;
+}
+html[data-theme] .dn-swipe-tray .dn-swipe-action:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:1px;
+}
+/* Competing legacy code-list action panels no longer render. */
+html[data-theme] .code-list-item .dn-swipe-main,
+html[data-theme] .code-list-item .code-list-row,
+html[data-theme] .code-list-item:hover .code-list-row,
+html[data-theme] .code-list-item:focus-within .code-list-row {
+  transform:none !important; padding-left:var(--space-lg) !important;
+  padding-right:var(--space-lg) !important; transition:none !important;
+}
+html[data-theme] .code-list-item .dn-swipe-tray {
+  min-height:52px; border-radius:inherit;
+}
+html[data-theme] .code-list-item .code-list-row {
+  position:relative; z-index:1; display:flex; width:100%;
+  background:var(--color-card) !important;
+}
+html[data-theme] .code-list-item + .code-list-item { border-top:1px solid var(--color-border); }
+html[data-theme] .event-activity-card .event-activity-main,
+html[data-theme] .event-activity-card:hover .event-activity-main,
+html[data-theme] .event-activity-card:focus-within .event-activity-main {
+  transform:none !important; transition:none !important;
+}
+html[data-theme] .event-activity-card .dn-swipe-main {
+  display:block !important; width:100%;
+}
+html[data-theme] .dn-transaction-card .dn-swipe-main,
+html[data-theme] .dn-transaction-card .dn-transaction-card-core {
+  transform:none !important; width:100%;
+}
+html[data-theme] .dn-transaction-card .dn-swipe-main { display:block; }
+/* Moment list/grid and detail hero preserve layout; only the action overlay changes. */
+html[data-theme] .dn-swipe-surface .event-story-main,
+html[data-theme] .dn-swipe-surface:hover .event-story-main,
+html[data-theme] .life-journey-cards .dn-swipe-surface .event-story-main {
+  transform:none !important; transition:none !important;
+}
+html[data-theme] .dn-moment-hero-swipe .dn-swipe-main { display:block; }
+html[data-theme] .dn-moment-hero-swipe .dn-swipe-main > .event-moment-hero { width:100%; }
+html[data-theme] .event-moment-top-actions {
+  display:flex !important; align-items:center; justify-content:flex-end;
+  flex-wrap:wrap; gap:8px !important; width:auto;
+}
+html[data-theme] .event-moment-top-actions .event-moment-memory-action,
+html[data-theme] .event-moment-top-actions .event-moment-copy-action {
+  display:inline-flex !important; flex:0 0 auto; align-items:center; justify-content:center;
+  gap:8px; width:auto !important; min-width:48px !important;
+  height:auto !important; min-height:48px !important;
+  padding:0 13px !important; border-radius:14px !important;
+  border:1px solid color-mix(in srgb,var(--color-primary) 52%,var(--color-border)) !important;
+  background:color-mix(in srgb,var(--color-card-raised) 90%,transparent) !important;
+  color:var(--color-text) !important;
+  box-shadow:0 5px 18px rgba(0,0,0,.16);
+}
+html[data-theme] .event-moment-top-actions button svg {
+  width:21px !important; height:21px !important; color:var(--color-primary) !important;
+  stroke-width:1.9 !important;
+}
+html[data-theme] .event-moment-top-actions button span {
+  display:inline !important; font-size:12px !important; font-weight:750;
+  color:var(--color-text) !important; white-space:nowrap;
+}
+@media (max-width:370px) {
+  html[data-theme] .event-moment-top-actions button { gap:5px !important; padding:0 10px !important; }
+  html[data-theme] .event-moment-top-actions button span { font-size:11px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-swipe-tray { transition:none !important; transform:none !important; }
+}

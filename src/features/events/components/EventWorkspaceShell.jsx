@@ -538,8 +538,8 @@ export default function EventWorkspaceShell() {
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
           <div className="event-moment-top-actions">
-            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={15} /><span>Add memory</span></button>
-            <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={15} /><span>Greeting card</span></button>
+            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={21} strokeWidth={1.9} /><span>Memory</span></button>
+            <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={21} strokeWidth={1.9} /><span>Greeting</span></button>
 
           </div>
         </div>

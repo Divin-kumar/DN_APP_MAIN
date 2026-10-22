@@ -21,7 +21,7 @@ import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists';
-import { resolveSwipeGesture } from '../utils/swipeGestures';
+import SwipeActionCard from '../components/common/SwipeActionCard';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -55,16 +55,10 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const incomes = useIncomeStore((state) => state.incomes);
   const [draft, setDraft] = useState('');
   const [draftLabel, setDraftLabel] = useState('');
-  const [swipedRow, setSwipedRow] = useState(null);
   const [editingValue, setEditingValue] = useState(null);
   const [warningValue, setWarningValue] = useState(null);
   const [momentTypeEditor, setMomentTypeEditor] = useState(null);
   const isMomentTypeEditorOpen = Boolean(momentTypeEditor);
-  const swipeStartRef = useRef(null);
-  const swipeMovedRef = useRef(false);
-  const swipeAxisRef = useRef(null);
-  const swipeActionRef = useRef(null);
-  const sectionRef = useRef(null);
   const momentTypeTitleRef = useRef(null);
 
   useEffect(() => {
@@ -72,21 +66,6 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const frameId = window.requestAnimationFrame(() => momentTypeTitleRef.current?.focus());
     return () => window.cancelAnimationFrame(frameId);
   }, [isMomentTypeEditorOpen]);
-
-  useEffect(() => {
-    if (!swipedRow) return undefined;
-
-    const handleOutsidePointerDown = (event) => {
-      const target = event.target;
-      const clickedRow = target instanceof Element ? target.closest('.code-list-item') : null;
-      if (!sectionRef.current?.contains(target) || !clickedRow || !sectionRef.current.contains(clickedRow)) {
-        setSwipedRow(null);
-      }
-    };
-
-    document.addEventListener('pointerdown', handleOutsidePointerDown);
-    return () => document.removeEventListener('pointerdown', handleOutsidePointerDown);
-  }, [swipedRow]);
 
   const entries = useMemo(() => {
     const source = Array.isArray(adminValues[listKey])
@@ -184,23 +163,19 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     const usageCount = usageMap[entry.value] || 0;
     if (usageCount === 0) {
       updateEntries(entries.filter((item) => item.value !== entry.value));
-      setSwipedRow(null);
       return;
     }
 
     setWarningValue({ entry, usageCount, label: entry.label });
-    setSwipedRow(null);
   };
 
   const handleDisable = (entry) => {
     updateEntries(entries.map((item) => (item.value === entry.value ? { ...item, active: false, isActive: false } : item)));
-    setSwipedRow(null);
   };
 
   const handleActivate = (entry) => {
     const nextEntries = entries.map((item) => (item.value === entry.value ? { ...item, active: true, isActive: true } : item));
     updateEntries(nextEntries);
-    setSwipedRow(null);
   };
 
   const handleRename = (entry, nextValue) => {
@@ -222,106 +197,42 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       return { ...item, value: trimmed, label: trimmed };
     }));
     setEditingValue(null);
-    setSwipedRow(null);
-  };
-
-  const handlePointerDown = (event, value) => {
-    swipeStartRef.current = { value, x: event.clientX, y: event.clientY };
-    swipeMovedRef.current = false;
-    swipeAxisRef.current = null;
-    swipeActionRef.current = null;
-    // Do not capture the pointer: the document must remain vertically scrollable.
-  };
-
-  const handlePointerMove = (event) => {
-    const gesture = swipeStartRef.current;
-    if (!gesture) return;
-    const result = resolveSwipeGesture(
-      gesture, { x: event.clientX, y: event.clientY }, swipeAxisRef.current,
-    );
-    swipeAxisRef.current = result.axis;
-    if (result.moved) swipeMovedRef.current = true;
-    if (result.action && swipeActionRef.current !== result.action) {
-      swipeActionRef.current = result.action;
-      if (event.pointerType === 'touch') {
-        try { navigator.vibrate?.(8); } catch { /* Haptics optional */ }
-      }
-      setSwipedRow({ value: gesture.value, action: result.action });
-    }
-  };
-
-  const handlePointerUp = () => {
-    swipeStartRef.current = null;
-    swipeAxisRef.current = null;
-    swipeActionRef.current = null;
   };
 
   const renderEntry = (entry) => {
     const usageCount = usageMap[entry.value] || 0;
-    const swipedRowMatches = swipedRow?.value === entry.value;
-    const isOtherOpen = swipedRowMatches && swipedRow.action === 'other';
-    const isDeleteOpen = swipedRowMatches && swipedRow.action === 'delete';
     const isInactive = entry.active === false || entry.isActive === false;
     const hasStatusAction = isInactive || usageCount > 0;
 
     return (
-      <div key={`${listKey}-${entry.value}`} className={`code-list-item ${isOtherOpen ? 'is-open-other' : ''} ${isDeleteOpen ? 'is-open-delete' : ''} ${isInactive ? 'is-inactive' : ''}`} style={{ '--code-list-actions-width': hasStatusAction ? '144px' : '72px' }}>
-        <div className="code-list-actions code-list-actions-other" aria-hidden={!isOtherOpen}>
-          <button type="button" className="code-list-action code-list-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => {
-            if (listKey === 'eventTypes') {
-              openMomentTypeEditor(entry);
-            } else {
-              setEditingValue(entry);
-            }
-            setSwipedRow(null);
-          }}>
-            <PencilLine size={14} /> Edit
-          </button>
-          {isInactive ? (
-            <button type="button" className="code-list-action code-list-activate" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleActivate(entry)}>
-              <Check size={14} /> Activate
-            </button>
-          ) : usageCount > 0 ? (
-            <button type="button" className="code-list-action code-list-disable" tabIndex={isOtherOpen ? 0 : -1} onClick={() => handleDisable(entry)}>
-              <ShieldOff size={14} /> Disable
-            </button>
-          ) : null}
-
-        </div>
-        <div className="code-list-actions code-list-actions-delete" aria-hidden={!isDeleteOpen}>
-          <button type="button" className="code-list-action code-list-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => handleDelete(entry)}><Trash2 size={14} /> Delete</button>
-        </div>
-
-        <button
-          type="button"
-          className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Swipe left for Edit/status, right for Delete.`}
-          aria-expanded={Boolean(swipedRowMatches)}
-          onKeyDown={(event) => { if (event.key === 'Escape') setSwipedRow(null); if (event.key === 'ArrowLeft') { event.preventDefault(); setSwipedRow({ value: entry.value, action: 'other' }); } if (event.key === 'ArrowRight') { event.preventDefault(); setSwipedRow({ value: entry.value, action: 'delete' }); } } }
-          onClick={(event) => {
-            if (swipeMovedRef.current) {
-              event.preventDefault();
-              swipeMovedRef.current = false;
-              return;
-            }
-            setSwipedRow((current) => (current?.value === entry.value ? null : { value: entry.value, action: 'other' }));
-          }}
-          onPointerDown={(event) => handlePointerDown(event, entry.value)}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerUp}
-        >
+      <SwipeActionCard key={`${listKey}-${entry.value}`} as="div"
+        className={`code-list-item${isInactive ? ' is-inactive' : ''}`}
+        mainClassName="code-list-swipe-content" label={entry.label} openOnTap
+        otherActions={[
+          { label: 'Edit', icon: PencilLine, onClick: () => {
+            if (listKey === 'eventTypes') openMomentTypeEditor(entry);
+            else setEditingValue(entry);
+          } },
+          ...(isInactive ? [{
+            label: 'Activate', icon: Check, onClick: () => handleActivate(entry),
+          }] : hasStatusAction ? [{
+            label: 'Disable', icon: ShieldOff, onClick: () => handleDisable(entry),
+          }] : []),
+        ]}
+        onDelete={() => handleDelete(entry)}>
+        <button type="button" className="code-list-row"
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap for actions; swipe left to edit, right to delete.`}>
           <span className="code-list-main">
             <span className="code-list-text">{entry.label}</span>
             {isInactive ? <span className="code-list-status">Inactive</span> : null}
           </span>
         </button>
-      </div>
+      </SwipeActionCard>
     );
   };
 
   return (
-    <section ref={sectionRef} className={`settings-section code-list-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
+    <section className={`settings-section code-list-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
       <div className="settings-section-heading">
         <span className="settings-accordion-icon"><Hash size={18} /></span>
         <div>

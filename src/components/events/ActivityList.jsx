@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 // Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
-import useSwipeActions from '../../hooks/useSwipeActions';
+import SwipeActionCard from '../common/SwipeActionCard';
 
 // Main component. It receives the event name, the list of activities, money connected to each activity,
 // and callback functions that tell the parent screen what action the user wants to do.
@@ -32,8 +32,6 @@ export default function ActivityList({
   // This state keeps track of which activity's expense list is open.
   // Example: { "activity-123": true } means the user opened the expense panel for one task.
   const [expandedExpenses, setExpandedExpenses] = useState({});
-  const [openActivityId, setOpenActivityId] = useState(null);
-  const { action, setAction, swipeRootRef, handlePointerDown, handlePointerMove, handlePointerUp, consumeSwipeClick, close } = useSwipeActions({ surfaceSelector: '.event-activity-card' });
 
   // If there are no tasks in this event, show a friendly empty state instead of an empty list.
   if (!allActivities.length) {
@@ -67,7 +65,7 @@ export default function ActivityList({
 
   // Main UI: the progress summary and list of all activities.
   return (
-    <div ref={swipeRootRef} className="event-activity-content">
+    <div className="event-activity-content">
       {/* This summary tells the user how many tasks are done out of total tasks. */}
       <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} active activities complete`}>
         <div>
@@ -110,72 +108,20 @@ export default function ActivityList({
             ? `${activityExpenses.length} linked ${activityExpenses.length === 1 ? 'expense' : 'expenses'} · ₹${totalSpent.toLocaleString('en-IN')}`
             : '';
 
-          const isOtherOpen = openActivityId === activity.id && action === 'other';
-          const isDeleteOpen = openActivityId === activity.id && action === 'delete';
-          const isOpen = isOtherOpen || isDeleteOpen;
-          const trayWidth = [onAddExpense, onEdit, onToggleCancelled].filter(Boolean).length * 68;
-
           return (
-            <article
-              key={activity.id}
-              role="group"
-              tabIndex={0}
-              style={{ '--dn-activity-tray-width': `${trayWidth}px` }}
-              aria-label={`${activity.title || 'Untitled activity'}${isOpen ? ', actions shown' : ', swipe left for actions or right for Delete'}`}
-              className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}${isOpen ? ` is-open-${action}` : ''}`}
-              onPointerDown={(event) => {
-                handlePointerDown(event);
-                if (!event.target.closest('button')) {
-                  if (openActivityId !== activity.id) close();
-                  setOpenActivityId(activity.id);
-                } else if (!event.target.closest('.event-activity-actions')) {
-                  close();
-                  setOpenActivityId(null);
-                }
-              }}
-              onPointerMove={handlePointerMove}
-              onPointerUp={handlePointerUp}
-              onPointerCancel={handlePointerUp}
-              onClick={(event) => {
-                if (event.target.closest('button')) return;
-                if (consumeSwipeClick(event)) return;
-                if (openActivityId === activity.id && action) {
-                  close();
-                  setOpenActivityId(null);
-                } else {
-                  setOpenActivityId(activity.id);
-                  setAction('other');
-                }
-              }}
-              onKeyDown={(event) => {
-                if (event.target !== event.currentTarget) return;
-                if (event.key === 'Escape') { close(); setOpenActivityId(null); return; }
-                if (event.key === 'ArrowLeft') { event.preventDefault(); setOpenActivityId(activity.id); setAction('other'); return; }
-                if (event.key === 'ArrowRight') { event.preventDefault(); setOpenActivityId(activity.id); setAction('delete'); return; }
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  if (openActivityId === activity.id && action) {
-                    close();
-                    setOpenActivityId(null);
-                  } else {
-                    setOpenActivityId(activity.id);
-                    setAction('other');
-                  }
-                }
-              }}
-            >
-              <div className="event-activity-actions event-activity-actions-other" aria-hidden={!isOtherOpen}>
-                {onAddExpense ? <button type="button" className="event-activity-action-expense" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onAddExpense(activity); close(); }} aria-label={`Add transaction to ${activity.title}`}><IndianRupee size={15} /><span>Transaction</span></button> : null}
-                {onEdit ? <button type="button" className="event-activity-action-edit" tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onEdit(activity); close(); }} aria-label={`Edit ${activity.title}`}><Pencil size={15} /><span>Edit</span></button> : null}
-                {onToggleCancelled ? <button type="button" className={`event-activity-action-cancel ${isCancelled ? 'is-restore' : ''}`} tabIndex={isOtherOpen ? 0 : -1} onClick={() => { onToggleCancelled(activity.id); close(); }} aria-label={`${isCancelled ? 'Restore' : 'Cancel'} ${activity.title}`}>
-                  {isCancelled ? <RotateCcw size={15} /> : <XCircle size={15} />}<span>{isCancelled ? 'Restore' : 'Cancel'}</span>
-                </button> : null}
-                
-              </div>
-              <div className="event-activity-actions event-activity-actions-delete" aria-hidden={!isDeleteOpen}>
-                {onDelete ? <button type="button" className="event-activity-action-delete" tabIndex={isDeleteOpen ? 0 : -1} onClick={() => { onDelete(activity.id); close(); }} aria-label={`Delete ${activity.title}`}><Trash2 size={15} /><span>Delete</span></button> : null}
-              </div>
-
+            <SwipeActionCard key={activity.id} as="article"
+              className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
+              label={activity.title || 'Untitled activity'} openOnTap
+              otherActions={[
+                ...(onAddExpense ? [{ label: 'Transaction', icon: IndianRupee, onClick: () => onAddExpense(activity) }] : []),
+                ...(onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
+                ...(onToggleCancelled ? [{
+                  label: isCancelled ? 'Restore' : 'Cancel',
+                  icon: isCancelled ? RotateCcw : XCircle,
+                  onClick: () => onToggleCancelled(activity.id),
+                }] : []),
+              ]}
+              onDelete={onDelete ? () => onDelete(activity.id) : undefined}>
               <div className="event-activity-main">
                 {onToggleComplete && !isCancelled ? (
                   <button
@@ -229,7 +175,7 @@ export default function ActivityList({
                 ) : null}
                 </div>
               </div>
-            </article>
+            </SwipeActionCard>
           );
         })}
       </div>
