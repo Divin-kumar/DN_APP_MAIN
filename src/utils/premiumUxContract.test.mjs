@@ -171,7 +171,8 @@ test('mobile editors avoid Safari focus zoom across forms without inflating othe
   assert.match(rule, /html\[data-theme\] \[contenteditable="true"\]/);
   assert.match(rule, /font-size: 16px !important/);
   assert.equal(rule.indexOf('font-size: 16px !important'), rule.lastIndexOf('font-size: 16px !important'));
-  assert.ok(css.endsWith(rule), 'The anti-zoom override should remain last in the design stylesheet');
+  assert.ok(css.indexOf('v2.15.4: iPhone Safari Greeting Template', marker) > marker,
+    'The general mobile editor floor must precede targeted field overrides');
   const financeForm = read('../components/financials/TransactionForm.jsx');
   assert.match(financeForm, /<input type="text"/);
   assert.match(financeForm, /<input type="number"/);
@@ -201,7 +202,8 @@ test('Moment type Greeting Template keeps a 16px editor font on mobile despite o
   assert.match(override, /html\[data-theme\] \.moment-type-form textarea/);
   assert.match(override, /html\[data-theme\] \.settings-greeting-editor-grid textarea/);
   assert.match(override, /font-size: 16px !important/);
-  assert.ok(css.endsWith(override), 'Guard should be the last CSS rule');
+  assert.ok(css.indexOf('v2.15.5 completion', patch) > patch,
+    'The targeted Moment overrides must precede the remaining compact search-field overrides');
 });
 test('the final iPhone anti-zoom correction does not restrict viewport magnification', () => {
   const html = read('../../index.html');
@@ -211,4 +213,26 @@ test('the final iPhone anti-zoom correction does not restrict viewport magnifica
   assert.match(css, /--font-body: 14px/);
   // Buttons, labels and previews still use the compact typography token.
   assert.doesNotMatch(css.slice(css.lastIndexOf('v2.15.4: iPhone Safari Greeting Template')), /\bbutton\b|\.settings-preview-box/);
+});
+
+test('compact search and editor fields cannot reintroduce sub-16px mobile zoom', () => {
+  const css = read('../design-system.css');
+  const guard = css.lastIndexOf('v2.15.5 completion');
+  const base = css.indexOf('iOS Safari form-focus zoom prevention');
+  const moment = css.lastIndexOf('v2.15.4: iPhone Safari Greeting Template');
+  assert.ok(guard > moment && moment > base);
+  const cssGuard = css.slice(guard);
+  for (const selector of [
+    '.event-search input',
+    '.activity-search-field input',
+    '.insights-tools input',
+    '.code-list-add-row input',
+    '.settings-tag-input-row input',
+    '.activity-event-search input',
+  ]) {
+    assert.ok(cssGuard.includes('html[data-theme] ' + selector), selector + ' should have a mobile font floor');
+  }
+  assert.match(cssGuard, /@media screen and \(max-width: 1024px\)/);
+  assert.match(cssGuard, /font-size: 16px !important/);
+  assert.doesNotMatch(cssGuard, /maximum-scale|user-scalable|\bbutton\b/);
 });

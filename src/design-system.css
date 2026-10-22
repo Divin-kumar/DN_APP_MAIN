@@ -2504,3 +2504,17 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
     font-size: 16px !important;
   }
 }
+
+/* v2.15.5 completion: high-specificity mobile search and entry fields can
+   otherwise override the baseline 16px input floor via compact font tokens.
+   Do not change labels, buttons, preview text, or viewport user zoom. */
+@media screen and (max-width: 1024px) {
+  html[data-theme] .event-search input,
+  html[data-theme] .activity-search-field input,
+  html[data-theme] .insights-tools input,
+  html[data-theme] .code-list-add-row input,
+  html[data-theme] .settings-tag-input-row input,
+  html[data-theme] .activity-event-search input {
+    font-size: 16px !important;
+  }
+}

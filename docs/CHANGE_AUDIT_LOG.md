@@ -937,3 +937,16 @@
 - Master sections updated: §9.1 and §13, version 2.15.4.
 - Status: SOURCE IMPLEMENTED / CI AND NATIVE DEVICE ACCEPTANCE PENDING.
 - Follow-ups: User to test Greeting Template and other Code Lists/modal textareas on updated preview, verify focus retains original Safari viewport scale. 
+
+## CHG-20261022-073 | Complete Safari form-focus zoom specificity audit
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner, follow-up iPhone Safari focus zoom and closeout.
+- Branch / commit / PR: `OldVersion` only, commit SHA in Git history. Protected `main` unchanged, no production deployment.
+- Exact changed paths: `src/design-system.css`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: v2.15.4 source contained a correct high-specificity 16px Moment Type Greeting Template override, but one older test incorrectly asserted the original global guard must be the very last stylesheet rule. CI 39709571162 passed the new Moment test and failed the stale earlier check. Fixed tests to assert precedence and coverage. Additional mobile 16px guards now cover high-specificity event search, activity search, Insights search, Code List add, Settings tag and activity Moment selector search inputs, whose font-size styles could bypass the prior global rule.
+- Why: One consistent iOS Safari form-focus zoom prevention strategy, including actual styles responsible for magnification, without disabling manual zoom.
+- User/data/security/compatibility impact: Input typography and source tests only; no data, Firestore schema, transaction flow, authentication or backups modified. Manual pinch-zoom and screen reader features remain available.
+- Verification: GitHub Actions 39709571162 v2.15.4 tests 112 PASS/1 FAIL (obsolete assertion), build skipped, docs governance PASS. This new commit updates that test and adds coverage; `npm test`, `npm run build`, governance pending CI. Real iPhone/Android, large-text iOS accessibility and keyboard visual viewport NOT RUN.
+- Risks/rollback: Longer search terms may wrap/truncate differently, but field width and height rules are retained; revert the commit if needed. No schema migration.
+- Master sections updated: §9.1 and §13 to version 2.15.5.
+- Status: SOURCE UPDATED / CI AND NATIVE DEVICE ACCEPTANCE PENDING.
