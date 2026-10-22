@@ -50,11 +50,12 @@ test('app source and styles never reintroduce retired product branding', () => {
   assert.deepEqual(offenders, [], 'DN is the only product brand. Keep old storage identifiers in the dedicated compatibility module.');
 });
 
-test('OldVersion contains exactly four approved Markdown documents', () => {
+test('OldVersion contains exactly five approved Markdown documents', () => {
   const allowed = [
     'AGENTS.md',
     'README.md',
     'docs/CHANGE_AUDIT_LOG.md',
+    'docs/DN_BUSINESS_GUIDE.md',
     'docs/MASTER_SOURCE_OF_TRUTH.md',
   ];
   const actual = walk(root).filter((path) =>

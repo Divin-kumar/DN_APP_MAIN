@@ -6,14 +6,15 @@ Scope: `OldVersion` in `Divin-kumar/DN_APP_MAIN`. Owner instructions and existin
 
 ## Authority and inventory
 
-Keep exactly four Markdown files:
+Keep exactly five approved Markdown files:
 
 - [Master](docs/MASTER_SOURCE_OF_TRUTH.md): current product behavior, architecture, data and limits.
 - [README](README.md): setup, commands and documentation index.
 - `AGENTS.md`: development rules.
 - [Change log](docs/CHANGE_AUDIT_LOG.md): completed changes, releases and historical decisions, newest first.
+- [Business guide](docs/DN_BUSINESS_GUIDE.md): owner-facing, strictly nontechnical summary of current features, limitations and proposed improvement checklist. Derived from the master, not a competing specification; future suggestions are not approval to implement.
 
-No duplicate specifications, plans or memory files. Additional documents require owner approval and inventory-check changes. Source outranks documentation; correct disagreements with the corresponding change.
+The owner explicitly approved the fifth business guide. Keep it aligned when user-facing facts change; agents need not load it for routine coding when the master answers the question. No other duplicate specifications, plans or memory files. Further documents require owner approval and inventory-check changes. Source outranks documentation; correct disagreements with the corresponding change.
 
 ## Workflow
 

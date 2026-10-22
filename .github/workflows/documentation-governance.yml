@@ -34,14 +34,14 @@ jobs:
           node-version: '20'
       # Review determines factual master impact and whether a meaningful change
       # needs new evidence. Routine edits do not require artificial document diffs.
-      - name: Enforce four-Markdown-file budget
+      - name: Enforce five approved Markdown documents
         shell: bash
         run: |
           set -euo pipefail
-          expected="$(printf '%s\n' README.md AGENTS.md docs/MASTER_SOURCE_OF_TRUTH.md docs/CHANGE_AUDIT_LOG.md | sort)"
+          expected="$(printf '%s\n' README.md AGENTS.md docs/MASTER_SOURCE_OF_TRUTH.md docs/CHANGE_AUDIT_LOG.md docs/DN_BUSINESS_GUIDE.md | sort)"
           actual="$(git ls-files '*.md' '*.MD' | sort)"
           if [[ "$actual" != "$expected" ]]; then
-            echo "::error::Only the four canonical Markdown files are permitted."
+            echo "::error::Only the five approved Markdown files are permitted."
             diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
             exit 1
           fi

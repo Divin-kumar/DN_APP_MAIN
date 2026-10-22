@@ -2,6 +2,7 @@
 
 Development branch: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
 
+- [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
 - [Agent rules](AGENTS.md) — authorization, development and documentation workflow.
 - [Change log](docs/CHANGE_AUDIT_LOG.md) — latest changes first; verification and release history.

@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-082 | Add owner-approved business guide as the fifth document
+- Date: 2026-10-22. Reviewed base `17627ecd6a706bdb832c6b8d4c9ee3d04136223a`. Owner requested a strictly business-friendly overview and improvement checklist, with a focused review to conserve usage.
+- Added `docs/DN_BUSINESS_GUIDE.md`: current features, everyday rules, limitations and explicitly proposed priorities. Master remains authoritative; no historical feature is treated as current merely because it appears in the log. No account-specific records are included.
+- Updated AGENTS/README and coordinated the branding-test/CI inventory allowlists for exactly five documents. Preserved all prior history. Targeted branding/inventory tests passed 3/3; diff check passed. Application behaviour is unchanged, so no app rebuild or deployment is required for this documentation task. Initially prepared for review; the owner subsequently authorized committing the guide to Git.
+
 ## CHG-20261022-081 | Verify permanent production release 1.0.22
 - Date: 2026-10-22. Implementation `4f7a4d3ce2367ded28d24c464379d3e4192f0d1f` pushed normally to OldVersion; main remains `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
 - GitHub Actions [run 39782170678](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39782170678) passed documentation-contract and application-smoke-tests; opt-in preview was skipped.
