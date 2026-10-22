@@ -147,7 +147,6 @@ export default function Financials() {
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
           <section className="dn-finance-summary" aria-label={`Financial totals for ${summaryPeriod}`}>
-            <p className="dn-finance-summary-period">{summaryPeriod} · Income, expense and balance</p>
             <div className="dn-finance-summary-grid">
               <div className="dn-finance-metric dn-finance-metric-income">
                 <span className="dn-finance-metric-heading"><ArrowDownLeft size={18} aria-hidden="true" /> Income</span>

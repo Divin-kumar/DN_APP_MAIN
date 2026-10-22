@@ -537,14 +537,16 @@ export default function EventWorkspaceShell() {
       <header className={`event-moment-hero mood-${eventMood}`}>
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
+          <span className="event-moment-kicker" title={event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}>
+            <Sparkles size={13} aria-hidden="true" /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}
+          </span>
           <div className="event-moment-top-actions">
-            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={21} strokeWidth={1.9} /><span>Memory</span></button>
-            <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={21} strokeWidth={1.9} /><span>Greeting</span></button>
+            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={17} strokeWidth={1.9} /><span>Memory</span></button>
+            <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={17} strokeWidth={1.9} /><span>Greeting</span></button>
 
           </div>
         </div>
         <div className="event-moment-content">
-          <span className="event-moment-kicker"><Sparkles size={13} /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}</span>
           <h1>{event.name}</h1>
           <div className="event-moment-date">
             <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}</span>

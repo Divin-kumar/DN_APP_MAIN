@@ -122,3 +122,30 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
   assert.match(read('../components/financials/TransactionHistory.jsx'), /Swipe either direction on a transaction/);
 });
+
+test('finance density has one-row totals and a single compact transaction heading', () => {
+  const page = read('../pages/Financials.jsx');
+  const history = read('../components/financials/TransactionHistory.jsx');
+  const css = read('../design-system.css');
+  assert.match(page, /aria-label=\{`Financial totals for/);
+  assert.doesNotMatch(page, /className="dn-finance-summary-period"/);
+  assert.match(history, /className="dn-transactions-heading-copy"/);
+  assert.match(history, /<p title="All income and expenses in one place">All income and expenses<\/p>/);
+  assert.match(history, /<span>Add Transaction<\/span>/);
+  assert.match(css, /\.dn-finance-summary-grid \{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(css, /\.dn-transactions-page \.transactions-heading \{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
+  assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-copy p \{[\s\S]*?white-space:nowrap/);
+});
+test('Moment hero places compact Memory and Greeting beside the left type label', () => {
+  const hero = read('../features/events/components/EventWorkspaceShell.jsx');
+  const css = read('../design-system.css');
+  const topStart = hero.indexOf('<div className="event-moment-topline">');
+  const topEnd = hero.indexOf('<div className="event-moment-content">', topStart);
+  const topline = hero.slice(topStart, topEnd);
+  assert.match(topline, /event-moment-kicker/);
+  assert.match(topline, /event-moment-memory-action/);
+  assert.match(topline, /event-moment-copy-action/);
+  assert.doesNotMatch(hero.slice(topEnd, hero.indexOf('<h1>', topEnd)), /event-moment-kicker/);
+  assert.match(css, /\.dn-moment-hero-swipe \.event-moment-topline \{[\s\S]*?justify-content:space-between !important/);
+  assert.match(css, /\.dn-moment-hero-swipe \.event-moment-top-actions \.event-moment-memory-action,[\s\S]*?min-height:44px !important/);
+});

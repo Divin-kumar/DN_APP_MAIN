@@ -73,12 +73,12 @@ export default function TransactionHistory({
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
-        <div>
+        <div className="dn-transactions-heading-copy">
           <h2 id="dn-transactions-heading">Transactions</h2>
-          <p>Every income and expense, in one place. Swipe either direction on a transaction for actions.</p>
+          <p title="All income and expenses in one place">All income and expenses</p>
         </div>
         <button type="button" className="primaryButton dn-transaction-add" onClick={onAdd}>
-          <Plus size={18} /> Add Transaction
+          <Plus size={17} aria-hidden="true" /><span>Add Transaction</span>
         </button>
       </header>
       <div className="transactions-toolbar">

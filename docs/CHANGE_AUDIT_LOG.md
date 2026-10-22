@@ -882,3 +882,17 @@
 - Risk and rollback: Mobile safe-area/navigation clearance is estimated; final positioning and nested portal event propagation require device QA. Existing legacy tray CSS remains unused but is not deleted in this scoped change. Revert this commit to restore prior gesture UI; no schema rollback.
 - Master sections updated: §9.1, §13, v2.15.0.
 - Status: SOURCE IMPLEMENTED / CI AND MOBILE QA PENDING.
+
+## CHG-20261022-069 | Remove extra Finance and Moment hero whitespace
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner; requested lightweight Income/Expense/Balance cards, Add Transaction and description on a single compact row, small top-right Memory/Greeting buttons inline with Moment type.
+- Branch / commit / PR: `OldVersion` only, Git SHA pending, protected `main` unchanged, PR #6 unmerged; no deployment.
+- Exact changed paths: `src/pages/Financials.jsx`, `src/components/financials/TransactionHistory.jsx`, `src/features/events/components/EventWorkspaceShell.jsx`, `src/design-system.css`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Finance totals were high, padded cards with a redundant visible month period row; now three shallow low-shadow tiles remain in a single responsive line. Financial Transactions header previously held a long multi-line gesture explanation and CTA could wrap full width on mobile; now the heading/short one-line definition and CTA share a compact row, with small-screen truncation instead of wrap. Moment hero top-left type text previously began on a separate row below the oversized 48px Memory/Greeting utility area; now type and smaller 44px utility targets share a single row, hero inner spacing reduced and labels are retained except at <=360px.
+- Why: Improve information density and mobile thumb reach without eliminating financial context or confusing the Moment hero hierarchy.
+- User/data/security/compatibility impact: JSX/CSS/source regression tests only; totals remain based on selected month and existing account/guest stores; original transaction and Moment utility callbacks, swipe actions, Firestore/backup schema and linked activity data unchanged. Accessible summary and utility labels remain present.
+- Verification: Added layout source-contract assertions; `npm test`, `npm run build` and governance checks PENDING GitHub CI. Real iPhone/Android viewport, zoom/accessibility, clipping and performance NOT RUN.
+- Risk and rollback: Extra-long currency values may wrap within a shallow tile, while unbroken CTA/description prioritizes a single row. Tiny-width utility labels deliberately hide but retain aria-label. Rollback by reverting source commit; no data migration.
+- Master sections updated: §9.1 and §13 to 2.15.1.
+- Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
+- Follow-ups: Verify Finance at 320/375/390/430px including long INR values and zoom; verify Moment type label and utility touch targets with long title, dark/light themes and screen readers.
