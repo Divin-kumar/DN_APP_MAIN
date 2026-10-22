@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-081 | Verify permanent production release 1.0.22
+- Date: 2026-10-22. Implementation `4f7a4d3ce2367ded28d24c464379d3e4192f0d1f` pushed normally to OldVersion; main remains `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
+- GitHub Actions [run 39782170678](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39782170678) passed documentation-contract and application-smoke-tests; opt-in preview was skipped.
+- Official CLI `deploy --only hosting --project expense-tracker-divin --non-interactive` successfully released the 33 tested files to permanent site `dn-10`, https://dn-10.web.app. No preview or database/Rules deployment.
+- Executed read-back: all 33 files plus root/About routes returned HTTP 200 and matched tested SHA-256 bytes. One transport-closed asset request required a successful retry. Index: `16d4562a0cc67af84eff01982b20dd3810637e6d266cfea3b13408c2a9b75f07`; worker: `88f02cce5f03cc610ca2779c6c3dcd2ea64795e6f8819192db1baf429848d5cf`.
+- Executed signed-in production UI: About shows 1.0.22/Production; 390px Moment form has one 50.8px toolbar row, 16px text and no dialog overflow. More reveals the secondary tools. Form cancelled without saving any business records; visual proof saved outside tracked source.
+- Status: COMPLETE — publication/read-back verified. This evidence-only follow-up leaves application/build inputs identical to the implementation commit. Native iPhone keyboard/caret, large-bundle and synchronization limitations remain as recorded in CHG-080 and the master.
+
 ## CHG-20261022-080 | Compact mobile text editing and keep dialog controls reachable
 - Date: 2026-10-22. Owner-requested mobile free-text refinement, continuing authorized OldVersion commit/push and permanent Firebase publication. Reviewed clean base `f9fb0ba7521073dc412d3498c5263b82b7e2a199`; release 1.0.22, without added dependencies.
 - Shared editor: one mobile row for Bold/Italic/Bullets/More/Preview, optional secondary tools, 44px targets, shorter 96px initial writing area, growth and shrinkage with content, retained selection and Write/Preview caret return. Desktop retains all formatting tools. Stored strings, whitespace, note times and backup format are unchanged.
