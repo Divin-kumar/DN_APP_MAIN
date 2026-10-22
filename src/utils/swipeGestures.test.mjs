@@ -25,3 +25,12 @@ test('legacy drag adapter also never executes delete by itself', () => {
   assert.equal(resolveDirectionalSwipe({ offsetX: 23, velocityX: 2000 }), null);
   assert.equal(resolveDirectionalSwipe({ wasOpen: 'delete', offsetX: -33 }), null);
 });
+
+test('both directions are accepted as a menu-opening intent at the same threshold', () => {
+  for (const destination of [{ x: 104, y: 150 }, { x: 196, y: 150 }]) {
+    assert.ok(resolveSwipeGesture(start, destination).action);
+  }
+  for (const destination of [{ x: 133, y: 150 }, { x: 167, y: 150 }, { x: 202, y: 208 }]) {
+    assert.equal(resolveSwipeGesture(start, destination).action, null);
+  }
+});

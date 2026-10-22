@@ -1,131 +1,170 @@
-import { useEffect, useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useId, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Trash2 } from 'lucide-react';
 import { resolveSwipeGesture } from '../../utils/swipeGestures';
+import { getVisibleViewport } from '../../utils/overlayPosition';
+import { computeSwipeMenuPlacement } from '../../utils/swipeMenuPlacement';
 
-// The entire card is the gesture surface, including main buttons/links.
-// Touch uses native Touch Events for iOS Safari; mouse/pen use Pointer Events.
-// Neither gesture ever runs an action: it only reveals a full-size action tray.
+// A swipe in EITHER direction opens the same compact glass action menu.
+// The card never slides, and Delete is only an explicit, confirmation-gated item.
 export default function SwipeActionCard({
-  as: Root = 'article', className = '', mainClassName = '', label = 'Card',
-  role = 'group', otherActions = [], onDelete, openOnTap = false, children,
+  as: Root = 'article', className = '', mainClassName = '',
+  label = 'Card', role = 'group', otherActions = [], onDelete, openOnTap = false, children,
 }) {
-  const [open, setOpen] = useState(null);
+  const [open, setOpen] = useState(false);
+  const [position, setPosition] = useState(null);
   const rootRef = useRef(null);
+  const popupRef = useRef(null);
   const gesture = useRef(null);
-  const suppressClick = useRef(false);
-  const reduced = useReducedMotion();
+  const suppressClick = useRef(0);
+  const focusOnOpen = useRef(false);
+  const menuId = useId();
+  const actions = [
+    ...otherActions.filter((action) => typeof action?.onClick === 'function'),
+    ...(onDelete ? [{ label: 'Delete', icon: Trash2, onClick: onDelete, danger: true }] : []),
+  ];
 
-  useEffect(() => {
-    if (!open) return undefined;
-    const closeOutside = (event) => {
-      if (!rootRef.current?.contains(event.target)) setOpen(null);
-    };
-    document.addEventListener('pointerdown', closeOutside);
-    return () => document.removeEventListener('pointerdown', closeOutside);
-  }, [open]);
-
-  const reveal = (next, isTouch = false) => {
-    if (next && next !== open && isTouch) {
-      try { navigator.vibrate?.(8); } catch { /* Native haptics are optional */ }
+  const close = (restoreFocus = false) => {
+    setOpen(false);
+    if (restoreFocus) rootRef.current?.focus();
+  };
+  const showMenu = (isTouch = false, fromKeyboard = false) => {
+    if (!actions.length || !rootRef.current) return;
+    const rect = rootRef.current.getBoundingClientRect();
+    const viewport = getVisibleViewport(window);
+    setPosition(computeSwipeMenuPlacement({
+      anchor: rect, viewport, count: actions.length,
+      bottomReserve: viewport.width < 768 ? 80 : 12,
+    }));
+    focusOnOpen.current = fromKeyboard;
+    if (!open && isTouch) {
+      try { navigator.vibrate?.(8); } catch { /* Optional device capability */ }
     }
-    setOpen(next);
+    setOpen(true);
   };
   const finishGesture = (x, y, isTouch) => {
     const start = gesture.current;
     gesture.current = null;
     if (!start) return;
-    const result = resolveSwipeGesture(start, { x, y });
-    if (!result.action || (result.action === 'delete' && !onDelete) ||
-        (result.action === 'other' && !otherActions.length)) return;
-    suppressClick.current = true;
-    reveal(result.action, isTouch);
+    // The axis-dominant threshold rejects vertical scrolls and small taps.
+    if (!resolveSwipeGesture(start, { x, y }).action) return;
+    suppressClick.current = Date.now();
+    showMenu(isTouch);
   };
-  const startGesture = (x, y) => { gesture.current = { x, y }; };
-  const perform = (callback) => {
-    setOpen(null);
-    callback?.();
-  };
-  const handleKeyDown = (event) => {
+  useEffect(() => {
+    if (!open) return undefined;
+    const outside = (event) => {
+      if (rootRef.current?.contains(event.target) || popupRef.current?.contains(event.target)) return;
+      close();
+    };
+    const onScroll = (event) => {
+      if (popupRef.current?.contains(event.target)) return;
+      close();
+    };
+    const onResize = () => close();
+    document.addEventListener('pointerdown', outside);
+    window.addEventListener('scroll', onScroll, true);
+    window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+    if (focusOnOpen.current) {
+      popupRef.current?.querySelector('button:not([disabled])')?.focus();
+      focusOnOpen.current = false;
+    }
+    return () => {
+      document.removeEventListener('pointerdown', outside);
+      window.removeEventListener('scroll', onScroll, true);
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+    };
+  }, [open]);
+
+  const handleCardKey = (event) => {
     if (event.target !== event.currentTarget) return;
-    if (event.key === 'Escape') { event.preventDefault(); reveal(null); }
-    else if (event.key === 'ArrowLeft' && otherActions.length) { event.preventDefault(); reveal('other'); }
-    else if (event.key === 'ArrowRight' && onDelete) { event.preventDefault(); reveal('delete'); }
-    else if (event.key === 'Enter' || event.key === ' ') {
-      event.preventDefault(); reveal(open === 'other' ? null : 'other');
+    if (event.key === 'Escape') { event.preventDefault(); close(); }
+    if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
+      event.preventDefault();
+      if (open) close(true);
+      else showMenu(false, true);
     }
   };
+  const handleMenuKey = (event) => {
+    if (event.key === 'Escape') {
+      event.preventDefault();
+      event.stopPropagation();
+      close(true);
+    } else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      const items = [...popupRef.current.querySelectorAll('button:not([disabled])')];
+      const index = items.indexOf(document.activeElement);
+      const next = (index + (event.key === 'ArrowDown' ? 1 : -1) + items.length) % items.length;
+      items[next]?.focus();
+    }
+  };
+  const perform = (callback) => {
+    close();
+    callback?.();
+  };
   return (
-    <Root ref={rootRef} role={role} tabIndex={0}
-      className={`dn-swipe-surface ${className}${open ? ` dn-swipe-open-${open}` : ''}`}
-      aria-label={`${label}. Swipe left for actions, right for Delete. Arrow keys reveal actions.`}
-      aria-expanded={Boolean(open)}
-      onKeyDown={handleKeyDown}
-      onPointerDownCapture={(event) => {
-        if (event.pointerType === 'touch' || event.target.closest('.dn-swipe-tray')) return;
-        suppressClick.current = false;
-        startGesture(event.clientX, event.clientY);
-      }}
-      onPointerUpCapture={(event) => {
-        if (event.pointerType !== 'touch') finishGesture(event.clientX, event.clientY, false);
-      }}
-      onPointerCancelCapture={() => { gesture.current = null; }}
-      onTouchStartCapture={(event) => {
-        if (event.touches.length !== 1 || event.target.closest('.dn-swipe-tray')) return;
-        suppressClick.current = false;
-        startGesture(event.touches[0].clientX, event.touches[0].clientY);
-      }}
-      onTouchEndCapture={(event) => {
-        const touch = event.changedTouches[0];
-        if (touch) finishGesture(touch.clientX, touch.clientY, true);
-      }}
-      onTouchCancelCapture={() => { gesture.current = null; }}
-      onClickCapture={(event) => {
-        if (!suppressClick.current) return;
-        event.preventDefault();
-        event.stopPropagation();
-        suppressClick.current = false;
-      }}
-      onClick={(event) => {
-        if (!openOnTap || event.defaultPrevented || event.target.closest('.dn-swipe-tray')) return;
-        // Nested links/buttons keep their own behavior; Code List row is the
-        // deliberate tap-to-reveal exception.
-        if (event.target.closest('button, a, input, select, textarea') &&
-            !event.target.closest('.code-list-row')) return;
-        setOpen((current) => current === 'other' ? null : 'other');
-      }}>
-      <div className="dn-swipe-tray dn-swipe-tray-other" aria-hidden={open !== 'other'}>
-        <div className="dn-swipe-tray-inner">
-          {otherActions.map(({ label: actionLabel, icon: Icon, onClick }) => (
-            <button key={actionLabel} type="button" className="dn-swipe-action"
-              tabIndex={open === 'other' ? 0 : -1}
-              aria-label={`${actionLabel} ${label}`}
+    <>
+      <Root ref={rootRef} tabIndex={0} role={role} aria-label={`${label}. Swipe either direction for actions.`}
+        aria-expanded={open} aria-controls={menuId}
+        className={`dn-swipe-surface ${className}`}
+        onKeyDown={handleCardKey}
+        onPointerDownCapture={(event) => {
+          if (event.pointerType === 'touch') return;
+          gesture.current = { x: event.clientX, y: event.clientY };
+        }}
+        onPointerUpCapture={(event) => {
+          if (event.pointerType !== 'touch') finishGesture(event.clientX, event.clientY, false);
+        }}
+        onPointerCancelCapture={() => { gesture.current = null; }}
+        onTouchStartCapture={(event) => {
+          if (event.touches.length !== 1) { gesture.current = null; return; }
+          gesture.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
+        }}
+        onTouchEndCapture={(event) => {
+          const touch = event.changedTouches[0];
+          if (touch) finishGesture(touch.clientX, touch.clientY, true);
+        }}
+        onTouchCancelCapture={() => { gesture.current = null; }}
+        onClickCapture={(event) => {
+          // Suppress the synthetic click after a real swipe, not later legitimate taps.
+          if (!suppressClick.current || Date.now() - suppressClick.current > 650) {
+            suppressClick.current = 0;
+            return;
+          }
+          event.preventDefault();
+          event.stopPropagation();
+          suppressClick.current = 0;
+        }}
+        onClick={(event) => {
+          if (!openOnTap || event.defaultPrevented || event.target.closest('.dn-swipe-popup')) return;
+          if (event.target.closest('button, a, input, select, textarea') &&
+              !event.target.closest('.code-list-row')) return;
+          if (open) close();
+          else showMenu();
+        }}>
+        <div className={`dn-swipe-main ${mainClassName}`} style={{ touchAction: 'pan-y' }}>
+          {children}
+        </div>
+      </Root>
+      {open && position && createPortal(
+        <div id={menuId} ref={popupRef} role="menu"
+          className="dn-swipe-popup" aria-label={`Actions for ${label}`}
+          style={{
+            position: 'fixed', top: position.top, left: position.left,
+            width: position.width, maxHeight: position.maxHeight,
+          }}
+          onKeyDown={handleMenuKey}>
+          {actions.map(({ label: actionLabel, icon: Icon, onClick, danger }, i) => (
+            <button key={`${actionLabel}-${i}`} role="menuitem" type="button"
+              className={`dn-swipe-popup-item${danger ? ' is-danger' : ''}`}
               onClick={() => perform(onClick)}>
-              {Icon ? <Icon size={21} strokeWidth={1.9} aria-hidden="true" /> : null}
+              {Icon ? <Icon size={17} strokeWidth={1.9} aria-hidden="true" /> : null}
               <span>{actionLabel}</span>
             </button>
           ))}
-        </div>
-      </div>
-      {onDelete ? (
-        <div className="dn-swipe-tray dn-swipe-tray-delete" aria-hidden={open !== 'delete'}>
-          <div className="dn-swipe-tray-inner">
-            <button type="button" className="dn-swipe-action is-danger"
-              tabIndex={open === 'delete' ? 0 : -1}
-              aria-label={`Delete ${label}`}
-              onClick={() => perform(onDelete)}>
-              <Trash2 size={21} strokeWidth={1.9} aria-hidden="true" />
-              <span>Delete</span>
-            </button>
-          </div>
-        </div>
-      ) : null}
-      <motion.div className={`dn-swipe-main ${mainClassName}`}
-        style={{ touchAction: 'pan-y' }}
-        animate={open ? { scale: 0.995 } : { scale: 1 }}
-        transition={reduced ? { duration: 0 } : { type: 'spring', stiffness: 440, damping: 37, mass: 0.8 }}>
-        {children}
-      </motion.div>
-    </Root>
+        </div>, document.body)}
+    </>
   );
 }

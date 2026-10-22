@@ -24,29 +24,34 @@ test('transaction cards reveal Edit and Delete with no overflow three-dot button
   assert.match(component, /<SwipeActionCard/);
   assert.match(component, /label: 'Edit'/);
   assert.match(component, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
-  assert.match(read('../components/common/SwipeActionCard.jsx'), /onKeyDown=\{handleKeyDown\}/);
+  assert.match(read('../components/common/SwipeActionCard.jsx'), /onKeyDown=\{handleCardKey\}/);
   assert.doesNotMatch(component, /Ellipsis|dn-transaction-overflow/);
 });
-test('all four editable card surfaces share the same overlay component', () => {
-  const moments = read('../pages/Events.jsx');
-  const header = read('../features/events/components/EventWorkspaceShell.jsx');
-  const transactions = read('../components/financials/TransactionHistory.jsx');
-  const activities = read('../components/events/ActivityList.jsx');
-  const lists = read('../pages/CodeLists.jsx');
-  for (const src of [moments, header, transactions, activities, lists]) {
+test('Moments, Activities, Transactions, Code Lists use one compact portaled popup', () => {
+  for (const path of [
+    '../pages/Events.jsx',
+    '../features/events/components/EventWorkspaceShell.jsx',
+    '../components/financials/TransactionHistory.jsx',
+    '../components/events/ActivityList.jsx',
+    '../pages/CodeLists.jsx',
+  ]) {
+    const src = read(path);
     assert.match(src, /<SwipeActionCard/);
     assert.doesNotMatch(src, /EventActionMenu/);
   }
-  assert.doesNotMatch(lists, /code-list-actions-(other|delete)|translateX/);
-  assert.doesNotMatch(activities, /event-activity-actions-(other|delete)/);
-  assert.doesNotMatch(transactions, /resolveTransactionSwipe|dragConstraints|onDragEnd/);
   const surface = read('../components/common/SwipeActionCard.jsx');
+  assert.match(surface, /createPortal\(/);
+  assert.match(surface, /className="dn-swipe-popup"/);
+  assert.match(surface, /role="menu"/);
+  assert.match(surface, /aria-label=\{\`Actions for/);
   assert.match(surface, /onTouchStartCapture=/);
   assert.match(surface, /onTouchEndCapture=/);
   assert.match(surface, /onPointerDownCapture=/);
   assert.match(surface, /onPointerUpCapture=/);
   assert.match(surface, /onClickCapture=/);
-  assert.match(surface, /aria-label=\{\`Delete/);
+  assert.match(surface, /\!resolveSwipeGesture\(start, \{ x, y \}\)\.action/);
+  assert.match(surface, /\.\.\.\(onDelete \? \[\{ label: 'Delete'/);
+  assert.doesNotMatch(surface, /dn-swipe-tray-(other|delete)|animate=\{/);
 });
 test('Flat Moment list removes timeline rail and dots, Grid selector remains', () => {
   assert.match(read('../pages/Events.jsx'), /life-journey-cards/);
@@ -106,4 +111,14 @@ test('nested Activity and Moment buttons do not open swipe trays', () => {
   assert.match(surface, /event\.target\.closest\('button, a, input, select, textarea'\)/);
   assert.match(surface, /!event\.target\.closest\('\.code-list-row'\)/);
   assert.match(read('../components/events/ActivityList.jsx'), /className="event-activity-expense-toggle"/);
+});
+
+test('either direction reveals same menu and Delete remains a separate click', () => {
+  const swipe = read('../components/common/SwipeActionCard.jsx');
+  assert.match(swipe, /if \(!resolveSwipeGesture\(start, \{ x, y \}\)\.action\) return/);
+  assert.match(swipe, /showMenu\(isTouch\)/);
+  assert.match(swipe, /onClick=\{\(\) => perform\(onClick\)\}/);
+  assert.match(swipe, /aria-label=\{\`Actions for/);
+  assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
+  assert.match(read('../components/financials/TransactionHistory.jsx'), /Swipe either direction on a transaction/);
 });

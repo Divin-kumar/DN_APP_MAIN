@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.14.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.15.0** · Updated **2026-10-22 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -260,6 +260,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
 
 ### 9.1 Unified transaction implementation
+**Compact two-direction card action popup (v2.15.0; SOURCE-INSPECTED):** The owner's latest preference supersedes distinct left/right trays and the prior oversized full-card overlay. A deliberate left OR right swipe on any editable Moment card (List and unchanged Grid), Moment detail hero, Activity, Transaction or Code List now opens **the same small, fixed-position glass popup** containing only actions available for that card. Delete is the **last, red-accented menu item**, alongside Edit/Share/Archive/etc as relevant; a swipe never performs Delete and existing parent confirmations still apply. Cards remain stationary. The popup uses a 188px preferred width, scrollable 244px height cap, 42px menu rows, backdrop blur and subtle entry animation, and computes placement using the visual viewport with bottom navigation clearance, flipping above the card when space is limited. It closes on outside taps, scrolling, viewport resizing or Escape; keyboard Enter/Space/Left/Right can open it and ArrowUp/Down navigate items. Existing tap-to-reveal for Code Lists/Transactions/Activities remains. Touch/Pointer input continues to use axis-dominant swipe recognition, with optional supported-browser vibration and reduced-motion support. The underlying record model, linked Moment/Activity relationships, account/guest isolation, backup schema and all action callbacks are unchanged. Source/geometry automated tests and build pending; native iPhone/Android device behavior and 60fps performance remain **NOT VERIFIED**.
+
 **v2.14.2 nested tap safety:** Shared card taps now ignore nested activity, navigation, expense-disclosure and other interactive descendants, while the Code List primary row remains a tap-to-reveal control. This prevents the action tray from opening when a user taps an existing Activity or Moment button. The preceding shared-swipe commit passed 100/100 tests, build and governance in GitHub Actions run 39705631114. This final nested-tap change has its own CI.
 
 **v2.14.1 test repair:** The automated UX contract follows the new architecture: TransactionHistory delegates accessible Arrow/Enter/Escape keyboard interaction to the shared `SwipeActionCard`; its regression test now checks the actual shared handler rather than legacy per-card code. Left action tray scrolling begins with the first action visible on narrow Moment grid cells, rather than flex-end overflow clipping. Prior v2.14.0 CI failed a stale source assertion, not an application execution assertion; this new version requires fresh CI confirmation.
@@ -386,6 +388,7 @@ The current `OldVersion` source commit `c22b3ddf87afb964e4a72004647306bc6f6d8e05
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.15.0** | **2026-10-22** | Both swipe directions show one compact glass menu with available actions and Delete last; viewport-safe portal replaces card-wide trays | **CHG-20261022-068** |
 | **2.14.2** | **2026-10-22** | Protect existing nested Moment/Activity buttons from swipe tray click handling | **CHG-20261022-067** |
 | **2.14.1** | **2026-10-22** | Correct stale shared keyboard contract test and align narrow swipe-tray action visibility | **CHG-20261022-066** |
 | **2.14.0** | **2026-10-21** | Unified real touch/pointer swipe surface for Moments/Activities/Transactions/Code Lists; fixed Code List extra action row and enlarged Moment header controls | **CHG-20261021-065** |

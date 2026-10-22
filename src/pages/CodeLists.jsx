@@ -221,7 +221,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         ]}
         onDelete={() => handleDelete(entry)}>
         <button type="button" className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap for actions; swipe left to edit, right to delete.`}>
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap or swipe either direction for actions.`}>
           <span className="code-list-main">
             <span className="code-list-text">{entry.label}</span>
             {isInactive ? <span className="code-list-status">Inactive</span> : null}

@@ -75,7 +75,7 @@ export default function TransactionHistory({
       <header className="transactions-heading">
         <div>
           <h2 id="dn-transactions-heading">Transactions</h2>
-          <p>Every income and expense, in one place. Swipe left to Edit; swipe right to reveal Delete.</p>
+          <p>Every income and expense, in one place. Swipe either direction on a transaction for actions.</p>
         </div>
         <button type="button" className="primaryButton dn-transaction-add" onClick={onAdd}>
           <Plus size={18} /> Add Transaction

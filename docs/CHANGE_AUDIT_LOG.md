@@ -869,3 +869,16 @@
 - Data/security impact: UI only, no schema, persisted data, Firebase rules or production deployment changes.
 - Risk/rollback: Minor intentional restriction to tapping nested controls; revert this commit if needed.
 - Master: §9.1 and §13, version 2.14.2.
+
+## CHG-20261022-068 | Compact glass popup for both swipe directions
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner. Replace large swipe action overlays with a lightweight glass dropdown; swipe either left or right to show the exact same available options, including Delete.
+- Branch / commit / PR: `OldVersion` only; SHA in Git history. `main` unchanged, no deployment.
+- Exact changed paths: `src/components/common/SwipeActionCard.jsx`, `src/utils/swipeMenuPlacement.js` (new), `src/utils/swipeMenuPlacement.test.mjs` (new), `src/utils/swipeGestures.test.mjs`, `src/utils/premiumUxContract.test.mjs`, `src/components/financials/TransactionHistory.jsx`, `src/pages/CodeLists.jsx`, `src/design-system.css`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Every shared swipe surface used a large full-card glass overlay and distinct left/right action content. Now left and right deliberately open the exact same small, glass-blurred portaled popup. The menu lists available commands, ending with a red Delete row where deletion exists; cards stay stationary and maintain their original layout. Menu width 188 CSS px, maximum height 244 CSS px with internal scrolling; viewport placement flips/clamps above/below, accounts for visualViewport offsets and mobile navigation clearance. Escape/outside tap/scroll/resize dismiss; keyboard arrow navigation supported.
+- Why: Match owner's lighter mobile experience, avoid dominating the card, and eliminate the need to remember gesture direction.
+- User/data/security/compatibility impact: UI and regression tests only; existing action callbacks, deletion confirmations, IDs, account/guest storage, linked transactions, Firebase collections, backups and permissions unchanged. Neither direction directly deletes records.
+- Verification (PASS/FAIL/NOT RUN): Added geometry placement unit tests, mirrored swipe-threshold cases and source interaction contracts. `npm test`, `npm run build` and docs governance PENDING CI. Real iPhone Safari, Android Chrome, keyboard/VoiceOver/TalkBack, visual viewport/keyboard and measured 60fps NOT RUN. Native haptics unavailable in some browsers, including iOS Safari.
+- Risk and rollback: Mobile safe-area/navigation clearance is estimated; final positioning and nested portal event propagation require device QA. Existing legacy tray CSS remains unused but is not deleted in this scoped change. Revert this commit to restore prior gesture UI; no schema rollback.
+- Master sections updated: §9.1, §13, v2.15.0.
+- Status: SOURCE IMPLEMENTED / CI AND MOBILE QA PENDING.
