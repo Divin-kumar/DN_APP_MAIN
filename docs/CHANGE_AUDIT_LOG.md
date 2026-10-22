@@ -858,3 +858,14 @@
 - Verification: CI pending on this commit; real iPhone and Android behavior not verified. No data or schema changes.
 - Risk and rollback: Low presentation risk; if needed revert patch without data rollback.
 - Master: §9.1 and §13, version 2.14.1.
+
+## CHG-20261022-067 | Protect nested card action clicks from swipe activation
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner, premium swipe overhaul follow-up.
+- Branch: OldVersion only; main unchanged; no deployment.
+- Exact paths: src/components/common/SwipeActionCard.jsx, src/utils/premiumUxContract.test.mjs, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before -> after: Generic card click opened the left action tray even when nested buttons (Activity expense disclosure, Moment navigation) were used. Nested interactive elements now keep their actions, with an intentional tap-to-reveal exception for Code List rows.
+- Verification: Previous 2.14.1 source passed 100/100 tests, Vite build and documentation governance in run 39705631114. This correction pending CI. Manual iPhone/Android and frame-time NOT RUN.
+- Data/security impact: UI only, no schema, persisted data, Firebase rules or production deployment changes.
+- Risk/rollback: Minor intentional restriction to tapping nested controls; revert this commit if needed.
+- Master: §9.1 and §13, version 2.14.2.

@@ -100,3 +100,10 @@ test('Finance totals stay in one row and Code Lists keep the label in place', ()
   assert.match(css, /\.dn-finance-summary-grid \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
   assert.match(css, /\.code-list-item \.code-list-row,[\s\S]*?transform:none !important/);
 });
+
+test('nested Activity and Moment buttons do not open swipe trays', () => {
+  const surface = read('../components/common/SwipeActionCard.jsx');
+  assert.match(surface, /event\.target\.closest\('button, a, input, select, textarea'\)/);
+  assert.match(surface, /!event\.target\.closest\('\.code-list-row'\)/);
+  assert.match(read('../components/events/ActivityList.jsx'), /className="event-activity-expense-toggle"/);
+});

@@ -88,6 +88,10 @@ export default function SwipeActionCard({
       }}
       onClick={(event) => {
         if (!openOnTap || event.defaultPrevented || event.target.closest('.dn-swipe-tray')) return;
+        // Nested links/buttons keep their own behavior; Code List row is the
+        // deliberate tap-to-reveal exception.
+        if (event.target.closest('button, a, input, select, textarea') &&
+            !event.target.closest('.code-list-row')) return;
         setOpen((current) => current === 'other' ? null : 'other');
       }}>
       <div className="dn-swipe-tray dn-swipe-tray-other" aria-hidden={open !== 'other'}>

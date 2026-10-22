@@ -1,6 +1,6 @@
 # DN — MASTER SOURCE OF TRUTH
 
-> **AUTHORITATIVE REFERENCE** · Version **2.14.1** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
+> **AUTHORITATIVE REFERENCE** · Version **2.14.2** · Updated **2026-10-21 (UTC)** · Repository `Divin-kumar/DN_APP_MAIN` · Working branch **`OldVersion`** · Status **SOURCE-INSPECTED / RUNTIME NOT VERIFIED**
 >
 > **Read first:** [AGENTS.md](../AGENTS.md) (mandatory instructions for human and AI contributors) and [CHANGE_AUDIT_LOG.md](CHANGE_AUDIT_LOG.md) (append-only change register). This master is the **only active normative product/architecture/operations document for `OldVersion`**. Its mandatory documentation governance does not apply to `main` or other branches. `README.md` provides navigation; it does not override this file.
 >
@@ -260,6 +260,8 @@ Existing Node test files cover selected backup, event, code-list, greeting, dash
 | DOCX historical sources | Binary content could not be extracted through GitHub connector | Older copies recoverable via Git; not certified reconciled |
 
 ### 9.1 Unified transaction implementation
+**v2.14.2 nested tap safety:** Shared card taps now ignore nested activity, navigation, expense-disclosure and other interactive descendants, while the Code List primary row remains a tap-to-reveal control. This prevents the action tray from opening when a user taps an existing Activity or Moment button. The preceding shared-swipe commit passed 100/100 tests, build and governance in GitHub Actions run 39705631114. This final nested-tap change has its own CI.
+
 **v2.14.1 test repair:** The automated UX contract follows the new architecture: TransactionHistory delegates accessible Arrow/Enter/Escape keyboard interaction to the shared `SwipeActionCard`; its regression test now checks the actual shared handler rather than legacy per-card code. Left action tray scrolling begins with the first action visible on narrow Moment grid cells, rather than flex-end overflow clipping. Prior v2.14.0 CI failed a stale source assertion, not an application execution assertion; this new version requires fresh CI confirmation.
 
 **Unified mobile swipe overhaul v2.14.0 (SOURCE-INSPECTED):** User's real iPhone Safari screenshots showed the Code List Delete control rendered on an extra row and Moment hero icons unreadably small; earlier source-only patches were insufficient. Moments (List/Grid and detail hero), Activities, Transactions and Code Lists now share `SwipeActionCard` with one `resolveSwipeGesture` recognizer. Touch input is captured via native Touch Events (including swipes beginning on a main card button), mouse/pen via Pointer Events. A 44px axis-dominant horizontal gesture reveals a stationary, full-card glass action overlay; swipe left = non-destructive actions, swipe right = Delete. Reveal is not execution; actual buttons remain explicit and retain existing parent deletion confirmation. Main card keeps its place, with a subtle reduced-motion-aware scale animation. Touch devices may optionally vibrate when supported; iOS Safari is not promised native haptics. Code Lists no longer inserts a second DOM action row or changes card height when revealing actions. Moment detail Memory and Greeting header controls now use 21px icons and minimum 48px targets with visible text, replacing the screenshot's tiny icon-only squares. Grid layout and Moment List's removed rail/dots remain intact. No persistence, schema or security rule changes. CI tests/build pending; real iPhone/Android, screen reader, performance frame timing and deployed preview acceptance NOT VERIFIED.
@@ -384,6 +386,7 @@ The current `OldVersion` source commit `c22b3ddf87afb964e4a72004647306bc6f6d8e05
 |---|---|---|---|
 | 1.0.0 | 2026-10-21 | First consolidated master and reports | CHG-20261021-001 |
 | 1.0.1 | 2026-10-21 | Early redundant-doc deletions and README pointers | CHG-20261021-002 |
+| **2.14.2** | **2026-10-22** | Protect existing nested Moment/Activity buttons from swipe tray click handling | **CHG-20261022-067** |
 | **2.14.1** | **2026-10-22** | Correct stale shared keyboard contract test and align narrow swipe-tray action visibility | **CHG-20261022-066** |
 | **2.14.0** | **2026-10-21** | Unified real touch/pointer swipe surface for Moments/Activities/Transactions/Code Lists; fixed Code List extra action row and enlarged Moment header controls | **CHG-20261021-065** |
 | **2.13.1** | **2026-10-21** | Kept Finance metrics in one row, repaired Moment and Transaction gesture handlers, changed Code List actions to stationary-card reveal | **CHG-20261021-064** |
