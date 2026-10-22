@@ -155,3 +155,33 @@ test('compact transaction panel padding applies to the panel element itself', ()
   assert.match(css, /\.transactions-panel\.dn-transactions-page \{ padding:12px !important/);
   assert.doesNotMatch(css, /\.dn-transactions-page \.transactions-panel \{ padding:12px !important/);
 });
+
+test('mobile editors avoid Safari focus zoom across forms without inflating other controls', () => {
+  const css = read('../design-system.css');
+  const marker = css.lastIndexOf('iOS Safari form-focus zoom prevention');
+  assert.ok(marker > 0);
+  const rule = css.slice(marker);
+  assert.match(rule, /@media screen and \(max-width: 1024px\)/);
+  assert.match(rule, /html\[data-theme\] input:not\(\[type="checkbox"\]\)/);
+  for (const excluded of ['radio','range','file','color','hidden','button','submit','reset']) {
+    assert.ok(rule.includes(`:not([type="${excluded}"])`), `Expected ${excluded} to be excluded`);
+  }
+  assert.match(rule, /html\[data-theme\] textarea/);
+  assert.match(rule, /html\[data-theme\] select/);
+  assert.match(rule, /html\[data-theme\] \[contenteditable="true"\]/);
+  assert.match(rule, /font-size: 16px !important/);
+  assert.equal(rule.indexOf('font-size: 16px !important'), rule.lastIndexOf('font-size: 16px !important'));
+  assert.ok(css.endsWith(rule), 'The anti-zoom override should remain last in the design stylesheet');
+  const financeForm = read('../components/financials/TransactionForm.jsx');
+  assert.match(financeForm, /<input type="text"/);
+  assert.match(financeForm, /<input type="number"/);
+  assert.match(financeForm, /<textarea/);
+  const picker = read('../components/common/DropdownSelect.jsx');
+  assert.match(picker, /<input ref=\{searchRef\} type="search"/);
+});
+test('viewport permits pinch zoom and never disables user scaling to hide focus zoom', () => {
+  const html = read('../../index.html');
+  assert.match(html, /name="viewport"/);
+  assert.match(html, /width=device-width, initial-scale=1/);
+  assert.doesNotMatch(html, /maximum-scale|user-scalable|minimum-scale/i);
+});

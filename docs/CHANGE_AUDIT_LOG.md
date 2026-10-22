@@ -909,3 +909,17 @@
 - Risks and rollback: Panel padding on small screens may affect dense filters; verify on 320-430px viewport. Revert change to restore prior selector and assertions.
 - Master sections updated: §9.1 and §13 to v2.15.2.
 - Status: SOURCE CORRECTED / CI AND MOBILE QA PENDING.
+
+## CHG-20261022-071 | Prevent iPhone Safari focus zoom on DN form inputs
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner. Supplied iPhone Safari screenshot showing unwanted page magnification after tapping the Transaction form Title field.
+- Branch / commit / PR: `OldVersion` only, commit SHA pending. Protected `main` unchanged; PR #6 unmerged; no deployment.
+- Exact changed paths: `src/design-system.css`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`. `index.html` inspected but intentionally unchanged.
+- Before -> after: Existing mobile inputs inherited field fonts smaller than 16 CSS px in portions of the form system, triggering iOS Safari's focus-zoom. A final 16px CSS minimum covers editable inputs, textarea, selects, searchable dropdown fields and contenteditable regions at <=1024px. Excludes checkbox/radio/range/file/color/hidden and button-like controls. No forced scale reset, viewport restrictions, or disabled pinch zoom.
+- Why: Prevent accidental magnification at focus rather than using unreliable JavaScript pinch reset or inaccessible user-scalable=no viewport policies.
+- User/data/security/compatibility impact: Typography only, no persisted transaction data, Firebase rules, layout route changes, input validation, backup records or account/guest storage edits. Text may take more horizontal space and should be verified at narrow widths; manual browser zoom remains allowed.
+- Verification (PASS/FAIL/NOT RUN): Added regression contracts for 16px floor on form editor types, exclusions, dropdown search and viewport zoom permission. `npm test`, `npm run build`, documentation governance pending GitHub CI. Actual iPhone Safari auto zoom, 320px portrait, keyboard visual viewport and browser history zoom NOT RUN.
+- Risk and rollback: iOS may still zoom by user pinch or accessibility settings; CSS cannot guarantee no browser zoom from other triggers. Revert this commit to restore font sizing. No storage migration.
+- Master sections updated: §9.1 and §13 to version 2.15.3.
+- Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
+- Follow-ups: Test focusing every Finance/Moment/Activity/Code List/Settings editor on an actual iPhone Safari viewport, including programmatic focus and searchable dropdown portals. Keep 16px rule last when consolidating legacy CSS.

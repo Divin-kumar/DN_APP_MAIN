@@ -2477,3 +2477,16 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
     font-size:.69rem !important;
   }
 }
+
+/* iOS Safari form-focus zoom prevention (DN v2.15.3).
+   Below 16 CSS px, WebKit can magnify the entire page when an editor gets focus.
+   Keep inputs themselves at 16px, not the entire UI; preserve user pinch zoom.
+   This rule is intentionally last, after legacy form overrides. */
+@media screen and (max-width: 1024px) {
+  html[data-theme] input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="hidden"]):not([type="button"]):not([type="submit"]):not([type="reset"]),
+  html[data-theme] textarea,
+  html[data-theme] select,
+  html[data-theme] [contenteditable="true"] {
+    font-size: 16px !important;
+  }
+}
