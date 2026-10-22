@@ -1,12 +1,13 @@
 // This page turns the stored event, income, and expense data into charts and summaries.
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Search, Sparkles, WalletCards } from 'lucide-react';
+import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
+import ListControls from '../components/common/ListControls';
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 const eventDate = (event) => {
@@ -127,7 +128,14 @@ export default function Insights() {
         <div><span className="insights-eyebrow"><Sparkles size={14} /> Your life, in perspective</span>
           <h2>Insights</h2>
           <p>A thoughtful view of the moments, progress, and resources shaping your journey.</p></div>
-        <div className="insights-tools"><label><Search size={15} /><input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search your timeline" aria-label="Search Insights" /></label><button type="button" onClick={exportInsights}><Download size={15} /> Export</button></div>
+        <div className="insights-tools">
+          <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
+            resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
+            summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={() => setSearch('')}
+            search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search milestones" aria-label="Search Insights" />} />
+          <button type="button" onClick={exportInsights}><Download size={15} /> Export</button>
+        </div>
       </header>
 
       {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on.</span></div> : null}

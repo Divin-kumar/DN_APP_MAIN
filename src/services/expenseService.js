@@ -9,6 +9,9 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { upsertRecord } from '../utils/transactionRelations';
+import { normalizeFinancialRecord, mergeFinancialExpenses } from '../utils/financialRecords.js';
+import { getEventsForUser } from './eventService';
+import { recordId } from '../utils/recordIdentity.js';
 
 const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
 const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
@@ -20,35 +23,10 @@ const getGuestExpenseMasters = () => {
   return parsed;
 };
 
-const expenseKey = (expense) => expense.id || expense.firestoreId;
-
-const mergeExpenseRecords = (records) => {
-  const merged = new Map();
-  records.forEach((record) => {
-    const normalized = {
-      ...normalizeExpense(record),
-      ...(record.firestoreId ? { firestoreId: record.firestoreId } : {}),
-    };
-    const key = expenseKey(normalized) || crypto.randomUUID();
-    if (!merged.has(key)) merged.set(key, normalized);
-  });
-  return [...merged.values()];
-};
+const mergeExpenseRecords = mergeFinancialExpenses;
 
 // Normalize and merge guest master records with nested event activity records.
-export const normalizeExpense = (item) => ({
-  id: item.id || crypto.randomUUID(),
-  name: String(item.name ?? '').trim(),
-  amount: Number(item.amount ?? 0),
-  category: item.category || 'Other',
-  description: String(item.description ?? '').trim(),
-  notes: String(item.notes ?? item.description ?? '').trim(),
-  date: item.date || new Date().toISOString().slice(0, 10),
-  createdAt: item.createdAt || new Date().toISOString(),
-  eventId: item.eventId || null,
-  activityId: item.activityId || null,
-  source: item.source || 'manual',
-});
+export const normalizeExpense = (item, fallbackId = '') => normalizeFinancialRecord(item, 'expense', fallbackId);
 
 export const getGuestExpenses = () => {
   try {
@@ -77,17 +55,15 @@ export const setGuestExpenses = (items) => {
 // Load both Firestore expense records and nested activity records for reporting pages.
 export const getExpensesForUser = async (uid) => {
   const expensesRef = collection(db, 'users', uid, 'expenses');
-  const eventsRef = collection(db, 'users', uid, 'eventGroups');
-  const [snapshot, eventSnapshot] = await Promise.all([getDocs(expensesRef), getDocs(eventsRef)]);
+  const [snapshot, events] = await Promise.all([getDocs(expensesRef), getEventsForUser(uid)]);
   const masterExpenses = snapshot.docs.map((docSnap) => ({
     firestoreId: docSnap.id,
-    ...normalizeExpense(docSnap.data()),
+    ...normalizeExpense(docSnap.data(), docSnap.id),
   }));
-  const nestedExpenses = eventSnapshot.docs.flatMap((eventSnap) => {
-    const event = eventSnap.data();
+  const nestedExpenses = events.flatMap((event) => {
     return (event.activities || []).flatMap((activity) => (activity.expenses || []).map((expense) => ({
       ...expense,
-      eventId: expense.eventId || event.id || eventSnap.id,
+      eventId: expense.eventId || event.id,
       activityId: expense.activityId || activity.id,
     })));
   });
@@ -127,7 +103,7 @@ export const saveGuestExpense = (expense) => {
 
 export const removeGuestExpense = (expenseId) => {
   setGuestExpenses(getGuestExpenseMasters().filter((item) =>
-    item.id !== expenseId && item.firestoreId !== expenseId
+    recordId(item.id) !== recordId(expenseId) && recordId(item.firestoreId) !== recordId(expenseId)
   ));
   return getGuestExpenses();
 };

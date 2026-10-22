@@ -1,12 +1,11 @@
 // This is the single-event workspace.
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
-import { useEffect, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Copy, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Share2, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
-import { duplicateEventData, eventShareDetails } from '../../../utils/eventActions';
 import DateField from '../../../components/common/DateField';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
@@ -19,6 +18,8 @@ import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
 import usePersistentSort from '../../../hooks/usePersistentSort';
 import SortControl from '../../../components/common/SortControl';
+import ListControls from '../../../components/common/ListControls';
+import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -51,13 +52,14 @@ export default function EventWorkspaceShell() {
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const workspaceNavRef = useRef(null);
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, error, loadEvents, addEvent, updateEventItem, deleteEventItem } = useEventStore();
+  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
   const { expenses, loadExpenses } = useExpenseStore();
   const { saveTransaction } = useTransactionManager();
   const [activityTitle, setActivityTitle] = useState('');
@@ -89,9 +91,9 @@ export default function EventWorkspaceShell() {
 
   useEffect(() => {
     if (!user && !isGuest) return;
-    if (!events.length) loadEvents(user?.uid, isGuest);
+    loadEvents(user?.uid, isGuest);
     loadExpenses(user?.uid, isGuest);
-  }, [events.length, isGuest, loadEvents, loadExpenses, user]);
+  }, [isGuest, loadEvents, loadExpenses, user]);
 
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
@@ -108,6 +110,38 @@ export default function EventWorkspaceShell() {
   useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
+
+  useLayoutEffect(() => {
+    const nav = workspaceNavRef.current;
+    if (!nav) return undefined;
+    let frame;
+    const revealActiveLink = () => {
+      const activeLink = nav.querySelector('[aria-current="page"]');
+      if (!activeLink) return;
+      const bounds = nav.getBoundingClientRect();
+      const activeBounds = activeLink.getBoundingClientRect();
+      const visibleLeft = bounds.left + nav.clientLeft;
+      const visibleRight = visibleLeft + nav.clientWidth;
+      const adjustment = activeBounds.left < visibleLeft ? activeBounds.left - visibleLeft
+        : activeBounds.right > visibleRight ? activeBounds.right - visibleRight : 0;
+      // Adjust this strip only; never move the page vertically when selecting a tab.
+      if (Math.abs(adjustment) > 1) nav.scrollLeft += adjustment;
+    };
+    const scheduleReveal = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(revealActiveLink);
+    };
+    revealActiveLink();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(scheduleReveal) : null;
+    observer?.observe(nav);
+    nav.querySelectorAll('a').forEach((link) => observer?.observe(link));
+    window.addEventListener('resize', scheduleReveal);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener('resize', scheduleReveal);
+    };
+  }, [location.pathname, event?.id]);
 
   if (loading && !event) {
     return <p style={{ color: 'var(--ink-soft)' }}>Loading event workspace...</p>;
@@ -130,7 +164,8 @@ export default function EventWorkspaceShell() {
     { label: 'Memories', path: `/events/${eventId}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
     { label: 'Attachments', path: `/events/${eventId}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
   ];
-  const activeSection = sections.find((section) => location.pathname === section.path) || sections[0];
+  const sectionName = getMomentWorkspaceSection(location.pathname);
+  const activeSection = sections.find((section) => section.label.toLowerCase() === sectionName) || sections[0];
   const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
   const activities = [...(event.activities || [])].sort((first, second) => {
     const dateOrder = new Date(first.date || '9999-12-31').getTime() - new Date(second.date || '9999-12-31').getTime();
@@ -372,30 +407,11 @@ export default function EventWorkspaceShell() {
       showToast('Moment updated', 'success');
     } catch { showToast('Unable to update moment', 'danger'); }
   };
-  const duplicateMoment = async () => {
-    try {
-      const saved = await addEvent(user?.uid, isGuest, duplicateEventData(event));
-      showToast('Moment duplicated without repeating expenses', 'success');
-      navigate('/events/' + (saved.id || saved.firestoreId));
-    } catch { showToast('Could not duplicate moment', 'danger'); }
-  };
   const archiveMoment = async () => {
     try {
       await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
       showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
     } catch { showToast('Could not update archive state', 'danger'); }
-  };
-  const shareMoment = async () => {
-    const details = eventShareDetails(event, isGuest, window.location.origin);
-    try {
-      if (navigator.share) await navigator.share(details);
-      else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText([details.text, details.url].filter(Boolean).join('\n'));
-        showToast('Moment details copied', 'success');
-      } else showToast('Sharing unavailable in this browser', 'danger');
-    } catch (error) {
-      if (error?.name !== 'AbortError') showToast('Could not share moment', 'danger');
-    }
   };
 
   const printSummary = () => window.print();
@@ -461,8 +477,22 @@ export default function EventWorkspaceShell() {
 
       return (
         <div className="workspace-activities">
-          <div className="activity-discovery-bar">
-            <label className="activity-search-field"><Search size={15} aria-hidden="true" /><input value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" /></label>
+          <ListControls
+            title="Activity filters"
+            activeCount={Number(Boolean(activitySearch.trim())) + Number(activityFilter !== 'all') + Number(activitySort !== 'date' || activitySortDirection !== 'asc')}
+            resultCount={filteredActivities.length}
+            resultLabel="activities"
+            summary={[
+              ({ all: 'Active activities', 'in-progress': 'In Progress', completed: 'Completed', cancelled: 'Cancelled', high: 'High Priority', medium: 'Medium Priority', low: 'Low Priority' })[activityFilter],
+              `${({ date: 'Due date', title: 'Title', priority: 'Priority', status: 'Status' })[activitySort]} ${activitySortDirection === 'asc' ? '↑' : '↓'}`,
+              activitySearch.trim() ? `Search: ${activitySearch.trim()}` : '',
+            ].filter(Boolean).join(' · ')}
+            hasSort
+            onReset={() => { setActivitySearch(''); setActivityFilter('all'); setActivitySort('date'); }}
+            search={<input id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}
+          >
+          <div className="dn-list-controls-field">
+            <span>Status or priority</span>
             <div className="activity-filter-rail" role="group" aria-label="Filter activities">
               {[
                 ['all', 'All'],
@@ -476,8 +506,12 @@ export default function EventWorkspaceShell() {
                 <button key={value} type="button" className={activityFilter === value ? 'is-selected' : ''} aria-pressed={activityFilter === value} onClick={() => setActivityFilter(value)}>{label}</button>
               ))}
             </div>
+          </div>
+          <div className="dn-list-controls-field">
+            <span>Sort by</span>
             <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
           </div>
+          </ListControls>
           <ActivityList
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
@@ -500,7 +534,6 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Attachments') {
       return (
         <div className="workspace-resource-list">
-          <label className="workspace-upload-control"><Upload size={16} /> Add attachment<input type="file" onChange={addAttachment} /></label>
           {event.attachments?.length ? event.attachments.map((attachment) => (
             <div className="workspace-resource-row workspace-attachment-card" key={attachment.id}><span className="workspace-attachment-icon">{attachment.type?.startsWith('image/') ? <Images size={19} /> : <FileText size={19} />}</span><div><strong title={attachment.name}>{attachment.name}</strong><span className="workspace-attachment-meta"><i>{String(attachment.type || 'FILE').split('/').pop().toUpperCase()}</i>{Math.max(1, Math.ceil(Number(attachment.size || 0) / 1024))} KB · {formatDate(attachment.createdAt)}</span></div><button type="button" onClick={() => setPendingDeleteAttachment(attachment)} style={styles.iconButtonDanger} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Documents, photos, and keepsakes will stay attached to this event.</p></div>}
@@ -511,7 +544,6 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Memories') {
       return (
         <div className="workspace-resource-list">
-          <button type="button" className="primaryButton" onClick={() => setMemoryDialogOpen(true)} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add memory</button>
           {event.memories?.length ? event.memories.map((memory) => (
             <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span className="workspace-memory-body free-text-preview is-truncated">{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
@@ -530,8 +562,6 @@ export default function EventWorkspaceShell() {
       <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
         otherActions={[
           { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
-          { label: 'Duplicate', icon: Copy, onClick: duplicateMoment },
-          { label: 'Share', icon: Share2, onClick: shareMoment },
           { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: archiveMoment },
         ]} onDelete={() => setPendingDeleteEvent(true)}>
       <header className={`event-moment-hero mood-${eventMood}`}>
@@ -558,7 +588,7 @@ export default function EventWorkspaceShell() {
       </header>
       </SwipeActionCard>
 
-      <nav className="event-workspace-nav" aria-label={`${event.name} sections`}>
+      <nav ref={workspaceNavRef} className="event-workspace-nav" aria-label={`${event.name} sections`}>
         {sections.map((section) => (
           <Link
             key={section.label}
@@ -575,10 +605,12 @@ export default function EventWorkspaceShell() {
       </nav>
 
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
-        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-activity-action' : ''}`}>
+        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-section-action has-activity-action' : ['Memories', 'Attachments'].includes(activeSection.label) ? ' has-section-action' : ''}`}>
           <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
           <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
           {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}><Plus size={15} aria-hidden="true" /> Add activity</button> : null}
+          {activeSection.label === 'Memories' ? <button type="button" className="workspace-section-action workspace-add-memory" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} aria-hidden="true" /> Add memory</button> : null}
+          {activeSection.label === 'Attachments' ? <label className="workspace-section-action workspace-upload-control workspace-add-attachment" role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); keyEvent.currentTarget.querySelector('input')?.click(); } }}><Upload size={15} aria-hidden="true" /> Add attachment<input type="file" aria-label="Add attachment" onChange={addAttachment} /></label> : null}
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}

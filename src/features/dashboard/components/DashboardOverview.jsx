@@ -6,50 +6,13 @@ import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
-import { getDashboardVisibleEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
+import { getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
+import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
-
-const getEventDate = (event) => {
-  const date = new Date(event.date || event.startDate || event.createdAt);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-
-const getStartOfDay = (date) => {
-  const next = new Date(date);
-  next.setHours(0, 0, 0, 0);
-  return next;
-};
-
-const isRecurringEvent = (event) => Boolean(event?.isRecurring === true || (event?.recurrence && String(event.recurrence).toLowerCase() !== 'none'));
-
-const getNextOccurrenceDate = (event, referenceDate = new Date()) => {
-  const baseDate = getEventDate(event);
-  if (!baseDate || !isRecurringEvent(event)) return baseDate;
-
-  const today = getStartOfDay(referenceDate);
-  const recurrence = String(event.recurrence || 'yearly').toLowerCase();
-  const baseMonth = baseDate.getMonth();
-  const baseDay = baseDate.getDate();
-
-  if (recurrence === 'monthly') {
-    const candidate = new Date(today.getFullYear(), today.getMonth(), baseDay);
-    if (candidate < today) {
-      const nextMonth = new Date(today.getFullYear(), today.getMonth() + 1, baseDay);
-      return nextMonth;
-    }
-    return candidate;
-  }
-
-  const nextYear = new Date(today.getFullYear(), baseMonth, baseDay);
-  if (nextYear < today) {
-    return new Date(today.getFullYear() + 1, baseMonth, baseDay);
-  }
-
-  return nextYear;
-};
+const EMPTY_EVENTS = Object.freeze([]);
 
 const getEventStatus = (event) => String(event.status || '').toLowerCase();
 
@@ -140,18 +103,10 @@ const getAnniversaryGreeting = (event) => {
 };
 
 const getNextOccurrenceForStatus = (event, referenceDate = new Date()) => {
-  if (!isRecurringEvent(event)) return getEventDate(event);
   return getNextOccurrenceDate(event, referenceDate);
 };
 
-const getDaysRemaining = (eventDate) => {
-  if (!eventDate) return null;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const diffMs = eventDate.getTime() - today.getTime();
-  const diffDays = Math.ceil(diffMs / 86400000);
-  return Math.max(diffDays, 0);
-};
+const getDaysRemaining = getCalendarDaysRemaining;
 
 const getValueFromEvent = (event, keys) => {
   for (const key of keys) {
@@ -450,29 +405,25 @@ export default function DashboardOverview() {
   const showToast = useAppStore((state) => state.showToast);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
-  const { events, loading, loadEvents } = useEventStore();
+  const { events: storedEvents, loading, error, loadedFor, activeLoadKey, loadEvents } = useEventStore();
+  const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
+  const ready = loadedFor === loadKey && activeLoadKey === loadKey;
+  const events = ready ? storedEvents : EMPTY_EVENTS;
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
 
   useEffect(() => {
+    setSelectedEvent(null);
+    setGreetingEvent(null);
+  }, [loadKey]);
+
+  useEffect(() => {
     if (!user && !isGuest) return;
-    if (!events.length) loadEvents(user?.uid, isGuest);
-  }, [events.length, isGuest, loadEvents, user]);
+    loadEvents(user?.uid, isGuest);
+  }, [isGuest, loadEvents, user?.uid, loadedFor]);
 
-  const upcomingEvents = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    return [...getDashboardVisibleEvents(events, momentTypes)]
-      .filter((event) => {
-        const date = getNextOccurrenceForStatus(event, today);
-        if (!date || date < today) return false;
-
-        const diffInDays = Math.floor((date.getTime() - today.getTime()) / 86400000);
-        return diffInDays <= 30;
-      })
-      .sort((a, b) => (getNextOccurrenceForStatus(a, today)?.getTime() || 0) - (getNextOccurrenceForStatus(b, today)?.getTime() || 0));
-  }, [events, momentTypes]);
+  const todayKey = new Date().toDateString();
+  const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
 
   const upcomingEmptyMessage = 'No moments in the next 30 days.';
 
@@ -539,7 +490,11 @@ export default function DashboardOverview() {
             <span>Upcoming moments</span>
             <button type="button" className="dashboard-upcoming-all-button" onClick={() => navigate('/events')}>All moments <span aria-hidden="true">→</span></button>
           </header>
-          {upcomingEvents.length ? (
+          {error === 'Unable to load events.' ? (
+            <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
+          ) : !ready || loading ? (
+            <p className="dashboard-upcoming-empty" role="status">Loading upcoming moments…</p>
+          ) : upcomingEvents.length ? (
             <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container">
               <div className="dashboard-upcoming-list" style={styles.upcomingList}>
                 {upcomingEvents.map((event) => {

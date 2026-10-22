@@ -139,6 +139,41 @@ test('orphaned finance links are reported instead of dropping standalone transac
   assert.deepEqual(collectBackupReferenceWarnings(parsed), ['Expense "orphan-expense" references a Moment not included in this backup.']);
 });
 
+test('legacy numeric identity and nested-only expenses survive v2 conversion and repeat restore', () => {
+  const converted = parseBackupDocument({ backupFormatVersion: 2, data: { collections: {
+    eventGroups: [{ id: 10, name: 'Legacy Moment', firestoreCollection: 'events', activities: [
+      { id: 20, expenses: [{ id: 30, amount: 1200, date: '2026-10-18' }] },
+    ] }],
+    expenses: [], incomes: [{ id: 40, name: 'Legacy income', amount: 18000 }],
+  }, localStorage: { dn_favorite_event_ids_guest: '[10]' } } });
+  assert.equal(converted.moments[0].id, '10');
+  assert.equal(converted.activities[0].id, '20');
+  assert.equal(converted.moments[0].firestoreCollection, undefined);
+  assert.equal(converted.expenses.length, 1);
+  assert.equal(converted.expenses[0].id, '30');
+  assert.equal(converted.expenses[0].eventId, '10');
+  assert.equal(converted.expenses[0].activityId, '20');
+  assert.equal(converted.incomes[0].id, '40');
+  assert.deepEqual(converted.dashboardConfiguration.favorites, ['10']);
+  const restored = buildEventGroupsFromBackup(converted);
+  assert.equal(restored[0].activities[0].expenses[0].amount, 1200);
+  const repeated = mergeEventGroupsForRestore(restored, buildEventGroupsFromBackup(converted));
+  assert.equal(repeated.eventGroups[0].activities[0].expenses.length, 1);
+  assert.equal(repeated.counts.moments, 0);
+});
+
+test('backup canonical expenses take precedence over a nested copy with numeric identity', () => {
+  const backup = createBackupDocument({
+    moments: [{ id: 1, activities: [{ id: 2, expenses: [{ id: 3, amount: 10 }] }] }],
+    expenses: [{ id: '3', amount: 25, eventId: '1', activityId: '2' }],
+    incomes: [{ firestoreId: 'old-income-document', amount: 100 }], codeLists: DEFAULT_CODE_LISTS,
+  });
+  assert.equal(backup.expenses.length, 1);
+  assert.equal(backup.expenses[0].amount, 25);
+  assert.equal(backup.incomes[0].id, 'old-income-document');
+  assert.equal(backup.incomes[0].firestoreId, undefined);
+});
+
 test('acceptance volume round-trips all required record counts and relationships', () => {
   const moments = Array.from({ length: 50 }, (_, index) => ({
     id: `moment-${index}`,

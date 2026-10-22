@@ -237,7 +237,6 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         <span className="settings-accordion-icon"><Hash size={18} /></span>
         <div>
           <h3>{title}</h3>
-          <p>{description}</p>
         </div>
         {listKey === 'eventTypes' ? (
           <button type="button" className="settings-tag-add moment-type-add-button" onClick={() => openMomentTypeEditor()}>
@@ -245,6 +244,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
           </button>
         ) : null}
       </div>
+      <p className="code-list-description">{description}</p>
 
       {listKey !== 'eventTypes' ? (
         <div className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}>
@@ -315,14 +315,14 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
             <div className="moment-type-switch-list">
               <div className="moment-type-switch-row">
-                <span>Greeting Cards</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Greeting Cards" aria-checked={momentTypeEditor.canGenerateGreetingCards} onClick={() => setMomentTypeEditor((current) => ({ ...current, canGenerateGreetingCards: !current.canGenerateGreetingCards }))}>
+                <span>Show on Dashboard</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Show on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
                   <span className="moment-type-switch-thumb" />
                 </button>
               </div>
               <div className="moment-type-switch-row">
-                <span>Show on Dashboard</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Show on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
+                <span>Greeting Cards</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Greeting Cards" aria-checked={momentTypeEditor.canGenerateGreetingCards} onClick={() => setMomentTypeEditor((current) => ({ ...current, canGenerateGreetingCards: !current.canGenerateGreetingCards }))}>
                   <span className="moment-type-switch-thumb" />
                 </button>
               </div>
@@ -389,7 +389,7 @@ export default function CodeLists() {
   };
 
   return (
-    <div className="feature-page settings-page about-page">
+    <div className="feature-page settings-page about-page code-lists-page">
       <header className="settings-subpage-header">
         <button type="button" className="settings-back-button" onClick={() => navigate('/settings')} aria-label="Back to Settings">
           <ArrowLeft size={16} />
@@ -411,7 +411,7 @@ export default function CodeLists() {
         </section>
       ) : null}
       {!adminValuesLoading && !adminValuesError ? <>
-        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type can control greeting generation and dashboard visibility." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type controls greeting generation and visibility in upcoming Dashboard moments." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />

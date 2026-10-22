@@ -1,4 +1,5 @@
 import { getCodeListMeta } from './codeLists.js';
+import { getNextOccurrenceDate, getStartOfDay } from './momentDates.js';
 
 export const DEFAULT_MOMENT_TYPE_CONFIG = Object.freeze({
   value: '',
@@ -36,10 +37,29 @@ export const getMomentTypeConfig = (momentType, customValues = []) => {
   };
 };
 
-export const getDashboardVisibleEvents = (events = [], customValues = []) => ((Array.isArray(events) ? events : []).filter((event) => {
-  const eventType = String(event?.type || event?.customType || '').trim();
-  return getMomentTypeConfig(eventType, customValues).showInDashboardUpcoming !== false;
-}));
+export const getDashboardVisibleEvents = (events = [], customValues = []) => {
+  const momentTypes = getCodeListMeta('eventTypes', customValues);
+  return (Array.isArray(events) ? events : []).filter((event) => {
+    if (!event || event.archived || ['archived', 'cancelled'].includes(String(event.status || '').trim().toLowerCase())) return false;
+    const eventType = String(event.type || event.customType || '').trim();
+    const customType = String(event.customType || '').trim();
+    const configuredCustomType = eventType.toLowerCase() === 'other' && customType && momentTypes.some((entry) => (
+      entry.value.toLowerCase() === customType.toLowerCase() || entry.label.toLowerCase() === customType.toLowerCase()
+    ));
+    const effectiveType = configuredCustomType ? customType : eventType;
+    return getMomentTypeConfig(effectiveType, momentTypes).showInDashboardUpcoming !== false;
+  });
+};
+
+export const getUpcomingDashboardEvents = (events = [], referenceDate = new Date(), customValues = []) => {
+  const today = getStartOfDay(referenceDate);
+  const lastDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 30);
+  return getDashboardVisibleEvents(events, customValues)
+    .map((event) => ({ event, date: getNextOccurrenceDate(event, today) }))
+    .filter(({ date }) => date && date >= today && date <= lastDay)
+    .sort((first, second) => first.date - second.date)
+    .map(({ event }) => event);
+};
 
 export const getMomentTypeGreetingTemplate = (momentType, customValues = [], fallbackTemplate = '') => {
   const config = getMomentTypeConfig(momentType, customValues);

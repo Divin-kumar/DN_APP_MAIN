@@ -373,9 +373,11 @@ export default function Settings() {
           - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
         resultingExpenses = mergeRecordsById(existingExpenses.filter((expense) => !nestedExpenseIds.has(expense.id)), standaloneBackupExpenses).items;
         setGuestExpenses(resultingExpenses);
+        imported.expenses = standaloneBackupExpenses.length;
 
         const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
         resultingIncomes = mergedIncomes.items;
+        setGuestIncomes(resultingIncomes);
         imported.incomes = mergedIncomes.added;
         imported.conflicts += backup.incomes.length - mergedIncomes.added;
       } else {
@@ -392,10 +394,11 @@ export default function Settings() {
         for (const moment of restoredGroups) {
           const previous = existingById.get(moment.id);
           if (!previous) {
-            await createEvent(user.uid, moment);
+            const legacyDestination = existingGroups.length > 0 && existingGroups.every((item) => item.firestoreCollection === 'events');
+            await createEvent(user.uid, { ...moment, ...(legacyDestination ? { firestoreCollection: 'events' } : {}) });
             continue;
           }
-          if (JSON.stringify(previous) !== JSON.stringify(moment)) await updateEvent(user.uid, moment);
+          if (JSON.stringify(previous) !== JSON.stringify(moment)) await updateEvent(user.uid, { ...moment, firestoreCollection: previous.firestoreCollection });
         }
 
         const nestedExpenseIds = new Set(restoredGroups.flatMap((moment) => (

@@ -1,69 +1,40 @@
-# Mandatory AI Operating Contract — DN_APP_MAIN / OldVersion
+# DN development and documentation rules — OldVersion
 
-**PERMANENT PRODUCT NAME: DN, explicitly confirmed by the owner. All future AI sessions working on `OldVersion` MUST use DN in product labels, answers, requirements, user-facing content and code.** Always call the application **DN** and never use any prior product name, in future AI sessions, answers, user-facing labels, code additions, PR titles, plans and documentation. The old product name is **deprecated and incorrect**. Older internal strings may exist solely as compatibility keys for previously stored user data, legacy backup tests and historic Git evidence; they are **never product branding**. If you encounter older naming in source, prefer DN and update the canonical master and audit entry with the correction.
+**PERMANENT PRODUCT NAME: DN.** Use DN in product labels, new code, answers and documentation. Old identifiers may remain only for stored-data compatibility or historic evidence, never as alternate branding.
 
-**Scope: `OldVersion` branch of `Divin-kumar/DN_APP_MAIN` only.** These mandatory AI/change-control rules **do not apply to `main`, any other branch, or other repositories.** For factual product/application truth, read [docs/MASTER_SOURCE_OF_TRUTH.md](docs/MASTER_SOURCE_OF_TRUTH.md) before edits. This document is not a replacement for verification of current code.
+These rules apply to `OldVersion` in `Divin-kumar/DN_APP_MAIN`, not other branches/repositories. Explicit owner instructions take precedence. Inspect branch/SHA/tree before editing, preserve unrelated changes and handle concurrency. Do not switch branches, commit, push, merge or deploy without authorization. Protect `main` and business data.
 
-## 0. Repository documentation budget
-**Strict DN branding and documentation gate:** No AI may add the retired app name to user-visible content. New or changed UI source must name the product DN. Never create a fifth Markdown file on `OldVersion`, including `.markdown` or case variants: add all proposed features, designs, decisions, tasks, specs and plans to the Master, and all executed work to the audit log. The only old-prefix exception is data compatibility, not a second product identity. `src/brandIdentity.test.mjs` checks these rules in `npm test`.
+## Documentation authority and inventory
 
-Only four Markdown files are authorized in the `OldVersion` working tree:
-1. `README.md` — short entry point and run commands.
-2. `AGENTS.md` — this mandatory AI change-control contract.
-3. `docs/MASTER_SOURCE_OF_TRUTH.md` — authoritative current state, architecture, constraints, decisions and planned backlog.
-4. `docs/CHANGE_AUDIT_LOG.md` — append-only history of every change.
-Do not add `tasks.md`, `memory.md`, additional PRDs, design notes, duplicate specs or scattered Markdown. Put approved future plans in the Master's **Planned/Unverified Backlog** section. Log every executed change in the audit log. Historical originals remain retrievable from Git commits when deleted.
+1. [docs/MASTER_SOURCE_OF_TRUTH.md](docs/MASTER_SOURCE_OF_TRUTH.md) is the single authority for current behavior, architecture, routes, data flow, storage, configuration, constraints and verification limits.
+2. [README.md](README.md) provides setup and the documentation index. Link to the master rather than duplicate application descriptions.
+3. `AGENTS.md` defines mandatory development/documentation rules. Every future coding agent must read it, the master and relevant source before modifications.
+4. [docs/CHANGE_AUDIT_LOG.md](docs/CHANGE_AUDIT_LOG.md) records change evidence, with the latest change first under the owner's explicit 2026-10-22 instruction. Add new entries immediately below its introduction, ordered by descending CHG date/sequence. Preserve all prior entry text; correct an older claim in a new top entry. The log is historical evidence, not current product truth or a second operating policy.
 
-## 1. Non-negotiable rule: no undocumented change
-**For EVERY change on `OldVersion`** (feature, bug fix, refactor, styling, dependencies, schema, code, tests, config, infrastructure, documentation or deployment script):
-- Inspect source behavior first and distinguish observed implementation from assumptions.
-- Update `docs/MASTER_SOURCE_OF_TRUTH.md` in the **same change/PR**: impacted functionality or architecture, data flows, domain invariants, risks, compatibility, and verification status. If a change is purely internal and has no user-facing behavior, record its internal implications.
-- **Append a new uniquely identified entry** to `docs/CHANGE_AUDIT_LOG.md` in the **same change/PR**, even when tests fail or the work is incomplete. Never silently rewrite or delete an old entry; correct it with a subsequent entry.
-- Each entry includes UTC date, actor, branch, change summary, rationale, exact changed paths, observed before/after behavior, data/UX/security implications, test commands and actual outcomes (or NOT RUN), commit/PR reference when known, risk and rollback, and planned follow-ups. If the commit SHA is not yet available, say `pending commit` and backfill in the next audit entry rather than falsely inventing one.
-- For documentation-only cleanup or governance changes, append the same audit entry and update master version and inventory.
-- Do **not** label code inspection as runtime validation or claim production Firebase Rules were tested without evidence.
-- Every change to `OldVersion` must include a documentation diff. The workflow under `.github/workflows/documentation-governance.yml` checks **only pushes to `OldVersion` and pull requests targeting `OldVersion`**. It does not govern other branches or repositories. Workflow checks are **not** a substitute for branch protection/review.
+Retain the existing four-file inventory. Put documentation rules here instead of creating `docs/DOCUMENTATION_RULES.md`; the brand/inventory test and CI whitelist require exactly these four Markdown files. Do not add duplicate architecture, plan, memory or behavior documents. A necessary supporting document needs explicit approval and coordinated inventory-check changes, and must defer shared behavior to the master.
 
-**Definition of done for `OldVersion`:** code implemented; relevant tests/build executed (or failures/limitations explicitly recorded); master and audit log updated; no unsupported claims; user-facing summary lists changed files, SHA and validation. A change lacking documentation remains **INCOMPLETE**, even if code runs.
+## Required workflow for every development task
 
-## 2. Branch and deployment rules
-- Current development target is exactly `OldVersion` (capital O and V); specify `branch: "OldVersion"` in GitHub writes.
-- `main` is protected and must not be modified, force-pushed or merged without explicit user instruction. PR #6 is historical/open and not authorization to merge.
-- Do not deploy Firebase Hosting, run destructive data migrations or delete business data without explicit authorization.
-- Before writing, fetch the latest branch SHA and relevant files. Handle conflicts and concurrency; never blindly overwrite newer work.
-- Avoid broad rewrites; preserve stable app IDs, guest/account separation, nested activity/expense links, migration behavior and backup compatibility.
+1. **Inspect first.** Check branch, SHA and working tree. Preserve unrelated changes/untracked files. Check the remote branch before writes when available and handle concurrency; otherwise disclose that remote freshness is unknown. Read relevant documentation and trace actual handlers, callers, stores/services, calculations and configuration. A filename, comment or component's existence does not prove reachability.
+2. **Identify the change.** Establish observed current behavior, intended resulting behavior and affected domains. Identify documentation that would become inaccurate. Separate source-derived facts from requirements and assumptions.
+3. **Implement within authorization.** Preserve stable IDs, guest/account boundaries, nested links, compatibility and recovery behavior. Do not destroy data, force-push, alter protected branches or deploy without explicit permission. Never expose secret values.
+4. **Document in the same task/change set.** Update the master whenever behavior, architecture, routes, data flow, storage, configuration or important constraints change. Update README or these rules when setup, usage, troubleshooting, testing, operations or process changes. Record the change and actual verification in a new top changelog entry. For internal changes update impacted constraints/verification facts; explain a no-documentation-impact conclusion when no documented fact changes. Code comments do not fully document a feature.
+5. **Describe the resulting present state.** Replace obsolete descriptions instead of accumulating previous implementations, invented rationale or version narratives. Document reachable behavior and limits with source references. Introduce no duplicate source of truth.
+6. **Verify agreement.** Compare routes/redirects to definitions, calculations to call sites, interactions to handlers/callers, persistence to service paths, backups to parser and restore orchestration, and PWA claims to registration/worker configuration. Check contradictions, Markdown links/anchors and inventory.
+7. **Run applicable validation.** Use existing tests/build and relevant browser/account/guest/sample/failure checks where available. Record exact commands and actual outcomes. Honor task restrictions on installation and scope. Source-text/utility tests do not prove browser/device/cloud behavior. Missing dependencies and failed checks are never passes.
+8. **Disclose limitations.** Identify verified execution, implementation-derived behavior and unverified behavior. Report failures, environmental limits and unresolved questions. If documentation cannot be updated, name exactly what remains outdated and why; report incomplete status. No behavioral/architectural change may knowingly leave the master outdated without that disclosure.
+9. **Review the final diff.** Confirm authorized scope, preserved unrelated work and valid links/inventory. Report changed files, reviewed SHA, validation, risks and commit/push/deploy status. Do not invent an uncommitted change's SHA.
 
-## 3. How to evaluate truth
-- **Current source at branch HEAD** > verifiable executed tests/deployed config > master (which must be updated when source changes) > historical Git docs.
-- Distinguish **Source-inspected**, **Runtime-verified**, **Planned**, **Unknown**, **Deprecated**.
-- Existing implementation: React/Vite, Router, Zustand, Firebase Auth+Firestore, guest localStorage; backup JSON v3; PWA shell cache.
-- Do not invent durable offline data synchronization, secure deployed Firestore Rules, original binary attachment storage, comprehensive automatic backups or completed roadmap features.
-- Validate changes in account, guest and sample/demo modes where relevant; check failure/recovery cases. Never expose secret values.
+## Evidence and completion standard
 
-## 4. Execution sequence for AI sessions working on `OldVersion`
-1. Read `AGENTS.md`, `docs/MASTER_SOURCE_OF_TRUTH.md` and the latest entries in `docs/CHANGE_AUDIT_LOG.md`.
-2. Refresh current `OldVersion` code/tree and user goal. State affected domains and planned verification.
-3. Implement only authorized changes on `OldVersion`, with tests/guardrails.
-4. Update master + append audit entry **before completing the task**; update version/changelog in master.
-5. Inspect diff, run applicable `npm test`, `npm run build` when available, and report real outcomes and any missing checks.
-6. Verify branch state, then summarize changed paths, open risks and log entry ID.
+- **Verified by execution:** name the command/journey and actual result, limiting claims to what was exercised.
+- **Implementation-derived:** traced source behavior without end-to-end execution.
+- **Unverified:** insufficient evidence/access; specify what remains missing.
 
-## 5. Audit record schema (mandatory)
-```text
-### CHG-YYYYMMDD-NNN | <summary>
-- Date (UTC):
-- Actor/requester:
-- Branch / commit / PR: 
-- Scope and changed paths:
-- Before -> after:
-- Why:
-- User/data/security/compatibility impact:
-- Verification (exact commands, PASS/FAIL/NOT RUN):
-- Risk and rollback:
-- Master sections updated:
-- Status: IMPLEMENTED / PARTIAL / REVERTED / PROPOSED (proposals live in master, not as executed code)
-- Follow-ups:
-```
+No coding agent may invent behavior, claim passing tests without evidence, infer secure deployed rules from client paths, or promise complete recovery/offline sync/file storage without implementation and validation. Documentation must accompany the corresponding implementation change set; tests and comments do not replace it. Changes to these rules require explicit owner direction.
 
-## 6. Governing changes to this contract
-Changing or removing these `OldVersion`-specific requirements requires explicit user direction and an `OldVersion` audit-log entry. Even if a requested task is only an answer, do not claim that it changed files if no GitHub write occurred.
+## Automated enforcement
+
+`src/brandIdentity.test.mjs` checks DN identity and exactly four Markdown paths in `npm test`. `.github/workflows/documentation-governance.yml` requires changed master/changelog files on each `OldVersion` push/PR and runs npm ci/test/build. `scripts/check-audit-log.mjs` compares entries with the base commit: previous CHG identifiers and entry text must remain, entries must be newest first, and at least one new entry must precede the historical records. Line endings and separating trailing whitespace are normalized for comparison. Existing entries may be reordered as intact records, never silently edited or removed.
+
+The owner's latest-first changelog instruction supersedes the former no-new-history policy and the old append-at-bottom check. Keep the master focused on the resulting present state and the changelog focused on evidence for changes. Do not weaken historical preservation or bypass CI to change log ordering. Branch protection and server-enforced data security require their own verification; these documentation checks do not establish them.

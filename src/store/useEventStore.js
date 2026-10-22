@@ -16,6 +16,8 @@ import {
 } from '../services/eventService';
 import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 import { getEventStatus } from '../utils/eventStatus';
+import { createEventLoader } from '../utils/eventLoadScope';
+import { recordId } from '../utils/recordIdentity';
 
 const sameEvent = (first, second) => Boolean(
   (first.id && second.id && first.id === second.id)
@@ -43,11 +45,7 @@ const syncEventSampleData = (data, events, options = {}) => {
   return next;
 };
 
-const getLoadKey = (uid, isGuest) => `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
-
 const useEventStore = create((set, get) => {
-  const pendingLoads = new Map();
-
   return ({
   events: [],
   loading: false,
@@ -57,41 +55,19 @@ const useEventStore = create((set, get) => {
 
   setEvents: (items) => set({ events: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
 
-  loadEvents: async (uid, isGuest) => {
-    const loadKey = getLoadKey(uid, isGuest);
-    if (get().loadedFor === loadKey) return get().events;
-    if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
-
-    set({ loading: true, error: null, activeLoadKey: loadKey });
-
-    const request = Promise.resolve().then(async () => {
-      try {
-        const sampleData = getActiveSampleData(uid);
-        if (sampleData) {
-          if (get().activeLoadKey === loadKey) set({ events: sampleData.events, loading: false, error: null, loadedFor: loadKey });
-          return sampleData.events;
-        }
-
-        const items = isGuest ? getGuestEvents() : await getEventsForUser(uid);
-        if (get().activeLoadKey === loadKey) set({ events: items, loading: false, error: null, loadedFor: loadKey });
-        return items;
-      } catch (error) {
-        console.error('Failed to load events:', error);
-        if (get().activeLoadKey === loadKey) set({ loading: false, error: 'Unable to load events.' });
-        return [];
-      } finally {
-        pendingLoads.delete(loadKey);
-      }
-    });
-    pendingLoads.set(loadKey, request);
-
-    return request;
-  },
+  loadEvents: createEventLoader({
+    get,
+    set,
+    readEvents: async (uid, isGuest) => {
+      const sampleData = getActiveSampleData(uid);
+      return sampleData ? sampleData.events : isGuest ? getGuestEvents() : getEventsForUser(uid);
+    },
+  }),
 
   addEvent: async (uid, isGuest, event) => {
     const normalized = {
       ...event,
-      id: event.id || crypto.randomUUID(),
+      id: recordId(event.id) || crypto.randomUUID(),
       activities: Array.isArray(event.activities) ? event.activities : [],
     };
     normalized.status = getEventStatus(normalized);
@@ -110,23 +86,38 @@ const useEventStore = create((set, get) => {
       return normalized;
     }
 
+    // Quick Create can be opened before a Moment page loads this account. Read
+    // its actual source before choosing a destination for the new aggregate.
+    const loadKey = `user:${uid || 'anonymous'}`;
+    if (get().loadedFor !== loadKey || get().activeLoadKey !== loadKey) {
+      await get().loadEvents(uid, false);
+      if (get().loadedFor !== loadKey || get().activeLoadKey !== loadKey) {
+        throw new Error('Unable to load this account’s Moments before saving. Please retry.');
+      }
+    }
     const previous = get().events;
+    normalized.firestoreCollection = previous.length && previous.every((item) => item.firestoreCollection === 'events')
+      ? 'events' : 'eventGroups';
     const optimistic = [normalized, ...previous];
     set({ events: optimistic, error: null });
 
     try {
       const saved = await createEvent(uid, normalized);
-      set({
-        events: [saved, ...get().events.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
-        error: null,
-      });
+      if (get().activeLoadKey === loadKey) {
+        set({
+          events: [saved, ...get().events.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
+          error: null,
+        });
+      }
       return saved;
     } catch (error) {
       console.error('Failed to create event:', error);
-      set({
-        events: get().events.filter((item) => !sameEvent(item, normalized)),
-        error: 'Unable to create the event. Your changes were restored.',
-      });
+      if (get().activeLoadKey === loadKey) {
+        set({
+          events: get().events.filter((item) => !sameEvent(item, normalized)),
+          error: 'Unable to create the event. Your changes were restored.',
+        });
+      }
       throw error;
     }
   },

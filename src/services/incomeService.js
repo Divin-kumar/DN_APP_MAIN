@@ -13,27 +13,17 @@ import {
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { upsertRecord } from '../utils/transactionRelations';
+import { normalizeFinancialRecord } from '../utils/financialRecords.js';
 
 const GUEST_INCOMES_KEY = 'dn_guest_incomes';
 
-export const normalizeIncome = (item) => ({
-  id: item.id || crypto.randomUUID(),
-  name: String(item.name ?? '').trim(),
-  type: item.type || 'Other',
-  amount: Number(item.amount ?? 0),
-  date: item.date || new Date().toISOString().slice(0, 10),
-  createdAt: item.createdAt || new Date().toISOString(),
-  description: String(item.description ?? item.notes ?? '').trim(),
-  notes: String(item.notes ?? item.description ?? '').trim(),
-  eventId: item.eventId || null,
-  activityId: item.activityId || null,
-});
+export const normalizeIncome = (item, fallbackId = '') => normalizeFinancialRecord(item, 'income', fallbackId);
 
 export const getGuestIncomes = () => {
   try {
     const raw = localStorage.getItem(GUEST_INCOMES_KEY) || '[]';
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map(normalizeIncome) : [];
+    return Array.isArray(parsed) ? parsed.map((item) => normalizeIncome(item)) : [];
   } catch (error) {
     console.error('Failed to load guest incomes:', error);
     return [];
@@ -49,7 +39,7 @@ export const getIncomesForUser = async (uid) => {
   const snapshot = await getDocs(incomesRef);
   return snapshot.docs.map((docSnap) => ({
     firestoreId: docSnap.id,
-    ...normalizeIncome(docSnap.data()),
+    ...normalizeIncome(docSnap.data(), docSnap.id),
   }));
 };
 

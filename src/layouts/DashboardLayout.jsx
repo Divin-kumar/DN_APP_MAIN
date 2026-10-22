@@ -22,6 +22,8 @@ import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
+import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
+import { getRouteTransitionKey, isSameMomentWorkspace } from '../utils/momentWorkspaceRoutes';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -39,7 +41,7 @@ export default function DashboardLayout() {
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loadEvents, addEvent, updateEventItem } = useEventStore();
+  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent, updateEventItem } = useEventStore();
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
@@ -58,10 +60,15 @@ export default function DashboardLayout() {
   const [quickCreateType, setQuickCreateType] = useState(null);
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickActivityEventId, setQuickActivityEventId] = useState('');
+  const [quickActivityType, setQuickActivityType] = useState('');
   const [quickActivityTitle, setQuickActivityTitle] = useState('');
   const [quickActivityDate, setQuickActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
+  const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
+  const activityMoments = loadedFor === eventScope && activeLoadKey === eventScope ? events : [];
+  const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
+  const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
 
   // Apply the saved theme to the page root so colors change across the whole app.
   useLayoutEffect(() => {
@@ -142,6 +149,8 @@ export default function DashboardLayout() {
       contentNode.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
+    } else if (isSameMomentWorkspace(previousLocation.pathname, currentLocation.pathname)) {
+      // Section navigation belongs to one workspace; keep its position and drafts.
     } else if (navigationType === 'POP') {
       const savedPosition = scrollPositionsRef.current.get(currentLocation.key) || 0;
       contentNode.scrollTop = savedPosition;
@@ -183,8 +192,8 @@ export default function DashboardLayout() {
 
   useEffect(() => {
     if (!quickCreateType || (!user && !isGuest)) return;
-    if ((quickCreateType === 'activity' || quickCreateType === 'transaction') && !events.length) loadEvents(user?.uid, isGuest);
-  }, [quickCreateType, user, isGuest, events.length, loadEvents]);
+    if (quickCreateType) loadEvents(user?.uid, isGuest);
+  }, [quickCreateType, user?.uid, isGuest, loadEvents]);
 
   // Build a readable profile label shown in the top bar.
   // If the user has a name, show it; otherwise show email or simply "Guest".
@@ -216,6 +225,7 @@ export default function DashboardLayout() {
     setQuickCreateType(type);
     if (type === 'activity') {
       setQuickActivityEventId('');
+      setQuickActivityType('');
       setQuickActivityTitle('');
       setQuickActivityDate(new Date().toISOString().slice(0, 10));
       setQuickActivityPriority('medium');
@@ -250,7 +260,7 @@ export default function DashboardLayout() {
   // This is the same idea as creating a to-do attached to a life event.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
-    const event = events.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
+    const event = filteredActivityMoments.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
     if (!event || !quickActivityTitle.trim()) {
       setQuickCreateError('Choose a life moment and enter an activity title.');
       return;
@@ -365,7 +375,7 @@ export default function DashboardLayout() {
           </div>
 
           <motion.div
-            key={location.pathname}
+            key={getRouteTransitionKey(location.pathname)}
             className="dn-route-transition"
             initial={{ opacity: 0.94, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
@@ -433,10 +443,21 @@ export default function DashboardLayout() {
         <ModalDialog title="Add an activity" onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form" onSubmit={saveQuickActivity}>
-            <DropdownSelect value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment">
-              <option value="">Choose a life moment</option>
-              {events.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}</option>)}
+            <label htmlFor="quick-activity-type">Moment type</label>
+            <DropdownSelect id="quick-activity-type" value={quickActivityType} onChange={(changeEvent) => {
+              const nextType = changeEvent.target.value;
+              setQuickActivityType(nextType);
+              if (!filterActivityMoments(activityMoments, nextType).some((event) => (event.id || event.firestoreId) === quickActivityEventId)) setQuickActivityEventId('');
+            }} aria-label="Moment type" disabled={eventsLoading}>
+              <option value="">All moment types</option>
+              {quickActivityTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
             </DropdownSelect>
+            <label htmlFor="quick-activity-moment">Life moment</label>
+            <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
+              <option value="">Choose a life moment</option>
+              {filteredActivityMoments.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
+            </DropdownSelect>
+            {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
             <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
             <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">

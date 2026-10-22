@@ -12,7 +12,7 @@
  * - guide users through the app experience
  * - support quick refresh and update checks for the PWA shell
  */
-import { ArrowLeft, BookOpen, CircleDashed, Info, RefreshCw, Sparkles, TrendingUp } from 'lucide-react';
+import { ArrowLeft, BookOpen, Info, RefreshCw, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
@@ -36,28 +36,30 @@ const publishedDate = Number.isNaN(deployedAt.getTime())
 const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 
 const guideItems = [
-  { title: 'Dashboard Overview', description: 'Start with the dashboard to view upcoming events, recent activity, and a quick summary of your personal and financial life.' },
-  { title: 'Events Management', description: 'Create life moments, organize event details, and keep each occasion linked to planning notes, memories, and attachments.' },
-  { title: 'Activities', description: 'Add tasks and action items for each event so important follow-ups never get buried.' },
-  { title: 'Memories', description: 'Capture meaningful notes and moments that shape the story behind each birthday, anniversary, festival, or personal milestone.' },
-  { title: 'Attachments', description: 'Attach files, photos, or references to keep the event record complete and easy to revisit.' },
-  { title: 'Financials', description: 'Track income, expenses, and spending trends to maintain a clear view of your monthly financial picture.' },
-  { title: 'Insights', description: 'Review your personal data and financial patterns for a clearer understanding of habits and progress.' },
-  { title: 'Settings', description: 'Tune defaults, reminders, categories, and personalization choices to fit your daily rhythm.' },
+  { title: 'Dashboard', description: 'See today’s Moments, greetings and upcoming Moments for the next 30 days. Choose which Moment Types appear using Show on Dashboard in Code Lists.' },
+  { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Swipe a Moment for Edit, Summary, Archive or Delete.' },
+  { title: 'Moment workspace', description: 'Move between Overview, Activities, Timeline, Memories and Attachments using the section row. Add a memory or attachment entry beside its section heading.' },
+  { title: 'Activities', description: 'Add tasks to a Moment, then complete, cancel or edit them. Quick Create lets you choose a Moment Type first to narrow the available Moments.' },
+  { title: 'Memories and greetings', description: 'Save a memory title and note within a Moment. Preview, edit and download greeting cards as HTML; generated templates follow the Moment Type settings.' },
+  { title: 'Attachments', description: 'Record a selected file’s name, type and size. DN saves attachment details, not the original file contents; keep your original files separately.' },
+  { title: 'Transactions', description: 'Add income and expenses, optionally linked to a Moment or Activity. Search beside Filters; choose type or month inside. History is newest first, and Income, Expense and Balance totals follow the selected month.' },
+  { title: 'Insights', description: 'Open Insights from Dashboard to review counts, spending and income patterns. Its JSON report is separate from a recovery backup.' },
+  { title: 'Settings and backup', description: 'Manage theme, preferences, greeting options and Code Lists. Export a JSON backup from Settings and review the restore summary before importing it. Reminder preferences do not schedule background notifications.' },
 ];
 
 const whatsNew = [
-  'Improved mobile-first Settings navigation for faster access to core controls.',
-  'Dedicated About page for cleaner app navigation and simpler user onboarding.',
-  'Application guide added to help new users understand major DN flows.',
-  'Consistent back-navigation for single-screen app experiences on smaller devices.',
+  'Search stays directly beside compact Filters controls; filtering and sorting open in a separate panel.',
+  'Moments use one list with shorter swipe menus, while Transactions keep a lightweight newest-first history.',
+  'Upcoming Moments use calendar dates and respect each Moment Type’s Show on Dashboard setting.',
+  'All five workspace sections stay in one row, with Memory and Attachment add actions beside their headings.',
+  'Legacy financial records and JSON backup compatibility have improved, and long transaction histories retain readable card heights.',
 ];
 
-const futureReleaseInfo = [
-  'Expanded reminder notifications for birthdays, anniversaries, and important activity checkpoints.',
-  'Improved monthly summaries and budgeting insights for deeper financial awareness.',
-  'More advanced memory and attachment management for richer event records.',
-  'Additional personalization controls for app defaults and user-defined life categories.',
+const dataInfo = [
+  'Signed-in records are stored in your account. Guest records stay in this browser; export a backup before changing browsers or devices.',
+  'Recovery backups include supported Moments, activities, memories, transaction records, settings and attachment details. They exclude original attachment file contents.',
+  'Downloaded JSON backups are not encrypted. Store them privately because they can contain personal and financial information.',
+  'Refresh app checks for an available app-shell update and reloads the page. It does not clear your saved records or replace a data backup.',
 ];
 
 export default function About() {
@@ -74,7 +76,7 @@ export default function About() {
         return;
       }
 
-      const timeoutId = window.setTimeout(finish, 6000);
+      let timeoutId;
       const finish = () => {
         window.clearTimeout(timeoutId);
         worker.removeEventListener('statechange', handleStateChange);
@@ -83,6 +85,7 @@ export default function About() {
       const handleStateChange = () => {
         if (['installed', 'activated', 'redundant'].includes(worker.state)) finish();
       };
+      timeoutId = window.setTimeout(finish, 6000);
       worker.addEventListener('statechange', handleStateChange);
     });
 
@@ -181,8 +184,8 @@ export default function About() {
         <div className="settings-section-heading">
           <span className="settings-accordion-icon"><Sparkles size={18} /></span>
           <div>
-            <h3>What&apos;s New</h3>
-            <p>Recent improvements in the DN experience</p>
+            <h3>What&apos;s New in v{appVersion}</h3>
+            <p>Changes in this version of DN</p>
           </div>
         </div>
         <ul className="about-list compact-list">
@@ -213,14 +216,14 @@ export default function About() {
 
       <section className="settings-section">
         <div className="settings-section-heading">
-          <span className="settings-accordion-icon"><TrendingUp size={18} /></span>
+          <span className="settings-accordion-icon"><Info size={18} /></span>
           <div>
-            <h3>Future Roadmap</h3>
-            <p>Planned enhancements and upcoming capabilities</p>
+            <h3>Your Data</h3>
+            <p>Storage, backups and app updates</p>
           </div>
         </div>
         <ul className="about-list compact-list">
-          {futureReleaseInfo.map((item) => (
+          {dataInfo.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>

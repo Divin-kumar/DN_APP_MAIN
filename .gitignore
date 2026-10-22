@@ -68,3 +68,6 @@ dist/
 
 # dataconnect generated files
 .dataconnect
+
+# Local browser verification artifacts may contain account data.
+.verification/

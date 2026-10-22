@@ -1,3 +1,6 @@
+import { recordId } from './recordIdentity.js';
+import { financialDate } from './financialRecords.js';
+
 // Mirror activity-linked expense records without creating a second financial ledger.
 // Master income/expense collections remain the accounting source of truth.
 // Never equate absent Firestore IDs. Both compared identifiers must exist.
@@ -16,16 +19,16 @@ export const upsertRecord = (items, record) => {
 // The shared nested expense shape preserves the canonical transaction metadata.
 // Historical child expenses without these optional keys remain readable.
 export const normalizeActivityExpense = (entry = {}, eventId = null, activityId = null) => ({
-  id: entry.id || entry.firestoreId || crypto.randomUUID(),
+  id: recordId(entry.id) || recordId(entry.firestoreId) || crypto.randomUUID(),
   name: String(entry.name ?? '').trim(),
   category: entry.category || 'Other',
   description: String(entry.description ?? entry.notes ?? '').trim(),
   notes: String(entry.notes ?? entry.description ?? '').trim(),
   amount: Number(entry.amount || 0),
-  date: entry.date || new Date().toISOString().slice(0, 10),
+  date: financialDate(entry.date, financialDate(new Date())),
   createdAt: entry.createdAt || new Date().toISOString(),
-  eventId: entry.eventId || eventId || null,
-  activityId: entry.activityId || activityId || null,
+  eventId: recordId(entry.eventId) || recordId(eventId) || null,
+  activityId: recordId(entry.activityId) || recordId(activityId) || null,
   source: entry.source || 'event-activity',
 });
 

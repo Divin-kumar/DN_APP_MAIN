@@ -7,7 +7,7 @@
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, BriefcaseBusiness, Cake, CalendarDays, ClipboardList, Clock3, Copy, FileText, Heart, House, LayoutGrid, List, PartyPopper, Pencil, Plane, Plus, Receipt, Search, Share2, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -21,35 +21,13 @@ import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
-import { duplicateEventData, eventShareDetails } from '../utils/eventActions';
 import usePersistentSort from '../hooks/usePersistentSort';
 import SortControl from '../components/common/SortControl';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
+import ListControls from '../components/common/ListControls';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-
-const getMomentGalleryIcon = (type = '') => {
-  const normalized = String(type).toLowerCase();
-  if (normalized.includes('birthday')) return Cake;
-  if (normalized.includes('anniversary') || normalized.includes('wedding')) return Heart;
-  if (normalized.includes('travel') || normalized.includes('vacation')) return Plane;
-  if (normalized.includes('home') || normalized.includes('house')) return House;
-  if (normalized.includes('work') || normalized.includes('career')) return BriefcaseBusiness;
-  if (normalized.includes('festival') || normalized.includes('celebration')) return PartyPopper;
-  return Sparkles;
-};
-
-const getMomentGalleryMood = (type = '') => {
-  const normalized = String(type).toLowerCase();
-  if (normalized.includes('birthday')) return 'birthday';
-  if (normalized.includes('anniversary') || normalized.includes('wedding')) return 'love';
-  if (normalized.includes('travel') || normalized.includes('vacation')) return 'travel';
-  if (normalized.includes('home') || normalized.includes('house')) return 'home';
-  if (normalized.includes('work') || normalized.includes('career')) return 'work';
-  if (normalized.includes('festival') || normalized.includes('celebration')) return 'festival';
-  return 'life';
-};
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
   const baseDate = new Date(event.date || event.startDate || event.createdAt);
@@ -69,7 +47,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEdit, onDuplicate, onShare, onArchive, onDelete }) {
+function EventStoryCard({ event, expenseTotal, onOpen, onSummary, onEdit, onArchive, onDelete }) {
   const date = getTimelineDate(event);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
@@ -77,29 +55,19 @@ function EventStoryCard({ event, expenseTotal, viewMode, onOpen, onSummary, onEd
   const activities = event.activities || [];
   const memories = event.memories || [];
   const attachments = event.attachments || [];
-  const galleryImage = typeof event.coverImage === 'string'
-    ? event.coverImage
-    : event.coverImage?.url || event.coverImageUrl || event.coverUrl
-      || event.attachments?.find((attachment) => String(attachment.type || '').startsWith('image/'))?.url || null;
-  const GalleryIcon = getMomentGalleryIcon(event.type === 'Other' ? event.customType : event.type);
-  const galleryMood = getMomentGalleryMood(event.type === 'Other' ? event.customType : event.type);
   return (
-    <SwipeActionCard className={'event-story-card ' + (viewMode === 'cards' ? 'event-story-card-grid' : '')}
+    <SwipeActionCard className="event-story-card"
       mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
-        { label: 'Duplicate', icon: Copy, onClick: onDuplicate },
-        { label: 'Share', icon: Share2, onClick: onShare },
         ...(onSummary ? [{ label: 'Summary', icon: ClipboardList, onClick: onSummary }] : []),
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
         <button type="button" className="event-story-main" onClick={onOpen}
           aria-label={'Open ' + (event.name || 'event')}>
           <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
-          <span className={'event-story-art' + (viewMode === 'cards' ? ' event-story-gallery-cover mood-' + galleryMood : '')} aria-hidden="true">
-            {viewMode === 'cards' && galleryImage ? <img src={galleryImage} alt="" loading="lazy" /> : null}
-            {viewMode === 'cards' && !galleryImage ? <GalleryIcon className="event-story-gallery-fallback-icon" size={32} strokeWidth={1.5} /> : null}
-            <span className={viewMode === 'cards' ? 'event-story-gallery-date' : ''}>
+          <span className="event-story-art" aria-hidden="true">
+            <span>
               {validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}
             </span>
             <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
@@ -169,7 +137,6 @@ export default function Events() {
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All moments');
   const { field: eventSort, direction: eventSortDirection, setField: setEventSort, toggleDirection: toggleEventSortDirection } = usePersistentSort('events', 'date', 'asc');
-  const [viewMode, setViewMode] = useState('timeline');
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
@@ -397,30 +364,11 @@ export default function Events() {
     }
   };
 
-  const duplicateMoment = async (event) => {
-    try {
-      const saved = await addEvent(user?.uid, isGuest, duplicateEventData(event));
-      showToast('Moment duplicated without copying expenses', 'success');
-      navigate('/events/' + (saved.id || saved.firestoreId));
-    } catch { showToast('Could not duplicate moment', 'danger'); }
-  };
   const archiveMoment = async (event) => {
     try {
       await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
       showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
     } catch { showToast('Could not update archive state', 'danger'); }
-  };
-  const shareMoment = async (event) => {
-    const details = eventShareDetails(event, isGuest, window.location.origin);
-    try {
-      if (navigator.share) await navigator.share(details);
-      else if (navigator.clipboard?.writeText) {
-        await navigator.clipboard.writeText([details.text, details.url].filter(Boolean).join('\n'));
-        showToast('Moment details copied', 'success');
-      } else showToast('Sharing is not supported in this browser', 'danger');
-    } catch (error) {
-      if (error?.name !== 'AbortError') showToast('Could not share this moment', 'danger');
-    }
   };
 
   const saveActivity = async () => {
@@ -534,13 +482,10 @@ export default function Events() {
     <EventStoryCard
       key={event.id || event.firestoreId}
       event={event}
-      viewMode={viewMode}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
       onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
       onSummary={() => setSummaryEvent(event)}
       onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
-      onDuplicate={() => duplicateMoment(event)}
-      onShare={() => shareMoment(event)}
       onArchive={() => archiveMoment(event)}
       onDelete={() => setPendingDeleteEvent(event)}
     />
@@ -562,23 +507,28 @@ export default function Events() {
       </header>
 
       <div className="event-discovery-bar">
-        <label className="event-search"><Search size={17} /><input value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment or memory" aria-label="Search events" /></label>
-        <div className="event-discovery-actions">
-          <div className="event-view-toggle" aria-label="Choose event view">
-            <button type="button" className={viewMode === 'timeline' ? 'active' : ''} onClick={() => setViewMode('timeline')} aria-pressed={viewMode === 'timeline'}><List size={16} /><span>List</span></button>
-            <button type="button" className={viewMode === 'cards' ? 'active' : ''} onClick={() => setViewMode('cards')} aria-pressed={viewMode === 'cards'}><LayoutGrid size={16} /><span>Cards</span></button>
+        <ListControls title="Moment filters" hasSort
+          activeCount={Number(Boolean(search.trim())) + Number(category !== 'All moments') + Number(eventSort !== 'date' || eventSortDirection !== 'asc')}
+          resultCount={visibleEvents.length} resultLabel="moments"
+          summary={[category, `${eventSort === 'name' ? 'Name' : eventSort === 'status' ? 'Status' : 'Date'} ${eventSortDirection === 'asc' ? '↑' : '↓'}`, search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
+          onReset={() => { setSearch(''); setCategory('All moments'); setEventSort('date'); }}
+          search={<input id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
+          <div className="dn-list-controls-field">
+            <label htmlFor="moment-filter-category">Category</label>
+            <select id="moment-filter-category" aria-label="Filter by event category" value={category} onChange={(changeEvent) => setCategory(changeEvent.target.value)}>
+              {categories.map((item) => <option key={item} value={item}>{item}</option>)}
+            </select>
           </div>
-          <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
-        </div>
-      </div>
-
-      <div className="event-category-rail" aria-label="Filter by event category">
-        {categories.map((item) => <button key={item} type="button" className={category === item ? 'selected' : ''} onClick={() => setCategory(item)}>{item}</button>)}
+          <div className="dn-list-controls-field">
+            <span>Sort by</span>
+            <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
+          </div>
+        </ListControls>
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
-        <div className={`life-journey ${viewMode === 'cards' ? 'life-journey-cards' : ''}`}>
+        <div className="life-journey">
           {eventSort === 'status' ? statusMomentGroups.map((group) => (
             <section className="life-journey-section" key={group.label}>
               <div className="life-journey-label"><CalendarDays size={16} /><div><span>{group.label}</span><small>Moments grouped by status</small></div><b>{group.events.length}</b></div>

@@ -53,8 +53,10 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
   assert.match(surface, /\.\.\.\(onDelete \? \[\{ label: 'Delete'/);
   assert.doesNotMatch(surface, /dn-swipe-tray-(other|delete)|animate=\{/);
 });
-test('Flat Moment list removes timeline rail and dots, Grid selector remains', () => {
-  assert.match(read('../pages/Events.jsx'), /life-journey-cards/);
+test('Moments use the flat list without a grid mode or redundant view toggle', () => {
+  const page = read('../pages/Events.jsx');
+  assert.match(page, /className="life-journey"/);
+  assert.doesNotMatch(page, /viewMode|setViewMode|event-view-toggle|life-journey-cards|event-story-card-grid|GalleryIcon/);
   assert.match(read('../design-system.css'), /border-left:0 !important/);
   assert.match(read('../design-system.css'), /event-story-card::before \{ display:none !important/);
 });

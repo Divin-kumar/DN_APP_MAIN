@@ -1,6 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus } from 'lucide-react';
-import DropdownSelect from '../common/DropdownSelect';
 import SwipeActionCard from '../common/SwipeActionCard';
+import ListControls from '../common/ListControls';
 
 const money = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -70,6 +70,10 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
 export default function TransactionHistory({
   transactions, filters, onFilters, monthOptions, events, onAdd, onEdit, onDelete,
 }) {
+  const activeCount = Number(filters.type !== 'all') + Number(filters.month !== 'all') + Number(Boolean(filters.search));
+  const period = filters.month === 'all' ? 'All months' : monthOptions.find((month) => month.value === filters.month)?.shortLabel || filters.month;
+  const scope = [filters.type === 'all' ? 'Income + expense' : filters.type === 'income' ? 'Income' : 'Expense', period,
+    filters.search ? `Search: ${filters.search}` : ''].filter(Boolean).join(' · ');
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
@@ -81,31 +85,29 @@ export default function TransactionHistory({
           <Plus size={17} aria-hidden="true" /><span>Add Transaction</span>
         </button>
       </header>
-      <div className="transactions-toolbar">
-        <input type="search" aria-label="Search transactions" placeholder="Search transactions"
-          value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />
-        <div className="transactions-filter-pair" role="group" aria-label="Transaction filters">
-          <DropdownSelect aria-label="Transaction Type" value={filters.type}
+      <ListControls title="Transaction filters" activeCount={activeCount} resultCount={transactions.length}
+        resultLabel="transactions" summary={scope}
+        onReset={() => onFilters({ type: 'all', month: 'all', search: '' })}
+        search={<input id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
+          value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
+        <div className="dn-list-controls-field">
+          <label htmlFor="transaction-filter-type">Type</label>
+          <select id="transaction-filter-type" aria-label="Transaction Type" value={filters.type}
             onChange={(event) => onFilters({ type: event.target.value })}>
-            <option value="all" data-short-label="All">All</option>
+            <option value="all">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
-          </DropdownSelect>
-          <DropdownSelect aria-label="Month" value={filters.month}
-            onChange={(event) => onFilters({ month: event.target.value })}>
-            <option value="all" data-short-label="All">All Months</option>
-            {monthOptions.map((month) => <option key={month.value} value={month.value} data-short-label={month.shortLabel}>{month.label}</option>)}
-          </DropdownSelect>
-          <DropdownSelect aria-label="Sort transactions" value={filters.sort}
-            onChange={(event) => onFilters({ sort: event.target.value })}>
-            <option value="date-desc" data-short-label="Newest">Newest first</option>
-            <option value="date-asc" data-short-label="Oldest">Oldest first</option>
-            <option value="amount-desc" data-short-label="Amount ↓">Highest amount</option>
-            <option value="amount-asc" data-short-label="Amount ↑">Lowest amount</option>
-            <option value="title-asc" data-short-label="Title">Title A–Z</option>
-          </DropdownSelect>
+          </select>
         </div>
-      </div>
+        <div className="dn-list-controls-field">
+          <label htmlFor="transaction-filter-month">Month</label>
+          <select id="transaction-filter-month" aria-label="Month" value={filters.month}
+            onChange={(event) => onFilters({ month: event.target.value })}>
+            <option value="all">All Months</option>
+            {monthOptions.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
+          </select>
+        </div>
+      </ListControls>
       <div className="dn-transactions-results" role="list" aria-label="Filtered transactions">
         {transactions.length ? transactions.map((item) => (
           <TransactionCard key={item.stableTransactionKey} transaction={item}

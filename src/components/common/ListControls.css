@@ -1,0 +1,205 @@
+html[data-theme] .dn-list-controls {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+html[data-theme] .dn-list-controls-topline { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 10px; }
+html[data-theme] .dn-list-controls-row { display: flex; min-width: 0; width: 100%; align-items: center; gap: 8px; }
+html[data-theme] .dn-list-controls-search { min-width: 0; flex: 1 1 0; }
+html[data-theme] .dn-list-controls .dn-list-controls-search input {
+  display: block;
+  width: 100% !important;
+  min-width: 0 !important;
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 12px !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  font-family: inherit;
+  font-size: 16px !important;
+  line-height: 1.4;
+}
+html[data-theme] .dn-list-controls-search input::placeholder { color: var(--color-text-muted); opacity: .85; }
+html[data-theme] .dn-list-controls-trigger {
+  display: inline-flex;
+  min-height: 44px !important;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+html[data-theme] .dn-list-controls-trigger:hover,
+html[data-theme] .dn-list-controls-trigger.is-active {
+  border-color: var(--action-border);
+  background: var(--action-fill);
+  color: var(--action-ink);
+}
+html[data-theme] .dn-list-controls-badge {
+  display: inline-grid;
+  min-width: 19px;
+  height: 19px;
+  place-items: center;
+  padding: 0 4px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--color-primary) 13%, var(--color-card));
+  font-size: 11px;
+}
+html[data-theme] .dn-list-controls-context {
+  min-width: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.45;
+  flex: 0 0 auto;
+}
+html[data-theme] .dn-list-controls-summary { overflow: hidden; color: var(--color-text-muted); font-size: 12px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
+html[data-theme] .dn-modal-backdrop:has(> .dn-list-controls-dialog) {
+  display: grid !important;
+  place-items: center !important;
+  padding: 20px !important;
+}
+html[data-theme] .dn-modal.dn-list-controls-dialog {
+  display: flex;
+  width: min(480px, calc(100vw - 40px)) !important;
+  max-width: 480px !important;
+  max-height: min(80dvh, 720px) !important;
+  flex-direction: column;
+  padding: 20px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 20px !important;
+  background: var(--color-card) !important;
+  color: var(--color-text);
+  box-shadow: var(--shadow-card), 0 28px 90px rgba(0,0,0,.2);
+  overflow: hidden;
+}
+html[data-theme] .dn-list-controls-dialog > div:first-child { flex: 0 0 auto; margin-bottom: 14px !important; }
+html[data-theme] .dn-list-controls-dialog h3 { font-size: 17px; letter-spacing: -.025em; }
+html[data-theme] .dn-list-controls-dialog .modal-close-button { width: 44px; min-width: 44px; height: 44px; min-height: 44px; }
+html[data-theme] .dn-list-controls-body {
+  display: grid;
+  min-height: 0;
+  gap: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px 2px 6px;
+}
+html[data-theme] .dn-list-controls-field { display: grid; min-width: 0; gap: 7px; }
+html[data-theme] .dn-list-controls-field > label,
+html[data-theme] .dn-list-controls-field > span {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+html[data-theme] .dn-list-controls-note {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+html[data-theme] .dn-list-controls-dialog input,
+html[data-theme] .dn-list-controls-dialog select {
+  width: 100% !important;
+  min-width: 0;
+  min-height: 44px !important;
+  padding: 10px 12px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: 11px !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  font-family: inherit;
+  font-size: 16px !important;
+  line-height: 1.4;
+}
+html[data-theme] .dn-list-controls-dialog .event-category-rail,
+html[data-theme] .dn-list-controls-dialog .activity-filter-rail,
+html[data-theme] .dn-list-controls-dialog .sort-control {
+  display: flex !important;
+  width: 100%;
+  flex-wrap: wrap;
+  gap: 7px;
+  overflow: visible;
+  padding: 0;
+}
+html[data-theme] .dn-list-controls-dialog .event-category-rail button,
+html[data-theme] .dn-list-controls-dialog .activity-filter-rail button,
+html[data-theme] .dn-list-controls-dialog .sort-option {
+  min-height: 44px !important;
+  padding: 8px 12px !important;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+html[data-theme] .dn-list-controls-dialog .event-category-rail button.selected,
+html[data-theme] .dn-list-controls-dialog .activity-filter-rail button.is-selected,
+html[data-theme] .dn-list-controls-dialog .sort-option.is-selected {
+  border-color: var(--action-border);
+  background: var(--action-fill);
+  color: var(--action-ink);
+}
+html[data-theme] .dn-list-controls-footer {
+  display: flex;
+  flex: 0 0 auto;
+  justify-content: space-between;
+  gap: 10px;
+  padding-top: 14px;
+  margin-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+html[data-theme] .dn-list-controls-footer button {
+  min-height: 44px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: var(--color-surface);
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+  cursor: pointer;
+}
+html[data-theme] .dn-list-controls-footer .dn-list-controls-done {
+  border-color: var(--action-border);
+  background: var(--action-fill);
+  color: var(--action-ink);
+}
+html[data-theme] .dn-list-controls-footer button:disabled { opacity: .45; cursor: default; }
+html[data-theme] .dn-list-controls button:focus-visible,
+html[data-theme] .dn-list-controls input:focus-visible,
+html[data-theme] .dn-list-controls-dialog :is(button, input, select):focus-visible {
+  outline: 3px solid color-mix(in srgb,var(--color-primary) 35%,transparent);
+  outline-offset: 2px;
+}
+html[data-theme] .event-discovery-bar:has(> .dn-list-controls) { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+html[data-theme] .event-discovery-bar > .dn-list-controls { flex: 1 1 230px; }
+html[data-theme] .insights-tools:has(> .dn-list-controls) { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+html[data-theme] .insights-tools > .dn-list-controls { flex: 1 1 200px; }
+@media (max-width: 640px) {
+  html[data-theme] .dn-modal-backdrop:has(> .dn-list-controls-dialog) {
+    align-items: end !important;
+    justify-items: stretch !important;
+    padding: 0 !important;
+  }
+  html[data-theme] .dn-modal.dn-list-controls-dialog {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: min(86dvh, 720px) !important;
+    margin: auto 0 0 !important;
+    padding: 22px 16px max(16px, env(safe-area-inset-bottom)) !important;
+    border-bottom: 0 !important;
+    border-radius: 22px 22px 0 0 !important;
+  }
+  html[data-theme] .dn-list-controls-context { font-size: 11px; }
+  html[data-theme] .dn-list-controls .dn-list-controls-trigger { gap: 5px; padding-inline: 10px; }
+  html[data-theme] .dn-list-controls-summary { font-size: 11px; }
+}

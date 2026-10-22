@@ -1,11 +1,39 @@
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
+import { recordId } from '../utils/recordIdentity.js';
+import { financialDate } from '../utils/financialRecords.js';
 
 export const CURRENT_BACKUP_VERSION = 3;
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
 const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
 const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
+
+// Canonicalize the original numeric IDs before validation; never invent backup IDs.
+const portableRecord = ({ firestoreId, firestoreCollection, ...item }) => ({
+  ...item,
+  id: recordId(item.id) || recordId(firestoreId),
+  ...Object.fromEntries(['eventId', 'activityId', 'momentId'].filter((key) => item[key] != null)
+    .map((key) => [key, recordId(item[key]) || null])),
+  ...(item.date != null ? { date: financialDate(item.date, item.date) } : {}),
+});
+
+const portableMoments = (moments) => moments.map((raw) => {
+  const moment = portableRecord(raw);
+  return {
+    ...moment,
+    activities: (raw.activities || []).map((entry) => {
+      const activity = portableRecord(entry);
+      return { ...activity, eventId: activity.eventId || moment.id,
+        expenses: (entry.expenses || []).map((expense) => ({
+          ...portableRecord(expense), eventId: recordId(expense.eventId) || moment.id,
+          activityId: recordId(expense.activityId) || activity.id,
+        })) };
+    }),
+    memories: (raw.memories || []).map(portableRecord),
+    attachments: (raw.attachments || []).map(portableRecord),
+  };
+});
 
 const parseStoredValue = (value) => {
   if (typeof value !== 'string') return value;
@@ -56,7 +84,20 @@ export const createBackupDocument = ({
   metadata = {},
   createdDate = new Date().toISOString(),
 }) => {
-  const flattened = flattenMoments(moments);
+  const normalizedMoments = portableMoments(moments);
+  const flattened = flattenMoments(normalizedMoments);
+  const normalizedExpenses = expenses.map(portableRecord);
+  const expenseIds = new Set(normalizedExpenses.map((expense) => expense.id));
+  for (const moment of normalizedMoments) {
+    for (const activity of moment.activities) {
+      for (const expense of activity.expenses) {
+        if (!expenseIds.has(expense.id)) {
+          normalizedExpenses.push(expense);
+          expenseIds.add(expense.id);
+        }
+      }
+    }
+  }
   const document = {
     app: 'DN',
     backupVersion: CURRENT_BACKUP_VERSION,
@@ -65,13 +106,17 @@ export const createBackupDocument = ({
     activities: flattened.activities,
     memories: flattened.memories,
     attachments: flattened.attachments,
-    expenses: expenses.map(({ firestoreId: _firestoreId, ...expense }) => expense),
-    incomes: incomes.map(({ firestoreId: _firestoreId, ...income }) => income),
+    expenses: normalizedExpenses,
+    incomes: incomes.map(portableRecord),
     codeLists: codeLists || {},
     codeListSchemaVersion,
     settings,
     preferences,
-    dashboardConfiguration,
+    dashboardConfiguration: {
+      ...dashboardConfiguration,
+      ...Object.fromEntries(['favorites', 'recent'].filter((key) => Array.isArray(dashboardConfiguration[key]))
+        .map((key) => [key, dashboardConfiguration[key].map(recordId).filter(Boolean)])),
+    },
     metadata: {
       ...metadata,
       relationships: 'activities, memories and attachments reference moments by momentId',

@@ -17,7 +17,7 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(value) || 0);
 
-const defaultFilters = { type: 'all', month: 'all', search: '', sort: 'date-desc' };
+const defaultFilters = { type: 'all', month: 'all', search: '' };
 const storageKey = (scope) => 'dn_transactions_filters_' + scope;
 const readFilters = (scope) => {
   try {
@@ -26,7 +26,6 @@ const readFilters = (scope) => {
       type: ['all', 'income', 'expense'].includes(parsed.type) ? parsed.type : 'all',
       month: parsed.month === 'all' || /^\d{4}-\d{2}$/.test(parsed.month || '') ? parsed.month : 'all',
       search: typeof parsed.search === 'string' ? parsed.search : '',
-      sort: ['date-desc', 'date-asc', 'amount-asc', 'amount-desc', 'title-asc'].includes(parsed.sort) ? parsed.sort : 'date-desc',
     };
   } catch { return { ...defaultFilters }; }
 };
@@ -85,7 +84,7 @@ export default function Financials() {
     }
   }, [ready, filters.month, monthOptions]);
   const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
-  const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
+  const sorted = useMemo(() => sortTransactions(filtered, 'date-desc'), [filtered]);
   // Summary is tied to the selected month, not list search or the type selector.
   // Selecting Expense must not artificially zero out the Income and Balance cards.
   const summary = useMemo(() => summarizeTransactions(

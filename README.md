@@ -1,41 +1,36 @@
 # DN
 
-**Canonical and sole product name: DN.** Future AI work on this branch must use DN; historical storage-key aliases are not alternate branding.
+DN is a personal Moments, activities and finance web app. Development target: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
 
-**Active development branch:** [`OldVersion`](https://github.com/Divin-kumar/DN_APP_MAIN/tree/OldVersion) · **Frontend:** React 18 + Vite 5 · **Firebase:** Auth/Firestore · **State:** Zustand.
+## Documentation index
 
-DN is a personal life-planning and finance web app for moments/events, activities, memories, income, expenses, dashboards, insights and settings. It supports Google sign-in and browser-local guest sessions. Production security and complete backup recovery are **not validated** by this README.
-
-## Documentation on `OldVersion`: exactly four Markdown files
-
-| File | Role |
+| Document | Purpose |
 |---|---|
-| [`README.md`](README.md) | This short orientation and developer quick start |
-| [`AGENTS.md`](AGENTS.md) | **Mandatory for AI/coding agents editing `OldVersion`**: branch-scoped change control and documentation requirements |
-| [`docs/MASTER_SOURCE_OF_TRUTH.md`](docs/MASTER_SOURCE_OF_TRUTH.md) | **Single authoritative app/product/architecture document**, with current state and future backlog |
-| [`docs/CHANGE_AUDIT_LOG.md`](docs/CHANGE_AUDIT_LOG.md) | **Append-only** record for every app, code, config, test and governance change |
+| [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) | Canonical current behavior, architecture, routes, persistence, configuration and verification limits |
+| [Development and documentation rules](AGENTS.md) | Mandatory workflow for every future development task; read before editing |
+| [Audit archive](docs/CHANGE_AUDIT_LOG.md) | Preserved historical records only; not current behavior or maintenance policy |
+| `README.md` | Setup commands and this index |
 
-**Rule on `OldVersion` only:** No change on this branch is complete unless `docs/MASTER_SOURCE_OF_TRUTH.md` is updated and a dated entry is appended to `docs/CHANGE_AUDIT_LOG.md` as part of the **same change/PR**. Future plans belong in the master; do not create another PRD, task list, memory file or architecture Markdown. See `AGENTS.md` for required fields and review gates. A GitHub Actions workflow checks for these documentation changes **only for pushes to `OldVersion` and pull requests targeting `OldVersion`**. Other branches are not subject to these rules.
+Document changed behavior in the master in the same task/change set as code. Replace obsolete descriptions, disclose unverified behavior and update setup/process instructions here or in AGENTS when affected. Keep the existing four Markdown files; do not create duplicate architecture or rules documents.
 
-## Developer commands
+## Local commands
 
-```bash
-npm install
-npm run dev       # Vite dev server, usually port 5173
-npm test          # Node test runner
-npm run build     # Production dist/ bundle
-npm run preview   # Preview build, usually port 4173
+Use Node.js with npm. Existing CI uses Node 20 for smoke tests and Node 22 for preview deployment; package.json declares no engines constraint. When dependency installation is authorized, use the lockfile:
+
+```sh
+npm ci
+npm run dev
+npm test
+npm run build
+npm run preview
 ```
 
-`npm run deploy:hosting` exists but **requires explicit deployment approval**. `firebase.json` is configured for Firebase Hosting; deployed access rules and environment details must be checked separately.
+Dev defaults to port 5173; preview defaults to 4173. Both bind `0.0.0.0`. Preview needs a successful build. Missing Vite prevents the build and tests importing Vite; do not claim successful validation or install dependencies when the task prohibits it.
 
-## Repo navigation
+Firebase client configuration is embedded in `src/firebase/config.js`, not loaded from `VITE_FIREBASE_*`. See [operations](docs/MASTER_SOURCE_OF_TRUTH.md#13-pwa-environment-and-operations) for build metadata, caching and Hosting. `npm run deploy:hosting` changes package/lock versions and deploys Hosting; it needs explicit authorization and is not a validation command.
 
-- `src/App.jsx` and `src/main.jsx` — routing and bootstrap.
-- `src/pages/`, `src/features/`, `src/components/` — UI screens, features and reusable elements.
-- `src/store/` — Zustand state and mutations.
-- `src/services/` — account/guest persistence and backup/migration behavior.
-- `src/firebase/`, `src/context/`, `src/routes/` — Firebase config, session, route guards.
-- `vite.config.js`, `firebase.json`, `public/` — build/PWA/hosting.
+## Validation limits
 
-Read the **master** for data contracts, architecture, operational caveats, security uncertainties, and planned changes. Historical docs that were removed from the working tree remain accessible in Git history.
+The 2026-10-22 checks for DN 1.0.19 pass all 143 Node tests and the production build. DN 1.0.19 is deployed at [dn-10.web.app](https://dn-10.web.app). Dependency audit reports 9 advisories (3 moderate, 6 high); build warns about a large chunk. Local guest UI journeys and read-only account display have been exercised; cloud business-data writes/restore remain unverified. See [deployment and validation evidence](docs/MASTER_SOURCE_OF_TRUTH.md#15-validation-and-maintenance).
+
+The [changelog](docs/CHANGE_AUDIT_LOG.md) puts the latest change first and preserves older entry text. The governance workflow requires a master update and a new top CHG entry while checking the four-file Markdown inventory. Run `node scripts/check-audit-log.mjs <base-commit-sha>` to verify historical preservation and ordering before pushing. [AGENTS.md](AGENTS.md#automated-enforcement) defines the current rules.
