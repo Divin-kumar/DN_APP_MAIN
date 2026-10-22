@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-080 | Compact mobile text editing and keep dialog controls reachable
+- Date: 2026-10-22. Owner-requested mobile free-text refinement, continuing authorized OldVersion commit/push and permanent Firebase publication. Reviewed clean base `f9fb0ba7521073dc412d3498c5263b82b7e2a199`; release 1.0.22, without added dependencies.
+- Shared editor: one mobile row for Bold/Italic/Bullets/More/Preview, optional secondary tools, 44px targets, shorter 96px initial writing area, growth and shrinkage with content, retained selection and Write/Preview caret return. Desktop retains all formatting tools. Stored strings, whitespace, note times and backup format are unchanged.
+- Shared dialogs: header outside the sole scrolling body, visible-viewport geometry with resize/pan cleanup and pinch-zoom fallback, sticky mobile/short-screen form actions, muted close control and hidden-control focus filtering. Outer clipping prevents browser focus scrolling the header away. Source-derived keyboard adjustment reveals short fields above actions; long-text caret scrolling stays browser-managed.
+- Executed local verification: `npm test` passed 185/185, zero failures/skips; `npm run build` passed, 2400 modules. Existing >500 kB chunk warning remains (main 1086.51 kB). Four real-editor handler tests and ten viewport geometry/observer tests cover selection, preview, resizing, keyboard geometry, zoom fallback, orientation, event coalescing and cleanup.
+- Executed isolated guest browser checks: Moment, Transaction and Greeting Template forms; 320/390/430px widths, reduced 430px height, both themes and desktop 1280px. No inner field/dialog horizontal overflow; header and actions remained visible during focused lower-field editing. More expands/collapses, dropdown Escape retains the form, and 50-line notes grow then shrink to 96px. No production business records were changed.
+- Documentation: master describes current interaction and test limits; four-document inventory retained. No synchronization redesign, data-model/storage/rules or account-record changes. Native iPhone Safari keyboard/caret behavior remains unverified; viewport emulation and fixtures are not device proof. GitHub CI and production publication require separate read-back after this commit.
+
 ## CHG-20261022-079 | Verify permanent production release 1.0.21
 - Date: 2026-10-22. Implementation commit `10f009fd88af79177b742f7e941b1564d321eb09` pushed normally to OldVersion. main remains `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
 - GitHub Actions [run 39777276647](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39777276647) passed documentation-contract and application-smoke-tests. The preview workflow was skipped.
