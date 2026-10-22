@@ -120,7 +120,7 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(swipe, /onClick=\{\(\) => perform\(onClick\)\}/);
   assert.match(swipe, /aria-label=\{\`Actions for/);
   assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
-  assert.match(read('../components/financials/TransactionHistory.jsx'), /Swipe either direction on a transaction/);
+  assert.match(read('../components/financials/TransactionHistory.jsx'), /All income and expenses/);
 });
 
 test('finance density has one-row totals and a single compact transaction heading', () => {
@@ -148,4 +148,10 @@ test('Moment hero places compact Memory and Greeting beside the left type label'
   assert.doesNotMatch(hero.slice(topEnd, hero.indexOf('<h1>', topEnd)), /event-moment-kicker/);
   assert.match(css, /\.dn-moment-hero-swipe \.event-moment-topline \{[\s\S]*?justify-content:space-between !important/);
   assert.match(css, /\.dn-moment-hero-swipe \.event-moment-top-actions \.event-moment-memory-action,[\s\S]*?min-height:44px !important/);
+});
+
+test('compact transaction panel padding applies to the panel element itself', () => {
+  const css = read('../design-system.css');
+  assert.match(css, /\.transactions-panel\.dn-transactions-page \{ padding:12px !important/);
+  assert.doesNotMatch(css, /\.dn-transactions-page \.transactions-panel \{ padding:12px !important/);
 });

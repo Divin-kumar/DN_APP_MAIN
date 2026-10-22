@@ -2401,7 +2401,7 @@ html[data-theme] .dn-transactions-page .dn-transaction-add {
 html[data-theme] .dn-transactions-page .dn-transaction-add svg {
   flex:0 0 auto; width:16px; height:16px;
 }
-html[data-theme] .dn-transactions-page .transactions-panel { padding:12px !important; }
+html[data-theme] .transactions-panel.dn-transactions-page { padding:12px !important; }
 /* Moment type and both actions share ONE top row, then title/date/stats follow.
    Visual pills are compact; 44px minimum touch targets remain accessible. */
 html[data-theme] .dn-moment-hero-swipe .event-moment-hero {

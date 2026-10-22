@@ -896,3 +896,16 @@
 - Master sections updated: §9.1 and §13 to 2.15.1.
 - Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
 - Follow-ups: Verify Finance at 320/375/390/430px including long INR values and zoom; verify Moment type label and utility touch targets with long title, dark/light themes and screen readers.
+
+## CHG-20261022-070 | Correct Finance density contract and panel-padding selector
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner, continued compact Finance and Moment header pass.
+- Branch / commit / PR: OldVersion only, commit SHA in Git history. Protected main unchanged and no deployment.
+- Exact changed paths: src/design-system.css, src/utils/premiumUxContract.test.mjs, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before -> after: v2.15.1 GitHub Actions run 39707771777 failed 1/108 tests because an old source assertion required the full-length swipe hint; it now checks the approved short description. A CSS rule erroneously targeted a descendant .transactions-panel within .dn-transactions-page, rather than the single panel element that has both classes; it now applies 12px compact padding correctly.
+- Why: Preserve the shorter Finance header and ensure removal of unnecessary padding is real, not a no-op.
+- User/data/security/compatibility impact: CSS plus tests only, no records, Firebase schema, financial calculation, permissions or backups affected.
+- Verification: Previous 2.15.1 CI 107 tests passed, 1 stale assertion failed; build skipped after test failure. New source regression test, npm test/build/docs checks PENDING GitHub Actions. Real mobile views NOT RUN.
+- Risks and rollback: Panel padding on small screens may affect dense filters; verify on 320-430px viewport. Revert change to restore prior selector and assertions.
+- Master sections updated: §9.1 and §13 to v2.15.2.
+- Status: SOURCE CORRECTED / CI AND MOBILE QA PENDING.
