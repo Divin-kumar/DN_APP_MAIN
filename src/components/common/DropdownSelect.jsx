@@ -4,6 +4,7 @@ import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffec
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
+import './DropdownSelect.css';
 
 const getOptionLabel = (children) => Children.toArray(children)
   .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))

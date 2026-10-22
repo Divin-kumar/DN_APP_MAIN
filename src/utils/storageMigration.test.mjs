@@ -38,19 +38,27 @@ test('migration is idempotent and newer DN values always win', () => {
   assert.equal(storage.getItem('dn_preferences'), '{"theme":"light"}');
 });
 
-test('clear local data removes legacy and DN app values without deleting unrelated data', () => {
+test('clear local data removes legacy and DN app values without deleting unrelated data', (t) => {
   const storage = makeStorage({
     lifehub_guest_mode: 'true',
     dn_guest_mode: 'true',
     lifehub_recent_event_ids_guest: '["old"]',
     dn_recent_event_ids_guest: '["new"]',
+    'dn_list_state_account%3Aowner_moments': '{"search":"private"}',
     unrelated_site_data: 'keep',
   });
+  const descriptor = Object.getOwnPropertyDescriptor(globalThis, 'sessionStorage');
+  const session = makeStorage({ dn_transactions_filters_owner: '{"search":"old"}', unrelated_session: 'keep' });
+  Object.defineProperty(globalThis, 'sessionStorage', { configurable: true, value: session });
+  t.after(() => descriptor ? Object.defineProperty(globalThis, 'sessionStorage', descriptor) : delete globalThis.sessionStorage);
   clearDnLocalData(storage);
   assert.equal(storage.getItem('lifehub_guest_mode'), null);
   assert.equal(storage.getItem('dn_guest_mode'), null);
   assert.equal(storage.getItem('lifehub_recent_event_ids_guest'), null);
   assert.equal(storage.getItem('dn_recent_event_ids_guest'), null);
+  assert.equal(storage.getItem('dn_list_state_account%3Aowner_moments'), null);
+  assert.equal(session.getItem('dn_transactions_filters_owner'), null);
+  assert.equal(session.getItem('unrelated_session'), 'keep');
   assert.equal(storage.getItem('unrelated_site_data'), 'keep');
 });
 

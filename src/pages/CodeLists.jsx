@@ -22,6 +22,8 @@ import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists';
 import SwipeActionCard from '../components/common/SwipeActionCard';
+import RichTextEditor from '../components/common/RichTextEditor';
+import RichText from '../components/common/RichText';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -131,7 +133,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       active: true,
       isActive: true,
       canGenerateGreetingCards: Boolean(momentTypeEditor.canGenerateGreetingCards),
-      greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate.trim() : '',
+      greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate : '',
       showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
     };
 
@@ -330,20 +332,16 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
             {momentTypeEditor.canGenerateGreetingCards ? (
               <div className="moment-type-template-field">
-                <label className="settings-input-block">
-                  <span>Greeting Template</span>
-                  <textarea
-                    rows={3}
-                    value={momentTypeEditor.greetingTemplate}
-                    onChange={(event) => setMomentTypeEditor((current) => ({ ...current, greetingTemplate: event.target.value }))}
-                    placeholder="Happy {ordinal} {eventName} {name}"
-                  />
+                <div className="settings-input-block">
+                  <RichTextEditor label="Greeting Template" value={momentTypeEditor.greetingTemplate}
+                    onChange={(greetingTemplate) => setMomentTypeEditor((current) => ({ ...current, greetingTemplate }))}
+                    placeholder="Happy {ordinal} {eventName} {name}" />
                   <small className="settings-placeholder-guide">Supported placeholders: {'{name}'}, {'{eventName}'}, {'{ordinal}'}</small>
-                </label>
+                </div>
 
                 <div className="moment-type-preview" aria-live="polite">
                   <span>Preview</span>
-                  <div className="free-text-preview is-truncated">{getGreetingTemplatePreview(momentTypeEditor.greetingTemplate)}</div>
+                  <RichText className="free-text-preview is-truncated" value={getGreetingTemplatePreview(momentTypeEditor.greetingTemplate)} />
                 </div>
               </div>
             ) : null}

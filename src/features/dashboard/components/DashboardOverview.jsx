@@ -9,6 +9,8 @@ import useEventStore from '../../../store/useEventStore';
 import { getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
+import RichText from '../../../components/common/RichText';
+import { plainRichText } from '../../../utils/richText';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -292,7 +294,7 @@ function EventSummaryModal({ event, onClose }) {
     ];
 
     if (greeting) {
-      lines.push(greeting.title, greeting.body, '');
+      lines.push(plainRichText(greeting.title), plainRichText(greeting.body), '');
     }
 
     if (activities.length) {
@@ -301,7 +303,7 @@ function EventSummaryModal({ event, onClose }) {
         const label = activity.title || activity.name || 'Untitled activity';
         const check = activity.completed ? '✓' : '○';
         lines.push(`${check} ${label}`);
-        const description = String(activity.description || '').trim();
+        const description = plainRichText(activity.description || '');
         if (description) lines.push(`  Description: ${description}`);
       });
     }
@@ -329,8 +331,8 @@ function EventSummaryModal({ event, onClose }) {
 
         {greeting ? (
           <div style={styles.greetingCard}>
-            <div style={styles.greetingTitle}>{greeting.title}</div>
-            <p className="free-text-content" style={styles.greetingBody}>{greeting.body}</p>
+            <div style={styles.greetingTitle}>{plainRichText(greeting.title)}</div>
+            <RichText style={styles.greetingBody} value={greeting.body} />
           </div>
         ) : null}
 
@@ -354,18 +356,16 @@ function EventSummaryModal({ event, onClose }) {
                     <span style={isComplete ? styles.activityCheckComplete : styles.activityCheckPending}>
                       {isComplete ? '✓' : '○'}
                     </span>
-                    <span className="dashboard-summary-activity-copy">
+                    <div className="dashboard-summary-activity-copy">
                       <span style={styles.activityLabel}>{label}</span>
                       <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
                       {hasDescription ? (
-                        <span className="dashboard-summary-description-wrap">
-                          <span className={`dashboard-summary-description free-text-content${canExpandDescription && !descriptionExpanded ? ' free-text-preview is-truncated' : ''}`}>
-                            {description}
-                          </span>
+                        <div className="dashboard-summary-description-wrap">
+                          <RichText className={`dashboard-summary-description${canExpandDescription && !descriptionExpanded ? ' free-text-preview is-truncated' : ''}`} value={description} />
                           {canExpandDescription ? <button type="button" className="dashboard-summary-description-toggle" aria-expanded={descriptionExpanded} onClick={() => setExpandedDescriptions((current) => ({ ...current, [activity.id || index]: !current[activity.id || index] }))}>{descriptionExpanded ? 'Show less' : 'Show more'}</button> : null}
-                        </span>
+                        </div>
                       ) : null}
-                    </span>
+                    </div>
                   </li>
                 );
               })}
@@ -388,8 +388,8 @@ function GreetingCardModal({ event, greeting, onClose, onCopy }) {
       <article className="dashboard-greeting-card-full">
         <span className="dashboard-greeting-card-kicker"><Sparkles size={15} /> A greeting for today</span>
         <span className="dashboard-greeting-card-event">{event.name || event.type || 'On this day'} · {formatDisplayDate(new Date())}</span>
-        <h2>{greeting.title}</h2>
-        <p className="free-text-content">{greeting.body}</p>
+        <h2>{plainRichText(greeting.title)}</h2>
+        <RichText value={greeting.body} />
       </article>
       <div className="dashboard-greeting-modal-actions">
         <button type="button" className="primaryButton" onClick={onCopy}><Copy size={15} /> Copy greeting</button>
@@ -454,7 +454,7 @@ export default function DashboardOverview() {
   const copyTodaysGreeting = async () => {
     if (!spotlightGreeting) return;
     try {
-      await navigator.clipboard.writeText(`${spotlightGreeting.title}\n\n${spotlightGreeting.body}`);
+      await navigator.clipboard.writeText(`${plainRichText(spotlightGreeting.title)}\n\n${plainRichText(spotlightGreeting.body)}`);
       showToast('Greeting copied', 'success');
     } catch {
       showToast('Unable to copy greeting on this device', 'danger');
@@ -480,8 +480,8 @@ export default function DashboardOverview() {
             <div className="focus-event-empty"><h3>{loading ? 'Finding a moment…' : 'A little space for what matters'}</h3><p>{focusEvent ? `Your next moment is ${focusEvent.name || 'coming up'}${daysUntilFocus === 0 ? ' today' : daysUntilFocus !== null ? ` in ${daysUntilFocus} ${daysUntilFocus === 1 ? 'day' : 'days'}` : ''}.` : 'Your on-this-day stories will appear here.'}</p></div>
           )}
           {spotlightGreeting && spotlightEvent ? (
-            <button type="button" className="dashboard-greeting-preview" onClick={() => setGreetingEvent(spotlightGreetingEvent)} aria-label={`View today's greeting: ${spotlightGreeting.title}`}>
-              <span>Greeting preview</span><strong>{spotlightGreeting.title}</strong><span className="dashboard-greeting-open">View greeting <span aria-hidden="true">→</span></span>
+            <button type="button" className="dashboard-greeting-preview" onClick={() => setGreetingEvent(spotlightGreetingEvent)} aria-label={`View today's greeting: ${plainRichText(spotlightGreeting.title)}`}>
+              <span>Greeting preview</span><strong>{plainRichText(spotlightGreeting.title)}</strong><span className="dashboard-greeting-open">View greeting <span aria-hidden="true">→</span></span>
             </button>
           ) : null}
         </section>

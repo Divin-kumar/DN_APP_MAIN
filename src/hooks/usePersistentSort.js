@@ -1,19 +1,10 @@
-import useAppStore from '../store/useAppStore';
-
-const validDirection = (direction) => (direction === 'desc' ? 'desc' : 'asc');
+import usePersistentListState from './usePersistentListState';
 
 export default function usePersistentSort(listKey, defaultField, defaultDirection = 'asc') {
-  const storedSort = useAppStore((state) => state.preferences.listSort?.[listKey]);
-  const setPreferences = useAppStore((state) => state.setPreferences);
-  const field = storedSort?.field || defaultField;
-  const direction = validDirection(storedSort?.direction || defaultDirection);
-
-  const setField = (nextField) => setPreferences({
-    listSort: { [listKey]: { field: nextField, direction: 'asc' } },
-  });
-  const toggleDirection = () => setPreferences({
-    listSort: { [listKey]: { field, direction: direction === 'asc' ? 'desc' : 'asc' } },
-  });
+  const [{ field, direction }, change] = usePersistentListState(`sort:${listKey}`,
+    { field: defaultField, direction: defaultDirection }, { direction: ['asc', 'desc'] });
+  const setField = (nextField) => change({ field: nextField, direction: 'asc' });
+  const toggleDirection = () => change((current) => ({ direction: current.direction === 'asc' ? 'desc' : 'asc' }));
 
   return { field, direction, setField, toggleDirection };
 }

@@ -1,0 +1,81 @@
+/* Shared polished select surface; portals retain the same design inside sheets. */
+html[data-theme] .dropdown-field .dropdown-trigger {
+  min-height: 44px;
+  padding: 11px 13px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--color-card) 78%, var(--color-surface)), var(--color-surface)) !important;
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-text) 4%, transparent), 0 2px 5px rgba(0,0,0,.035);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.4;
+  transition: border-color .16s ease, box-shadow .16s ease, background .16s ease;
+}
+html[data-theme] .dropdown-field .dropdown-trigger[aria-expanded="true"] {
+  border-color: var(--action-border) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 11%, transparent);
+}
+html[data-theme] .dropdown-menu.dropdown-menu-portal {
+  gap: 5px;
+  padding: 7px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, var(--color-text) 15%);
+  border-radius: 15px;
+  background: var(--color-card);
+  box-shadow: 0 12px 40px rgba(0,0,0,.2), 0 2px 8px rgba(0,0,0,.08);
+}
+html[data-theme] .dropdown-menu-portal .dropdown-option {
+  border-radius: 9px;
+  font-size: 14px;
+  line-height: 1.45;
+  transition: background .12s ease, color .12s ease;
+}
+html[data-theme] .dropdown-menu-portal .dropdown-option.is-selected {
+  color: var(--action-ink);
+  background: var(--action-fill);
+  box-shadow: inset 0 0 0 1px var(--action-border);
+  font-weight: 650;
+}
+html[data-theme] .dropdown-menu-portal .dropdown-option.is-active:not(.is-selected) {
+  background: color-mix(in srgb, var(--color-text) 6%, var(--color-card));
+  color: var(--color-text);
+}
+html[data-theme] .dropdown-menu-portal .dropdown-option > svg {
+  width: 17px;
+  height: 17px;
+  padding: 2px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--action-ink) 10%, transparent);
+}
+html[data-theme] .dropdown-menu-portal .dropdown-search-wrap {
+  margin-bottom: 3px;
+  padding: 3px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface);
+}
+html[data-theme] .dn-list-controls-dialog .dn-list-controls-body .sort-control {
+  padding: 5px;
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+}
+html[data-theme] .dn-list-controls-dialog .sort-control .sort-option {
+  flex: 1 1 auto;
+  border-color: transparent;
+  background: transparent;
+  white-space: nowrap;
+}
+html[data-theme] .dn-list-controls-dialog .sort-control .sort-option.is-selected {
+  border-color: var(--action-border);
+  background: var(--action-fill);
+  color: var(--action-ink);
+  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+}
+@media (max-width: 1024px) {
+  html[data-theme] .dropdown-field .dropdown-trigger { font-size: 16px !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dropdown-field .dropdown-trigger,
+  html[data-theme] .dropdown-menu-portal .dropdown-option { transition: none; }
+}

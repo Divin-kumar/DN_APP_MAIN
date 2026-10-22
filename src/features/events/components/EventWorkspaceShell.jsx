@@ -7,6 +7,10 @@ import ActivityList from '../../../components/events/ActivityList';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
 import DateField from '../../../components/common/DateField';
+import TransactionForm from '../../../components/financials/TransactionForm';
+import RichTextEditor from '../../../components/common/RichTextEditor';
+import RichText from '../../../components/common/RichText';
+import { plainRichText, renderRichTextHtml } from '../../../utils/richText';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
@@ -16,13 +20,18 @@ import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDial
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
-import usePersistentSort from '../../../hooks/usePersistentSort';
+import usePersistentListState from '../../../hooks/usePersistentListState';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
+const ACTIVITY_LIST_DEFAULTS = Object.freeze({ search: '', filter: 'all', field: 'date', direction: 'asc' });
+const ACTIVITY_LIST_OPTIONS = Object.freeze({
+  filter: ['all', 'in-progress', 'completed', 'cancelled', 'high', 'medium', 'low'],
+  field: ['date', 'title', 'priority', 'status'], direction: ['asc', 'desc'],
+});
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -66,9 +75,12 @@ export default function EventWorkspaceShell() {
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
-  const [activitySearch, setActivitySearch] = useState('');
-  const [activityFilter, setActivityFilter] = useState('all');
-  const { field: activitySort, direction: activitySortDirection, setField: setActivitySort, toggleDirection: toggleActivitySortDirection } = usePersistentSort(`activities-${eventId}`, 'date', 'asc');
+  const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
+  const { search: activitySearch, filter: activityFilter, field: activitySort, direction: activitySortDirection } = activityList;
+  const setActivitySearch = (search) => changeActivityList({ search });
+  const setActivityFilter = (filter) => changeActivityList({ filter });
+  const setActivitySort = (field) => changeActivityList({ field, direction: 'asc' });
+  const toggleActivitySortDirection = () => changeActivityList((current) => ({ direction: current.direction === 'asc' ? 'desc' : 'asc' }));
   const [editingActivityId, setEditingActivityId] = useState(null);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [activityError, setActivityError] = useState('');
@@ -85,6 +97,13 @@ export default function EventWorkspaceShell() {
   const [eventEditOpen, setEventEditOpen] = useState(false);
   const [linkExpenseActivity, setLinkExpenseActivity] = useState(null);
   const [expenseError, setExpenseError] = useState('');
+  const [transactionActivity, setTransactionActivity] = useState(null);
+  const [transactionBusy, setTransactionBusy] = useState(false);
+  const [transactionError, setTransactionError] = useState('');
+  const transactionSavingRef = useRef(false);
+  const transactionContext = `${user?.uid || (isGuest ? 'guest' : 'local')}:${eventId}`;
+  const transactionContextRef = useRef(transactionContext);
+  transactionContextRef.current = transactionContext;
   const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
   const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
   const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
@@ -236,7 +255,7 @@ export default function EventWorkspaceShell() {
 
   const saveGreetingCard = async (submitEvent) => {
     submitEvent.preventDefault();
-    const greetingCard = { title: greetingTitleDraft.trim(), body: greetingBodyDraft.trim(), updatedAt: new Date().toISOString() };
+    const greetingCard = { title: greetingTitleDraft.trim(), body: greetingBodyDraft, updatedAt: new Date().toISOString() };
     try {
       await updateEventItem(user?.uid, isGuest, { ...event, greetingCard });
       setGreetingDialogOpen(false);
@@ -248,7 +267,7 @@ export default function EventWorkspaceShell() {
 
   const downloadGreetingCard = () => {
     const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(greetingTitleDraft)}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(greetingTitleDraft)}</h1><p class="body">${escapeHtml(greetingBodyDraft)}</p></article></body></html>`;
+    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(plainRichText(greetingTitleDraft))}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(plainRichText(greetingTitleDraft))}</h1><div class="body">${renderRichTextHtml(greetingBodyDraft)}</div></article></body></html>`;
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
   };
 
@@ -263,7 +282,7 @@ export default function EventWorkspaceShell() {
       eventId,
       title: activityTitle.trim(),
       date: activityDate,
-      description: activityDescription.trim(),
+      description: activityDescription,
       completed: existingActivity?.completed || false,
       completedAt: existingActivity?.completedAt || null,
       priority: activityPriority,
@@ -319,6 +338,40 @@ export default function EventWorkspaceShell() {
     }
   };
 
+  const openActivityTransaction = (activity) => {
+    if (transactionSavingRef.current) return;
+    setTransactionError('');
+    setLinkExpenseActivity(null);
+    setTransactionActivity({ eventId, activityId: activity.id, date: activity.date, context: transactionContext });
+  };
+
+  const closeActivityTransaction = () => {
+    if (transactionSavingRef.current) return;
+    setTransactionActivity(null);
+    setTransactionError('');
+  };
+
+  const saveActivityTransaction = async (form) => {
+    if (transactionSavingRef.current) return;
+    transactionSavingRef.current = true;
+    setTransactionBusy(true);
+    setTransactionError('');
+    const context = transactionContext;
+    try {
+      await saveTransaction(form);
+      if (transactionContextRef.current === context) {
+        setTransactionActivity(null);
+        showToast('Transaction added', 'success');
+      }
+    } catch (saveError) {
+      if (transactionContextRef.current === context) setTransactionError(saveError?.message || 'Could not save this transaction.');
+      throw saveError;
+    } finally {
+      transactionSavingRef.current = false;
+      setTransactionBusy(false);
+    }
+  };
+
   const removeActivity = async (activityId) => {
     await updateEventItem(user?.uid, isGuest, {
       ...event,
@@ -353,7 +406,7 @@ export default function EventWorkspaceShell() {
 
   const saveNotes = async (submitEvent) => {
     submitEvent.preventDefault();
-    await updateEventItem(user?.uid, isGuest, { ...event, notes: notesDraft.trim() });
+    await updateEventItem(user?.uid, isGuest, { ...event, notes: notesDraft });
     setNotesDialogOpen(false);
   };
 
@@ -365,7 +418,7 @@ export default function EventWorkspaceShell() {
       memories: [...(event.memories || []), {
         id: crypto.randomUUID(),
         title: memoryTitle.trim(),
-        body: memoryBody.trim(),
+        body: memoryBody,
         createdAt: new Date().toISOString(),
       }],
     });
@@ -434,7 +487,7 @@ export default function EventWorkspaceShell() {
             <div className="event-featured-memory-art"><BookHeart size={21} /><span>Memory keepsake</span></div>
             <div className="event-featured-memory-copy">
               <span className="event-overview-eyebrow"><Heart size={13} /> A piece of this moment</span>
-              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><p className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`}>{latestMemory.body || 'A moment worth remembering, kept safe with this event.'}</p><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
+              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><RichText className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`} value={latestMemory.body || 'A moment worth remembering, kept safe with this event.'} /><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
             </div>
           </section>
 
@@ -454,7 +507,7 @@ export default function EventWorkspaceShell() {
             </section>
           </div>
 
-          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><p className="free-text-content">{event.notes}</p></section> : null}
+          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><RichText value={event.notes} className="free-text-content" /></section> : null}
         </div>
       );
     }
@@ -468,7 +521,7 @@ export default function EventWorkspaceShell() {
                 <span>{formatDate(activity.date)}</span>
                 <strong>{activity.title || 'Untitled activity'}</strong>
                     <small className={activity.cancelled || activity.status === 'cancelled' ? 'is-cancelled' : activity.completed ? 'is-complete' : 'is-pending'}>{activity.cancelled || activity.status === 'cancelled' ? 'Cancelled' : activity.completed ? 'Completed' : 'In progress'}</small>
-                {activity.description ? <p className="free-text-content">{activity.description}</p> : null}
+                {activity.description ? <RichText value={activity.description} className="free-text-content" /> : null}
               </div>
             ))}
           </div>
@@ -488,12 +541,12 @@ export default function EventWorkspaceShell() {
               activitySearch.trim() ? `Search: ${activitySearch.trim()}` : '',
             ].filter(Boolean).join(' · ')}
             hasSort
-            onReset={() => { setActivitySearch(''); setActivityFilter('all'); setActivitySort('date'); }}
+            onReset={resetActivityList}
             search={<input id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}
           >
           <div className="dn-list-controls-field">
             <span>Status or priority</span>
-            <div className="activity-filter-rail" role="group" aria-label="Filter activities">
+            <DropdownSelect value={activityFilter} onChange={(changeEvent) => setActivityFilter(changeEvent.target.value)} aria-label="Filter activities">
               {[
                 ['all', 'All'],
                 ['in-progress', 'In Progress'],
@@ -503,9 +556,9 @@ export default function EventWorkspaceShell() {
                 ['medium', 'Medium Priority'],
                 ['low', 'Low Priority'],
               ].map(([value, label]) => (
-                <button key={value} type="button" className={activityFilter === value ? 'is-selected' : ''} aria-pressed={activityFilter === value} onClick={() => setActivityFilter(value)}>{label}</button>
+                <option key={value} value={value}>{label}</option>
               ))}
-            </div>
+            </DropdownSelect>
           </div>
           <div className="dn-list-controls-field">
             <span>Sort by</span>
@@ -521,7 +574,7 @@ export default function EventWorkspaceShell() {
             expensesByActivity={expensesByActivity}
             onToggleComplete={toggleActivity}
             onToggleCancelled={toggleActivityCancellation}
-            onAddExpense={(activity) => navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(eventId) + '&activity=' + encodeURIComponent(activity.id))}
+            onAddExpense={openActivityTransaction}
             onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
             onEdit={editActivity}
             onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
@@ -545,7 +598,7 @@ export default function EventWorkspaceShell() {
       return (
         <div className="workspace-resource-list">
           {event.memories?.length ? event.memories.map((memory) => (
-            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><span className="workspace-memory-body free-text-preview is-truncated">{memory.body || 'A memory worth keeping.'}</span><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
+            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><RichText className="workspace-memory-body free-text-preview is-truncated" value={memory.body || 'A memory worth keeping.'} /><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
           )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
         </div>
       );
@@ -620,12 +673,12 @@ export default function EventWorkspaceShell() {
         <ModalDialog title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
           <div className="event-greeting-card-preview">
             <span><Sparkles size={14} /> A greeting for {event.name || 'this moment'}</span>
-            <strong>{greetingTitleDraft || 'Your greeting title'}</strong>
-            <p className="free-text-content">{greetingBodyDraft || 'Your greeting message will appear here.'}</p>
+            <strong>{plainRichText(greetingTitleDraft) || 'Your greeting title'}</strong>
+            <RichText value={greetingBodyDraft || 'Your greeting message will appear here.'} className="free-text-content" />
           </div>
           <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
             <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
-            <label>Message<textarea value={greetingBodyDraft} onChange={(changeEvent) => setGreetingBodyDraft(changeEvent.target.value)} rows={4} maxLength={500} required /></label>
+            <RichTextEditor label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
             <div className="event-greeting-editor-actions">
               <button type="button" className="secondaryButton" onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
               <button type="button" className="event-greeting-close-button" onClick={() => setGreetingDialogOpen(false)}><X size={15} /> Close</button>
@@ -646,7 +699,7 @@ export default function EventWorkspaceShell() {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
-            <textarea value={activityDescription} onChange={(submitEvent) => setActivityDescription(submitEvent.target.value)} placeholder="Description (optional)" style={styles.input} rows={4} />
+            <RichTextEditor label="Activity notes" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setActivityDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
@@ -658,13 +711,20 @@ export default function EventWorkspaceShell() {
         <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
           {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
           {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Add a transaction for this activity instead.</p>}
-          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => { const activity = linkExpenseActivity; setLinkExpenseActivity(null); navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(eventId) + '&activity=' + encodeURIComponent(activity.id)); }}><Plus size={15} aria-hidden="true" /> Add transaction</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
+          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => openActivityTransaction(linkExpenseActivity)}><Plus size={15} aria-hidden="true" /> Add transaction</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
+        </ModalDialog>
+      ) : null}
+      {transactionActivity?.context === transactionContext ? (
+        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={closeActivityTransaction}>
+          {transactionError ? <p className="dn-transaction-form-error" role="alert">{transactionError}</p> : null}
+          <TransactionForm defaultKind="expense" presetLink={transactionActivity} events={events}
+            onSubmit={saveActivityTransaction} busy={transactionBusy} onCancel={closeActivityTransaction} />
         </ModalDialog>
       ) : null}
       {notesDialogOpen ? (
         <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
           <form onSubmit={saveNotes} style={{ display: 'grid', gap: '12px' }}>
-            <textarea value={notesDraft} onChange={(submitEvent) => setNotesDraft(submitEvent.target.value)} placeholder="What should you remember about this event?" style={styles.input} rows={7} autoFocus />
+            <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this event?" rows={7} autoFocus />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
@@ -676,7 +736,7 @@ export default function EventWorkspaceShell() {
         <ModalDialog title="Add memory" onClose={() => setMemoryDialogOpen(false)}>
           <form onSubmit={saveMemory} style={{ display: 'grid', gap: '12px' }}>
             <input value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Memory title" style={styles.input} autoFocus />
-            <textarea value={memoryBody} onChange={(eventChange) => setMemoryBody(eventChange.target.value)} placeholder="What do you want to remember?" style={styles.input} rows={6} />
+            <RichTextEditor label="Memory notes" value={memoryBody} onChange={setMemoryBody} placeholder="What do you want to remember?" rows={6} />
             <div className="dialog-actions" style={styles.dialogActions}><button type="button" className="secondaryButton" onClick={() => setMemoryDialogOpen(false)}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
           </form>
         </ModalDialog>

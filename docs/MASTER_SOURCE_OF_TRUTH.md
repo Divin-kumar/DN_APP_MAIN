@@ -40,7 +40,7 @@ Build commands are in README and governance in AGENTS. Opt-in previews use the s
 | Unified legacy finance | `users/{uid}/transactions`, selected by `kind` | No account-to-guest mirroring |
 | Code Lists | `users/{uid}/settings/codelists` | `dn_guest_admin_values` plus schema version; legacy hydration keys supported |
 | Preferences/theme | Browser-local even for accounts | `dn_preferences`, `dn_theme_choice` |
-| Picker/filter state | Browser-local, scoped | Favorite/recent Moment IDs by UID/guest; transaction filters in scoped sessionStorage |
+| Picker/filter state | Browser-local, scoped | Favorite/recent Moment IDs by UID/guest; `dn_list_state_*` localStorage keeps list search/filter/sort and Quick Create type by account/guest, with activity choices per Moment |
 
 Children are nested arrays with stable IDs and `eventId`/`activityId` financial links. Attachment selection stores name/type/size/timestamps, not bytes or durable URLs; pre-existing URL fields may display images.
 
@@ -48,7 +48,7 @@ Moment reads fall back to `users/{uid}/events` only when `eventGroups` is empty.
 
 Runtime `firestoreId`/`firestoreCollection`/`firestoreSources` route account mutations. Financial sources are restricted to the expected typed collection or `transactions`; duplicate-copy updates/deletes use a batch and retain legacy kind/category fields. New finance uses typed collections regardless of imported metadata. Guest expense writes persist only the standalone ledger.
 
-[Browser migration](../src/utils/storageMigration.js) copies old keys only to absent DN keys and keeps originals. Clear Local Data removes recognized keys of both generations, not cloud/auth data, worker caches or transaction sessionStorage.
+[Browser migration](../src/utils/storageMigration.js) copies old keys only to absent DN keys and keeps originals. Clear Local Data removes recognized keys of both generations, list-state memory and legacy transaction session filters, then reloads; it does not remove cloud/auth data or worker caches. Old scoped transaction filters migrate to list memory. Unowned legacy global sort preferences are not assigned to an account; scoped sort starts at its default once on upgrade.
 
 ## Current Features
 
@@ -57,13 +57,15 @@ Runtime `firestoreId`/`firestoreCollection`/`firestoreSources` route account mut
 | Dashboard | Greeting, today's count, On This Day spotlight/greeting, upcoming list, summary/text download and Insights link. Spotlight/count use separate date rules from Upcoming. |
 | Moments | One list; name/type/custom-type/notes search, category/Archived filter and saved date/name/status sort. Normal categories hide archived records. Form requires name/date and a custom type for Other; stored budget has no shared-form field. |
 | Workspace | Overview, Activities, Timeline, Memories and Attachments. Five links stay in one row; clipped active links reveal horizontally. Same-Moment navigation preserves drafts/vertical position, subject to content clamping. Add memory/attachment actions sit beside headings. |
-| Activities | Title/date/description/priority, complete/reopen, cancel/restore, confirmed deletion, search/sort. Progress excludes cancelled items; finance actions use the transaction coordinator. |
+| Activities | Title/date/description/priority, complete/reopen, cancel/restore, confirmed deletion, search/sort. Progress excludes cancelled items. Add transaction opens an in-place dialog with Moment/activity/date presets; save uses the transaction coordinator and guards repeated submission. |
 | Finance | Add/Edit form, Income/Expense/Balance cards, search/type/month filters, recorded months, scoped saved filters, confirmed deletion and load/retry failures. Old sort preferences are ignored. |
 | Insights | Derived totals/counts, categories, six-month charts, milestone lists/year groups and report JSON. Search narrows milestone lists only; its past/Archived calculation is not the Moment archive flag. |
 | Settings/Code Lists | Defaults, theme/currency/reminder preferences, greeting templates, backup/reset; editable types/categories/priorities/presets with activation and usage-sensitive removal. Moment types control greeting generation/template and Dashboard visibility. Renaming does not migrate records. |
 | About/exports | Build/environment, guide/data limits and Refresh. Greetings export escaped HTML; summaries export text; Insights JSON is a report, not recovery backup. |
 
-Moments/Activities/Transactions keep search beside Filters. Secondary options open a dialog/mobile sheet; values survive closing and Reset restores defaults/search. Active count/results/scope stay visible. Insights has search/Clear only. Hidden scrollbars retain scrolling.
+Moments/Activities/Transactions keep search beside Filters. Secondary options open a dialog/mobile sheet using shared styled dropdowns. Search, filters and sort survive navigation, reload and browser restart on that browser, isolated by account/guest and by Moment for activities. Explicit Reset restores defaults including sort direction; missing categories/months retain their selection with empty results. Insights has saved search/Clear only; Quick Create remembers the Moment-type filter. Storage denial/quota failure falls back to memory for the current session. Active count/results/scope stay visible. Hidden scrollbars retain scrolling.
+
+Multiline notes, activity descriptions, memories, greeting bodies and templates use an expanding editor with bold, italic, headings, bullet/numbered lists, quotes, strikethrough, inline code and Write/Preview. Stored values remain strings with a restricted Markdown vocabulary; plain text and whitespace survive editing/backup without automatic rewrites. Displays and greeting HTML use escaped, allowlisted rendering; HTML, links and images remain literal text. Dates and times inside notes are ordinary text, not reminders. List previews may shorten formatting while full workspace views retain it.
 
 Either swipe opens the same menu, never deletion. Moment list offers Edit/Summary/Archive/Restore/Delete; hero omits Summary. Share/Duplicate are absent. Record deletion is confirmed; unused Code List deletion is immediate, used values offer Disable. Portaled dropdowns search long lists; modals manage focus/Escape/backdrop. Themes use muted CTAs, 44px targets and editor zoom guards. Workspace Add activity matches Filters at 44px, 13px/650 text and does not stretch beside wrapped headings.
 
@@ -84,9 +86,9 @@ Routes are defined in [App.jsx](../src/App.jsx):
 ## Key Workflows
 
 1. **Session/merge:** Login returns to the requested pathname, default Dashboard, without its query/hash. Guest entry restores local records/settings; logout keeps records. Account initialization batches guest events/finance with fresh provider IDs and stable application IDs, then clears both generations of guest record/mode keys after commit. Merge failure is logged and sign-in proceeds.
-2. **Create/edit:** Quick Create opens Moment/Activity/Transaction forms. Activity filters Moments by type, keeps archived/historical choices and clears excluded selections. Workspace consumes `create=activity`; Finance consumes `create=income|expense|transaction` plus optional `event`/`activity` presets. Settings hashes open matching sections.
+2. **Create/edit:** Quick Create opens Moment/Activity/Transaction forms. Activity filters Moments by a remembered type, keeps archived/historical choices and clears excluded Moment selections. Workspace consumes `create=activity`; its activity transaction actions stay on the same workspace route for save/cancel/error. Finance still supports `create=income|expense|transaction` plus optional `event`/`activity` presets. Settings hashes open matching sections.
 3. **Finance:** Same-kind edits update source documents/rebuild mirrors; nested-only expenses update their aggregate. Kind conversion creates a typed replacement, reconciles mirrors and removes original documents, attempting compensation on failure. Persisted account expenses remain deletable with unavailable links; guest/nested-only activity links require a parent. Moment/activity deletion does not cascade into standalone finance.
-4. **Backup:** Fresh source reads export JSON v3: Moments, flattened children, finance, Code Lists/version, preferences/settings, picker IDs and optional account metadata. Routing fields, auth credentials, file bytes, rules and caches are excluded; JSON is unencrypted. IDs normalize and nested-only expenses appear once. V2 envelopes upgrade; unversioned input is settings-only; unsupported versions reject.
+4. **Backup:** Fresh source reads export JSON v3: Moments, flattened children, finance, Code Lists/version, preferences/settings, picker IDs and optional account metadata. Routing fields, auth credentials, file bytes, rules, caches and the new scoped list-state memory are excluded; JSON is unencrypted. Formatted note strings round-trip without a schema change. IDs normalize and nested-only expenses appear once. V2 envelopes upgrade; unversioned input is settings-only; unsupported versions reject.
 5. **Restore:** Reject files over 50 MB. Validate envelope/date, six arrays, configuration, unique IDs and child-to-Moment references; finance checks are partial warnings. Confirmation targets the active account/guest. Existing values win; missing children append. New mirrors use destination values with matching links or skip stale reattachment. Guest restore preserves raw standalone masters independently of mirrors; corrupt ledgers block writes and nested-only projections stay nested. Sequential record writes precede configuration/reload; partial results remain and retries skip existing IDs. Samples block restore.
 6. **Settings:** Remote Code Lists, including empty lists, override browser values; missing settings seed guest/legacy values or defaults. Reset preserves business records/referenced custom values inactive. Clear Local Data is separately confirmed, with Data Model's scope. Reminder preferences do not establish delivery.
 
@@ -99,7 +101,7 @@ Routes are defined in [App.jsx](../src/App.jsx):
 | Compatibility | [event service](../src/services/eventService.js), [account transaction routing](../src/services/accountTransactionService.js), [financial normalization](../src/utils/financialRecords.js) |
 | Finance | [Financials](../src/pages/Financials.jsx), [calculations](../src/utils/transactionFilters.js), [coordinator](../src/hooks/useTransactionManager.js) |
 | Backup/settings | [backup service](../src/services/backupService.js), [Settings](../src/pages/Settings.jsx), [Code Lists](../src/pages/CodeLists.jsx) |
-| Shared UI | [list controls](../src/components/common/ListControls.jsx), [swipe](../src/components/common/SwipeActionCard.jsx), [styles](../src/design-system.css) |
+| Shared UI | [list controls](../src/components/common/ListControls.jsx), [filter memory](../src/hooks/usePersistentListState.js), [dropdowns](../src/components/common/DropdownSelect.jsx), [note editor](../src/components/common/RichTextEditor.jsx), [safe formatting](../src/utils/richText.js), [swipe](../src/components/common/SwipeActionCard.jsx), [styles](../src/design-system.css) |
 
 ## Known Limitations
 
@@ -114,6 +116,8 @@ Routes are defined in [App.jsx](../src/App.jsx):
 ## Open Work / Future Enhancements
 
 Proposed only: realtime subscriptions, durable offline data and conflict/deletion policy. Synchronization is unimplemented and excluded from this work. Verify/remediate Known Limitations before adding guarantees.
+
+- Proposed: separate activity reminder date/time, yearly recurrence and notification delivery. Activities currently have one date; reminder dates/times can be retained in notes, without scheduling or delivery.
 
 ## References
 

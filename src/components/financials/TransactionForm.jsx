@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
 import DateField from '../common/DateField';
+import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
@@ -33,7 +34,7 @@ export default function TransactionForm({
     const kind = initialTransaction?.transactionKind || defaultKind;
     setForm({
       ...defaultValues(preferences, kind),
-      ...(!initialTransaction && presetLink ? { eventId: presetLink.eventId, activityId: presetLink.activityId } : {}),
+      ...(!initialTransaction && presetLink ? { eventId: presetLink.eventId, activityId: presetLink.activityId, ...(presetLink.date ? { date: presetLink.date } : {}) } : {}),
       ...(initialTransaction ? {
         transactionKind: kind,
         title: initialTransaction.name || initialTransaction.title || '',
@@ -46,7 +47,7 @@ export default function TransactionForm({
       } : {}),
     });
     setError('');
-  }, [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);
+  }, [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);
 
   const categories = useMemo(() => {
     const isIncome = form.transactionKind === 'income';
@@ -77,6 +78,7 @@ export default function TransactionForm({
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (busy) return;
     const amount = Number(form.amount);
     if (!form.title.trim() || !form.category || !form.date || !Number.isFinite(amount) || amount <= 0) {
       setError('Enter a title, category, valid positive amount and date.');
@@ -148,12 +150,8 @@ export default function TransactionForm({
       </label>
       <DateField label="Date *" name="date" required value={form.date}
         onChange={(event) => change('date', event.target.value)} disabled={busy} />
-      <label className="dn-transaction-field">
-        <span>Notes</span>
-        <textarea rows={3} maxLength={3000} value={form.notes}
-          onChange={(event) => change('notes', event.target.value)}
-          placeholder="Add details (optional)" disabled={busy} />
-      </label>
+      <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
+        placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       <div className="form-actions">
         <button className="primaryButton" type="submit" disabled={busy}>

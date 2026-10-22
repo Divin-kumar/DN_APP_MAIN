@@ -18,7 +18,7 @@ const FIXED_SUFFIXES = Object.freeze([
   'dev_fixture_scenario',
   'dev_fixture_data',
 ]);
-const DYNAMIC_SUFFIXES = Object.freeze(['favorite_event_ids_', 'recent_event_ids_']);
+const DYNAMIC_SUFFIXES = Object.freeze(['favorite_event_ids_', 'recent_event_ids_', 'list_state_', 'transactions_filters_']);
 
 const isDnKey = (key, prefix) => {
   if (!key.startsWith(prefix)) return false;
@@ -82,4 +82,16 @@ export const clearDnLocalData = (storage = globalThis.localStorage) => {
     }
   }
   [...new Set(candidates)].forEach((key) => storage.removeItem(key));
+  // Old transaction choices lived in sessionStorage. Clear them as well so
+  // the next launch cannot migrate them back into an explicitly cleared list.
+  try {
+    const session = globalThis.sessionStorage;
+    if (session && session !== storage && typeof session.key === 'function') {
+      const keys = Array.from({ length: session.length }, (_, index) => session.key(index));
+      keys.filter((key) => typeof key === 'string' && (
+        key.startsWith(`${DN_STORAGE_PREFIX}transactions_filters_`)
+        || key.startsWith(`${LEGACY_STORAGE_PREFIX}transactions_filters_`)
+      )).forEach((key) => session.removeItem(key));
+    }
+  } catch { /* Session storage can be disabled independently of local storage. */ }
 };

@@ -6,6 +6,7 @@ import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
+import usePersistentListState from '../hooks/usePersistentListState';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
@@ -17,18 +18,8 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(value) || 0);
 
-const defaultFilters = { type: 'all', month: 'all', search: '' };
-const storageKey = (scope) => 'dn_transactions_filters_' + scope;
-const readFilters = (scope) => {
-  try {
-    const parsed = JSON.parse(sessionStorage.getItem(storageKey(scope)) || '{}');
-    return {
-      type: ['all', 'income', 'expense'].includes(parsed.type) ? parsed.type : 'all',
-      month: parsed.month === 'all' || /^\d{4}-\d{2}$/.test(parsed.month || '') ? parsed.month : 'all',
-      search: typeof parsed.search === 'string' ? parsed.search : '',
-    };
-  } catch { return { ...defaultFilters }; }
-};
+const defaultFilters = Object.freeze({ type: 'all', month: 'all', search: '' });
+const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value) };
 
 export default function Financials() {
   const location = useLocation();
@@ -37,12 +28,11 @@ export default function Financials() {
   const isGuest = useAppStore((state) => state.isGuest);
   const showToast = useAppStore((state) => state.showToast);
   const uid = user?.uid;
-  const scope = uid || (isGuest ? 'guest' : 'local');
   const { incomes, loading: loadingIncome, error: incomeError, loadedFor: incomeScope, loadIncomes } = useIncomeStore();
   const { expenses, loading: loadingExpense, error: expenseError, loadedFor: expenseScope, loadExpenses } = useExpenseStore();
   const { events, loadEvents } = useEventStore();
   const { saveTransaction, removeTransaction } = useTransactionManager();
-  const [filters, setFilters] = useState(() => readFilters(scope));
+  const [filters, changeFilters] = usePersistentListState('transactions', defaultFilters, filterRules);
   const [editing, setEditing] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [defaultKind, setDefaultKind] = useState('expense');
@@ -58,15 +48,6 @@ export default function Financials() {
     loadEvents(uid, isGuest);
   }, [uid, isGuest, user, loadIncomes, loadExpenses, loadEvents]);
 
-  useEffect(() => { setFilters(readFilters(scope)); }, [scope]);
-  const changeFilters = (patch) => {
-    setFilters((current) => {
-      const next = { ...current, ...patch };
-      try { sessionStorage.setItem(storageKey(scope), JSON.stringify(next)); } catch { /* Optional persistence */ }
-      return next;
-    });
-  };
-
   const expectedScope = (isGuest ? 'guest' : 'user') + ':' + (uid || 'anonymous');
   // Never display transactions belonging to a previous signed-in user while
   // the new account's stores are still loading.
@@ -75,14 +56,16 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
-  const monthOptions = useMemo(() => transactionMonthOptions(allTransactions), [allTransactions]);
-  useEffect(() => {
-    // Keep a saved month across reloads until BOTH store loads have completed.
-    if (!ready || filters.month === 'all') return;
-    if (!monthOptions.some((item) => item.value === filters.month)) {
-      changeFilters({ month: 'all' });
+  const monthOptions = useMemo(() => {
+    const options = transactionMonthOptions(allTransactions);
+    // Loading, deletion and a temporarily empty account must not erase a choice.
+    if (filters.month !== 'all' && !options.some((item) => item.value === filters.month)) {
+      const date = new Date(`${filters.month}-01T00:00:00`);
+      options.unshift({ value: filters.month, label: date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
+        shortLabel: date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) });
     }
-  }, [ready, filters.month, monthOptions]);
+    return options;
+  }, [allTransactions, filters.month]);
   const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
   const sorted = useMemo(() => sortTransactions(filtered, 'date-desc'), [filtered]);
   // Summary is tied to the selected month, not list search or the type selector.

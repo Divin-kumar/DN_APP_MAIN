@@ -2587,6 +2587,47 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
   }
 }
 
+/* DN shared rich notes: string-compatible Markdown, growing editors and safe previews. */
+html[data-theme] .dn-rich-editor { display:grid; min-width:0; width:100%; gap:7px; }
+html[data-theme] .dn-rich-editor-label { display:block; color:var(--color-text); font-size:var(--font-body); font-weight:600; }
+html[data-theme] .dn-rich-editor-surface { min-width:0; border:1px solid var(--color-border); border-radius:14px; background:var(--color-surface); overflow:hidden; }
+html[data-theme] .dn-rich-editor-surface:focus-within { border-color:color-mix(in srgb,var(--color-primary) 60%,var(--color-border)); box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 12%,transparent); }
+html[data-theme] .dn-rich-editor-toolbar { display:flex; min-width:0; align-items:flex-start; gap:5px; padding:5px; border-bottom:1px solid var(--color-border); background:color-mix(in srgb,var(--color-card-raised) 65%,var(--color-surface)); }
+html[data-theme] .dn-rich-editor-tools { display:flex; flex-wrap:wrap; min-width:0; gap:2px; flex:1; }
+html[data-theme] .dn-rich-editor-toolbar button { display:inline-flex; flex:0 0 auto; width:36px; min-width:36px; min-height:38px; align-items:center; justify-content:center; padding:0 !important; border:1px solid transparent !important; border-radius:9px !important; background:transparent !important; color:var(--color-text-muted) !important; box-shadow:none !important; cursor:pointer; }
+html[data-theme] .dn-rich-editor-toolbar button:hover:not(:disabled),
+html[data-theme] .dn-rich-editor-toolbar button[aria-pressed="true"] { background:var(--color-card-raised) !important; border-color:var(--color-border) !important; color:var(--color-text) !important; }
+html[data-theme] .dn-rich-editor-toolbar button:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
+html[data-theme] .dn-rich-editor-toolbar button:disabled { opacity:.4; cursor:default; }
+html[data-theme] .dn-rich-editor-toolbar .dn-rich-editor-preview-toggle { width:auto; min-width:76px; gap:5px; padding:0 6px !important; font-size:11px !important; font-weight:600; }
+@media (max-width:760px) { html[data-theme] .dn-rich-editor-toolbar button { width:44px !important; min-width:44px !important; min-height:44px; } }
+html[data-theme] .dn-rich-editor textarea { display:block; box-sizing:border-box; width:100% !important; min-width:0 !important; max-width:100%; min-height:112px; padding:13px !important; border:0 !important; border-radius:0 !important; background:transparent !important; color:var(--color-text) !important; font-family:var(--font-family-ui); font-size:var(--font-body) !important; font-weight:400; line-height:1.65; outline:0 !important; box-shadow:none !important; resize:none !important; overflow:hidden !important; }
+html[data-theme] .dn-rich-editor-hint { padding:5px 12px 9px; color:var(--color-text-muted); font-size:10px; font-weight:400; }
+html[data-theme] .dn-rich-editor-preview { min-height:112px; padding:13px; color:var(--color-text); font-weight:400; line-height:1.65; }
+html[data-theme] .dn-rich-editor-empty { color:var(--color-text-muted); font-size:var(--font-body); }
+html[data-theme] .dn-rich-editor.is-disabled { opacity:.7; }
+html[data-theme] .dn-rich-editor-announcement { position:absolute; width:1px; height:1px; padding:0; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+html[data-theme] .dn-rich-text { min-width:0; max-width:100%; overflow-wrap:anywhere; word-break:normal; font-size:inherit; font-weight:400; line-height:1.6; }
+html[data-theme] .dn-rich-text-line { min-height:1em; white-space:pre-wrap; }
+html[data-theme] .dn-rich-text strong { font-weight:700; color:inherit; }
+html[data-theme] .dn-rich-text :is(h3,h4,h5) { margin:.45em 0 .25em !important; color:inherit !important; font-size:1.12em !important; font-weight:700; line-height:1.4; }
+html[data-theme] .dn-rich-text :is(ul,ol) { display:block; margin:.3em 0 !important; padding-left:1.5em !important; list-style-position:outside; }
+html[data-theme] .dn-rich-text ul { list-style-type:disc; }
+html[data-theme] .dn-rich-text ol { list-style-type:decimal; }
+html[data-theme] .dn-rich-text li { display:list-item; margin:.12em 0; padding:0; border:0; border-radius:0; background:transparent; white-space:pre-wrap; }
+html[data-theme] .dn-rich-text blockquote { margin:.3em 0; padding:.25em .8em; border-left:2px solid var(--color-primary); color:var(--color-text-muted); white-space:pre-wrap; }
+html[data-theme] .dn-rich-text code { padding:1px 4px; border-radius:4px; background:color-mix(in srgb,var(--color-text) 8%,transparent); font-size:.9em; }
+html[data-theme] .dn-rich-text-inline { white-space:pre-wrap; }
+html[data-theme] .dn-rich-text.free-text-preview { white-space:normal !important; }
+html[data-theme] .dn-rich-text.free-text-preview .dn-rich-text-line { white-space:pre-wrap; }
+html[data-theme] .event-summary-activity-copy > .dn-rich-text { --free-text-lines:2; }
+html[data-theme] .dn-transaction-note.dn-rich-text { color:var(--color-text-muted); font-size:12px; }
+html[data-theme] .event-activity-copy > .dn-rich-text { margin-top:4px; color:var(--color-text-muted); font-size:13px; }
+@media screen and (max-width:1024px) {
+  html[data-theme] .dn-rich-editor textarea { font-size:16px !important; }
+  html[data-theme] .dn-rich-editor-toolbar button { min-height:44px; width:40px; min-width:40px; }
+}
+
 /* iOS Safari form-focus zoom prevention (DN v2.15.3).
    Below 16 CSS px, WebKit can magnify the entire page when an editor gets focus.
    Keep inputs themselves at 16px, not the entire UI; preserve user pinch zoom.

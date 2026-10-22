@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
+import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 
@@ -57,7 +58,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       name: form.name.trim(),
       type: form.type,
       customType: form.type === 'Other' ? form.customType.trim() : '',
-      notes: form.notes.trim(),
+      notes: form.notes,
     });
   };
 
@@ -96,9 +97,8 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         </DropdownSelect>
       </label>
 
-      <label htmlFor="event-notes">Notes <span className="event-form-optional">Optional</span>
-        <textarea id="event-notes" name="notes" value={form.notes} onChange={handleChange} placeholder="Add a detail you would like to remember" rows={3} />
-      </label>
+      <RichTextEditor label="Notes (optional)" id="event-notes" name="notes" value={form.notes}
+        onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
 
       <div className="event-form-actions">
         <button type="submit" className="primaryButton">{submitLabel}</button>

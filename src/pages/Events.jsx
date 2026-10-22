@@ -21,13 +21,18 @@ import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
-import usePersistentSort from '../hooks/usePersistentSort';
+import usePersistentListState from '../hooks/usePersistentListState';
 import SortControl from '../components/common/SortControl';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
+import RichTextEditor from '../components/common/RichTextEditor';
+import RichText from '../components/common/RichText';
+import { plainRichText } from '../utils/richText';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
+const momentFilterRules = { field: ['date', 'name', 'status'], direction: ['asc', 'desc'] };
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
   const baseDate = new Date(event.date || event.startDate || event.createdAt);
@@ -79,7 +84,7 @@ function EventStoryCard({ event, expenseTotal, onOpen, onSummary, onEdit, onArch
             </span>
             <strong>{event.name || 'A life moment'}</strong>
             <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
-            {event.notes ? <span className="event-story-note free-text-preview is-truncated">{event.notes}</span> : null}
+            {event.notes ? <RichText inline className="event-story-note free-text-preview is-truncated" value={event.notes} /> : null}
             <span className="event-story-details">
               <span><Clock3 size={13} /> {activities.length} activities</span>
               <span><BookHeart size={13} /> {memories.length} memories</span>
@@ -134,9 +139,12 @@ export default function Events() {
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const [summaryEvent, setSummaryEvent] = useState(null);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
-  const [search, setSearch] = useState('');
-  const [category, setCategory] = useState('All moments');
-  const { field: eventSort, direction: eventSortDirection, setField: setEventSort, toggleDirection: toggleEventSortDirection } = usePersistentSort('events', 'date', 'asc');
+  const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
+  const { search, category, field: eventSort, direction: eventSortDirection } = momentFilters;
+  const setSearch = (value) => changeMomentFilters({ search: value });
+  const setCategory = (value) => changeMomentFilters({ category: value });
+  const setEventSort = (field) => changeMomentFilters({ field, direction: 'asc' });
+  const toggleEventSortDirection = () => changeMomentFilters((current) => ({ direction: current.direction === 'asc' ? 'desc' : 'asc' }));
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
@@ -196,7 +204,7 @@ export default function Events() {
     return [...events]
       .filter((event) => {
         const matchesCategory = category === 'Archived' ? Boolean(event.archived) : !event.archived && (category === 'All moments' || (event.type || 'Personal') === category);
-        const matchesSearch = !query || [event.name, event.type, event.customType, event.notes]
+        const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
           .some((value) => String(value || '').toLowerCase().includes(query));
         return matchesCategory && matchesSearch;
       })
@@ -285,7 +293,7 @@ export default function Events() {
       id: crypto.randomUUID(),
       eventId,
       title: activityTitle.trim(),
-      description: activityDescription.trim(),
+      description: activityDescription,
       date: activityDate,
       priority: activityPriority,
       completed: false,
@@ -322,9 +330,6 @@ export default function Events() {
     setActivityDescription('');
     setActivityDate(new Date().toISOString().slice(0, 10));
     setActivityPriority('medium');
-    setExpenseActivity(null);
-    setExpenseAmount('');
-    setExpenseDescription('');
   };
   const openNewEvent = () => { setEditingEvent(null); setDrawer('event'); };
   const openEditEvent = () => { setEditingEvent(focusedEvent); setDrawer('event'); };
@@ -378,7 +383,7 @@ export default function Events() {
       id: editingActivity?.id || crypto.randomUUID(),
       eventId: focusedId,
       title: activityTitle.trim(),
-      description: activityDescription.trim(),
+      description: activityDescription,
       date: activityDate || editingActivity?.date || focusedEvent.date,
       completed: editingActivity?.completed || false,
       completedAt: editingActivity?.completedAt || null,
@@ -511,13 +516,14 @@ export default function Events() {
           activeCount={Number(Boolean(search.trim())) + Number(category !== 'All moments') + Number(eventSort !== 'date' || eventSortDirection !== 'asc')}
           resultCount={visibleEvents.length} resultLabel="moments"
           summary={[category, `${eventSort === 'name' ? 'Name' : eventSort === 'status' ? 'Status' : 'Date'} ${eventSortDirection === 'asc' ? '↑' : '↓'}`, search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
-          onReset={() => { setSearch(''); setCategory('All moments'); setEventSort('date'); }}
+          onReset={resetMomentFilters}
           search={<input id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <div className="dn-list-controls-field">
             <label htmlFor="moment-filter-category">Category</label>
-            <select id="moment-filter-category" aria-label="Filter by event category" value={category} onChange={(changeEvent) => setCategory(changeEvent.target.value)}>
+            <DropdownSelect id="moment-filter-category" aria-label="Filter by event category" value={category} onChange={(changeEvent) => setCategory(changeEvent.target.value)}>
+              {!categories.includes(category) ? <option value={category}>{category}</option> : null}
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
-            </select>
+            </DropdownSelect>
           </div>
           <div className="dn-list-controls-field">
             <span>Sort by</span>
@@ -603,7 +609,7 @@ export default function Events() {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
-            <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
+            <RichTextEditor label="Activity description" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" />
             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
@@ -625,8 +631,7 @@ function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDe
           <div style={styles.formStack}>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)}
               placeholder="Activity title" style={styles.input} />
-            <textarea value={activityDescription} onChange={(event) => setActivityDescription(event.target.value)}
-              placeholder="Description" style={styles.input} />
+            <RichTextEditor label="Activity description" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" />
             <DateField label="Date" name="activity-date" value={activityDate || ''}
               onChange={(event) => setActivityDate(event.target.value)} />
             <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)}

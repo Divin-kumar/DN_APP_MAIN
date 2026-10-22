@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { CalendarDays, Check, Circle } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
+import RichText from '../common/RichText';
 import { getEventStatus } from '../../utils/eventStatus';
 
 const formatDate = (value) => {
@@ -24,7 +25,7 @@ export default function EventSummaryDialog({ event, onClose }) {
           <h3>{event.name || 'Untitled moment'}</h3>
           <p>{formatDate(event.date)} · {statusLabel}</p>
         </header>
-        {event.notes ? <p className="event-summary-notes free-text-content">{event.notes}</p> : null}
+        {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
         <section className="event-summary-activities" aria-label="Activity summary">
           <h4>Activities <span>{activities.length}</span></h4>
           {activities.length ? <ul>
@@ -41,7 +42,7 @@ export default function EventSummaryDialog({ event, onClose }) {
                     <strong>{activity.title || activity.name || 'Untitled activity'}</strong>
                     <small>{formatDate(activity.date)}{activity.cancelled || activity.status === 'cancelled' ? ' · Cancelled' : activity.completed ? ' · Completed' : ''}</small>
                     {hasDescription ? <>
-                      <p className={`free-text-content${canExpand && !expanded ? ' free-text-preview is-truncated' : ''}`}>{description}</p>
+                      <RichText className={canExpand && !expanded ? 'free-text-preview is-truncated' : ''} value={description} />
                       {canExpand ? <button type="button" onClick={() => setExpandedActivities((current) => ({ ...current, [key]: !current[key] }))} aria-expanded={expanded}>{expanded ? 'Show less' : 'Show more'}</button> : null}
                     </> : null}
                   </div>

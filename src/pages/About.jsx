@@ -39,8 +39,8 @@ const guideItems = [
   { title: 'Dashboard', description: 'See today’s Moments, greetings and upcoming Moments for the next 30 days. Choose which Moment Types appear using Show on Dashboard in Code Lists.' },
   { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Swipe a Moment for Edit, Summary, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Overview, Activities, Timeline, Memories and Attachments using the section row. Add a memory or attachment entry beside its section heading.' },
-  { title: 'Activities', description: 'Add tasks to a Moment, then complete, cancel or edit them. Quick Create lets you choose a Moment Type first to narrow the available Moments.' },
-  { title: 'Memories and greetings', description: 'Save a memory title and note within a Moment. Preview, edit and download greeting cards as HTML; generated templates follow the Moment Type settings.' },
+  { title: 'Activities', description: 'Add tasks to a Moment, then complete, cancel or edit them. Add a linked transaction directly inside Activities. Quick Create remembers your Moment Type choice to narrow the available Moments.' },
+  { title: 'Memories and greetings', description: 'Write spacious notes with bold, lists, headings and other formatting. Use Preview to check the result. Memories stay within their Moment; greeting cards can be edited and downloaded as HTML.' },
   { title: 'Attachments', description: 'Record a selected file’s name, type and size. DN saves attachment details, not the original file contents; keep your original files separately.' },
   { title: 'Transactions', description: 'Add income and expenses, optionally linked to a Moment or Activity. Search beside Filters; choose type or month inside. History is newest first, and Income, Expense and Balance totals follow the selected month.' },
   { title: 'Insights', description: 'Open Insights from Dashboard to review counts, spending and income patterns. Its JSON report is separate from a recovery backup.' },
@@ -48,11 +48,10 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Search stays directly beside compact Filters controls; filtering and sorting open in a separate panel.',
-  'Moments use one list with shorter swipe menus, while Transactions keep a lightweight newest-first history.',
-  'Upcoming Moments use calendar dates and respect each Moment Type’s Show on Dashboard setting.',
-  'All five workspace sections stay in one row, with Memory and Attachment add actions beside their headings.',
-  'Legacy financial records and JSON backup compatibility have improved, and long transaction histories retain readable card heights.',
+  'Add transactions from an activity without leaving its workspace, with the activity and date already selected.',
+  'Notes expand as you write, with formatting tools and a preview across Moments, activities, memories and transactions.',
+  'Filters use polished dropdowns and remember your search, selections and sorting in this browser until you reset them.',
+  'Activity filters are remembered separately for each Moment and account; empty periods keep your selected filter.',
 ];
 
 const dataInfo = [

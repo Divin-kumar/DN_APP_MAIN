@@ -11,6 +11,7 @@ import { useState } from 'react';
 // Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
+import RichText from '../common/RichText';
 
 // Main component. It receives the event name, the list of activities, money connected to each activity,
 // and callback functions that tell the parent screen what action the user wants to do.
@@ -150,7 +151,7 @@ export default function ActivityList({
                 <div className="event-activity-context"><span>{eventName}</span><i>·</i><span>{dueText}</span></div>
 
                 {/* If a task has a description, show it below the title. */}
-                {activity.description ? <p className="free-text-content">{activity.description}</p> : null}
+                {activity.description ? <RichText value={activity.description} /> : null}
 
                 {/* If linked expenses exist, show a section with a toggle to expand and collapse them. */}
                 {hasExpenses ? (

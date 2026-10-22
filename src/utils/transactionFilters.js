@@ -1,4 +1,6 @@
 // The transaction UI is unified; Firestore collections and guest backups remain backward-compatible.
+import { plainRichText } from './richText.js';
+
 export const transactionMonthKey = (date) => {
   if (typeof date !== 'string') return null;
   const match = /^(\d{4})-(\d{2})(?:-|$)/.exec(date);
@@ -24,7 +26,7 @@ export const filterTransactions = (transactions, { type = 'all', month = 'all', 
     if (month !== 'all' && transactionMonthKey(item.date) !== month) return false;
     if (!query) return true;
     return [
-      item.name, item.title, item.description, item.notes, item.category, item.type,
+      item.name, item.title, plainRichText(item.description), plainRichText(item.notes), item.category, item.type,
       item.amount, item.date, item.activityTitle, item.eventTitle,
     ].some((value) => String(value ?? '').toLowerCase().includes(query));
   });
@@ -73,8 +75,8 @@ export const transactionPayload = (form) => {
     name: String(form.title || '').trim(),
     amount: Number(form.amount),
     date: form.date,
-    description: String(form.notes || '').trim(),
-    notes: String(form.notes || '').trim(),
+    description: String(form.notes || ''),
+    notes: String(form.notes || ''),
     eventId: form.eventId || null,
     activityId: form.activityId || null,
   };

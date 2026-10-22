@@ -4,6 +4,15 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-078 | Keep activity transactions in place, add rich notes and remember filters
+- Date: 2026-10-22. Owner-authorized fixes, OldVersion commit/push and permanent production Hosting. Reviewed base: `35e5599259530811b66a9fe0a90134447e9521cc`; release version 1.0.21, without dependency additions or synchronization redesign.
+- Activities: both Transaction entry points open the shared form inside the workspace, preset Moment/activity/date, retain the route on save/cancel/error, use the existing finance coordinator and guard repeated saves/closing during submission. Removed obsolete undefined Moment drawer resets.
+- Notes: shared expanding editor and restricted safe rendering provide bold, italic, headings, lists, quotes, strikethrough, code and preview across supported note fields. Existing strings/whitespace, financial mirrors and JSON backups remain compatible; visible formatted phrases are searchable. HTML, links and images are literal text, not executable markup.
+- Filters: shared styled dropdowns; account/guest-scoped browser memory for search/filter/sort, per-Moment activity choices and Quick Create type. Missing categories/months remain selected, Reset restores defaults/direction, storage failure keeps session memory, and Clear Local Data removes new/legacy filter keys. Old scoped transaction filters migrate; unowned global sort preferences intentionally start scoped defaults once.
+- Documentation: master and About describe current behavior; retained the owner's proposed activity reminder enhancement without implementing it. No personal account notes or import records are captured here.
+- Executed local verification: `npm test` passed 171/171; production build passed with 2398 modules. Existing >500 kB chunk warning remains. Isolated localhost guest journeys verified rich notes/HTML escaping, multiline formatting, 75-line editor growth at 320/390px with 16px text and no inner editor/page overflow, dropdown Escape/panel behavior in both themes, Moment/activity/Finance filter persistence and explicit Reset, and one linked expense saved/reloaded without leaving Activities. No production business data was changed by these code checks.
+- Release target: project `expense-tracker-divin`, permanent live Hosting site `dn-10` (`https://dn-10.web.app`); deployment/remote CI require their own read-back. Native iPhone behavior, production save failures and cross-device synchronization are not proven by local/browser/mock checks.
+
 ## CHG-20261022-077 | Verify permanent production release 1.0.20
 - Date: 2026-10-22. Source release: `3342eaf07b48f2f7040fd9b670b47f3114eb5c84`, pushed normally to OldVersion; main remained `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
 - GitHub Actions [run 39765691989](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39765691989) completed successfully: documentation-contract and application-smoke-tests passed. The opt-in preview workflow was skipped.

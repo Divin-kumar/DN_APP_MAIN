@@ -1,6 +1,8 @@
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
+import RichText from '../common/RichText';
+import DropdownSelect from '../common/DropdownSelect';
 
 const money = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -55,7 +57,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
           <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
           {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
           {activityTitle ? <small>Activity: {activityTitle}</small> : null}
-          {transaction.notes || transaction.description ? <small className="dn-transaction-note">{transaction.notes || transaction.description}</small> : null}
+          {transaction.notes || transaction.description ? <RichText className="dn-transaction-note" value={transaction.notes || transaction.description} /> : null}
         </div>
         <div className="dn-transaction-card-side">
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
@@ -92,20 +94,20 @@ export default function TransactionHistory({
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <div className="dn-list-controls-field">
           <label htmlFor="transaction-filter-type">Type</label>
-          <select id="transaction-filter-type" aria-label="Transaction Type" value={filters.type}
+          <DropdownSelect id="transaction-filter-type" aria-label="Transaction Type" value={filters.type}
             onChange={(event) => onFilters({ type: event.target.value })}>
             <option value="all">All</option>
             <option value="income">Income</option>
             <option value="expense">Expense</option>
-          </select>
+          </DropdownSelect>
         </div>
         <div className="dn-list-controls-field">
           <label htmlFor="transaction-filter-month">Month</label>
-          <select id="transaction-filter-month" aria-label="Month" value={filters.month}
+          <DropdownSelect id="transaction-filter-month" aria-label="Month" value={filters.month}
             onChange={(event) => onFilters({ month: event.target.value })}>
             <option value="all">All Months</option>
             {monthOptions.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
-          </select>
+          </DropdownSelect>
         </div>
       </ListControls>
       <div className="dn-transactions-results" role="list" aria-label="Filtered transactions">

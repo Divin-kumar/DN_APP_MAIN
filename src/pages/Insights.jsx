@@ -1,6 +1,6 @@
 // This page turns the stored event, income, and expense data into charts and summaries.
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -8,6 +8,9 @@ import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
 import ListControls from '../components/common/ListControls';
+import usePersistentListState from '../hooks/usePersistentListState';
+
+const defaultInsightFilters = Object.freeze({ search: '' });
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 const eventDate = (event) => {
@@ -31,7 +34,9 @@ const nextEventDate = (event) => {
 };
 
 export default function Insights() {
-  const [search, setSearch] = useState('');
+  const [insightFilters, changeInsightFilters, resetInsightFilters] = usePersistentListState('insights', defaultInsightFilters);
+  const search = insightFilters.search;
+  const setSearch = (value) => changeInsightFilters({ search: value });
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const { events, loadEvents } = useEventStore();
@@ -131,7 +136,7 @@ export default function Insights() {
         <div className="insights-tools">
           <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
             resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
-            summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={() => setSearch('')}
+            summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
             search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
               placeholder="Search milestones" aria-label="Search Insights" />} />
           <button type="button" onClick={exportInsights}><Download size={15} /> Export</button>

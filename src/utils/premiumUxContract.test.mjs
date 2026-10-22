@@ -180,7 +180,8 @@ test('mobile editors avoid Safari focus zoom across forms without inflating othe
   const financeForm = read('../components/financials/TransactionForm.jsx');
   assert.match(financeForm, /<input type="text"/);
   assert.match(financeForm, /<input type="number"/);
-  assert.match(financeForm, /<textarea/);
+  assert.match(financeForm, /<RichTextEditor label="Notes"/);
+  assert.match(read('../components/common/RichTextEditor.jsx'), /<textarea ref=\{inputRef\}/);
   const picker = read('../components/common/DropdownSelect.jsx');
   assert.match(picker, /<input ref=\{searchRef\} type="search"/);
 });
@@ -198,7 +199,7 @@ test('Moment type Greeting Template keeps a 16px editor font on mobile despite o
   const patch = css.lastIndexOf('v2.15.4: iPhone Safari Greeting Template anti-zoom specificity repair');
   assert.ok(original >= 0 && patch > original, 'The stronger mobile override must follow the 14px Moment field rule');
   assert.match(source, /className="moment-type-form"/);
-  assert.match(source, /<span>Greeting Template<\/span>\s*<textarea/);
+  assert.match(source, /<RichTextEditor label="Greeting Template"/);
   const override = css.slice(patch);
   assert.match(override, /@media screen and \(max-width: 1024px\)/);
   assert.match(override, /html\[data-theme\] \.moment-type-form input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/);

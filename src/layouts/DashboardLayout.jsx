@@ -18,6 +18,8 @@ import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import TransactionForm from '../components/financials/TransactionForm';
+import RichTextEditor from '../components/common/RichTextEditor';
+import usePersistentListState from '../hooks/usePersistentListState';
 import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
@@ -33,6 +35,7 @@ const navItems = [
   { label: 'Financials', path: '/financials', icon: WalletCards },
   { label: 'Settings', path: '/settings', icon: Settings },
 ];
+const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 
 export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
@@ -60,7 +63,9 @@ export default function DashboardLayout() {
   const [quickCreateType, setQuickCreateType] = useState(null);
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickActivityEventId, setQuickActivityEventId] = useState('');
-  const [quickActivityType, setQuickActivityType] = useState('');
+  const [activityPickerFilter, changeActivityPickerFilter] = usePersistentListState('activity-picker', ACTIVITY_PICKER_DEFAULTS);
+  const quickActivityType = activityPickerFilter.type;
+  const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
   const [quickActivityTitle, setQuickActivityTitle] = useState('');
   const [quickActivityDate, setQuickActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
@@ -225,7 +230,6 @@ export default function DashboardLayout() {
     setQuickCreateType(type);
     if (type === 'activity') {
       setQuickActivityEventId('');
-      setQuickActivityType('');
       setQuickActivityTitle('');
       setQuickActivityDate(new Date().toISOString().slice(0, 10));
       setQuickActivityPriority('medium');
@@ -270,7 +274,7 @@ export default function DashboardLayout() {
         id: crypto.randomUUID(),
         eventId: event.id || event.firestoreId,
         title: quickActivityTitle.trim(),
-        description: quickActivityDescription.trim(),
+        description: quickActivityDescription,
         date: quickActivityDate,
         priority: quickActivityPriority,
         completed: false,
@@ -451,6 +455,7 @@ export default function DashboardLayout() {
             }} aria-label="Moment type" disabled={eventsLoading}>
               <option value="">All moment types</option>
               {quickActivityTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+              {quickActivityType && !quickActivityTypes.some((type) => type.value === quickActivityType) ? <option value={quickActivityType}>Saved moment type (unavailable)</option> : null}
             </DropdownSelect>
             <label htmlFor="quick-activity-moment">Life moment</label>
             <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
@@ -465,7 +470,7 @@ export default function DashboardLayout() {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
-            <textarea value={quickActivityDescription} onChange={(event) => setQuickActivityDescription(event.target.value)} placeholder="Description (optional)" aria-label="Activity description" rows={3} />
+            <RichTextEditor label="Activity notes" value={quickActivityDescription} onChange={setQuickActivityDescription} placeholder="Description (optional)" rows={4} />
             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
