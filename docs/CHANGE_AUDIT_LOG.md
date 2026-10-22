@@ -950,3 +950,14 @@
 - Risks/rollback: Longer search terms may wrap/truncate differently, but field width and height rules are retained; revert the commit if needed. No schema migration.
 - Master sections updated: §9.1 and §13 to version 2.15.5.
 - Status: SOURCE UPDATED / CI AND NATIVE DEVICE ACCEPTANCE PENDING.
+
+## CHG-20261022-074 | Scope base mobile Safari font regression test
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner, closeout QA for remaining Greeting Template iPhone focus zoom.
+- Branch / commit / PR: OldVersion only, SHA in Git history; main unchanged and no deployment.
+- Exact paths: src/utils/premiumUxContract.test.mjs, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before -> after: v2.15.5 run 39709793563 passed 113/114 tests and failed one old assertion which counted every later 16px rule after the original global guard. Updated test to check the baseline CSS block only, leaving targeted 16px guard tests separate. No further CSS changes.
+- Verification: npm test/build and documentation governance pending new CI. Actual iPhone Safari/keyboard zoom behavior NOT RUN.
+- User/data/security impact: Source regression test and documentation only; no app runtime changes, deployment, schema or user data changes.
+- Risk/rollback: Test change is scoped to CSS block boundaries; no runtime rollback required.
+- Master: §9.1 and §13, v2.15.6.

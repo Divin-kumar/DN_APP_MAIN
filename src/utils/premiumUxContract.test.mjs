@@ -160,7 +160,9 @@ test('mobile editors avoid Safari focus zoom across forms without inflating othe
   const css = read('../design-system.css');
   const marker = css.lastIndexOf('iOS Safari form-focus zoom prevention');
   assert.ok(marker > 0);
-  const rule = css.slice(marker);
+  const endOfBaseGuard = css.indexOf('\n/* v2.15.4:', marker);
+  assert.ok(endOfBaseGuard > marker, 'The baseline guard must end before targeted overrides');
+  const rule = css.slice(marker, endOfBaseGuard);
   assert.match(rule, /@media screen and \(max-width: 1024px\)/);
   assert.match(rule, /html\[data-theme\] input:not\(\[type="checkbox"\]\)/);
   for (const excluded of ['radio','range','file','color','hidden','button','submit','reset']) {
