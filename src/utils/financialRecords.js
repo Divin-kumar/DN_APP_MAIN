@@ -48,14 +48,43 @@ export const normalizeFinancialRecord = (item = {}, kind = 'expense', fallbackId
   ...(kind === 'expense' ? { source: item.source || 'manual' } : {}),
 });
 
-export const mergeFinancialExpenses = (records) => {
+// Runtime document provenance only. Collection names and document IDs are
+// constrained before they can participate in an account mutation.
+export const getFinancialRecordSources = (record, kind = 'expense', fallbackId = '') => {
+  const typedCollection = kind === 'income' ? 'incomes' : 'expenses';
+  const sources = new Map();
+  const add = (collection, id) => {
+    if (![typedCollection, 'transactions'].includes(collection)
+      || typeof id !== 'string' || !id.trim() || id.includes('/')) return;
+    sources.set(`${collection}/${id}`, { collection, id });
+  };
+  add(record.firestoreCollection === 'transactions' ? 'transactions' : typedCollection,
+    record.firestoreId || fallbackId);
+  for (const source of Array.isArray(record.firestoreSources) ? record.firestoreSources : []) {
+    if (source && typeof source === 'object') add(source.collection, source.id);
+  }
+  return [...sources.values()];
+};
+
+export const mergeFinancialRecords = (records, kind = 'expense') => {
   const byId = new Map();
   for (const record of records) {
+    const sources = getFinancialRecordSources(record, kind);
     const normalized = {
-      ...normalizeFinancialRecord(record),
+      ...normalizeFinancialRecord(record, kind),
       ...(record.firestoreId ? { firestoreId: record.firestoreId } : {}),
+      ...(['transactions', kind === 'income' ? 'incomes' : 'expenses'].includes(record.firestoreCollection)
+        ? { firestoreCollection: record.firestoreCollection } : {}),
+      ...(sources.length ? { firestoreSources: sources } : {}),
     };
     if (!byId.has(normalized.id)) byId.set(normalized.id, normalized);
+    else if (sources.length) {
+      const current = byId.get(normalized.id);
+      current.firestoreSources = getFinancialRecordSources({ ...current,
+        firestoreSources: [...(current.firestoreSources || []), ...sources] }, kind);
+    }
   }
   return [...byId.values()];
 };
+
+export const mergeFinancialExpenses = (records) => mergeFinancialRecords(records, 'expense');

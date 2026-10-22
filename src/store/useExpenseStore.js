@@ -157,13 +157,13 @@ const useExpenseStore = create((set, get) => {
 
   deleteExpenseItem: async (uid, isGuest, expenseId) => {
     const current = get().expenses;
-    const expense = current.find((item) => item.id === expenseId || item.firestoreId === expenseId);
+    const expense = current.find((item) => item.id === expenseId) || current.find((item) => item.firestoreId === expenseId);
 
     if (!expense) return;
 
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
-      const updated = sampleData.expenses.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
+      const updated = sampleData.expenses.filter((item) => !sameRecord(item, expense));
       saveActiveSampleData({ ...sampleData, expenses: updated });
       set({ expenses: updated });
       return;
@@ -175,7 +175,7 @@ const useExpenseStore = create((set, get) => {
       return;
     }
 
-    const remaining = current.filter((item) => item.id !== expenseId && item.firestoreId !== expenseId);
+    const remaining = current.filter((item) => !sameRecord(item, expense));
     set({ expenses: remaining, error: null });
 
     try {

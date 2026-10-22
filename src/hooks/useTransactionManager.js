@@ -104,7 +104,11 @@ export default function useTransactionManager() {
     // Only activity-linked expenses have nested mirrors that must be reconciled.
     // Moment-only expenses have no activity child; deletion must still work if
     // their historical Moment is no longer present.
-    if (original.activityId) requireLinkedActivity(useEventStore.getState().events, original);
+    // Persisted account expenses also retain an independently deletable document
+    // when an old parent is missing. Guest/nested-only records need that parent.
+    if (original.activityId && (isGuest || isNestedOnlyAccountExpense(original, isGuest))) {
+      requireLinkedActivity(useEventStore.getState().events, original);
+    }
     await updateMirrors(original, null);
     if (isNestedOnlyAccountExpense(original, isGuest)) {
       patchLoadedExpenses(useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, original)));

@@ -1383,6 +1383,22 @@ html[data-theme] .settings-tag-add:hover,
 html[data-theme] .workspace-add-activity:hover,
 html[data-theme] .event-moment-memory-action:hover,
 html[data-theme] .event-moment-copy-action:hover { border-color: color-mix(in srgb,var(--color-primary) 46%,var(--color-border)) !important; background: color-mix(in srgb,var(--color-primary) 14%,var(--color-card)) !important; transform: translateY(-1px); }
+/* Match the adjacent Filters control without stretching with a wrapped heading. */
+html[data-theme] .event-section-heading .workspace-add-activity {
+  align-self: center; width: fit-content; height: 44px; max-height: 44px;
+  min-height: 44px !important; gap: 7px !important; padding: 0 12px !important;
+  border: 1px solid var(--color-border) !important; border-radius: 12px !important;
+  background: var(--color-card) !important; color: var(--color-text-muted) !important;
+  box-shadow: none !important; font-size: 13px !important; font-weight: 650 !important;
+  line-height: normal; white-space: nowrap;
+}
+html[data-theme] .event-section-heading .workspace-add-activity:hover {
+  border-color: var(--action-border) !important; background: var(--action-fill) !important;
+  color: var(--action-ink) !important; transform: none;
+}
+@media (max-width: 640px) {
+  html[data-theme] .event-section-heading .workspace-add-activity { gap: 5px !important; padding-inline: 10px !important; }
+}
 html[data-theme] .event-moment-delete,
 html[data-theme] .profile-menu-danger { border-color: color-mix(in srgb,var(--color-danger) 28%,var(--color-border)) !important; background: color-mix(in srgb,var(--color-danger) 9%,var(--color-card)) !important; color: var(--color-danger) !important; }
 html[data-theme] .event-moment-delete { display: grid; width: 42px; min-width: 42px; height: 42px; min-height: 42px; place-items: center; padding: 0 !important; border-radius: 12px !important; box-shadow: 0 3px 10px color-mix(in srgb,var(--color-danger) 8%,transparent); transition: var(--action-motion); }

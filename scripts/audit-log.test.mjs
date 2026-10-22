@@ -16,15 +16,29 @@ test('audit validation accepts subsequent newest-first entries and Windows line 
   assert.deepEqual(verifyAuditLog(previous, (newest + previous).replace(/\n/g, '\r\n')), { preserved: 2, added: 1 });
 });
 
+test('routine changes may retain an unchanged audit log without new entries', () => {
+  const previous = second + first;
+  assert.deepEqual(verifyAuditLog(previous, previous), { preserved: 2, added: 0 });
+  assert.deepEqual(verifyAuditLog(previous, previous.replace(/\n/g, '\r\n')), { preserved: 2, added: 0 });
+});
+
+test('audit ordering is validated even when a historical baseline is unavailable', () => {
+  assert.deepEqual(verifyAuditLog('', newest + second + first), { preserved: 0, added: 3 });
+  assert.throws(() => verifyAuditLog('', first + second), /newest first/);
+  assert.throws(() => verifyAuditLog('', '# Empty log\n'), /must contain entries/);
+});
+
 test('audit validation rejects changed, removed or renamed historical records', () => {
+  assert.throws(() => verifyAuditLog(second + first, second + first.replace('Evidence preserved.', 'Edited.')), /edited/);
+  assert.throws(() => verifyAuditLog(second + first, first), /removed/);
   assert.throws(() => verifyAuditLog(first + second, newest + second + first.replace('Evidence preserved.', 'Edited.')), /edited/);
   assert.throws(() => verifyAuditLog(first + second, newest + first), /removed/);
   assert.throws(() => verifyAuditLog(first, newest + first.replace('20261021-001', '20261021-003')), /removed/);
 });
 
-test('audit validation rejects duplicate, malformed, oldest-first and missing new entries', () => {
+test('audit validation rejects duplicate, malformed, oldest-first and misplaced new entries', () => {
   assert.throws(() => verifyAuditLog(first, newest + first + first), /Duplicate/);
   assert.throws(() => verifyAuditLog(first, newest + first + '## CHG-invalid | Change\n'), /Malformed/);
   assert.throws(() => verifyAuditLog(first, first + newest), /newest first/);
-  assert.throws(() => verifyAuditLog(first + second, second + first), /requires a new/);
+  assert.throws(() => verifyAuditLog(newest + first, newest + second + first), /must precede historical/);
 });

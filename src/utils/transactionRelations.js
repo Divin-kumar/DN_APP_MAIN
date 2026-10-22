@@ -6,7 +6,8 @@ import { financialDate } from './financialRecords.js';
 // Never equate absent Firestore IDs. Both compared identifiers must exist.
 export const sameRecord = (a, b) => Boolean(a && b && (
   (a.id != null && b.id != null && String(a.id).length && String(a.id) === String(b.id)) ||
-  (a.firestoreId != null && b.firestoreId != null && String(a.firestoreId).length && String(a.firestoreId) === String(b.firestoreId))
+  (a.firestoreId != null && b.firestoreId != null && String(a.firestoreId).length && String(a.firestoreId) === String(b.firestoreId)
+    && (a.firestoreCollection || null) === (b.firestoreCollection || null))
 ));
 
 export const upsertRecord = (items, record) => {

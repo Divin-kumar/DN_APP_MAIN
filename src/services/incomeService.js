@@ -6,14 +6,12 @@
 import {
   addDoc,
   collection,
-  deleteDoc,
-  doc,
   getDocs,
-  updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
 import { upsertRecord } from '../utils/transactionRelations';
-import { normalizeFinancialRecord } from '../utils/financialRecords.js';
+import { normalizeFinancialRecord, mergeFinancialRecords } from '../utils/financialRecords.js';
+import { deleteAccountFinancialRecord, getAccountTransactions, updateAccountFinancialRecord } from './accountTransactionService';
 
 const GUEST_INCOMES_KEY = 'dn_guest_incomes';
 
@@ -36,35 +34,31 @@ export const setGuestIncomes = (items) => {
 
 export const getIncomesForUser = async (uid) => {
   const incomesRef = collection(db, 'users', uid, 'incomes');
-  const snapshot = await getDocs(incomesRef);
-  return snapshot.docs.map((docSnap) => ({
+  const [snapshot, unifiedIncomes] = await Promise.all([
+    getDocs(incomesRef), getAccountTransactions(uid, 'income', normalizeIncome),
+  ]);
+  const typedIncomes = snapshot.docs.map((docSnap) => ({
     firestoreId: docSnap.id,
-    ...normalizeIncome(docSnap.data(), docSnap.id),
+    firestoreCollection: 'incomes',
+    ...normalizeIncome({ ...docSnap.data(), firestoreId: docSnap.id }, docSnap.id),
   }));
+  return mergeFinancialRecords([...typedIncomes, ...unifiedIncomes], 'income');
 };
 
 export const createIncome = async (uid, income) => {
   const normalized = normalizeIncome(income);
   const incomesRef = collection(db, 'users', uid, 'incomes');
   const docRef = await addDoc(incomesRef, normalized);
-  return { firestoreId: docRef.id, ...normalized };
+  return { firestoreId: docRef.id, firestoreCollection: 'incomes', ...normalized };
 };
 
 export const updateIncome = async (uid, income) => {
   const normalized = normalizeIncome(income);
-  const ref = doc(db, 'users', uid, 'incomes', income.firestoreId || income.id);
-  await updateDoc(ref, {
-    ...normalized,
-    id: normalized.id,
-  });
-  return normalized;
+  return updateAccountFinancialRecord(uid, 'income', income, normalized);
 };
 
 export const deleteIncome = async (uid, income) => {
-  const id = income.firestoreId || income.id;
-  if (!id) return;
-  const ref = doc(db, 'users', uid, 'incomes', id);
-  await deleteDoc(ref);
+  return deleteAccountFinancialRecord(uid, 'income', income);
 };
 
 export const saveGuestIncome = (income) => {

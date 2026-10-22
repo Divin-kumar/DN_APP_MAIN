@@ -148,13 +148,13 @@ const useIncomeStore = create((set, get) => {
 
   deleteIncomeItem: async (uid, isGuest, incomeId) => {
     const current = get().incomes;
-    const income = current.find((item) => item.id === incomeId || item.firestoreId === incomeId);
+    const income = current.find((item) => item.id === incomeId) || current.find((item) => item.firestoreId === incomeId);
 
     if (!income) return;
 
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
-      const updated = sampleData.incomes.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
+      const updated = sampleData.incomes.filter((item) => !sameRecord(item, income));
       saveActiveSampleData({ ...sampleData, incomes: updated });
       set({ incomes: updated });
       return;
@@ -166,7 +166,7 @@ const useIncomeStore = create((set, get) => {
       return;
     }
 
-    const remaining = current.filter((item) => item.id !== incomeId && item.firestoreId !== incomeId);
+    const remaining = current.filter((item) => !sameRecord(item, income));
     set({ incomes: remaining, error: null });
 
     try {

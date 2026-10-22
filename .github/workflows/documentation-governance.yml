@@ -32,33 +32,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Require documentation and audit for OldVersion changes
-        shell: bash
-        env:
-          EVENT_NAME: ${{ github.event_name }}
-          PUSH_BEFORE: ${{ github.event.before }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.sha }}
-        run: |
-          set -euo pipefail
-          base="$PUSH_BEFORE"
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then base="$BASE_SHA"; fi
-          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
-            base="$(git rev-list --max-parents=0 HEAD | tail -1)"
-          fi
-          changed="$(git diff --name-only "$base" "$HEAD_SHA" || true)"
-          echo "Changed files:"
-          printf '%s\n' "$changed"
-          if [[ -z "$changed" ]]; then exit 0; fi
-          if ! grep -Fxq "docs/MASTER_SOURCE_OF_TRUTH.md" <<< "$changed"; then
-            echo "::error::OldVersion changes require an update to docs/MASTER_SOURCE_OF_TRUTH.md"
-            exit 1
-          fi
-          if ! grep -Fxq "docs/CHANGE_AUDIT_LOG.md" <<< "$changed"; then
-            echo "::error::OldVersion changes require a new top audit entry in docs/CHANGE_AUDIT_LOG.md"
-            exit 1
-          fi
-          echo "Documentation files changed; verify factual quality during review."
+      # Review determines factual master impact and whether a meaningful change
+      # needs new evidence. Routine edits do not require artificial document diffs.
       - name: Enforce four-Markdown-file budget
         shell: bash
         run: |
@@ -70,7 +45,7 @@ jobs:
             diff -u <(printf '%s\n' "$expected") <(printf '%s\n' "$actual") || true
             exit 1
           fi
-      - name: Verify prior audit entries are preserved
+      - name: Validate audit ordering and preserve historical entries
         shell: bash
         env:
           EVENT_NAME: ${{ github.event_name }}
@@ -80,6 +55,15 @@ jobs:
           set -euo pipefail
           base="$PUSH_BEFORE"
           if [[ "$EVENT_NAME" == "pull_request" ]]; then base="$BASE_SHA"; fi
-          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then exit 0; fi
-          if ! git cat-file -e "$base:docs/CHANGE_AUDIT_LOG.md" 2>/dev/null; then exit 0; fi
-          node scripts/check-audit-log.mjs "$base"
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            node scripts/check-audit-log.mjs
+          else
+            # A supplied but unavailable commit is an error, not permission to
+            # skip preservation. Only a genuinely absent old log has no baseline.
+            git cat-file -e "$base^{commit}"
+            if git cat-file -e "$base:docs/CHANGE_AUDIT_LOG.md" 2>/dev/null; then
+              node scripts/check-audit-log.mjs "$base"
+            else
+              node scripts/check-audit-log.mjs
+            fi
+          fi

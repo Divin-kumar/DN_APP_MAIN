@@ -10,7 +10,7 @@ const isRecord = (value) => value && typeof value === 'object' && !Array.isArray
 const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
 
 // Canonicalize the original numeric IDs before validation; never invent backup IDs.
-const portableRecord = ({ firestoreId, firestoreCollection, ...item }) => ({
+const portableRecord = ({ firestoreId, firestoreCollection, firestoreSources, ...item }) => ({
   ...item,
   id: recordId(item.id) || recordId(firestoreId),
   ...Object.fromEntries(['eventId', 'activityId', 'momentId'].filter((key) => item[key] != null)
@@ -291,12 +291,35 @@ const mergeById = (currentItems = [], importedItems = []) => {
   return { items: merged, added };
 };
 
-export const mergeEventGroupsForRestore = (currentGroups, importedGroups) => {
+const preferDestinationExpenseMirrors = (importedGroups, destinationExpenses) => {
+  const byId = new Map();
+  destinationExpenses.forEach((expense) => {
+    const id = recordId(expense.id);
+    if (id && !byId.has(id)) byId.set(id, expense);
+  });
+  return importedGroups.map((moment) => ({
+    ...moment,
+    activities: (moment.activities || []).map((activity) => ({
+      ...activity,
+      expenses: (activity.expenses || []).flatMap((expense) => {
+        const existing = byId.get(recordId(expense.id));
+        if (!existing) return [expense];
+        // A backup must not relink an existing ledger record or copy its stale
+        // values into a newly added activity mirror. Existing values win.
+        const existingMomentId = recordId(existing.eventId) || recordId(existing.momentId);
+        if (existingMomentId !== recordId(moment.id) || recordId(existing.activityId) !== recordId(activity.id)) return [];
+        return [portableRecord(existing)];
+      }),
+    })),
+  }));
+};
+
+export const mergeEventGroupsForRestore = (currentGroups, importedGroups, destinationExpenses = []) => {
   const merged = [...currentGroups];
   const byId = new Map(merged.map((moment, index) => [moment.id, index]));
   const counts = { moments: 0, activities: 0, memories: 0, attachments: 0, conflicts: 0 };
 
-  importedGroups.forEach((imported) => {
+  preferDestinationExpenseMirrors(importedGroups, destinationExpenses).forEach((imported) => {
     const existingIndex = byId.get(imported.id);
     if (existingIndex === undefined) {
       merged.push(imported);

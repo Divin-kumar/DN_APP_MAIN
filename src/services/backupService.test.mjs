@@ -174,6 +174,51 @@ test('backup canonical expenses take precedence over a nested copy with numeric 
   assert.equal(backup.incomes[0].firestoreId, undefined);
 });
 
+test('restore uses destination legacy expense values for a missing mirror and remains idempotent', () => {
+  const imported = buildEventGroupsFromBackup(fixture());
+  const current = [{ id: 'moment-1', name: 'Current trip', activities: [{ id: 'activity-1', title: 'Current activity', expenses: [] }] }];
+  const expenses = [{
+    id: 'expense-nested', firestoreId: 'legacy-expense-doc', firestoreCollection: 'transactions',
+    name: 'Current expense', amount: 99, notes: 'Current notes', eventId: 'moment-1', activityId: 'activity-1',
+  }];
+  const before = JSON.stringify({ current, expenses, imported });
+  const first = mergeEventGroupsForRestore(current, imported, expenses);
+  const mirror = first.eventGroups[0].activities[0].expenses[0];
+  assert.equal(mirror.amount, 99, 'the stale backup amount must not become a new mirror');
+  assert.equal(mirror.name, 'Current expense');
+  assert.equal(mirror.notes, 'Current notes');
+  assert.equal(mirror.firestoreId, undefined);
+  assert.equal(mirror.firestoreCollection, undefined);
+  assert.equal(first.eventGroups[0].name, 'Current trip');
+  assert.equal(JSON.stringify({ current, expenses, imported }), before, 'source records and imported backup remain unchanged');
+
+  const repeated = mergeEventGroupsForRestore(first.eventGroups, imported, expenses);
+  assert.equal(repeated.eventGroups[0].activities[0].expenses.length, 1);
+  assert.equal(repeated.eventGroups[0].activities[0].expenses[0].amount, 99);
+  assert.equal(repeated.counts.moments, 0);
+  const backup = createBackupDocument({ moments: repeated.eventGroups, expenses, codeLists: DEFAULT_CODE_LISTS });
+  assert.equal(backup.expenses.length, 1, 'exporting after restore preserves one authoritative financial record');
+  assert.equal(backup.expenses[0].amount, 99);
+  assert.equal(backup.expenses[0].firestoreCollection, undefined);
+});
+
+test('restore does not attach a destination expense to a backup activity when its current links differ or were cleared', () => {
+  for (const links of [
+    { eventId: null, activityId: null },
+    { eventId: 'other-moment', activityId: 'other-activity' },
+    { eventId: 'moment-1', activityId: 'other-activity' },
+  ]) {
+    const imported = buildEventGroupsFromBackup(fixture());
+    const expenses = [{ id: 'expense-nested', amount: 99, ...links }];
+    const first = mergeEventGroupsForRestore([], imported, expenses);
+    assert.deepEqual(first.eventGroups[0].activities[0].expenses, []);
+    assert.deepEqual(expenses[0], { id: 'expense-nested', amount: 99, ...links }, 'existing relationships remain authoritative');
+    const repeated = mergeEventGroupsForRestore(first.eventGroups, imported, expenses);
+    assert.deepEqual(repeated.eventGroups[0].activities[0].expenses, []);
+    assert.equal(repeated.eventGroups.length, 1);
+  }
+});
+
 test('acceptance volume round-trips all required record counts and relationships', () => {
   const moments = Array.from({ length: 50 }, (_, index) => ({
     id: `moment-${index}`,

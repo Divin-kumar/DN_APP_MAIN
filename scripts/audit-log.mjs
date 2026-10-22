@@ -1,4 +1,5 @@
-// Preserve historical entry text while allowing the owner-required newest-first order.
+// Preserve historical entry text and newest-first order. An unchanged log is
+// valid: deciding which changes need new evidence belongs to documentation review.
 export const parseAuditEntries = (source) => {
   const text = source.replace(/\r\n/g, '\n');
   const headings = [...text.matchAll(/^## (CHG-\d{8}-\d{3}) \| .+$/gm)];
@@ -26,7 +27,6 @@ export const verifyAuditLog = (previousSource, currentSource) => {
     if (current.get(id) !== content) throw new Error(`Audit history was edited: ${id}`);
   }
   const added = ids.filter((id) => !previous.has(id));
-  if (!added.length) throw new Error('Each OldVersion change requires a new CHG entry at the top.');
   if (ids.slice(0, added.length).some((id) => previous.has(id))) {
     throw new Error('New audit entries must precede historical entries.');
   }

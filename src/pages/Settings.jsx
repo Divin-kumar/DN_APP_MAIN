@@ -10,7 +10,7 @@ import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { createEvent, getEventsForUser, getGuestEvents, setGuestEvents, updateEvent } from '../services/eventService';
-import { createExpense, getExpensesForUser, getGuestExpenses, setGuestExpenses } from '../services/expenseService';
+import { createExpense, getExpensesForUser, getGuestExpenseMasters, getGuestExpenses, setGuestExpenses } from '../services/expenseService';
 import { createIncome, getIncomesForUser, getGuestIncomes, setGuestIncomes } from '../services/incomeService';
 import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
@@ -354,10 +354,11 @@ export default function Settings() {
       let resultingIncomes;
 
       if (isGuest || !user?.uid) {
+        const existingExpenseMasters = getGuestExpenseMasters();
         const existingGroups = getGuestEvents();
         const existingExpenses = getGuestExpenses();
         const existingIncomes = getGuestIncomes();
-        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups);
+        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups, existingExpenses);
         restoredGroups = merged.eventGroups;
         Object.assign(imported, merged.counts);
         setGuestEvents(restoredGroups);
@@ -371,7 +372,9 @@ export default function Settings() {
         ));
         imported.conflicts += backup.expenses.length - standaloneBackupExpenses.length
           - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
-        resultingExpenses = mergeRecordsById(existingExpenses.filter((expense) => !nestedExpenseIds.has(expense.id)), standaloneBackupExpenses).items;
+        // Keep existing independent ledger entries even when the backup adds a
+        // matching activity mirror; never copy the merged projection to storage.
+        resultingExpenses = mergeRecordsById(existingExpenseMasters, standaloneBackupExpenses).items;
         setGuestExpenses(resultingExpenses);
         imported.expenses = standaloneBackupExpenses.length;
 
@@ -386,7 +389,7 @@ export default function Settings() {
           getExpensesForUser(user.uid),
           getIncomesForUser(user.uid),
         ]);
-        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups);
+        const merged = mergeEventGroupsForRestore(existingGroups, importedGroups, existingExpenses);
         restoredGroups = merged.eventGroups;
         Object.assign(imported, merged.counts);
 

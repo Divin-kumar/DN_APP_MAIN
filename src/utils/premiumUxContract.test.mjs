@@ -91,7 +91,7 @@ test('linked Moment label displays even without an activity and swipe Delete rem
 });
 test('moment-only expenses can be deleted without requiring an expired activity mirror', () => {
   const manager = read('../hooks/useTransactionManager.js');
-  assert.match(manager, /if \(original\.activityId\) requireLinkedActivity/);
+  assert.match(manager, /original\.activityId && \(isGuest \|\| isNestedOnlyAccountExpense\(original, isGuest\)\)/);
   assert.match(manager, /await updateMirrors\(original, null\)/);
   assert.match(manager, /await deleteExpenseItem\(uid, isGuest, id\)/);
 });
