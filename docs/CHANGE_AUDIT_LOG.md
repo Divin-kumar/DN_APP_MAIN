@@ -847,3 +847,14 @@
 - Master sections updated: §9.1 and §13 v2.14.0.
 - Status: SOURCE CHANGES PENDING CI AND MOBILE ACCEPTANCE.
 - Follow-ups: Compare screenshot at 375/390/414px, test iOS touch/vertical scroll, nested action buttons and no accidental activation, inspect both themes and long Moment names; verify live Firebase and security separately.
+
+## CHG-20261022-066 | Repair swipe keyboard test after shared component refactor
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner; AI CI correction for premium mobile swipe overhaul.
+- Branch: OldVersion only; main untouched; no deployment.
+- Exact paths: src/utils/premiumUxContract.test.mjs, src/design-system.css, docs/MASTER_SOURCE_OF_TRUTH.md, docs/CHANGE_AUDIT_LOG.md.
+- Before -> after: Previous CI run 39705456571 failed one stale source-test expectation for an onKeyDown handler that moved from TransactionHistory to shared SwipeActionCard. Test now verifies the shared handler. Other action tray overflow begins with Edit visible on narrow cells instead of using flex-end alignment.
+- Reason: Prevent false source test failures while protecting keyboard support and the first-action affordance.
+- Verification: CI pending on this commit; real iPhone and Android behavior not verified. No data or schema changes.
+- Risk and rollback: Low presentation risk; if needed revert patch without data rollback.
+- Master: §9.1 and §13, version 2.14.1.

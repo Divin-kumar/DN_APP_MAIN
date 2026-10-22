@@ -24,7 +24,7 @@ test('transaction cards reveal Edit and Delete with no overflow three-dot button
   assert.match(component, /<SwipeActionCard/);
   assert.match(component, /label: 'Edit'/);
   assert.match(component, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
-  assert.match(component, /onKeyDown=\{/);
+  assert.match(read('../components/common/SwipeActionCard.jsx'), /onKeyDown=\{handleKeyDown\}/);
   assert.doesNotMatch(component, /Ellipsis|dn-transaction-overflow/);
 });
 test('all four editable card surfaces share the same overlay component', () => {

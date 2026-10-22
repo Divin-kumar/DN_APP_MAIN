@@ -2288,3 +2288,6 @@ html[data-theme] .event-moment-top-actions button span {
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-swipe-tray { transition:none !important; transform:none !important; }
 }
+
+/* v2.14.1: show Edit first on horizontally scrollable overflow trays, even on small grids. */
+html[data-theme] .dn-swipe-tray-other .dn-swipe-tray-inner { justify-content:flex-start !important; margin-left:auto; }
