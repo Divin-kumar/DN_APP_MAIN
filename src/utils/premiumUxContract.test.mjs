@@ -185,3 +185,30 @@ test('viewport permits pinch zoom and never disables user scaling to hide focus 
   assert.match(html, /width=device-width, initial-scale=1/);
   assert.doesNotMatch(html, /maximum-scale|user-scalable|minimum-scale/i);
 });
+
+test('Moment type Greeting Template keeps a 16px editor font on mobile despite older high-specificity rule', () => {
+  const source = read('../pages/CodeLists.jsx');
+  const css = read('../design-system.css');
+  const original = css.indexOf('html[data-theme] .moment-type-form input:not([type="checkbox"]):not([type="radio"])');
+  const patch = css.lastIndexOf('v2.15.4: iPhone Safari Greeting Template anti-zoom specificity repair');
+  assert.ok(original >= 0 && patch > original, 'The stronger mobile override must follow the 14px Moment field rule');
+  assert.match(source, /className="moment-type-form"/);
+  assert.match(source, /<span>Greeting Template<\/span>\s*<textarea/);
+  const override = css.slice(patch);
+  assert.match(override, /@media screen and \(max-width: 1024px\)/);
+  assert.match(override, /html\[data-theme\] \.moment-type-form input:not\(\[type="checkbox"\]\):not\(\[type="radio"\]\)/);
+  assert.match(override, /html\[data-theme\] \.moment-type-form select/);
+  assert.match(override, /html\[data-theme\] \.moment-type-form textarea/);
+  assert.match(override, /html\[data-theme\] \.settings-greeting-editor-grid textarea/);
+  assert.match(override, /font-size: 16px !important/);
+  assert.ok(css.endsWith(override), 'Guard should be the last CSS rule');
+});
+test('the final iPhone anti-zoom correction does not restrict viewport magnification', () => {
+  const html = read('../../index.html');
+  assert.match(html, /width=device-width, initial-scale=1/);
+  assert.doesNotMatch(html, /maximum-scale|user-scalable|minimum-scale/i);
+  const css = read('../design-system.css');
+  assert.match(css, /--font-body: 14px/);
+  // Buttons, labels and previews still use the compact typography token.
+  assert.doesNotMatch(css.slice(css.lastIndexOf('v2.15.4: iPhone Safari Greeting Template')), /\bbutton\b|\.settings-preview-box/);
+});

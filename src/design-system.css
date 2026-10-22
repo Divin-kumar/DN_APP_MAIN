@@ -2490,3 +2490,17 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
     font-size: 16px !important;
   }
 }
+
+/* v2.15.4: iPhone Safari Greeting Template anti-zoom specificity repair.
+   Moment type editors override the generic 16px floor with their own
+   14px !important body token. Match those selectors at equal specificity
+   AFTER the legacy rule and keep full browser pinch-to-zoom available.
+   Also cover Settings greeting editors explicitly as a regression guard. */
+@media screen and (max-width: 1024px) {
+  html[data-theme] .moment-type-form input:not([type="checkbox"]):not([type="radio"]),
+  html[data-theme] .moment-type-form select,
+  html[data-theme] .moment-type-form textarea,
+  html[data-theme] .settings-greeting-editor-grid textarea {
+    font-size: 16px !important;
+  }
+}

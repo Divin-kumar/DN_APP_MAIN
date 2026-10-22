@@ -923,3 +923,17 @@
 - Master sections updated: §9.1 and §13 to version 2.15.3.
 - Status: SOURCE IMPLEMENTED / CI AND DEVICE QA PENDING.
 - Follow-ups: Test focusing every Finance/Moment/Activity/Code List/Settings editor on an actual iPhone Safari viewport, including programmatic focus and searchable dropdown portals. Keep 16px rule last when consolidating legacy CSS.
+
+## CHG-20261022-072 | Fix remaining iPhone Greeting Template input-focus magnification
+- Date (UTC): 2026-10-22.
+- Actor/requester: DN owner; supplied iPhone Safari screenshot of Code Lists > Moment Types > Greeting Template still zooming after v2.15.3.
+- Branch / commit / PR: `OldVersion` only, commit SHA in history. `main` unchanged; no Vercel/Firebase deployment.
+- Exact changed paths: `src/design-system.css`, `src/utils/premiumUxContract.test.mjs`, `docs/MASTER_SOURCE_OF_TRUTH.md`, `docs/CHANGE_AUDIT_LOG.md`.
+- Before -> after: Shared mobile 16px editor CSS lost the specificity contest to `html[data-theme] .moment-type-form textarea` and `html[data-theme] .moment-type-form select`, which inherited the 14px `--font-body` token with `!important`. Final 16px mobile-specific selectors now override Moment Type input, select and textarea fields, and explicitly protect Settings Greeting textareas. No changes to label/button/preview typography or application logic.
+- Why: iOS Safari commonly focuses/zooms editors displaying under 16 CSS pixels. Fixing the computed font size, not imposing an inaccessible viewport maximum-scale, addresses the actual root cause.
+- User/data/security/compatibility impact: Style-only behavior, plus tests/docs. No transaction, Moment type value, greeting template data, Firestore/guest storage, security permissions, backups, or database changes. Manual browser zoom and accessibility scaling remain permitted.
+- Verification (PASS/FAIL/NOT RUN): Added static regression tests for legacy-vs-final selector order, exact Moment editor coverage and no viewport scale restrictions. `npm test`, `npm run build`, governance CI PENDING. Native iPhone Safari and accessibility large-text focus, modal scroll and keyboard visual viewport NOT RUN.
+- Risk and rollback: Underlying 14px desktop token remains, while editable field fonts increase to 16px on mobile; long Greeting Template contents may wrap differently. Revert this commit for rollback; no schema migration.
+- Master sections updated: §9.1 and §13, version 2.15.4.
+- Status: SOURCE IMPLEMENTED / CI AND NATIVE DEVICE ACCEPTANCE PENDING.
+- Follow-ups: User to test Greeting Template and other Code Lists/modal textareas on updated preview, verify focus retains original Safari viewport scale. 
