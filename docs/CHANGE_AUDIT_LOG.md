@@ -4,6 +4,15 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-077 | Verify permanent production release 1.0.20
+- Date: 2026-10-22. Source release: `3342eaf07b48f2f7040fd9b670b47f3114eb5c84`, pushed normally to OldVersion; main remained `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
+- GitHub Actions [run 39765691989](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39765691989) completed successfully: documentation-contract and application-smoke-tests passed. The opt-in preview workflow was skipped.
+- Official CLI `deploy --only hosting --project expense-tracker-divin --non-interactive` released all 34 tested dist files to site `dn-10`, permanent live URL https://dn-10.web.app. No preview channel or database/rules deployment was used.
+- Executed read-back: root, About deep link, worker and entry JavaScript returned HTTP 200 and matched tested SHA-256 bytes. Index: `0ac485db1c50d21a0f22dd98b46588a6d04bd8c58f3b5d9962da0508359e348c`; worker: `e81b0b544f30f9d1d0b2b3ba6f004b6f2c60c2a5db91ee6b552fe98094950fe7`.
+- Executed production UI: About Refresh applied 1.0.20/Production; Finance displayed 40 transactions including the reported 20/115/50 expenses dated 22 October. Fresh production backup contained 36 unique expenses and four unique incomes, each target once and no runtime provenance. Add activity/Filters measured 44px with 13px/650 text; narrow 320px view had no page overflow. No production business records were saved or deleted.
+- Read-back limitation reconciled in the master: root/deep-link HTML advertises `max-age=3600`; explicit index, worker and JS paths return no-cache headers. Cached clients may need About Refresh. Hosting configuration was not changed.
+- Status: COMPLETE — production release and read-back verified. This follow-up changes documentation only; application/build inputs remain identical to the release commit. Item 3 remains unimplemented; mutation/security/native-device limits in CHG-076 still apply.
+
 ## CHG-20261022-076 | Recover transactions, compact Activity actions and reconcile documentation for 1.0.20
 - Date: 2026-10-22. Owner-authorized scope: fixes 1–2, four-document refactor, CI-policy alignment, OldVersion commit/push and permanent production Hosting. Item 3 synchronization redesign is excluded.
 - Source: inspected base `10639467750f55d62fcc4beabb22c695e9119432`; this implementation commit is identified by Git history. Package/lock version prepared as 1.0.20 without dependency changes. main is unchanged.

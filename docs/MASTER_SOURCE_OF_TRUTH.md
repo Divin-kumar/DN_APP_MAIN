@@ -25,7 +25,7 @@ React/Vite, Router, Zustand, Firebase Auth/Firestore, Lucide and Framer Motion r
 
 Google popup sign-in hydrates Code Lists, attempts guest merge and activates the user with revision guards. Protected routes wait for auth, then allow account/guest access or redirect to login. Code Lists use transaction hydration, merged `setDoc` saves and owner/revision guards.
 
-Firebase client configuration is embedded in [config](../src/firebase/config.js), not `VITE_FIREBASE_*`. [.firebaserc](../.firebaserc) selects `expense-tracker-divin`; [Hosting](../firebase.json) serves `dist` on site `dn-10`, rewrites SPA URLs and disables HTTP caching for entry/worker/manifest/JS/CSS. Optional production Analytics failures do not block the app. Storage SDK is not initialized.
+Firebase client configuration is embedded in [config](../src/firebase/config.js), not `VITE_FIREBASE_*`. [.firebaserc](../.firebaserc) selects `expense-tracker-divin`; [Hosting](../firebase.json) serves `dist` on site `dn-10` and rewrites SPA URLs. No-cache headers match explicit `index.html`, worker, manifest and JS/CSS paths. Optional production Analytics failures do not block the app. Storage SDK is not initialized.
 
 [Vite](../vite.config.js) injects version/timestamp/environment with deployment overrides. Production registers a versioned shell worker: navigation falls back to cached index, core assets are precached and visited `/assets/` JS/CSS/SVG/WOFF/WOFF2 files cache on demand. Activation removes old caches; Refresh handles waiting workers/reload. Development has no worker. Manifest installation is browser-provided; connectivity tracks browser network status. Shell caching does not synchronize Firebase data.
 
@@ -109,6 +109,7 @@ Routes are defined in [App.jsx](../src/App.jsx):
 - Backup checks do not prove every expense belongs to its stated Moment/activity; orphans can remain. Original file recovery, comprehensive automatic backups and server-delivered reminders are not implemented.
 - Deployed rules/cross-user isolation, account mutation/restore, interrupted recovery, native-device/PWA behavior and accessibility need separate verification. Client UID paths are not authorization; this tree has no Rules file.
 - Existing album export handlers produce printable HTML or HTML named `.doc`, not native PDF/DOCX; handler existence does not prove a reachable export flow. Inconsistent HTML escaping in those handlers remains a review gap. Offline shell caching does not guarantee unvisited pages/account data.
+- Root and rewritten deep-link HTML responses advertise `max-age=3600`, unlike explicit `/index.html`. Cached clients may need About → Refresh app to apply a release; worker caching and HTTP caching are separate.
 
 ## Open Work / Future Enhancements
 
