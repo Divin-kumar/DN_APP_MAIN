@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261022-079 | Verify permanent production release 1.0.21
+- Date: 2026-10-22. Implementation commit `10f009fd88af79177b742f7e941b1564d321eb09` pushed normally to OldVersion. main remains `a7f5c26d6e43a971b1461b101f8823129de12cf6`.
+- GitHub Actions [run 39777276647](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/39777276647) passed documentation-contract and application-smoke-tests. The preview workflow was skipped.
+- Official CLI `deploy --only hosting --project expense-tracker-divin --non-interactive` successfully released 33 tested files to the permanent live site `dn-10`, https://dn-10.web.app. No preview, database or Rules deployment.
+- Executed production read-back: all 33 files plus root/About SPA routes returned HTTP 200 and matched the tested SHA-256 bytes. Index: `ae23f41dcea11dda75118ee50b201b5f8be20fc2ab0c3a874e6e3d43310e2da4`; worker: `9fe4edcaa2970211ab1bd631950f777c4b0358fca862602c946967190200cfdf`.
+- Executed signed-in UI: About shows v1.0.21/Production; activity Transaction opens in place with correct parent/activity/date; the responsive rich Activity editor is present. Both forms were cancelled without saving or changing production business records. Saved visual evidence remains outside tracked source.
+- Status: COMPLETE — deployment and read-back verified. This follow-up records evidence only; application/build inputs remain those of the implementation commit. Existing large-chunk, native-device, mutation-failure and synchronization limits in CHG-078 remain.
+
 ## CHG-20261022-078 | Keep activity transactions in place, add rich notes and remember filters
 - Date: 2026-10-22. Owner-authorized fixes, OldVersion commit/push and permanent production Hosting. Reviewed base: `35e5599259530811b66a9fe0a90134447e9521cc`; release version 1.0.21, without dependency additions or synchronization redesign.
 - Activities: both Transaction entry points open the shared form inside the workspace, preset Moment/activity/date, retain the route on save/cancel/error, use the existing finance coordinator and guard repeated saves/closing during submission. Removed obsolete undefined Moment drawer resets.
