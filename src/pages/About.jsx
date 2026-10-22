@@ -40,7 +40,7 @@ const guideItems = [
   { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Swipe a Moment for Edit, Summary, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Overview, Activities, Timeline, Memories and Attachments using the section row. Add a memory or attachment entry beside its section heading.' },
   { title: 'Activities', description: 'Add tasks to a Moment, then complete, cancel or edit them. Add a linked transaction directly inside Activities. Quick Create remembers your Moment Type choice to narrow the available Moments.' },
-  { title: 'Memories and greetings', description: 'Write spacious notes with bold, lists, headings and other formatting. Use Preview to check the result. Memories stay within their Moment; greeting cards can be edited and downloaded as HTML.' },
+  { title: 'Memories and greetings', description: 'On larger computer screens, type directly with visible formatting, text styles and undo/redo. Switch between Edit and Preview. Phones keep the compact formatting toolbar. Memories stay within their Moment; greeting cards can be edited and downloaded as HTML.' },
   { title: 'Attachments', description: 'Record a selected file’s name, type and size. DN saves attachment details, not the original file contents; keep your original files separately.' },
   { title: 'Transactions', description: 'Add income and expenses, optionally linked to a Moment or Activity. Search beside Filters; choose type or month inside. History is newest first, and Income, Expense and Balance totals follow the selected month.' },
   { title: 'Insights', description: 'Open Insights from Dashboard to review counts, spending and income patterns. Its JSON report is separate from a recovery backup.' },
@@ -48,10 +48,10 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Add transactions from an activity without leaving its workspace, with the activity and date already selected.',
-  'Notes expand as you write, with formatting tools and a preview across Moments, activities, memories and transactions.',
-  'Filters use polished dropdowns and remember your search, selections and sorting in this browser until you reset them.',
-  'Activity filters are remembered separately for each Moment and account; empty periods keep your selected filter.',
+  'Desktop notes now work like a word processor: type with visible formatting, headings, lists, undo/redo and a word count.',
+  'Use Edit and Preview in a wider desktop writing panel across Moments, activities, memories and transactions.',
+  'Mobile dialogs now preserve their visible area during keyboard changes. Long notes scroll within the field while the keyboard is open.',
+  'The compact phone toolbar stays familiar, and existing note content and backups remain compatible.',
 ];
 
 const dataInfo = [

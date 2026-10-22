@@ -3,15 +3,19 @@
 export function parseInlineRichText(value, depth = 0) {
   const text = String(value ?? '');
   if (depth > 4) return [{ type: 'text', text }];
-  const expression = /\*\*([^\n]+?)\*\*|~~([^\n]+?)~~|`([^`\n]+)`|\*([^*\n]+)\*/g;
+  const expression = /\*\*\*([^\n]+?)\*\*\*|\*\*([^\n]+?)\*\*|~~([^\n]+?)~~|`([^`\n]+)`|\*([^*\n]+)\*/g;
   const nodes = [];
   let cursor = 0;
   for (const match of text.matchAll(expression)) {
     if (match.index > cursor) nodes.push({ type: 'text', text: text.slice(cursor, match.index) });
-    const index = match.slice(1).findIndex((part) => part !== undefined);
-    const type = ['strong', 'del', 'code', 'em'][index];
-    const content = match[index + 1];
-    nodes.push(type === 'code' ? { type, text: content } : { type, children: parseInlineRichText(content, depth + 1) });
+    if (match[1] !== undefined) {
+      nodes.push({ type: 'strong', children: [{ type: 'em', children: parseInlineRichText(match[1], depth + 1) }] });
+    } else {
+      const index = match.slice(2).findIndex((part) => part !== undefined);
+      const type = ['strong', 'del', 'code', 'em'][index];
+      const content = match[index + 2];
+      nodes.push(type === 'code' ? { type, text: content } : { type, children: parseInlineRichText(content, depth + 1) });
+    }
     cursor = match.index + match[0].length;
   }
   if (cursor < text.length || !nodes.length) nodes.push({ type: 'text', text: text.slice(cursor) });

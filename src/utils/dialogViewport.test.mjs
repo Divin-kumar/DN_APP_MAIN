@@ -30,7 +30,7 @@ function browserFixture({ visual = true } = {}) {
   Object.assign(win, {
     innerWidth: 390,
     innerHeight: 844,
-    document: { documentElement: { clientWidth: 390, clientHeight: 844 } },
+    document: Object.assign(new EventSurface(), { documentElement: { clientWidth: 390, clientHeight: 844 } }),
     visualViewport: visual ? Object.assign(new EventSurface(), {
       width: 390, height: 844, offsetLeft: 0, offsetTop: 0, scale: 1,
     }) : undefined,
@@ -71,6 +71,40 @@ test('normal browser chrome changes do not mark a keyboard as open', () => {
   assert.deepEqual(getDialogViewportBounds(win), {
     width: 390, height: 770, left: 0, top: 20, keyboardOpen: false,
   });
+});
+
+test('a resized innerHeight does not discard Safari visual pan or hide the keyboard state', () => {
+  const { win } = browserFixture();
+  win.innerHeight = 390;
+  Object.assign(win.visualViewport, { height: 390, offsetTop: 220 });
+  assert.deepEqual(getDialogViewportBounds(win), {
+    width: 390, height: 390, left: 0, top: 220, keyboardOpen: true,
+  });
+});
+
+test('focus and window scrolling retain the pre-keyboard reference even if both layout measurements shrink', () => {
+  const { win, flushFrames } = browserFixture();
+  const updates = [];
+  const stop = observeDialogViewport(win, (bounds, layout) => updates.push({ bounds, layout }));
+  win.innerHeight = 390;
+  win.document.documentElement.clientHeight = 390;
+  Object.assign(win.visualViewport, { height: 390, offsetTop: 220 });
+  win.document.dispatch('focusin');
+  win.dispatch('scroll');
+  flushFrames();
+  assert.deepEqual(updates.at(-1), {
+    bounds: { width: 390, height: 390, left: 0, top: 220, keyboardOpen: true },
+    layout: { width: 390, height: 844 },
+  });
+  win.innerHeight = 844;
+  win.document.documentElement.clientHeight = 844;
+  Object.assign(win.visualViewport, { height: 844, offsetTop: 0 });
+  win.document.dispatch('focusout');
+  flushFrames();
+  assert.equal(updates.at(-1).bounds.keyboardOpen, false);
+  assert.equal(updates.at(-1).bounds.top, 0);
+  stop();
+  assert.equal(win.document.listenerCount, 0);
 });
 
 test('browsers without visualViewport retain layout bounds', () => {
@@ -144,6 +178,7 @@ test('orientation changes read fresh layout and visual geometry rather than the 
   const updates = [];
   const stop = observeDialogViewport(win, (bounds) => updates.push(bounds));
   Object.assign(win, { innerWidth: 844, innerHeight: 390 });
+  Object.assign(win.document.documentElement, { clientWidth: 844, clientHeight: 390 });
   Object.assign(win.visualViewport, { width: 844, height: 390, offsetTop: 0 });
   win.dispatch('resize');
   flushFrames();
@@ -157,12 +192,14 @@ test('cleanup removes both window and visual listeners and cancels pending updat
   const { win, frames, flushFrames } = browserFixture();
   const updates = [];
   const stop = observeDialogViewport(win, (bounds) => updates.push(bounds));
-  assert.equal(win.listenerCount, 1);
+  assert.equal(win.listenerCount, 2);
+  assert.equal(win.document.listenerCount, 2);
   assert.equal(win.visualViewport.listenerCount, 2);
   win.visualViewport.dispatch('resize');
   assert.equal(frames.size, 1);
   stop();
   assert.equal(win.listenerCount, 0);
+  assert.equal(win.document.listenerCount, 0);
   assert.equal(win.visualViewport.listenerCount, 0);
   assert.equal(frames.size, 0);
   Object.assign(win.visualViewport, { height: 300 });
@@ -177,6 +214,7 @@ test('observation still updates and cleans up when visualViewport is unavailable
   const updates = [];
   const stop = observeDialogViewport(win, (bounds) => updates.push(bounds));
   Object.assign(win, { innerWidth: 640, innerHeight: 480 });
+  Object.assign(win.document.documentElement, { clientWidth: 640, clientHeight: 480 });
   win.dispatch('resize');
   flushFrames();
   assert.deepEqual(updates.at(-1), {

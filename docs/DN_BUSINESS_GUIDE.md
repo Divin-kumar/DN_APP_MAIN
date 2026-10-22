@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **22 October 2026 · Version 1.0.22**
+Current position: **22 October 2026 · Version 1.0.23**
 
 ## 1. What DN helps you do
 
@@ -26,7 +26,7 @@ For example, a family celebration can contain Activities for booking a venue and
 | Linked expenses | Add a transaction directly from an Activity without leaving its page. The Moment, Activity and date are already selected. | Record a cost while its purpose is clear. |
 | Financials | Add, edit and delete income and expenses; optionally link them to a Moment or Activity. View Income, Expense and Balance, and search or filter transaction history. | Understand money coming in and going out. |
 | Insights | Review summaries, spending categories, six-month charts and milestone lists. Download a report. | Review patterns over time. |
-| Notes and memories | Write longer text with bold, italic, headings, lists and other formatting. Preview the result. On mobile, extra formatting sits under More. | Keep detailed information readable without crowding the form. |
+| Notes and memories | On larger computer screens, type and format directly as in a word processor, with headings, lists, bold, italic, undo/redo and a word count. Switch between Edit and Preview. On phones, the existing editor keeps extra formatting under More. | Keep detailed information readable without crowding the form. |
 | Greetings | Choose which Moment types support greetings, edit their wording and download a greeting card. | Personalize messages for important occasions. |
 | Code Lists | Manage Moment types, expense categories, income types, priorities and reminder preferences. Choose which Moment types appear on the Dashboard. | Adapt DN to your own way of organizing life. |
 | Everyday controls | Light and dark appearance, search beside Filters, remembered search/filter/sort choices, and the bottom + button for quick additions. | Find records and add information with fewer repeated steps. |
@@ -53,7 +53,7 @@ For example, a family celebration can contain Activities for booking a venue and
 | Guest use | Guest records stay in the current browser. They are not the same as signed-in account records. Keep a backup before changing browsers or devices. |
 | Backup and restore | Backups include supported records, settings and attachment details, but not the original attached files. Keep backups private. A restore keeps existing records and adds missing information; an interrupted restore may finish only part of the work. |
 | Financial detail | Recorded expenses do not have a separate paid/unpaid balance. Currency preferences do not convert amounts between currencies. |
-| Phone experience | Narrow-screen improvements have been checked, but the iPhone keyboard, long-note editing and installed-app experience still need hands-on confirmation. |
+| Phone experience | The compact toolbar keeps its layout. Keyboard-related positioning and long-note scrolling have been improved and checked at phone-sized widths, but the actual iPhone keyboard and installed-app experience still need hands-on confirmation. |
 
 ## 5. Future improvement checklist
 

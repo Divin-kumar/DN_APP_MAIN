@@ -39,7 +39,7 @@ const openEditor = async (t, initial = 'Original 5:30 notes', extra = {}) => {
       },
       load(id) {
         const api = `globalThis[${JSON.stringify(key)}]`;
-        if (id === '\0rich-editor-react') return `export const useId=()=>"test-editor", useState=${api}.state, useRef=${api}.ref, useLayoutEffect=${api}.effect, useCallback=(fn)=>fn;`;
+        if (id === '\0rich-editor-react') return `export const useId=()=>"test-editor", useState=${api}.state, useRef=${api}.ref, useLayoutEffect=${api}.effect, useEffect=${api}.effect, useCallback=(fn)=>fn, lazy=()=>"DocumentEditor", Suspense="Suspense";`;
         if (id === '\0rich-editor-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx, jsxDEV=jsx;';
         if (id === '\0rich-editor-icons') return 'export const Bold="icon",Code2="icon",Eye="icon",Heading2="icon",Italic="icon",List="icon",ListOrdered="icon",MoreHorizontal="icon",Pencil="icon",Quote="icon",Strikethrough="icon";';
         if (id === '\0rich-editor-display') return 'export default "RichText";';
@@ -48,7 +48,7 @@ const openEditor = async (t, initial = 'Original 5:30 notes', extra = {}) => {
     }],
   });
   t.after(async () => { await server.close(); delete globalThis[key]; });
-  const { default: Editor } = await server.ssrLoadModule('/src/components/common/RichTextEditor.jsx');
+  const { MarkupTextEditor: Editor } = await server.ssrLoadModule('/src/components/common/RichTextEditor.jsx');
   let tree;
   const render = () => {
     cursor = 0;

@@ -1,4 +1,4 @@
-import { useCallback, useId, useLayoutEffect, useRef, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Bold, Code2, Eye, Heading2, Italic, List, ListOrdered, MoreHorizontal, Pencil, Quote, Strikethrough } from 'lucide-react';
 import RichText from './RichText';
 import { applyTextFormat } from '../../utils/richText';
@@ -9,7 +9,23 @@ const tools = [
   ['quote', 'Quote', Quote], ['strike', 'Strikethrough', Strikethrough], ['code', 'Code', Code2],
 ];
 
-export default function RichTextEditor({ label = 'Notes', value = '', onChange, id, name, placeholder, rows = 4,
+const DocumentTextEditor = lazy(() => import('./DocumentTextEditor'));
+
+export default function RichTextEditor(props) {
+  const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && window.matchMedia('(min-width: 1025px)').matches);
+  useEffect(() => {
+    const media = window.matchMedia('(min-width: 1025px)');
+    const update = () => setDesktop(media.matches);
+    media.addEventListener('change', update);
+    update();
+    return () => media.removeEventListener('change', update);
+  }, []);
+  return desktop ? <Suspense fallback={<div role="status">Preparing editor…</div>}><DocumentTextEditor {...props} /></Suspense>
+    : <MarkupTextEditor {...props} />;
+}
+
+// Keep the compact mobile editor and its focus/selection behaviour unchanged.
+export function MarkupTextEditor({ label = 'Notes', value = '', onChange, id, name, placeholder, rows = 4,
   required = false, disabled = false, autoFocus = false, maxLength, className = '' }) {
   const generatedId = useId();
   const inputId = id || `dn-rich-editor-${generatedId}`;

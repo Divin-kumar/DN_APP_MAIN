@@ -1,7 +1,7 @@
 {
   "name": "dn",
   "private": true,
-  "version": "1.0.22",
+  "version": "1.0.23",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -11,6 +11,11 @@
     "deploy:hosting": "node scripts/deploy-hosting.mjs"
   },
   "dependencies": {
+    "@tiptap/extension-code": "3.32.0",
+    "@tiptap/extension-list": "3.32.0",
+    "@tiptap/pm": "3.32.0",
+    "@tiptap/react": "3.32.0",
+    "@tiptap/starter-kit": "3.32.0",
     "firebase": "^12.19.0",
     "framer-motion": "^13.4.6",
     "lucide-react": "^1.48.0",

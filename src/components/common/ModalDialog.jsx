@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { observeDialogViewport } from '../../utils/dialogViewport';
+import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
 export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
@@ -16,13 +17,17 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   const onCloseRef = useRef(onClose);
   const titleId = useId();
 
-  useLayoutEffect(() => observeDialogViewport(window, (viewport) => {
+  useLayoutEffect(() => observeDialogViewport(window, (viewport, layout) => {
     const backdrop = backdropRef.current;
     if (!backdrop) return;
     backdrop.style.setProperty('--dn-dialog-viewport-height', `${viewport.height}px`);
     backdrop.style.setProperty('--dn-dialog-viewport-width', `${viewport.width}px`);
     backdrop.style.setProperty('--dn-dialog-viewport-top', `${viewport.top}px`);
     backdrop.style.setProperty('--dn-dialog-viewport-left', `${viewport.left}px`);
+    backdrop.style.setProperty('--dn-dialog-layout-height', `${layout.height}px`);
+    backdrop.style.setProperty('--dn-dialog-layout-width', `${layout.width}px`);
+    backdrop.style.setProperty('--dn-dialog-inset-bottom', `${Math.max(0, layout.height - viewport.top - viewport.height)}px`);
+    backdrop.style.setProperty('--dn-dialog-inset-right', `${Math.max(0, layout.width - viewport.left - viewport.width)}px`);
     backdrop.dataset.keyboardOpen = String(viewport.keyboardOpen);
     const active = document.activeElement;
     const body = bodyRef.current;
@@ -32,8 +37,8 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions, .dn-list-controls-footer');
     const footerTop = footer && getComputedStyle(footer).position === 'sticky' ? footer.getBoundingClientRect().top : visible.bottom;
     const visibleBottom = Math.min(visible.bottom, Math.max(visible.top, footerTop));
-    // Let WebKit handle the caret inside a long growing textarea. Moving the
-    // entire field on every resize would jump to its end while writing.
+    // Keyboard-only CSS bounds long textareas, leaving caret scrolling inside
+    // the field. Never jump the entire body to the end of oversized content.
     if (field.height > visibleBottom - visible.top - 24) return;
     if (field.bottom > visibleBottom - 12) body.scrollTop += field.bottom - visibleBottom + 12;
     else if (field.top < visible.top + 12) body.scrollTop -= visible.top + 12 - field.top;
@@ -44,11 +49,9 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   }, [onClose]);
 
   useEffect(() => {
-    const previousOverflow = document.body.style.overflow;
     const previousFocus = document.activeElement;
-    document.body.style.overflow = 'hidden';
-    document.body.classList.add('dn-modal-open');
-    closeButtonRef.current?.focus();
+    const unlockScroll = lockDialogScroll(window);
+    closeButtonRef.current?.focus({ preventScroll: true });
 
     const handleKeyDown = (event) => {
       if (event.key === 'Escape') {
@@ -77,10 +80,9 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
 
     document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
-      document.body.classList.remove('dn-modal-open');
+      unlockScroll();
       document.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus();
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
     };
   }, []);
 

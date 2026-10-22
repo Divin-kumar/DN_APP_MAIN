@@ -1,11 +1,13 @@
-/* One scrolling form surface that follows the visible viewport, including iOS keyboards. */
+/* Full-layout scrim; padding positions the sheet inside the visual viewport.
+   Keeping the scrim full-sized avoids exposing the app during iOS focus pans. */
 html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] {
   position: fixed !important;
   inset: auto !important;
-  top: var(--dn-dialog-viewport-top, 0px) !important;
-  left: var(--dn-dialog-viewport-left, 0px) !important;
-  width: var(--dn-dialog-viewport-width, 100vw) !important;
-  height: var(--dn-dialog-viewport-height, 100dvh) !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: var(--dn-dialog-layout-width, 100vw) !important;
+  height: var(--dn-dialog-layout-height, 100dvh) !important;
+  padding: calc(var(--dn-dialog-viewport-top, 0px) + 24px) calc(var(--dn-dialog-inset-right, 0px) + 24px) calc(var(--dn-dialog-inset-bottom, 0px) + 24px) calc(var(--dn-dialog-viewport-left, 0px) + 24px) !important;
   box-sizing: border-box;
   overflow: hidden !important;
   overflow: clip !important;
@@ -46,7 +48,9 @@ html[data-theme] .dn-modal-body :is(form, .field-group, .event-form-fields, .mom
   box-sizing: border-box;
 }
 @media (max-width: 760px), (max-height: 500px) {
-  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] { padding: 8px !important; }
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] {
+    padding: calc(var(--dn-dialog-viewport-top, 0px) + 8px) calc(var(--dn-dialog-inset-right, 0px) + 8px) calc(var(--dn-dialog-inset-bottom, 0px) + 8px) calc(var(--dn-dialog-viewport-left, 0px) + 8px) !important;
+  }
   html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-modal {
     width: 100% !important;
     max-height: calc(var(--dn-dialog-viewport-height, 100dvh) - 16px) !important;
@@ -74,6 +78,12 @@ html[data-theme] .dn-modal-body :is(form, .field-group, .event-form-fields, .mom
     padding: 12px !important;
   }
   html[data-theme] .dn-modal-viewport[data-keyboard-open="true"] .event-form-intro { display: none; }
+  html[data-theme] .dn-modal-viewport[data-keyboard-open="true"] .dn-rich-editor textarea {
+    max-height: max(96px, calc(var(--dn-dialog-viewport-height, 100dvh) - 220px));
+    overflow-y: auto !important;
+    overscroll-behavior: contain;
+    scroll-padding-block: 12px;
+  }
 }
 @media (max-height: 500px) {
   html[data-theme] .dn-modal-viewport .event-form-intro { display: none; }

@@ -38,6 +38,14 @@ test('transaction search matches the visible phrase across note formatting marke
   assert.equal(record.notes, '**Blood** test at *5:30*');
 });
 
+test('bold and italic combine without exposing delimiters or interpreting literal HTML', () => {
+  const original = '***5:30 <b>Visit</b>*** and **bold** *italic* `code`';
+  assert.deepEqual(parseInlineRichText('***Visit***'), [{ type: 'strong', children: [{ type: 'em', children: [{ type: 'text', text: 'Visit' }] }] }]);
+  assert.equal(plainRichText(original), '5:30 <b>Visit</b> and bold italic code');
+  assert.match(renderRichTextHtml(original), /<strong><em>5:30 &lt;b&gt;Visit&lt;\/b&gt;<\/em><\/strong>/);
+  assert.equal(renderRichTextHtml('ordinary *unclosed <img src=x>'), '<div style="white-space:pre-wrap;min-height:1em">ordinary *unclosed &lt;img src=x&gt;</div>');
+});
+
 test('formatting selected text is reversible and preserves all surrounding authored content', () => {
   const original = '  5:30 test\nkeep this  ';
   const formatted = applyTextFormat(original, 7, 11, 'bold');
