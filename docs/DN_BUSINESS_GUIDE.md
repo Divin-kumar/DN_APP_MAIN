@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **23 October 2026 · Version 1.0.24 prepared for release**. The Activities, navigation, compact controls, writing, greeting and original-file updates described below are awaiting production publication and verification.
+Current position: **23 October 2026 · Version 1.0.24 published** at [DN](https://dn-10.web.app). The dashboard, Activities, compact controls, writing and greeting updates are live. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 
@@ -52,7 +52,7 @@ For example, a family celebration can contain Activities for booking a venue and
 | Moving between devices | Signed-in records belong to your account, but changes are not guaranteed to appear immediately on another device. Editing the same Moment on two devices can cause one change to replace another. |
 | Working without a connection | DN may open previously visited content, but dependable offline reading, saving and later transfer of every record are not guaranteed. |
 | Reminders | Preferences and dates written in notes do not send a notification. An Activity currently has one date, without a separate reminder date and time. |
-| Attachments | Original-file saving, previews, download and backup are implemented locally for review. Signed-in files must reach account storage before being attached; there is no offline upload queue. Live account upload, access and recovery still need verification. Older file-detail records cannot recreate a missing original: attach that file again. |
+| Attachments | Guest original-file saving, previews, download and backup are available. Account photos are blocked because this Firebase project has no file storage and billing is disabled. Firebase requires its pay-as-you-go Blaze plan for file storage, so owner approval/setup is needed before account photos can work. No paid plan was enabled. Signed-in files must upload successfully before being attached; there is no offline upload queue. Older file-detail records cannot recreate a missing original: attach that file again. |
 | Guest use | Guest records and original files stay in the current browser until backed up or successfully transferred at sign-in. Sign-in uploads stored originals before transferring their records; a failed upload keeps the Guest copies. Keep a backup before changing browsers or devices. |
 | Backup and restore | Stored original files are included once and checked before recovery. The complete backup must fit within 50 MB; an oversized or incomplete backup is not downloaded. Older backups may contain file details only. A restore preserves existing records and adds missing information; an interruption may leave part completed. Keep backups private. |
 | Removing files | Removing an attachment removes its link. Unused originals are retained; automatic file cleanup is not available. Clear Local Data removes local records and choices but does not remove stored original file objects or account files. |
@@ -76,7 +76,7 @@ For example, a family celebration can contain Activities for booking a venue and
 
 - [ ] **Improve an existing feature — Finish phone testing.** Check iPhone and Android keyboards, selecting text for styles, long notes, gestures, dropdowns, scrolling, Save/Cancel and both appearances. Success means important controls remain reachable while typing.
 - [ ] **Add a new feature — Separate reminders from Activity dates.** Keep the date something happened while choosing a different reminder date, time or yearly reminder. Agree how reminders should arrive and how missed reminders should be handled.
-- [ ] **Improve an existing feature — Verify account photo recovery.** Original-file saving and backup are implemented. Confirm upload, preview, download and restore in a real signed-in account, and agree how unused files should be cleaned up before offering automatic deletion.
+- [ ] **Improve an existing feature — Enable and verify account photos.** Approve and set up Firebase's pay-as-you-go plan and private file storage, then confirm upload, preview, download and restore in a signed-in account. Agree how unused files should be cleaned up before offering automatic deletion.
 - [ ] **Improve an existing feature — Clearer shared terminology.** Use consistent Moment, Activity, Memory and Transaction wording throughout the app so each action is easy to understand.
 - [ ] **Improve an existing feature — Easier reading and control.** Check text size, contrast, touch controls and use with assistance features, including on smaller phones.
 
