@@ -133,23 +133,34 @@ test('finance density has one-row totals and a single compact transaction headin
   assert.doesNotMatch(page, /className="dn-finance-summary-period"/);
   assert.match(history, /className="dn-transactions-heading-copy"/);
   assert.match(history, /<p title="All income and expenses in one place">All income and expenses<\/p>/);
-  assert.match(history, /<span>Add Transaction<\/span>/);
+  const layout = read('../layouts/DashboardLayout.jsx');
+  assert.doesNotMatch(history, /dn-transaction-add/);
+  assert.match(layout, /onClick=\{\(\) => beginQuickCreate\('transaction'\)\}/);
+  assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{events\} onSubmit=\{saveQuickTransaction\}/);
   assert.match(css, /\.dn-finance-summary-grid \{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
   assert.match(css, /\.dn-transactions-page \.transactions-heading \{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-copy p \{[\s\S]*?white-space:nowrap/);
 });
-test('Moment hero places compact Memory and Greeting beside the left type label', () => {
+test('Moment hero retains Greeting while universal create reaches Memory and Attachments', () => {
   const hero = read('../features/events/components/EventWorkspaceShell.jsx');
+  const layout = read('../layouts/DashboardLayout.jsx');
   const css = read('../design-system.css');
   const topStart = hero.indexOf('<div className="event-moment-topline">');
   const topEnd = hero.indexOf('<div className="event-moment-content">', topStart);
   const topline = hero.slice(topStart, topEnd);
   assert.match(topline, /event-moment-kicker/);
-  assert.match(topline, /event-moment-memory-action/);
+  assert.doesNotMatch(topline, /event-moment-memory-action/);
   assert.match(topline, /event-moment-copy-action/);
+  for (const kind of ['memory', 'attachment']) {
+    assert.match(layout, new RegExp(`onClick=\\{\\(\\) => beginMomentCreate\\('${kind}'\\)\\}`));
+  }
+  assert.match(layout, /window\.dispatchEvent\(new CustomEvent\('dn:moment-create'/);
+  assert.match(hero, /window\.addEventListener\('dn:moment-create', receiveCreate\)/);
+  assert.match(hero, /<ModalDialog title="Add memory"[\s\S]*?<form onSubmit=\{saveMemory\}/);
+  assert.match(hero, /<input ref=\{attachmentInputRef\} type="file" hidden aria-label="Add attachment" onChange=\{addAttachment\}/);
   assert.doesNotMatch(hero.slice(topEnd, hero.indexOf('<h1>', topEnd)), /event-moment-kicker/);
   assert.match(css, /\.dn-moment-hero-swipe \.event-moment-topline \{[\s\S]*?justify-content:space-between !important/);
-  assert.match(css, /\.dn-moment-hero-swipe \.event-moment-top-actions \.event-moment-memory-action,[\s\S]*?min-height:44px !important/);
+  assert.match(css, /\.dn-moment-hero-swipe \.event-moment-top-actions \.event-moment-copy-action \{[\s\S]*?min-height:44px !important/);
 });
 
 test('compact transaction panel padding applies to the panel element itself', () => {
@@ -181,7 +192,8 @@ test('mobile editors avoid Safari focus zoom across forms without inflating othe
   assert.match(financeForm, /<input type="text"/);
   assert.match(financeForm, /<input type="number"/);
   assert.match(financeForm, /<RichTextEditor label="Notes"/);
-  assert.match(read('../components/common/RichTextEditor.jsx'), /<textarea ref=\{inputRef\}/);
+  assert.match(read('../components/common/RichTextEditor.jsx'), /<DocumentTextEditor/);
+  assert.doesNotMatch(read('../components/common/RichTextEditor.jsx'), /matchMedia|<textarea/);
   const picker = read('../components/common/DropdownSelect.jsx');
   assert.match(picker, /<input ref=\{searchRef\} type="search"/);
 });

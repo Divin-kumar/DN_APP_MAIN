@@ -54,27 +54,37 @@ html[data-theme] .dropdown-menu-portal .dropdown-search-wrap {
   border-radius: 10px;
   background: var(--color-surface);
 }
-html[data-theme] .dn-list-controls-dialog .dn-list-controls-body .sort-control {
-  padding: 5px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  background: var(--color-surface);
+html[data-theme] .dn-list-controls-panel .dn-list-controls-body .sort-control {
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
 }
-html[data-theme] .dn-list-controls-dialog .sort-control .sort-option {
+html[data-theme] .dn-list-controls-panel .sort-control .sort-option {
   flex: 1 1 auto;
   border-color: transparent;
   background: transparent;
   white-space: nowrap;
 }
-html[data-theme] .dn-list-controls-dialog .sort-control .sort-option.is-selected {
-  border-color: var(--action-border);
-  background: var(--action-fill);
+html[data-theme] .dn-list-controls-panel .sort-control .sort-option.is-selected {
+  border-color: transparent;
+  background: linear-gradient(transparent 5px, var(--action-fill) 5px, var(--action-fill) calc(100% - 5px), transparent calc(100% - 5px));
   color: var(--action-ink);
-  box-shadow: 0 1px 4px rgba(0,0,0,.06);
+  box-shadow: none;
 }
 @media (max-width: 1024px) {
   html[data-theme] .dropdown-field .dropdown-trigger { font-size: 16px !important; }
 }
+/* Compact filter selectors are buttons. Search inputs retain the mobile
+   16px font floor; shortening these labels cannot trigger input-focus zoom. */
+html[data-theme] .dn-list-controls-panel .dropdown-field .dropdown-trigger {
+  width: auto; max-width: 100%; min-height: 44px;
+  gap: 7px; padding: 0 8px !important;
+  border: 0 !important; border-radius: 9px !important;
+  background: transparent !important; box-shadow: none;
+  font-size: 12px !important; font-weight: 600;
+}
+html[data-theme] .dn-list-controls-panel .dropdown-trigger > svg { width: 13px; height: 13px; }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dropdown-field .dropdown-trigger,
   html[data-theme] .dropdown-menu-portal .dropdown-option { transition: none; }

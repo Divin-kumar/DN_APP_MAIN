@@ -1,4 +1,4 @@
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, Pencil, Plus } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import RichText from '../common/RichText';
@@ -28,7 +28,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
       <article className="dn-transaction-card dn-transaction-card-compact" role="listitem">
         <div className="dn-transaction-card-core">
           <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
-            {isIncome ? <ArrowDownLeft size={19} /> : <ArrowUpRight size={19} />}
+            {isIncome ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
           </span>
           <span className="dn-transaction-copy">
             <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
@@ -50,14 +50,21 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
       onDelete={() => onDelete(transaction)}>
       <div className="dn-transaction-card-core">
         <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
-          {isIncome ? <ArrowDownLeft size={20} /> : <ArrowUpRight size={20} />}
+          {isIncome ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
         </span>
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
           <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
-          {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
-          {activityTitle ? <small>Activity: {activityTitle}</small> : null}
-          {transaction.notes || transaction.description ? <RichText className="dn-transaction-note" value={transaction.notes || transaction.description} /> : null}
+          {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
+            <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>
+              <summary><span>Details{eventTitle ? ` · ${eventTitle}` : ''}</span><ChevronDown size={12} aria-hidden="true" /></summary>
+              <div className="dn-transaction-details-content">
+                {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
+                {activityTitle ? <small>Activity: {activityTitle}</small> : null}
+                {transaction.notes || transaction.description ? <RichText className="dn-transaction-note" value={transaction.notes || transaction.description} /> : null}
+              </div>
+            </details>
+          ) : null}
         </div>
         <div className="dn-transaction-card-side">
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
@@ -70,7 +77,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
 }
 
 export default function TransactionHistory({
-  transactions, filters, onFilters, monthOptions, events, onAdd, onEdit, onDelete,
+  transactions, filters, onFilters, monthOptions, events, onEdit, onDelete,
 }) {
   const activeCount = Number(filters.type !== 'all') + Number(filters.month !== 'all') + Number(Boolean(filters.search));
   const period = filters.month === 'all' ? 'All months' : monthOptions.find((month) => month.value === filters.month)?.shortLabel || filters.month;
@@ -83,9 +90,6 @@ export default function TransactionHistory({
           <h2 id="dn-transactions-heading">Transactions</h2>
           <p title="All income and expenses in one place">All income and expenses</p>
         </div>
-        <button type="button" className="primaryButton dn-transaction-add" onClick={onAdd}>
-          <Plus size={17} aria-hidden="true" /><span>Add Transaction</span>
-        </button>
       </header>
       <ListControls title="Transaction filters" activeCount={activeCount} resultCount={transactions.length}
         resultLabel="transactions" summary={scope}

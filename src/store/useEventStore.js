@@ -143,6 +143,7 @@ const useEventStore = create((set, get) => {
       return normalizedEvent;
     }
 
+    const mutationScope = get().activeLoadKey;
     const current = get().events;
     const previous = current.find((item) => sameEvent(item, normalizedEvent));
     const optimistic = current.map((item) => (
@@ -152,6 +153,7 @@ const useEventStore = create((set, get) => {
 
     try {
       const updated = await updateEvent(uid, normalizedEvent);
+      if (get().activeLoadKey !== mutationScope) return updated;
       set({
         events: get().events.map((item) =>
           sameEvent(item, normalizedEvent) ? { ...item, ...updated } : item
@@ -160,6 +162,7 @@ const useEventStore = create((set, get) => {
       return updated;
     } catch (error) {
       console.error('Failed to update event:', error);
+      if (get().activeLoadKey !== mutationScope) throw error;
       set({
         events: previous
           ? get().events.map((item) => (sameEvent(item, normalizedEvent) ? previous : item))

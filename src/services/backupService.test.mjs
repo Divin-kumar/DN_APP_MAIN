@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 
 import {
   buildEventGroupsFromBackup,
@@ -247,4 +248,76 @@ test('acceptance volume round-trips all required record counts and relationships
   assert.equal(restoredMoments.flatMap((moment) => moment.activities).length, 100);
   assert.equal(restoredMoments.flatMap((moment) => moment.memories).length, 200);
   assert.equal(restoredMoments.flatMap((moment) => moment.attachments).length, 20);
+});
+
+const originalFile = () => {
+  const bytes = Buffer.from('An original photograph');
+  return { assetId: createHash('sha256').update(bytes).digest('hex'), type: 'image/jpeg', size: bytes.length, base64: bytes.toString('base64') };
+};
+
+const backupWithOriginal = () => {
+  const file = originalFile();
+  return createBackupDocument({
+    moments: [{ id: 'moment-photo', activities: [{ id: 'activity-photo', title: 'A memory' }], attachments: [
+      { id: 'photo-1', name: 'photo.jpg', assetId: file.assetId, storage: 'firebase', activityId: 'activity-photo' },
+      { id: 'photo-2', name: 'same-original.jpg', assetId: file.assetId, storage: 'firebase' },
+    ] }],
+    attachmentFiles: [file],
+    codeLists: DEFAULT_CODE_LISTS,
+  });
+};
+
+test('original attachment payload is stored once while references and activity links round-trip', () => {
+  const backup = backupWithOriginal();
+  assert.equal(backup.attachmentFiles.length, 1);
+  assert.equal(backup.attachments.length, 2);
+  assert.equal(backup.metadata.attachmentDataIncluded, true);
+  assert.equal(backup.metadata.attachmentLimitation, null);
+  const parsed = parseBackupDocument(JSON.parse(JSON.stringify(backup)));
+  const [moment] = buildEventGroupsFromBackup(parsed);
+  assert.equal(moment.attachments[0].activityId, 'activity-photo');
+  assert.equal(moment.attachments[0].assetId, originalFile().assetId);
+  assert.equal(moment.attachments[1].assetId, moment.attachments[0].assetId);
+  assert.equal(Buffer.from(parsed.attachmentFiles[0].base64, 'base64').toString(), 'An original photograph');
+});
+
+test('old v3 metadata-only backups remain accepted without the optional attachmentFiles collection', () => {
+  const backup = fixture();
+  delete backup.attachmentFiles;
+  assert.equal(parseBackupDocument(backup), backup);
+  assert.equal(buildEventGroupsFromBackup(backup)[0].attachments[0].name, 'sunset.jpg');
+});
+
+test('new exports and imports reject original references without their files', () => {
+  const file = originalFile();
+  assert.throws(() => createBackupDocument({
+    moments: [{ id: 'moment', attachments: [{ id: 'photo', assetId: file.assetId }] }], codeLists: DEFAULT_CODE_LISTS,
+  }), /missing the original file/);
+  for (const attachmentFiles of [[], undefined]) {
+    assert.throws(() => validateBackupDocument({ ...backupWithOriginal(), attachmentFiles }), /missing the original file/);
+  }
+});
+
+test('original payload validation rejects duplicate assets, invalid IDs, shapes and oversized files', () => {
+  const backup = backupWithOriginal();
+  const file = originalFile();
+  assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: [file, file] }), /duplicate original/);
+  assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: {} }), /must be an array/);
+  assert.throws(() => validateBackupDocument({ ...backup, attachments: [] }), /without an attachment reference/);
+  for (const change of [
+    { assetId: '../outside' }, { assetId: null }, { extra: 'unexpected' }, { type: '' }, { type: 'image/jpeg\nContent-Type: text/html' },
+    { size: 0 }, { size: 1.5 }, { size: 10 * 1024 * 1024 + 1 },
+  ]) {
+    assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: [{ ...file, ...change }] }), /invalid|between/);
+  }
+});
+
+test('original payload validation rejects malformed base64 and mismatched decoded byte sizes', () => {
+  const backup = backupWithOriginal();
+  const file = originalFile();
+  for (const base64 of [null, '', 'YQ', 'Y===', '$bad', 'Y Q=', '====']) {
+    assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: [{ ...file, base64 }] }), /valid base64|does not match/);
+  }
+  assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: [{ ...file, size: file.size + 1 }] }), /does not match/);
+  assert.throws(() => validateBackupDocument({ ...backup, attachments: [{ ...backup.attachments[0], assetId: 'not-a-hash' }] }), /invalid original file reference/);
 });

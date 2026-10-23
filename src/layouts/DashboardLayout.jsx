@@ -1,15 +1,15 @@
 /*
-  Event-first app shell for dashboard and workspace navigation.
+  Moment-first app shell for dashboard and workspace navigation.
 
   In simple language:
   this file is the "parent frame" of the whole app after login.
   It contains the top bar, side menu, mobile navigation, theme switch, profile actions,
-  and quick-create buttons for events, activities, and transactions.
+  and quick-create buttons for moments, activities, and transactions.
 */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, UserCircle, WalletCards, X } from 'lucide-react';
+import { Activity, BookHeart, CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -25,17 +25,18 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
-import { getRouteTransitionKey, isSameMomentWorkspace } from '../utils/momentWorkspaceRoutes';
+import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace } from '../utils/momentWorkspaceRoutes';
+import { recordId } from '../utils/recordIdentity';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
 const navItems = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Events', path: '/events', icon: CalendarDays },
-  { label: 'Financials', path: '/financials', icon: WalletCards },
-  { label: 'Settings', path: '/settings', icon: Settings },
+  { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Moments', path: '/events', icon: CalendarDays },
+  { label: 'Activities', path: '/activities', icon: ListChecks },
 ];
 const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
+const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
 
 export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
@@ -72,6 +73,8 @@ export default function DashboardLayout() {
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const activityMoments = loadedFor === eventScope && activeLoadKey === eventScope ? events : [];
+  const workspaceKey = getMomentWorkspaceKey(location.pathname);
+  const workspaceMoment = workspaceKey ? activityMoments.find((moment) => workspaceKey === `/events/${encodeURIComponent(momentId(moment))}`) : null;
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
 
@@ -137,7 +140,7 @@ export default function DashboardLayout() {
     const currentLocation = {
       key: location.key || location.pathname,
       pathname: location.pathname,
-      primaryRoute: ['dashboard', 'events', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
+      primaryRoute: ['dashboard', 'events', 'activities', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
     };
     const previousLocation = previousLocationRef.current;
 
@@ -229,12 +232,24 @@ export default function DashboardLayout() {
     setQuickCreateError('');
     setQuickCreateType(type);
     if (type === 'activity') {
-      setQuickActivityEventId('');
+      const currentMomentId = momentId(workspaceMoment);
+      if (workspaceMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
+      setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
       setQuickActivityDate(new Date().toISOString().slice(0, 10));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');
     }
+  };
+
+  const beginMomentCreate = (kind) => {
+    if (!workspaceMoment) return;
+    setQuickCreateOpen(false);
+    // Keep file selection inside this click; navigating or deferring it can
+    // discard the user gesture required by mobile browsers.
+    window.dispatchEvent(new CustomEvent('dn:moment-create', {
+      detail: { eventId: momentId(workspaceMoment), scope: eventScope, kind },
+    }));
   };
 
   // Save a life moment and let the user choose whether to open it.
@@ -264,7 +279,7 @@ export default function DashboardLayout() {
   // This is the same idea as creating a to-do attached to a life event.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
-    const event = filteredActivityMoments.find((item) => (item.id || item.firestoreId) === quickActivityEventId);
+    const event = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
     if (!event || !quickActivityTitle.trim()) {
       setQuickCreateError('Choose a life moment and enter an activity title.');
       return;
@@ -272,7 +287,7 @@ export default function DashboardLayout() {
     try {
       const activity = {
         id: crypto.randomUUID(),
-        eventId: event.id || event.firestoreId,
+        eventId: momentId(event),
         title: quickActivityTitle.trim(),
         description: quickActivityDescription,
         date: quickActivityDate,
@@ -333,6 +348,8 @@ export default function DashboardLayout() {
               <div className="profile-menu" role="menu">
                 <div className="profile-menu-account"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
+                <NavLink to="/financials/transactions" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Receipt size={16} /> Transactions</NavLink>
+                <NavLink to="/insights" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Activity size={16} /> Insights</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
                 <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
               </div>
@@ -359,7 +376,7 @@ export default function DashboardLayout() {
                 className="dn-nav-link"
                 style={({ isActive }) => ({
                 ...styles.navCard,
-                ...(isActive ? styles.navCardActive : {}),
+                ...(isActive || (item.path === '/dashboard' && location.pathname === '/') ? styles.navCardActive : {}),
               })}
             >
               <span className="dn-nav-icon" aria-hidden="true"><item.icon size={18} strokeWidth={2} /></span>
@@ -396,7 +413,7 @@ export default function DashboardLayout() {
             key={item.path}
             to={item.path}
             end={item.path === '/dashboard'}
-            className={({ isActive }) => `mobile-tab${isActive ? ' mobile-tab-active' : ''}`}
+            className={({ isActive }) => `mobile-tab${isActive || (item.path === '/dashboard' && location.pathname === '/') ? ' mobile-tab-active' : ''}`}
             aria-label={item.label}
           >
             <item.icon size={19} strokeWidth={2} aria-hidden="true" />
@@ -409,6 +426,8 @@ export default function DashboardLayout() {
               <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
               <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
               <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
+              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('memory')}><BookHeart size={17} /><span>Memory</span></button> : null}
+              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
             </div>
           ) : null}
           <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
@@ -423,6 +442,8 @@ export default function DashboardLayout() {
             <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
             <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
+            {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('memory')}><BookHeart size={17} /><span>Memory</span></button> : null}
+            {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
         ) : null}
         <button type="button" className="dn-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
@@ -451,7 +472,7 @@ export default function DashboardLayout() {
             <DropdownSelect id="quick-activity-type" value={quickActivityType} onChange={(changeEvent) => {
               const nextType = changeEvent.target.value;
               setQuickActivityType(nextType);
-              if (!filterActivityMoments(activityMoments, nextType).some((event) => (event.id || event.firestoreId) === quickActivityEventId)) setQuickActivityEventId('');
+              if (!filterActivityMoments(activityMoments, nextType).some((event) => momentId(event) === quickActivityEventId)) setQuickActivityEventId('');
             }} aria-label="Moment type" disabled={eventsLoading}>
               <option value="">All moment types</option>
               {quickActivityTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
@@ -460,7 +481,7 @@ export default function DashboardLayout() {
             <label htmlFor="quick-activity-moment">Life moment</label>
             <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
               <option value="">Choose a life moment</option>
-              {filteredActivityMoments.map((event) => <option key={event.id || event.firestoreId} value={event.id || event.firestoreId}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
+              {filteredActivityMoments.map((event) => <option key={momentId(event)} value={momentId(event)}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
             </DropdownSelect>
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />

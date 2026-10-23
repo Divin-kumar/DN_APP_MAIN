@@ -2,12 +2,43 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
 import { recordId } from '../utils/recordIdentity.js';
 import { financialDate } from '../utils/financialRecords.js';
+import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
 
 export const CURRENT_BACKUP_VERSION = 3;
+export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
+export const BACKUP_SIZE_LIMIT_MESSAGE = 'Backup files must be 50 MB or smaller, including original attachments.';
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
 const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
 const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
+const ASSET_ID = /^[a-f0-9]{64}$/;
+
+const validateAttachmentFiles = (backup) => {
+  if (backup.attachmentFiles !== undefined && !Array.isArray(backup.attachmentFiles)) throw new Error('Backup attachmentFiles must be an array.');
+  const files = backup.attachmentFiles || [];
+  const assetIds = new Set();
+  files.forEach((file) => {
+    if (!isRecord(file) || Object.keys(file).some((key) => !['assetId', 'type', 'size', 'base64'].includes(key))
+      || typeof file.assetId !== 'string' || !ASSET_ID.test(file.assetId)) throw new Error('Backup contains an invalid original attachment file.');
+    if (assetIds.has(file.assetId)) throw new Error('Backup contains duplicate original attachment files.');
+    assetIds.add(file.assetId);
+    if (typeof file.type !== 'string' || !file.type.trim() || file.type.length > 255 || /[\r\n]/.test(file.type)) throw new Error('Backup attachment file type is invalid.');
+    if (!Number.isInteger(file.size) || file.size < 1 || file.size > MAX_ATTACHMENT_BYTES) throw new Error('Each original attachment must be between 1 byte and 10 MB.');
+    const encoded = file.base64;
+    if (typeof encoded !== 'string' || !encoded.length || encoded.length % 4 !== 0
+      || encoded.length > Math.ceil(MAX_ATTACHMENT_BYTES / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Backup attachment file data is not valid base64.');
+    const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+    if ((encoded.length / 4) * 3 - padding !== file.size) throw new Error('Backup attachment file size does not match its data.');
+  });
+  const referencedAssets = new Set();
+  backup.attachments.forEach((attachment) => {
+    if (attachment.assetId === undefined || attachment.assetId === null || attachment.assetId === '') return;
+    if (typeof attachment.assetId !== 'string' || !ASSET_ID.test(attachment.assetId)) throw new Error('Backup attachment has an invalid original file reference.');
+    if (!assetIds.has(attachment.assetId)) throw new Error(`Backup is missing the original file for attachment "${attachment.id}".`);
+    referencedAssets.add(attachment.assetId);
+  });
+  if (files.some((file) => !referencedAssets.has(file.assetId))) throw new Error('Backup contains an original file without an attachment reference.');
+};
 
 // Canonicalize the original numeric IDs before validation; never invent backup IDs.
 const portableRecord = ({ firestoreId, firestoreCollection, firestoreSources, ...item }) => ({
@@ -76,6 +107,7 @@ export const createBackupDocument = ({
   moments = [],
   expenses = [],
   incomes = [],
+  attachmentFiles = [],
   codeLists,
   codeListSchemaVersion = 1,
   preferences = {},
@@ -106,6 +138,7 @@ export const createBackupDocument = ({
     activities: flattened.activities,
     memories: flattened.memories,
     attachments: flattened.attachments,
+    attachmentFiles,
     expenses: normalizedExpenses,
     incomes: incomes.map(portableRecord),
     codeLists: codeLists || {},
@@ -120,8 +153,9 @@ export const createBackupDocument = ({
     metadata: {
       ...metadata,
       relationships: 'activities, memories and attachments reference moments by momentId',
-      attachmentDataIncluded: false,
-      attachmentLimitation: 'The current app stores attachment metadata only; original file bytes are not available to back up.',
+      attachmentDataIncluded: attachmentFiles.length > 0,
+      attachmentLimitation: flattened.attachments.some((attachment) => !attachment.assetId)
+        ? 'Older attachment records without an original file remain metadata only; reattach those original files to include them in a future backup.' : null,
     },
   };
   validateBackupDocument(document);
@@ -169,6 +203,7 @@ export const validateBackupDocument = (backup) => {
   backup.attachments.forEach((attachment) => {
     if (!momentIds.has(attachment.momentId)) throw new Error(`Attachment "${attachment.id}" references a missing Moment.`);
   });
+  validateAttachmentFiles(backup);
   return backup;
 };
 

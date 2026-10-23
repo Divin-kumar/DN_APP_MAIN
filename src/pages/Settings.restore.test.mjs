@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'vite';
 import { createBackupDocument } from '../services/backupService.js';
+import { restoreAttachmentFiles } from '../services/attachmentService.js';
 import { DEFAULT_CODE_LISTS } from '../utils/codeLists.js';
 
 const children = (node) => Array.isArray(node) ? node : node?.props?.children ?? [];
@@ -13,8 +14,10 @@ const label = (node) => Array.isArray(node) ? node.map(label).join('')
 
 const openSettings = async (t, initialStorage) => {
   const values = new Map(Object.entries(initialStorage));
+  const storageWrites = [];
+  const toasts = [];
   const storage = { getItem: (key) => values.get(key) ?? null,
-    setItem: (key, value) => values.set(key, String(value)), removeItem: (key) => values.delete(key) };
+    setItem: (key, value) => { storageWrites.push([key, String(value)]); values.set(key, String(value)); }, removeItem: (key) => values.delete(key) };
   const key = `__dnGuestRestoreTest${Date.now()}${Math.random().toString(36).slice(2)}`;
   const slots = [];
   let cursor = 0;
@@ -26,9 +29,10 @@ const openSettings = async (t, initialStorage) => {
       return [slots[index], (value) => { slots[index] = typeof value === 'function' ? value(slots[index]) : value; }];
     },
     app: { user: null, isGuest: true, adminValues: DEFAULT_CODE_LISTS,
-      preferences: { currency: 'INR', notifications: {} }, showToast: () => {},
+      preferences: { currency: 'INR', notifications: {} }, showToast: (...args) => toasts.push(args),
       setAdminValues: async () => { throw new Error('Fixture configuration should not be restored.'); } },
     cloud: () => { throw new Error('Guest restore must not access Firebase.'); },
+    restoreOriginals: restoreAttachmentFiles,
   };
   const globals = new Map(['localStorage', 'window'].map((name) => [name, Object.getOwnPropertyDescriptor(globalThis, name)]));
   Object.defineProperty(globalThis, 'localStorage', { configurable: true, value: storage });
@@ -49,6 +53,7 @@ const openSettings = async (t, initialStorage) => {
           if (source.startsWith('../components/common/')) return '\0guest-restore-component';
           if (source === '../store/useAppStore') return '\0guest-restore-app';
           if (source.startsWith('../store/')) return '\0guest-restore-store';
+          if (source === '../services/attachmentService') return '\0guest-restore-attachments';
         }
         if (/\/src\/services\/(?:expenseService|incomeService|eventService|accountTransactionService)\.js$/.test(file)) {
           if (source === 'firebase/firestore') return '\0guest-restore-firestore';
@@ -63,8 +68,9 @@ const openSettings = async (t, initialStorage) => {
         if (id === '\0guest-restore-router') return 'export const Link = "link"; export const useLocation = () => ({hash: ""});';
         if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", RotateCcw="icon", Plus="icon";';
         if (id === '\0guest-restore-component') return 'export default "component";';
-        if (id === '\0guest-restore-app') return `export default (select) => select(${fixture}.app);`;
+        if (id === '\0guest-restore-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0guest-restore-store') return 'const useStore = () => ({}); useStore.getState = useStore; export default useStore;';
+        if (id === '\0guest-restore-attachments') return `export const restoreAttachmentFiles=(...args)=>${fixture}.restoreOriginals(...args); export const exportAttachmentFiles=()=>{throw new Error("Unexpected attachment export");};`;
         if (id === '\0guest-restore-db') return 'export const db = {};';
         if (id === '\0guest-restore-firestore') return `export const addDoc=${fixture}.cloud, collection=${fixture}.cloud, deleteDoc=${fixture}.cloud, doc=${fixture}.cloud, getDocs=${fixture}.cloud, updateDoc=${fixture}.cloud, writeBatch=${fixture}.cloud;`;
         return null;
@@ -82,7 +88,7 @@ const openSettings = async (t, initialStorage) => {
   const expenseService = await server.ssrLoadModule('/src/services/expenseService.js');
   const eventService = await server.ssrLoadModule('/src/services/eventService.js');
   const render = () => { cursor = 0; return Settings(); };
-  const restore = async (backup) => {
+  const prepareRestore = async (backup) => {
     let tree = render();
     const toggle = nodes(tree).find((node) => node.type === 'button' && label(node).includes('Data & Backup'));
     if (!toggle.props['aria-expanded']) { toggle.props.onClick(); tree = render(); }
@@ -91,10 +97,20 @@ const openSettings = async (t, initialStorage) => {
     tree = render();
     const confirm = nodes(tree).find((node) => node.type === 'button' && label(node) === 'Confirm restore');
     assert.ok(confirm, 'the real Settings import handler must present restore confirmation');
+    return confirm;
+  };
+  const restore = async (backup) => {
+    const confirm = await prepareRestore(backup);
     await confirm.props.onClick();
     return label(render());
   };
-  return { values, expenseService, eventService, restore, reloads: () => reloads };
+  return { api, values, storageWrites, toasts, render, expenseService, eventService, prepareRestore, restore, reloads: () => reloads };
+};
+
+const deferred = () => {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
 };
 
 const moment = (expenses) => ({ id: 'guest-moment', name: 'Synthetic Moment', date: '2026-10-22',
@@ -144,4 +160,99 @@ test('guest Settings restore rejects a corrupt raw master ledger before changing
   assert.match(result, /Guest expense storage is invalid/);
   assert.equal(harness.reloads(), 0);
   assert.deepEqual([...harness.values], before, 'strict raw-ledger validation prevents partial guest record writes');
+});
+
+test('Settings restore rejects an obsolete confirmation after the active session changes', async (t) => {
+  const harness = await openSettings(t, { dn_guest_expenses: '[]', dn_guest_eventGroups: '[]' });
+  const confirm = await harness.prepareRestore(backupFor([]));
+  const before = [...harness.values];
+  let originalCalls = 0;
+  harness.api.restoreOriginals = async () => { originalCalls += 1; throw new Error('Stale confirmation must not restore originals'); };
+  harness.api.app.user = { uid: 'different-owner' };
+  harness.api.app.isGuest = false;
+  t.mock.method(console, 'error', () => {});
+  await confirm.props.onClick();
+  assert.match(label(harness.render()), /session changed/i);
+  assert.equal(originalCalls, 0);
+  assert.deepEqual(harness.storageWrites, []);
+  assert.deepEqual([...harness.values], before);
+  assert.equal(harness.reloads(), 0);
+  assert.equal(harness.toasts.some(([, kind]) => kind === 'success'), false);
+});
+
+test('Settings restore rechecks the session after awaiting originals before any record write', async (t) => {
+  const harness = await openSettings(t, { dn_guest_expenses: '[]', dn_guest_eventGroups: '[]' });
+  const pending = deferred();
+  let restoreContext;
+  let imported;
+  harness.api.restoreOriginals = async (groups, _files, context) => {
+    context.assertCurrent();
+    restoreContext = context;
+    imported = groups;
+    await pending.promise;
+    return groups;
+  };
+  const confirm = await harness.prepareRestore(backupFor([]));
+  const restoring = confirm.props.onClick();
+  assert.ok(imported, 'the real handler starts with original restoration');
+  assert.deepEqual(harness.storageWrites, []);
+  harness.api.app.user = { uid: 'different-owner' };
+  harness.api.app.isGuest = false;
+  assert.throws(() => restoreContext.assertCurrent(), /session changed/i);
+  t.mock.method(console, 'error', () => {});
+  pending.resolve();
+  await restoring;
+  assert.match(label(harness.render()), /session changed/i);
+  assert.deepEqual(harness.storageWrites, []);
+  assert.equal(harness.reloads(), 0);
+  assert.equal(harness.toasts.some(([, kind]) => kind === 'success'), false);
+});
+
+test('Settings restores verified destination file references before writing any guest records', async (t) => {
+  const harness = await openSettings(t, { dn_guest_expenses: '[]', dn_guest_eventGroups: '[]' });
+  const assetId = 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad'; // SHA-256 of abc.
+  const backup = createBackupDocument({
+    moments: [{ ...moment([]), attachments: [{ id: 'original-photo', name: 'photo.png', type: 'image/png',
+      size: 3, assetId, storage: 'firebase', activityId: 'guest-activity' }] }],
+    attachmentFiles: [{ assetId, type: 'image/png', size: 3, base64: 'YWJj' }],
+    codeLists: DEFAULT_CODE_LISTS, settings: { restoreCodeLists: false },
+  });
+  const pending = deferred();
+  let fileCalls = 0;
+  harness.api.restoreOriginals = async (groups, files, context) => {
+    fileCalls += 1;
+    assert.equal(context.uid, null);
+    assert.equal(context.isGuest, true);
+    context.assertCurrent();
+    assert.deepEqual(files, backup.attachmentFiles);
+    await pending.promise;
+    context.assertCurrent();
+    return groups.map((group) => ({ ...group, attachments: group.attachments.map((entry) => ({ ...entry, storage: 'local' })) }));
+  };
+  const confirm = await harness.prepareRestore(backup);
+  const restoring = confirm.props.onClick();
+  assert.equal(fileCalls, 1);
+  assert.deepEqual(harness.storageWrites, [], 'record writes wait for file persistence to succeed');
+  assert.equal(harness.reloads(), 0);
+  pending.resolve();
+  await restoring;
+  const [written] = harness.eventService.getGuestEvents();
+  assert.equal(written.attachments[0].storage, 'local');
+  assert.equal(written.attachments[0].assetId, assetId);
+  assert.equal(written.attachments[0].activityId, 'guest-activity');
+  assert.equal(harness.reloads(), 1);
+  assert.equal(harness.toasts.some(([message, kind]) => message === 'Backup restore finished' && kind === 'success'), true);
+});
+
+test('Settings original restoration failure leaves every guest record unchanged and reports no successful restore', async (t) => {
+  const harness = await openSettings(t, { dn_guest_expenses: '[]', dn_guest_eventGroups: JSON.stringify([moment([])]) });
+  const before = [...harness.values];
+  harness.api.restoreOriginals = async () => { throw new Error('Original file could not be stored'); };
+  t.mock.method(console, 'error', () => {});
+  const result = await harness.restore(backupFor([expense('new-expense', 10)]));
+  assert.match(result, /Original file could not be stored/);
+  assert.deepEqual(harness.storageWrites, []);
+  assert.deepEqual([...harness.values], before);
+  assert.equal(harness.reloads(), 0);
+  assert.equal(harness.toasts.some(([, kind]) => kind === 'success'), false);
 });

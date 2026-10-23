@@ -1823,7 +1823,7 @@ html[data-theme] .dn-transactions-page .transactions-filter-pair {
   grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;
 }
 html[data-theme] .dn-transactions-results {
-  display: grid; gap: 12px; min-width: 0;
+  display: grid; gap: 7px; min-width: 0;
   /* Scroll long histories instead of squeezing overflow-hidden cards into the cap. */
   grid-auto-rows: max-content; align-content: start;
   max-height: min(65dvh,820px); overflow-y: auto;
@@ -1832,10 +1832,10 @@ html[data-theme] .dn-transactions-results {
 }
 html[data-theme] .dn-transaction-card {
   position: relative; isolation: isolate; overflow: hidden; min-width: 0;
-  min-height: 100px;
-  border: 1px solid var(--color-border); border-radius: clamp(16px,2vw,20px);
+  min-height: 64px;
+  border: 1px solid var(--color-border); border-radius: 13px;
   background: var(--color-card);
-  box-shadow: 0 7px 20px color-mix(in srgb,var(--color-text) 6%,transparent);
+  box-shadow: 0 3px 10px color-mix(in srgb,var(--color-text) 4%,transparent);
   transition: border-color .18s ease,box-shadow .18s ease;
 }
 html[data-theme] .dn-transaction-card:hover,
@@ -1844,15 +1844,15 @@ html[data-theme] .dn-transaction-card:focus-within {
   box-shadow: 0 10px 28px color-mix(in srgb,var(--color-text) 10%,transparent);
 }
 html[data-theme] .dn-transaction-card-core {
-  position: relative; display: flex; align-items: flex-start; gap: 13px;
-  padding: clamp(14px,2.1vw,20px); min-height: 100px;
+  position: relative; display: flex; align-items: flex-start; gap: 9px;
+  padding: 10px 11px; min-height: 64px;
   background: linear-gradient(135deg,var(--color-card),color-mix(in srgb,var(--color-card-raised) 63%,var(--color-card)));
   box-sizing: border-box; min-width: 0;
 }
-html[data-theme] .dn-transaction-card-compact .dn-transaction-card-core { min-height: 76px; align-items: center; }
+html[data-theme] .dn-transaction-card-compact .dn-transaction-card-core { min-height: 64px; align-items: center; }
 html[data-theme] .dn-transaction-icon {
-  display: grid; place-items: center; flex: 0 0 44px;
-  width: 44px; height: 44px; border-radius: 14px;
+  display: grid; place-items: center; flex: 0 0 32px;
+  width: 32px; height: 32px; border-radius: 10px;
 }
 html[data-theme] .dn-transaction-icon.is-income {
   background: color-mix(in srgb,var(--color-success) 14%,var(--color-card));
@@ -1862,20 +1862,32 @@ html[data-theme] .dn-transaction-icon.is-expense {
   background: color-mix(in srgb,var(--color-danger) 12%,var(--color-card));
   color: var(--color-danger);
 }
-html[data-theme] .dn-transaction-copy { display: grid; gap: 6px; flex: 1 1 0; min-width: 0; }
+html[data-theme] .dn-transaction-copy { display: grid; gap: 3px; flex: 1 1 0; min-width: 0; }
 html[data-theme] .dn-transaction-copy > strong {
-  color: var(--color-text); font-size: .98rem; font-weight: 750;
+  color: var(--color-text); font-size: 13px; font-weight: 680;
   line-height: 1.3; overflow-wrap: anywhere;
 }
 html[data-theme] .dn-transaction-copy > span,
 html[data-theme] .dn-transaction-copy > small {
-  color: var(--color-text-muted); font-size: .79rem; line-height: 1.4;
+  color: var(--color-text-muted); font-size: 11px; line-height: 1.35;
   display: inline-flex; align-items: center; flex-wrap: wrap; gap: 4px;
   overflow-wrap: anywhere;
 }
 html[data-theme] .dn-transaction-note { max-width: 60ch; white-space: normal; }
+html[data-theme] .dn-transaction-details { min-width: 0; color: var(--color-text-muted); font-size: 11px; }
+html[data-theme] .dn-transaction-details > summary {
+  display: flex; align-items: center; gap: 4px; min-height: 28px;
+  cursor: pointer; list-style: none; font-size: 11px;
+}
+html[data-theme] .dn-transaction-details > summary::-webkit-details-marker { display: none; }
+html[data-theme] .dn-transaction-details > summary > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+html[data-theme] .dn-transaction-details > summary > svg { flex: 0 0 auto; }
+html[data-theme] .dn-transaction-details[open] > summary > svg { transform: rotate(180deg); }
+html[data-theme] .dn-transaction-details > summary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; border-radius: 4px; }
+html[data-theme] .dn-transaction-details-content { display: grid; gap: 4px; padding: 1px 0 4px; }
+html[data-theme] .dn-transaction-details-content > small { font-size: 11px; line-height: 1.35; }
 html[data-theme] .dn-transaction-card-side { display: grid; justify-items: end; flex: 0 0 auto; gap: 8px; }
-html[data-theme] .dn-transaction-value { white-space: nowrap; font-weight: 780; letter-spacing: -.02em; font-size: .99rem; }
+html[data-theme] .dn-transaction-value { white-space: nowrap; font-weight: 700; letter-spacing: -.01em; font-size: 13px; }
 html[data-theme] .dn-transaction-value.is-income { color: var(--color-success); }
 html[data-theme] .dn-transaction-value.is-expense { color: var(--color-danger); }
 html[data-theme] .dn-transaction-overflow {
@@ -1926,9 +1938,9 @@ html[data-theme] .dn-transaction-form .form-actions { display: flex; flex-wrap: 
 html[data-theme] .dn-transaction-form .form-actions > button { min-height: 46px; }
 html[data-theme] .dn-transaction-form-error { color: var(--color-danger); font-weight: 600; margin: 0; }
 @media (max-width: 700px) {
-  html[data-theme] .dn-transaction-card-core { padding: 13px; gap: 10px; }
-  html[data-theme] .dn-transaction-value { font-size: .87rem; }
-  html[data-theme] .dn-transaction-icon { width: 40px; height: 40px; flex-basis: 40px; }
+  html[data-theme] .dn-transaction-card-core { padding: 10px; gap: 8px; }
+  html[data-theme] .dn-transaction-value { font-size: 13px; }
+  html[data-theme] .dn-transaction-icon { width: 32px; height: 32px; flex-basis: 32px; }
   html[data-theme] .dn-transactions-page .transactions-filter-pair .dropdown-trigger { font-size: .75rem !important; padding-inline: 8px !important; }
   html[data-theme] .dn-transaction-add { width: 100%; justify-content: center; }
 }

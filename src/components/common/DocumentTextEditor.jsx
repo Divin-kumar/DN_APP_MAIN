@@ -1,14 +1,13 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { EditorContent, Extension, useEditor } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import { ListItem } from '@tiptap/extension-list';
 import Code from '@tiptap/extension-code';
 import { Plugin } from '@tiptap/pm/state';
-import { Bold, Code2, Eye, Italic, List, ListOrdered, Pencil, Quote, Redo2, Strikethrough, Undo2 } from 'lucide-react';
+import { Bold, Code2, Heading2, Italic, List, ListOrdered, MoreHorizontal, Quote, RemoveFormatting, Strikethrough } from 'lucide-react';
 import { editorDocumentToNote, noteToEditorDocument } from '../../utils/richTextDocument';
 import { hasNoteText, pastePlainNoteText } from '../../utils/documentEditing';
-import RichText from './RichText';
-import DropdownSelect from './DropdownSelect';
 import './DocumentTextEditor.css';
 
 const FlatListItem = ListItem.extend({
@@ -27,8 +26,9 @@ export default function DocumentTextEditor({ label = 'Notes', value = '', onChan
   if (!initial.current) initial.current = noteToEditorDocument(value);
   const lastValue = useRef(value);
   const validation = useRef(null);
-  const selection = useRef(null);
-  const [preview, setPreview] = useState(false);
+  const surface = useRef(null);
+  const selectionTools = useRef(null);
+  const [moreStyles, setMoreStyles] = useState(false);
   const [notice, setNotice] = useState('');
   const editor = useEditor({
     extensions: [StarterKit.configure({ heading: { levels: [3, 4, 5] }, code: false, hardBreak: false,
@@ -63,7 +63,20 @@ export default function DocumentTextEditor({ label = 'Notes', value = '', onChan
       attributes: { id: inputId, role: 'textbox', 'aria-label': label, 'aria-multiline': 'true',
         'aria-required': String(required), 'aria-describedby': `${inputId}-hint`,
         'data-placeholder': placeholder || 'Start writing…', spellcheck: 'true' },
-      // Pasting text cannot introduce unsupported nesting, images or executable HTML.
+      handleKeyDown(view, event) {
+        // Keyboard users reach the same contextual tools as touch selection.
+        if (event.altKey && event.key === 'F10' && !view.state.selection.empty) {
+          event.preventDefault();
+          // Selection updates are briefly debounced for touch handles. Explicit
+          // keyboard access must not try to focus a still-hidden menu.
+          view.dispatch(view.state.tr.setMeta('dnNoteSelection', 'show'));
+          view.dispatch(view.state.tr.setMeta('dnNoteSelection', 'updatePosition'));
+          selectionTools.current?.querySelector('button')?.focus({ preventScroll: true });
+          return true;
+        }
+        return false;
+      },
+      // Pasting cannot introduce unsupported nesting, images or executable HTML.
       handlePaste(view, event) {
         const text = event.clipboardData?.getData('text/plain');
         if (text === undefined) return false;
@@ -86,74 +99,85 @@ export default function DocumentTextEditor({ label = 'Notes', value = '', onChan
     lastValue.current = value;
     editor.commands.setContent(noteToEditorDocument(value), { emitUpdate: false });
   }, [editor, value]);
-  useEffect(() => {
-    editor?.setEditable(!disabled && !preview, false);
-    if (editor && !disabled && !preview && selection.current) {
-      editor.commands.focus();
-      editor.commands.setTextSelection(selection.current);
-      selection.current = null;
-    }
-  }, [editor, disabled, preview]);
+  useEffect(() => { editor?.setEditable(!disabled, false); }, [editor, disabled]);
   useEffect(() => {
     validation.current?.setCustomValidity(required && editor && !hasNoteText(editor.state.doc) ? 'Please enter some text.' : '');
   }, [editor, value, required]);
 
-  const changeMode = (next) => {
-    if (next === preview) return;
-    if (next) selection.current = editor ? { from: editor.state.selection.from, to: editor.state.selection.to } : null;
-    setPreview(next);
-  };
-  const tool = (title, Icon, command, active = false, unavailable = false) => <button type="button" key={title}
-    title={title} aria-label={title} aria-pressed={active} disabled={disabled || !editor || unavailable}
-    onMouseDown={(event) => event.preventDefault()} onClick={() => command(editor.chain().focus()).run()}>
-    <Icon size={17} aria-hidden="true" /></button>;
-  const heading = editor?.isActive('heading') ? String(editor.getAttributes('heading').level) : 'paragraph';
-  const words = editor?.getText().match(/\S+/gu)?.length || 0;
+  const menuOptions = useMemo(() => ({
+    placement: 'bottom', offset: 8, flip: { padding: 8 }, shift: { padding: 8 },
+    hide: { strategy: 'referenceHidden' },
+    scrollTarget: editor?.view.dom.closest('.dn-modal-body') || undefined,
+    onHide: () => setMoreStyles(false),
+  }), [editor]);
+  const appendMenu = useCallback(() => surface.current, []);
+  const showSelectionTools = useCallback(({ editor: instance, element, state, from, to, view }) =>
+    !disabled && instance.isEditable && !state.selection.empty
+      && Boolean(state.doc.textBetween(from, to).trim())
+      && (view.hasFocus() || element.contains(element.ownerDocument.activeElement)), [disabled]);
+  useEffect(() => {
+    if (!editor) return undefined;
+    const reposition = () => {
+      if (!editor.isDestroyed) editor.view.dispatch(editor.state.tr.setMeta('dnNoteSelection', 'updatePosition'));
+    };
+    // Keep controls attached during body scrolling, editor scrolling or keyboard pan.
+    document.addEventListener('scroll', reposition, true);
+    window.visualViewport?.addEventListener('resize', reposition);
+    window.visualViewport?.addEventListener('scroll', reposition);
+    return () => {
+      document.removeEventListener('scroll', reposition, true);
+      window.visualViewport?.removeEventListener('resize', reposition);
+      window.visualViewport?.removeEventListener('scroll', reposition);
+    };
+  }, [editor]);
+  useEffect(() => {
+    if (editor && !editor.isDestroyed) editor.view.dispatch(editor.state.tr.setMeta('dnNoteSelection', 'updatePosition'));
+  }, [editor, moreStyles]);
+
+  const tool = (title, Icon, command, active = false) => <button type="button" key={title}
+    title={title} aria-label={title} aria-pressed={active} disabled={disabled || !editor}
+    onPointerDown={(event) => event.preventDefault()} onMouseDown={(event) => event.preventDefault()}
+    onClick={() => command(editor.chain().focus(undefined, { scrollIntoView: false })).run()}>
+    <Icon size={16} aria-hidden="true" /></button>;
 
   return <div className={`dn-document-editor ${className}${disabled ? ' is-disabled' : ''}`}>
-    <label id={`${inputId}-label`} className="dn-document-label" onClick={() => { changeMode(false); editor?.commands.focus(); }}>{label}</label>
-    <div className="dn-document-surface">
-      <div className="dn-document-heading">
-        <span className="dn-document-state"><span aria-hidden="true" />{preview ? 'Reading view' : 'Write naturally. Make it yours.'}</span>
-        <div className="dn-document-modes" role="group" aria-label={`${label} view`}>
-          <button type="button" aria-pressed={!preview} onClick={() => changeMode(false)} disabled={disabled}><Pencil size={14} aria-hidden="true" />Edit</button>
-          <button type="button" aria-pressed={preview} onClick={() => changeMode(true)} disabled={disabled}><Eye size={14} aria-hidden="true" />Preview</button>
+    <label id={`${inputId}-label`} htmlFor={inputId} className="dn-document-label" onClick={() => editor?.commands.focus()}>{label}</label>
+    <div ref={surface} className="dn-document-surface">
+      <div className="dn-document-writing"><EditorContent editor={editor} /></div>
+      {editor ? <BubbleMenu ref={selectionTools} editor={editor} pluginKey="dnNoteSelection" updateDelay={100}
+        className="dn-document-selection-tools" role="toolbar" aria-label={`${label} selection formatting`}
+        appendTo={appendMenu} shouldShow={showSelectionTools} options={menuOptions}
+        onKeyDown={(event) => {
+          if (event.key !== 'Escape') return;
+          event.preventDefault();
+          event.stopPropagation();
+          setMoreStyles(false);
+          editor.chain().setTextSelection(editor.state.selection.to).focus(undefined, { scrollIntoView: false }).run();
+        }}>
+        <div className="dn-document-selection-primary">
+          {tool('Bold', Bold, (chain) => chain.toggleBold(), editor.isActive('bold'))}
+          {tool('Italic', Italic, (chain) => chain.toggleItalic(), editor.isActive('italic'))}
+          {tool('Bullet list', List, (chain) => chain.unsetBlockquote().toggleBulletList(), editor.isActive('bulletList'))}
+          <button type="button" title="More styles" aria-label="More styles" aria-expanded={moreStyles} aria-controls={`${inputId}-styles`}
+            disabled={disabled} onPointerDown={(event) => event.preventDefault()} onMouseDown={(event) => event.preventDefault()}
+            onClick={() => setMoreStyles((current) => !current)}><MoreHorizontal size={16} aria-hidden="true" /></button>
         </div>
-      </div>
-      {!preview ? <div className="dn-document-toolbar" role="group" aria-label={`${label} formatting`}>
-        <DropdownSelect id={`${inputId}-style`} aria-label="Text style" value={heading} disabled={disabled || !editor}
-          onChange={(event) => {
-            const chain = editor.chain().focus().clearNodes();
-            if (event.target.value === 'paragraph') chain.setParagraph().run();
-            else chain.setHeading({ level: Number(event.target.value) }).run();
-          }}>
-          <option value="paragraph">Normal text</option><option value="3">Heading</option><option value="4">Subheading</option><option value="5">Small heading</option>
-        </DropdownSelect>
-        <div className="dn-document-tool-group">
-          {tool('Bold', Bold, (chain) => chain.toggleBold(), editor?.isActive('bold'))}
-          {tool('Italic', Italic, (chain) => chain.toggleItalic(), editor?.isActive('italic'))}
-          {tool('Strikethrough', Strikethrough, (chain) => chain.toggleStrike(), editor?.isActive('strike'))}
-        </div>
-        <div className="dn-document-tool-group">
-          {tool('Bullet list', List, (chain) => chain.unsetBlockquote().toggleBulletList(), editor?.isActive('bulletList'))}
-          {tool('Numbered list', ListOrdered, (chain) => chain.unsetBlockquote().toggleOrderedList(), editor?.isActive('orderedList'))}
-          {tool('Quote', Quote, (chain) => editor.isActive('blockquote') ? chain.unsetBlockquote() : chain.clearNodes().setBlockquote(), editor?.isActive('blockquote'))}
-          {tool('Code', Code2, (chain) => chain.toggleCode(), editor?.isActive('code'))}
-        </div>
-        <div className="dn-document-tool-group dn-document-history">
-          {tool('Undo', Undo2, (chain) => chain.undo(), false, !editor?.can().undo())}
-          {tool('Redo', Redo2, (chain) => chain.redo(), false, !editor?.can().redo())}
-        </div>
-      </div> : null}
-      <div className="dn-document-writing" hidden={preview}><EditorContent editor={editor} /></div>
-      {preview ? <div className="dn-document-preview" role="region" aria-label={`${label} preview`} tabIndex={0}>
-        {value ? <RichText value={value} /> : <span className="dn-document-empty">Your words will appear here.</span>}
-      </div> : null}
-      <div id={`${inputId}-hint`} className="dn-document-footer"><span>{preview ? 'Choose Edit to keep writing' : 'Select text to format · Ctrl/⌘ B or I'}</span>
-        <span>{words} {words === 1 ? 'word' : 'words'}{maxLength ? ` · ${value.length}/${maxLength}` : ''}</span></div>
+        {moreStyles ? <div id={`${inputId}-styles`} className="dn-document-selection-more">
+          {tool('Heading', Heading2, (chain) => editor.isActive('heading', { level: 3 }) ? chain.setParagraph() : chain.clearNodes().setHeading({ level: 3 }), editor.isActive('heading', { level: 3 }))}
+          {tool('Subheading', Heading2, (chain) => editor.isActive('heading', { level: 4 }) ? chain.setParagraph() : chain.clearNodes().setHeading({ level: 4 }), editor.isActive('heading', { level: 4 }))}
+          {tool('Small heading', Heading2, (chain) => editor.isActive('heading', { level: 5 }) ? chain.setParagraph() : chain.clearNodes().setHeading({ level: 5 }), editor.isActive('heading', { level: 5 }))}
+          {tool('Numbered list', ListOrdered, (chain) => chain.unsetBlockquote().toggleOrderedList(), editor.isActive('orderedList'))}
+          {tool('Quote', Quote, (chain) => editor.isActive('blockquote') ? chain.unsetBlockquote() : chain.clearNodes().setBlockquote(), editor.isActive('blockquote'))}
+          {tool('Strikethrough', Strikethrough, (chain) => chain.toggleStrike(), editor.isActive('strike'))}
+          {tool('Code', Code2, (chain) => chain.toggleCode(), editor.isActive('code'))}
+          {tool('Normal text', RemoveFormatting, (chain) => chain.clearNodes().unsetAllMarks())}
+        </div> : null}
+      </BubbleMenu> : null}
+      <div id={`${inputId}-hint`} className="dn-document-footer"><span>Select text for styles<span className="dn-document-keyboard-hint"> · Ctrl/⌘ B or I · Alt+F10 for tools</span></span>
+        {maxLength ? <span>{value.length}/{maxLength}</span> : null}</div>
     </div>
     <textarea ref={validation} className="dn-document-form-value" name={name} value={value} required={required} disabled={disabled}
-      tabIndex={-1} aria-hidden="true" onChange={() => {}} onInvalid={(event) => { event.preventDefault(); changeMode(false); editor?.commands.focus(); setNotice('Please enter some text.'); }} />
+      tabIndex={-1} aria-hidden="true" onChange={() => {}} onInvalid={(event) => { event.preventDefault(); editor?.commands.focus(); setNotice('Please enter some text.'); }} />
     <span className="dn-document-notice" role="status" aria-live="polite">{notice}</span>
   </div>;
 }

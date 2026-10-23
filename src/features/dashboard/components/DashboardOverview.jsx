@@ -1,22 +1,22 @@
 // This component is the main dashboard summary screen.
 // It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, CalendarDays, Copy, Download, Sparkles } from 'lucide-react';
+import { Copy, Download, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
-import { getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
+import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
+import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
 import RichText from '../../../components/common/RichText';
 import { plainRichText } from '../../../utils/richText';
+import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
-
-const getEventStatus = (event) => String(event.status || '').toLowerCase();
 
 const isSameDay = (first, second) => (
   first && second
@@ -70,77 +70,11 @@ const getGreetingName = (event) => {
   return cleaned || 'You';
 };
 
-const getBirthdayGreeting = (event) => {
-  const eventDate = getEventDate(event);
-  if (!eventDate) return null;
-
-  const today = new Date();
-  const age = today.getFullYear() - eventDate.getFullYear();
-  const birthdayThisYear = new Date(today.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-  const finalAge = birthdayThisYear > today ? age - 1 : age;
-
-  if (finalAge < 1) return null;
-
-  return {
-    title: `Happy ${getOrdinal(finalAge)} Birthday ${getGreetingName(event)} 🎂`,
-    body: 'Wishing you a wonderful year filled with happiness, health, and success.',
-  };
-};
-
-const getAnniversaryGreeting = (event) => {
-  const eventDate = getEventDate(event);
-  if (!eventDate) return null;
-
-  const today = new Date();
-  const anniversaryYears = today.getFullYear() - eventDate.getFullYear();
-  const anniversaryThisYear = new Date(today.getFullYear(), eventDate.getMonth(), eventDate.getDate());
-  const finalYears = anniversaryThisYear > today ? anniversaryYears - 1 : anniversaryYears;
-
-  if (finalYears < 1) return null;
-
-  return {
-    title: `Happy ${getOrdinal(finalYears)} Anniversary ❤️`,
-    body: 'Wishing you many more years of happiness and beautiful memories together.',
-  };
-};
-
 const getNextOccurrenceForStatus = (event, referenceDate = new Date()) => {
   return getNextOccurrenceDate(event, referenceDate);
 };
 
 const getDaysRemaining = getCalendarDaysRemaining;
-
-const getValueFromEvent = (event, keys) => {
-  for (const key of keys) {
-    const value = event?.[key];
-    if (value) return value;
-  }
-  return null;
-};
-
-const getBirthdayAge = (event) => {
-  const rawDate = getValueFromEvent(event, ['birthDate', 'birthdayDate', 'date']);
-  const source = new Date(rawDate);
-  if (Number.isNaN(source.getTime())) return null;
-
-  const today = new Date();
-  const birthdayThisYear = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  let age = today.getFullYear() - source.getFullYear();
-  if (today < birthdayThisYear) age -= 1;
-  return Math.max(age, 0);
-};
-
-const getAnniversaryYears = (event) => {
-  const rawDate = getValueFromEvent(event, ['anniversaryDate', 'date']);
-  const source = new Date(rawDate);
-  if (Number.isNaN(source.getTime())) return null;
-
-  const today = new Date();
-  const anniversaryThisYear = new Date(today.getFullYear(), source.getMonth(), source.getDate());
-  let years = today.getFullYear() - source.getFullYear();
-  if (today < anniversaryThisYear) years -= 1;
-  return Math.max(years, 0);
-};
 
 const renderGreetingTemplate = (template, replacements = {}) => {
   if (!template) return '';
@@ -260,7 +194,6 @@ function EventSummaryModal({ event, onClose }) {
   const activities = Array.isArray(event.activities) ? event.activities : [];
   const totalActivities = activities.length;
   const completedActivities = activities.filter((activity) => Boolean(activity.completed)).length;
-  const pendingActivities = Math.max(totalActivities - completedActivities, 0);
   const daysRemaining = getDaysRemaining(eventDate);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -279,15 +212,15 @@ function EventSummaryModal({ event, onClose }) {
     return 'Upcoming';
   })();
 
-  const statusText = eventStatus === 'Upcoming' && daysRemaining !== null && daysRemaining <= 3 && !isRecurring ? 'Event is approaching' : eventStatus;
+  const statusText = eventStatus === 'Upcoming' && daysRemaining !== null && daysRemaining <= 3 && !isRecurring ? 'Moment is approaching' : eventStatus;
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
 
   const handleDownload = () => {
     const lines = [
-      `${event.name || 'Untitled event'}`,
-      `Type: ${event.type || 'Event'}`,
+      `${event.name || 'Untitled moment'}`,
+      `Type: ${event.type || 'Moment'}`,
       `Date: ${formatDisplayDate(eventDate)}`,
       `Status: ${statusText}`,
       '',
@@ -313,15 +246,15 @@ function EventSummaryModal({ event, onClose }) {
   };
 
   return (
-    <ModalDialog title="Event summary" onClose={onClose} className="dashboard-event-summary-modal">
+    <ModalDialog title="Moment summary" onClose={onClose} className="dashboard-event-summary-modal">
       <div style={styles.cardWrap}>
         <div style={styles.hero}>
           <div>
-            <div style={styles.kicker}>Event</div>
-            <h4 style={styles.heroTitle}>{event.name || 'Untitled event'}</h4>
+            <div style={styles.kicker}>Moment</div>
+            <h4 style={styles.heroTitle}>{event.name || 'Untitled moment'}</h4>
           </div>
           <div style={styles.heroMeta}>
-            <span style={styles.typePill}>{event.type || 'Event'}</span>
+            <span style={styles.typePill}>{event.type || 'Moment'}</span>
             <strong style={styles.daysText}>
               {daysRemaining === null ? 'Date pending' : daysRemaining === 0 ? 'Today' : `${daysRemaining} days left`}
             </strong>
@@ -330,10 +263,7 @@ function EventSummaryModal({ event, onClose }) {
         </div>
 
         {greeting ? (
-          <div style={styles.greetingCard}>
-            <div style={styles.greetingTitle}>{plainRichText(greeting.title)}</div>
-            <RichText style={styles.greetingBody} value={greeting.body} />
-          </div>
+          <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={formatDisplayDate(eventDate)} />
         ) : null}
 
         <div style={styles.section}>
@@ -382,16 +312,16 @@ function EventSummaryModal({ event, onClose }) {
   );
 }
 
-function GreetingCardModal({ event, greeting, onClose, onCopy }) {
+function GreetingCardModal({ event, greeting, dateLabel, onClose, onCopy }) {
+  const downloadGreeting = () => {
+    const html = buildGreetingCardHtml({ ...greeting, momentName: event.name, momentType: event.type, dateLabel });
+    downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
+  };
   return (
-    <ModalDialog title="Today's greeting" onClose={onClose} className="dashboard-greeting-modal">
-      <article className="dashboard-greeting-card-full">
-        <span className="dashboard-greeting-card-kicker"><Sparkles size={15} /> A greeting for today</span>
-        <span className="dashboard-greeting-card-event">{event.name || event.type || 'On this day'} · {formatDisplayDate(new Date())}</span>
-        <h2>{plainRichText(greeting.title)}</h2>
-        <RichText value={greeting.body} />
-      </article>
+    <ModalDialog title="Greeting card" onClose={onClose} className="dashboard-greeting-modal">
+      <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={dateLabel} />
       <div className="dashboard-greeting-modal-actions">
+        <button type="button" className="secondaryButton" onClick={downloadGreeting}><Download size={15} /> Download card</button>
         <button type="button" className="primaryButton" onClick={onCopy}><Copy size={15} /> Copy greeting</button>
       </div>
     </ModalDialog>
@@ -411,10 +341,14 @@ export default function DashboardOverview() {
   const events = ready ? storedEvents : EMPTY_EVENTS;
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
+  const [momentView, setMomentView] = useState('upcoming');
+  const [activityView, setActivityView] = useState('upcoming');
 
   useEffect(() => {
     setSelectedEvent(null);
     setGreetingEvent(null);
+    setMomentView('upcoming');
+    setActivityView('upcoming');
   }, [loadKey]);
 
   useEffect(() => {
@@ -424,37 +358,27 @@ export default function DashboardOverview() {
 
   const todayKey = new Date().toDateString();
   const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const onThisDayEvents = useMemo(() => getOnThisDayDashboardEvents(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const dashboardMoments = momentView === 'upcoming' ? upcomingEvents : onThisDayEvents;
+  const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
 
-  const upcomingEmptyMessage = 'No moments in the next 30 days.';
-
-  const focusEvent = upcomingEvents[0] || events[0] || null;
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
   const profileName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || (isGuest ? 'Guest' : 'there');
-  const focusDate = focusEvent ? getNextOccurrenceForStatus(focusEvent) : null;
-  const daysUntilFocus = focusDate ? getDaysRemaining(focusDate) : null;
   const today = new Date();
-  const onThisDayEvents = useMemo(() => events.filter((event) => {
-    const eventDate = getEventDate(event);
-    if (!eventDate || eventDate > today) return false;
-    const recurrence = String(event.recurrence || '').toLowerCase();
-    if (recurrence === 'monthly') return eventDate.getDate() === today.getDate();
-    return eventDate.getMonth() === today.getMonth() && eventDate.getDate() === today.getDate();
-  }).sort((first, second) => getEventDate(first) - getEventDate(second)), [events, today.getDate(), today.getMonth(), today.getFullYear()]);
-  const spotlightEvent = onThisDayEvents[0] || null;
-  const spotlightGreetingEvent = spotlightEvent && !isRecurringEvent(spotlightEvent)
-    ? { ...spotlightEvent, recurrence: 'yearly' }
-    : spotlightEvent;
-  const spotlightDate = spotlightEvent ? getEventDate(spotlightEvent) : null;
-  const spotlightGreeting = spotlightEvent?.greetingCard?.title
-    ? spotlightEvent.greetingCard
-    : spotlightGreetingEvent ? getGreetingMessage(spotlightGreetingEvent, greetingTemplates, momentTypes) : null;
+  const getMomentGreeting = (event) => {
+    const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;
+    return event.greetingCard?.title ? event.greetingCard : getGreetingMessage(greetingSource, greetingTemplates, momentTypes);
+  };
+  const selectedGreeting = greetingEvent?.greeting;
   const activeTodayCount = events.filter((event) => isSameDay(getNextOccurrenceForStatus(event, today), today)).length;
   const dateText = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: '2-digit', month: 'short' }).format(today);
   const copyTodaysGreeting = async () => {
-    if (!spotlightGreeting) return;
+    if (!selectedGreeting) return;
     try {
-      await navigator.clipboard.writeText(`${plainRichText(spotlightGreeting.title)}\n\n${plainRichText(spotlightGreeting.body)}`);
+      await navigator.clipboard.writeText(`${plainRichText(selectedGreeting.title)}\n\n${plainRichText(selectedGreeting.body)}`);
       showToast('Greeting copied', 'success');
     } catch {
       showToast('Unable to copy greeting on this device', 'danger');
@@ -468,53 +392,79 @@ export default function DashboardOverview() {
           <span>{greeting}, {profileName}</span>
           <p>{activeTodayCount} {activeTodayCount === 1 ? 'moment' : 'moments'} today <i>·</i> {dateText}</p>
         </header>
-        <section className="focus-event-card" aria-label="On this day">
-          <div className="focus-event-header"><span className="focus-event-kicker">On this day</span><span className="dashboard-date-chip">{dateText}</span></div>
-          {spotlightEvent ? (
-            <button type="button" className="dashboard-spotlight" onClick={() => setSelectedEvent(spotlightEvent)}>
-              <span className="dashboard-spotlight-date">{formatDisplayDate(spotlightDate)}</span>
-              <strong>{spotlightEvent.name || spotlightEvent.type || 'A life moment'}</strong>
-              <span>{spotlightDate ? `${today.getFullYear() - spotlightDate.getFullYear()} ${today.getFullYear() - spotlightDate.getFullYear() === 1 ? 'year' : 'years'} ago` : 'A moment to remember'}</span>
-            </button>
-          ) : (
-            <div className="focus-event-empty"><h3>{loading ? 'Finding a moment…' : 'A little space for what matters'}</h3><p>{focusEvent ? `Your next moment is ${focusEvent.name || 'coming up'}${daysUntilFocus === 0 ? ' today' : daysUntilFocus !== null ? ` in ${daysUntilFocus} ${daysUntilFocus === 1 ? 'day' : 'days'}` : ''}.` : 'Your on-this-day stories will appear here.'}</p></div>
-          )}
-          {spotlightGreeting && spotlightEvent ? (
-            <button type="button" className="dashboard-greeting-preview" onClick={() => setGreetingEvent(spotlightGreetingEvent)} aria-label={`View today's greeting: ${plainRichText(spotlightGreeting.title)}`}>
-              <span>Greeting preview</span><strong>{plainRichText(spotlightGreeting.title)}</strong><span className="dashboard-greeting-open">View greeting <span aria-hidden="true">→</span></span>
-            </button>
-          ) : null}
-        </section>
-        <section className="dashboard-upcoming-card" aria-label="Upcoming moments">
+        <section className="dashboard-upcoming-card" aria-label="Moments">
           <header style={styles.upcomingHeader}>
-            <span>Upcoming moments</span>
-            <button type="button" className="dashboard-upcoming-all-button" onClick={() => navigate('/events')}>All moments <span aria-hidden="true">→</span></button>
+            <span>Moments</span>
           </header>
+          <div role="group" aria-label="Moment dates" className="dashboard-date-views">
+            <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
+            <button type="button" aria-pressed={momentView === 'on-this-day'} onClick={() => setMomentView('on-this-day')}>On This Day</button>
+          </div>
           {error === 'Unable to load events.' ? (
             <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
           ) : !ready || loading ? (
-            <p className="dashboard-upcoming-empty" role="status">Loading upcoming moments…</p>
-          ) : upcomingEvents.length ? (
-            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container">
+            <p className="dashboard-upcoming-empty" role="status">Loading moments…</p>
+          ) : dashboardMoments.length ? (
+            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container" key={momentView} tabIndex={0} role="region" aria-label={momentView === 'upcoming' ? 'Moments in the next 30 days' : 'Moments on this day in previous years'}>
               <div className="dashboard-upcoming-list" style={styles.upcomingList}>
-                {upcomingEvents.map((event) => {
-                  const date = getNextOccurrenceForStatus(event, today);
+                {dashboardMoments.map((event) => {
+                  const date = momentView === 'on-this-day' ? getEventDate(event) : getNextOccurrenceForStatus(event, today);
                   const days = getDaysRemaining(date);
-                  return <button type="button" className="dashboard-upcoming-row" key={event.id || event.firestoreId} onClick={() => setSelectedEvent(event)}><span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span><span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span><span className="dashboard-upcoming-arrow" aria-hidden="true">›</span></button>;
+                  const yearsAgo = date ? today.getFullYear() - date.getFullYear() : 0;
+                  const momentGreeting = getMomentGreeting(event);
+                  return (
+                    <div className="dashboard-moment-row" key={event.id || event.firestoreId}>
+                      <button type="button" className="dashboard-upcoming-row" onClick={() => setSelectedEvent(event)}>
+                        <span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
+                        <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {momentView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
+                        <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
+                      </button>
+                      {momentGreeting ? <button type="button" className="dashboard-moment-greeting-button" onClick={() => setGreetingEvent({ event, greeting: momentGreeting, dateLabel: formatDisplayDate(momentView === 'on-this-day' ? today : date) })} aria-label={`Greeting for ${event.name || 'this moment'}`} title="View greeting"><Sparkles size={17} aria-hidden="true" /></button> : null}
+                    </div>
+                  );
                 })}
               </div>
             </div>
           ) : (
-            <p className="dashboard-upcoming-empty">{upcomingEmptyMessage}</p>
+            <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p>
           )}
         </section>
-        <button type="button" className="dashboard-insights-cta" onClick={() => navigate('/insights')}>
-          <span><strong>View Insights</strong><small>Explore reports and patterns across your moments</small></span><Sparkles size={19} /><span className="dashboard-insights-arrow">→</span>
-        </button>
+        <section className="dashboard-upcoming-card" aria-label="Activities">
+          <header style={styles.upcomingHeader}>
+            <span>Activities</span>
+          </header>
+          <div role="group" aria-label="Activity dates" className="dashboard-date-views">
+            <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
+            <button type="button" aria-pressed={activityView === 'on-this-day'} onClick={() => setActivityView('on-this-day')}>On This Day</button>
+          </div>
+          {error === 'Unable to load events.' ? (
+            <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
+          ) : !ready || loading ? (
+            <p className="dashboard-upcoming-empty" role="status">Loading activities…</p>
+          ) : dashboardActivities.length ? (
+            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container" key={activityView} tabIndex={0} role="region" aria-label={activityView === 'upcoming' ? 'Activities in the next 30 days' : 'Activities on this day in previous years'}>
+              <div className="dashboard-upcoming-list" style={styles.upcomingList}>
+                {dashboardActivities.map(({ event, activity, date }, index) => {
+                  const yearsAgo = today.getFullYear() - date.getFullYear();
+                  const days = getDaysRemaining(date);
+                  return (
+                    <button type="button" className="dashboard-upcoming-row" key={`${event.id || event.firestoreId}:${activity.id || index}`} onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/activities`)}>
+                      <span className="dashboard-upcoming-date"><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
+                      <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
+                      <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
+          )}
+        </section>
       </div>
 
       {selectedEvent ? <EventSummaryModal event={selectedEvent} onClose={() => setSelectedEvent(null)} /> : null}
-      {greetingEvent && spotlightGreeting ? <GreetingCardModal event={greetingEvent} greeting={spotlightGreeting} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
+      {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
     </>
   );
 }
@@ -582,14 +532,6 @@ const styles = {
     justifyContent: 'space-between',
     gap: '10px',
     flexWrap: 'wrap',
-  },
-  upcomingHeaderActions: {
-    display: 'flex',
-    alignItems: 'center',
-    marginLeft: 'auto',
-    gap: '8px',
-    flexWrap: 'wrap',
-    justifyContent: 'flex-end',
   },
   upcomingListContainer: {
     maxHeight: '220px',
@@ -700,26 +642,6 @@ const styles = {
   emptyState: {
     margin: 0,
     color: 'var(--ink-soft)',
-    lineHeight: 1.6,
-  },
-  greetingCard: {
-    padding: '18px 16px',
-    borderRadius: '18px',
-    background: 'linear-gradient(135deg, #f9f2d6 0%, #fffaf0 50%, #f0f7f6 100%)',
-    border: '1px solid rgba(173, 140, 70, 0.18)',
-    boxShadow: '0 16px 28px rgba(110, 96, 44, 0.08)',
-    color: '#463d1a',
-  },
-  greetingTitle: {
-    margin: '0 0 8px',
-    fontSize: '1rem',
-    fontWeight: 800,
-    color: '#1f6f5d',
-    lineHeight: 1.4,
-  },
-  greetingBody: {
-    margin: 0,
-    color: '#463d1a',
     lineHeight: 1.6,
   },
   downloadButton: {

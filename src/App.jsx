@@ -21,6 +21,7 @@ import useAppStore from './store/useAppStore';
 const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const Events = lazy(() => import('./pages/Events'));
+const Activities = lazy(() => import('./pages/Activities'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
@@ -153,7 +154,7 @@ export default function App() {
             <Route index element={loadScreen(<DashboardHome />, 'dashboard')} />
             <Route path="dashboard" element={loadScreen(<DashboardHome />, 'dashboard')} />
             <Route path="events" element={loadScreen(<Events />, 'moments')} />
-            <Route path="activities" element={<Navigate to="/events" replace />} />
+            <Route path="activities" element={loadScreen(<Activities />, 'activities')} />
             <Route path="insights" element={loadScreen(<Insights />, 'insights')} />
 
             {/* Each event has its own workspace and sub-pages for overview, activities, timeline, etc. */}

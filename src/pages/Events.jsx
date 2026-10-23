@@ -571,7 +571,6 @@ export default function Events() {
           <span className="life-timeline-eyebrow">A fresh page</span>
           <h3>{events.length ? 'No moments found' : 'Your story starts with one moment'}</h3>
           <p>{events.length ? 'Try another search or category.' : 'Save the dates and people that make life feel like yours. Add the first moment whenever you are ready.'}</p>
-          {!events.length ? <button type="button" className="primaryButton event-empty-state-cta" onClick={openNewEvent}><Plus size={16} aria-hidden="true" /> Create your first moment</button> : null}
         </div>
       )}
 

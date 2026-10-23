@@ -1,5 +1,5 @@
 import { getCodeListMeta } from './codeLists.js';
-import { getNextOccurrenceDate, getStartOfDay } from './momentDates.js';
+import { getEventDate, getNextOccurrenceDate, getStartOfDay } from './momentDates.js';
 
 export const DEFAULT_MOMENT_TYPE_CONFIG = Object.freeze({
   value: '',
@@ -58,6 +58,16 @@ export const getUpcomingDashboardEvents = (events = [], referenceDate = new Date
     .map((event) => ({ event, date: getNextOccurrenceDate(event, today) }))
     .filter(({ date }) => date && date >= today && date <= lastDay)
     .sort((first, second) => first.date - second.date)
+    .map(({ event }) => event);
+};
+
+export const getOnThisDayDashboardEvents = (events = [], referenceDate = new Date(), customValues = []) => {
+  const today = getStartOfDay(referenceDate);
+  return getDashboardVisibleEvents(events, customValues)
+    .map((event) => ({ event, date: getEventDate(event) }))
+    .filter(({ date }) => date && date.getFullYear() < today.getFullYear()
+      && date.getMonth() === today.getMonth() && date.getDate() === today.getDate())
+    .sort((first, second) => second.date - first.date)
     .map(({ event }) => event);
 };
 

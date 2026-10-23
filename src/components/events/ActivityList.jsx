@@ -9,9 +9,10 @@
 import { useState } from 'react';
 
 // Import icons used for actions like complete, edit, delete, money, and add.
-import { Check, ChevronDown, Circle, IndianRupee, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Check, ChevronDown, Circle, IndianRupee, Link2, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import RichText from '../common/RichText';
+import { parseMomentDate } from '../../utils/momentDates';
 
 // Main component. It receives the event name, the list of activities, money connected to each activity,
 // and callback functions that tell the parent screen what action the user wants to do.
@@ -22,13 +23,15 @@ export default function ActivityList({
   showCancelled = false,
   hasActiveFilters = false,
   expensesByActivity = {},
+  getActivityKey = (activity) => activity.id,
+  getEventName,
+  renderAttachments,
   onDelete,
   onEdit,
   onAddExpense,
   onLinkExpense,
   onToggleComplete,
   onToggleCancelled,
-  onAddActivity,
 }) {
   // This state keeps track of which activity's expense list is open.
   // Example: { "activity-123": true } means the user opened the expense panel for one task.
@@ -36,6 +39,7 @@ export default function ActivityList({
 
   // If there are no tasks in this event, show a friendly empty state instead of an empty list.
   if (!allActivities.length) {
+    if (hasActiveFilters) return <div className="event-activity-filter-empty">No activities match these filters.</div>;
     return (
       // Empty-state box for a clean, encouraging message.
       <div className="event-activity-empty">
@@ -48,8 +52,6 @@ export default function ActivityList({
         {/* Explain the purpose of activities in simple language. */}
         <p>Activities help you track things to do for {eventName}. Keep the plans right here, alongside the moment they belong to.</p>
 
-        {/* If the parent screen passed an add button action, show it. */}
-        {onAddActivity ? <button type="button" className="primaryButton event-empty-state-cta" onClick={onAddActivity}><Plus size={15} /> Add the first activity</button> : null}
       </div>
     );
   }
@@ -82,23 +84,25 @@ export default function ActivityList({
       <div className="event-activity-list">
         {!visibleActivities.length && (hasActiveFilters || showCancelled || activeActivities.length === 0) ? <div className="event-activity-filter-empty">{showCancelled ? 'No cancelled activities.' : activeActivities.length === 0 ? 'All activities are cancelled.' : 'No activities match these filters.'}</div> : visibleActivities.map((activity) => {
           // Get the expenses that belong to this single activity.
-          const activityExpenses = expensesByActivity[activity.id] || [];
+          const activityKey = getActivityKey(activity);
+          const activityEventName = getEventName ? getEventName(activity) : eventName;
+          const activityExpenses = expensesByActivity[activityKey] || [];
 
           // Add up all linked amounts for this activity.
           const totalSpent = activityExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
           // Convert the string date into a real Date object so we can compare it with today.
-          const activityDate = new Date(`${String(activity.date || '').slice(0, 10)}T00:00:00`);
+          const activityDate = parseMomentDate(activity.date);
 
           // Decide if the task is overdue.
           // A task is overdue only if it is not done, has a valid date, and that date is before today.
-          const overdue = !activity.completed && !activity.cancelled && activity.status !== 'cancelled' && !Number.isNaN(activityDate.getTime()) && activityDate < new Date(new Date().setHours(0, 0, 0, 0));
+          const overdue = !activity.completed && !activity.cancelled && activity.status !== 'cancelled' && activityDate && activityDate < new Date(new Date().setHours(0, 0, 0, 0));
 
           // Build a readable due date label, such as "Due Mon, 12 Sep" or "Past due · 12 Sep".
-          const dueText = !activity.date ? 'Date to be decided' : overdue ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(activityDate)}` : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(activityDate)}`;
+          const dueText = !activityDate ? 'Date to be decided' : overdue ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(activityDate)}` : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(activityDate)}`;
 
           // Check whether the expense panel for this activity is currently open.
-          const expensesOpen = Boolean(expandedExpenses[activity.id]);
+          const expensesOpen = Boolean(expandedExpenses[activityKey]);
           const isCancelled = activity.cancelled || activity.status === 'cancelled';
 
           // See whether this activity has any linked expenses at all.
@@ -110,25 +114,26 @@ export default function ActivityList({
             : '';
 
           return (
-            <SwipeActionCard key={activity.id} as="article"
+            <SwipeActionCard key={activityKey} as="article"
               className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
               label={activity.title || 'Untitled activity'} openOnTap
               otherActions={[
                 ...(onAddExpense ? [{ label: 'Transaction', icon: IndianRupee, onClick: () => onAddExpense(activity) }] : []),
+                ...(onLinkExpense ? [{ label: 'Link expense', icon: Link2, onClick: () => onLinkExpense(activity) }] : []),
                 ...(onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
                 ...(onToggleCancelled ? [{
                   label: isCancelled ? 'Restore' : 'Cancel',
                   icon: isCancelled ? RotateCcw : XCircle,
-                  onClick: () => onToggleCancelled(activity.id),
+                  onClick: () => onToggleCancelled(activity.id, activity),
                 }] : []),
               ]}
-              onDelete={onDelete ? () => onDelete(activity.id) : undefined}>
+              onDelete={onDelete ? () => onDelete(activity.id, activity) : undefined}>
               <div className="event-activity-main">
                 {onToggleComplete && !isCancelled ? (
                   <button
                     type="button"
                     className={`event-activity-complete${activity.completed ? ' is-complete' : ''}`}
-                    onClick={(event) => { event.stopPropagation(); onToggleComplete(activity.id); }}
+                    onClick={(event) => { event.stopPropagation(); onToggleComplete(activity.id, activity); }}
                     aria-label={activity.completed ? `Mark ${activity.title} in progress` : `Complete ${activity.title}`}
                     aria-pressed={Boolean(activity.completed)}
                   >
@@ -148,15 +153,16 @@ export default function ActivityList({
                 </div>
 
                 {/* Show the event name and due date together for context. */}
-                <div className="event-activity-context"><span>{eventName}</span><i>·</i><span>{dueText}</span></div>
+                <div className="event-activity-context"><span>{activityEventName}</span><i>·</i><span>{dueText}</span></div>
 
                 {/* If a task has a description, show it below the title. */}
                 {activity.description ? <RichText value={activity.description} /> : null}
+                {renderAttachments?.(activity)}
 
                 {/* If linked expenses exist, show a section with a toggle to expand and collapse them. */}
                 {hasExpenses ? (
                   <div className="event-activity-expense-disclosure">
-                    <button type="button" className="event-activity-expense-toggle" onClick={() => setExpandedExpenses((current) => ({ ...current, [activity.id]: !current[activity.id] }))} aria-expanded={expensesOpen}>
+                    <button type="button" className="event-activity-expense-toggle" onClick={() => setExpandedExpenses((current) => ({ ...current, [activityKey]: !current[activityKey] }))} aria-expanded={expensesOpen}>
                       <IndianRupee size={13} /><span>{expenseLabel}</span><ChevronDown size={14} />
                     </button>
 

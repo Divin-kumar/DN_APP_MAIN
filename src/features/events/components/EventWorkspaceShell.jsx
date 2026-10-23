@@ -2,15 +2,18 @@
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Sparkles, Trash2, Upload, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Sparkles, Trash2, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
+import AttachmentGallery from '../../../components/common/AttachmentGallery';
+import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
+import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/attachmentService';
+import { getActiveSampleData } from '../../../dev/sampleData';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
 import DateField from '../../../components/common/DateField';
 import TransactionForm from '../../../components/financials/TransactionForm';
 import RichTextEditor from '../../../components/common/RichTextEditor';
 import RichText from '../../../components/common/RichText';
-import { plainRichText, renderRichTextHtml } from '../../../utils/richText';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
@@ -24,6 +27,7 @@ import usePersistentListState from '../../../hooks/usePersistentListState';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
+import { recordId } from '../../../utils/recordIdentity';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -62,6 +66,9 @@ export default function EventWorkspaceShell() {
   const location = useLocation();
   const navigate = useNavigate();
   const workspaceNavRef = useRef(null);
+  const attachmentInputRef = useRef(null);
+  const attachmentContextRef = useRef(null);
+  const memoryContextRef = useRef(null);
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -92,6 +99,11 @@ export default function EventWorkspaceShell() {
   const [memoryExpanded, setMemoryExpanded] = useState(false);
   const [pendingDeleteMemory, setPendingDeleteMemory] = useState(null);
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
+  const [attachmentDraft, setAttachmentDraft] = useState(null);
+  const [attachmentActivityId, setAttachmentActivityId] = useState('');
+  const [attachmentBusy, setAttachmentBusy] = useState(false);
+  const [attachmentError, setAttachmentError] = useState('');
+  const attachmentSavingRef = useRef(false);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
   const [eventEditOpen, setEventEditOpen] = useState(false);
@@ -107,6 +119,43 @@ export default function EventWorkspaceShell() {
   const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
   const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
   const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
+  const workspaceScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
+  const workspaceMountedRef = useRef(false);
+  const workspaceIdentityRef = useRef('');
+  workspaceIdentityRef.current = `${workspaceScope}:${eventId}`;
+
+  const resolveCreateMoment = (context) => {
+    const session = useAppStore.getState();
+    const currentScope = `${session.isGuest ? 'guest' : 'user'}:${session.user?.uid || 'anonymous'}`;
+    const current = useEventStore.getState();
+    if (!workspaceMountedRef.current || workspaceIdentityRef.current !== `${workspaceScope}:${eventId}`
+      || !context || context.eventId !== eventId || context.scope !== workspaceScope
+      || (!session.user && !session.isGuest) || currentScope !== workspaceScope
+      || current.loadedFor !== workspaceScope || current.activeLoadKey !== workspaceScope) return null;
+    return current.events.find((moment) => (recordId(moment.id) || recordId(moment.firestoreId)) === eventId) || null;
+  };
+
+  useEffect(() => {
+    workspaceMountedRef.current = true;
+    const receiveCreate = (request) => {
+      const context = request.detail;
+      if (!['memory', 'attachment'].includes(context?.kind) || !resolveCreateMoment(context)) return;
+      if (context.kind === 'memory') {
+        memoryContextRef.current = { eventId, scope: workspaceScope };
+        setMemoryDialogOpen(true);
+      } else {
+        attachmentContextRef.current = { eventId, scope: workspaceScope };
+        attachmentInputRef.current?.click();
+      }
+    };
+    window.addEventListener('dn:moment-create', receiveCreate);
+    return () => {
+      workspaceMountedRef.current = false;
+      window.removeEventListener('dn:moment-create', receiveCreate);
+      attachmentContextRef.current = null;
+      memoryContextRef.current = null;
+    };
+  }, [eventId, workspaceScope]);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -266,8 +315,7 @@ export default function EventWorkspaceShell() {
   };
 
   const downloadGreetingCard = () => {
-    const escapeHtml = (value) => String(value || '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,minimum-scale=1,viewport-fit=cover,user-scalable=no"><title>${escapeHtml(plainRichText(greetingTitleDraft))}</title><style>*{box-sizing:border-box}body{margin:0;min-height:100vh;display:grid;place-items:center;padding:24px;background:#0b1020;color:#edf3ff;font-family:Inter,system-ui,sans-serif}.card{width:min(640px,100%);padding:clamp(28px,7vw,56px);border:1px solid #35445f;border-radius:28px;background:radial-gradient(circle at 100% 0,#253966,#162033 55%);box-shadow:0 28px 80px #0006}.eyebrow{color:#80aaff;font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase}.event{margin-top:22px;color:#a7b3c8;font-size:14px}.title{margin:20px 0 12px;font-size:clamp(30px,7vw,48px);line-height:1.1;letter-spacing:-.04em}.body{color:#c1ccdf;font-size:18px;line-height:1.65;white-space:pre-wrap}</style></head><body><article class="card"><span class="eyebrow">A greeting for today</span><div class="event">${escapeHtml(event.name || event.type)} · ${escapeHtml(formatDate(event.date))}</div><h1 class="title">${escapeHtml(plainRichText(greetingTitleDraft))}</h1><div class="body">${renderRichTextHtml(greetingBodyDraft)}</div></article></body></html>`;
+    const html = buildGreetingCardHtml({ title: greetingTitleDraft, body: greetingBodyDraft, momentName: event.name, momentType: event.type, dateLabel: formatDate(event.date) });
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
   };
 
@@ -413,9 +461,14 @@ export default function EventWorkspaceShell() {
   const saveMemory = async (submitEvent) => {
     submitEvent.preventDefault();
     if (!memoryTitle.trim()) return;
+    const currentMoment = resolveCreateMoment(memoryContextRef.current);
+    if (!currentMoment) {
+      showToast('This Moment is no longer available in the active session. Please reopen it.', 'danger');
+      return;
+    }
     await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      memories: [...(event.memories || []), {
+      ...currentMoment,
+      memories: [...(currentMoment.memories || []), {
         id: crypto.randomUUID(),
         title: memoryTitle.trim(),
         body: memoryBody,
@@ -432,20 +485,41 @@ export default function EventWorkspaceShell() {
     setPendingDeleteMemory(null);
   };
 
-  const addAttachment = async (changeEvent) => {
-    const file = changeEvent.target.files?.[0];
-    if (!file) return;
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      attachments: [...(event.attachments || []), {
-        id: crypto.randomUUID(),
-        name: file.name,
-        type: file.type || 'File',
-        size: file.size,
-        createdAt: new Date().toISOString(),
-      }],
-    });
-    changeEvent.target.value = '';
+  const addAttachment = (changeEvent) => {
+    const input = changeEvent.target;
+    const file = input.files?.[0];
+    const context = attachmentContextRef.current;
+    const currentMoment = resolveCreateMoment(context);
+    attachmentContextRef.current = null;
+    input.value = '';
+    if (!file || !currentMoment) return;
+    if (!file.size || file.size > MAX_ATTACHMENT_BYTES) { showToast('Choose a file between 1 byte and 10 MB.', 'danger'); return; }
+    setAttachmentError('');
+    setAttachmentActivityId('');
+    setAttachmentDraft({ file, context });
+  };
+  const saveAttachment = async (submitEvent) => {
+    submitEvent.preventDefault();
+    if (!attachmentDraft || attachmentSavingRef.current) return;
+    const { file, context } = attachmentDraft;
+    attachmentSavingRef.current = true;
+    setAttachmentBusy(true); setAttachmentError('');
+    try {
+      if (!resolveCreateMoment(context)) throw new Error('This Moment is no longer available in the active session. Please reopen it.');
+      const reference = await attachmentRepository.save(file, { uid: user?.uid, isGuest, sample: Boolean(getActiveSampleData(user?.uid)), assertCurrent: () => {
+        if (!resolveCreateMoment(context)) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
+      } });
+      const currentMoment = resolveCreateMoment(context);
+      if (!currentMoment) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
+      if (attachmentActivityId && !currentMoment.activities?.some((activity) => recordId(activity.id) === attachmentActivityId)) throw new Error('The chosen activity is no longer available.');
+      await updateEventItem(user?.uid, isGuest, { ...currentMoment, attachments: [...(currentMoment.attachments || []), {
+        id: crypto.randomUUID(), name: file.name, type: file.type || 'application/octet-stream', size: file.size,
+        createdAt: new Date().toISOString(), ...reference, ...(attachmentActivityId ? { activityId: attachmentActivityId } : {}),
+      }] });
+      setAttachmentDraft(null);
+      showToast('Original file saved', 'success');
+    } catch (reason) { setAttachmentError(reason?.message || 'Unable to save the original file. Please try again.'); }
+    finally { attachmentSavingRef.current = false; setAttachmentBusy(false); }
   };
 
   const removeAttachment = async (attachmentId) => {
@@ -487,7 +561,7 @@ export default function EventWorkspaceShell() {
             <div className="event-featured-memory-art"><BookHeart size={21} /><span>Memory keepsake</span></div>
             <div className="event-featured-memory-copy">
               <span className="event-overview-eyebrow"><Heart size={13} /> A piece of this moment</span>
-              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><RichText className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`} value={latestMemory.body || 'A moment worth remembering, kept safe with this event.'} /><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} /> Add your first memory</button></>}
+              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><RichText className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`} value={latestMemory.body || 'A moment worth remembering, kept safe with this event.'} /><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p></>}
             </div>
           </section>
 
@@ -572,13 +646,13 @@ export default function EventWorkspaceShell() {
             showCancelled={activityFilter === 'cancelled'}
             hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
             expensesByActivity={expensesByActivity}
+            renderAttachments={(activity) => <AttachmentGallery compact uid={user?.uid} isGuest={isGuest} attachments={attachments.filter((attachment) => recordId(attachment.activityId) === recordId(activity.id))} />}
             onToggleComplete={toggleActivity}
             onToggleCancelled={toggleActivityCancellation}
             onAddExpense={openActivityTransaction}
             onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
             onEdit={editActivity}
             onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
-            onAddActivity={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityError(''); setActivityDialogOpen(true); }}
           />
         </div>
       );
@@ -587,9 +661,7 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Attachments') {
       return (
         <div className="workspace-resource-list">
-          {event.attachments?.length ? event.attachments.map((attachment) => (
-            <div className="workspace-resource-row workspace-attachment-card" key={attachment.id}><span className="workspace-attachment-icon">{attachment.type?.startsWith('image/') ? <Images size={19} /> : <FileText size={19} />}</span><div><strong title={attachment.name}>{attachment.name}</strong><span className="workspace-attachment-meta"><i>{String(attachment.type || 'FILE').split('/').pop().toUpperCase()}</i>{Math.max(1, Math.ceil(Number(attachment.size || 0) / 1024))} KB · {formatDate(attachment.createdAt)}</span></div><button type="button" onClick={() => setPendingDeleteAttachment(attachment)} style={styles.iconButtonDanger} aria-label={`Remove ${attachment.name}`}><Trash2 size={15} /></button></div>
-          )) : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Documents, photos, and keepsakes will stay attached to this event.</p></div>}
+          {event.attachments?.length ? <AttachmentGallery uid={user?.uid} isGuest={isGuest} attachments={attachments} onRemove={setPendingDeleteAttachment} /> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Use + to attach original photos and files to this Moment or one of its activities.</p></div>}
         </div>
       );
     }
@@ -624,7 +696,6 @@ export default function EventWorkspaceShell() {
             <Sparkles size={13} aria-hidden="true" /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}
           </span>
           <div className="event-moment-top-actions">
-            <button type="button" className="event-moment-memory-action" onClick={() => setMemoryDialogOpen(true)} aria-label="Add memory"><BookHeart size={17} strokeWidth={1.9} /><span>Memory</span></button>
             <button type="button" className="event-moment-copy-action" onClick={openGreetingCard} aria-label="Preview and edit greeting card"><Sparkles size={17} strokeWidth={1.9} /><span>Greeting</span></button>
 
           </div>
@@ -657,13 +728,11 @@ export default function EventWorkspaceShell() {
         ))}
       </nav>
 
+      <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
-        <div className={`event-section-heading${activeSection.label === 'Activities' && activities.length ? ' has-section-action has-activity-action' : ['Memories', 'Attachments'].includes(activeSection.label) ? ' has-section-action' : ''}`}>
+        <div className="event-section-heading">
           <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
           <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
-          {activeSection.label === 'Activities' && activities.length ? <button type="button" className="workspace-add-activity" onClick={() => { setEditingActivityId(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setActivityDialogOpen(true); }}><Plus size={15} aria-hidden="true" /> Add activity</button> : null}
-          {activeSection.label === 'Memories' ? <button type="button" className="workspace-section-action workspace-add-memory" onClick={() => setMemoryDialogOpen(true)}><Plus size={15} aria-hidden="true" /> Add memory</button> : null}
-          {activeSection.label === 'Attachments' ? <label className="workspace-section-action workspace-upload-control workspace-add-attachment" role="button" tabIndex={0} onKeyDown={(keyEvent) => { if (keyEvent.key === 'Enter' || keyEvent.key === ' ') { keyEvent.preventDefault(); keyEvent.currentTarget.querySelector('input')?.click(); } }}><Upload size={15} aria-hidden="true" /> Add attachment<input type="file" aria-label="Add attachment" onChange={addAttachment} /></label> : null}
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
@@ -671,11 +740,7 @@ export default function EventWorkspaceShell() {
 
       {greetingDialogOpen ? (
         <ModalDialog title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
-          <div className="event-greeting-card-preview">
-            <span><Sparkles size={14} /> A greeting for {event.name || 'this moment'}</span>
-            <strong>{plainRichText(greetingTitleDraft) || 'Your greeting title'}</strong>
-            <RichText value={greetingBodyDraft || 'Your greeting message will appear here.'} className="free-text-content" />
-          </div>
+          <GreetingCard title={greetingTitleDraft} body={greetingBodyDraft} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} />
           <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
             <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
             <RichTextEditor label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
@@ -688,6 +753,18 @@ export default function EventWorkspaceShell() {
         </ModalDialog>
       ) : null}
 
+      {attachmentDraft ? <ModalDialog title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
+        <form className="form-surface" onSubmit={saveAttachment} style={{ display: 'grid', gap: '12px' }}>
+          <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
+          {attachmentError ? <p className="quick-create-error" role="alert">{attachmentError}</p> : null}
+          <label htmlFor="attachment-activity">Keep with</label>
+          <DropdownSelect id="attachment-activity" value={attachmentActivityId} disabled={attachmentBusy} onChange={(changeEvent) => setAttachmentActivityId(changeEvent.target.value)}>
+            <option value="">This Moment</option>
+            {activities.map((activity) => <option key={activity.id} value={recordId(activity.id)}>{activity.title || 'Untitled activity'}</option>)}
+          </DropdownSelect>
+          <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
+        </form>
+      </ModalDialog> : null}
       {activityDialogOpen ? (
         <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); }}>
           <form onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>

@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **22 October 2026 · Version 1.0.23**
+Current position: **23 October 2026 · Version 1.0.24 prepared for release**. The Activities, navigation, compact controls, writing, greeting and original-file updates described below are awaiting production publication and verification.
 
 ## 1. What DN helps you do
 
@@ -19,26 +19,29 @@ For example, a family celebration can contain Activities for booking a venue and
 
 | Area | Available today | How it helps you |
 |---|---|---|
-| Dashboard | Today's Moments, an On This Day highlight, upcoming Moments for the next 30 days, a downloadable summary and access to Insights. | See important dates at a glance. |
+| Dashboard | Separate Moments and Activities cards, each using small text controls for Upcoming and On This Day. Upcoming covers the next 30 days; On This Day brings back actual happenings from the same date in previous years. Each card scrolls within a limited space. Open a Moment summary or greeting directly; use the main navigation to reach all Moments or Activities. | See relevant dates and activities without repeated buttons or a longer Dashboard. |
 | Moments | Create and edit Moments, choose their type and date, add notes, and set monthly or yearly repetition. Search, filter, sort or archive them. | Keep different occasions and personal stories organized. |
-| Moment workspace | Overview, Activities, Timeline, Memories and Attachments within each Moment. | Keep the planning, story and related records together. |
-| Activities | Add a title, date, detailed notes and priority. Complete, reopen, cancel or restore an Activity. | Break a Moment into manageable steps and follow progress. |
+| Moment workspace | Overview, Activities, Timeline, Memories and Attachments within each Moment. Use + to add a memory or original file; keep a file with the Moment or a chosen Activity. | Keep the planning, story and related records together. |
+| Activities | See activities across your Moments, filter to one Moment, search, sort and choose whether archived Moments are included. Add a title, date, notes and priority; complete, reopen, cancel, restore or delete with confirmation. Open the parent Moment directly. | Find and manage steps across different plans without opening each Moment first. |
 | Linked expenses | Add a transaction directly from an Activity without leaving its page. The Moment, Activity and date are already selected. | Record a cost while its purpose is clear. |
-| Financials | Add, edit and delete income and expenses; optionally link them to a Moment or Activity. View Income, Expense and Balance, and search or filter transaction history. | Understand money coming in and going out. |
+| Financials | Add, edit and delete income and expenses; optionally link them to a Moment or Activity. View Income, Expense and Balance, and search or filter transaction history. Smaller rows keep the current layout; expand Details for notes and related records. | Understand money coming in and going out with less scrolling. |
 | Insights | Review summaries, spending categories, six-month charts and milestone lists. Download a report. | Review patterns over time. |
-| Notes and memories | On larger computer screens, type and format directly as in a word processor, with headings, lists, bold, italic, undo/redo and a word count. Switch between Edit and Preview. On phones, the existing editor keeps extra formatting under More. | Keep detailed information readable without crowding the form. |
-| Greetings | Choose which Moment types support greetings, edit their wording and download a greeting card. | Personalize messages for important occasions. |
+| Notes and memories | Write with visible formatting on phones and computers. No permanent row of formatting buttons or separate Preview is needed. Select text for small Bold, Italic, List and More controls; keyboard shortcuts support formatting and undo. | Write naturally and see the result immediately. |
+| Greetings | Choose which Moment types support greetings, edit their wording and see a readable framed card. Copy a Dashboard greeting or download a card with the same appearance as its preview. | Personalize messages for important occasions. |
+| Photos and files | Keep an original file up to 10 MB, optionally linked to an Activity. See photo previews in that Activity and the Moment's Attachments section; open a larger view or download the original. Reusing the same file avoids storing repeated original copies within your account or Guest space. | See the relevant photo where you need it and retain the original quality. |
 | Code Lists | Manage Moment types, expense categories, income types, priorities and reminder preferences. Choose which Moment types appear on the Dashboard. | Adapt DN to your own way of organizing life. |
-| Everyday controls | Light and dark appearance, search beside Filters, remembered search/filter/sort choices, and the bottom + button for quick additions. | Find records and add information with fewer repeated steps. |
-| Backup and app updates | Download a backup, review a restore before proceeding, and use About → Refresh app for an available update. | Keep a separate copy of supported records and access the current app. |
+| Everyday controls | Home, Moments and Activities in the main navigation; Transactions, Insights and Settings under Profile. Compact filters expand in one small row within the page; swipe sideways for more choices. Use the universal + to add items. Completed activities keep their checkmark and status without crossing out the title. | Find records and add information without repeated buttons or a filter screen covering the list. |
+| Backup and app updates | Download a backup containing supported records, settings and stored original files, within the 50 MB backup limit. Review a restore before proceeding, and use About → Refresh app for an available update. | Keep a separate recovery copy and access the current app. |
 
 ## 3. Rules that affect what you see
 
 - **Upcoming Moments:** covers today through the next 30 days. Archived or cancelled Moments are excluded. A Moment type with Show on Dashboard turned off is also excluded.
+- **On This Day:** shows the original recorded date from a previous year, newest first. A repeating birthday due today can also appear in Upcoming. Upcoming Activities shows pending work; completed activities can still appear as memories in On This Day.
 - **Moment progress:** all remaining Activities must be complete, with at least one completed Activity, for the Moment to become Completed. No Activities does not mean Completed. Cancelled Activities do not count towards progress.
 - **Monthly money totals:** Income, Expense and Balance follow the selected month. Search and income/expense filters narrow the list but do not change those monthly totals. Balance means income minus expenses; it is not a bank balance.
 - **Transaction order:** newest first. Every transaction needs a title, category, date and amount greater than zero.
-- **Saved filters:** choices stay in that browser until you reset them. They are separate for each account or Guest, and Activity choices are separate for each Moment. They do not automatically follow you to another device.
+- **Saved filters:** choices stay in that browser until you reset them. They are separate for each account or Guest. The overall Activities list and each Moment remember their own choices. They do not automatically follow you to another device.
+- **The same activities:** the overall Activities list and a Moment's Activities section show the same records. Editing either view updates the activity in both places. Each activity still belongs to one Moment.
 - **Archiving:** keeps a Moment and its related records. Deleting a Moment or Activity does not automatically delete separately recorded transactions.
 - **Repeating dates:** help show future occurrences. They do not automatically create new expenses or send reminders.
 
@@ -49,11 +52,12 @@ For example, a family celebration can contain Activities for booking a venue and
 | Moving between devices | Signed-in records belong to your account, but changes are not guaranteed to appear immediately on another device. Editing the same Moment on two devices can cause one change to replace another. |
 | Working without a connection | DN may open previously visited content, but dependable offline reading, saving and later transfer of every record are not guaranteed. |
 | Reminders | Preferences and dates written in notes do not send a notification. An Activity currently has one date, without a separate reminder date and time. |
-| Attachments | DN records file details such as name, type and size. It does not keep the original selected file for later recovery. Keep your own original copies. |
-| Guest use | Guest records stay in the current browser. They are not the same as signed-in account records. Keep a backup before changing browsers or devices. |
-| Backup and restore | Backups include supported records, settings and attachment details, but not the original attached files. Keep backups private. A restore keeps existing records and adds missing information; an interrupted restore may finish only part of the work. |
+| Attachments | Original-file saving, previews, download and backup are implemented locally for review. Signed-in files must reach account storage before being attached; there is no offline upload queue. Live account upload, access and recovery still need verification. Older file-detail records cannot recreate a missing original: attach that file again. |
+| Guest use | Guest records and original files stay in the current browser until backed up or successfully transferred at sign-in. Sign-in uploads stored originals before transferring their records; a failed upload keeps the Guest copies. Keep a backup before changing browsers or devices. |
+| Backup and restore | Stored original files are included once and checked before recovery. The complete backup must fit within 50 MB; an oversized or incomplete backup is not downloaded. Older backups may contain file details only. A restore preserves existing records and adds missing information; an interruption may leave part completed. Keep backups private. |
+| Removing files | Removing an attachment removes its link. Unused originals are retained; automatic file cleanup is not available. Clear Local Data removes local records and choices but does not remove stored original file objects or account files. |
 | Financial detail | Recorded expenses do not have a separate paid/unpaid balance. Currency preferences do not convert amounts between currencies. |
-| Phone experience | The compact toolbar keeps its layout. Keyboard-related positioning and long-note scrolling have been improved and checked at phone-sized widths, but the actual iPhone keyboard and installed-app experience still need hands-on confirmation. |
+| Phone experience | Phone-sized browser checks covered writing with visible formatting, keyboard bold/undo, compact controls and original photo previews after reopening the app. Actual phone keyboards, touch text selection, gestures and the installed-app experience still need hands-on confirmation. |
 
 ## 5. Future improvement checklist
 
@@ -70,9 +74,9 @@ For example, a family celebration can contain Activities for booking a venue and
 
 ### Priority 2 — Make daily use easier
 
-- [ ] **Improve an existing feature — Finish phone testing.** Check iPhone keyboard use, long notes, formatting, dropdowns, scrolling, Save/Cancel and both appearances. Success means important controls remain reachable while typing.
+- [ ] **Improve an existing feature — Finish phone testing.** Check iPhone and Android keyboards, selecting text for styles, long notes, gestures, dropdowns, scrolling, Save/Cancel and both appearances. Success means important controls remain reachable while typing.
 - [ ] **Add a new feature — Separate reminders from Activity dates.** Keep the date something happened while choosing a different reminder date, time or yearly reminder. Agree how reminders should arrive and how missed reminders should be handled.
-- [ ] **Improve an existing feature — Keep original attachments.** Decide which photos and documents DN should retain, how much space is allowed, and how they can be viewed, downloaded and recovered.
+- [ ] **Improve an existing feature — Verify account photo recovery.** Original-file saving and backup are implemented. Confirm upload, preview, download and restore in a real signed-in account, and agree how unused files should be cleaned up before offering automatic deletion.
 - [ ] **Improve an existing feature — Clearer shared terminology.** Use consistent Moment, Activity, Memory and Transaction wording throughout the app so each action is easy to understand.
 - [ ] **Improve an existing feature — Easier reading and control.** Check text size, contrast, touch controls and use with assistance features, including on smaller phones.
 

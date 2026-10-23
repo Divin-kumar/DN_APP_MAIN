@@ -2980,7 +2980,7 @@ html[data-theme="dark"] {
 @media (max-width:760px) {
   .dn-main { background:linear-gradient(180deg,#fbfcf9 0%,#f5f8f3 100%) !important; }
   .dn-content { padding-bottom:18px !important; }
-  .mobile-tabbar { position:fixed !important; right:10px !important; bottom:9px !important; left:10px !important; z-index:90 !important; display:grid !important; grid-template-columns:repeat(5,minmax(0,1fr)) !important; align-items:center; gap:2px !important; padding:6px !important; border:1px solid rgba(60,83,63,.1) !important; border-radius:21px !important; background:rgba(251,252,248,.83) !important; box-shadow:0 12px 34px rgba(38,58,41,.11),inset 0 1px 0 rgba(255,255,255,.95) !important; backdrop-filter:blur(26px) saturate(1.35) !important; -webkit-backdrop-filter:blur(26px) saturate(1.35) !important; }
+  .mobile-tabbar { position:fixed !important; right:10px !important; bottom:9px !important; left:10px !important; z-index:90 !important; display:grid !important; grid-template-columns:repeat(4,minmax(0,1fr)) !important; align-items:center; gap:2px !important; padding:6px !important; border:1px solid rgba(60,83,63,.1) !important; border-radius:21px !important; background:rgba(251,252,248,.83) !important; box-shadow:0 12px 34px rgba(38,58,41,.11),inset 0 1px 0 rgba(255,255,255,.95) !important; backdrop-filter:blur(26px) saturate(1.35) !important; -webkit-backdrop-filter:blur(26px) saturate(1.35) !important; }
   .mobile-tab { min-height:47px !important; border-radius:14px !important; font-size:.54rem !important; }
   .mobile-tab-active { background:rgba(228,239,226,.85) !important; }
   .mobile-dock-create { position:relative; display:grid; place-items:center; min-width:0; }
@@ -4139,7 +4139,7 @@ button:active,
   }
 
   .mobile-tabbar {
-    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
     left: 8px !important;
     right: 8px !important;
     gap: 1px !important;
@@ -4509,8 +4509,7 @@ button:active,
 
 .is-complete .progress-activity-copy strong {
   color: #8b968e;
-  text-decoration: line-through;
-  text-decoration-color: rgba(92, 119, 98, 0.42);
+  text-decoration: none;
 }
 
 .activity-priority-indicator {
@@ -5474,8 +5473,7 @@ button:active,
 
 .event-activity-card.is-complete .event-activity-title-row > strong {
   color: #8c968d;
-  text-decoration: line-through;
-  text-decoration-color: rgba(92, 119, 98, 0.42);
+  text-decoration: none;
 }
 
 .event-activity-status,

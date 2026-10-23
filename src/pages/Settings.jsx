@@ -16,7 +16,8 @@ import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData,
 import useAppStore from '../store/useAppStore';
 import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
-import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, createBackupDocument, mergeEventGroupsForRestore, mergeRecordsById, parseBackupDocument } from '../services/backupService';
+import { BACKUP_SIZE_LIMIT_MESSAGE, MAX_BACKUP_BYTES, buildEventGroupsFromBackup, collectBackupReferenceWarnings, createBackupDocument, mergeEventGroupsForRestore, mergeRecordsById, parseBackupDocument } from '../services/backupService';
+import { exportAttachmentFiles, restoreAttachmentFiles } from '../services/attachmentService';
 
 const normalizeList = (value) =>
   value
@@ -146,6 +147,7 @@ export default function Settings() {
   const [backupMessage, setBackupMessage] = useState('');
   const [pendingBackup, setPendingBackup] = useState(null);
   const [importingBackup, setImportingBackup] = useState(false);
+  const [exportingBackup, setExportingBackup] = useState(false);
   const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
@@ -234,6 +236,17 @@ export default function Settings() {
   };
 
   const exportBackup = async () => {
+    if (exportingBackup || importingBackup) return;
+    setExportingBackup(true);
+    const sourceUid = user?.uid || null;
+    const sourceGuest = isGuest;
+    const sourceScenario = getActiveSampleScenario();
+    const assertSourceScope = () => {
+      const state = useAppStore.getState();
+      if ((state.user?.uid || null) !== sourceUid || state.isGuest !== sourceGuest || getActiveSampleScenario() !== sourceScenario) {
+        throw new Error('Your session changed. Open Data & Backup in the current session and try again.');
+      }
+    };
     try {
       setBackupMessage('Preparing an application data backup…');
 
@@ -264,6 +277,10 @@ export default function Settings() {
         incomes = getGuestIncomes();
         dataSource = 'local-browser';
       }
+      assertSourceScope();
+      setBackupMessage('Collecting original attachment files…');
+      const attachmentFiles = await exportAttachmentFiles(events, { uid: sourceUid, isGuest: isGuest || !sourceUid, sample: Boolean(sampleData), assertCurrent: assertSourceScope });
+      assertSourceScope();
 
       const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
       const readIdList = (key) => {
@@ -276,6 +293,7 @@ export default function Settings() {
       };
       const snapshot = createBackupDocument({
         moments: events,
+        attachmentFiles,
         expenses,
         incomes,
         codeLists: adminValues,
@@ -298,13 +316,17 @@ export default function Settings() {
       });
 
       const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
+      if (blob.size > MAX_BACKUP_BYTES) throw new Error(`${BACKUP_SIZE_LIMIT_MESSAGE} This complete backup exceeds that limit; no partial backup was downloaded.`);
       downloadBlob(blob, `dn-backup-${snapshot.createdDate.slice(0, 10)}.json`);
-      setBackupMessage('Backup downloaded. Attachment records contain metadata only; original file bytes are not stored by this app.');
+      const metadataOnlyCount = snapshot.attachments.filter((attachment) => !attachment.assetId).length;
+      setBackupMessage(`Backup downloaded with ${attachmentFiles.length} original attachment ${attachmentFiles.length === 1 ? 'file' : 'files'}.${metadataOnlyCount ? ` ${metadataOnlyCount} older attachment ${metadataOnlyCount === 1 ? 'record has' : 'records have'} no stored original; reattach the original files to include them.` : ''}`);
       showToast('Backup exported', 'success');
     } catch (error) {
       console.error('Failed to export application backup:', error);
-      setBackupMessage('Backup could not be created. Check your connection and try again.');
+      setBackupMessage(`Backup could not be created: ${error.message || 'check your connection and try again'}.`);
       showToast('Backup export failed', 'danger');
+    } finally {
+      setExportingBackup(false);
     }
   };
 
@@ -313,8 +335,8 @@ export default function Settings() {
     if (!file) return;
 
     try {
-      if (file.size > 50 * 1024 * 1024) {
-        throw new Error('Backup files must be 50 MB or smaller.');
+      if (file.size > MAX_BACKUP_BYTES) {
+        throw new Error(BACKUP_SIZE_LIMIT_MESSAGE);
       }
       const parsed = JSON.parse(await file.text());
       const backup = parseBackupDocument(parsed);
@@ -337,9 +359,18 @@ export default function Settings() {
   };
 
   const restorePendingBackup = async () => {
-    if (!pendingBackup || importingBackup) return;
+    if (!pendingBackup || importingBackup || exportingBackup) return;
     setImportingBackup(true);
     const { backup } = pendingBackup;
+    const destinationUid = user?.uid || null;
+    const destinationGuest = isGuest;
+    const destinationScenario = getActiveSampleScenario();
+    const assertDestinationScope = () => {
+      const state = useAppStore.getState();
+      if ((state.user?.uid || null) !== destinationUid || state.isGuest !== destinationGuest || getActiveSampleScenario() !== destinationScenario) {
+        throw new Error('Your session changed. Open Data & Backup in the intended session before retrying.');
+      }
+    };
 
     try {
       const sampleData = getActiveSampleData(user?.uid || null);
@@ -347,7 +378,10 @@ export default function Settings() {
         throw new Error('Clear the isolated development sample scenario before restoring a backup.');
       }
 
-      const importedGroups = buildEventGroupsFromBackup(backup);
+      assertDestinationScope();
+      setBackupMessage('Verifying and restoring original attachment files before records…');
+      const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup), backup.attachmentFiles || [], { uid: destinationUid, isGuest: isGuest || !destinationUid, assertCurrent: assertDestinationScope });
+      assertDestinationScope();
       const imported = { moments: 0, activities: 0, memories: 0, attachments: 0, expenses: 0, incomes: 0, conflicts: 0 };
       let restoredGroups;
       let resultingExpenses;
@@ -389,12 +423,14 @@ export default function Settings() {
           getExpensesForUser(user.uid),
           getIncomesForUser(user.uid),
         ]);
+        assertDestinationScope();
         const merged = mergeEventGroupsForRestore(existingGroups, importedGroups, existingExpenses);
         restoredGroups = merged.eventGroups;
         Object.assign(imported, merged.counts);
 
         const existingById = new Map(existingGroups.map((moment) => [moment.id, moment]));
         for (const moment of restoredGroups) {
+          assertDestinationScope();
           const previous = existingById.get(moment.id);
           if (!previous) {
             const legacyDestination = existingGroups.length > 0 && existingGroups.every((item) => item.firestoreCollection === 'events');
@@ -413,11 +449,15 @@ export default function Settings() {
         ));
         imported.conflicts += backup.expenses.length - standaloneBackupExpenses.length
           - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
-        for (const expense of standaloneBackupExpenses) await createExpense(user.uid, expense);
+        for (const expense of standaloneBackupExpenses) {
+          assertDestinationScope();
+          await createExpense(user.uid, expense);
+        }
         imported.expenses = standaloneBackupExpenses.length;
 
         const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
         for (const income of backup.incomes) {
+          assertDestinationScope();
           if (existingIncomes.some((current) => current.id === income.id)) continue;
           await createIncome(user.uid, income);
         }
@@ -426,7 +466,9 @@ export default function Settings() {
       }
 
       // Configuration is restored only after record writes succeed. Existing record values win on ID conflicts.
+      assertDestinationScope();
       if (backup.settings.restoreCodeLists !== false) await setAdminValues(backup.codeLists);
+      assertDestinationScope();
       if (Object.keys(backup.preferences).length) {
         restorePreferences(backup.preferences);
         setTheme(backup.preferences.theme || 'dark');
@@ -446,7 +488,7 @@ export default function Settings() {
       const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, and Code Lists were restored where present.`;
 
       setPendingBackup(null);
-      setBackupMessage(`${importSummary} Reloading app. Original attachment files are not included because the application stores attachment metadata only.`);
+      setBackupMessage(`${importSummary} ${(backup.attachmentFiles || []).length} original attachment files verified and restored. Reloading app.`);
       showToast('Backup restore finished', 'success');
       window.location.reload();
     } catch (error) {
@@ -460,7 +502,7 @@ export default function Settings() {
 
   const clearLocalData = () => {
     clearDnLocalData();
-    setBackupMessage('Local app data cleared. Reloading...');
+    setBackupMessage('Local records and preferences cleared. Stored originals and account data are retained. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
   };
@@ -707,15 +749,15 @@ export default function Settings() {
       <div className="settings-admin-grid">
         <div className="settings-input-block">
           <span>Local backup</span>
-          <p className="settings-helper">Export app settings and records to JSON. Restore merges missing records into the active guest or signed-in account; matching record IDs are skipped and existing records are never overwritten.</p>
+          <p className="settings-helper">Export app settings, records and available original attachments to one JSON file, up to 50 MB. Restore adds missing records to the active guest or signed-in account and preserves existing records with matching IDs.</p>
         </div>
       </div>
 
       <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={exportBackup}><Download size={15} /> Export backup</button>
+        <button type="button" className="settings-primary-button" onClick={exportBackup} disabled={exportingBackup || importingBackup}><Download size={15} /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}</button>
         <label className="settings-secondary-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
           <Upload size={15} /> Restore backup
-          <input type="file" accept="application/json" onChange={importBackup} style={{ display: 'none' }} />
+          <input type="file" accept="application/json" onChange={importBackup} disabled={exportingBackup || importingBackup} style={{ display: 'none' }} />
         </label>
         <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)}><Trash2 size={15} /> Clear local data</button>
       </div>
@@ -817,13 +859,13 @@ export default function Settings() {
                   <li>{pendingBackup.backup.moments.length} Moments</li>
                   <li>{pendingBackup.backup.activities.length} Activities</li>
                   <li>{pendingBackup.backup.memories.length} Memories</li>
-                  <li>{pendingBackup.backup.attachments.length} attachment metadata records (no file bytes)</li>
+                  <li>{pendingBackup.backup.attachments.length} attachment records · {(pendingBackup.backup.attachmentFiles || []).length} original files</li>
                   <li>{pendingBackup.backup.expenses.length} Expenses</li>
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
                   <li>Code Lists, preferences, and dashboard configuration</li>
                 </ul>
                 <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration from the backup replaces the destination configuration. An interrupted restore can be retried; completed records are recognized by ID.</p>
-                <p><strong>Attachment limitation:</strong> original files are not in this backup because the app currently stores attachment metadata only.</p>
+                <p>Original files in this backup are integrity-checked and stored before record writes. Older attachment records without a stored original remain metadata only.</p>
                 {pendingBackup.referenceWarnings.length ? (
                   <div role="alert"><strong>Relationship warnings</strong><ul>{pendingBackup.referenceWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>
                 ) : null}
@@ -834,7 +876,7 @@ export default function Settings() {
           </div>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
-            <button type="button" className="settings-primary-button" onClick={restorePendingBackup} disabled={importingBackup}>
+            <button type="button" className="settings-primary-button" onClick={restorePendingBackup} disabled={importingBackup || exportingBackup}>
               {importingBackup ? 'Restoring backup…' : 'Confirm restore'}
             </button>
           </div>
@@ -843,7 +885,7 @@ export default function Settings() {
 
       {confirmClearData ? (
         <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
-          <p className="settings-helper">This removes guest data, preferences, and local backups from this browser. This action cannot be undone.</p>
+          <p className="settings-helper">This removes guest records, preferences, and local record backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
             <button type="button" className="settings-primary-button" onClick={clearLocalData}>Clear local data</button>
