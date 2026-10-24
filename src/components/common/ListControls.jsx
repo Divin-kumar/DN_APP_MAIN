@@ -5,14 +5,15 @@ import './ListControls.css';
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
   title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
-  summary = '', onReset, hasSort = false, hasPanel = true, search, children,
+  summary = '', onReset, hasSort = false, hasPanel = true, search, sort, children,
 }) {
   const [open, setOpen] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
   const panelId = useId();
+  const panelRef = useRef(null);
   const railRef = useRef(null);
   const triggerRef = useRef(null);
-  const label = hasSort ? 'Filters and sort' : 'Filters';
+  const label = hasSort || sort ? 'Filters and sort' : 'Filters';
   const updateEdges = () => {
     const rail = railRef.current;
     if (!rail) return;
@@ -33,11 +34,26 @@ export default function ListControls({
       setOpen(false);
       triggerRef.current?.focus({ preventScroll: true });
     };
+    const closeOnOutsideClick = (event) => {
+      const panel = panelRef.current;
+      if (panel?.contains(event.target) || triggerRef.current?.contains(event.target)) return;
+      // DropdownSelect renders its options/search in a document-body portal.
+      // Follow the listbox's ARIA owner instead of treating every portal as ours.
+      const portal = event.target?.closest?.('.dropdown-menu-portal');
+      const owners = portal?.querySelector('[role="listbox"]')?.getAttribute('aria-labelledby')?.split(/\s+/) || [];
+      if (owners.some((id) => panel?.contains(document.getElementById(id)))) return;
+      // Wait until click: collapsing on pointerdown can move the intended target
+      // before pointerup. The click path is already resolved, so its action stays
+      // intact without consuming the event or moving focus.
+      setOpen(false);
+    };
     document.addEventListener('keydown', closeOnEscape);
+    document.addEventListener('click', closeOnOutsideClick, true);
     return () => {
       observer?.disconnect();
       window.removeEventListener('resize', updateEdges);
       document.removeEventListener('keydown', closeOnEscape);
+      document.removeEventListener('click', closeOnOutsideClick, true);
     };
   }, [open]);
   const moveRail = (direction) => {
@@ -58,15 +74,17 @@ export default function ListControls({
         </button> : activeCount && onReset ? <button type="button" className="dn-list-controls-trigger"
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
       </div>
-      {hasPanel && open ? <section id={panelId} className="dn-list-controls-panel" aria-label={title}>
-        <div ref={railRef} className="dn-list-controls-body" onScroll={updateEdges}>{children}
-          {onReset ? <button type="button" className="dn-list-controls-reset" onClick={onReset}
-            disabled={!activeCount}>Reset</button> : null}
-        </div>
-        {edges.previous || edges.next ? <div className="dn-list-controls-scroll" role="group" aria-label="More filter controls">
+      {hasPanel && open ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
+        <div className="dn-list-controls-filters-row">
+          <div ref={railRef} className="dn-list-controls-body" onScroll={updateEdges}>{children}</div>
+          {edges.previous || edges.next ? <div className="dn-list-controls-scroll" role="group" aria-label="More filter controls">
             <button type="button" aria-label="Previous filter controls" disabled={!edges.previous} onClick={() => moveRail(-1)}><ChevronLeft size={16} aria-hidden="true" /></button>
             <button type="button" aria-label="More filter controls" disabled={!edges.next} onClick={() => moveRail(1)}><ChevronRight size={16} aria-hidden="true" /></button>
           </div> : null}
+        </div>
+        {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}
+        {onReset ? <div className="dn-list-controls-reset-row"><button type="button" className="dn-list-controls-reset" onClick={onReset}
+          disabled={!activeCount}>Reset</button></div> : null}
       </section> : null}
       <div className="dn-list-controls-topline">
         {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}

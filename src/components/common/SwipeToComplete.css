@@ -1,0 +1,8 @@
+.dn-swipe-complete { position: relative; isolation: isolate; overflow: hidden; touch-action: pan-y; border-radius: 9px; }
+.dn-swipe-complete-feedback { position: absolute; inset: 0; display: flex; align-items: center; gap: 5px; padding: 0 12px; color: var(--color-text-muted); background: color-mix(in srgb, var(--color-primary) 8%, var(--color-surface)); font-size: 10px; opacity: 0; }
+.dn-swipe-complete.is-dragging .dn-swipe-complete-feedback { opacity: 1; }
+.dn-swipe-complete.is-ready .dn-swipe-complete-feedback { color: var(--color-text); background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface)); }
+.dn-swipe-complete-content { position: relative; z-index: 1; background: var(--color-card); transition: transform .16s ease; touch-action: pan-y; }
+.dn-swipe-complete-content > .dashboard-upcoming-row { width: 100%; }
+.dn-swipe-complete.is-dragging .dn-swipe-complete-content { transition: none; }
+@media (prefers-reduced-motion: reduce) { .dn-swipe-complete-content { transition: none; } }

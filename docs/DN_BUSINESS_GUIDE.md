@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **23 October 2026 · Version 1.0.24 published** at [DN](https://dn-10.web.app). The dashboard, Activities, compact controls, writing and greeting updates are live. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
+Current position: **24 October 2026 · Version 1.0.25 is being prepared** for [DN](https://dn-10.web.app). The Dashboard Upcoming Activity editor and swipe completion, and smaller inline filter controls, are being validated before publication. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 
@@ -19,7 +19,7 @@ For example, a family celebration can contain Activities for booking a venue and
 
 | Area | Available today | How it helps you |
 |---|---|---|
-| Dashboard | Separate Moments and Activities cards, each using small text controls for Upcoming and On This Day. Upcoming covers the next 30 days; On This Day brings back actual happenings from the same date in previous years. Each card scrolls within a limited space. Open a Moment summary or greeting directly; use the main navigation to reach all Moments or Activities. | See relevant dates and activities without repeated buttons or a longer Dashboard. |
+| Dashboard | Separate Moments and Activities cards, each using small text controls for Upcoming and On This Day. Upcoming covers the next 30 days; On This Day brings back actual happenings from the same date in previous years. Tap an Upcoming Activity to edit its notes and details in place, or swipe it sideways to complete it. Each card scrolls within a limited space. Open a Moment summary or greeting directly; use the main navigation to reach all Moments or Activities. | See relevant dates and activities without repeated buttons or a longer Dashboard. |
 | Moments | Create and edit Moments, choose their type and date, add notes, and set monthly or yearly repetition. Search, filter, sort or archive them. | Keep different occasions and personal stories organized. |
 | Moment workspace | Overview, Activities, Timeline, Memories and Attachments within each Moment. Use + to add a memory or original file; keep a file with the Moment or a chosen Activity. | Keep the planning, story and related records together. |
 | Activities | See activities across your Moments, filter to one Moment, search, sort and choose whether archived Moments are included. Add a title, date, notes and priority; complete, reopen, cancel, restore or delete with confirmation. Open the parent Moment directly. | Find and manage steps across different plans without opening each Moment first. |
@@ -30,7 +30,7 @@ For example, a family celebration can contain Activities for booking a venue and
 | Greetings | Choose which Moment types support greetings, edit their wording and see a readable framed card. Copy a Dashboard greeting or download a card with the same appearance as its preview. | Personalize messages for important occasions. |
 | Photos and files | Keep an original file up to 10 MB, optionally linked to an Activity. See photo previews in that Activity and the Moment's Attachments section; open a larger view or download the original. Reusing the same file avoids storing repeated original copies within your account or Guest space. | See the relevant photo where you need it and retain the original quality. |
 | Code Lists | Manage Moment types, expense categories, income types, priorities and reminder preferences. Choose which Moment types appear on the Dashboard. | Adapt DN to your own way of organizing life. |
-| Everyday controls | Home, Moments and Activities in the main navigation; Transactions, Insights and Settings under Profile. Compact filters expand in one small row within the page; swipe sideways for more choices. Use the universal + to add items. Completed activities keep their checkmark and status without crossing out the title. | Find records and add information without repeated buttons or a filter screen covering the list. |
+| Everyday controls | Home, Moments and Activities in the main navigation; Transactions, Insights and Settings under Profile. Compact filters expand within the page; swipe sideways for more choices. Filter choices occupy the first row, sort is on the second row, and a tiny light Reset option sits below. Clicking elsewhere closes the filter panel. Use the universal + to add items. Completed activities keep their checkmark and status without crossing out the title. | Find records and add information without repeated buttons or a filter screen covering the list. |
 | Backup and app updates | Download a backup containing supported records, settings and stored original files, within the 50 MB backup limit. Review a restore before proceeding, and use About → Refresh app for an available update. | Keep a separate recovery copy and access the current app. |
 
 ## 3. Rules that affect what you see

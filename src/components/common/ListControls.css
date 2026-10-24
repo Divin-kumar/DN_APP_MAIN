@@ -64,9 +64,18 @@ html[data-theme] .dn-list-controls-context {
 }
 html[data-theme] .dn-list-controls-summary { overflow: hidden; color: var(--color-text-muted); font-size: 12px; line-height: 1.45; text-overflow: ellipsis; white-space: nowrap; }
 html[data-theme] .dn-list-controls-panel {
-  display: flex; align-items: center; gap: 2px;
+  display: grid; align-items: start; gap: 0;
   min-width: 0; padding-top: 2px;
 }
+html[data-theme] .dn-list-controls-filters-row { display: flex; align-items: center; gap: 2px; min-width: 0; }
+html[data-theme] .dn-list-controls-sort-row {
+  min-width: 0; padding: 2px 1px;
+  overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+html[data-theme] .dn-list-controls-sort-row::-webkit-scrollbar { display: none; }
+html[data-theme] .dn-list-controls-sort-row > .dn-list-controls-field { width: max-content; max-width: none; }
+html[data-theme] .dn-list-controls-reset-row { display: flex; align-items: center; min-width: 0; }
 html[data-theme] .dn-list-controls-body {
   display: flex;
   align-items: center;
@@ -151,6 +160,11 @@ html[data-theme] .dn-list-controls-scroll button:hover {
   background: var(--action-fill);
   color: var(--action-ink);
 }
+html[data-theme] .dn-list-controls-reset {
+  min-height: 32px; padding: 0 3px; border: 0; border-radius: 0;
+  background: transparent; box-shadow: none;
+}
+html[data-theme] .dn-list-controls-reset:hover { background: transparent; }
 html[data-theme] .dn-list-controls-reset:disabled,
 html[data-theme] .dn-list-controls-scroll button:disabled { opacity: .4; cursor: default; }
 html[data-theme] .dn-list-controls-scroll { display: flex; flex: 0 0 auto; gap: 0; }

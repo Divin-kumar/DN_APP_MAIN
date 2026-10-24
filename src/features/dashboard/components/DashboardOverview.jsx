@@ -1,6 +1,6 @@
 // This component is the main dashboard summary screen.
 // It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, Download, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
@@ -8,11 +8,15 @@ import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
-import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
+import { formatMomentDate, getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent, parseMomentDate } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
 import RichText from '../../../components/common/RichText';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
+import SwipeToComplete from '../../../components/common/SwipeToComplete';
+import DashboardActivityEditor from './DashboardActivityEditor';
+import { recordId } from '../../../utils/recordIdentity';
+import { getActiveSampleScenario } from '../../../dev/sampleData';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -335,6 +339,7 @@ export default function DashboardOverview() {
   const showToast = useAppStore((state) => state.showToast);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
+  const priorities = useAppStore((state) => state.adminValues.activityPriorities || EMPTY_MOMENT_TYPES);
   const { events: storedEvents, loading, error, loadedFor, activeLoadKey, loadEvents } = useEventStore();
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = loadedFor === loadKey && activeLoadKey === loadKey;
@@ -343,12 +348,27 @@ export default function DashboardOverview() {
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
+  const [activityDraft, setActivityDraft] = useState(null);
+  const [activityError, setActivityError] = useState('');
+  const [busyActivityParents, setBusyActivityParents] = useState(() => new Set());
+  const pendingActivityWrites = useRef(new Map());
+  const activityEditorToken = useRef(0);
+  const activityDraftRef = useRef(activityDraft);
+  activityDraftRef.current = activityDraft;
+  const mounted = useRef(false);
+  const dashboardScope = useRef(loadKey);
+  dashboardScope.current = loadKey;
+
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; activityDraftRef.current = null; }; }, []);
 
   useEffect(() => {
     setSelectedEvent(null);
     setGreetingEvent(null);
     setMomentView('upcoming');
     setActivityView('upcoming');
+    setActivityDraft(null);
+    activityDraftRef.current = null;
+    setActivityError('');
   }, [loadKey]);
 
   useEffect(() => {
@@ -363,6 +383,106 @@ export default function DashboardOverview() {
   const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
   const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
   const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
+
+  const activityTarget = (event, activity) => ({
+    scope: loadKey, uid: user?.uid || null, isGuest: Boolean(isGuest), sample: getActiveSampleScenario(user?.uid),
+    momentId: recordId(event.id) || recordId(event.firestoreId), activityId: recordId(activity.id),
+  });
+  const activityParentKey = (target) => JSON.stringify([target.scope, target.sample, target.momentId]);
+  const isCurrentActivityScope = (target) => {
+    const session = useAppStore.getState();
+    const current = useEventStore.getState();
+    return mounted.current && dashboardScope.current === target.scope
+      && (Boolean(session.isGuest) || Boolean(session.user?.uid))
+      && (session.user?.uid || null) === target.uid && Boolean(session.isGuest) === target.isGuest
+      && `${session.isGuest ? 'guest' : 'user'}:${session.user?.uid || 'anonymous'}` === target.scope
+      && getActiveSampleScenario(session.user?.uid) === target.sample
+      && current.loadedFor === target.scope && current.activeLoadKey === target.scope && !current.loading;
+  };
+  const resolveDashboardActivity = (target) => {
+    if (!isCurrentActivityScope(target)) throw new Error('Your session changed or Moments are still loading. Reopen this activity and try again.');
+    const current = useEventStore.getState();
+    const moment = current.events.find((item) => (recordId(item.id) || recordId(item.firestoreId)) === target.momentId);
+    const activity = target.activityId && moment?.activities?.find((item) => recordId(item.id) === target.activityId);
+    if (!moment || !activity) throw new Error('This Moment or activity is no longer available.');
+    return { current, moment, activity };
+  };
+  const openDashboardActivity = (event, activity) => {
+    const target = activityTarget(event, activity);
+    if (pendingActivityWrites.current.has(activityParentKey(target))) return;
+    try {
+      const latest = resolveDashboardActivity(target);
+      const draft = { ...target, token: ++activityEditorToken.current, momentName: latest.moment.name,
+        title: latest.activity.title || latest.activity.name || '', date: formatMomentDate(parseMomentDate(latest.activity.date)),
+        priority: latest.activity.priority || 'medium', description: latest.activity.description || '' };
+      activityDraftRef.current = draft;
+      setActivityDraft(draft);
+      setActivityError('');
+    } catch (reason) {
+      if (isCurrentActivityScope(target)) setActivityError(reason.message);
+    }
+  };
+  const changeDashboardActivity = (patch) => {
+    setActivityDraft((draft) => {
+      if (!draft || pendingActivityWrites.current.has(activityParentKey(draft))) return draft;
+      const next = { ...draft, ...patch };
+      activityDraftRef.current = next;
+      return next;
+    });
+  };
+  const closeDashboardActivity = () => {
+    if (activityDraftRef.current && pendingActivityWrites.current.has(activityParentKey(activityDraftRef.current))) return;
+    activityDraftRef.current = null;
+    setActivityDraft(null);
+    setActivityError('');
+  };
+  const writeDashboardActivity = async (target, patch, completion = false) => {
+    const parentKey = activityParentKey(target);
+    if (pendingActivityWrites.current.has(parentKey)) return false;
+    const operationKey = JSON.stringify([target.scope, target.sample, target.momentId, target.activityId]);
+    try {
+      const { current, moment, activity } = resolveDashboardActivity(target);
+      if (completion && (activity.completed || String(activity.status || '').toLowerCase() === 'completed')) return false;
+      if (completion && (moment.archived || ['archived', 'cancelled'].includes(String(moment.status || '').toLowerCase())
+        || activity.cancelled || ['cancelled', 'canceled'].includes(String(activity.status || '').toLowerCase()))) {
+        throw new Error('This activity is no longer available to complete.');
+      }
+      pendingActivityWrites.current.set(parentKey, operationKey);
+      setBusyActivityParents(new Set(pendingActivityWrites.current.keys()));
+      setActivityError('');
+      await current.updateEventItem(target.uid, target.isGuest, { ...moment,
+        activities: moment.activities.map((item) => recordId(item.id) === target.activityId ? { ...item, ...patch } : item),
+      });
+      if (isCurrentActivityScope(target)) {
+        if (!completion && activityDraftRef.current?.token === target.token) {
+          activityDraftRef.current = null;
+          setActivityDraft(null);
+        }
+        showToast(completion ? 'Activity completed' : 'Activity updated', 'success');
+      }
+      return true;
+    } catch (reason) {
+      if (isCurrentActivityScope(target)) {
+        setActivityError(reason?.message || 'Could not save this activity. Please try again.');
+        if (completion) showToast('Could not complete this activity. Please try again.', 'danger');
+      }
+      throw reason;
+    } finally {
+      if (pendingActivityWrites.current.get(parentKey) === operationKey) pendingActivityWrites.current.delete(parentKey);
+      // The lock belongs to this mounted Dashboard, not to a visible session.
+      // Reconcile it even after a scope change so returning to an account does
+      // not retain a disabled row after that account's request has settled.
+      if (mounted.current) setBusyActivityParents(new Set(pendingActivityWrites.current.keys()));
+    }
+  };
+  const saveDashboardActivity = (submitEvent) => {
+    submitEvent.preventDefault();
+    const draft = activityDraftRef.current;
+    if (!draft || pendingActivityWrites.current.has(activityParentKey(draft))) return;
+    if (!draft.title.trim() || !parseMomentDate(draft.date)) { setActivityError('Enter an activity title and a valid date.'); return; }
+    return writeDashboardActivity(draft, { title: draft.title.trim(), date: draft.date, description: draft.description, priority: draft.priority }).catch(() => {});
+  };
+  const completeDashboardActivity = (target) => writeDashboardActivity(target, { completed: true, completedAt: new Date().toISOString() }, true);
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
@@ -447,24 +567,37 @@ export default function DashboardOverview() {
                 {dashboardActivities.map(({ event, activity, date }, index) => {
                   const yearsAgo = today.getFullYear() - date.getFullYear();
                   const days = getDaysRemaining(date);
-                  return (
-                    <button type="button" className="dashboard-upcoming-row" key={`${event.id || event.firestoreId}:${activity.id || index}`} onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/activities`)}>
+                  const target = activityTarget(event, activity);
+                  const busy = busyActivityParents.has(activityParentKey(target));
+                  const row = (
+                    <button type="button" className="dashboard-upcoming-row" disabled={activityView === 'upcoming' && busy}
+                      aria-label={activityView === 'upcoming' ? `Edit ${activity.title || activity.name || 'activity'}` : undefined}
+                      onClick={() => activityView === 'upcoming' ? openDashboardActivity(event, activity) : navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/activities`)}>
                       <span className="dashboard-upcoming-date"><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
                       <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
                       <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
                     </button>
                   );
+                  const key = JSON.stringify([target.momentId, target.activityId || index]);
+                  return activityView === 'upcoming'
+                    ? <SwipeToComplete key={key} label={activity.title || activity.name || 'activity'} disabled={busy}
+                      onComplete={() => completeDashboardActivity(target)}>{row}</SwipeToComplete>
+                    : <div key={key}>{row}</div>;
                 })}
               </div>
             </div>
           ) : (
             <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
           )}
+          {activityError && !activityDraft ? <p className="dashboard-activity-action-error" role="alert">{activityError}</p> : null}
         </section>
       </div>
 
       {selectedEvent ? <EventSummaryModal event={selectedEvent} onClose={() => setSelectedEvent(null)} /> : null}
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
+      {activityDraft && isCurrentActivityScope(activityDraft) ? <DashboardActivityEditor draft={activityDraft} priorities={priorities}
+        busy={busyActivityParents.has(activityParentKey(activityDraft))} error={activityError}
+        onChange={changeDashboardActivity} onSubmit={saveDashboardActivity} onClose={closeDashboardActivity} /> : null}
     </>
   );
 }

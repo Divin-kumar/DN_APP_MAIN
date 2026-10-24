@@ -197,6 +197,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
           summary={summary} onReset={resetFilters}
+          sort={<div className="dn-list-controls-field"><span>Sort by</span>
+            <SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
+              onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />
+          </div>}
           search={<input type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
           <div className="dn-list-controls-field"><label htmlFor="activities-moment-filter">Moment</label>
             <DropdownSelect id="activities-moment-filter" value={filters.momentId} onChange={(event) => changeFilters({ momentId: event.target.value, parentScope: 'all' })}>
@@ -214,10 +218,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             <DropdownSelect id="activities-status-filter" value={filters.filter} onChange={(event) => changeFilters({ filter: event.target.value })}>
               {FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><span>Sort by</span>
-            <SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
-              onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />
           </div>
         </ListControls>
       </div>

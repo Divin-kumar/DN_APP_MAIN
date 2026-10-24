@@ -1,0 +1,7 @@
+html[data-theme] .dashboard-activity-editor { gap: 10px; }
+html[data-theme] .dashboard-activity-context { margin: 0 0 3px; color: var(--color-text-muted); font-size: 12px; line-height: 1.4; overflow-wrap: anywhere; }
+html[data-theme] .dashboard-activity-editor > label { color: var(--color-text-muted); font-size: 12px; }
+html[data-theme] .dashboard-activity-editor .form-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+html[data-theme] .dashboard-activity-editor .form-actions button { min-height: 44px; }
+html[data-theme] .dashboard-upcoming-row[disabled] { opacity: .65; cursor: wait; }
+html[data-theme] .dashboard-activity-action-error { margin: 0; color: var(--color-danger); font-size: 12px; line-height: 1.5; }

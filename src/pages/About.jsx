@@ -36,10 +36,10 @@ const publishedDate = Number.isNaN(deployedAt.getTime())
 const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 
 const guideItems = [
-  { title: 'Home', description: 'Moments and Activities each have one card with small Upcoming and On This Day text controls. See the next 30 days or revisit this date in previous years. Longer lists scroll inside the card; the main navigation opens the full modules. Choose which Moment types appear using Show on Dashboard in Code Lists.' },
-  { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Swipe a Moment for Edit, Summary, Archive or Delete.' },
+  { title: 'Home', description: 'Moments and Activities each have one card with small Upcoming and On This Day text controls. Upcoming Activity rows open their own editor without leaving Home; swipe sideways to complete one. See the next 30 days or revisit this date in previous years. Choose which Moment types appear using Show on Dashboard in Code Lists.' },
+  { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Filter choices stay open while you use them and close when you click elsewhere; Sort is on the second line and a tiny Reset option is below it. Swipe a Moment for Edit, Summary, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Overview, Activities, Timeline, Memories and Attachments using the section row. Use the universal + to add items; Memory and Attachment are available there while a Moment is open.' },
-  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page; swipe sideways for more controls. Completed titles stay readable without being crossed out. Complete, cancel or edit tasks and add linked transactions in place. Each activity still belongs to its original Moment.' },
+  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page; swipe sideways for more controls. Filter choices close when you click elsewhere; Sort is on the second line and a tiny Reset option is below it. Completed titles stay readable without being crossed out. Complete, cancel or edit tasks and add linked transactions in place. Each activity still belongs to its original Moment.' },
   { title: 'Memories and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Memories stay within their Moment; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Activities and Attachments. Identical originals share one stored file. Account saves require a successful cloud upload; Guest files stay in this browser. Older file details cannot recover an original that was never stored.' },
   { title: 'Transactions', description: 'Open Transactions under Profile to add income and expenses, optionally linked to a Moment or Activity. Search beside Filters; choose type or month inside. History is newest first, and Income, Expense and Balance totals follow the selected month.' },
@@ -48,12 +48,9 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Activities now has its own page across Moments, with existing cards, filters, editing and linked transactions. Main navigation is Home, Moments and Activities; money records and settings are under Profile.',
-  'Filters fit in a compact sideways-scrolling row. Smaller transaction records keep notes and linked details under Details.',
-  'Notes use visible formatting on phones and computers, with styles appearing only when you select text. Keyboard formatting and undo remain available.',
-  'Mobile dialogs now preserve their visible area during keyboard changes. Long notes scroll within the field while the keyboard is open.',
-  'Moments and Activities each combine Upcoming and On This Day. Greeting cards now share their preview and download design.',
-  'Original attachments can preview inside Activities and are included once in complete backups. Older metadata-only entries need their original file reattached.',
+  'Tap an Upcoming Activity on Home to edit its notes and details in place. Swipe it sideways to complete it.',
+  'Filters now close when you click elsewhere. Sort appears on the second line and Reset is a tiny, light option below.',
+  'Completed activity titles remain readable without strikethrough. Existing activity editing and Moment links stay in place.',
 ];
 
 const dataInfo = [

@@ -517,6 +517,10 @@ export default function Events() {
           resultCount={visibleEvents.length} resultLabel="moments"
           summary={[category, `${eventSort === 'name' ? 'Name' : eventSort === 'status' ? 'Status' : 'Date'} ${eventSortDirection === 'asc' ? '↑' : '↓'}`, search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
           onReset={resetMomentFilters}
+          sort={<div className="dn-list-controls-field">
+            <span>Sort by</span>
+            <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
+          </div>}
           search={<input id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <div className="dn-list-controls-field">
             <label htmlFor="moment-filter-category">Category</label>
@@ -524,10 +528,6 @@ export default function Events() {
               {!categories.includes(category) ? <option value={category}>{category}</option> : null}
               {categories.map((item) => <option key={item} value={item}>{item}</option>)}
             </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field">
-            <span>Sort by</span>
-            <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
           </div>
         </ListControls>
       </div>

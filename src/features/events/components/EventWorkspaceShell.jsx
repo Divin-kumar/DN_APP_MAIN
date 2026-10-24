@@ -616,6 +616,10 @@ export default function EventWorkspaceShell() {
             ].filter(Boolean).join(' · ')}
             hasSort
             onReset={resetActivityList}
+            sort={<div className="dn-list-controls-field">
+              <span>Sort by</span>
+              <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
+            </div>}
             search={<input id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}
           >
           <div className="dn-list-controls-field">
@@ -633,10 +637,6 @@ export default function EventWorkspaceShell() {
                 <option key={value} value={value}>{label}</option>
               ))}
             </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field">
-            <span>Sort by</span>
-            <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
           </div>
           </ListControls>
           <ActivityList
