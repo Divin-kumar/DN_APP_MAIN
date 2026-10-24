@@ -61,7 +61,7 @@ const openDashboard = async (t) => {
       if (id === '\0dashboard-activity-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useEffect=${fixture}.effect; export const useMemo=(fn)=>fn();`;
       if (id === '\0dashboard-activity-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
       if (id === '\0dashboard-activity-router') return `export const useNavigate=()=>${fixture}.navigate;`;
-      if (id === '\0dashboard-activity-icons') return 'export const Copy="icon",Download="icon",Sparkles="icon";';
+      if (id === '\0dashboard-activity-icons') return 'export const Copy="icon",Download="icon",Sparkles="icon",Pencil="icon",BookOpen="icon";';
       if (id.startsWith('\0dashboard-activity-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const buildGreetingCardHtml=()=>"";`;
       if (id === '\0dashboard-activity-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
       if (id === '\0dashboard-activity-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;

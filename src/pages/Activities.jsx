@@ -183,6 +183,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   }, () => { setLinkTarget(null); showToast('Transaction linked to activity', 'success'); });
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
   const currentMoment = events.find((item) => momentId(item) === filters.momentId);
+  const pickerMoments = events.filter((moment) => filters.parentScope === 'all'
+    || Boolean(moment.archived) === (filters.parentScope === 'archived'));
   const activeCount = Number(Boolean(filters.search.trim())) + Number(Boolean(filters.momentId))
     + Number(filters.filter !== 'all') + Number(filters.parentScope !== 'active') + Number(filters.field !== 'date' || filters.direction !== 'asc');
   const summary = [currentMoment?.name || (filters.momentId ? 'Saved Moment (unavailable)' : 'All Moments'),
@@ -202,23 +204,31 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
               onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />
           </div>}
           search={<input type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
-          <div className="dn-list-controls-field"><label htmlFor="activities-moment-filter">Moment</label>
-            <DropdownSelect id="activities-moment-filter" value={filters.momentId} onChange={(event) => changeFilters({ momentId: event.target.value, parentScope: 'all' })}>
-              <option value="">All Moments</option>
-              {filters.momentId && !currentMoment ? <option value={filters.momentId}>Saved Moment (unavailable)</option> : null}
-              {events.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
-            </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><label htmlFor="activities-parent-filter">Moment visibility</label>
-            <DropdownSelect id="activities-parent-filter" value={filters.parentScope} onChange={(event) => changeFilters({ parentScope: event.target.value })}>
-              <option value="active">Unarchived Moments</option><option value="archived">Archived Moments</option><option value="all">All Moments</option>
-            </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><label htmlFor="activities-status-filter">Status or priority</label>
+          <div className="dn-list-controls-field"><label htmlFor="activities-status-filter">Status</label>
             <DropdownSelect id="activities-status-filter" value={filters.filter} onChange={(event) => changeFilters({ filter: event.target.value })}>
               {FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
             </DropdownSelect>
           </div>
+          <div className="dn-list-controls-field"><label htmlFor="activities-moment-filter">Moment</label>
+            <DropdownSelect id="activities-moment-filter" menuMinWidth={280} value={filters.momentId} onChange={(event) => changeFilters({ momentId: event.target.value })}>
+              <option value="">All Moments</option>
+              {filters.momentId && !currentMoment ? <option value={filters.momentId}>Saved Moment (unavailable)</option> : null}
+              {currentMoment && !pickerMoments.includes(currentMoment) ? <option value={filters.momentId}>{currentMoment.name || 'Saved Moment'} (outside visibility)</option> : null}
+              {pickerMoments.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
+            </DropdownSelect>
+          </div>
+          <details className="dn-list-controls-more">
+            <summary>More{filters.parentScope !== 'active' ? ' · 1' : ''}</summary>
+          <div className="dn-list-controls-field"><label htmlFor="activities-parent-filter">Moment visibility</label>
+            <DropdownSelect id="activities-parent-filter" value={filters.parentScope} onChange={(event) => {
+              const parentScope = event.target.value;
+              changeFilters({ parentScope, momentId: currentMoment && parentScope !== 'all'
+                && Boolean(currentMoment.archived) !== (parentScope === 'archived') ? '' : filters.momentId });
+            }}>
+              <option value="active">Unarchived Moments</option><option value="archived">Archived Moments</option><option value="all">All Moments</option>
+            </DropdownSelect>
+          </div>
+          </details>
         </ListControls>
       </div>
       {saveError && !draft && !transactionTarget && !linkTarget ? <p className="quick-create-error" role="alert">{saveError}</p> : null}

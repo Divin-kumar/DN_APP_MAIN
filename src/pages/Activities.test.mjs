@@ -117,6 +117,28 @@ const openActivities = async (t) => {
     setSaver: (next) => { saver = next; } };
 };
 
+test('Moment filter excludes archived choices by default and preserves explicit visibility on selection', async (t) => {
+  const h = await openActivities(t);
+  h.second.archived = true;
+  const control = (id) => nodes(h.render()).find((node) => node.props?.id === id);
+  const values = () => nodes(control('activities-moment-filter')).filter((node) => node.type === 'option').map((node) => node.props.value);
+  assert.deepEqual(values(), ['', 'moment-one']);
+  const more = nodes(h.render()).find((node) => node.type === 'details');
+  assert.equal(Boolean(more.props.open), false);
+  control('activities-moment-filter').props.onChange({ target: { value: 'moment-one' } });
+  assert.equal(h.api.filters.parentScope, 'active');
+  control('activities-parent-filter').props.onChange({ target: { value: 'archived' } });
+  assert.equal(h.api.filters.momentId, '', 'incompatible selection is cleared');
+  assert.deepEqual(values(), ['', 'moment-two']);
+  control('activities-moment-filter').props.onChange({ target: { value: 'moment-two' } });
+  assert.equal(h.api.filters.parentScope, 'archived');
+  control('activities-status-filter').props.onChange({ target: { value: 'completed' } });
+  assert.equal(h.api.filters.momentId, 'moment-two');
+  h.find('ListControls').props.onReset();
+  assert.deepEqual(values(), ['', 'moment-one']);
+  assert.equal(h.writes.length, 0);
+});
+
 test('duplicate activity IDs complete and cancel only their chosen Moment', async (t) => {
   const harness = await openActivities(t);
   const originalFirst = structuredClone(harness.first);

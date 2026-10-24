@@ -13,7 +13,7 @@ const SEARCH_LIMIT = 10;
 
 export default function DropdownSelect({
   id, name, value, onChange, children, disabled = false, required = false,
-  placeholder = 'Select an option', className = '', ...accessibilityProps
+  placeholder = 'Select an option', className = '', menuMinWidth = 220, ...accessibilityProps
 }) {
   const generatedId = useId();
   const triggerId = id || `dropdown-${generatedId}`;
@@ -70,11 +70,11 @@ export default function DropdownSelect({
       anchor: bounds,
       viewport,
       preferredHeight,
-      minimumWidth: bounds.width,
+      minimumWidth: Math.max(bounds.width, menuMinWidth),
       bottomObstruction: obstruction.length ? Math.min(...obstruction) : null,
     });
     setPlacement(next);
-  }, [close, options.length, searchable]);
+  }, [close, options.length, searchable, menuMinWidth]);
 
   useLayoutEffect(() => {
     if (!open) return undefined;

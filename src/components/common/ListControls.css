@@ -3,6 +3,9 @@ html[data-theme] .dn-list-controls {
   min-width: 0;
   gap: 5px;
 }
+html[data-theme] .dn-list-controls-more { flex: 0 0 auto; color: var(--color-text-muted); font-size: 12px; }
+html[data-theme] .dn-list-controls-more > summary { cursor: pointer; padding: 14px 8px; min-height: 44px; box-sizing: border-box; }
+html[data-theme] .dn-list-controls-more > summary:focus-visible { outline: 2px solid var(--color-primary); outline-offset: -2px; border-radius: 8px; }
 html[data-theme] .dn-list-controls-topline { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 10px; }
 html[data-theme] .dn-list-controls-row { display: flex; min-width: 0; width: 100%; align-items: center; gap: 8px; }
 html[data-theme] .dn-list-controls-search { min-width: 0; flex: 1 1 0; }

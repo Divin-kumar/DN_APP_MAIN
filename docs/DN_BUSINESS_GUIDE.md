@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **24 October 2026 · Version 1.0.25 is published** at [DN](https://dn-10.web.app). Dashboard Upcoming Activities can be edited in place or completed with a deliberate swipe; filters now close on outside clicks, with Sort on row two and a tiny Reset on row three. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
+Current position: **24 October 2026 · Version 1.0.26 is published** at [DN](https://dn-10.web.app). Activity filters put Status first, with Moment visibility under More and unarchived choices by default. Dropdowns are easier to read, and Dashboard activities use pencil/book cues. Account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 
@@ -34,6 +34,8 @@ For example, a family celebration can contain Activities for booking a venue and
 | Backup and app updates | Download a backup containing supported records, settings and stored original files, within the 50 MB backup limit. Review a restore before proceeding, and use About → Refresh app for an available update. | Keep a separate recovery copy and access the current app. |
 
 ## 3. Rules that affect what you see
+
+- **Activity filters:** Status comes first. The Moment picker shows unarchived Moments by default; More reveals the less-used archived visibility choices. Choosing a Moment keeps your visibility choice. Larger dropdown text and wider menus make names easier to read. Upcoming Activities on Home use a pencil to indicate editing; On This Day uses a book to indicate opening the Moment.
 
 - **Upcoming Moments:** covers today through the next 30 days. Archived or cancelled Moments are excluded. A Moment type with Show on Dashboard turned off is also excluded.
 - **On This Day:** shows the original recorded date from a previous year, newest first. A repeating birthday due today can also appear in Upcoming. Upcoming Activities shows pending work; completed activities can still appear as memories in On This Day.

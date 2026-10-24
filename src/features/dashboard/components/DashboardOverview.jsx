@@ -1,7 +1,7 @@
 // This component is the main dashboard summary screen.
 // It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, Download, Sparkles } from 'lucide-react';
+import { Copy, Download, Sparkles, Pencil, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -575,7 +575,7 @@ export default function DashboardOverview() {
                       onClick={() => activityView === 'upcoming' ? openDashboardActivity(event, activity) : navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/activities`)}>
                       <span className="dashboard-upcoming-date"><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
                       <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
-                      <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
+                      <span className="dashboard-upcoming-arrow" aria-hidden="true">{activityView === 'upcoming' ? <Pencil size={14} /> : <BookOpen size={14} />}</span>
                     </button>
                   );
                   const key = JSON.stringify([target.momentId, target.activityId || index]);

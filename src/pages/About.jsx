@@ -48,9 +48,9 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Tap an Upcoming Activity on Home to edit its notes and details in place. Swipe it sideways to complete it.',
-  'Filters now close when you click elsewhere. Sort appears on the second line and Reset is a tiny, light option below.',
-  'Completed activity titles remain readable without strikethrough. Existing activity editing and Moment links stay in place.',
+  'Activities puts Status first and keeps the rarely used Moment visibility filter under More. The Moment picker shows unarchived Moments by default.',
+  'Dropdown text is larger and menus have more room for readable names. Sort and the tiny Reset option keep their own rows.',
+  'Upcoming activities on Home have a small pencil cue for editing in place. On This Day activities use a book icon for opening their Moment.',
 ];
 
 const dataInfo = [

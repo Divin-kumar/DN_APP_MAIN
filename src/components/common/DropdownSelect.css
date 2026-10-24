@@ -26,7 +26,11 @@ html[data-theme] .dropdown-menu.dropdown-menu-portal {
 }
 html[data-theme] .dropdown-menu-portal .dropdown-option {
   border-radius: 9px;
-  font-size: 14px;
+  font-size: 15px;
+  min-height: 44px;
+  padding: 11px 12px;
+  white-space: normal;
+  overflow-wrap: anywhere;
   line-height: 1.45;
   transition: background .12s ease, color .12s ease;
 }
@@ -82,7 +86,7 @@ html[data-theme] .dn-list-controls-panel .dropdown-field .dropdown-trigger {
   gap: 7px; padding: 0 8px !important;
   border: 0 !important; border-radius: 9px !important;
   background: transparent !important; box-shadow: none;
-  font-size: 12px !important; font-weight: 600;
+  font-size: 14px !important; font-weight: 600;
 }
 html[data-theme] .dn-list-controls-panel .dropdown-trigger > svg { width: 13px; height: 13px; }
 @media (prefers-reduced-motion: reduce) {
