@@ -16,16 +16,16 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
-import { projectActivities, selectActivityEntries } from '../utils/activityRecords';
+import { getActivityMomentType, projectActivities, selectActivityEntries } from '../utils/activityRecords';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
 
 const EMPTY = Object.freeze([]);
-const DEFAULTS = Object.freeze({ search: '', filter: 'all', momentId: '', parentScope: 'active', field: 'date', direction: 'asc' });
+const DEFAULTS = Object.freeze({ search: '', filter: 'all', momentId: '', momentType: '', parentScope: 'active', field: 'date', direction: 'asc' });
 const FILTERS = Object.freeze([
   ['all', 'All'], ['in-progress', 'In progress'], ['completed', 'Completed'],
-  ['cancelled', 'Cancelled'], ['high', 'High priority'], ['medium', 'Medium priority'], ['low', 'Low priority'],
+  ['cancelled', 'Cancelled'],
 ]);
 const SORTS = Object.freeze([
   { value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' },
@@ -91,6 +91,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const selected = selectActivityEntries(projection.entries, filters);
   const allInScope = projection.entries.filter((entry) => (
     (!filters.momentId || entry.momentId === filters.momentId)
+    && (!filters.momentType || entry.momentType === filters.momentType)
     && (filters.parentScope === 'all' || entry.archived === (filters.parentScope === 'archived'))
   ));
   const visible = selected.map((entry) => projection.views.get(entry.key));
@@ -183,13 +184,16 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   }, () => { setLinkTarget(null); showToast('Transaction linked to activity', 'success'); });
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
   const currentMoment = events.find((item) => momentId(item) === filters.momentId);
-  const pickerMoments = events.filter((moment) => filters.parentScope === 'all'
-    || Boolean(moment.archived) === (filters.parentScope === 'archived'));
+  const momentTypes = [...new Set(events.map(getActivityMomentType))].sort((a, b) => a.localeCompare(b));
+  const pickerMoments = events.filter((moment) => (!filters.momentType || getActivityMomentType(moment) === filters.momentType)
+    && (filters.parentScope === 'all' || Boolean(moment.archived) === (filters.parentScope === 'archived')));
   const activeCount = Number(Boolean(filters.search.trim())) + Number(Boolean(filters.momentId))
+    + Number(Boolean(filters.momentType))
     + Number(filters.filter !== 'all') + Number(filters.parentScope !== 'active') + Number(filters.field !== 'date' || filters.direction !== 'asc');
   const summary = [currentMoment?.name || (filters.momentId ? 'Saved Moment (unavailable)' : 'All Moments'),
+    filters.momentType,
     filters.parentScope === 'active' ? 'Unarchived Moments' : filters.parentScope === 'archived' ? 'Archived Moments' : 'Including archived Moments',
-    FILTERS.find(([value]) => value === filters.filter)?.[1], `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`].join(' · ');
+    FILTERS.find(([value]) => value === filters.filter)?.[1], `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`].filter(Boolean).join(' · ');
 
   return (
     <div className="events-page life-timeline-page">
@@ -213,12 +217,21 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             <DropdownSelect id="activities-moment-filter" menuMinWidth={280} value={filters.momentId} onChange={(event) => changeFilters({ momentId: event.target.value })}>
               <option value="">All Moments</option>
               {filters.momentId && !currentMoment ? <option value={filters.momentId}>Saved Moment (unavailable)</option> : null}
-              {currentMoment && !pickerMoments.includes(currentMoment) ? <option value={filters.momentId}>{currentMoment.name || 'Saved Moment'} (outside visibility)</option> : null}
+              {currentMoment && !pickerMoments.includes(currentMoment) ? <option value={filters.momentId}>{currentMoment.name || 'Saved Moment'} (outside filters)</option> : null}
               {pickerMoments.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
             </DropdownSelect>
           </div>
-          <details className="dn-list-controls-more">
-            <summary>More{filters.parentScope !== 'active' ? ' · 1' : ''}</summary>
+          <div className="dn-list-controls-field"><label htmlFor="activities-type-filter">Moment type</label>
+            <DropdownSelect id="activities-type-filter" value={filters.momentType} onChange={(event) => {
+              const momentType = event.target.value;
+              changeFilters({ momentType, momentId: currentMoment && momentType
+                && getActivityMomentType(currentMoment) !== momentType ? '' : filters.momentId });
+            }}>
+              <option value="">All types</option>
+              {filters.momentType && !momentTypes.includes(filters.momentType) ? <option value={filters.momentType}>{filters.momentType} (unavailable)</option> : null}
+              {momentTypes.map((type) => <option key={type} value={type}>{type}</option>)}
+            </DropdownSelect>
+          </div>
           <div className="dn-list-controls-field"><label htmlFor="activities-parent-filter">Moment visibility</label>
             <DropdownSelect id="activities-parent-filter" value={filters.parentScope} onChange={(event) => {
               const parentScope = event.target.value;
@@ -228,7 +241,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
               <option value="active">Unarchived Moments</option><option value="archived">Archived Moments</option><option value="all">All Moments</option>
             </DropdownSelect>
           </div>
-          </details>
         </ListControls>
       </div>
       {saveError && !draft && !transactionTarget && !linkTarget ? <p className="quick-create-error" role="alert">{saveError}</p> : null}

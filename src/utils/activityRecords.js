@@ -1,6 +1,10 @@
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
 
+export const getActivityMomentType = (moment) => String(
+  moment?.type === 'Other' ? moment.customType || 'Other' : moment?.type || 'Personal',
+);
+
 // These keys belong to the view only. Activity IDs and stored parent links stay intact.
 export const getActivityEntryKey = (momentId, activityId) => {
   const parent = recordId(momentId);
@@ -17,6 +21,7 @@ export const projectActivities = (events = []) => (Array.isArray(events) ? event
       key,
       momentId,
       momentName: String(moment.name || 'Untitled moment'),
+      momentType: getActivityMomentType(moment),
       archived: Boolean(moment.archived),
       activity,
     }] : [];
@@ -30,7 +35,7 @@ const cancelled = (activity) => Boolean(activity.cancelled || activity.status ==
 const priorityRank = (activity) => ({ high: 3, medium: 2, low: 1 })[String(activity.priority || 'medium').toLowerCase()] || 0;
 
 export const selectActivityEntries = (entries = [], {
-  search = '', filter = 'all', momentId = '', parentScope = 'active', field = 'date', direction = 'asc',
+  search = '', filter = 'all', momentId = '', momentType = '', parentScope = 'active', field = 'date', direction = 'asc',
 } = {}, referenceDate = new Date()) => {
   const query = String(search).trim().toLowerCase();
   const selectedMoment = recordId(momentId);
@@ -59,6 +64,7 @@ export const selectActivityEntries = (entries = [], {
   return entries.filter((entry) => {
     if (parentScope !== 'all' && Boolean(entry.archived) !== (parentScope === 'archived')) return false;
     if (selectedMoment && entry.momentId !== selectedMoment) return false;
+    if (momentType && entry.momentType !== momentType) return false;
     const activity = entry.activity;
     const matchesSearch = !query || [activity.title, activity.description, entry.momentName]
       .some((value) => String(value || '').toLowerCase().includes(query));

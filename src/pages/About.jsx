@@ -48,9 +48,9 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Activities puts Status first and keeps the rarely used Moment visibility filter under More. The Moment picker shows unarchived Moments by default.',
-  'Dropdown text is larger and menus have more room for readable names. Sort and the tiny Reset option keep their own rows.',
-  'Upcoming activities on Home have a small pencil cue for editing in place. On This Day activities use a book icon for opening their Moment.',
+  'Activity Status now offers All, In progress, Completed and Cancelled, without priority choices.',
+  'Moment type sits beside Moment and narrows the activity list, Moment choices and progress together.',
+  'Filters use lightweight text controls. Swipe left along the row for Moment type and visibility; no More section is needed. Sort and the tiny Reset stay below.',
 ];
 
 const dataInfo = [

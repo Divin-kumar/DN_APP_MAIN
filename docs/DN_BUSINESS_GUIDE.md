@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **24 October 2026 · Version 1.0.26 is published** at [DN](https://dn-10.web.app). Activity filters put Status first, with Moment visibility under More and unarchived choices by default. Dropdowns are easier to read, and Dashboard activities use pencil/book cues. Account photo storage still needs the paid-plan setup described below.
+Current position: **24 October 2026 · Version 1.0.27 is published** at [DN](https://dn-10.web.app). Activity filters now use lighter text controls, Status excludes priority choices, and Moment type sits beside Moment. Swipe left for the later filters; the separate More section is removed. Account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 
@@ -35,7 +35,7 @@ For example, a family celebration can contain Activities for booking a venue and
 
 ## 3. Rules that affect what you see
 
-- **Activity filters:** Status comes first. The Moment picker shows unarchived Moments by default; More reveals the less-used archived visibility choices. Choosing a Moment keeps your visibility choice. Larger dropdown text and wider menus make names easier to read. Upcoming Activities on Home use a pencil to indicate editing; On This Day uses a book to indicate opening the Moment.
+- **Activity filters:** Status has All, In progress, Completed and Cancelled. Moment type sits beside Moment and narrows the choices, list and progress together. Swipe left along the lightweight filter row to reach Moment visibility; there is no More section. Reset clears your type choice too. Priority is still available when editing activities and sorting.
 
 - **Upcoming Moments:** covers today through the next 30 days. Archived or cancelled Moments are excluded. A Moment type with Show on Dashboard turned off is also excluded.
 - **On This Day:** shows the original recorded date from a previous year, newest first. A repeating birthday due today can also appear in Upcoming. Upcoming Activities shows pending work; completed activities can still appear as memories in On This Day.

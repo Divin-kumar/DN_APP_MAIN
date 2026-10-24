@@ -83,7 +83,7 @@ html[data-theme] .dn-list-controls-panel .sort-control .sort-option.is-selected 
    16px font floor; shortening these labels cannot trigger input-focus zoom. */
 html[data-theme] .dn-list-controls-panel .dropdown-field .dropdown-trigger {
   width: auto; max-width: 100%; min-height: 44px;
-  gap: 7px; padding: 0 8px !important;
+  gap: 5px; padding: 0 5px !important;
   border: 0 !important; border-radius: 9px !important;
   background: transparent !important; box-shadow: none;
   font-size: 14px !important; font-weight: 600;

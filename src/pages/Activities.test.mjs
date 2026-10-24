@@ -123,8 +123,7 @@ test('Moment filter excludes archived choices by default and preserves explicit 
   const control = (id) => nodes(h.render()).find((node) => node.props?.id === id);
   const values = () => nodes(control('activities-moment-filter')).filter((node) => node.type === 'option').map((node) => node.props.value);
   assert.deepEqual(values(), ['', 'moment-one']);
-  const more = nodes(h.render()).find((node) => node.type === 'details');
-  assert.equal(Boolean(more.props.open), false);
+  assert.equal(nodes(h.render()).some((node) => node.type === 'details'), false);
   control('activities-moment-filter').props.onChange({ target: { value: 'moment-one' } });
   assert.equal(h.api.filters.parentScope, 'active');
   control('activities-parent-filter').props.onChange({ target: { value: 'archived' } });
@@ -136,6 +135,27 @@ test('Moment filter excludes archived choices by default and preserves explicit 
   assert.equal(h.api.filters.momentId, 'moment-two');
   h.find('ListControls').props.onReset();
   assert.deepEqual(values(), ['', 'moment-one']);
+  assert.equal(h.writes.length, 0);
+});
+
+test('Moment type narrows picker, activities and progress together without writing records', async (t) => {
+  const h = await openActivities(t);
+  h.second.type = 'Other';
+  h.second.customType = 'Travel';
+  const control = (id) => nodes(h.render()).find((node) => node.props?.id === id);
+  const values = (id) => nodes(control(id)).filter((node) => node.type === 'option').map((node) => node.props.value);
+  assert.deepEqual(values('activities-status-filter'), ['all', 'in-progress', 'completed', 'cancelled']);
+  control('activities-moment-filter').props.onChange({ target: { value: 'moment-one' } });
+  control('activities-type-filter').props.onChange({ target: { value: 'Travel' } });
+  assert.equal(h.api.filters.momentId, '');
+  assert.deepEqual(values('activities-moment-filter'), ['', 'moment-two']);
+  assert.equal(h.list().props.activities.length, 2);
+  assert.equal(h.list().props.allActivities.length, 2);
+  control('activities-moment-filter').props.onChange({ target: { value: 'moment-two' } });
+  assert.equal(h.api.filters.momentType, 'Travel');
+  h.find('ListControls').props.onReset();
+  assert.equal(h.api.filters.momentType, '');
+  assert.equal(h.list().props.allActivities.length, 3);
   assert.equal(h.writes.length, 0);
 });
 
