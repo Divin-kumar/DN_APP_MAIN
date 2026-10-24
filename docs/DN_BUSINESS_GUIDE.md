@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current position: **24 October 2026 · Version 1.0.25 is being prepared** for [DN](https://dn-10.web.app). The Dashboard Upcoming Activity editor and swipe completion, and smaller inline filter controls, are being validated before publication. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
+Current position: **24 October 2026 · Version 1.0.25 is published** at [DN](https://dn-10.web.app). Dashboard Upcoming Activities can be edited in place or completed with a deliberate swipe; filters now close on outside clicks, with Sort on row two and a tiny Reset on row three. Guest original-file previews and backup/recovery were checked; account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 
