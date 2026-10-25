@@ -36,10 +36,10 @@ const publishedDate = Number.isNaN(deployedAt.getTime())
 const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 
 const guideItems = [
-  { title: 'Home', description: 'Moments and Activities each have one card with small Upcoming and On This Day text controls. Upcoming Activity rows open their own editor without leaving Home; swipe sideways to complete one. See the next 30 days or revisit this date in previous years. Choose which Moment types appear using Show on Dashboard in Code Lists.' },
+  { title: 'Home', description: 'Moments and Activities each have one card with small Upcoming and On This Day text controls. Tap an Activity to open its detail page; swipe left deliberately to complete or reopen it, or use Activity options. Edit remains explicit in that menu. See the next 30 days or revisit this date in previous years. Choose which Moment types appear using Show on Dashboard in Code Lists.' },
   { title: 'Moments', description: 'Create and search your Moments in one list. Open Filters & sort to narrow the list or change its order. Filter choices stay open while you use them and close when you click elsewhere; Sort is on the second line and a tiny Reset option is below it. Swipe a Moment for Edit, Summary, Archive or Delete.' },
-  { title: 'Moment workspace', description: 'Move between Overview, Activities, Timeline, Memories and Attachments using the section row. Use the universal + to add items; Memory and Attachment are available there while a Moment is open.' },
-  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page; swipe sideways for more controls. Filter choices close when you click elsewhere; Sort is on the second line and a tiny Reset option is below it. Completed titles stay readable without being crossed out. Complete, cancel or edit tasks and add linked transactions in place. Each activity still belongs to its original Moment.' },
+  { title: 'Moment workspace', description: 'Move between Overview, Activities, Transactions, Timeline, Memories and Attachments using one horizontally scrolling section row. Overview is a compact contents list. Moment Transactions reuses existing income and expenses with full-Moment totals. Use the universal + to add items; Memory and Attachment are available there while a Moment is open.' },
+  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page; swipe sideways for more controls. Filter choices close when you click elsewhere; Sort is on the second line and a tiny Reset option is below it. Completed titles stay readable without being crossed out. Normal selection opens Activity Detail with one linked cover photo or a fallback, description, finance and original attachments. Swipe left deliberately to complete or reopen; the lightweight three-dot menu offers the same actions, Edit, Cancel/Restore and confirmed Delete. No large round completion button is needed. Activities remain inside their original Moment.' },
   { title: 'Memories and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Memories stay within their Moment; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Activities and Attachments. Identical originals share one stored file. Account saves require a successful cloud upload; Guest files stay in this browser. Older file details cannot recover an original that was never stored.' },
   { title: 'Transactions', description: 'Open Transactions under Profile to add income and expenses, optionally linked to a Moment or Activity. Search beside Filters; choose type or month inside. History is newest first, and Income, Expense and Balance totals follow the selected month.' },
@@ -48,9 +48,11 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Activity Status now offers All, In progress, Completed and Cancelled, without priority choices.',
-  'Moment type sits beside Moment and narrows the activity list, Moment choices and progress together.',
-  'Filters use lightweight text controls. Swipe left along the row for Moment type and visibility; no More section is needed. Sort and the tiny Reset stay below.',
+  'Activities open their own detail page, with one landscape cover from their linked photos, safe formatted notes, finance and original attachments.',
+  'Moments now group Overview, Activities, Transactions, Timeline, Memories and Attachments. Their Transactions section reuses existing records and shows full-Moment income, expense and balance.',
+  'Swipe left deliberately to complete or reopen an Activity. A lightweight three-dot menu provides accessible actions; cancelled work is restored explicitly and deletion stays confirmed.',
+  'Main navigation is Home, Activities, Moments. Activity Detail highlights Activities; Moment workspace sections highlight Moments. No data migration or backup-format change is required.',
+
 ];
 
 const dataInfo = [

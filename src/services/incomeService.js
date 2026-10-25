@@ -21,10 +21,11 @@ export const getGuestIncomes = () => {
   try {
     const raw = localStorage.getItem(GUEST_INCOMES_KEY) || '[]';
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.map((item) => normalizeIncome(item)) : [];
+    if (!Array.isArray(parsed)) throw new Error('Guest income storage is invalid; no changes were made.');
+    return parsed.map((item) => normalizeIncome(item));
   } catch (error) {
     console.error('Failed to load guest incomes:', error);
-    return [];
+    throw error;
   }
 };
 

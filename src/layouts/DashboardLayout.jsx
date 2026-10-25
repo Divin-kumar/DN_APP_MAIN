@@ -7,8 +7,8 @@
   and quick-create buttons for moments, activities, and transactions.
 */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, BookHeart, CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
@@ -25,15 +25,17 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
-import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace } from '../utils/momentWorkspaceRoutes';
+import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from '../utils/momentWorkspaceRoutes';
 import { recordId } from '../utils/recordIdentity';
+import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
+import { getActiveSampleScenario } from '../dev/sampleData';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
 const navItems = [
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Moments', path: '/events', icon: CalendarDays },
   { label: 'Activities', path: '/activities', icon: ListChecks },
+  { label: 'Moments', path: '/events', icon: CalendarDays },
 ];
 const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
@@ -45,10 +47,13 @@ export default function DashboardLayout() {
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent, updateEventItem } = useEventStore();
+  const eventState = useEventStore();
+  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent, updateEventItem } = eventState;
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
+  const reducedMotion = useReducedMotion();
+  const activeNavigationPath = primaryNavigationPath(location.pathname);
   const navigationType = useNavigationType();
   const navigate = useNavigate();
   const contentRef = useRef(null);
@@ -72,7 +77,7 @@ export default function DashboardLayout() {
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
-  const activityMoments = loadedFor === eventScope && activeLoadKey === eventScope ? events : [];
+  const activityMoments = isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) ? events : [];
   const workspaceKey = getMomentWorkspaceKey(location.pathname);
   const workspaceMoment = workspaceKey ? activityMoments.find((moment) => workspaceKey === `/events/${encodeURIComponent(momentId(moment))}`) : null;
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
@@ -140,7 +145,7 @@ export default function DashboardLayout() {
     const currentLocation = {
       key: location.key || location.pathname,
       pathname: location.pathname,
-      primaryRoute: ['dashboard', 'events', 'activities', 'financials', 'insights', 'settings'].includes(segment) ? segment : 'dashboard',
+      primaryRoute: primaryNavigationPath(location.pathname) || segment,
     };
     const previousLocation = previousLocationRef.current;
 
@@ -152,20 +157,14 @@ export default function DashboardLayout() {
       }
     }
 
-    if (!previousLocation || previousLocation.primaryRoute !== currentLocation.primaryRoute) {
-      contentNode.scrollTop = 0;
+    if (previousLocation && isSameMomentWorkspace(previousLocation.pathname, currentLocation.pathname)) {
+      // Section navigation belongs to one workspace; keep its position and drafts.
+    } else if (previousLocation && navigationType === 'POP') {
+      const savedPosition = scrollPositionsRef.current.get(currentLocation.key) || 0;
+      contentNode.scrollTo({ top: savedPosition, left: 0, behavior: 'auto' });
+    } else if (!previousLocation || previousLocation.pathname !== currentLocation.pathname) {
       contentNode.scrollTo({ top: 0, left: 0, behavior: 'auto' });
       window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
-      if (document.scrollingElement) document.scrollingElement.scrollTop = 0;
-    } else if (isSameMomentWorkspace(previousLocation.pathname, currentLocation.pathname)) {
-      // Section navigation belongs to one workspace; keep its position and drafts.
-    } else if (navigationType === 'POP') {
-      const savedPosition = scrollPositionsRef.current.get(currentLocation.key) || 0;
-      contentNode.scrollTop = savedPosition;
-      contentNode.scrollTo({ top: savedPosition, left: 0, behavior: 'auto' });
-    } else if (previousLocation.pathname !== currentLocation.pathname) {
-      contentNode.scrollTop = 0;
-      contentNode.scrollTo({ top: 0, left: 0, behavior: 'auto' });
     }
 
     previousLocationRef.current = currentLocation;
@@ -369,19 +368,12 @@ export default function DashboardLayout() {
           }}
         >
           {navItems.map((item) => (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              end={item.path === '/dashboard'}
-                className="dn-nav-link"
-                style={({ isActive }) => ({
-                ...styles.navCard,
-                ...(isActive || (item.path === '/dashboard' && location.pathname === '/') ? styles.navCardActive : {}),
-              })}
-            >
+            <Link key={item.path} to={item.path} className="dn-nav-link"
+              aria-current={activeNavigationPath === item.path ? 'page' : undefined}
+              style={{ ...styles.navCard, ...(activeNavigationPath === item.path ? styles.navCardActive : {}) }}>
               <span className="dn-nav-icon" aria-hidden="true"><item.icon size={18} strokeWidth={2} /></span>
               <span className="dn-nav-label">{item.label}</span>
-            </NavLink>
+            </Link>
           ))}
         </aside>
 
@@ -398,9 +390,9 @@ export default function DashboardLayout() {
           <motion.div
             key={getRouteTransitionKey(location.pathname)}
             className="dn-route-transition"
-            initial={{ opacity: 0.94, y: 4 }}
+            initial={reducedMotion ? false : { opacity: 0.94, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.14, ease: 'easeOut' }}
+            transition={{ duration: reducedMotion ? 0 : 0.14, ease: 'easeOut' }}
           >
             <Outlet />
           </motion.div>
@@ -409,16 +401,12 @@ export default function DashboardLayout() {
 
       <nav className="mobile-tabbar" aria-label="Main navigation">
         {navItems.map((item) => (
-          <NavLink
-            key={item.path}
-            to={item.path}
-            end={item.path === '/dashboard'}
-            className={({ isActive }) => `mobile-tab${isActive || (item.path === '/dashboard' && location.pathname === '/') ? ' mobile-tab-active' : ''}`}
-            aria-label={item.label}
-          >
+          <Link key={item.path} to={item.path}
+            className={`mobile-tab${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
+            aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
             <item.icon size={19} strokeWidth={2} aria-hidden="true" />
             <span>{item.label}</span>
-          </NavLink>
+          </Link>
         ))}
         <div ref={quickCreateMobileRef} className={`mobile-dock-create${quickCreateOpen ? ' is-open' : ''}`}>
           {quickCreateOpen ? (
@@ -460,7 +448,7 @@ export default function DashboardLayout() {
       {quickCreateType === 'transaction' ? (
         <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
-          <TransactionForm events={events} onSubmit={saveQuickTransaction}
+          <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             onCancel={() => setQuickCreateType(null)} />
         </ModalDialog>
       ) : null}

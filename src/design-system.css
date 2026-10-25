@@ -327,7 +327,7 @@ html[data-theme] .event-moment-kicker,
 html[data-theme] .event-moment-date,
 html[data-theme] .event-moment-countdown,
 html[data-theme] .event-moment-stat-line { font-size: var(--font-caption) !important; line-height: 1.25; }
-html[data-theme] .event-workspace-nav { position: sticky; top: var(--space-sm); z-index: 8; display: grid !important; grid-template-columns: repeat(5,minmax(max-content,1fr)); width: 100%; max-width: 100%; gap: 3px !important; overflow-x: auto; overflow-y: hidden; scroll-behavior: smooth; padding: var(--space-xs); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-glass); backdrop-filter: blur(18px); }
+html[data-theme] .event-workspace-nav { position: sticky; top: var(--space-sm); z-index: 8; display: flex !important; flex-wrap: nowrap !important; width: 100%; max-width: 100%; gap: 3px !important; overflow-x: auto; overflow-y: hidden; scroll-behavior: auto; padding: var(--space-xs); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-glass); backdrop-filter: blur(18px); }
 html[data-theme] .event-workspace-nav-item { display: inline-flex; min-width: 0; min-height: 44px !important; align-items: center; justify-content: center; gap: 6px; padding: 0 8px !important; border-radius: var(--radius-sm); color: var(--color-text-muted); font-size: var(--font-caption); white-space: nowrap; }
 html[data-theme] .event-workspace-nav-item.is-active { background: var(--color-card-raised) !important; color: var(--color-primary) !important; }
 @media (max-width: 760px) {
@@ -2364,7 +2364,7 @@ html[data-theme] .event-activity-card:focus-within .event-activity-main {
   transform:none !important; transition:none !important;
 }
 html[data-theme] .event-activity-card .dn-swipe-main {
-  display:block !important; width:100%;
+  display:flex !important; width:100%;
 }
 html[data-theme] .dn-transaction-card .dn-swipe-main,
 html[data-theme] .dn-transaction-card .dn-transaction-card-core {
@@ -2431,7 +2431,7 @@ html[data-theme] .dn-swipe-popup {
   animation:dn-swipe-popup-in .18s cubic-bezier(.2,.82,.2,1) both;
 }
 html[data-theme] .dn-swipe-popup-item {
-  display:flex; align-items:center; gap:10px; width:100%; min-height:42px;
+  display:flex; align-items:center; gap:10px; width:100%; min-height:44px;
   box-sizing:border-box; border:0 !important; border-radius:11px !important;
   padding:8px 10px !important; margin:0; background:transparent !important;
   color:var(--color-text) !important; font:inherit; font-size:13px !important;
@@ -2700,3 +2700,66 @@ html[data-theme] .event-activity-copy > .dn-rich-text { margin-top:4px; color:va
     font-size: 16px !important;
   }
 }
+
+/* Contextual Moment contents, shared record menus and Activity cards. */
+html[data-theme] .moment-text-action { display:inline-flex; align-items:center; gap:5px; min-height:44px; padding:0 4px; border:0; background:transparent; color:var(--action-ink); font-size:12px; text-align:left; text-decoration:none; cursor:pointer; }
+html[data-theme] .moment-empty-state { margin:12px 0; color:var(--color-text-muted); font-size:13px; line-height:1.6; }
+html[data-theme] .moment-finance-summary { min-width:0; padding:4px 0 16px; }
+html[data-theme] .moment-finance-caption { color:var(--color-text-muted); font-size:11px; }
+html[data-theme] .moment-finance-summary dl { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:12px 0 0; }
+html[data-theme] .moment-finance-summary dl > div { min-width:0; }
+html[data-theme] .moment-finance-summary dt { font-size:11px; color:var(--color-text-muted); margin-bottom:6px; }
+html[data-theme] .moment-finance-summary dd { margin:0; color:var(--color-text); font-size:clamp(14px,2vw,20px); font-weight:650; letter-spacing:-.025em; overflow-wrap:anywhere; }
+html[data-theme] .moment-transactions { min-width:0; }
+html[data-theme] .moment-transactions-heading { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; margin:8px 0; }
+html[data-theme] .moment-transactions-heading h3 { margin:0; font-size:14px; }
+html[data-theme] .moment-transactions-heading .secondaryButton { min-height:44px; display:inline-flex; align-items:center; gap:5px; font-size:12px; }
+html[data-theme] .moment-transactions .dn-transactions-results { display:grid; gap:8px; }
+html[data-theme] .moment-transactions .dn-transaction-card { min-width:0; padding:12px !important; }
+html[data-theme] .moment-transactions .dn-transaction-copy strong, html[data-theme] .moment-transactions .dn-transaction-value { font-size:13px !important; }
+html[data-theme] .moment-transactions .dn-transaction-value { color:var(--color-text); }
+html[data-theme] .moment-transactions .dn-transaction-copy > span, html[data-theme] .moment-transactions .dn-transaction-details { font-size:11px !important; }
+html[data-theme] .moment-contents { display:grid; margin:0; }
+html[data-theme] .moment-contents-row { display:grid; grid-template-columns:24px minmax(0,1fr) 18px; align-items:center; gap:12px; min-height:76px; padding:14px 0; color:var(--color-text); text-decoration:none; border-bottom:1px solid var(--color-border); }
+html[data-theme] .moment-contents-row:last-child { border:0; }
+html[data-theme] .moment-contents-row > svg:first-child { color:var(--color-primary); }
+html[data-theme] .moment-contents-row > svg:last-child { color:var(--color-text-muted); }
+html[data-theme] .moment-contents-row span { min-width:0; display:grid; gap:5px; }
+html[data-theme] .moment-contents-row strong { font-size:14px; }
+html[data-theme] .moment-contents-row small { color:var(--color-text-muted); font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+html[data-theme] .dn-record-menu-trigger { display:inline-grid; place-items:center; flex:0 0 44px; min-width:44px; width:44px; min-height:44px; height:44px; padding:0; border:0; border-radius:var(--radius-sm); background:transparent; box-shadow:none; color:var(--color-text-muted); cursor:pointer; }
+html[data-theme] .dn-record-menu-trigger:hover,html[data-theme] .dn-record-menu-trigger[aria-expanded="true"] { color:var(--color-text); background:var(--color-surface); }
+html[data-theme] .dn-record-menu-trigger:focus-visible { outline:2px solid var(--color-primary); outline-offset:1px; }
+html[data-theme] .event-activity-card .dn-swipe-main { position:relative; display:flex; align-items:flex-start; }
+html[data-theme] .event-activity-card { padding:0 !important; }
+html[data-theme] .event-activity-card .event-activity-main { display:block !important; flex:1; min-width:0; width:auto !important; padding:12px 0 12px 12px !important; gap:0 !important; }
+html[data-theme] .event-activity-card .dn-record-menu-trigger { margin:4px 4px 0 0; order:2; }
+html[data-theme] .event-activity-card .event-activity-title-row { display:flex; flex-wrap:wrap !important; align-items:center; gap:5px 8px; }
+html[data-theme] .event-activity-card .event-activity-title-row > strong { flex:0 0 100%; width:100%; white-space:normal; overflow:visible; text-overflow:clip; font-size:14px !important; line-height:1.5; overflow-wrap:anywhere; color:var(--color-text) !important; }
+html[data-theme] .event-activity-context { flex-wrap:wrap; overflow-wrap:anywhere; }
+html[data-theme] .event-activity-context > span:first-child { color:var(--color-text-muted); }
+html[data-theme] .event-activity-context a { display:inline-flex; min-height:44px; align-items:center; color:var(--action-ink); }
+html[data-theme] .event-activity-status { display:inline-flex; gap:4px; align-items:center; min-height:24px; }
+html[data-theme] .event-activity-card .event-activity-status, html[data-theme] .event-activity-card .event-activity-priority { color:var(--color-text) !important; }
+html[data-theme] .event-activity-status.complete svg { color:var(--color-success); }
+html[data-theme] .event-activity-card.is-cancelled .event-activity-main { opacity:1; }
+html[data-theme] .event-activity-card.is-cancelled .event-activity-title-row > strong { color:var(--color-text-muted) !important; }
+html[data-theme] .event-activity-copy { width:100%; min-width:0; }
+html[data-theme] .event-activity-copy > .dn-rich-text { display:-webkit-box; -webkit-line-clamp:3; -webkit-box-orient:vertical; overflow:hidden; }
+html[data-theme] .event-activity-card .dn-attachment-gallery { max-width:100%; }
+html[data-theme] .event-activity-card .dn-attachment-tile { min-width:0; }
+html[data-theme] .activity-detail-more.dn-swipe-surface { overflow:visible; border-radius:var(--radius-sm); }
+html[data-theme] .activity-detail-more .dn-swipe-main { background:transparent; }
+html[data-theme] .dn-swipe-popup-item:disabled { opacity:.55; cursor:wait; }
+html[data-theme] .dn-swipe-popup-item.is-danger { border-top:1px solid var(--color-border); margin-top:4px; }
+html[data-theme] .dashboard-activity-card { border-radius:8px; }
+html[data-theme] .dashboard-activity-card .dn-swipe-main { display:flex; align-items:center; min-width:0; }
+html[data-theme] .dashboard-activity-card .dashboard-upcoming-row { flex:1; width:0; min-width:0; }
+html[data-theme] .dashboard-activity-card .dn-record-menu-trigger { flex:0 0 44px; }
+@media(max-width:767px) { html[data-theme] .moment-transactions .dn-transaction-card { padding:10px !important; } }
+@media(prefers-reduced-motion:reduce) { html[data-theme] .moment-contents-row, html[data-theme] .dn-record-menu-trigger { transition:none !important; } }
+
+html[data-theme] .event-workspace-nav .event-workspace-nav-item { flex:0 0 auto !important; min-height:44px !important; padding:0 12px !important; white-space:nowrap; }
+html[data-theme] .event-workspace-nav-item.is-active { box-shadow:inset 0 -1px 0 var(--color-primary); }
+html[data-theme] .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; border:0; }
+html[data-theme] .dn-swipe-popup-item:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }

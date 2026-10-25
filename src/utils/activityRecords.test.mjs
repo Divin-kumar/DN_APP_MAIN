@@ -129,3 +129,12 @@ test('search reaches activity title, notes and parent name; status and priority 
   assert.deepEqual(ids(selectActivityEntries(entries, { filter: 'in-progress' })), ['birthday/cake', 'home/call']);
   assert.deepEqual(ids(selectActivityEntries(entries, { filter: 'cancelled', search: 'cake' })), ['birthday/cancel', 'birthday/legacy-cancel']);
 });
+
+test('legacy completed status keeps list filters consistent without changing the stored flags', () => {
+  const moments = [{ id: 'm', activities: [{ id: 'legacy', completed: false, status: 'completed' }, { id: 'pending' }] }];
+  const before = structuredClone(moments);
+  const entries = projectActivities(moments);
+  assert.deepEqual(ids(selectActivityEntries(entries, { filter: 'completed' })), ['m/legacy']);
+  assert.deepEqual(ids(selectActivityEntries(entries, { filter: 'in-progress' })), ['m/pending']);
+  assert.deepEqual(moments, before);
+});

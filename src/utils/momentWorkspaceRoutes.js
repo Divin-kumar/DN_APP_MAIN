@@ -1,4 +1,9 @@
-const workspaceRoute = /^\/events\/([^/]+)(?:\/(overview|activities|timeline|memories|attachments|pdf))?\/?$/;
+const workspaceRoute = /^\/events\/([^/]+)(?:\/(overview|activities|transactions|timeline|memories|attachments|pdf))?\/?$/;
+const activityDetailRoute = /^\/events\/[^/]+\/activities\/[^/]+\/?$/;
+
+export const isActivityDetailRoute = (pathname) => activityDetailRoute.test(pathname || '');
+export const primaryNavigationPath = (pathname) => isActivityDetailRoute(pathname) || /^\/activities\/?$/.test(pathname)
+  ? '/activities' : /^\/events(?:\/|$)/.test(pathname) ? '/events' : pathname === '/' || /^\/dashboard\/?$/.test(pathname) ? '/dashboard' : null;
 
 const matchWorkspaceRoute = (pathname) => typeof pathname === 'string' ? pathname.match(workspaceRoute) : null;
 

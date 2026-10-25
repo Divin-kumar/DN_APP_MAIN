@@ -8,13 +8,13 @@ function Inline({ nodes }) {
   });
 }
 
-export default function RichText({ value, className = '', style, inline = false, ...props }) {
+export default function RichText({ value, className = '', style, inline = false, headingLevel, ...props }) {
   if (inline) return <span className={`dn-rich-text dn-rich-text-inline ${className}`} style={style} {...props}><Inline nodes={parseInlineRichText(value)} /></span>;
   return (
     <div className={`dn-rich-text ${className}`} style={style} {...props}>
       {parseRichText(value).map((block, index) => {
         if (block.type === 'heading') {
-          const Tag = `h${block.level + 2}`;
+          const Tag = `h${Number.isInteger(headingLevel) && headingLevel >= 2 && headingLevel <= 6 ? headingLevel : block.level + 2}`;
           return <Tag key={index}><Inline nodes={block.children} /></Tag>;
         }
         if (block.type === 'quote') return <blockquote key={index}><Inline nodes={block.children} /></blockquote>;

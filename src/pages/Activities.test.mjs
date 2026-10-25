@@ -80,6 +80,7 @@ const openActivities = async (t) => {
         if (source === 'react') return '\0activities-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0activities-jsx';
         if (!file.endsWith('/src/pages/Activities.jsx')) return null;
+        if (source.endsWith('/services/scopedRecordActions')) return '\0activities-writer';
         if (source === 'react-router-dom') return '\0activities-router';
         if (source === 'lucide-react') return '\0activities-icons';
         if (source.includes('/components/')) return `\0activities-child:${source.split('/').at(-1)}`;
@@ -94,12 +95,13 @@ const openActivities = async (t) => {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
         if (id === '\0activities-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useMemo=${fixture}.memo; export const useEffect=()=>{};`;
         if (id === '\0activities-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
-        if (id === '\0activities-router') return 'export const Link="Link";';
+        if (id === '\0activities-router') return 'export const Link="Link",useNavigate=()=>()=>{};';
         if (id === '\0activities-icons') return 'export const ListChecks="icon",Plus="icon";';
         if (id.startsWith('\0activities-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
         if (id === '\0activities-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0activities-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0activities-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;
+        if (id === '\0activities-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
         if (id === '\0activities-manager') return `export default ()=>({saveTransaction:${fixture}.save});`;
         if (id === '\0activities-filters') return `export default (_key,defaults)=>{const api=${fixture}; api.filters??=defaults; return [api.filters,(patch)=>{api.filters={...api.filters,...patch}},()=>{api.filters=defaults}];};`;
         return null;

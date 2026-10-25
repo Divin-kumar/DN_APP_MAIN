@@ -93,6 +93,9 @@ const openWorkspace = async (t) => {
         if (source === 'react') return '\0workspace-create-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0workspace-create-jsx';
         if (!file.endsWith('/src/features/events/components/EventWorkspaceShell.jsx')) return null;
+        if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
+        if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
+        if (source === './MomentContents') return '\0workspace-create-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-create-router';
         if (source === 'lucide-react') return '\0workspace-create-icons';
         if (source.includes('/components/')) return `\0workspace-create-child:${source.split('/').at(-1)}`;
@@ -109,8 +112,10 @@ const openWorkspace = async (t) => {
         if (id === '\0workspace-create-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useEffect=${fixture}.effect; export const useLayoutEffect=()=>{},useMemo=(fn)=>fn(),useCallback=(fn)=>fn();`;
         if (id === '\0workspace-create-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
         if (id === '\0workspace-create-router') return `export const Link="Link",useLocation=()=>${fixture}.location,useNavigate=()=>${fixture}.navigate,useParams=()=>${fixture}.params;`;
-        if (id === '\0workspace-create-icons') return 'export const Archive="icon",ArchiveRestore="icon",ArrowLeft="icon",BookHeart="icon",CalendarDays="icon",Check="icon",CircleCheck="icon",Clock3="icon",Download="icon",FileText="icon",Heart="icon",Images="icon",ListChecks="icon",Pencil="icon",Plus="icon",Save="icon",Search="icon",Sparkles="icon",Trash2="icon",Upload="icon",X="icon";';
+        if (id === '\0workspace-create-icons') return 'export const Archive="icon",ArchiveRestore="icon",ArrowLeft="icon",BookHeart="icon",CalendarDays="icon",Check="icon",CircleCheck="icon",Clock3="icon",Download="icon",FileText="icon",Heart="icon",Images="icon",ListChecks="icon",Pencil="icon",Plus="icon",Receipt="icon",Save="icon",Search="icon",Sparkles="icon",Trash2="icon",Upload="icon",X="icon";';
         if (id.startsWith('\0workspace-create-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
+        if (id === '\0workspace-shared-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
+        if (id === '\0workspace-shared-finance') return `export default ()=>({ready:true,transactions:[],summary:{income:0,expense:0,balance:0},error:null});`;
         if (id === '\0workspace-create-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0workspace-create-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0workspace-create-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;
@@ -128,7 +133,7 @@ const openWorkspace = async (t) => {
     if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
     else delete globalThis.window;
   });
-  const { default: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
+  const { EventWorkspaceContent: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
   const render = () => {
     cursor = 0;
     const tree = Workspace();

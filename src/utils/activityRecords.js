@@ -1,5 +1,6 @@
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
+import { activityStatus } from './activityDetail.js';
 
 export const getActivityMomentType = (moment) => String(
   moment?.type === 'Other' ? moment.customType || 'Other' : moment?.type || 'Personal',
@@ -56,7 +57,7 @@ export const selectActivityEntries = (entries = [], {
   };
   const statusRank = (entry) => {
     if (cancelled(entry.activity)) return 3;
-    if (entry.activity.completed) return 2;
+    if (activityStatus(entry.activity) === 'completed') return 2;
     const date = entryDate(entry);
     const calendarDay = date ? new Date(date).setHours(0, 0, 0, 0) : null;
     return calendarDay !== null && calendarDay > today.getTime() ? 1 : 0;
@@ -72,8 +73,8 @@ export const selectActivityEntries = (entries = [], {
     if (filter === 'cancelled') return cancelled(activity);
     if (cancelled(activity)) return false;
     return filter === 'all'
-      || (filter === 'in-progress' && !activity.completed)
-      || (filter === 'completed' && Boolean(activity.completed))
+      || (filter === 'in-progress' && activityStatus(activity) === 'in-progress')
+      || (filter === 'completed' && activityStatus(activity) === 'completed')
       || (activity.priority || 'medium') === filter;
   }).sort((first, second) => {
     let order = 0;

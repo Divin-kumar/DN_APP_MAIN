@@ -2,12 +2,12 @@
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Save, Search, Sparkles, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Receipt, Save, Search, Sparkles, Trash2, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
 import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/attachmentService';
-import { getActiveSampleData } from '../../../dev/sampleData';
+import { getActiveSampleData, getActiveSampleScenario } from '../../../dev/sampleData';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
 import DateField from '../../../components/common/DateField';
@@ -27,7 +27,15 @@ import usePersistentListState from '../../../hooks/usePersistentListState';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
+import { formatMomentDate, parseMomentDate } from '../../../utils/momentDates';
 import { recordId } from '../../../utils/recordIdentity';
+import { scopedRecordActions as records } from '../../../services/scopedRecordActions';
+import { isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
+import { activityCompletionPatch, activityDateLabel, activityDetailPath, activityStatus } from '../../../utils/activityDetail';
+import useMomentFinance from '../../../hooks/useMomentFinance';
+import LinkedTransactions from '../../finance/components/LinkedTransactions';
+import MomentContents from './MomentContents';
+import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -37,13 +45,7 @@ const ACTIVITY_LIST_OPTIONS = Object.freeze({
   field: ['date', 'title', 'priority', 'status'], direction: ['asc', 'desc'],
 });
 
-const formatDate = (value) => {
-  if (!value) return 'Date to be decided';
-  const date = new Date(value);
-  return Number.isNaN(date.getTime())
-    ? 'Date to be decided'
-    : date.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
-};
+const formatDate = activityDateLabel;
 
 const getBirthdayAge = (value) => {
   if (!value) return null;
@@ -63,6 +65,13 @@ const getBirthdayAge = (value) => {
 
 export default function EventWorkspaceShell() {
   const { eventId } = useParams();
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  return <EventWorkspaceContent key={JSON.stringify([user?.uid, isGuest, getActiveSampleScenario(user?.uid), eventId])} />;
+}
+
+export function EventWorkspaceContent() {
+  const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const workspaceNavRef = useRef(null);
@@ -75,8 +84,15 @@ export default function EventWorkspaceShell() {
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
-  const { events, loading, error, loadEvents, updateEventItem, deleteEventItem } = useEventStore();
-  const { expenses, loadExpenses } = useExpenseStore();
+  const eventState = useEventStore();
+  const { loading, error, loadEvents, updateEventItem, deleteEventItem } = eventState;
+  const expenseState = useExpenseStore();
+  const { loadExpenses } = expenseState;
+  const finance = useMomentFinance(eventId);
+  const mutationContext = records.capture();
+  const [activityAnnouncement, setActivityAnnouncement] = useState('');
+  const activitySavingRef = useRef(false);
+  const [activityBusy, setActivityBusy] = useState(false);
   const { saveTransaction } = useTransactionManager();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
@@ -120,6 +136,10 @@ export default function EventWorkspaceShell() {
   const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
   const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
   const workspaceScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
+  const sample = getActiveSampleScenario(user?.uid);
+  const ready = isRecordScopeLoaded(eventState, workspaceScope, sample);
+  const events = ready ? eventState.events : [];
+  const expenses = isRecordScopeLoaded(expenseState, workspaceScope, sample) ? expenseState.expenses : [];
   const workspaceMountedRef = useRef(false);
   const workspaceIdentityRef = useRef('');
   workspaceIdentityRef.current = `${workspaceScope}:${eventId}`;
@@ -211,26 +231,28 @@ export default function EventWorkspaceShell() {
     };
   }, [location.pathname, event?.id]);
 
-  if (loading && !event) {
-    return <p style={{ color: 'var(--ink-soft)' }}>Loading event workspace...</p>;
+  if (eventState.activeLoadKey === workspaceScope && error === 'Unable to load events.') {
+    return <section role="alert"><h1>Moment couldn’t be loaded</h1><p>Please try again.</p><button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></section>;
   }
+  if (!ready || loading) return <LoadingSkeleton rows={6} label="Loading Moment workspace" />;
 
   if (!event) {
     return (
       <div style={{ display: 'grid', gap: '14px' }}>
-        <h2 style={{ margin: 0 }}>Event not found</h2>
-        <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This event may have been removed or is not available in the current session.</p>
-        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Events</Link>
+        <h2 style={{ margin: 0 }}>Moment not found</h2>
+        <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This Moment may have been removed or is not available in the current session.</p>
+        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Moments</Link>
       </div>
     );
   }
 
   const sections = [
-    { label: 'Overview', path: `/events/${eventId}/overview`, detail: 'Event details and current status', icon: FileText },
-    { label: 'Activities', path: `/events/${eventId}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
-    { label: 'Timeline', path: `/events/${eventId}/timeline`, detail: 'Milestones and progress', icon: Clock3 },
-    { label: 'Memories', path: `/events/${eventId}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
-    { label: 'Attachments', path: `/events/${eventId}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
+    { label: 'Overview', path: `/events/${encodeURIComponent(eventId)}/overview`, detail: 'Event details and current status', icon: FileText },
+    { label: 'Activities', path: `/events/${encodeURIComponent(eventId)}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
+    { label: 'Transactions', path: `/events/${encodeURIComponent(eventId)}/transactions`, detail: 'Income and expenses linked to this Moment', icon: Receipt },
+    { label: 'Timeline', path: `/events/${encodeURIComponent(eventId)}/timeline`, detail: 'Milestones and progress', icon: Clock3 },
+    { label: 'Memories', path: `/events/${encodeURIComponent(eventId)}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
+    { label: 'Attachments', path: `/events/${encodeURIComponent(eventId)}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
   ];
   const sectionName = getMomentWorkspaceSection(location.pathname);
   const activeSection = sections.find((section) => section.label.toLowerCase() === sectionName) || sections[0];
@@ -274,7 +296,7 @@ export default function EventWorkspaceShell() {
   const linkableExpenses = expenses.filter((expense) => (
     !expense.activityId && (!expense.eventId || expense.eventId === eventId)
   ));
-  const totalSpent = eventExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+  const totalSpent = finance.summary.expense;
   const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
   const completedActivities = activeActivities.filter((activity) => activity.completed).length;
   const memoryCount = (event.memories || []).length;
@@ -319,38 +341,29 @@ export default function EventWorkspaceShell() {
     downloadBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), `${(event.name || 'dn-greeting').toLowerCase().replace(/[^a-z0-9]+/g, '-')}-greeting.html`);
   };
 
-  const addActivity = async (submitEvent) => {
-    submitEvent.preventDefault();
-    if (!activityTitle.trim()) return;
-    setActivityError('');
-
-    const existingActivity = (event.activities || []).find((item) => item.id === editingActivityId);
-    const activity = {
-      id: editingActivityId || crypto.randomUUID(),
-      eventId,
-      title: activityTitle.trim(),
-      date: activityDate,
-      description: activityDescription,
-      completed: existingActivity?.completed || false,
-      completedAt: existingActivity?.completedAt || null,
-      priority: activityPriority,
-      createdAt: existingActivity?.createdAt || new Date().toISOString(),
-    };
-
+  const runActivityWrite = async (operation, after) => {
+    if (activitySavingRef.current) return;
+    activitySavingRef.current = true; setActivityBusy(true); setActivityError('');
     try {
-      await updateEventItem(user?.uid, isGuest, {
-        ...event,
-        activities: editingActivityId
-          ? (event.activities || []).map((item) => item.id === editingActivityId ? { ...item, ...activity } : item)
-          : [...(event.activities || []), activity],
-      });
-      setActivityTitle('');
-      setActivityDescription('');
-      setEditingActivityId(null);
-      setActivityDialogOpen(false);
-    } catch {
-      setActivityError('Could not save this activity. Please try again.');
-    }
+      await operation();
+      if (workspaceMountedRef.current && records.isCurrent(mutationContext)) after?.();
+    } catch (reason) {
+      if (workspaceMountedRef.current && records.isCurrent(mutationContext)) {
+        setActivityError(reason?.message || 'Could not save this activity. Please try again.');
+        showToast('Could not save this activity. Please try again.', 'danger');
+      }
+      throw reason;
+    } finally { activitySavingRef.current = false; if (workspaceMountedRef.current && records.isCurrent(mutationContext)) setActivityBusy(false); }
+  };
+  const addActivity = (submitEvent) => {
+    submitEvent.preventDefault();
+    if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
+    const values = { title: activityTitle.trim(), date: activityDate, description: activityDescription, priority: activityPriority };
+    return runActivityWrite(() => editingActivityId
+      ? records.mutateActivity(mutationContext, eventId, editingActivityId, () => values)
+      : records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
+        ...values, id: crypto.randomUUID(), eventId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
+      }] })), () => { setActivityTitle(''); setActivityDescription(''); setEditingActivityId(null); setActivityDialogOpen(false); }).catch(() => {});
   };
 
   const editActivity = (activity) => {
@@ -359,7 +372,7 @@ export default function EventWorkspaceShell() {
     setEditingActivityId(activity.id);
     setActivityTitle(activity.title || '');
     setActivityDescription(activity.description || '');
-    setActivityDate(activity.date || new Date().toISOString().slice(0, 10));
+    setActivityDate(formatMomentDate(parseMomentDate(activity.date)));
     setActivityPriority(activity.priority || 'medium');
     setActivityDialogOpen(true);
   };
@@ -420,37 +433,15 @@ export default function EventWorkspaceShell() {
     }
   };
 
-  const removeActivity = async (activityId) => {
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      activities: (event.activities || []).filter((activity) => activity.id !== activityId),
-    });
-    setPendingDeleteActivity(null);
-  };
-
-  const toggleActivity = async (activityId) => {
-    const currentActivity = (event.activities || []).find((activity) => activity.id === activityId);
-    if (!currentActivity) return;
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      activities: (event.activities || []).map((activity) => (
-        activity.id === activityId
-          ? { ...activity, completed: !activity.completed, completedAt: activity.completed ? null : new Date().toISOString() }
-          : activity
-      )),
-    });
-  };
-
-  const toggleActivityCancellation = async (activityId) => {
-    await updateEventItem(user?.uid, isGuest, {
-      ...event,
-      activities: (event.activities || []).map((activity) => (
-        activity.id === activityId
-          ? { ...activity, cancelled: !(activity.cancelled || activity.status === 'cancelled'), status: activity.cancelled || activity.status === 'cancelled' ? 'in-progress' : 'cancelled' }
-          : activity
-      )),
-    });
-  };
+  const removeActivity = (activityId) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId, () => null),
+    () => setPendingDeleteActivity(null)).catch(() => {});
+  const toggleActivity = (activityId, view) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId,
+    (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')),
+  () => setActivityAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed')).catch(() => {});
+  const toggleActivityCancellation = (activityId) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId, (activity) => {
+    const cancelled = activity.cancelled || activity.status === 'cancelled';
+    return { cancelled: !cancelled, status: cancelled ? activity.completed ? 'completed' : 'in-progress' : 'cancelled' };
+  }), () => setActivityAnnouncement('Activity status updated')).catch(() => {});
 
   const saveNotes = async (submitEvent) => {
     submitEvent.preventDefault();
@@ -557,34 +548,14 @@ export default function EventWorkspaceShell() {
     if (activeSection.label === 'Overview') {
       return (
         <div className="event-moment-overview">
-          <section className="event-featured-memory">
-            <div className="event-featured-memory-art"><BookHeart size={21} /><span>Memory keepsake</span></div>
-            <div className="event-featured-memory-copy">
-              <span className="event-overview-eyebrow"><Heart size={13} /> A piece of this moment</span>
-              {latestMemory ? <><h4>{latestMemory.title || 'A memory to keep'}</h4><RichText className={`event-memory-story-copy free-text-preview${memoryExpanded ? ' is-expanded' : ' is-truncated'}`} value={latestMemory.body || 'A moment worth remembering, kept safe with this event.'} /><small>{formatDate(latestMemory.createdAt)}</small>{latestMemoryNeedsExpansion ? <button type="button" className="event-memory-expand" onClick={() => setMemoryExpanded((expanded) => !expanded)}>{memoryExpanded ? 'Show less' : 'Read story'}</button> : null}</> : <><h4>Leave room for a memory</h4><p>Save the little details, stories, and feelings you will want to return to.</p></>}
-            </div>
-          </section>
-
-          <section className="event-health-strip" aria-label="Event health">
-            <div className="event-overview-section-title"><span>Event health</span><small>A gentle check-in</small></div>
-            <div className="event-health-items">
-              <span className={activities.length ? 'is-ready' : 'is-pending'}>{activities.length ? <CircleCheck size={15} /> : <CircleCheck size={15} />}{activities.length ? `${activities.length} steps planned` : 'Plan a few steps'}</span>
-              <span className={memoryCount ? 'is-ready' : 'is-pending'}>{memoryCount ? <CircleCheck size={15} /> : <Heart size={15} />}{memoryCount ? `${memoryCount} memories saved` : 'Add a memory'}</span>
-              <span className={attachments.length ? 'is-ready' : 'is-pending'}>{attachments.length ? <CircleCheck size={15} /> : <Images size={15} />}{attachments.length ? `${attachments.length} keepsakes saved` : 'No keepsakes yet'}</span>
-            </div>
-          </section>
-
-          <div className="event-overview-lower-grid">
-            <section className="event-upcoming-preview">
-              <div className="event-overview-section-title"><span>Little next steps</span><button type="button" onClick={() => navigate(`/events/${eventId}/activities`)}>See all</button></div>
-              {activities.length ? activities.slice(0, 3).map((activity) => <div className={`event-next-step${activity.completed ? ' is-complete' : ''}`} key={activity.id}><span>{activity.completed ? <Check size={14} /> : null}</span><div><strong>{activity.title || 'Untitled activity'}</strong><small>{activity.completed ? 'Complete' : formatDate(activity.date)}</small></div></div>) : <p className="event-overview-hint">A few gentle reminders can make this moment easier to enjoy.</p>}
-            </section>
-          </div>
+          <MomentContents moment={event} finance={finance} />
 
           {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><RichText value={event.notes} className="free-text-content" /></section> : null}
         </div>
       );
     }
+
+    if (activeSection.label === 'Transactions') return <LinkedTransactions eventId={eventId} />;
 
     if (activeSection.label === 'Activities' || activeSection.label === 'Timeline') {
       if (activeSection.label === 'Timeline') {
@@ -593,7 +564,7 @@ export default function EventWorkspaceShell() {
                 {activities.map((activity) => (
               <div key={activity.id} className="timeline-item">
                 <span>{formatDate(activity.date)}</span>
-                <strong>{activity.title || 'Untitled activity'}</strong>
+                <Link to={activityDetailPath(eventId, activity.id)}>{activity.title || 'Untitled activity'}</Link>
                     <small className={activity.cancelled || activity.status === 'cancelled' ? 'is-cancelled' : activity.completed ? 'is-complete' : 'is-pending'}>{activity.cancelled || activity.status === 'cancelled' ? 'Cancelled' : activity.completed ? 'Completed' : 'In progress'}</small>
                 {activity.description ? <RichText value={activity.description} className="free-text-content" /> : null}
               </div>
@@ -647,6 +618,7 @@ export default function EventWorkspaceShell() {
             hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
             expensesByActivity={expensesByActivity}
             renderAttachments={(activity) => <AttachmentGallery compact uid={user?.uid} isGuest={isGuest} attachments={attachments.filter((attachment) => recordId(attachment.activityId) === recordId(activity.id))} />}
+            onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id))}
             onToggleComplete={toggleActivity}
             onToggleCancelled={toggleActivityCancellation}
             onAddExpense={openActivityTransaction}
@@ -728,6 +700,9 @@ export default function EventWorkspaceShell() {
         ))}
       </nav>
 
+      <p className="sr-only" role="status" aria-live="polite">{activityAnnouncement}</p>
+      {activityBusy ? <p role="status">Saving activity…</p> : null}
+      {activityError && !activityDialogOpen && !pendingDeleteActivity ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
         <div className="event-section-heading">
@@ -766,8 +741,8 @@ export default function EventWorkspaceShell() {
         </form>
       </ModalDialog> : null}
       {activityDialogOpen ? (
-        <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); }}>
-          <form onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
+        <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); } }}>
+          <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
@@ -778,8 +753,8 @@ export default function EventWorkspaceShell() {
             </DropdownSelect>
             <RichTextEditor label="Activity notes" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
             <div className="dialog-actions" style={styles.dialogActions}>
-              <button type="button" className="secondaryButton" onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-              <button type="submit" className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
+              <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
+              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
             </div>
           </form>
         </ModalDialog>
@@ -824,7 +799,8 @@ export default function EventWorkspaceShell() {
         <ConfirmDialog
           title="Remove activity?"
           message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`}
-          onCancel={() => setPendingDeleteActivity(null)}
+          onCancel={() => { if (!activitySavingRef.current) setPendingDeleteActivity(null); }}
+          busy={activityBusy} error={activityError}
           onConfirm={() => removeActivity(pendingDeleteActivity.id)}
         />
       ) : null}

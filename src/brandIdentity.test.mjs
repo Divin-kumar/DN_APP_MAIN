@@ -14,7 +14,7 @@ const retiredBrand = /life[\s_-]*hub/i;
 const walk = (dir, result = []) => {
   for (const entry of readdirSync(dir, { withFileTypes: true })) {
     if (entry.isDirectory()) {
-      if (['.git', 'node_modules', 'dist', 'coverage'].includes(entry.name)) continue;
+      if (['.git', 'node_modules', 'dist', 'coverage', '.verification', 'playwright-report', 'test-results'].includes(entry.name)) continue;
       walk(join(dir, entry.name), result);
     } else if (entry.isFile()) {
       result.push(relative(root, join(dir, entry.name)).split(sep).join('/'));

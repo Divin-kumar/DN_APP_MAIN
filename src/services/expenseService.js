@@ -30,6 +30,7 @@ export const getGuestExpenses = () => {
   try {
     const expenseData = JSON.parse(localStorage.getItem(GUEST_EXPENSES_KEY) || '[]');
     const eventData = JSON.parse(localStorage.getItem(GUEST_EVENTS_KEY) || '[]');
+    if (!Array.isArray(expenseData) || !Array.isArray(eventData)) throw new Error('Guest expense or Moment storage is invalid; no changes were made.');
     const nestedExpenses = Array.isArray(eventData)
       ? eventData.flatMap((event) => (event.activities || []).flatMap((activity) => (
         activity.expenses || []
@@ -42,7 +43,7 @@ export const getGuestExpenses = () => {
     ]);
   } catch (error) {
     console.error('Failed to load guest expenses:', error);
-    return [];
+    throw error;
   }
 };
 

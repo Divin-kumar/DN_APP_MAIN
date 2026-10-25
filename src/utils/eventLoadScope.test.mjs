@@ -65,3 +65,20 @@ test('guest/account transitions keep records isolated and failed reads can retry
   await load('B', false);
   assert.deepEqual(get().events, [{ id: 'B' }]);
 });
+
+test('Sample and Guest reads have independent ownership despite using the same Guest route scope', async () => {
+  let sample = null, state = { events: [], activeLoadKey: null, loadedFor: null };
+  const pending = deferred();
+  const load = createEventLoader({ get: () => state, set: (patch) => { state = { ...state, ...patch }; },
+    getSample: () => sample, readEvents: () => sample ? [{ id: 'sample-only' }] : pending.promise });
+  const guest = load(null, true);
+  await Promise.resolve();
+  sample = 'regular'; await load(null, true);
+  assert.deepEqual(state.events, [{ id: 'sample-only' }]);
+  pending.resolve([{ id: 'guest-only' }]); await guest;
+  assert.deepEqual(state.events, [{ id: 'sample-only' }]);
+  assert.equal(state.loadedSample, 'regular');
+  sample = null; await load(null, true);
+  assert.deepEqual(state.events, [{ id: 'guest-only' }]);
+  assert.equal(state.loadedSample, null);
+});

@@ -41,7 +41,7 @@ const openWorkspace = async (t) => {
     navigate: (...args) => navigations.push(args),
     app: { user: null, isGuest: true, adminValues: { eventTypes: [], activityPriorities: [] },
       preferences: {}, showToast: (...args) => toasts.push(args) },
-    eventStore: { events: [moment], loading: false, error: '', loadEvents: () => {},
+    eventStore: { loadedFor: 'guest:anonymous', activeLoadKey: 'guest:anonymous', events: [moment], loading: false, error: '', loadEvents: () => {},
       updateEventItem: async () => { throw new Error('Unexpected Moment write'); },
       deleteEventItem: async () => { throw new Error('Unexpected Moment deletion'); } },
     expenseStore: { expenses: [], loadExpenses: () => {} },
@@ -57,6 +57,9 @@ const openWorkspace = async (t) => {
         if (source === 'react') return '\0workspace-transaction-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0workspace-transaction-jsx';
         if (!file.endsWith('/src/features/events/components/EventWorkspaceShell.jsx')) return null;
+        if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
+        if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
+        if (source === './MomentContents') return '\0workspace-transaction-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-transaction-router';
         if (source === 'lucide-react') return '\0workspace-transaction-icons';
         if (source.includes('/components/')) return `\0workspace-transaction-child:${source.split('/').at(-1)}`;
@@ -73,8 +76,10 @@ const openWorkspace = async (t) => {
         if (id === '\0workspace-transaction-react') return `export const useState=${fixture}.state, useRef=${fixture}.ref; export const useEffect=()=>{}, useLayoutEffect=()=>{}, useMemo=(fn)=>fn(), useCallback=(fn)=>fn();`;
         if (id === '\0workspace-transaction-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx, jsxDEV=jsx, Fragment="fragment";';
         if (id === '\0workspace-transaction-router') return `export const Link="Link", useLocation=()=>${fixture}.location, useNavigate=()=>${fixture}.navigate, useParams=()=>${fixture}.params;`;
-        if (id === '\0workspace-transaction-icons') return 'export const Archive="icon",ArchiveRestore="icon",ArrowLeft="icon",BookHeart="icon",CalendarDays="icon",Check="icon",CircleCheck="icon",Clock3="icon",Download="icon",FileText="icon",Heart="icon",Images="icon",ListChecks="icon",Pencil="icon",Plus="icon",Save="icon",Search="icon",Sparkles="icon",Trash2="icon",Upload="icon",X="icon";';
+        if (id === '\0workspace-transaction-icons') return 'export const Archive="icon",ArchiveRestore="icon",ArrowLeft="icon",BookHeart="icon",CalendarDays="icon",Check="icon",CircleCheck="icon",Clock3="icon",Download="icon",FileText="icon",Heart="icon",Images="icon",ListChecks="icon",Pencil="icon",Plus="icon",Receipt="icon",Save="icon",Search="icon",Sparkles="icon",Trash2="icon",Upload="icon",X="icon";';
         if (id.startsWith('\0workspace-transaction-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
+        if (id === '\0workspace-shared-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
+        if (id === '\0workspace-shared-finance') return `export default ()=>({ready:true,transactions:[],summary:{income:0,expense:0,balance:0},error:null});`;
         if (id === '\0workspace-transaction-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0workspace-transaction-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0workspace-transaction-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;
@@ -86,7 +91,7 @@ const openWorkspace = async (t) => {
     }],
   });
   t.after(async () => { await server.close(); delete globalThis[key]; });
-  const { default: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
+  const { EventWorkspaceContent: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
   const render = () => { cursor = 0; return Workspace(); };
   const find = (type) => nodes(render()).find((node) => node.type === type);
   const open = () => { find('ActivityList').props.onAddExpense(activity); return find('TransactionForm'); };

@@ -85,6 +85,7 @@ self.addEventListener('fetch', (event) => {
 
 export default defineConfig({
   plugins: [react(), pwaShellPlugin()],
+  cacheDir: process.env.DN_BROWSER_TEST === '1' ? '.verification/vite-browser-cache' : undefined,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(APP_VERSION),
     'import.meta.env.VITE_DEPLOYED_AT': JSON.stringify(DEPLOYED_AT),

@@ -220,7 +220,8 @@ export const getSampleScenarioDefinitions = () => scenarioDefinitions;
 
 export const getActiveSampleScenario = (uid) => {
   if (!import.meta.env.DEV || uid || typeof localStorage === 'undefined') return null;
-  return localStorage.getItem(ACTIVE_SCENARIO_KEY) || null;
+  try { return localStorage.getItem(ACTIVE_SCENARIO_KEY) || null; }
+  catch { return null; }
 };
 
 export const getActiveSampleData = (uid) => {
@@ -228,10 +229,20 @@ export const getActiveSampleData = (uid) => {
   if (!scenario) return null;
   try {
     const data = JSON.parse(localStorage.getItem(FIXTURE_DATA_KEY) || 'null');
-    return data?.scenario === scenario ? data : null;
+    return data?.scenario === scenario && ['events', 'incomes', 'expenses'].every((key) => Array.isArray(data[key])) ? data : null;
   } catch {
     return null;
   }
+};
+
+// Stores must never fall through to real Guest persistence when an active
+// isolated fixture is missing/corrupt. Settings can still offer Clear Sample.
+export const requireActiveSampleData = (uid) => {
+  const data = getActiveSampleData(uid);
+  if (getActiveSampleScenario(uid) && (!data || !['events', 'incomes', 'expenses'].every((key) => Array.isArray(data[key])))) {
+    throw new Error('The isolated Sample data is unavailable. Clear Sample data or reload it before saving.');
+  }
+  return data;
 };
 
 export const activateSampleScenario = (scenario) => {

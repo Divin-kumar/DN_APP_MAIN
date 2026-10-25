@@ -3,10 +3,13 @@ import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import RichText from '../common/RichText';
 import DropdownSelect from '../common/DropdownSelect';
+import { Link } from 'react-router-dom';
+import { activityDetailPath } from '../../utils/activityDetail';
 
-const money = (amount) => new Intl.NumberFormat('en-IN', {
+export const formatTransactionMoney = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(amount) || 0);
+const money = (amount) => Number.isFinite(Number(amount)) ? formatTransactionMoney(amount) : 'Amount unavailable';
 const dateLabel = (date) => {
   if (!date) return 'Date not set';
   const parsed = new Date(`${String(date).slice(0, 10)}T00:00:00`);
@@ -15,7 +18,7 @@ const dateLabel = (date) => {
     : 'Date not set';
 };
 
-export function TransactionCard({ transaction, events = [], onEdit, onDelete, compact = false }) {
+export function TransactionCard({ transaction, events = [], onEdit, onDelete, onOpen, showActivity = false, compact = false }) {
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
   const activity = event?.activities?.find((item) => item.id === transaction.activityId);
@@ -46,6 +49,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
     <SwipeActionCard as="article" role="listitem" className="dn-transaction-card"
       mainClassName="dn-transaction-swipe-content"
       label={transaction.name || transaction.title || 'Transaction'} openOnTap
+      onOpen={onOpen ? () => onOpen(transaction) : undefined}
       otherActions={[{ label: 'Edit', icon: Pencil, onClick: () => onEdit(transaction) }]}
       onDelete={() => onDelete(transaction)}>
       <div className="dn-transaction-card-core">
@@ -55,12 +59,13 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, co
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
           <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
+          {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}
           {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
             <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>
               <summary><span>Details{eventTitle ? ` · ${eventTitle}` : ''}</span><ChevronDown size={12} aria-hidden="true" /></summary>
               <div className="dn-transaction-details-content">
                 {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
-                {activityTitle ? <small>Activity: {activityTitle}</small> : null}
+                {activityTitle ? <small>Activity: {activity && event ? <Link to={activityDetailPath(event.id || event.firestoreId, activity.id)}>{activityTitle}</Link> : activityTitle}</small> : null}
                 {transaction.notes || transaction.description ? <RichText className="dn-transaction-note" value={transaction.notes || transaction.description} /> : null}
               </div>
             </details>

@@ -22,6 +22,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const Events = lazy(() => import('./pages/Events'));
 const Activities = lazy(() => import('./pages/Activities'));
+const ActivityDetail = lazy(() => import('./features/activities/ActivityDetail'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
@@ -161,6 +162,8 @@ export default function App() {
             <Route path="events/:eventId" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/overview" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/activities" element={loadScreen(<EventWorkspaceShell />, 'activities')} />
+            <Route path="events/:eventId/activities/:activityId" element={loadScreen(<ActivityDetail />, 'activity')} />
+            <Route path="events/:eventId/transactions" element={loadScreen(<EventWorkspaceShell />, 'transactions')} />
             <Route path="events/:eventId/timeline" element={loadScreen(<EventWorkspaceShell />, 'timeline')} />
             <Route path="events/:eventId/memories" element={loadScreen(<EventWorkspaceShell />, 'memories')} />
             <Route path="events/:eventId/attachments" element={loadScreen(<EventWorkspaceShell />, 'attachments')} />

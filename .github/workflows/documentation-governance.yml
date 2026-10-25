@@ -20,6 +20,12 @@ jobs:
         run: npm ci
       - name: Run Node unit tests
         run: npm test
+      - name: Lint application and tests
+        run: npm run lint
+      - name: Install Chromium for synthetic browser regressions
+        run: npx playwright install --with-deps chromium
+      - name: Test Activity and Moment browser journeys
+        run: npm run test:e2e
       - name: Build production application
         run: npm run build
   documentation-contract:
@@ -67,3 +73,5 @@ jobs:
               node scripts/check-audit-log.mjs
             fi
           fi
+      - name: Check documentation links and current route contracts
+        run: node scripts/check-documentation.mjs

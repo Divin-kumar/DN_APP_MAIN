@@ -43,13 +43,13 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
   assert.match(surface, /createPortal\(/);
   assert.match(surface, /className="dn-swipe-popup"/);
   assert.match(surface, /role="menu"/);
-  assert.match(surface, /aria-label=\{\`Actions for/);
+  assert.match(surface, /aria-label=\{`Actions for/);
   assert.match(surface, /onTouchStartCapture=/);
   assert.match(surface, /onTouchEndCapture=/);
   assert.match(surface, /onPointerDownCapture=/);
   assert.match(surface, /onPointerUpCapture=/);
   assert.match(surface, /onClickCapture=/);
-  assert.match(surface, /\!resolveSwipeGesture\(start, \{ x, y \}\)\.action/);
+  assert.match(surface, /!resolveSwipeGesture\(start, \{ x, y \}\)\.action/);
   assert.match(surface, /\.\.\.\(onDelete \? \[\{ label: 'Delete'/);
   assert.doesNotMatch(surface, /dn-swipe-tray-(other|delete)|animate=\{/);
 });
@@ -85,14 +85,14 @@ test('Transaction form chooses a Moment before showing Moment-scoped activities'
 test('linked Moment label displays even without an activity and swipe Delete remains explicit', () => {
   const card = read('../components/financials/TransactionHistory.jsx');
   assert.match(card, /transaction\.eventId \? <small>Moment: \{eventTitle\}<\/small>/);
-  assert.match(card, /activityTitle \? <small>Activity: \{activityTitle\}<\/small>/);
+  assert.match(card, /activityTitle \? <small>Activity:/);
   assert.match(card, /onDelete\(transaction\)/);
   assert.match(card, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
 });
 test('moment-only expenses can be deleted without requiring an expired activity mirror', () => {
   const manager = read('../hooks/useTransactionManager.js');
   assert.match(manager, /original\.activityId && \(isGuest \|\| isNestedOnlyAccountExpense\(original, isGuest\)\)/);
-  assert.match(manager, /await updateMirrors\(original, null\)/);
+  assert.match(manager, /await updateMirrors\(original, null, context\)/);
   assert.match(manager, /await deleteExpenseItem\(uid, isGuest, id\)/);
 });
 
@@ -120,7 +120,7 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(swipe, /if \(!resolveSwipeGesture\(start, \{ x, y \}\)\.action\) return/);
   assert.match(swipe, /showMenu\(isTouch\)/);
   assert.match(swipe, /onClick=\{\(\) => perform\(onClick\)\}/);
-  assert.match(swipe, /aria-label=\{\`Actions for/);
+  assert.match(swipe, /aria-label=\{`Actions for/);
   assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
   assert.match(read('../components/financials/TransactionHistory.jsx'), /All income and expenses/);
 });
@@ -136,7 +136,7 @@ test('finance density has one-row totals and a single compact transaction headin
   const layout = read('../layouts/DashboardLayout.jsx');
   assert.doesNotMatch(history, /dn-transaction-add/);
   assert.match(layout, /onClick=\{\(\) => beginQuickCreate\('transaction'\)\}/);
-  assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{events\} onSubmit=\{saveQuickTransaction\}/);
+  assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{activityMoments\} onSubmit=\{saveQuickTransaction\}/);
   assert.match(css, /\.dn-finance-summary-grid \{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
   assert.match(css, /\.dn-transactions-page \.transactions-heading \{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-copy p \{[\s\S]*?white-space:nowrap/);

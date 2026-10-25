@@ -1,0 +1,65 @@
+import { useEffect, useRef, useState } from 'react';
+import useAppStore from '../store/useAppStore';
+import { scopedRecordActions as records } from '../services/scopedRecordActions';
+import { activityCompletionPatch } from '../utils/activityDetail';
+import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
+
+// Shared by the detail page and Dashboard. List/workspace forms use the same
+// scoped writer, so every entry point serializes changes to a parent Moment.
+export default function useActivityActions() {
+  const showToast = useAppStore((state) => state.showToast);
+  const context = records.capture();
+  const mounted = useRef(true);
+  const saving = useRef(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+  const [announcement, setAnnouncement] = useState('');
+  const [draft, setDraft] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  const current = () => mounted.current && records.isCurrent(context);
+  const run = async (target, updater, operation, message, after) => {
+    if (saving.current || !mounted.current) return false;
+    saving.current = true;
+    setBusy(true); setError('');
+    try {
+      const changed = await records.mutateActivity(context, target.momentId, target.activityId, updater, operation);
+      if (current()) { if (changed && message) setAnnouncement(message); after?.(changed); }
+      return changed;
+    } catch (reason) {
+      if (current()) {
+        setError(reason?.message || 'Could not save this activity. Please try again.');
+        showToast('Could not save this activity. Please try again.', 'danger');
+      }
+      throw reason;
+    } finally { saving.current = false; if (current()) setBusy(false); }
+  };
+  const setCompleted = (target, completed) => run(target, (activity, moment) => activityCompletionPatch(activity, moment, completed),
+    completed ? 'complete' : 'reopen', completed ? 'Activity completed' : 'Activity reopened');
+  const setCancelled = (target, cancelled) => run(target, (activity) => ({ cancelled,
+    status: cancelled ? 'cancelled' : activity.completed ? 'completed' : 'in-progress' }),
+  cancelled ? 'cancel' : 'restore', cancelled ? 'Activity cancelled' : 'Activity restored');
+  const edit = (target) => {
+    if (saving.current) return;
+    try {
+      const { moment, activity } = records.resolveActivity(context, target.momentId, target.activityId);
+      setError('');
+      setDraft({ ...target, momentName: moment.name, title: activity.title || '',
+        date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
+    } catch (reason) { setError(reason.message); }
+  };
+  const save = (event) => {
+    event.preventDefault();
+    if (!draft?.title.trim() || !parseMomentDate(draft.date)) { setError('Enter an activity title and a valid date.'); return; }
+    return run(draft, () => ({ title: draft.title.trim(), date: draft.date, description: draft.description, priority: draft.priority }),
+      'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
+  };
+  const closeEditor = () => { if (!saving.current) { setDraft(null); setError(''); } };
+  const requestDelete = (target) => { if (!saving.current) { setError(''); setDeleteTarget(target); } };
+  const remove = (after) => run(deleteTarget, () => null, 'delete', 'Activity deleted', (changed) => {
+    setDeleteTarget(null); if (changed) after?.();
+  }).catch(() => {});
+  return { busy, error, announcement, draft, deleteTarget, edit, save, closeEditor, requestDelete, remove,
+    changeDraft: (patch) => { if (!saving.current) setDraft((value) => ({ ...value, ...patch })); },
+    closeDelete: () => { if (!saving.current) setDeleteTarget(null); }, setCompleted, setCancelled };
+}

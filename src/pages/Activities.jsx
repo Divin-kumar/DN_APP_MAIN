@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ListChecks, Plus } from 'lucide-react';
 import ActivityList from '../components/events/ActivityList';
 import AttachmentGallery from '../components/common/AttachmentGallery';
@@ -20,6 +20,10 @@ import { getActivityMomentType, projectActivities, selectActivityEntries } from 
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
+import { activityCompletionPatch, activityDetailPath, activityStatus } from '../utils/activityDetail';
+import { scopedRecordActions as records } from '../services/scopedRecordActions';
+import { getActiveSampleScenario } from '../dev/sampleData';
+import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 
 const EMPTY = Object.freeze([]);
 const DEFAULTS = Object.freeze({ search: '', filter: 'all', momentId: '', momentType: '', parentScope: 'active', field: 'date', direction: 'asc' });
@@ -44,10 +48,13 @@ export default function Activities() {
   const isGuest = useAppStore((state) => state.isGuest);
   const scope = scopeKey({ user, isGuest });
   // Remount drafts on account/guest changes as well as hiding stale store data.
-  return <ActivitiesContent key={scope} uid={user?.uid} isGuest={isGuest} scope={scope} />;
+  return <ActivitiesContent key={JSON.stringify([scope, getActiveSampleScenario(user?.uid)])} uid={user?.uid} isGuest={isGuest} scope={scope} />;
 }
 
 export function ActivitiesContent({ uid, isGuest, scope }) {
+  const navigate = useNavigate();
+  const mutationContext = records.capture();
+  const [announcement, setAnnouncement] = useState('');
   const showToast = useAppStore((state) => state.showToast);
   const adminValues = useAppStore((state) => state.adminValues);
   const eventStore = useEventStore();
@@ -73,8 +80,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     loadExpenses(uid, isGuest);
   }, [uid, isGuest, loadEvents, loadExpenses]);
 
-  const ready = eventStore.loadedFor === scope && eventStore.activeLoadKey === scope;
-  const expensesReady = expenseStore.loadedFor === scope && expenseStore.activeLoadKey === scope;
+  const ready = isRecordScopeLoaded(eventStore, scope, getActiveSampleScenario(uid));
+  const expensesReady = isRecordScopeLoaded(expenseStore, scope, getActiveSampleScenario(uid));
   const events = ready ? eventStore.events : EMPTY;
   const expenses = expensesReady ? expenseStore.expenses : EMPTY;
   const projection = useMemo(() => {
@@ -105,7 +112,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   };
   const assertScope = () => {
     const current = useEventStore.getState();
-    if (!activeSession() || current.loadedFor !== scope || current.activeLoadKey !== scope) {
+    if (!activeSession() || !records.isCurrent(mutationContext) || !isRecordScopeLoaded(current, scope, getActiveSampleScenario(uid)) || current.loading) {
       throw new Error('The active account changed or its Moments are still loading. Please try again.');
     }
     return current;
@@ -136,14 +143,12 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       if (activeSession()) setBusy(false);
     }
   };
-  const runAction = (operation, after) => { mutate(operation, after).catch(() => {}); };
+  const runAction = (operation, after) => mutate(operation, after).catch(() => {});
   const updateActivity = (target, patch) => {
-    const { moment, activity } = resolve(target);
-    return updateEventItem(uid, isGuest, {
-      ...moment,
-      activities: moment.activities.map((item) => recordId(item.id) === target.activityId ? { ...activity, ...patch(activity) } : item),
-    });
+    resolve(target);
+    return records.mutateActivity(mutationContext, target.momentId, target.activityId, patch);
   };
+
   const edit = (view) => {
     if (saving.current) return;
     const target = reference(view);
@@ -245,6 +250,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       </div>
       {saveError && !draft && !transactionTarget && !linkTarget ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
       {busy ? <p role="status">Saving…</p> : null}
+      <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))}
@@ -256,9 +262,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             }}
             getEventName={(view) => { const entry = projection.context.get(view); return <Link to={`/events/${encodeURIComponent(entry.momentId)}/activities`}>{entry.momentName}</Link>; }}
             expensesByActivity={expensesByActivity} showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount)}
+            onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId)); }}
             onEdit={edit}
-            onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => ({ completed: !activity.completed, completedAt: activity.completed ? null : new Date().toISOString() })))}
-            onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => { const cancelled = activity.cancelled || activity.status === 'cancelled'; return { cancelled: !cancelled, status: cancelled ? 'in-progress' : 'cancelled' }; }))}
+            onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')), () => setAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed'))}
+            onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => { const cancelled = activity.cancelled || activity.status === 'cancelled'; return { cancelled: !cancelled, status: cancelled ? activity.completed ? 'completed' : 'in-progress' : 'cancelled' }; }))}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
             onAddExpense={(view) => openTransaction(reference(view))}
             onLinkExpense={(view) => { if (!saving.current) { setSaveError(''); setLinkTarget({ ...reference(view), title: view.title }); } }} />}
@@ -282,7 +289,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         </form>
       </ModalDialog> : null}
       {deleteTarget ? <ConfirmDialog title="Delete activity?" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}
-        onConfirm={() => runAction(async () => { const { moment } = resolve(deleteTarget); await updateEventItem(uid, isGuest, { ...moment, activities: moment.activities.filter((item) => recordId(item.id) !== deleteTarget.activityId) }); }, () => setDeleteTarget(null))} /> : null}
+        busy={busy} error={saveError} onConfirm={() => runAction(() => records.mutateActivity(mutationContext, deleteTarget.momentId, deleteTarget.activityId, () => null), () => setDeleteTarget(null))} /> : null}
       {transactionTarget ? <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={() => close(setTransactionTarget)}>
         {saveError ? <p className="dn-transaction-form-error" role="alert">{saveError}</p> : null}
         <TransactionForm defaultKind="expense" presetLink={transactionTarget} events={events} busy={busy} onCancel={() => close(setTransactionTarget)}

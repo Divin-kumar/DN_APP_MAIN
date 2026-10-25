@@ -15,11 +15,18 @@ import {
 import { db } from '../firebase/config';
 import { getEventStatus } from '../utils/eventStatus';
 import { normalizeActivityExpense } from '../utils/transactionRelations';
-import { formatMomentDate, getEventDate } from '../utils/momentDates';
+import { formatMomentDate, getEventDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
 
 const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
 const GUEST_SESSION_BACKUP_KEY = 'dn_session_backup';
+
+const storedFields = (item) => Object.fromEntries(Object.entries(item)
+  .filter(([key]) => !['firestoreId', 'firestoreCollection', 'firestoreSources'].includes(key)));
+const activityDate = (item) => {
+  try { return formatMomentDate(parseMomentDate(item.date ?? item.startDate)) || item.date || ''; }
+  catch { return ''; }
+};
 
 export { getEventStatus };
 
@@ -34,18 +41,19 @@ export const normalizeActivity = (item = {}) => {
   const id = recordId(item.id) || crypto.randomUUID();
   const eventId = recordId(item.eventId) || null;
   return {
+    ...storedFields(item),
     id,
     eventId,
     title: String(item.title ?? '').trim(),
-    date: formatMomentDate(getEventDate(item)) || item.date || formatMomentDate(new Date()),
+    date: activityDate(item),
     description: item.description || '',
     expenses: Array.isArray(item.expenses)
-      ? item.expenses.map((expense) => normalizeActivityExpense({
+      ? item.expenses.map((expense) => ({ ...storedFields(expense || {}), ...normalizeActivityExpense({
         ...expense,
         id: recordId(expense.id) || recordId(expense.firestoreId) || undefined,
         eventId: recordId(expense.eventId) || eventId,
         activityId: recordId(expense.activityId) || id,
-      }, eventId, id))
+      }, eventId, id) }))
       : [],
     completed: Boolean(item.completed),
     cancelled: Boolean(item.cancelled || String(item.status || '').toLowerCase() === 'cancelled'),
@@ -60,6 +68,7 @@ export const normalizeActivity = (item = {}) => {
 export const normalizeEvent = (item = {}) => {
   const id = recordId(item.id) || recordId(item.firestoreId) || crypto.randomUUID();
   return {
+    ...storedFields(item),
     id,
     name: String(item.name ?? item.title ?? '').trim(),
     date: formatMomentDate(getEventDate(item)) || item.date || formatMomentDate(new Date()),
@@ -97,10 +106,10 @@ export const getGuestEvents = () => {
       return normalized;
     }
 
-    return [];
+    throw new Error('Guest Moment storage is invalid; no changes were made.');
   } catch (error) {
     console.error('Failed to load guest events:', error);
-    return [];
+    throw error;
   }
 };
 

@@ -78,6 +78,7 @@ test('account financial readers include unified transactions, retain source rout
       name: 'isolated-financial-sources', enforce: 'pre',
       resolveId(source, importer) {
         if (importer?.replaceAll('\\', '/').endsWith('/src/hooks/useTransactionManager.js')) {
+          if (source.endsWith('/services/scopedRecordActions')) return '\0financial-hook-writer';
           if (source === 'react') return '\0financial-hook-react';
           const store = { '../store/useAppStore': 'app', '../store/useIncomeStore': 'income',
             '../store/useExpenseStore': 'expense', '../store/useEventStore': 'event' }[source];
@@ -91,6 +92,7 @@ test('account financial readers include unified transactions, retain source rout
       load(id) {
         if (id === '\0financial-test-db') return 'export const db = {};';
         if (id === '\0financial-test-firestore') return `export const { ${Object.keys(api).join(', ')} } = globalThis[${JSON.stringify(fixtureKey)}];`;
+        if (id === '\0financial-hook-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; const api=()=>globalThis[${JSON.stringify(fixtureKey)}].hook; export const scopedRecordActions=createScopedRecordActions({getSession:()=>api().appState,getEvents:()=>api().eventState});`;
         if (id === '\0financial-hook-react') return 'export const useCallback = (callback) => callback;';
         if (id === '\0financial-hook-app') return `export default (selector) => selector(globalThis[${JSON.stringify(fixtureKey)}].hook.appState);`;
         if (id === '\0financial-hook-event') return `const useStore = () => globalThis[${JSON.stringify(fixtureKey)}].hook.eventState; useStore.getState = useStore; export default useStore;`;
@@ -191,22 +193,26 @@ test('account financial readers include unified transactions, retain source rout
   // service with controlled hook bindings. React memoization is outside this test.
   const { default: incomeStore } = await server.ssrLoadModule('/src/store/useIncomeStore.js');
   api.hook = { appState: { user: { uid: 'A' }, isGuest: false }, expenseStore, incomeStore,
-    eventState: { events: [], updateEventItem: async (_uid, _guest, event) => {
+    eventState: { loadedFor:'user:A',activeLoadKey:'user:A', events: [], updateEventItem: async (_uid, _guest, event) => {
       calls.push(['event-update', event]);
       api.hook.eventState.events = [event];
     } } };
   const { default: useTransactionManager } = await server.ssrLoadModule('/src/hooks/useTransactionManager.js');
   expenseStore.getState().setExpenses([recovered]);
+  expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   await useTransactionManager().removeTransaction({ ...recovered, transactionKind: 'expense', eventId: 'missing-moment', activityId: 'missing-activity' });
   assert.deepEqual(calls.at(-1), ['delete', 'users/A/transactions/transaction-20'], 'a persisted recovered expense remains deletable after an old parent disappears');
   const beforeNestedDelete = calls.length;
   await assert.rejects(() => useTransactionManager().removeTransaction({ id: 'nested-orphan', transactionKind: 'expense', eventId: 'missing-moment', activityId: 'missing-activity' }), /moment is unavailable/);
   assert.equal(calls.length, beforeNestedDelete, 'nested-only deletion still requires its actual parent');
   api.hook.appState = { user: null, isGuest: true };
+  expenseStore.setState({loadedFor:'guest:anonymous',activeLoadKey:'guest:anonymous'});
   await assert.rejects(() => useTransactionManager().removeTransaction({ ...recovered, transactionKind: 'expense', eventId: 'missing-moment', activityId: 'missing-activity' }), /moment is unavailable/, 'guest mirror safety remains unchanged');
   api.hook.appState = { user: { uid: 'A' }, isGuest: false };
+  expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   api.hook.eventState.events = [{ id: 'moment', activities: [{ id: 'activity', expenses: [recovered] }] }];
   expenseStore.getState().setExpenses([recovered]);
+  expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   const beforeLinkedDelete = calls.length;
   await useTransactionManager().removeTransaction({ ...recovered, transactionKind: 'expense' });
   assert.equal(calls[beforeLinkedDelete][0], 'event-update');
@@ -217,6 +223,7 @@ test('account financial readers include unified transactions, retain source rout
   records.set('users/A/transactions', [...records.get('users/A/transactions'), ['convert-unified', { id: 'convert-source', kind: 'expense', name: 'Conversion fixture', amount: 15, date: '2026-10-22' }]]);
   const beforeConversion = await expenseService.getExpensesForUser('A');
   expenseStore.getState().setExpenses(beforeConversion);
+  expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   incomeStore.getState().setIncomes(await incomeService.getIncomesForUser('A'));
   api.hook.eventState.events = [];
   await useTransactionManager().saveTransaction({ transactionKind: 'income', title: 'Converted', amount: 15, date: '2026-10-22', category: 'Bonus', notes: '', eventId: '', activityId: '' },

@@ -13,7 +13,7 @@ import {
   saveGuestExpense,
   updateExpense,
 } from '../services/expenseService';
-import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
 import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
 
@@ -24,29 +24,36 @@ const useExpenseStore = create((set, get) => {
 
   return ({
   expenses: [],
+  pendingCreateIds: [],
   loading: false,
   error: null,
   loadedFor: null,
   activeLoadKey: null,
+  loadedSample: null, activeSample: null, scopeRevision: 0,
 
   // A complete replacement (restore/account switch) resets ownership metadata.
-  setExpenses: (items) => set({ expenses: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
+  setExpenses: (items) => set((state) => ({ expenses: items, pendingCreateIds: [], loading: false, error: null, loadedFor: null, activeLoadKey: null,
+    loadedSample: null, activeSample: null, scopeRevision: state.scopeRevision + 1 })),
   // An in-memory edit of a nested-only expense must retain the account/guest
   // scope already verified by loadExpenses, or Financials hides every record.
   patchLoadedExpenses: (items) => set({ expenses: items, loading: false, error: null }),
 
   loadExpenses: async (uid, isGuest) => {
     const loadKey = getLoadKey(uid, isGuest);
-    if (isFinancialScopeLoaded(get(), loadKey)) return get().expenses;
-    set(beginFinancialLoad(get(), loadKey, 'expenses'));
+    const sample = getActiveSampleScenario(uid);
+    const requestKey = JSON.stringify([loadKey, sample]);
+    if (isFinancialScopeLoaded(get(), loadKey) && (get().loadedSample ?? null) === sample && (get().activeSample ?? null) === sample) return get().expenses;
+    const changed = get().activeLoadKey !== loadKey || (get().activeSample ?? null) !== sample;
+    set({ ...beginFinancialLoad(get(), loadKey, 'expenses'), activeSample: sample,
+      ...(changed ? { expenses: [], pendingCreateIds: [], loadedFor: null, loadedSample: null, scopeRevision: get().scopeRevision + 1 } : {}) });
     // Re-select an in-flight account when rapidly switching A → B → A.
-    if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
+    if (pendingLoads.has(requestKey)) return pendingLoads.get(requestKey);
 
     const request = Promise.resolve().then(async () => {
       try {
         const sampleData = getActiveSampleData(uid);
         if (sampleData) {
-          if (get().activeLoadKey === loadKey) set({ expenses: sampleData.expenses, loading: false, error: null, loadedFor: loadKey });
+          if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) set({ expenses: sampleData.expenses, loading: false, error: null, loadedFor: loadKey, loadedSample: sample });
           return sampleData.expenses;
         }
 
@@ -54,17 +61,17 @@ const useExpenseStore = create((set, get) => {
           ? getGuestExpenses()
           : await getExpensesForUser(uid);
 
-        if (get().activeLoadKey === loadKey) set({ expenses: items, loading: false, error: null, loadedFor: loadKey });
+        if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) set({ expenses: items, loading: false, error: null, loadedFor: loadKey, loadedSample: sample });
         return items;
       } catch (error) {
         console.error('Failed to load expenses:', error);
-        if (get().activeLoadKey === loadKey) set({ loading: false, error: 'Unable to load expenses.' });
+        if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) set({ loading: false, error: 'Unable to load expenses.' });
         return [];
       } finally {
-        pendingLoads.delete(loadKey);
+        pendingLoads.delete(requestKey);
       }
     });
-    pendingLoads.set(loadKey, request);
+    pendingLoads.set(requestKey, request);
 
     return request;
   },
@@ -91,20 +98,26 @@ const useExpenseStore = create((set, get) => {
       return normalized;
     }
 
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const previous = get().expenses;
     const optimistic = [normalized, ...previous];
-    set({ expenses: optimistic, loading: false, error: null });
+    set({ expenses: optimistic, pendingCreateIds: [...get().pendingCreateIds, String(normalized.id)], loading: false, error: null });
 
     try {
       const saved = await createExpense(uid, normalized);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return saved;
       set({
+        pendingCreateIds: get().pendingCreateIds.filter((id) => id !== String(normalized.id)),
         expenses: [saved, ...get().expenses.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
       });
       return saved;
     } catch (error) {
       console.error('Failed to create expense:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
+        pendingCreateIds: get().pendingCreateIds.filter((id) => id !== String(normalized.id)),
         expenses: get().expenses.filter((item) => item.id !== normalized.id && item.firestoreId !== normalized.id),
         error: 'Unable to create the expense. Your changes were restored.',
       });
@@ -127,6 +140,8 @@ const useExpenseStore = create((set, get) => {
       return expense;
     }
 
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const current = get().expenses;
     const previous = current.find((item) => sameRecord(item, expense));
     const optimistic = current.map((item) =>
@@ -136,6 +151,7 @@ const useExpenseStore = create((set, get) => {
 
     try {
       const updated = await updateExpense(uid, expense);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return updated;
       set({
         expenses: get().expenses.map((item) =>
           sameRecord(item, expense) ? { ...item, ...updated } : item
@@ -145,6 +161,7 @@ const useExpenseStore = create((set, get) => {
       return updated;
     } catch (error) {
       console.error('Failed to update expense:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
         expenses: previous
           ? get().expenses.map((item) => (sameRecord(item, expense) ? previous : item))
@@ -156,6 +173,8 @@ const useExpenseStore = create((set, get) => {
   },
 
   deleteExpenseItem: async (uid, isGuest, expenseId) => {
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const current = get().expenses;
     const expense = current.find((item) => item.id === expenseId) || current.find((item) => item.firestoreId === expenseId);
 
@@ -185,6 +204,7 @@ const useExpenseStore = create((set, get) => {
       }
     } catch (error) {
       console.error('Failed to delete expense:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
         expenses: get().expenses.some((item) => sameRecord(item, expense))
           ? get().expenses

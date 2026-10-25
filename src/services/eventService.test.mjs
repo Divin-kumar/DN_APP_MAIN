@@ -86,7 +86,8 @@ test('event service normalizes old dates/IDs and preserves legacy account collec
     name: 'Birthday',
     startDate: '1990-11-02',
     isRecurring: true,
-    activities: [{ id: 1728990000001, title: 'Gift', date: { seconds: new Date(2026, 10, 1, 12).getTime() / 1000 }, expenses: [{ id: 1728990000002, amount: 10 }] }],
+    extraParentData: { retained: true },
+    activities: [{ id: 1728990000001, title: 'Gift', extraChildData: { retained: true }, date: { seconds: new Date(2026, 10, 1, 12).getTime() / 1000 }, expenses: [{ id: 1728990000002, amount: 10, extraExpenseData: { retained: true }, firestoreId: 'runtime-only' }] }],
     memories: [{ id: 1728990000003, title: 'Remembered' }],
     attachments: [{ id: 1728990000004, name: 'Photo' }, { firestoreId: 'old-file-document', name: 'Old file' }],
   };
@@ -116,6 +117,10 @@ test('event service normalizes old dates/IDs and preserves legacy account collec
   await service.updateEvent('A', { ...legacy[0], notes: 'Edited' });
   assert.equal(calls.at(-1)[1], 'users/A/events/legacy-document');
   assert.equal(calls.at(-1)[2].notes, 'Edited');
+  assert.deepEqual(calls.at(-1)[2].extraParentData, { retained: true });
+  assert.deepEqual(calls.at(-1)[2].activities[0].extraChildData, { retained: true });
+  assert.deepEqual(calls.at(-1)[2].activities[0].expenses[0].extraExpenseData, { retained: true });
+  assert.equal(calls.at(-1)[2].activities[0].expenses[0].firestoreId, undefined);
   assert.equal(Object.hasOwn(calls.at(-1)[2], 'firestoreCollection'), false);
   await service.deleteEvent('A', legacy[0]);
   assert.deepEqual(calls.at(-1), ['delete', 'users/A/events/legacy-document']);

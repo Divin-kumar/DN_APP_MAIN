@@ -1,12 +1,21 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getMomentWorkspaceKey, getMomentWorkspaceSection, getRouteTransitionKey, isSameMomentWorkspace } from './momentWorkspaceRoutes.js';
+import { getMomentWorkspaceKey, getMomentWorkspaceSection, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from './momentWorkspaceRoutes.js';
 
 test('Moment section links share a stable transition key, including direct aliases and trailing slashes', () => {
-  for (const suffix of ['', '/overview', '/activities', '/timeline', '/memories', '/attachments', '/pdf', '/memories/']) {
+  for (const suffix of ['', '/overview', '/activities', '/transactions', '/timeline', '/memories', '/attachments', '/pdf', '/memories/']) {
     assert.equal(getRouteTransitionKey(`/events/moment-1${suffix}`), '/events/moment-1');
     assert.equal(isSameMomentWorkspace('/events/moment-1/activities', `/events/moment-1${suffix}`), true);
   }
+});
+
+test('Activity Detail highlights Activities; every other Moment workspace route highlights Moments', () => {
+  for (const route of ['/events/moment/activities/child', '/events/moment/activities/child/', '/activities']) assert.equal(primaryNavigationPath(route), '/activities');
+  for (const route of ['/events', '/events/moment', '/events/moment/activities', '/events/moment/transactions', '/events/moment/memories']) assert.equal(primaryNavigationPath(route), '/events');
+  assert.equal(getMomentWorkspaceSection('/events/moment/transactions'), 'transactions');
+  assert.equal(primaryNavigationPath('/dashboard'), '/dashboard');
+  assert.equal(primaryNavigationPath('/'), '/dashboard');
+  assert.equal(primaryNavigationPath('/financials/transactions'), null);
 });
 
 test('different Moments and app pages remain distinct navigation contexts', () => {

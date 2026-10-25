@@ -13,7 +13,7 @@ import {
   saveGuestIncome,
   updateIncome,
 } from '../services/incomeService';
-import { getActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
+import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
 import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
 
@@ -28,15 +28,21 @@ const useIncomeStore = create((set, get) => {
   error: null,
   loadedFor: null,
   activeLoadKey: null,
+  loadedSample: null, activeSample: null, scopeRevision: 0,
 
-  setIncomes: (items) => set({ incomes: items, loading: false, error: null, loadedFor: null, activeLoadKey: null }),
+  setIncomes: (items) => set((state) => ({ incomes: items, loading: false, error: null, loadedFor: null, activeLoadKey: null,
+    loadedSample: null, activeSample: null, scopeRevision: state.scopeRevision + 1 })),
 
   loadIncomes: async (uid, isGuest) => {
     const loadKey = getLoadKey(uid, isGuest);
-    if (isFinancialScopeLoaded(get(), loadKey)) return get().incomes;
-    set(beginFinancialLoad(get(), loadKey, 'incomes'));
+    const sample = getActiveSampleScenario(uid);
+    const requestKey = JSON.stringify([loadKey, sample]);
+    if (isFinancialScopeLoaded(get(), loadKey) && (get().loadedSample ?? null) === sample && (get().activeSample ?? null) === sample) return get().incomes;
+    const changed = get().activeLoadKey !== loadKey || (get().activeSample ?? null) !== sample;
+    set({ ...beginFinancialLoad(get(), loadKey, 'incomes'), activeSample: sample,
+      ...(changed ? { incomes: [], loadedFor: null, loadedSample: null, scopeRevision: get().scopeRevision + 1 } : {}) });
     // Re-select an in-flight account when rapidly switching A → B → A.
-    if (pendingLoads.has(loadKey)) return pendingLoads.get(loadKey);
+    if (pendingLoads.has(requestKey)) return pendingLoads.get(requestKey);
 
     const request = Promise.resolve().then(async () => {
       try {
@@ -44,19 +50,19 @@ const useIncomeStore = create((set, get) => {
         const items = sampleData
           ? sampleData.incomes
           : isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
-        if (get().activeLoadKey === loadKey) {
-          set({ incomes: items, loading: false, error: null, loadedFor: loadKey });
+        if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) {
+          set({ incomes: items, loading: false, error: null, loadedFor: loadKey, loadedSample: sample });
         }
         return items;
       } catch (error) {
         console.error('Failed to load incomes:', error);
-        if (get().activeLoadKey === loadKey) set({ loading: false, error: 'Unable to load incomes.' });
+        if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) set({ loading: false, error: 'Unable to load incomes.' });
         return [];
       } finally {
-        pendingLoads.delete(loadKey);
+        pendingLoads.delete(requestKey);
       }
     });
-    pendingLoads.set(loadKey, request);
+    pendingLoads.set(requestKey, request);
     return request;
   },
 
@@ -82,12 +88,15 @@ const useIncomeStore = create((set, get) => {
       return normalized;
     }
 
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const previous = get().incomes;
     const optimistic = [normalized, ...previous];
     set({ incomes: optimistic, error: null });
 
     try {
       const saved = await createIncome(uid, normalized);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return saved;
       set({
         incomes: [saved, ...get().incomes.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
         error: null,
@@ -95,6 +104,7 @@ const useIncomeStore = create((set, get) => {
       return saved;
     } catch (error) {
       console.error('Failed to create income:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
         incomes: get().incomes.filter((item) => item.id !== normalized.id && item.firestoreId !== normalized.id),
         error: 'Unable to create the income. Your changes were restored.',
@@ -118,6 +128,8 @@ const useIncomeStore = create((set, get) => {
       return income;
     }
 
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const current = get().incomes;
     const previous = current.find((item) => sameRecord(item, income));
     const optimistic = current.map((item) =>
@@ -127,6 +139,7 @@ const useIncomeStore = create((set, get) => {
 
     try {
       const updated = await updateIncome(uid, income);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return updated;
       set({
         incomes: get().incomes.map((item) =>
           sameRecord(item, income) ? { ...item, ...updated } : item
@@ -136,6 +149,7 @@ const useIncomeStore = create((set, get) => {
       return updated;
     } catch (error) {
       console.error('Failed to update income:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
         incomes: previous
           ? get().incomes.map((item) => (sameRecord(item, income) ? previous : item))
@@ -147,6 +161,8 @@ const useIncomeStore = create((set, get) => {
   },
 
   deleteIncomeItem: async (uid, isGuest, incomeId) => {
+    const mutationScope = get().activeLoadKey;
+    const mutationRevision = get().scopeRevision;
     const current = get().incomes;
     const income = current.find((item) => item.id === incomeId) || current.find((item) => item.firestoreId === incomeId);
 
@@ -173,6 +189,7 @@ const useIncomeStore = create((set, get) => {
       await deleteIncome(uid, income);
     } catch (error) {
       console.error('Failed to delete income:', error);
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw error;
       set({
         incomes: get().incomes.some((item) => sameRecord(item, income))
           ? get().incomes

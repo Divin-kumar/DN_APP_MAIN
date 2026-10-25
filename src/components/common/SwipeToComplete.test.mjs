@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'vite';
 
+// Browser event bus shared by the real gesture handlers in this process.
+globalThis.window = new EventTarget();
+
 const same = (first, second) => Array.isArray(first) && Array.isArray(second)
   && first.length === second.length && first.every((value, index) => Object.is(value, second[index]));
 const settle = () => new Promise((resolve) => setImmediate(resolve));
@@ -114,7 +117,7 @@ const openCard = async (t, { width = 320, onComplete, disabled = false, unavaila
   };
 };
 
-test('ordinary pointer and touch taps keep the edit click and never capture or complete', async (t) => {
+test('ordinary pointer and touch taps keep the opening click and never capture or complete', async (t) => {
   const card = await openCard(t);
   card.down(100); card.move(106, 104); card.up(106, 104);
   assert.equal(card.click().prevented, false);
@@ -127,7 +130,7 @@ test('ordinary pointer and touch taps keep the edit click and never capture or c
   assert.equal(card.transform(), 'translateX(0px)');
 });
 
-test('deliberate left and right drags complete once and consume the trailing edit click', async (t) => {
+test('deliberate left and right drags complete once and consume the trailing opening click', async (t) => {
   for (const direction of [-1, 1]) {
     const pending = deferred();
     const card = await openCard(t, { onComplete: () => pending.promise });
@@ -258,7 +261,7 @@ test('synchronously thrown persistence errors are handled and allow another atte
   await settle();
 });
 
-test('Control and Command Enter complete; ordinary Enter and Space retain ordinary edit activation', async (t) => {
+test('Control and Command Enter complete; ordinary Enter and Space retain ordinary record activation', async (t) => {
   const card = await openCard(t);
   assert.equal(card.key().prevented, false);
   assert.equal(card.key({ key: ' ' }).prevented, false);
@@ -304,4 +307,22 @@ test('unmount ignores stale completion handlers and pending settlements never wr
   pending.resolve(); await settle();
   assert.equal(savingCard.calls.length, 1);
   assert.deepEqual(savingCard.writesAfterUnmount, []);
+});
+
+test('left state swipes consider velocity without allowing short, slow or opposite-direction movements', async (t) => {
+  const card = await openCard(t, { width: 350 });
+  card.render({ direction: 'left', actionLabel: 'Reopen', actionIcon: 'reopen-icon' });
+  assert.match(card.tree().props['aria-label'], /Swipe left to reopen/);
+  let now = 10000;
+  t.mock.method(Date, 'now', () => now);
+  for (const [distance, duration] of [[30, 30], [60, 300], [-60, 60]]) {
+    card.down(200); now += duration; card.move(200 - distance); card.up(200 - distance);
+    assert.equal(card.calls.length, 0);
+    now += 1000;
+  }
+  card.down(200); now += 60; card.move(140); card.up(140);
+  assert.equal(card.calls.length, 1, 'a deliberate 60px left swipe commits at sufficient velocity');
+  assert.equal(card.click().prevented, true);
+  await settle(); card.render();
+  assert.equal(card.transform(), 'translateX(0px)');
 });

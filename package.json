@@ -1,14 +1,17 @@
 {
   "name": "dn",
   "private": true,
-  "version": "1.0.27",
+  "version": "1.0.28",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "build": "vite build",
     "test": "node --test",
     "preview": "vite preview --host 0.0.0.0",
-    "deploy:hosting": "node scripts/deploy-hosting.mjs"
+    "deploy:hosting": "node scripts/deploy-hosting.mjs",
+    "lint": "eslint .",
+    "test:e2e": "playwright test",
+    "check:docs": "node scripts/check-documentation.mjs"
   },
   "dependencies": {
     "@tiptap/extension-code": "3.32.0",
@@ -25,7 +28,11 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.56.1",
     "@vitejs/plugin-react": "^4.3.3",
+    "eslint": "^10.13.0",
+    "globals": "^16.5.0",
     "vite": "^5.4.10"
   }
 }

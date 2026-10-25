@@ -11,6 +11,8 @@ import { useState } from 'react';
 // Import icons used for actions like complete, edit, delete, money, and add.
 import { Check, ChevronDown, Circle, IndianRupee, Link2, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
+import SwipeToComplete from '../common/SwipeToComplete';
+import { activityStatus, activityStatusLabel } from '../../utils/activityDetail';
 import RichText from '../common/RichText';
 import { parseMomentDate } from '../../utils/momentDates';
 
@@ -26,6 +28,7 @@ export default function ActivityList({
   getActivityKey = (activity) => activity.id,
   getEventName,
   renderAttachments,
+  onOpen,
   onDelete,
   onEdit,
   onAddExpense,
@@ -61,7 +64,7 @@ export default function ActivityList({
   const visibleActivities = showCancelled
     ? activities.filter((activity) => activity.cancelled || activity.status === 'cancelled')
     : activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
-  const completedCount = activeActivities.filter((activity) => activity.completed).length;
+  const completedCount = activeActivities.filter((activity) => activityStatus(activity) === 'completed').length;
 
   // Work out the completion percentage for the progress bar.
   const progress = activeActivities.length ? Math.round((completedCount / activeActivities.length) * 100) : 0;
@@ -87,16 +90,18 @@ export default function ActivityList({
           const activityKey = getActivityKey(activity);
           const activityEventName = getEventName ? getEventName(activity) : eventName;
           const activityExpenses = expensesByActivity[activityKey] || [];
+          const isCompleted = activityStatus(activity) === 'completed';
 
           // Add up all linked amounts for this activity.
-          const totalSpent = activityExpenses.reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
+          const totalSpent = activityExpenses.reduce((sum, expense) => sum + (Number.isFinite(Number(expense.amount)) ? Number(expense.amount) : 0), 0);
 
           // Convert the string date into a real Date object so we can compare it with today.
-          const activityDate = parseMomentDate(activity.date);
+          let activityDate;
+          try { activityDate = parseMomentDate(activity.date); } catch { /* Invalid legacy date. */ }
 
           // Decide if the task is overdue.
           // A task is overdue only if it is not done, has a valid date, and that date is before today.
-          const overdue = !activity.completed && !activity.cancelled && activity.status !== 'cancelled' && activityDate && activityDate < new Date(new Date().setHours(0, 0, 0, 0));
+          const overdue = !isCompleted && !activity.cancelled && activity.status !== 'cancelled' && activityDate && activityDate < new Date(new Date().setHours(0, 0, 0, 0));
 
           // Build a readable due date label, such as "Due Mon, 12 Sep" or "Past due · 12 Sep".
           const dueText = !activityDate ? 'Date to be decided' : overdue ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(activityDate)}` : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(activityDate)}`;
@@ -113,40 +118,28 @@ export default function ActivityList({
             ? `${activityExpenses.length} linked ${activityExpenses.length === 1 ? 'expense' : 'expenses'} · ₹${totalSpent.toLocaleString('en-IN')}`
             : '';
 
-          return (
+          const card = (
             <SwipeActionCard key={activityKey} as="article"
-              className={`event-activity-card${activity.completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
-              label={activity.title || 'Untitled activity'} openOnTap
+              className={`event-activity-card${isCompleted ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
+              label={activity.title || 'Untitled activity'} menuButton menuLabel="Activity options"
+              onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={isCancelled}
               otherActions={[
-                ...(onAddExpense ? [{ label: 'Transaction', icon: IndianRupee, onClick: () => onAddExpense(activity) }] : []),
-                ...(onLinkExpense ? [{ label: 'Link expense', icon: Link2, onClick: () => onLinkExpense(activity) }] : []),
                 ...(onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
-                ...(onToggleCancelled ? [{
-                  label: isCancelled ? 'Restore' : 'Cancel',
-                  icon: isCancelled ? RotateCcw : XCircle,
-                  onClick: () => onToggleCancelled(activity.id, activity),
-                }] : []),
+                ...(onToggleComplete && !isCancelled ? [{ label: isCompleted ? 'Reopen' : 'Complete',
+                  icon: isCompleted ? RotateCcw : Check, onClick: () => onToggleComplete(activity.id, activity) }] : []),
+                ...(onAddExpense ? [{ label: 'Add transaction', icon: IndianRupee, onClick: () => onAddExpense(activity) }] : []),
+                ...(onToggleCancelled ? [{ label: isCancelled ? 'Restore' : 'Cancel', icon: isCancelled ? RotateCcw : XCircle,
+                  onClick: () => onToggleCancelled(activity.id, activity) }] : []),
               ]}
               onDelete={onDelete ? () => onDelete(activity.id, activity) : undefined}>
               <div className="event-activity-main">
-                {onToggleComplete && !isCancelled ? (
-                  <button
-                    type="button"
-                    className={`event-activity-complete${activity.completed ? ' is-complete' : ''}`}
-                    onClick={(event) => { event.stopPropagation(); onToggleComplete(activity.id, activity); }}
-                    aria-label={activity.completed ? `Mark ${activity.title} in progress` : `Complete ${activity.title}`}
-                    aria-pressed={Boolean(activity.completed)}
-                  >
-                    {activity.completed ? <Check size={15} strokeWidth={2.5} /> : null}
-                  </button>
-                ) : <span className="event-activity-complete-static">{activity.completed ? <Check size={14} /> : <Circle size={14} />}</span>}
                 <div className="event-activity-copy">
                 <div className="event-activity-title-row">
                   {/* Task name or fallback text if the user did not enter one. */}
                   <strong>{activity.title || 'Untitled activity'}</strong>
 
                   {/* The status text shows whether the task is done, overdue, or still pending. */}
-                  <span className={`event-activity-status${activity.completed ? ' complete' : ''}${isCancelled ? ' cancelled' : ''}`}>{isCancelled ? 'Cancelled' : activity.completed ? 'Complete' : overdue ? 'Overdue' : 'To do'}</span>
+                  <span className={`event-activity-status${isCompleted ? ' complete' : ''}${isCancelled ? ' cancelled' : ''}`}>{isCompleted ? <Check size={12} aria-hidden="true" /> : isCancelled ? <XCircle size={12} aria-hidden="true" /> : <Circle size={12} aria-hidden="true" />}{activityStatusLabel(activity)}</span>
 
                   {/* Priority tells how urgent or important the task is. */}
                   <span className={`event-activity-priority ${activity.priority || 'medium'}`}>{activity.priority || 'medium'}</span>
@@ -184,6 +177,9 @@ export default function ActivityList({
               </div>
             </SwipeActionCard>
           );
+          return onToggleComplete && !isCancelled ? <SwipeToComplete key={activityKey} label={activity.title || 'Activity'}
+            direction="left" actionLabel={isCompleted ? 'Reopen' : 'Complete'} actionIcon={isCompleted ? RotateCcw : Check}
+            onComplete={() => onToggleComplete(activity.id, activity)}>{card}</SwipeToComplete> : card;
         })}
       </div>
     </div>

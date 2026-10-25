@@ -15,6 +15,9 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   const backdropRef = useRef(null);
   const bodyRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  // Capture before portal children mount: React autoFocus can run before this
+  // component's effect and would otherwise remember a disappearing input.
+  const previousFocusRef = useRef(typeof document === 'undefined' ? null : document.activeElement);
   const titleId = useId();
 
   useLayoutEffect(() => observeDialogViewport(window, (viewport, layout) => {
@@ -49,7 +52,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   }, [onClose]);
 
   useEffect(() => {
-    const previousFocus = document.activeElement;
+    const previousFocus = previousFocusRef.current;
     const unlockScroll = lockDialogScroll(window);
     closeButtonRef.current?.focus({ preventScroll: true });
 
@@ -107,13 +110,14 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   );
 }
 
-export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete' }) {
+export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '' }) {
   return (
     <ModalDialog title={title} onClose={onCancel}>
       <p style={styles.message}>{message}</p>
+      {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
       <div className="modal-confirm-actions" style={styles.actions}>
-        <button type="button" className="secondaryButton modal-action-button" onClick={onCancel}>Cancel</button>
-        <button type="button" className="modal-danger-button modal-action-button" onClick={onConfirm}>{confirmLabel}</button>
+        <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
+        <button type="button" className="modal-danger-button modal-action-button" disabled={busy} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
       </div>
     </ModalDialog>
   );

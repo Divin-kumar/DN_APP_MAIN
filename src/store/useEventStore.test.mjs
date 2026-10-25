@@ -42,7 +42,7 @@ const openStore = async (t) => {
       load(id) {
         const fixture = `globalThis[${JSON.stringify(fixtureKey)}]`;
         if (id === '\0event-store-service') return `export const {createEvent,deleteEvent,getEventsForUser,getGuestEvents,removeGuestEvent,saveGuestEvent,updateEvent}=${fixture};`;
-        if (id === '\0event-store-samples') return `export const {getActiveSampleData,saveActiveSampleData}=${fixture};`;
+        if (id === '\0event-store-samples') return `export const {getActiveSampleData,saveActiveSampleData}=${fixture}; export const requireActiveSampleData=getActiveSampleData;`;
         return null;
       },
     }],
@@ -118,4 +118,22 @@ test('a successful update in the same account keeps the service result and provi
   assert.equal(store.getState().events[0].firestoreId, 'account-a-document');
   assert.equal(store.getState().events[0].firestoreCollection, 'eventGroups');
   assert.equal(store.getState().error, null);
+});
+
+test('A → B → A invalidates old completion and rollback even when the account and application IDs match again', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  for (const fails of [false, true]) {
+    const { store, pending, original } = await openStore(t);
+    const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Old pending edit' });
+    await store.getState().loadEvents('owner-b', false);
+    await store.getState().loadEvents('owner-a', false);
+    store.setState({ events: [{ ...original, name: 'Newly loaded A record' }] });
+    const selected = store.getState();
+    if (fails) {
+      const rejection = assert.rejects(operation, /Old write rejected/);
+      pending[0].reject(new Error('Old write rejected')); await rejection;
+    } else { pending[0].resolve({ ...original, name: 'Old service result' }); await operation; }
+    assert.equal(store.getState(), selected);
+    assert.equal(store.getState().events[0].name, 'Newly loaded A record');
+  }
 });
