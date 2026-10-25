@@ -11,6 +11,10 @@ export const resolveActivityDetail = (events, eventId, activityId) => {
 export const activityStatus = (activity) => activity.cancelled || activity.status === 'cancelled' ? 'cancelled'
   : activity.completed || activity.status === 'completed' ? 'completed' : 'in-progress';
 export const activityStatusLabel = (activity) => ({ 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled' })[activityStatus(activity)];
+export const activityCancellationPatch = (activity, cancelled) => {
+  const completed = Boolean(activity.completed || activity.status === 'completed');
+  return { cancelled, ...(completed ? { completed: true } : {}), status: cancelled ? 'cancelled' : completed ? 'completed' : 'in-progress' };
+};
 export const activityCompletionPatch = (activity, moment, completed) => {
   if (activityStatus(activity) === 'cancelled') throw new Error('Restore this activity explicitly before changing its completion.');
   if (completed && (moment.archived || ['archived', 'cancelled'].includes(moment.status))) throw new Error('Restore this Moment before completing its activity.');
@@ -29,7 +33,9 @@ export const legacyAttachmentImage = (attachment) => {
 };
 export const activityAttachments = (moment, activityId) => (moment?.attachments || [])
   .filter((item) => recordId(item.activityId) === recordId(activityId));
-export const selectActivityCover = (moment, activityId) => activityAttachments(moment, activityId)
-  .find((item) => isAttachmentImage(item.type) && (/^[a-f0-9]{64}$/.test(item.assetId || '') || legacyAttachmentImage(item))) || null;
+export const activityCoverImages = (moment, activityId) => activityAttachments(moment, activityId)
+  .filter((item) => isAttachmentImage(item.type) && (/^[a-f0-9]{64}$/.test(item.assetId || '') || legacyAttachmentImage(item)));
+export const coverImageKey = (image) => image ? JSON.stringify([recordId(image.id), image.assetId || legacyAttachmentImage(image)]) : '';
+export const selectActivityCover = (moment, activityId) => activityCoverImages(moment, activityId)[0] || null;
 export const activityCoverRatio = (width, height) => Number(width) > 0 && Number(height) > 0
   && Number.isFinite(Number(width) / Number(height)) ? Math.max(16 / 9, Math.min(2.4, Number(width) / Number(height))) : 16 / 9;

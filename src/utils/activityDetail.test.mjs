@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activityCompletionPatch, activityCoverRatio, activityDateLabel, activityDetailPath, activityStatusLabel, resolveActivityDetail, selectActivityCover } from './activityDetail.js';
+import { activityCancellationPatch, activityCompletionPatch, activityCoverRatio, activityDateLabel, activityDetailPath, activityStatusLabel, resolveActivityDetail, selectActivityCover } from './activityDetail.js';
+import { isActivityEditable } from './scopedRecordActions.js';
 
 test('detail resolution requires both parent and child IDs, preserving encoded application identity', () => {
   const moments = [{ id: 'trip/one', activities: [{ id: 'same', title: 'First' }] }, { id: 'two', activities: [{ id: 'same', title: 'Second' }] }];
@@ -46,4 +47,14 @@ test('state patches are idempotent, forbid cancelled swipe restoration and prese
   assert.deepEqual(activityCompletionPatch({ completed: true }, {}, false), { completed: false, completedAt: null, status: 'in-progress' });
   assert.throws(() => activityCompletionPatch({ cancelled: true }, {}, true), /Restore this activity explicitly/);
   assert.throws(() => activityCompletionPatch({}, { archived: true }, true), /Restore this Moment/);
+});
+
+test('cancelling/restoring legacy completed work never silently reopens it or bypasses the edit restriction', () => {
+  const legacy = { title: 'Keep title', status: 'completed', description: 'Keep text' };
+  const cancelled = { ...legacy, ...activityCancellationPatch(legacy, true) };
+  const restored = { ...cancelled, ...activityCancellationPatch(cancelled, false) };
+  assert.equal(isActivityEditable(cancelled), false); assert.equal(isActivityEditable(restored), false);
+  assert.equal(restored.status, 'completed'); assert.equal(restored.description, legacy.description);
+  assert.equal(restored.completedAt, undefined);
+  assert.equal(isActivityEditable({ ...restored, ...activityCompletionPatch(restored, {}, false) }), true);
 });

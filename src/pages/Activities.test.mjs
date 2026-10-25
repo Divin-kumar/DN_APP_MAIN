@@ -51,7 +51,7 @@ const openActivities = async (t) => {
       }
       return slots[index].value;
     },
-    filters: null,
+    filters: null, navigations: [],
     app: { user: { uid: 'synthetic-owner' }, isGuest: false,
       adminValues: { eventTypes: [], activityPriorities: [] },
       showToast: (...args) => toasts.push(args) },
@@ -95,7 +95,7 @@ const openActivities = async (t) => {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
         if (id === '\0activities-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useMemo=${fixture}.memo; export const useEffect=()=>{};`;
         if (id === '\0activities-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
-        if (id === '\0activities-router') return 'export const Link="Link",useNavigate=()=>()=>{};';
+        if (id === '\0activities-router') return `export const Link="Link",useNavigate=()=>(...args)=>${fixture}.navigations.push(args);`;
         if (id === '\0activities-icons') return 'export const ListChecks="icon",Plus="icon";';
         if (id.startsWith('\0activities-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
         if (id === '\0activities-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
@@ -186,9 +186,9 @@ test('duplicate activity IDs complete and cancel only their chosen Moment', asyn
   assert.deepEqual(harness.api.eventStore.events[1].activities[1], harness.second.activities[1]);
 });
 
-test('editing one duplicate retains nested expenses, cancellation, completion and unrelated data', async (t) => {
+test('editing an unfinished duplicate retains expenses, cancellation and unrelated data', async (t) => {
   const harness = await openActivities(t);
-  Object.assign(harness.second.activities[0], { completed: true, completedAt: '2025-09-01T08:00:00.000Z', cancelled: true, status: 'cancelled' });
+  Object.assign(harness.second.activities[0], { cancelled: true, status: 'cancelled' });
   const originalFirst = structuredClone(harness.first);
   const originalSecond = structuredClone(harness.second);
   harness.list();
@@ -224,7 +224,7 @@ test('confirmed deletion removes only the chosen duplicate and leaves other Mome
   assert.equal(harness.find('ConfirmDialog'), undefined);
 });
 
-test('expense presentation uses composite Moment/activity keys and hides stale expense scope', async (t) => {
+test('clean cards preserve composite identity without expense or attachment previews', async (t) => {
   const harness = await openActivities(t);
   const list = harness.list().props;
   const first = harness.view('Synthetic first activity');
@@ -232,13 +232,10 @@ test('expense presentation uses composite Moment/activity keys and hides stale e
   const firstKey = list.getActivityKey(first);
   const secondKey = list.getActivityKey(second);
   assert.notEqual(firstKey, secondKey);
-  assert.deepEqual(list.expensesByActivity[firstKey].map((expense) => expense.id), ['expense-one']);
-  assert.deepEqual(list.expensesByActivity[secondKey].map((expense) => expense.id), ['expense-two']);
+  assert.equal(list.expensesByActivity, undefined);
+  assert.equal(list.renderAttachments, undefined);
   assert.equal(list.getEventName(second).props.to, '/events/moment-two/activities');
   assert.equal('momentId' in second, false, 'presentation context does not alter stored activity fields');
-  harness.api.expenseStore.activeLoadKey = 'user:another-owner';
-  assert.deepEqual(harness.list().props.expensesByActivity[firstKey], []);
-  assert.deepEqual(harness.list().props.expensesByActivity[secondKey], []);
 });
 
 test('captured activity actions reject a changed account or stale Moment load scope', async (t) => {
@@ -272,16 +269,26 @@ test('Activities delegates transaction creation to universal + without contextua
   assert.deepEqual(harness.saves, []);
 });
 
-test('attachment previews resolve the containing Moment when activity IDs are reused', async (t) => {
+test('opening snapshots scoped list order using both IDs without copying records into navigation', async (t) => {
   const harness = await openActivities(t);
   harness.first.attachments.push({ id: 'photo-one', activityId: 'shared-activity', assetId: 'first-original' });
   harness.second.attachments.push({ id: 'photo-two', activityId: 'shared-activity', assetId: 'second-original' });
   const list = harness.list().props;
-  const first = list.renderAttachments(harness.view('Synthetic first activity'));
-  const second = list.renderAttachments(harness.view());
-  assert.deepEqual(first.props.attachments.map((item) => item.id), ['photo-one']);
-  assert.deepEqual(second.props.attachments.map((item) => item.id), ['photo-two']);
-  assert.equal(second.props.uid, 'synthetic-owner');
-  assert.equal(second.props.compact, true);
+  list.onOpen(harness.view());
+  const [path, options] = harness.api.navigations[0];
+  assert.equal(path, '/events/moment-two/activities/shared-activity');
+  assert.deepEqual(options.state.activitySequence.ids, [['moment-one', 'shared-activity'], ['moment-two', 'shared-activity'], ['moment-two', 'unrelated']]);
+  assert.equal(options.state.activitySequence.scope, JSON.stringify(['user:synthetic-owner', null]));
   assert.deepEqual(harness.writes, []);
+});
+
+test('completed and legacy-completed Activity editors require reopening, including cancelled completed records', async (t) => {
+  for (const state of [{ completed: true }, { status: 'completed' }, { completed: true, cancelled: true, status: 'cancelled' }]) {
+    const harness = await openActivities(t);
+    Object.assign(harness.second.activities[0], state);
+    harness.list().props.onEdit(harness.view());
+    assert.equal(harness.find('ModalDialog'), undefined);
+    assert.match(text(harness.render()), /Reopen this activity before editing/);
+    assert.equal(harness.writes.length, 0);
+  }
 });

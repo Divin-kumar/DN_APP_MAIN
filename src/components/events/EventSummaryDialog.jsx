@@ -1,8 +1,10 @@
-import { useState } from 'react';
 import { CalendarDays, Check, Circle } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import RichText from '../common/RichText';
 import { getEventStatus } from '../../utils/eventStatus';
+import MomentSummaryExtras from './MomentSummaryExtras';
+import GreetingCard from '../common/GreetingCard';
+import { activityStatus } from '../../utils/activityDetail';
 
 const formatDate = (value) => {
   if (!value) return 'Date to be decided';
@@ -11,14 +13,13 @@ const formatDate = (value) => {
 };
 
 export default function EventSummaryDialog({ event, onClose }) {
-  const [expandedActivities, setExpandedActivities] = useState({});
   if (!event) return null;
   const activities = event.activities || [];
   const status = getEventStatus(event);
-  const statusLabel = status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
+  const statusLabel = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled', archived: 'Archived' }[status];
 
   return (
-    <ModalDialog title="Event summary" onClose={onClose} className="event-summary-dialog">
+    <ModalDialog title="Moment summary" onClose={onClose} className="event-summary-dialog">
       <div className="event-summary-content">
         <header className="event-summary-header">
           <span><CalendarDays size={15} /> {event.type || 'Life moment'}</span>
@@ -26,31 +27,29 @@ export default function EventSummaryDialog({ event, onClose }) {
           <p>{formatDate(event.date)} · {statusLabel}</p>
         </header>
         {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
+        {event.greetingCard ? <GreetingCard {...event.greetingCard} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} /> : null}
         <section className="event-summary-activities" aria-label="Activity summary">
           <h4>Activities <span>{activities.length}</span></h4>
           {activities.length ? <ul>
             {activities.map((activity, index) => {
               const description = String(activity.description || '');
               const hasDescription = Boolean(description.trim());
-              const expanded = Boolean(expandedActivities[activity.id || index]);
-              const canExpand = description.length > 150 || description.split(/\r\n|\r|\n/).length > 2;
               const key = activity.id || `activity-${index}`;
+              const completed = activityStatus(activity) === 'completed';
               return (
                 <li key={key}>
-                  <span className={activity.completed ? 'is-complete' : 'is-pending'} aria-hidden="true">{activity.completed ? <Check size={14} /> : <Circle size={13} />}</span>
+                  <span className={completed ? 'is-complete' : 'is-pending'} aria-hidden="true">{completed ? <Check size={14} /> : <Circle size={13} />}</span>
                   <div className="event-summary-activity-copy">
                     <strong>{activity.title || activity.name || 'Untitled activity'}</strong>
-                    <small>{formatDate(activity.date)}{activity.cancelled || activity.status === 'cancelled' ? ' · Cancelled' : activity.completed ? ' · Completed' : ''}</small>
-                    {hasDescription ? <>
-                      <RichText className={canExpand && !expanded ? 'free-text-preview is-truncated' : ''} value={description} />
-                      {canExpand ? <button type="button" onClick={() => setExpandedActivities((current) => ({ ...current, [key]: !current[key] }))} aria-expanded={expanded}>{expanded ? 'Show less' : 'Show more'}</button> : null}
-                    </> : null}
+                    <small>{formatDate(activity.date)}{activityStatus(activity) === 'cancelled' ? ' · Cancelled' : completed ? ' · Completed' : ''}</small>
+                    {hasDescription ? <RichText value={description} /> : null}
                   </div>
                 </li>
               );
             })}
           </ul> : <p className="event-summary-empty">No activities have been added yet.</p>}
         </section>
+        <MomentSummaryExtras event={event} />
       </div>
     </ModalDialog>
   );

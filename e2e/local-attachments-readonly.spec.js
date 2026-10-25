@@ -1,28 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, swipe, openUniversalTransaction } from './fixtures.js';
+import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScope } from './fixtures.js';
 
 // Only the Firestore store edge is mocked; file IO uses the real scoped IndexedDB repository.
-async function accountScope(page, uid, moments) {
-  await page.evaluate(async ({ uid, moments }) => {
-    const app = (await import('/src/store/useAppStore.js')).default;
-    const events = (await import('/src/store/useEventStore.js')).default;
-    const incomes = (await import('/src/store/useIncomeStore.js')).default;
-    const expenses = (await import('/src/store/useExpenseStore.js')).default;
-    const state = { loadedFor: `user:${uid}`, activeLoadKey: `user:${uid}`, loadedSample: null, activeSample: null, loading: false, error: null };
-    window.__dnAccountWrites = [];
-    events.setState({ ...state, events: moments, scopeRevision: events.getState().scopeRevision + 1,
-      loadEvents: async () => events.getState().events,
-      updateEventItem: async (owner, isGuest, moment) => {
-        if (owner !== uid || isGuest) throw new Error('Wrong synthetic account write');
-        window.__dnAccountWrites.push(structuredClone(moment));
-        events.setState({ events: events.getState().events.map((item) => item.id === moment.id ? moment : item) });
-        return moment;
-      } });
-    incomes.setState({ ...state, incomes: [], loadIncomes: async () => [] });
-    expenses.setState({ ...state, expenses: [], pendingCreateIds: [], loadExpenses: async () => [] });
-    app.setState({ user: { uid }, isGuest: false, authReady: true });
-  }, { uid, moments });
-}
 
 test('Moment Activities is read-only, still opens Detail, and the retired Timeline URL shows Overview', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities');

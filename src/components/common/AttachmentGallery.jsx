@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download, FileText, ImageOff, X } from 'lucide-react';
 import useAttachmentOriginal from '../../hooks/useAttachmentOriginal';
-import { isAttachmentImage as isImage } from '../../utils/activityDetail';
+import { coverImageKey, isAttachmentImage as isImage } from '../../utils/activityDetail';
 import { downloadBlob } from '../../utils/download';
 import ModalDialog from './ModalDialog';
 import './AttachmentGallery.css';
 
-function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetadata }) {
+function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetadata, onSelect, selectedKey, retainLoaded }) {
   const [broken, setBroken] = useState('');
   const [open, setOpen] = useState(false);
   const tile = useRef(null);
@@ -18,15 +18,18 @@ function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetad
   useEffect(() => {
     if (typeof IntersectionObserver !== 'function') { setNearby(true); return undefined; }
     const observer = new IntersectionObserver((entries) => {
-      setNearby(entries.some((entry) => entry.isIntersecting));
+      const intersecting = entries.some((entry) => entry.isIntersecting);
+      setNearby((current) => retainLoaded ? current || intersecting : intersecting);
     }, { rootMargin: '160px' });
     if (tile.current) observer.observe(tile.current);
     return () => observer.disconnect();
-  }, []);
+  }, [retainLoaded]);
   return <div ref={tile} className={`dn-attachment-tile${compact ? ' is-compact' : ''}`}
     onClick={(event) => event.stopPropagation()} onPointerDown={(event) => event.stopPropagation()}
     onTouchStart={(event) => event.stopPropagation()} onTouchMove={(event) => event.stopPropagation()} onTouchEnd={(event) => event.stopPropagation()}>
-    <button type="button" className="dn-attachment-open" onClick={() => setOpen(true)} aria-label={`Preview ${attachment.name || 'attachment'}`}>
+    <button type="button" className="dn-attachment-open" onClick={() => onSelect ? onSelect(attachment) : setOpen(true)}
+      disabled={Boolean(onSelect && (!source || error))} aria-pressed={onSelect ? selectedKey === coverImageKey(attachment) : undefined}
+      aria-label={`${onSelect ? 'Use as cover:' : 'Preview'} ${attachment.name || 'attachment'}`}>
       {source && !error && isImage(attachment.type) ? <img src={source} alt={attachment.name || 'Attached photo'} loading="lazy" onError={() => setBroken(source)} />
         : error ? <ImageOff size={20} aria-hidden="true" /> : <FileText size={20} aria-hidden="true" />}
       <span><strong>{attachment.name || 'Attachment'}</strong>{!compact && showMetadata ? <small>{error || `${Math.ceil(Number(attachment.size || 0) / 1024)} KB`}</small> : null}</span>
@@ -38,9 +41,9 @@ function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetad
     </ModalDialog> : null}
   </div>;
 }
-export default function AttachmentGallery({ attachments = [], uid, isGuest, onRemove, compact = false, showMetadata = true }) {
+export default function AttachmentGallery({ attachments = [], uid, isGuest, onRemove, compact = false, showMetadata = true, onSelect, selectedKey, retainLoaded = false }) {
   if (!attachments.length) return null;
   return <div className={`dn-attachment-gallery${compact ? ' is-compact' : ''}`} aria-label="Attachments">
-    {attachments.map((attachment) => <AttachmentTile key={attachment.id} attachment={attachment} uid={uid} isGuest={isGuest} onRemove={onRemove} compact={compact} showMetadata={showMetadata} />)}
+    {attachments.map((attachment) => <AttachmentTile key={attachment.id} attachment={attachment} uid={uid} isGuest={isGuest} onRemove={onRemove} compact={compact} showMetadata={showMetadata} onSelect={onSelect} selectedKey={selectedKey} retainLoaded={retainLoaded} />)}
   </div>;
 }

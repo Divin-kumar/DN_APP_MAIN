@@ -28,6 +28,8 @@ import ListControls from '../components/common/ListControls';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import { plainRichText } from '../utils/richText';
+import useScopedMoments from '../hooks/useScopedMoments';
+import { recordId } from '../utils/recordIdentity';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -112,6 +114,7 @@ function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorit
 }
 
 export default function Events() {
+  const scopedMoments = useScopedMoments();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppStore((state) => state.user);
@@ -138,6 +141,7 @@ export default function Events() {
   const [activityPriority, setActivityPriority] = useState('medium');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const [summaryEvent, setSummaryEvent] = useState(null);
+  useEffect(() => { setSummaryEvent(null); }, [scopedMoments.scopeIdentity]);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
   const { search, category, field: eventSort, direction: eventSortDirection } = momentFilters;
@@ -489,7 +493,7 @@ export default function Events() {
       event={event}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
       onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
-      onSummary={() => setSummaryEvent(event)}
+      onSummary={() => setSummaryEvent({ id: recordId(event.id || event.firestoreId), scope: scopedMoments.scopeIdentity })}
       onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
       onArchive={() => archiveMoment(event)}
       onDelete={() => setPendingDeleteEvent(event)}
@@ -575,7 +579,8 @@ export default function Events() {
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
-      {summaryEvent ? <EventSummaryDialog event={summaryEvent} onClose={() => setSummaryEvent(null)} /> : null}
+      {summaryEvent?.scope === scopedMoments.scopeIdentity && scopedMoments.ready ? <EventSummaryDialog
+        event={scopedMoments.events.find((item) => recordId(item.id || item.firestoreId) === summaryEvent.id)} onClose={() => setSummaryEvent(null)} /> : null}
       {drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
       {activityChooserOpen ? (
         <ModalDialog title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>

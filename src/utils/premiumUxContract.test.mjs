@@ -112,7 +112,7 @@ test('nested Activity and Moment buttons do not open swipe trays', () => {
   const surface = read('../components/common/SwipeActionCard.jsx');
   assert.match(surface, /event\.target\.closest\('button, a, input, select, textarea'\)/);
   assert.match(surface, /!event\.target\.closest\('\.code-list-row'\)/);
-  assert.match(read('../components/events/ActivityList.jsx'), /className="event-activity-expense-toggle"/);
+  assert.doesNotMatch(read('../components/events/ActivityList.jsx'), /activity\.description|renderAttachments|event-activity-expense/);
 });
 
 test('either direction reveals same menu and Delete remains a separate click', () => {

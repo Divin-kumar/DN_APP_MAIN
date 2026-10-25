@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import useAppStore from '../store/useAppStore';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
-import { activityCompletionPatch } from '../utils/activityDetail';
+import { activityCancellationPatch, activityCompletionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
+import { assertActivityEditable } from '../utils/scopedRecordActions';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
 // scoped writer, so every entry point serializes changes to a parent Moment.
@@ -36,13 +37,13 @@ export default function useActivityActions() {
   };
   const setCompleted = (target, completed) => run(target, (activity, moment) => activityCompletionPatch(activity, moment, completed),
     completed ? 'complete' : 'reopen', completed ? 'Activity completed' : 'Activity reopened');
-  const setCancelled = (target, cancelled) => run(target, (activity) => ({ cancelled,
-    status: cancelled ? 'cancelled' : activity.completed ? 'completed' : 'in-progress' }),
+  const setCancelled = (target, cancelled) => run(target, (activity) => activityCancellationPatch(activity, cancelled),
   cancelled ? 'cancel' : 'restore', cancelled ? 'Activity cancelled' : 'Activity restored');
   const edit = (target) => {
     if (saving.current) return;
     try {
       const { moment, activity } = records.resolveActivity(context, target.momentId, target.activityId);
+      assertActivityEditable(activity);
       setError('');
       setDraft({ ...target, momentName: moment.name, title: activity.title || '',
         date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });

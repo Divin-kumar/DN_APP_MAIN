@@ -78,3 +78,17 @@ test('loaded data requires matching active/loaded scope and Sample ownership', (
   assert.equal(isRecordScopeLoaded({ loadedFor: 'guest:anonymous', activeLoadKey: 'user:A' }, 'guest:anonymous'), false);
   assert.equal(isRecordScopeLoaded({ loadedFor: 'guest:anonymous', activeLoadKey: 'guest:anonymous', loadedSample: 'first', activeSample: 'first' }, 'guest:anonymous', 'second'), false);
 });
+
+test('edits queued behind completion recheck the latest Activity and require an explicit reopen', async () => {
+  const h = setup(), context = h.actions.capture(), pending = deferred();
+  h.persist = async () => { if (h.writes.length === 1) await pending.promise; };
+  const complete = h.actions.mutateActivity(context, 'one', 'same', (activity, moment) => activityCompletionPatch(activity, moment, true), 'complete');
+  const edit = h.actions.mutateActivity(context, 'one', 'same', () => ({ title: 'Must not replace completed data' }), 'edit');
+  const rejected = assert.rejects(edit, /Reopen this activity before editing/);
+  pending.resolve(); await complete; await rejected;
+  assert.equal(h.writes.length, 1); assert.equal(h.state.events[0].activities[0].title, 'First');
+  await h.actions.mutateActivity(context, 'one', 'same', (activity, moment) => activityCompletionPatch(activity, moment, false), 'reopen');
+  await h.actions.mutateActivity(context, 'one', 'same', () => ({ title: 'Now editable' }), 'edit');
+  assert.equal(h.state.events[0].activities[0].title, 'Now editable');
+  assert.deepEqual(h.state.events[0].activities[1], { id: 'sibling', title: 'Sibling', custom: { keep: true } });
+});

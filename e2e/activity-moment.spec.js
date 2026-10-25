@@ -24,7 +24,7 @@ test('direct detail/refresh uses both IDs, shows safe formatted notes and never 
   expect(errors).toEqual([]);
 });
 
-test('normal card/keyboard selection opens detail, menus and attachment controls do not navigate', async ({ page }) => {
+test('clean cards open detail by pointer/keyboard, and menus never navigate', async ({ page }) => {
   await seedGuest(page); await addOriginal(page);
   await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
@@ -36,9 +36,7 @@ test('normal card/keyboard selection opens detail, menus and attachment controls
   await expect(page).toHaveURL(/\/activities$/);
   expect(await page.getByRole('menuitem').last().innerText()).toBe('Delete');
   await page.keyboard.press('Escape'); await expect(trigger).toBeFocused();
-  await card.getByRole('button', { name: 'Preview Activity photo 0.png' }).click();
-  await expect(page.getByRole('dialog')).toBeVisible(); await expect(page).toHaveURL(/\/activities$/);
-  await page.keyboard.press('Escape');
+  await expect(card.locator('.dn-rich-text, .dn-attachment-gallery, .event-activity-expense-disclosure')).toHaveCount(0);
   await card.focus(); await page.keyboard.press('Space');
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await page.goBack(); await expect(card).toBeVisible();

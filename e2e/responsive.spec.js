@@ -28,7 +28,7 @@ async function expectTextContrast(locator) {
   for (const result of results) expect(result.ratio, `Text contrast for ${result.text}`).toBeGreaterThanOrEqual(4.5);
 }
 
-const sizes = [[320, 640], [360, 740], [390, 844], [844, 390], [768, 1024], [1024, 768], [1280, 480], [1440, 900], [1920, 1080]];
+const sizes = [[320, 640], [360, 740], [390, 844], [390, 896], [844, 390], [768, 1024], [1024, 768], [1280, 480], [1440, 900], [1920, 1080]];
 for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
   test(`${theme} ${width}x${height}: long Activity, five workspace tabs and transactions stay reachable`, async ({ page }) => {
     await page.setViewportSize({ width, height });
@@ -39,11 +39,13 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     const errors = await seedGuest(page, { moments, theme });
     await page.goto('/events/moment-one/activities/shared');
     await expect(page.locator('h1')).toHaveText(moments[0].activities[0].title);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
     await expect(page.getByRole('link', { name: 'Back to Moment activities', exact: true })).toBeVisible();
     await expectTextContrast(page.locator('.activity-cover-back, .activity-parent-context a, .activity-status-pill'));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const frame = await page.locator('.activity-cover').boundingBox();
-    expect(frame.width).toBeGreaterThan(frame.height);
+    if (width < 768) expect(Math.abs(frame.height - height * .4)).toBeLessThan(2);
+    else expect(frame.width).toBeGreaterThan(frame.height);
     if (height < 500) expect(frame.height).toBeLessThanOrEqual(height * .45);
     await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
     const end = await page.locator('.activity-detail-footer').boundingBox();

@@ -270,11 +270,6 @@ export function EventWorkspaceContent() {
       || (activity.priority || 'medium') === activityFilter;
     return matchesSearch && matchesFilter;
   });
-  const eventExpenses = expenses.filter((expense) => expense.eventId === eventId);
-  const expensesByActivity = Object.fromEntries(activities.map((activity) => [
-    activity.id,
-    eventExpenses.filter((expense) => expense.activityId === activity.id),
-  ]));
   const totalSpent = finance.summary.expense;
   const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
   const completedActivities = activeActivities.filter((activity) => activity.completed).length;
@@ -501,8 +496,6 @@ export function EventWorkspaceContent() {
             allActivities={activities}
             showCancelled={activityFilter === 'cancelled'}
             hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
-            expensesByActivity={expensesByActivity}
-            renderAttachments={(activity) => <AttachmentGallery compact uid={user?.uid} isGuest={isGuest} attachments={attachments.filter((attachment) => recordId(attachment.activityId) === recordId(activity.id))} />}
             onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id))}
 
           />

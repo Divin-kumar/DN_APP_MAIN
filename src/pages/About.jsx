@@ -48,9 +48,10 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Activity Detail shows your cover, Moment and title, status/date/priority, actual description, transactions with totals, compact attachment previews and recorded dates.',
-  'Use its three-dot menu for Close or Reopen, Edit, Cancel or Restore, and confirmed Delete. Close marks the Activity completed.',
-  'Transaction history stays read-only here; use universal + to add a transaction and Profile → Transactions to edit it. Local originals and backup formats are unchanged.',
+  'Completed Activities require Reopen before editing; recorded completion dates stay at the end of Detail. List cards show only identity and metadata.',
+  'Phone covers use 40% of the initial screen height. Choose a linked photo and use Reposition to drag or adjust with arrow keys. This browser remembers the view; originals are unchanged.',
+  'Swipe left/right in Detail for the next/previous Activity in the Activities list order, or use the arrow buttons. Cover repositioning and page scrolling stay separate.',
+  'Moment summaries show full notes, descriptions, memories and every photo/file without shortening text. Scroll through the full summary and preview or download originals.',
 ];
 
 const dataInfo = [

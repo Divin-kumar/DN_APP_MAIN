@@ -2,6 +2,10 @@ import { recordId } from './recordIdentity.js';
 
 export const recordScopeKey = ({ user, isGuest }) => `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
 export const momentRecordId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
+export const isActivityEditable = (activity) => !activity?.completed && activity?.status !== 'completed';
+export const assertActivityEditable = (activity) => {
+  if (!isActivityEditable(activity)) throw new Error('Reopen this activity before editing it.');
+};
 export const isRecordScopeLoaded = (state, scope, sample = null) => Boolean(state
   && state.loadedFor === scope && state.activeLoadKey === scope
   && (state.loadedSample ?? null) === sample && (state.activeSample ?? null) === sample);
@@ -64,6 +68,7 @@ export function createScopedRecordActions({ getSession, getEvents, getSample = (
   const mutateActivity = (context, eventId, activityId, updater, operation = '') => mutateMoment(context, eventId, (moment) => {
     const activity = moment.activities?.find((item) => recordId(item.id) === recordId(activityId));
     if (!activity) throw new Error('This activity is no longer available in this Moment.');
+    if (operation === 'edit') assertActivityEditable(activity);
     const patch = updater(activity, moment);
     if (patch === undefined) return moment;
     return { ...moment, activities: patch === null

@@ -18,9 +18,10 @@ import ActivityActionDialogs from '../../../components/events/ActivityActionDial
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import useActivityActions from '../../../hooks/useActivityActions';
 import { activityDetailPath, activityStatus } from '../../../utils/activityDetail';
-import { isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
+import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
+import MomentSummaryExtras from '../../../components/events/MomentSummaryExtras';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -197,7 +198,6 @@ const getGreetingMessage = (event, greetingTemplates = {}, momentTypes = []) => 
 };
 
 function EventSummaryModal({ event, onClose }) {
-  const [expandedDescriptions, setExpandedDescriptions] = useState({});
   const eventDate = getNextOccurrenceForStatus(event);
   const activities = Array.isArray(event.activities) ? event.activities : [];
   const totalActivities = activities.length;
@@ -237,6 +237,7 @@ function EventSummaryModal({ event, onClose }) {
     if (greeting) {
       lines.push(plainRichText(greeting.title), plainRichText(greeting.body), '');
     }
+    if (event.notes) lines.push(plainRichText(event.notes), '');
 
     if (activities.length) {
       lines.push('Activities:');
@@ -248,6 +249,11 @@ function EventSummaryModal({ event, onClose }) {
         if (description) lines.push(`  Description: ${description}`);
       });
     }
+    if (event.memories?.length) {
+      lines.push('', 'Memories:');
+      event.memories.forEach((memory) => lines.push(memory.title || '', plainRichText(memory.body || '')));
+    }
+    if (event.attachments?.length) lines.push('', 'Photos and files:', ...event.attachments.map((item) => item.name || 'Attachment'));
 
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
     downloadBlob(blob, `${(event.name || 'event').toLowerCase().replace(/\s+/g, '-')}-summary.txt`);
@@ -273,6 +279,7 @@ function EventSummaryModal({ event, onClose }) {
         {greeting ? (
           <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={formatDisplayDate(eventDate)} />
         ) : null}
+        {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
 
         <div style={styles.section}>
           <div style={styles.statusRow}>{statusText}</div>
@@ -286,8 +293,6 @@ function EventSummaryModal({ event, onClose }) {
                 const isComplete = Boolean(activity.completed);
                 const description = String(activity.description || '');
                 const hasDescription = Boolean(description.trim());
-                const canExpandDescription = description.length > 150 || description.split(/\r\n|\r|\n/).length > 2;
-                const descriptionExpanded = Boolean(expandedDescriptions[activity.id || index]);
 
                 return (
                   <li key={`${label}-${activity.id || index}`} className="dashboard-summary-activity-item" style={styles.activityItem}>
@@ -299,8 +304,7 @@ function EventSummaryModal({ event, onClose }) {
                       <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
                       {hasDescription ? (
                         <div className="dashboard-summary-description-wrap">
-                          <RichText className={`dashboard-summary-description${canExpandDescription && !descriptionExpanded ? ' free-text-preview is-truncated' : ''}`} value={description} />
-                          {canExpandDescription ? <button type="button" className="dashboard-summary-description-toggle" aria-expanded={descriptionExpanded} onClick={() => setExpandedDescriptions((current) => ({ ...current, [activity.id || index]: !current[activity.id || index] }))}>{descriptionExpanded ? 'Show less' : 'Show more'}</button> : null}
+                          <RichText className="dashboard-summary-description" value={description} />
                         </div>
                       ) : null}
                     </div>
@@ -311,6 +315,7 @@ function EventSummaryModal({ event, onClose }) {
           </div>
         ) : null}
 
+        <MomentSummaryExtras event={event} />
         <button type="button" onClick={handleDownload} style={styles.downloadButton}>
           <Download size={16} />
           Download Summary
@@ -461,7 +466,7 @@ export function DashboardOverviewContent() {
                   const row = <SwipeActionCard className="dashboard-activity-card" label={activity.title || 'Activity'}
                     menuButton menuLabel="Activity options" swipeEnabled={false} disabled={activityActions.busy}
                     otherActions={[
-                      { label: 'Edit', icon: Pencil, onClick: () => activityActions.edit(target) },
+                      ...(isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => activityActions.edit(target) }] : []),
                       { label: status === 'completed' ? 'Reopen' : 'Complete', icon: status === 'completed' ? RotateCcw : Check,
                         onClick: () => activityActions.setCompleted(target, status !== 'completed') },
                       { label: 'Cancel', icon: XCircle, onClick: () => activityActions.setCancelled(target, true) },
@@ -489,7 +494,8 @@ export function DashboardOverviewContent() {
         </section>
       </div>
 
-      {selectedEvent ? <EventSummaryModal event={selectedEvent} onClose={() => setSelectedEvent(null)} /> : null}
+      {selectedEvent && events.find((item) => recordId(item.id || item.firestoreId) === recordId(selectedEvent.id || selectedEvent.firestoreId)) ? <EventSummaryModal
+        event={events.find((item) => recordId(item.id || item.firestoreId) === recordId(selectedEvent.id || selectedEvent.firestoreId))} onClose={() => setSelectedEvent(null)} /> : null}
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
       <ActivityActionDialogs actions={activityActions} />
     </>

@@ -57,6 +57,9 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     closeButtonRef.current?.focus({ preventScroll: true });
 
     const handleKeyDown = (event) => {
+      // A nested original preview owns focus/Escape until it closes.
+      const activeDialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+      if (activeDialogs[activeDialogs.length - 1] !== dialogRef.current) return;
       if (event.key === 'Escape') {
         event.preventDefault();
         onCloseRef.current();

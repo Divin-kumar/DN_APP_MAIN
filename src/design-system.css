@@ -2765,3 +2765,23 @@ html[data-theme] .sr-only { position:absolute; width:1px; height:1px; margin:-1p
 html[data-theme] .dn-swipe-popup-item:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
 
 html[data-theme] .event-activity-card.is-readonly .event-activity-main { padding-right:12px !important; }
+
+/* Moment summaries expose the entire content; the shared dialog body handles scrolling. */
+html[data-theme] .event-summary-dialog,
+html[data-theme] .dashboard-event-summary-modal { width:min(920px, calc(100vw - 24px)); max-width:920px; }
+html[data-theme] .event-summary-content,
+html[data-theme] .dashboard-event-summary-modal .dashboard-summary-activity-copy { min-width:0; overflow-wrap:anywhere; }
+html[data-theme] .event-summary-header h3,
+html[data-theme] .event-summary-activity-copy strong,
+html[data-theme] .dashboard-event-summary-modal .dashboard-summary-activity-copy > span { white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:anywhere; }
+html[data-theme] .event-summary-dialog .dn-rich-text,
+html[data-theme] .dashboard-event-summary-modal .dn-rich-text { display:block; max-height:none; overflow:visible; -webkit-line-clamp:unset; line-clamp:unset; }
+html[data-theme] .moment-summary-memories { display:grid; gap:14px; }
+html[data-theme] .moment-summary-memories > div { display:grid; gap:6px; min-width:0; overflow-wrap:anywhere; }
+html[data-theme] .moment-summary-memories small { color:var(--color-text-muted); }
+html[data-theme] .moment-summary-attachments { min-width:0; }
+html[data-theme] .moment-summary-attachments .dn-attachment-open { flex-direction:column; align-items:stretch; }
+html[data-theme] .moment-summary-attachments .dn-attachment-open img { width:100%; height:auto; max-height:none; object-fit:contain; }
+html[data-theme] .moment-summary-attachments .dn-attachment-open strong { white-space:normal; overflow:visible; overflow-wrap:anywhere; text-overflow:clip; }
+html[data-theme] .event-summary-dialog .dn-modal-body,
+html[data-theme] .dashboard-event-summary-modal .dn-modal-body { min-width:0; overflow-wrap:anywhere; }

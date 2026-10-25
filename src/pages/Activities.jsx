@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ListChecks, Plus } from 'lucide-react';
 import ActivityList from '../components/events/ActivityList';
-import AttachmentGallery from '../components/common/AttachmentGallery';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import ListControls from '../components/common/ListControls';
@@ -13,30 +12,17 @@ import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
-import useExpenseStore from '../store/useExpenseStore';
 import { getActivityMomentType, projectActivities, selectActivityEntries } from '../utils/activityRecords';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
-import { activityCompletionPatch, activityDetailPath, activityStatus } from '../utils/activityDetail';
+import { activityCancellationPatch, activityCompletionPatch, activityDetailPath, activityStatus } from '../utils/activityDetail';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
-import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
+import { assertActivityEditable, isRecordScopeLoaded } from '../utils/scopedRecordActions';
+import { ACTIVITY_LIST_DEFAULTS as DEFAULTS, ACTIVITY_FILTERS as FILTERS, ACTIVITY_SORTS as SORTS, ACTIVITY_LIST_RULES as RULES } from '../utils/activityListState';
 
 const EMPTY = Object.freeze([]);
-const DEFAULTS = Object.freeze({ search: '', filter: 'all', momentId: '', momentType: '', parentScope: 'active', field: 'date', direction: 'asc' });
-const FILTERS = Object.freeze([
-  ['all', 'All'], ['in-progress', 'In progress'], ['completed', 'Completed'],
-  ['cancelled', 'Cancelled'],
-]);
-const SORTS = Object.freeze([
-  { value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' },
-  { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' },
-]);
-const RULES = Object.freeze({
-  filter: FILTERS.map(([value]) => value), parentScope: ['active', 'archived', 'all'],
-  field: SORTS.map(({ value }) => value), direction: ['asc', 'desc'],
-});
 const scopeKey = ({ user, isGuest }) => `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
 const momentId = (moment) => recordId(moment.id) || recordId(moment.firestoreId);
 const today = () => formatMomentDate(new Date());
@@ -56,7 +42,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const showToast = useAppStore((state) => state.showToast);
   const adminValues = useAppStore((state) => state.adminValues);
   const eventStore = useEventStore();
-  const expenseStore = useExpenseStore();
   const [filters, changeFilters, resetFilters] = usePersistentListState('activities', DEFAULTS, RULES);
   const [draft, setDraft] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
@@ -68,17 +53,13 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const activeSession = () => mounted.current && scopeKey(useAppStore.getState()) === scope;
 
   const { loadEvents, updateEventItem } = eventStore;
-  const { loadExpenses } = expenseStore;
   useEffect(() => {
     if (!uid && !isGuest) return;
     loadEvents(uid, isGuest);
-    loadExpenses(uid, isGuest);
-  }, [uid, isGuest, loadEvents, loadExpenses]);
+  }, [uid, isGuest, loadEvents]);
 
   const ready = isRecordScopeLoaded(eventStore, scope, getActiveSampleScenario(uid));
-  const expensesReady = isRecordScopeLoaded(expenseStore, scope, getActiveSampleScenario(uid));
   const events = ready ? eventStore.events : EMPTY;
-  const expenses = expensesReady ? expenseStore.expenses : EMPTY;
   const projection = useMemo(() => {
     const entries = projectActivities(events);
     const context = new WeakMap();
@@ -97,9 +78,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     && (filters.parentScope === 'all' || entry.archived === (filters.parentScope === 'archived'))
   ));
   const visible = selected.map((entry) => projection.views.get(entry.key));
-  const expensesByActivity = Object.fromEntries(projection.entries.map((entry) => [entry.key,
-    expenses.filter((expense) => recordId(expense.eventId) === entry.momentId && recordId(expense.activityId) === recordId(entry.activity.id)),
-  ]));
   const reference = (view) => {
     const entry = projection.context.get(view);
     if (!entry) throw new Error('This activity is unavailable. Please reload and try again.');
@@ -139,18 +117,21 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     }
   };
   const runAction = (operation, after) => mutate(operation, after).catch(() => {});
-  const updateActivity = (target, patch) => {
+  const updateActivity = (target, patch, operation = '') => {
     resolve(target);
-    return records.mutateActivity(mutationContext, target.momentId, target.activityId, patch);
+    return records.mutateActivity(mutationContext, target.momentId, target.activityId, patch, operation);
   };
 
   const edit = (view) => {
     if (saving.current) return;
-    const target = reference(view);
-    const { activity } = resolve(target);
-    setSaveError('');
-    setDraft({ ...target, title: activity.title || '', date: formatMomentDate(parseMomentDate(activity.date)) || today(),
-      priority: activity.priority || 'medium', description: activity.description || '' });
+    try {
+      const target = reference(view);
+      const { activity } = resolve(target);
+      assertActivityEditable(activity);
+      setSaveError('');
+      setDraft({ ...target, title: activity.title || '', date: formatMomentDate(parseMomentDate(activity.date)) || today(),
+        priority: activity.priority || 'medium', description: activity.description || '' });
+    } catch (error) { setSaveError(error.message); }
   };
   const saveActivity = (event) => {
     event.preventDefault();
@@ -158,7 +139,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     runAction(async () => {
       const { moment } = resolve(draft);
       const values = { title: draft.title.trim(), date: draft.date, description: draft.description, priority: draft.priority };
-      if (draft.activityId) return updateActivity(draft, () => values);
+      if (draft.activityId) return updateActivity(draft, () => values, 'edit');
       return updateEventItem(uid, isGuest, { ...moment, activities: [...(moment.activities || []), {
         ...values, id: crypto.randomUUID(), eventId: draft.momentId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
       }] });
@@ -232,21 +213,17 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))}
             getActivityKey={(view) => projection.context.get(view).key}
-            renderAttachments={(view) => {
-              const entry = projection.context.get(view);
-              const parent = events.find((moment) => momentId(moment) === entry.momentId);
-              return <AttachmentGallery compact uid={uid} isGuest={isGuest} attachments={(parent?.attachments || []).filter((attachment) => recordId(attachment.activityId) === recordId(entry.activity.id))} />;
-            }}
             getEventName={(view) => { const entry = projection.context.get(view); return <Link to={`/events/${encodeURIComponent(entry.momentId)}/activities`}>{entry.momentName}</Link>; }}
-            expensesByActivity={expensesByActivity} showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount)}
-            onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId)); }}
+            showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount)}
+            onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId), {
+              state: { activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
+            }); }}
             onEdit={edit}
             onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')), () => setAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed'))}
-            onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => { const cancelled = activity.cancelled || activity.status === 'cancelled'; return { cancelled: !cancelled, status: cancelled ? activity.completed ? 'completed' : 'in-progress' : 'cancelled' }; }))}
+            onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => activityCancellationPatch(activity, activityStatus(activity) !== 'cancelled')))}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
       {ready && !events.length ? <p className="dn-list-controls-note">Use + to create a Moment, then add its activities.</p> : null}
-      {expenseStore.error ? <div className="financial-load-error" role="alert"><span>Linked expenses couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadExpenses(uid, isGuest)}>Try again</button></div> : null}
       {draft ? <ModalDialog title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
         <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
           {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
