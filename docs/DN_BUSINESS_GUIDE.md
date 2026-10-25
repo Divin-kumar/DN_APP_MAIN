@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-Current source: **25 October 2026 · Version 1.0.28 is prepared, not published**. The latest verified live release remains 1.0.27 at [DN](https://dn-10.web.app). The prepared change adds an Activity Detail page, a Transactions section within every Moment, and simpler Activity cards. Account photo storage still needs the paid-plan setup described below.
+Current release: **25 October 2026 · Version 1.0.28 is published** at [DN](https://dn-10.web.app). This release adds an Activity Detail page, a Transactions section within every Moment, and simpler Activity cards. Account photo storage still needs the paid-plan setup described below.
 
 ## 1. What DN helps you do
 

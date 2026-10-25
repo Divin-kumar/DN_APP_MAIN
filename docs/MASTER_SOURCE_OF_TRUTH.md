@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-DN organizes Moments, activities, memories, greetings, original attachments and finance for Google accounts and browser-local guests. This source change prepares **1.0.28**; the latest verified Hosting publication remains **1.0.27** (CHG-094). This is the current product reference; rules are in [AGENTS.md](../AGENTS.md), commands in [README.md](../README.md), and execution/release evidence in the [change log](CHANGE_AUDIT_LOG.md).
+DN organizes Moments, activities, memories, greetings, original attachments and finance for Google accounts and browser-local guests. Version **1.0.28** is published on Firebase Hosting (CHG-097). This is the current product reference; rules are in [AGENTS.md](../AGENTS.md), commands in [README.md](../README.md), and execution/release evidence in the [change log](CHANGE_AUDIT_LOG.md).
 
 ## Product Overview
 
@@ -144,4 +144,4 @@ Proposed only: realtime subscriptions, durable offline data and conflict/deletio
 - [Documentation CI](../.github/workflows/documentation-governance.yml), [history checker](../scripts/check-audit-log.mjs), [preview workflow](../.github/workflows/dn-oldversion-firebase-preview.yml).
 - Previous published release: 1.0.27 changes reviewed against clean OldVersion base `0601a65fd47b888842f4d00fbff8e0d09b98c728`, 2026-10-24. **Executed:** 318 tests, production build, phone-width filter navigation/selection inspection and Hosting deployment; all 46 served files and four SPA routes matched build hashes. Production About showed 1.0.27/Production. **Source-derived:** type/status filter changes write no business records and retain scoped browser preferences. **Unverified:** native phone gestures and signed-in Storage journeys. Existing Storage/billing limitations remain; release evidence is in CHG-094.
 
-- Current source implementation: reviewed OldVersion base `2474fab770951c9d84402d3449d0e70fc88a4717`; source version 1.0.28, no Hosting publication. See CHG-095 for executed verification and the remaining device/cloud limits.
+- Current source implementation: reviewed OldVersion base `2474fab770951c9d84402d3449d0e70fc88a4717`; source version 1.0.28, published to Hosting in CHG-097. See CHG-095 for executed verification and the remaining device/cloud limits.
