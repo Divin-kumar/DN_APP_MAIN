@@ -64,15 +64,15 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
     });
   }, () => setLinking(false));
   return <div className="activity-attachments">
-    <div className="activity-section-heading"><h2>Attachments <small>{attachments.length || ''}</small></h2>
-      <button type="button" className="moment-text-action" disabled={busy} onClick={() => input.current?.click()}><Plus size={15} aria-hidden="true" /> Add attachment</button></div>
-    <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
+    <div className="activity-section-heading"><h2>Attachments</h2>
+      <div className="activity-attachment-actions">
+        {available.length ? <button type="button" className="dn-record-menu-trigger" aria-label="Link a Moment attachment" title="Link a Moment attachment" disabled={busy} onClick={() => setLinking(true)}><Link2 size={17} aria-hidden="true" /></button> : null}
+        <button type="button" className="dn-record-menu-trigger" aria-label="Add attachment" title="Add attachment (saved on this device)" disabled={busy} onClick={() => input.current?.click()}><Plus size={18} aria-hidden="true" /></button>
+      </div></div>
     <input ref={input} hidden type="file" aria-label="Add Activity attachment" onChange={addFile} />
     {busy ? <p role="status">Saving attachment…</p> : null}
     {error && !linking && !deleting ? <p role="alert" className="quick-create-error">{error}</p> : null}
-    {attachments.length ? <AttachmentGallery attachments={attachments} uid={uid} isGuest={isGuest} onRemove={setDeleting} />
-      : <p className="moment-empty-state">No attachments added.</p>}
-    {available.length ? <button type="button" className="moment-text-action" disabled={busy} onClick={() => setLinking(true)}><Link2 size={14} aria-hidden="true" /> Link a Moment attachment</button> : null}
+    <AttachmentGallery attachments={attachments} uid={uid} isGuest={isGuest} onRemove={setDeleting} showMetadata={false} />
     {linking ? <ModalDialog title="Link Moment attachment" onClose={() => { if (!saving.current) setLinking(false); }}>
       <p>Keep an existing Moment attachment with this activity. Stored originals are reused.</p>
       {error ? <p role="alert" className="quick-create-error">{error}</p> : null}

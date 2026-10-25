@@ -9,8 +9,7 @@ import ActivityActionDialogs from '../../components/events/ActivityActionDialogs
 import LinkedTransactions from '../finance/components/LinkedTransactions';
 import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
-import { activityAttachments, activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail, selectActivityCover } from '../../utils/activityDetail';
-import { getActivityMomentType } from '../../utils/activityRecords';
+import { activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail, selectActivityCover } from '../../utils/activityDetail';
 import './ActivityDetail.css';
 
 export default function ActivityDetail() {
@@ -40,46 +39,50 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const cover = selectActivityCover(moment, activityId);
   const coverKey = JSON.stringify([cover?.id, cover?.assetId, cover?.storage, cover?.url, cover?.downloadURL, cover?.src]);
   const parentTo = `/events/${encodeURIComponent(eventId)}/activities`;
-  const perform = (operation) => operation().catch(() => {});
+  const menuActions = [
+    status === 'cancelled'
+      ? { label: 'Restore', icon: RotateCcw, onClick: () => actions.setCancelled(target, false) }
+      : { label: status === 'completed' ? 'Reopen' : 'Close', icon: status === 'completed' ? RotateCcw : Check,
+          disabled: status !== 'completed' && (moment.archived || ['archived', 'cancelled'].includes(moment.status)),
+          onClick: () => actions.setCompleted(target, status !== 'completed') },
+    { label: 'Edit', icon: Pencil, onClick: () => actions.edit(target) },
+    ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => actions.setCancelled(target, true) }] : []),
+  ];
+  const dates = [
+    { label: 'Created', value: activityDateLabel(activity.createdAt, '') },
+    { label: 'Completed', value: activityDateLabel(activity.completedAt, '') },
+  ].filter(({ value }) => value);
   return <article className="activity-detail-page">
-    <ActivityCover key={coverKey} attachment={cover} uid={scoped.uid} isGuest={scoped.isGuest} backTo={parentTo} momentType={getActivityMomentType(moment)} />
+    <ActivityCover key={coverKey} attachment={cover} uid={scoped.uid} isGuest={scoped.isGuest} backTo={parentTo} />
     <div className="activity-detail-content">
-      <nav className="activity-parent-context" aria-label="Activity parent"><span>Moment</span><Link to={parentTo}>{moment.name || 'Untitled Moment'}</Link></nav>
+      <header className="activity-detail-heading">
+        <nav className="activity-parent-context" aria-label="Activity parent">Moment: <Link to={parentTo}>{moment.name || 'Untitled Moment'}</Link></nav>
+        <span className="activity-title-divider" aria-hidden="true"> — </span><h1>{activity.title || 'Untitled activity'}</h1>
+      </header>
       {moment.archived ? <p className="activity-archived"><Archive size={14} aria-hidden="true" /> Archived Moment</p> : null}
-      <h1>{activity.title || 'Untitled activity'}</h1>
-      <div className="activity-detail-metadata">
-        <span className={`activity-status-pill status-${status}`}><StatusIcon size={14} aria-hidden="true" />{activityStatusLabel(activity)}</span>
-        <span><CalendarDays size={14} aria-hidden="true" />{activityDateLabel(activity.date)}</span>
-        <span><Flag size={14} aria-hidden="true" />Priority: {activity.priority || 'medium'}</span>
-      </div>
-      <div className="activity-detail-actions" aria-busy={actions.busy}>
-        {status !== 'cancelled' ? <button type="button" className="primaryButton" disabled={actions.busy || (moment.archived && status !== 'completed')}
-          onClick={() => perform(() => actions.setCompleted(target, status !== 'completed'))}>
-          {status === 'completed' ? <RotateCcw size={16} aria-hidden="true" /> : <Check size={16} aria-hidden="true" />}{actions.busy ? 'Saving…' : status === 'completed' ? 'Reopen' : 'Complete'}</button>
-          : <button type="button" className="primaryButton" disabled={actions.busy} onClick={() => perform(() => actions.setCancelled(target, false))}><RotateCcw size={16} aria-hidden="true" />Restore</button>}
-        <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => actions.edit(target)}><Pencil size={15} aria-hidden="true" />Edit</button>
-        <SwipeActionCard className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
-          otherActions={status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => perform(() => actions.setCancelled(target, true)) }] : []}
+      <div className="activity-detail-metadata" aria-busy={actions.busy}>
+        <div className="activity-detail-facts">
+          <span className={`activity-status-pill status-${status}`}><StatusIcon size={14} aria-hidden="true" />{activityStatusLabel(activity)}</span>
+          <span><CalendarDays size={14} aria-hidden="true" />{activityDateLabel(activity.date)}</span>
+          <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={14} aria-hidden="true" />{activity.priority || 'medium'}</span>
+        </div>
+        <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
+          otherActions={menuActions}
           onDelete={() => actions.requestDelete(target)} />
       </div>
       {actions.error && !actions.draft && !actions.deleteTarget ? <p className="quick-create-error" role="alert">{actions.error}</p> : null}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{actions.announcement}</p>
-      <section className="activity-detail-section" aria-labelledby="activity-description-heading"><h2 id="activity-description-heading">Description</h2>
-        {activity.description ? <RichText value={activity.description} headingLevel={3} className="activity-description" />
-          : <p className="moment-empty-state">No description added. <button type="button" className="moment-text-action" onClick={() => actions.edit(target)}>Edit</button></p>}
+      {activity.description ? <section className="activity-detail-section" aria-labelledby="activity-description-heading">
+        <h2 className="sr-only" id="activity-description-heading">Description</h2>
+        <RichText value={activity.description} headingLevel={3} className="activity-description" />
+      </section> : null}
+      <section className="activity-detail-section" aria-labelledby="activity-transactions-heading">
+        <h2 className="sr-only" id="activity-transactions-heading">Transactions</h2><LinkedTransactions eventId={eventId} activityId={activityId} minimal />
       </section>
-      <section className="activity-detail-section"><h2>Parent Moment</h2><Link className="activity-parent-link" to={parentTo}>{moment.name || 'Untitled Moment'}</Link>
-        <p className="activity-secondary">{getActivityMomentType(moment)} · {activityDateLabel(moment.date)}{moment.archived ? ' · Archived Moment' : ''}</p>
-      </section>
-      <section className="activity-detail-section"><h2>Finance</h2><LinkedTransactions eventId={eventId} activityId={activityId} /></section>
       <section className="activity-detail-section"><ActivityAttachments moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} /></section>
-      <footer className="activity-detail-section activity-secondary">
-        <dl className="activity-secondary-metadata"><div><dt>Created</dt><dd>{activityDateLabel(activity.createdAt)}</dd></div>
-          {activity.completedAt ? <div><dt>Completed</dt><dd>{activityDateLabel(activity.completedAt)}</dd></div> : null}
-          <div><dt>Attachments</dt><dd>{activityAttachments(moment, activityId).length}</dd></div>
-        </dl>
-        <button type="button" className="activity-delete-action" disabled={actions.busy} onClick={() => actions.requestDelete(target)}>Delete activity</button>
-      </footer>
+      {dates.length ? <footer className="activity-detail-footer activity-secondary">
+        <dl className="activity-secondary-metadata">{dates.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
+      </footer> : null}
     </div>
     <ActivityActionDialogs actions={actions} onDeleted={() => navigate('/activities', { replace: true })} />
   </article>;

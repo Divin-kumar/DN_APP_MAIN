@@ -48,11 +48,9 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'All new attachment originals save in this browser for Account, Guest and Sample. Only filenames and reference details sync; backups carry originals to another device.',
-  'Moment Activities is a read-only list that opens Activity Detail. Timeline is removed from the workspace.',
-  'Activity and Moment transaction history is read-only. Edit or delete existing records in Transactions under Profile.',
-  'Universal + is the single transaction creation entry, with current Moment and Activity Detail presets. No data migration or backup-format change is required.',
-
+  'Activity Detail shows your cover, Moment and title, status/date/priority, actual description, transactions with totals, compact attachment previews and recorded dates.',
+  'Use its three-dot menu for Close or Reopen, Edit, Cancel or Restore, and confirmed Delete. Close marks the Activity completed.',
+  'Transaction history stays read-only here; use universal + to add a transaction and Profile → Transactions to edit it. Local originals and backup formats are unchanged.',
 ];
 
 const dataInfo = [

@@ -4,7 +4,7 @@ export const calendarDate = (offset = 0) => {
 };
 export const fixtureMoments = () => [
   { id: 'moment-one', name: 'Weekend in Ooty — family plans and memories', type: 'Vacation', date: calendarDate(5),
-    activities: [{ id: 'shared', eventId: 'moment-one', title: 'Book a lakeside stay', date: calendarDate(1), priority: 'high', completed: false,
+    activities: [{ id: 'shared', eventId: 'moment-one', title: 'Book a lakeside stay', date: calendarDate(1), priority: 'high', completed: false, createdAt: '2026-10-20T12:00:00Z',
       description: '### Travel notes\n- Bring a jacket\n- **Book early**\n\n<script>alert("literal")</script>\n![literal image](https://invalid.test/x.png)',
       expenses: [{ id: 'duplicate', amount: 999, date: '2026-10-01' }, { id: 'nested-only', name: 'Parking', amount: 20, date: '2026-09-01' }], extra: { retained: true } },
     { id: 'completed', title: 'Choose the train', completed: true, date: calendarDate(-3), priority: 'medium' },
@@ -67,4 +67,9 @@ export async function swipe(page, locator, { distance = 150, vertical = 0 } = {}
 export async function openUniversalTransaction(page) {
   await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
   await page.getByRole('button', { name: 'Transaction', exact: true }).click();
+}
+
+export async function activityDetailAction(page, name) {
+  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await page.getByRole('menuitem', { name, exact: true }).click();
 }

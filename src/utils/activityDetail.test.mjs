@@ -31,7 +31,10 @@ test('portrait/square/panoramic/tiny covers reserve a bounded landscape frame wi
 });
 
 test('dates accept legacy strings and Firestore timestamps; missing and invalid dates remain undecided', () => {
-  for (const value of ['', null, 'bad date', '2026-02-30', { toDate() { throw new Error('bad'); } }]) assert.equal(activityDateLabel(value), 'Date to be decided');
+  for (const value of ['', null, 'bad date', '2026-02-30', { toDate() { throw new Error('bad'); } }]) {
+    assert.equal(activityDateLabel(value), 'Date to be decided');
+    assert.equal(activityDateLabel(value, ''), ''); // Missing secondary dates never invent a recorded date.
+  }
   assert.match(activityDateLabel({ seconds: Date.UTC(2026, 9, 25, 12) / 1000 }), /25 Oct 2026/);
   assert.equal(activityStatusLabel({ completed: true }), 'Completed');
   assert.equal(activityStatusLabel({ cancelled: true, completed: true }), 'Cancelled');

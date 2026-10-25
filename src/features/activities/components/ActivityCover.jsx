@@ -6,7 +6,7 @@ import { activityCoverRatio } from '../../../utils/activityDetail';
 
 // Intrinsic measurements are a runtime hint only, never a persisted crop/asset.
 const dimensions = new Map();
-export default function ActivityCover({ attachment, uid, isGuest, backTo, momentType }) {
+export default function ActivityCover({ attachment, uid, isGuest, backTo }) {
   const original = useAttachmentOriginal(attachment, { uid, isGuest });
   const [brokenSource, setBrokenSource] = useState('');
   const identity = attachment?.assetId || attachment?.url || attachment?.downloadURL || attachment?.src;
@@ -25,8 +25,7 @@ export default function ActivityCover({ attachment, uid, isGuest, backTo, moment
         if (width && height && dimensions.size < 100) dimensions.set(identity, { width, height });
       }} onError={() => setBrokenSource(original.source)} /> : <div className="activity-cover-fallback">
       <span aria-hidden="true">{attachment && !loading ? <ImageOff size={28} /> : <Images size={28} />}</span>
-      <small>{loading ? 'Loading photo…' : attachment ? 'Cover photo unavailable' : 'No cover photo'}</small>
-      {momentType ? <span className="activity-cover-kind">{momentType}</span> : null}
+      <small className="sr-only">{loading ? 'Loading photo…' : attachment ? 'Cover photo unavailable' : 'No cover photo'}</small>
     </div>}
     <Link to={backTo} className="activity-cover-back" aria-label="Back to Moment activities"><ArrowLeft size={19} aria-hidden="true" /></Link>
   </div>;

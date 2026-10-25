@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { addOriginal, fixtureMoments, seedGuest, swipe, openUniversalTransaction } from './fixtures.js';
+import { addOriginal, fixtureMoments, seedGuest, swipe, openUniversalTransaction, activityDetailAction } from './fixtures.js';
 
 test('direct detail/refresh uses both IDs, shows safe formatted notes and never rewrites source records', async ({ page }) => {
   const errors = await seedGuest(page);
@@ -48,12 +48,12 @@ test('normal card/keyboard selection opens detail, menus and attachment controls
 
 test('edit stays on detail, cancel restores focus/scroll, failed save retains draft and retry succeeds', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
-  const edit = page.getByRole('button', { name: 'Edit', exact: true }).first();
-  await edit.click(); const dialog = page.getByRole('dialog');
+  const trigger = page.getByRole('button', { name: 'Activity options', exact: true });
+  await activityDetailAction(page, 'Edit'); const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox', { name: 'Activity title', exact: true }).fill('Changed title');
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(edit).toBeFocused(); await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
-  await edit.click();
+  await expect(trigger).toBeFocused(); await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
+  await activityDetailAction(page, 'Edit');
   await dialog.getByRole('textbox', { name: 'Activity title', exact: true }).fill('Saved title');
   await page.evaluate(async () => {
     const store = (await import('/src/store/useEventStore.js')).default;
@@ -198,7 +198,7 @@ test('many attachment references share one original; preview/download preserve i
   await page.goto('/events/moment-one/activities/shared');
   const cover = page.locator('.activity-cover img'); await expect(cover).toHaveCount(1);
   const source = await cover.getAttribute('src');
-  await page.getByRole('button', { name: 'Edit', exact: true }).first().click();
+  await activityDetailAction(page, 'Edit');
   await page.getByRole('dialog').getByRole('textbox', { name: 'Activity title', exact: true }).fill('New title, same original');
   await page.getByRole('dialog').getByRole('button', { name: 'Save activity', exact: true }).click();
   await expect(page.locator('h1')).toHaveText('New title, same original');

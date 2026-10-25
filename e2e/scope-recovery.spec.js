@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, swipe, openUniversalTransaction } from './fixtures.js';
+import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, activityDetailAction } from './fixtures.js';
 
 test('Account loading never flashes not-found or a previous scope Activity; both IDs remain authoritative', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
@@ -61,7 +61,7 @@ test('Sample Activity changes stay in the isolated fixture and clearing Sample r
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.locator('h1')).toHaveText('Isolated Sample Activity');
   const guest = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-  await page.getByRole('button', { name: 'Complete', exact: true }).click();
+  await activityDetailAction(page, 'Close');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(guest);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).events[0].activities[0].completed)).toBe(true);
@@ -81,10 +81,12 @@ test('archived parents remain readable, cancelled restore stays explicit and inv
   await seedGuest(page, { moments }); await page.goto('/events/moment-one/activities/shared');
   await expect(page.getByText('Archived Moment', { exact: true })).toBeVisible();
   await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
-  await expect(page.getByRole('button', { name: 'Complete', exact: true })).toBeDisabled();
+  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: 'Close', exact: true })).toBeDisabled();
   await page.goto('/events/moment-one/activities/cancelled');
   await expect(page.locator('.activity-status-pill')).toHaveText('Cancelled');
-  await expect(page.getByRole('button', { name: 'Restore', exact: true })).toBeEnabled();
+  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: 'Restore', exact: true })).toBeEnabled();
   await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
 });
 

@@ -45,8 +45,8 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     const frame = await page.locator('.activity-cover').boundingBox();
     expect(frame.width).toBeGreaterThan(frame.height);
     if (height < 500) expect(frame.height).toBeLessThanOrEqual(height * .45);
-    await page.locator('.activity-delete-action').scrollIntoViewIfNeeded();
-    const end = await page.locator('.activity-delete-action').boundingBox();
+    await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
+    const end = await page.locator('.activity-detail-footer').boundingBox();
     if (width < 768) {
       const dock = await page.locator('.mobile-tabbar').boundingBox();
       expect(end.bottom ?? end.y + end.height).toBeLessThanOrEqual(dock.y + 1);
@@ -84,8 +84,8 @@ test('200% CSS zoom with reduced motion retains reachable actions, menus and fin
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Delete', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
-  await page.locator('.activity-delete-action').scrollIntoViewIfNeeded();
-  await expect(page.locator('.activity-delete-action')).toBeInViewport();
+  await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
+  await expect(page.locator('.activity-detail-footer')).toBeInViewport();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(await page.locator('.dn-route-transition').evaluate((node) => getComputedStyle(node).transform)).toMatch(/none|matrix\(1, 0, 0, 1, 0, 0\)/);
 });

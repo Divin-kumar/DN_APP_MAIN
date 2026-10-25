@@ -17,10 +17,10 @@ export const activityCompletionPatch = (activity, moment, completed) => {
   if ((activityStatus(activity) === 'completed') === completed) return undefined;
   return { completed, completedAt: completed ? new Date().toISOString() : null, status: completed ? 'completed' : 'in-progress' };
 };
-export const activityDateLabel = (value) => {
+export const activityDateLabel = (value, fallback = 'Date to be decided') => {
   let date;
   try { date = parseMomentDate(value); } catch { /* Unreadable legacy timestamps have no date. */ }
-  return date ? date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date to be decided';
+  return date ? date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : fallback;
 };
 export const isAttachmentImage = (type) => /^image\/(jpeg|png|webp|gif|avif|bmp)$/i.test(type || '');
 export const legacyAttachmentImage = (attachment) => {

@@ -42,7 +42,8 @@ test('Moment Activities is read-only, still opens Detail, and the retired Timeli
   await page.getByRole('navigation', { name: 'Moment contents' }).getByRole('link', { name: /Activities/ }).click();
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
-  await expect(page.getByRole('button', { name: 'Edit', exact: true }).first()).toBeVisible();
+  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toBeVisible();
 });
 
 test('contextual transaction rows have no edit, delete, swipe or Add controls; main Finance keeps editing', async ({ page }) => {
