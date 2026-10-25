@@ -37,8 +37,8 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     }
   };
   assertMergeScope();
-  // Upload each original once before committing references to the account. A
-  // missing original or failed upload leaves every guest record/file intact.
+  // Copy originals into this browser's account scope before committing metadata.
+  // A missing original or failed local save keeps all Guest records/files intact.
   const files = await exportAttachmentFiles(events, { isGuest: true, assertCurrent: assertMergeScope });
   assertMergeScope();
   const accountEvents = await restoreAttachmentFiles(events, files, { uid, isGuest: false, assertCurrent: assertMergeScope });

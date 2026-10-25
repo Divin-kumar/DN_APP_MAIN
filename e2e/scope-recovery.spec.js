@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, swipe } from './fixtures.js';
+import { fixtureMoments, seedGuest, swipe, openUniversalTransaction } from './fixtures.js';
 
 test('Account loading never flashes not-found or a previous scope Activity; both IDs remain authoritative', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
@@ -88,9 +88,9 @@ test('archived parents remain readable, cancelled restore stays explicit and inv
   await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
 });
 
-test('Activity transaction presets both IDs and retains route/draft through failure, cancellation and retry', async ({ page }) => {
+test('Universal + transaction presets both IDs and retains route/draft through failure, cancellation and retry', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
-  await page.getByRole('button', { name: 'Add transaction', exact: true }).click();
+  await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('combobox', { name: 'Linked Activity', exact: true })).toContainText('Book a lakeside stay');
   await dialog.getByRole('spinbutton').fill('30');
@@ -109,7 +109,7 @@ test('Activity transaction presets both IDs and retains route/draft through fail
   await dialog.getByRole('button', { name: 'Add Transaction', exact: true }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Tea stop');
-  await page.getByRole('button', { name: 'Add transaction', exact: true }).click();
+  await openUniversalTransaction(page);
   await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
 });

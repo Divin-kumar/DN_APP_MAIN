@@ -9,7 +9,7 @@
 import { useState } from 'react';
 
 // Import icons used for actions like complete, edit, delete, money, and add.
-import { Check, ChevronDown, Circle, IndianRupee, Link2, Pencil, Plus, RotateCcw, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Check, ChevronDown, Circle, IndianRupee, Pencil, RotateCcw, Sparkles, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import SwipeToComplete from '../common/SwipeToComplete';
 import { activityStatus, activityStatusLabel } from '../../utils/activityDetail';
@@ -31,10 +31,9 @@ export default function ActivityList({
   onOpen,
   onDelete,
   onEdit,
-  onAddExpense,
-  onLinkExpense,
   onToggleComplete,
   onToggleCancelled,
+  readOnly = false,
 }) {
   // This state keeps track of which activity's expense list is open.
   // Example: { "activity-123": true } means the user opened the expense panel for one task.
@@ -109,6 +108,7 @@ export default function ActivityList({
           // Check whether the expense panel for this activity is currently open.
           const expensesOpen = Boolean(expandedExpenses[activityKey]);
           const isCancelled = activity.cancelled || activity.status === 'cancelled';
+          const hasActions = !readOnly && Boolean(onEdit || onToggleComplete || onToggleCancelled || onDelete);
 
           // See whether this activity has any linked expenses at all.
           const hasExpenses = activityExpenses.length > 0;
@@ -120,18 +120,17 @@ export default function ActivityList({
 
           const card = (
             <SwipeActionCard key={activityKey} as="article"
-              className={`event-activity-card${isCompleted ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
-              label={activity.title || 'Untitled activity'} menuButton menuLabel="Activity options"
-              onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={isCancelled}
-              otherActions={[
+              className={`event-activity-card${readOnly ? ' is-readonly' : ''}${isCompleted ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${isCancelled ? ' is-cancelled' : ''}`}
+              label={activity.title || 'Untitled activity'} menuButton={hasActions} menuLabel="Activity options"
+              onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={!readOnly && isCancelled && hasActions}
+              otherActions={readOnly ? [] : [
                 ...(onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
                 ...(onToggleComplete && !isCancelled ? [{ label: isCompleted ? 'Reopen' : 'Complete',
                   icon: isCompleted ? RotateCcw : Check, onClick: () => onToggleComplete(activity.id, activity) }] : []),
-                ...(onAddExpense ? [{ label: 'Add transaction', icon: IndianRupee, onClick: () => onAddExpense(activity) }] : []),
                 ...(onToggleCancelled ? [{ label: isCancelled ? 'Restore' : 'Cancel', icon: isCancelled ? RotateCcw : XCircle,
                   onClick: () => onToggleCancelled(activity.id, activity) }] : []),
               ]}
-              onDelete={onDelete ? () => onDelete(activity.id, activity) : undefined}>
+              onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
               <div className="event-activity-main">
                 <div className="event-activity-copy">
                 <div className="event-activity-title-row">
@@ -164,11 +163,6 @@ export default function ActivityList({
                       <div className="event-activity-expense-panel">
                         {activityExpenses.map((expense) => <div className="event-activity-expense-row" key={expense.id || expense.firestoreId}><span>{expense.name || expense.description || 'Expense'}</span><strong>₹{Number(expense.amount || 0).toLocaleString('en-IN')}</strong></div>)}
 
-                        {/* Actions inside the expense panel: create new expense or link an existing one. */}
-                        <div className="event-activity-expense-actions">
-                          {onAddExpense ? <button type="button" onClick={() => onAddExpense(activity)}><Plus size={13} /> Add transaction</button> : null}
-                          {onLinkExpense ? <button type="button" onClick={() => onLinkExpense(activity)}>Link existing</button> : null}
-                        </div>
                       </div>
                     ) : null}
                   </div>
@@ -177,7 +171,7 @@ export default function ActivityList({
               </div>
             </SwipeActionCard>
           );
-          return onToggleComplete && !isCancelled ? <SwipeToComplete key={activityKey} label={activity.title || 'Activity'}
+          return !readOnly && onToggleComplete && !isCancelled ? <SwipeToComplete key={activityKey} label={activity.title || 'Activity'}
             direction="left" actionLabel={isCompleted ? 'Reopen' : 'Complete'} actionIcon={isCompleted ? RotateCcw : Check}
             onComplete={() => onToggleComplete(activity.id, activity)}>{card}</SwipeToComplete> : card;
         })}

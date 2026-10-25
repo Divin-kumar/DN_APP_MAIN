@@ -30,7 +30,7 @@ async function expectTextContrast(locator) {
 
 const sizes = [[320, 640], [360, 740], [390, 844], [844, 390], [768, 1024], [1024, 768], [1280, 480], [1440, 900], [1920, 1080]];
 for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
-  test(`${theme} ${width}x${height}: long Activity, six workspace tabs and transactions stay reachable`, async ({ page }) => {
+  test(`${theme} ${width}x${height}: long Activity, five workspace tabs and transactions stay reachable`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const moments = fixtureMoments();
     moments[0].name = 'A long parent Moment name with family plans, stories and practical arrangements '.repeat(3);
@@ -53,7 +53,7 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     }
     await page.goto('/events/moment-one/attachments');
     const tabs = page.locator('.event-workspace-nav a');
-    await expect(tabs).toHaveCount(6);
+    await expect(tabs).toHaveCount(5);
     expect(new Set(await tabs.evaluateAll((links) => links.map((node) => Math.round(node.getBoundingClientRect().top)))).size).toBe(1);
     const active = await page.locator('.event-workspace-nav [aria-current="page"]').boundingBox();
     const rail = await page.locator('.event-workspace-nav').boundingBox();

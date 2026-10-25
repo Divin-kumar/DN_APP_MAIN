@@ -63,27 +63,25 @@ test('saving and reading preserves binary bytes, MIME and one stored original pe
   const remoteFirst = await repository.save(file, account('owner-A'));
   const remoteSecond = await repository.save(file, account('owner-A'));
   assert.deepEqual(remoteFirst, remoteSecond);
-  assert.equal(remoteFirst.storage, 'firebase');
-  assert.equal(cloudFiles.size, 1);
+  assert.equal(remoteFirst.storage, 'local');
+  assert.equal(localFiles.size, 2);
+  assert.equal(cloudFiles.size, 0);
   assert.deepEqual(await bytes(await repository.read(attachment(remoteFirst), account('owner-A'))), await bytes(file));
 });
 
-test('guest, sample and distinct account originals are isolated even when the content ID matches', async () => {
+test('Guest, Sample and distinct account originals are isolated with zero cloud writes', async () => {
   const { repository, localFiles, cloudFiles, calls } = fixture();
   const file = original();
-  const localReference = await repository.save(file, guest);
-  await assert.rejects(repository.read(attachment(localReference), account('owner-A')), /unavailable on this device/);
+  const reference = await repository.save(file, guest);
+  await assert.rejects(repository.read(attachment(reference), account('owner-A')), /unavailable on this device/);
   const sample = { isGuest: true, sample: true };
-  await assert.rejects(repository.read(attachment(localReference), sample), /unavailable on this device/);
-  const cloudReference = await repository.save(file, account('owner-A'));
-  await assert.rejects(repository.read(attachment(cloudReference), account('owner-B')), /object-not-found/);
-  await assert.rejects(repository.read(attachment(cloudReference), guest), /Restore the original/);
-  await assert.rejects(repository.read(attachment(cloudReference), sample), /Restore the original/);
+  await assert.rejects(repository.read(attachment(reference), sample), /unavailable on this device/);
+  await repository.save(file, account('owner-A'));
+  await assert.rejects(repository.read(attachment(reference), account('owner-B')), /unavailable on this device/);
   await repository.save(file, sample);
-  assert.equal(localFiles.size, 2);
-  assert.equal(cloudFiles.size, 1);
-  assert.deepEqual(calls.filter(([operation]) => operation === 'cloud-get').map(([, uid]) => uid), ['owner-B'],
-    'cloud reads target only the requesting owner, never the source account');
+  assert.equal(localFiles.size, 3);
+  assert.equal(cloudFiles.size, 0);
+  assert.deepEqual(calls.filter(([operation]) => operation.startsWith('cloud-')), []);
 });
 
 test('missing identity, invalid content IDs and invalid files reject before original persistence', async () => {
@@ -98,16 +96,45 @@ test('missing identity, invalid content IDs and invalid files reject before orig
   await assert.rejects(invalidHash.save(original(), guest), /Invalid attachment/);
 });
 
-test('denied cloud upload rejects with no local fallback or successful reference', async () => {
-  const denied = Object.assign(new Error('Storage access denied'), { code: 'storage/unauthorized' });
-  let uploads = 0;
+test('account saves work with unavailable Firebase Storage and local failures never return a reference', async () => {
+  const denied = new Error('Storage access denied');
+  const files = new Map();
   const repository = createAttachmentRepository({
-    local: async () => assert.fail('account upload must not fall back to guest/local storage'),
-    remote: { put: async () => { uploads += 1; throw denied; }, get: async () => { throw denied; } },
+    local: async (scope, id, blob) => { if (blob) files.set(scope + id, blob); return files.get(scope + id); },
+    remote: { put: async () => assert.fail('new account files never upload'), get: async () => { throw denied; } },
   });
-  await assert.rejects(repository.save(original(), account('owner-A')), (error) => error === denied);
-  assert.equal(uploads, 1);
-  await assert.rejects(repository.read({ assetId: independentHash(Buffer.from('abc')), storage: 'firebase' }, account('owner-A')), (error) => error === denied);
+  const file = original();
+  const reference = await repository.save(file, account('owner-A'));
+  assert.equal(reference.storage, 'local');
+  assert.deepEqual(await bytes(await repository.read(attachment(reference), account('owner-A'))), await bytes(file));
+  await assert.rejects(repository.read({ assetId: independentHash(Buffer.from('absent legacy file')), storage: 'firebase' }, account('owner-A')), (error) => error === denied);
+  const quota = new Error('Local storage quota exceeded');
+  const unavailable = createAttachmentRepository({ local: async () => { throw quota; }, remote: { put: () => assert.fail('never fall back to cloud') } });
+  await assert.rejects(unavailable.save(file, account('owner-A')), (error) => error === quota);
+});
+
+test('legacy cloud references read only the current owner path without migrating records', async () => {
+  const { repository, cloudFiles, calls } = fixture();
+  const file = original(), assetId = await attachmentAssetId(file);
+  const reference = { assetId, storage: 'firebase' };
+  const before = structuredClone(reference);
+  cloudFiles.set('owner-A/' + assetId, file);
+  assert.deepEqual(await bytes(await repository.read(reference, account('owner-A'))), await bytes(file));
+  await assert.rejects(repository.read(reference, account('owner-B')), /object-not-found/);
+  await assert.rejects(repository.read(reference, guest), /Restore the original/);
+  assert.deepEqual(reference, before);
+  assert.equal(calls.some(([operation]) => operation === 'cloud-put' || operation === 'local-put'), false);
+});
+
+test('a locally restored original works with an unchanged legacy cloud marker and no Storage access', async () => {
+  const { repository, calls } = fixture();
+  const file = original();
+  const local = await repository.save(file, account('owner-A'));
+  const reference = attachment({ ...local, storage: 'firebase' });
+  const before = structuredClone(reference);
+  assert.deepEqual(await bytes(await repository.read(reference, account('owner-A'))), await bytes(file));
+  assert.deepEqual(reference, before);
+  assert.equal(calls.some(([operation]) => operation.startsWith('cloud-')), false);
 });
 
 test('legacy metadata-only attachments stay readable as metadata without inventing a file', async () => {
@@ -115,6 +142,22 @@ test('legacy metadata-only attachments stay readable as metadata without inventi
   assert.equal(await repository.read({ id: 'old', name: 'lost-original.jpg', type: 'image/jpeg' }, guest), null);
   assert.deepEqual(calls, []);
   assert.deepEqual(await exportAttachmentFiles([{ id: 'moment', attachments: [{ id: 'old', name: 'lost-original.jpg' }] }], guest, repository), []);
+});
+
+test('a session change during an account local save cannot return a reference for the next scope', async () => {
+  let active = true, finish;
+  const savedScopes = [];
+  const repository = createAttachmentRepository({ local: async (scope) => {
+    savedScopes.push(scope);
+    await new Promise((resolve) => { finish = resolve; });
+  }, remote: { put: () => assert.fail('never upload') } });
+  const saving = repository.save(original(), { ...account('owner-A'), assertCurrent: () => {
+    if (!active) throw new Error('Session changed');
+  } });
+  while (!finish) await new Promise((resolve) => setImmediate(resolve));
+  active = false; finish();
+  await assert.rejects(saving, /Session changed/);
+  assert.deepEqual(savedScopes, ['account:owner-A']);
 });
 
 test('backup exports each original once across Moments and Activity references with exact binary base64', async () => {
@@ -156,7 +199,7 @@ test('local and cloud reads reject corrupt stored bytes before showing a wrong o
   const { repository, localFiles, cloudFiles } = fixture();
   const file = original();
   const localReference = await repository.save(file, guest);
-  const remoteReference = await repository.save(file, account('owner-A'));
+  const remoteReference = { assetId: await attachmentAssetId(file), storage: 'firebase' };
   const corrupted = await bytes(file);
   corrupted[0] ^= 0xff;
   const wrongOriginal = new Blob([corrupted], { type: file.type });
@@ -166,7 +209,7 @@ test('local and cloud reads reject corrupt stored bytes before showing a wrong o
   await assert.rejects(repository.read(attachment(remoteReference), account('owner-A')), /integrity|original|match/i);
 });
 
-test('restore uploads an original once and changes all references to the destination account preserving record links', async () => {
+test('restore stores an original once locally in the destination account and preserves record links', async () => {
   const { repository, calls } = fixture();
   const file = original();
   const reference = await repository.save(file, guest);
@@ -177,14 +220,15 @@ test('restore uploads an original once and changes all references to the destina
   const files = await exportAttachmentFiles(moments, guest, repository);
   const before = JSON.stringify({ moments, files });
   const restored = await restoreAttachmentFiles(moments, files, account('destination'), repository);
-  assert.equal(calls.filter(([operation]) => operation === 'cloud-put').length, 1);
+  assert.equal(calls.filter(([operation, scope]) => operation === 'local-put' && scope === 'account:destination').length, 1);
+  assert.equal(calls.some(([operation]) => operation.startsWith('cloud-')), false);
   assert.equal(JSON.stringify({ moments, files }), before, 'restore never mutates the imported backup or original records');
   assert.equal(restored[0].id, 'moment-1');
   assert.equal(restored[0].name, 'Original Moment');
   assert.deepEqual(restored[0].activities, [{ id: 'activity-1' }]);
   for (const record of [restored[0].attachments[0], restored[1].attachments[0]]) {
     assert.equal(record.assetId, reference.assetId);
-    assert.equal(record.storage, 'firebase');
+    assert.equal(record.storage, 'local');
     assert.deepEqual(await bytes(await repository.read(record, account('destination'))), await bytes(file));
   }
   assert.equal(restored[0].attachments[0].id, 'photo-1');
@@ -195,7 +239,7 @@ test('restore uploads an original once and changes all references to the destina
   assert.deepEqual(restored[1].attachments[1], { id: 'legacy', name: 'old.jpg' });
 });
 
-test('account backup restored to Guest stores a new local original instead of retaining inaccessible cloud references', async () => {
+test('account local backup restores to Guest without exposing the source account scope', async () => {
   const { repository, calls } = fixture();
   const file = original();
   const reference = await repository.save(file, account('source-account'));
@@ -233,15 +277,15 @@ test('restore rejects missing, corrupt and mismatched originals before persistin
   });
 });
 
-test('restore propagates denied destination uploads rather than returning falsely restored records', async () => {
+test('restore propagates failed destination local storage instead of returning falsely restored records', async () => {
   const file = original();
   const assetId = await attachmentAssetId(file);
   const moments = [{ id: 'moment', attachments: [attachment({ assetId, storage: 'local' })] }];
   const files = [{ assetId, type: file.type, size: file.size, base64: (await bytes(file)).toString('base64') }];
-  const denied = new Error('storage/unauthorized');
+  const denied = new Error('Local file storage unavailable');
   const repository = createAttachmentRepository({
-    local: async () => assert.fail('account restore must not silently become local-only'),
-    remote: { put: async () => { throw denied; } },
+    local: async () => { throw denied; },
+    remote: { put: async () => assert.fail('account restore must not upload') },
   });
   await assert.rejects(restoreAttachmentFiles(moments, files, account('destination'), repository), (error) => error === denied);
   assert.equal(moments[0].attachments[0].storage, 'local');

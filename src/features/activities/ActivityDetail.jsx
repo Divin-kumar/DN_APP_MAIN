@@ -11,7 +11,6 @@ import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
 import { activityAttachments, activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail, selectActivityCover } from '../../utils/activityDetail';
 import { getActivityMomentType } from '../../utils/activityRecords';
-import { financialDate } from '../../utils/financialRecords';
 import './ActivityDetail.css';
 
 export default function ActivityDetail() {
@@ -72,7 +71,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       <section className="activity-detail-section"><h2>Parent Moment</h2><Link className="activity-parent-link" to={parentTo}>{moment.name || 'Untitled Moment'}</Link>
         <p className="activity-secondary">{getActivityMomentType(moment)} · {activityDateLabel(moment.date)}{moment.archived ? ' · Archived Moment' : ''}</p>
       </section>
-      <section className="activity-detail-section"><h2>Finance</h2><LinkedTransactions eventId={eventId} activityId={activityId} date={financialDate(activity.date)} /></section>
+      <section className="activity-detail-section"><h2>Finance</h2><LinkedTransactions eventId={eventId} activityId={activityId} /></section>
       <section className="activity-detail-section"><ActivityAttachments moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} /></section>
       <footer className="activity-detail-section activity-secondary">
         <dl className="activity-secondary-metadata"><div><dt>Created</dt><dd>{activityDateLabel(activity.createdAt)}</dd></div>

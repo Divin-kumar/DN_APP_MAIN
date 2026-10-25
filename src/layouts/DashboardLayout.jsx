@@ -7,7 +7,7 @@
   and quick-create buttons for moments, activities, and transactions.
 */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Link, NavLink, Outlet, useLocation, useNavigate, useNavigationType } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Activity, BookHeart, CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
@@ -27,6 +27,8 @@ import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
 import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from '../utils/momentWorkspaceRoutes';
 import { recordId } from '../utils/recordIdentity';
+import { financialDate } from '../utils/financialRecords';
+import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
 
@@ -68,6 +70,11 @@ export default function DashboardLayout() {
   const quickCreateMobileRef = useRef(null);
   const [quickCreateType, setQuickCreateType] = useState(null);
   const [quickCreateError, setQuickCreateError] = useState('');
+  const [quickTransaction, setQuickTransaction] = useState(null);
+  const [transactionBusy, setTransactionBusy] = useState(false);
+  const transactionSaving = useRef(false);
+  const transactionMounted = useRef(true);
+  useEffect(() => { transactionMounted.current = true; return () => { transactionMounted.current = false; }; }, []);
   const [quickActivityEventId, setQuickActivityEventId] = useState('');
   const [activityPickerFilter, changeActivityPickerFilter] = usePersistentListState('activity-picker', ACTIVITY_PICKER_DEFAULTS);
   const quickActivityType = activityPickerFilter.type;
@@ -78,6 +85,7 @@ export default function DashboardLayout() {
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const activityMoments = isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) ? events : [];
+  const activityDetailMatch = useMatch('/events/:eventId/activities/:activityId');
   const workspaceKey = getMomentWorkspaceKey(location.pathname);
   const workspaceMoment = workspaceKey ? activityMoments.find((moment) => workspaceKey === `/events/${encodeURIComponent(momentId(moment))}`) : null;
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
@@ -227,7 +235,18 @@ export default function DashboardLayout() {
   // Quick create opens a lightweight modal for common tasks without leaving the page.
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type) => {
+    if (transactionSaving.current) return;
+    if (type === 'transaction') {
+      const parent = activityDetailMatch ? activityMoments.find((moment) => momentId(moment) === activityDetailMatch.params.eventId) : workspaceMoment;
+      const activity = parent?.activities?.find((item) => recordId(item.id) === activityDetailMatch?.params.activityId);
+      setQuickTransaction({ context: records.capture(), preset: { eventId: momentId(parent), activityId: recordId(activity?.id), date: financialDate(activity?.date) } });
+      setTransactionBusy(false);
+    }
     setQuickCreateOpen(false);
+    // Restore dialogs to the persistent + control, rather than a disappearing menu item.
+    [quickCreateMobileRef.current, quickCreateDesktopRef.current]
+      .map((node) => node?.querySelector('.mobile-dock-create-trigger, .dn-quick-create-trigger'))
+      .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
     setQuickCreateError('');
     setQuickCreateType(type);
     if (type === 'activity') {
@@ -263,14 +282,26 @@ export default function DashboardLayout() {
   };
 
   // Use the same transaction pathway as the Financials screen.
+  const closeQuickTransaction = () => {
+    if (!transactionSaving.current) { setQuickCreateType(null); setQuickTransaction(null); setQuickCreateError(''); }
+  };
   const saveQuickTransaction = async (formData) => {
+    if (transactionSaving.current) return;
+    const context = quickTransaction?.context;
+    if (!records.isCurrent(context)) throw new Error('Your session changed. Reopen + to add a transaction.');
+    transactionSaving.current = true; setTransactionBusy(true); setQuickCreateError('');
     try {
       await saveTransaction(formData);
-      setQuickCreateType(null);
-      showToast('Transaction added', 'success', { label: 'View', to: '/financials/transactions' });
+      if (transactionMounted.current && records.isCurrent(context)) {
+        setQuickCreateType(null); setQuickTransaction(null);
+        showToast('Transaction added', 'success', { label: 'View', to: '/financials/transactions' });
+      }
     } catch (error) {
-      setQuickCreateError(error?.message || 'Could not save this transaction.');
+      if (transactionMounted.current && records.isCurrent(context)) setQuickCreateError(error?.message || 'Could not save this transaction.');
       throw error;
+    } finally {
+      transactionSaving.current = false;
+      if (transactionMounted.current) setTransactionBusy(false);
     }
   };
 
@@ -445,11 +476,11 @@ export default function DashboardLayout() {
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'transaction' ? (
-        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={() => setQuickCreateType(null)}>
+      {quickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
+        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={closeQuickTransaction}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
-            onCancel={() => setQuickCreateType(null)} />
+            presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (

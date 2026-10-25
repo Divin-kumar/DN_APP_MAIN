@@ -94,81 +94,32 @@ const openWorkspace = async (t) => {
   const { EventWorkspaceContent: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
   const render = () => { cursor = 0; return Workspace(); };
   const find = (type) => nodes(render()).find((node) => node.type === type);
-  const open = () => { find('ActivityList').props.onAddExpense(activity); return find('TransactionForm'); };
-  return { activity, api, calls, navigations, toasts, render, find, open,
-    setSaver: (next) => { saver = next; } };
+  return { activity, api, calls, navigations, toasts, render, find };
 };
 
-test('activity transaction opens in place with its Moment, activity and historical date', async (t) => {
+test('Moment Activities exposes read-only cards without record or finance mutation callbacks', async (t) => {
   const harness = await openWorkspace(t);
-  const form = harness.open();
-  assert.ok(form, 'the real ActivityList callback opens the shared TransactionForm');
-  assert.equal(form.props.defaultKind, 'expense');
-  assert.equal(form.props.presetLink.eventId, 'moment-one');
-  assert.equal(form.props.presetLink.activityId, 'activity-one');
-  assert.equal(form.props.presetLink.date, '2026-08-24');
-  assert.equal(form.props.events, harness.api.eventStore.events);
-  assert.deepEqual(harness.navigations, [], 'opening never changes the Activities route');
-  form.props.onCancel();
+  const list = harness.find('ActivityList');
+  assert.equal(list.props.readOnly, true);
+  for (const action of ['onEdit', 'onDelete', 'onToggleComplete', 'onToggleCancelled', 'onAddExpense', 'onLinkExpense']) {
+    assert.equal(list.props[action], undefined, action + ' is unavailable in this tab');
+  }
   assert.equal(harness.find('TransactionForm'), undefined);
-  assert.deepEqual(harness.navigations, [], 'cancel also keeps the original route');
+  assert.deepEqual(harness.calls, []);
 });
 
-test('workspace transaction save blocks repeated submissions and closing until completion', async (t) => {
+test('read-only Moment Activity selection opens the canonical nested Detail route', async (t) => {
   const harness = await openWorkspace(t);
-  let complete;
-  harness.setSaver(() => new Promise((resolve) => { complete = resolve; }));
-  const form = harness.open();
-  const values = { transactionKind: 'expense', title: 'Synthetic tablets', amount: 419,
-    category: 'Medical', date: '2026-08-24', notes: 'Unchanged notes',
-    eventId: 'moment-one', activityId: 'activity-one' };
-  const saving = form.props.onSubmit(values);
-  await form.props.onSubmit(values);
-  assert.equal(harness.calls.length, 1, 'the synchronous ref guard prevents duplicate coordinator calls');
-  assert.deepEqual(harness.calls[0], values, 'the existing transaction coordinator receives the entire form');
-  let current = harness.find('TransactionForm');
-  assert.equal(current.props.busy, true);
-  current.props.onCancel();
-  assert.ok(harness.find('TransactionForm'), 'Cancel cannot dismiss an in-flight write');
-  const modal = nodes(harness.render()).find((node) => node.type === 'ModalDialog' && node.props.title === 'Add Transaction');
-  modal.props.onClose();
-  assert.ok(harness.find('TransactionForm'), 'Escape/backdrop close uses the same guard');
-  complete({ id: 'saved-expense' });
-  await saving;
-  assert.equal(harness.find('TransactionForm'), undefined);
-  assert.equal(harness.toasts.length, 1);
-  assert.deepEqual(harness.navigations, [], 'successful save leaves Activities open');
+  harness.find('ActivityList').props.onOpen(harness.activity);
+  assert.deepEqual(harness.navigations, [['/events/moment-one/activities/activity-one']]);
+  assert.deepEqual(harness.calls, []);
 });
 
-test('workspace transaction failures keep the form and its context available for retry', async (t) => {
+test('retired Timeline links display Overview without a Timeline tab or record writes', async (t) => {
   const harness = await openWorkspace(t);
-  harness.setSaver(async () => { throw new Error('Synthetic write failure'); });
-  const form = harness.open();
-  await assert.rejects(form.props.onSubmit({ title: 'Synthetic failure' }), /Synthetic write failure/);
-  const current = harness.find('TransactionForm');
-  assert.ok(current, 'failure does not close the draft');
-  assert.equal(current.props.busy, false);
-  assert.equal(current.props.presetLink.activityId, 'activity-one');
-  assert.match(text(harness.render()), /Synthetic write failure/);
-  assert.deepEqual(harness.navigations, []);
-  harness.setSaver(async () => ({ id: 'retry-expense' }));
-  await current.props.onSubmit({ title: 'Synthetic retry' });
-  assert.equal(harness.calls.length, 2, 'failure releases the submission guard for an explicit retry');
-  assert.equal(harness.find('TransactionForm'), undefined);
-});
-
-test('Add transaction in the link-existing dialog uses the same in-place form', async (t) => {
-  const harness = await openWorkspace(t);
-  harness.find('ActivityList').props.onLinkExpense(harness.activity);
-  let tree = harness.render();
-  assert.ok(nodes(tree).find((node) => node.type === 'ModalDialog' && node.props.title.startsWith('Link expense')));
-  const add = nodes(tree).find((node) => node.type === 'button' && text(node).trim() === 'Add transaction');
-  assert.ok(add);
-  add.props.onClick();
-  const form = harness.find('TransactionForm');
-  assert.equal(form.props.presetLink.activityId, 'activity-one');
-  assert.equal(form.props.presetLink.date, '2026-08-24');
-  tree = harness.render();
-  assert.equal(nodes(tree).some((node) => node.type === 'ModalDialog' && node.props.title.startsWith('Link expense')), false);
-  assert.deepEqual(harness.navigations, []);
+  harness.api.location.pathname = '/events/moment-one/timeline';
+  assert.ok(harness.find('MomentContents'));
+  assert.equal(harness.find('ActivityList'), undefined);
+  assert.doesNotMatch(text(harness.render()), /Timeline/);
+  assert.deepEqual(harness.calls, []);
 });

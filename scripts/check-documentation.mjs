@@ -28,7 +28,7 @@ const previous = execFileSync('git', ['show', `${base}:docs/CHANGE_AUDIT_LOG.md`
 const current = readFileSync(join(root, 'docs/CHANGE_AUDIT_LOG.md'), 'utf8');
 const audit = verifyAuditLog(previous, current);
 const master = readFileSync(join(root, 'docs/MASTER_SOURCE_OF_TRUTH.md'), 'utf8');
-for (const contract of ['/events/:eventId/activities/:activityId', '/events/:eventId/transactions', 'Overview, Activities, Transactions, Timeline, Memories and Attachments']) {
+for (const contract of ['/events/:eventId/activities/:activityId', '/events/:eventId/transactions', 'Overview, Activities, Transactions, Memories and Attachments']) {
   if (!master.includes(contract)) throw new Error(`Master is missing the route/workspace contract: ${contract}`);
 }
 console.log(`Documentation PASS: five documents, ${links} local links, ${audit.preserved} historical entries preserved, ${audit.added} new entries; route/workspace contracts present.`);

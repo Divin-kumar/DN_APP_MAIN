@@ -99,6 +99,7 @@ export default function SwipeActionCard({
       if (!disabled) onOpen();
       return;
     }
+    if (!actions.length) return;
     if (event.key === 'Escape') { event.preventDefault(); close(); }
     if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();
@@ -134,7 +135,7 @@ export default function SwipeActionCard({
   return (
     <>
       <Root ref={rootRef} tabIndex={menuButton && !onOpen ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : `${label}. Swipe either direction for actions.`}
-        aria-expanded={menuButton ? undefined : open} aria-controls={menuButton ? undefined : menuId}
+        aria-expanded={!menuButton && actions.length ? open : undefined} aria-controls={!menuButton && actions.length && open ? menuId : undefined}
         className={`dn-swipe-surface ${className}`}
         onKeyDown={handleCardKey}
         onPointerDownCapture={(event) => {

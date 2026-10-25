@@ -114,8 +114,7 @@ const openActivities = async (t) => {
   const find = (type) => nodes(render()).find((node) => node.type === type);
   const list = () => find('ActivityList');
   const view = (title = 'Synthetic second activity') => list().props.allActivities.find((item) => item.title === title);
-  const openTransaction = () => { list().props.onAddExpense(view()); return find('TransactionForm'); };
-  return { api, first, second, writes, saves, toasts, render, find, list, view, openTransaction,
+  return { api, first, second, writes, saves, toasts, render, find, list, view,
     setSaver: (next) => { saver = next; } };
 };
 
@@ -263,62 +262,14 @@ test('captured activity actions reject a changed account or stale Moment load sc
   }
 });
 
-test('activity transaction opens in place with the chosen duplicate and historical date', async (t) => {
+test('Activities delegates transaction creation to universal + without contextual mutation callbacks', async (t) => {
   const harness = await openActivities(t);
-  const form = harness.openTransaction();
-  assert.equal(form.props.defaultKind, 'expense');
-  assert.equal(form.props.presetLink.eventId, 'moment-two');
-  assert.equal(form.props.presetLink.activityId, 'shared-activity');
-  assert.equal(form.props.presetLink.date, '2026-08-24');
-  assert.equal(form.props.events, harness.api.eventStore.events);
-  assert.ok(harness.list(), 'the overall Activities screen stays rendered behind the dialog');
-  assert.deepEqual(harness.writes, [], 'opening the form does not rewrite the Moment');
-  form.props.onCancel();
+  const list = harness.list();
+  assert.equal(list.props.onAddExpense, undefined);
+  assert.equal(list.props.onLinkExpense, undefined);
   assert.equal(harness.find('TransactionForm'), undefined);
-});
-
-test('activity transaction blocks duplicate saves and all closing paths while pending', async (t) => {
-  const harness = await openActivities(t);
-  let complete;
-  harness.setSaver(() => new Promise((resolve) => { complete = resolve; }));
-  const form = harness.openTransaction();
-  const values = { transactionKind: 'expense', title: 'Synthetic cake', amount: 419,
-    category: 'Food', date: '2026-08-24', notes: 'Original notes',
-    eventId: 'moment-two', activityId: 'shared-activity' };
-  const saving = form.props.onSubmit(values);
-  await form.props.onSubmit(values);
-  assert.equal(harness.saves.length, 1);
-  assert.deepEqual(harness.saves[0], [values]);
-  const current = harness.find('TransactionForm');
-  assert.equal(current.props.busy, true);
-  current.props.onCancel();
-  assert.ok(harness.find('TransactionForm'));
-  const modal = nodes(harness.render()).find((node) => node.type === 'ModalDialog' && node.props.title === 'Add Transaction');
-  modal.props.onClose();
-  assert.ok(harness.find('TransactionForm'), 'Escape/backdrop close shares the pending-save guard');
-  complete({ id: 'saved-expense' });
-  await saving;
-  assert.equal(harness.find('TransactionForm'), undefined);
-  assert.equal(harness.toasts.length, 1);
-  assert.ok(harness.list());
-  assert.deepEqual(harness.writes, [], 'the existing coordinator alone handles the transaction');
-});
-
-test('transaction failure keeps its context and releases the guard for retry', async (t) => {
-  const harness = await openActivities(t);
-  harness.setSaver(async () => { throw new Error('Synthetic write failure'); });
-  const form = harness.openTransaction();
-  await assert.rejects(form.props.onSubmit({ title: 'Synthetic failed expense' }), /Synthetic write failure/);
-  const current = harness.find('TransactionForm');
-  assert.ok(current);
-  assert.equal(current.props.busy, false);
-  assert.equal(current.props.presetLink.eventId, 'moment-two');
-  assert.equal(current.props.presetLink.activityId, 'shared-activity');
-  assert.match(text(harness.render()), /Synthetic write failure/);
-  harness.setSaver(async () => ({ id: 'retry-expense' }));
-  await current.props.onSubmit({ title: 'Synthetic retry' });
-  assert.equal(harness.saves.length, 2);
-  assert.equal(harness.find('TransactionForm'), undefined);
+  assert.deepEqual(harness.writes, []);
+  assert.deepEqual(harness.saves, []);
 });
 
 test('attachment previews resolve the containing Moment when activity IDs are reused', async (t) => {
@@ -333,14 +284,4 @@ test('attachment previews resolve the containing Moment when activity IDs are re
   assert.equal(second.props.uid, 'synthetic-owner');
   assert.equal(second.props.compact, true);
   assert.deepEqual(harness.writes, []);
-});
-
-test('transaction submission rejects a stale owner without calling the coordinator', async (t) => {
-  const harness = await openActivities(t);
-  const form = harness.openTransaction();
-  harness.api.app.user = { uid: 'another-owner' };
-  await assert.rejects(form.props.onSubmit({ title: 'Stale draft' }), /active account changed/);
-  assert.equal(harness.saves.length, 0);
-  assert.equal(harness.writes.length, 0);
-  assert.equal(harness.toasts.length, 0, 'the previous account does not receive a new toast');
 });

@@ -2763,3 +2763,5 @@ html[data-theme] .event-workspace-nav .event-workspace-nav-item { flex:0 0 auto 
 html[data-theme] .event-workspace-nav-item.is-active { box-shadow:inset 0 -1px 0 var(--color-primary); }
 html[data-theme] .sr-only { position:absolute; width:1px; height:1px; margin:-1px; padding:0; overflow:hidden; clip:rect(0,0,0,0); clip-path:inset(50%); white-space:nowrap; border:0; }
 html[data-theme] .dn-swipe-popup-item:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
+
+html[data-theme] .event-activity-card.is-readonly .event-activity-main { padding-right:12px !important; }

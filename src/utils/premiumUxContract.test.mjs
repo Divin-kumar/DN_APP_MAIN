@@ -21,9 +21,9 @@ test('Finance supports both legacy financials URL and Transactions deep links', 
 });
 test('transaction cards reveal Edit and Delete with no overflow three-dot button', () => {
   const component = read('../components/financials/TransactionHistory.jsx');
-  assert.match(component, /<SwipeActionCard/);
+  assert.match(component, /SwipeActionCard/);
   assert.match(component, /label: 'Edit'/);
-  assert.match(component, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
+  assert.match(component, /onDelete: onDelete \? \(\) => onDelete\(transaction\)/);
   assert.match(read('../components/common/SwipeActionCard.jsx'), /onKeyDown=\{handleCardKey\}/);
   assert.doesNotMatch(component, /Ellipsis|dn-transaction-overflow/);
 });
@@ -36,7 +36,7 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
     '../pages/CodeLists.jsx',
   ]) {
     const src = read(path);
-    assert.match(src, /<SwipeActionCard/);
+    assert.match(src, /SwipeActionCard/);
     assert.doesNotMatch(src, /EventActionMenu/);
   }
   const surface = read('../components/common/SwipeActionCard.jsx');
@@ -62,8 +62,8 @@ test('Moments use the flat list without a grid mode or redundant view toggle', (
 });
 test('Finance card delegates Edit and Delete through the same surface', () => {
   const card = read('../components/financials/TransactionHistory.jsx');
-  assert.match(card, /otherActions=\{\[\{ label: 'Edit'/);
-  assert.match(card, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
+  assert.match(card, /otherActions: onEdit \? \[\{ label: 'Edit'/);
+  assert.match(card, /onDelete: onDelete \? \(\) => onDelete\(transaction\)/);
 });
 test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
   const page = read('../pages/Financials.jsx');
@@ -87,7 +87,7 @@ test('linked Moment label displays even without an activity and swipe Delete rem
   assert.match(card, /transaction\.eventId \? <small>Moment: \{eventTitle\}<\/small>/);
   assert.match(card, /activityTitle \? <small>Activity:/);
   assert.match(card, /onDelete\(transaction\)/);
-  assert.match(card, /onDelete=\{\(\) => onDelete\(transaction\)\}/);
+  assert.match(card, /onDelete: onDelete \? \(\) => onDelete\(transaction\)/);
 });
 test('moment-only expenses can be deleted without requiring an expired activity mirror', () => {
   const manager = read('../hooks/useTransactionManager.js');

@@ -158,13 +158,13 @@ export default function App() {
             <Route path="activities" element={loadScreen(<Activities />, 'activities')} />
             <Route path="insights" element={loadScreen(<Insights />, 'insights')} />
 
-            {/* Each event has its own workspace and sub-pages for overview, activities, timeline, etc. */}
+            {/* Each event has its own workspace and sub-pages for overview, activities, transactions, etc. */}
             <Route path="events/:eventId" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/overview" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/activities" element={loadScreen(<EventWorkspaceShell />, 'activities')} />
             <Route path="events/:eventId/activities/:activityId" element={loadScreen(<ActivityDetail />, 'activity')} />
             <Route path="events/:eventId/transactions" element={loadScreen(<EventWorkspaceShell />, 'transactions')} />
-            <Route path="events/:eventId/timeline" element={loadScreen(<EventWorkspaceShell />, 'timeline')} />
+            <Route path="events/:eventId/timeline" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/memories" element={loadScreen(<EventWorkspaceShell />, 'memories')} />
             <Route path="events/:eventId/attachments" element={loadScreen(<EventWorkspaceShell />, 'attachments')} />
             <Route path="events/:eventId/pdf" element={loadScreen(<EventWorkspaceShell />, 'document')} />

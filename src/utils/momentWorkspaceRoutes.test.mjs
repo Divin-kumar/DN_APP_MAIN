@@ -38,5 +38,5 @@ test('section selection handles overview aliases and trailing slash deep links',
   assert.equal(getMomentWorkspaceSection('/events/moment-1'), 'overview');
   assert.equal(getMomentWorkspaceSection('/events/moment-1/overview'), 'overview');
   assert.equal(getMomentWorkspaceSection('/events/moment-1/attachments/'), 'attachments');
-  assert.equal(getMomentWorkspaceSection('/events/moment-1/timeline'), 'timeline');
+  assert.equal(getMomentWorkspaceSection('/events/moment-1/timeline'), 'overview');
 });

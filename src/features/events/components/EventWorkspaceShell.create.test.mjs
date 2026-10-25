@@ -71,7 +71,7 @@ const openWorkspace = async (t) => {
       loadEvents: () => {}, updateEventItem: async (...args) => { writes.push(args); },
       deleteEventItem: async (...args) => { writes.push(args); } },
     expenseStore: { expenses: [], loadExpenses: () => {} },
-    persistOriginal: async () => ({ assetId: 'a'.repeat(64), storage: 'firebase' }),
+    persistOriginal: async () => ({ assetId: 'a'.repeat(64), storage: 'local' }),
     saveOriginal: async (file, context) => {
       originalSaves.push({ file, context });
       context.assertCurrent?.();
@@ -316,12 +316,12 @@ test('confirmed original save preserves the latest parent and creates one stable
   assert.equal(harness.originalSaves[0].context.isGuest, false);
   assert.equal(typeof harness.originalSaves[0].context.assertCurrent, 'function');
   assert.deepEqual(harness.writes, [], 'the record is not created before durable original save finishes');
-  const concurrentAttachment = { id: 'earlier-photo', name: 'another.png', assetId: 'b'.repeat(64), storage: 'firebase' };
+  const concurrentAttachment = { id: 'earlier-photo', name: 'another.png', assetId: 'b'.repeat(64), storage: 'local' };
   const latest = { ...harness.moment, name: 'Latest parent name', notes: 'Concurrent parent edit',
     memories: [{ id: 'new-memory', body: 'Keep the edit' }], attachments: [concurrentAttachment],
     activities: [{ id: 'activity-1', title: 'Latest activity title', completed: true }] };
   harness.api.eventStore.events = [latest];
-  pending.resolve({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  pending.resolve({ assetId: 'a'.repeat(64), storage: 'local' });
   await save;
   assert.equal(harness.writes.length, 1);
   const [uid, isGuest, written] = harness.writes[0];
@@ -335,7 +335,7 @@ test('confirmed original save preserves the latest parent and creates one stable
   const reference = written.attachments[1];
   assert.equal(reference.activityId, 'activity-1');
   assert.equal(reference.assetId, 'a'.repeat(64));
-  assert.equal(reference.storage, 'firebase');
+  assert.equal(reference.storage, 'local');
   assert.equal(reference.name, file.name);
   assert.equal(reference.type, file.type);
   assert.equal(reference.size, file.size);
@@ -353,7 +353,7 @@ test('original confirmation guards duplicate submit and dismissal while pending,
   const modal = harness.findModal('Save attachment');
   const first = submitForm(modal);
   await submitForm(modal);
-  assert.equal(harness.originalSaves.length, 1, 'repeated taps cannot upload or save twice');
+  assert.equal(harness.originalSaves.length, 1, 'repeated taps cannot save twice');
   const busyModal = harness.findModal('Save attachment');
   busyModal.props.onClose();
   assert.ok(harness.findModal('Save attachment'), 'Escape/backdrop close is guarded while saving');
@@ -364,7 +364,7 @@ test('original confirmation guards duplicate submit and dismissal while pending,
   assert.deepEqual(harness.writes, []);
   assert.deepEqual(harness.toasts, [], 'a rejected original never reports success');
   assert.match(JSON.stringify(nodes(harness.findModal('Save attachment')).map(children)), /Storage permission denied/);
-  harness.api.persistOriginal = async () => ({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  harness.api.persistOriginal = async () => ({ assetId: 'a'.repeat(64), storage: 'local' });
   await submitForm(harness.findModal('Save attachment'));
   assert.equal(harness.originalSaves.length, 2);
   assert.equal(harness.writes.length, 1);
@@ -372,7 +372,7 @@ test('original confirmation guards duplicate submit and dismissal while pending,
   assert.equal(harness.findModal('Save attachment'), undefined);
 });
 
-test('session changes before confirmation prevent original upload and record creation', async (t) => {
+test('session changes before confirmation prevent original save and record creation', async (t) => {
   const harness = await openWorkspace(t);
   const { modal } = harness.pickAttachment();
   harness.api.app.user = { uid: 'different-owner' };
@@ -382,7 +382,7 @@ test('session changes before confirmation prevent original upload and record cre
   assert.deepEqual(harness.toasts, []);
 });
 
-test('session changes after original upload starts reject its scope callback and prevent stale record creation', async (t) => {
+test('session changes after original save starts reject its scope callback and prevent stale record creation', async (t) => {
   const harness = await openWorkspace(t);
   harness.pickAttachment();
   const pending = deferred();
@@ -393,7 +393,7 @@ test('session changes after original upload starts reject its scope callback and
   harness.api.eventStore.loadedFor = 'user:different-owner';
   harness.api.eventStore.activeLoadKey = 'user:different-owner';
   assert.throws(() => originalContext.assertCurrent(), /session changed/i);
-  pending.resolve({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  pending.resolve({ assetId: 'a'.repeat(64), storage: 'local' });
   await save;
   assert.deepEqual(harness.writes, []);
   assert.deepEqual(harness.toasts, []);
@@ -410,7 +410,7 @@ test('an activity removed during original persistence prevents creation of a sta
   harness.api.persistOriginal = () => pending.promise;
   const save = submitForm(harness.findModal('Save attachment'));
   harness.api.eventStore.events = [{ ...harness.moment, activities: [] }];
-  pending.resolve({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  pending.resolve({ assetId: 'a'.repeat(64), storage: 'local' });
   await save;
   assert.deepEqual(harness.writes, []);
   assert.deepEqual(harness.toasts, []);
@@ -436,7 +436,7 @@ test('workspace unmount invalidates an original save still awaiting persistence'
   const save = submitForm(harness.findModal('Save attachment'));
   const context = harness.originalSaves[0].context;
   harness.unmount();
-  pending.resolve({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  pending.resolve({ assetId: 'a'.repeat(64), storage: 'local' });
   await save;
   assert.deepEqual(harness.writes, [], 'leaving the workspace cancels the later attachment record write');
   assert.deepEqual(harness.toasts, []);
@@ -453,7 +453,7 @@ test('switching Moments while an original is pending invalidates the previous sa
   harness.api.params = { eventId: 'different-moment' };
   harness.api.location = { pathname: '/events/different-moment/attachments', search: '', hash: '' };
   harness.render();
-  pending.resolve({ assetId: 'a'.repeat(64), storage: 'firebase' });
+  pending.resolve({ assetId: 'a'.repeat(64), storage: 'local' });
   await save;
   assert.deepEqual(harness.writes, [], 'the pending original cannot attach after its workspace context changes');
   assert.deepEqual(harness.toasts, []);

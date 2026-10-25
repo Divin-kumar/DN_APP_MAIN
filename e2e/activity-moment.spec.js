@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
-import { addOriginal, fixtureMoments, seedGuest, swipe } from './fixtures.js';
+import { addOriginal, fixtureMoments, seedGuest, swipe, openUniversalTransaction } from './fixtures.js';
 
 test('direct detail/refresh uses both IDs, shows safe formatted notes and never rewrites source records', async ({ page }) => {
   const errors = await seedGuest(page);
@@ -127,12 +127,12 @@ test('menus expose accessible state actions; only one opens; Cancel/Restore and 
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Room deposit');
 });
 
-test('Moment Transactions has six reachable tabs, full-Moment totals, independent filters and in-place forms', async ({ page }) => {
+test('Moment Transactions has five reachable tabs, full-Moment totals, independent filters and in-place forms', async ({ page }) => {
   const errors = await seedGuest(page); await page.goto('/events/moment-one/transactions');
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
   await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Moments');
   const tabs = page.locator('.event-workspace-nav a');
-  expect(await tabs.allTextContents()).toEqual(['Overview', 'Activities3', 'Transactions', 'Timeline', 'Memories1', 'Attachments']);
+  expect(await tabs.allTextContents()).toEqual(['Overview', 'Activities3', 'Transactions', 'Memories1', 'Attachments']);
   const bounds = await tabs.evaluateAll((links) => links.map((link) => Math.round(link.getBoundingClientRect().top)));
   expect(new Set(bounds).size).toBe(1);
   const totals = page.getByRole('group', { name: 'Totals for this Moment' });
@@ -144,7 +144,7 @@ test('Moment Transactions has six reachable tabs, full-Moment totals, independen
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).not.toContainText('Trip fund');
   await expect(totals).toContainText('₹1,000');
-  await page.getByRole('button', { name: 'Add transaction', exact: true }).click();
+  await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment', exact: true })).toContainText('Weekend in Ooty');
   await dialog.getByRole('combobox', { name: 'Linked Activity', exact: true }).click();

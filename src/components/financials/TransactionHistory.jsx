@@ -18,7 +18,7 @@ const dateLabel = (date) => {
     : 'Date not set';
 };
 
-export function TransactionCard({ transaction, events = [], onEdit, onDelete, onOpen, showActivity = false, compact = false }) {
+export function TransactionCard({ transaction, events = [], onEdit, onDelete, onOpen, showActivity = false, compact = false, readOnly = false }) {
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
   const activity = event?.activities?.find((item) => item.id === transaction.activityId);
@@ -45,13 +45,16 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
     );
   }
 
+  const Card = readOnly ? 'article' : SwipeActionCard;
+  const actionProps = readOnly ? {} : {
+    as: 'article', mainClassName: 'dn-transaction-swipe-content',
+    label: transaction.name || transaction.title || 'Transaction', openOnTap: true,
+    onOpen: onOpen ? () => onOpen(transaction) : undefined,
+    otherActions: onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(transaction) }] : [],
+    onDelete: onDelete ? () => onDelete(transaction) : undefined,
+  };
   return (
-    <SwipeActionCard as="article" role="listitem" className="dn-transaction-card"
-      mainClassName="dn-transaction-swipe-content"
-      label={transaction.name || transaction.title || 'Transaction'} openOnTap
-      onOpen={onOpen ? () => onOpen(transaction) : undefined}
-      otherActions={[{ label: 'Edit', icon: Pencil, onClick: () => onEdit(transaction) }]}
-      onDelete={() => onDelete(transaction)}>
+    <Card role="listitem" className="dn-transaction-card" {...actionProps}>
       <div className="dn-transaction-card-core">
         <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
           {isIncome ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
@@ -77,7 +80,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
           </strong>
         </div>
       </div>
-    </SwipeActionCard>
+    </Card>
   );
 }
 

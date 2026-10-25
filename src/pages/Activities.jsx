@@ -10,9 +10,7 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import RichTextEditor from '../components/common/RichTextEditor';
 import SortControl from '../components/common/SortControl';
-import TransactionForm from '../components/financials/TransactionForm';
 import usePersistentListState from '../hooks/usePersistentListState';
-import useTransactionManager from '../hooks/useTransactionManager';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
@@ -59,12 +57,9 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const adminValues = useAppStore((state) => state.adminValues);
   const eventStore = useEventStore();
   const expenseStore = useExpenseStore();
-  const { saveTransaction } = useTransactionManager();
   const [filters, changeFilters, resetFilters] = usePersistentListState('activities', DEFAULTS, RULES);
   const [draft, setDraft] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
-  const [transactionTarget, setTransactionTarget] = useState(null);
-  const [linkTarget, setLinkTarget] = useState(null);
   const [saveError, setSaveError] = useState('');
   const [busy, setBusy] = useState(false);
   const saving = useRef(false);
@@ -169,24 +164,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       }] });
     }, () => { setDraft(null); showToast(draft.activityId ? 'Activity updated' : 'Activity added', 'success'); });
   };
-  const openTransaction = (target) => {
-    if (saving.current) return;
-    const { activity } = resolve(target);
-    setSaveError('');
-    setLinkTarget(null);
-    setTransactionTarget({ ...target, eventId: target.momentId, date: formatMomentDate(parseMomentDate(activity.date)) });
-  };
-  const linkable = linkTarget ? expenses.filter((expense) => !expense.activityId && (!expense.eventId || recordId(expense.eventId) === linkTarget.momentId)) : EMPTY;
-  const linkExpense = (expense) => runAction(async () => {
-    resolve(linkTarget);
-    const current = useExpenseStore.getState();
-    if (current.loadedFor !== scope || current.activeLoadKey !== scope) throw new Error('Expenses are still loading. Please try again.');
-    const original = current.expenses.find((item) => (item.id || item.firestoreId) === (expense.id || expense.firestoreId));
-    if (!original || original.activityId || (original.eventId && recordId(original.eventId) !== linkTarget.momentId)) throw new Error('This expense is no longer available to link.');
-    await saveTransaction({ transactionKind: 'expense', title: original.name || original.description || 'Expense',
-      amount: original.amount, category: original.category || 'Other', date: original.date, notes: original.notes || original.description || '',
-      eventId: linkTarget.momentId, activityId: linkTarget.activityId }, { ...original, transactionKind: 'expense' });
-  }, () => { setLinkTarget(null); showToast('Transaction linked to activity', 'success'); });
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
   const currentMoment = events.find((item) => momentId(item) === filters.momentId);
   const momentTypes = [...new Set(events.map(getActivityMomentType))].sort((a, b) => a.localeCompare(b));
@@ -248,7 +225,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           </div>
         </ListControls>
       </div>
-      {saveError && !draft && !transactionTarget && !linkTarget ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
+      {saveError && !draft ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
       {busy ? <p role="status">Saving…</p> : null}
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
@@ -267,8 +244,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')), () => setAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed'))}
             onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => { const cancelled = activity.cancelled || activity.status === 'cancelled'; return { cancelled: !cancelled, status: cancelled ? activity.completed ? 'completed' : 'in-progress' : 'cancelled' }; }))}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
-            onAddExpense={(view) => openTransaction(reference(view))}
-            onLinkExpense={(view) => { if (!saving.current) { setSaveError(''); setLinkTarget({ ...reference(view), title: view.title }); } }} />}
+ />}
       {ready && !events.length ? <p className="dn-list-controls-note">Use + to create a Moment, then add its activities.</p> : null}
       {expenseStore.error ? <div className="financial-load-error" role="alert"><span>Linked expenses couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadExpenses(uid, isGuest)}>Try again</button></div> : null}
       {draft ? <ModalDialog title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
@@ -290,16 +266,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       </ModalDialog> : null}
       {deleteTarget ? <ConfirmDialog title="Delete activity?" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}
         busy={busy} error={saveError} onConfirm={() => runAction(() => records.mutateActivity(mutationContext, deleteTarget.momentId, deleteTarget.activityId, () => null), () => setDeleteTarget(null))} /> : null}
-      {transactionTarget ? <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={() => close(setTransactionTarget)}>
-        {saveError ? <p className="dn-transaction-form-error" role="alert">{saveError}</p> : null}
-        <TransactionForm defaultKind="expense" presetLink={transactionTarget} events={events} busy={busy} onCancel={() => close(setTransactionTarget)}
-          onSubmit={(form) => mutate(() => saveTransaction(form), () => { setTransactionTarget(null); showToast('Transaction added', 'success'); })} />
-      </ModalDialog> : null}
-      {linkTarget ? <ModalDialog title={`Link expense · ${linkTarget.title || 'Activity'}`} onClose={() => close(setLinkTarget)}>
-        {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
-        {expenseStore.error ? <div className="financial-load-error" role="alert"><span>Expenses couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadExpenses(uid, isGuest)}>Try again</button></div> : !expensesReady ? <p role="status">Loading expenses…</p> : linkable.length ? <div className="activity-expense-link-list">{linkable.map((expense) => <button disabled={busy} type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatMomentDate(parseMomentDate(expense.date))}</small></span><b>₹{Number(expense.amount || 0).toLocaleString('en-IN')}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Add a transaction for this activity instead.</p>}
-        <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" disabled={busy} onClick={() => openTransaction(linkTarget)}><Plus size={15} /> Add transaction</button><button type="button" className="secondaryButton" disabled={busy} onClick={() => close(setLinkTarget)}>Close</button></div>
-      </ModalDialog> : null}
+
+
     </div>
   );
 }

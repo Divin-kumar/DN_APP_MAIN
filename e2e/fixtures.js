@@ -63,3 +63,8 @@ export async function swipe(page, locator, { distance = 150, vertical = 0 } = {}
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(x - distance, y + vertical, { steps: 8 }); await page.mouse.up();
 }
+
+export async function openUniversalTransaction(page) {
+  await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
+  await page.getByRole('button', { name: 'Transaction', exact: true }).click();
+}

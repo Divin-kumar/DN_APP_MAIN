@@ -16,7 +16,7 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
   const eventId = recordId(moment.id || moment.firestoreId);
   const attachments = activityAttachments(moment, activityId);
   const available = (moment.attachments || []).filter((item) => !item.activityId
-    && (isGuest || context.sample || (item.assetId && item.storage === 'firebase')));
+    && (isGuest || context.sample || (item.assetId && ['local', 'firebase'].includes(item.storage))));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [linking, setLinking] = useState(false);
@@ -48,9 +48,8 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
   };
   const link = (item) => run(async () => {
     if (!isGuest && !context.sample) {
-      // A new account link also requires an actual cloud original. A legacy
-      // metadata-only record must not become a newly promised stored file.
-      if (!item.assetId || item.storage !== 'firebase') throw new Error('Reattach the original file before linking this attachment.');
+      // Verify the scoped original before creating another account relationship.
+      if (!item.assetId || !['local', 'firebase'].includes(item.storage)) throw new Error('Reattach the original file before linking this attachment.');
       await attachmentRepository.read(item, { uid, isGuest, sample: false, assertCurrent });
       assertCurrent();
     }
@@ -67,6 +66,7 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
   return <div className="activity-attachments">
     <div className="activity-section-heading"><h2>Attachments <small>{attachments.length || ''}</small></h2>
       <button type="button" className="moment-text-action" disabled={busy} onClick={() => input.current?.click()}><Plus size={15} aria-hidden="true" /> Add attachment</button></div>
+    <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
     <input ref={input} hidden type="file" aria-label="Add Activity attachment" onChange={addFile} />
     {busy ? <p role="status">Saving attachment…</p> : null}
     {error && !linking && !deleting ? <p role="alert" className="quick-create-error">{error}</p> : null}

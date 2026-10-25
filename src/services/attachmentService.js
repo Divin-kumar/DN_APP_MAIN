@@ -1,4 +1,4 @@
-// Originals are content-addressed once per guest/account; Moment records hold references only.
+// Originals stay in this browser, content-addressed per scope. Cloud records hold metadata only.
 export const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 const ASSET_ID = /^[a-f0-9]{64}$/;
 const DB_NAME = 'dn_attachment_originals';
@@ -38,15 +38,7 @@ const firebaseStorage = async () => {
   return { ...sdk, storage: sdk.getStorage(firebaseApp) };
 };
 const cloud = {
-  async put(uid, id, blob) {
-    const sdk = await firebaseStorage();
-    const reference = sdk.ref(sdk.storage, cloudPath(uid, id));
-    try { await sdk.getMetadata(reference); }
-    catch (error) {
-      if (error.code !== 'storage/object-not-found') throw error;
-      await sdk.uploadBytes(reference, blob, { contentType: blob.type || 'application/octet-stream' });
-    }
-  },
+  // Read compatibility for existing cloud references; new originals never upload.
   async get(uid, id) {
     const sdk = await firebaseStorage();
     return sdk.getBlob(sdk.ref(sdk.storage, cloudPath(uid, id)), MAX_ATTACHMENT_BYTES);
@@ -63,23 +55,24 @@ export const createAttachmentRepository = ({ local = localFile, remote = cloud, 
     const scope = scopeName(context);
     const assetId = validId(await hash(blob));
     context.assertCurrent?.();
-    if (context.isGuest || context.sample) await local(scope, assetId, blob);
-    else await remote.put(context.uid, assetId, blob);
+    await local(scope, assetId, blob);
     context.assertCurrent?.();
-    return { assetId, storage: context.isGuest || context.sample ? 'local' : 'firebase' };
+    return { assetId, storage: 'local' };
   },
   async read(attachment, context) {
     context.assertCurrent?.();
     const scope = scopeName(context);
     if (!attachment.assetId) return null; // A historical metadata-only entry cannot recover its file.
-    let blob;
-    if (attachment.storage === 'firebase') {
+    let blob = await local(scope, validId(attachment.assetId));
+    context.assertCurrent?.();
+    if (!blob && attachment.storage === 'firebase') {
       if (context.isGuest || context.sample) throw new Error('Restore the original file into this session before opening it.');
       blob = await remote.get(context.uid, validId(attachment.assetId));
-    } else blob = await local(scope, validId(attachment.assetId));
+    }
     context.assertCurrent?.();
     if (!blob) throw new Error('The original file is unavailable on this device. Restore a backup containing the file.');
     if (blob.size > MAX_ATTACHMENT_BYTES || await hash(blob) !== attachment.assetId) throw new Error('The original file failed its integrity check. Restore it from a complete backup.');
+    context.assertCurrent?.();
     return blob;
   },
 });

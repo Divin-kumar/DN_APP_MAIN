@@ -17,7 +17,10 @@ export const getMomentWorkspaceKey = (pathname) => {
   }
 };
 
-export const getMomentWorkspaceSection = (pathname) => matchWorkspaceRoute(pathname)?.[2] || 'overview';
+export const getMomentWorkspaceSection = (pathname) => {
+  const section = matchWorkspaceRoute(pathname)?.[2];
+  return !section || section === 'timeline' ? 'overview' : section;
+};
 
 // Keep one mounted Moment workspace when changing its section. Different
 // Moments and the rest of the app retain distinct route transition keys.

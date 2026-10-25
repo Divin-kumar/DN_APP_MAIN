@@ -11,14 +11,12 @@ import { getActiveSampleData, getActiveSampleScenario } from '../../../dev/sampl
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
 import DateField from '../../../components/common/DateField';
-import TransactionForm from '../../../components/financials/TransactionForm';
 import RichTextEditor from '../../../components/common/RichTextEditor';
 import RichText from '../../../components/common/RichText';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
-import useTransactionManager from '../../../hooks/useTransactionManager';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
@@ -27,11 +25,10 @@ import usePersistentListState from '../../../hooks/usePersistentListState';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
-import { formatMomentDate, parseMomentDate } from '../../../utils/momentDates';
 import { recordId } from '../../../utils/recordIdentity';
 import { scopedRecordActions as records } from '../../../services/scopedRecordActions';
 import { isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
-import { activityCompletionPatch, activityDateLabel, activityDetailPath, activityStatus } from '../../../utils/activityDetail';
+import { activityDateLabel, activityDetailPath } from '../../../utils/activityDetail';
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import LinkedTransactions from '../../finance/components/LinkedTransactions';
 import MomentContents from './MomentContents';
@@ -90,10 +87,8 @@ export function EventWorkspaceContent() {
   const { loadExpenses } = expenseState;
   const finance = useMomentFinance(eventId);
   const mutationContext = records.capture();
-  const [activityAnnouncement, setActivityAnnouncement] = useState('');
   const activitySavingRef = useRef(false);
   const [activityBusy, setActivityBusy] = useState(false);
-  const { saveTransaction } = useTransactionManager();
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
   const [activityDescription, setActivityDescription] = useState('');
@@ -104,7 +99,6 @@ export function EventWorkspaceContent() {
   const setActivityFilter = (filter) => changeActivityList({ filter });
   const setActivitySort = (field) => changeActivityList({ field, direction: 'asc' });
   const toggleActivitySortDirection = () => changeActivityList((current) => ({ direction: current.direction === 'asc' ? 'desc' : 'asc' }));
-  const [editingActivityId, setEditingActivityId] = useState(null);
   const [activityDialogOpen, setActivityDialogOpen] = useState(false);
   const [activityError, setActivityError] = useState('');
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
@@ -120,18 +114,8 @@ export function EventWorkspaceContent() {
   const [attachmentBusy, setAttachmentBusy] = useState(false);
   const [attachmentError, setAttachmentError] = useState('');
   const attachmentSavingRef = useRef(false);
-  const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
   const [eventEditOpen, setEventEditOpen] = useState(false);
-  const [linkExpenseActivity, setLinkExpenseActivity] = useState(null);
-  const [expenseError, setExpenseError] = useState('');
-  const [transactionActivity, setTransactionActivity] = useState(null);
-  const [transactionBusy, setTransactionBusy] = useState(false);
-  const [transactionError, setTransactionError] = useState('');
-  const transactionSavingRef = useRef(false);
-  const transactionContext = `${user?.uid || (isGuest ? 'guest' : 'local')}:${eventId}`;
-  const transactionContextRef = useRef(transactionContext);
-  transactionContextRef.current = transactionContext;
   const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
   const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
   const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
@@ -185,7 +169,6 @@ export function EventWorkspaceContent() {
 
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
-    setEditingActivityId(null);
     setActivityTitle('');
     setActivityDescription('');
     setActivityDate(new Date().toISOString().slice(0, 10));
@@ -250,7 +233,6 @@ export function EventWorkspaceContent() {
     { label: 'Overview', path: `/events/${encodeURIComponent(eventId)}/overview`, detail: 'Event details and current status', icon: FileText },
     { label: 'Activities', path: `/events/${encodeURIComponent(eventId)}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
     { label: 'Transactions', path: `/events/${encodeURIComponent(eventId)}/transactions`, detail: 'Income and expenses linked to this Moment', icon: Receipt },
-    { label: 'Timeline', path: `/events/${encodeURIComponent(eventId)}/timeline`, detail: 'Milestones and progress', icon: Clock3 },
     { label: 'Memories', path: `/events/${encodeURIComponent(eventId)}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
     { label: 'Attachments', path: `/events/${encodeURIComponent(eventId)}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
   ];
@@ -293,9 +275,6 @@ export function EventWorkspaceContent() {
     activity.id,
     eventExpenses.filter((expense) => expense.activityId === activity.id),
   ]));
-  const linkableExpenses = expenses.filter((expense) => (
-    !expense.activityId && (!expense.eventId || expense.eventId === eventId)
-  ));
   const totalSpent = finance.summary.expense;
   const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
   const completedActivities = activeActivities.filter((activity) => activity.completed).length;
@@ -359,89 +338,10 @@ export function EventWorkspaceContent() {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
     const values = { title: activityTitle.trim(), date: activityDate, description: activityDescription, priority: activityPriority };
-    return runActivityWrite(() => editingActivityId
-      ? records.mutateActivity(mutationContext, eventId, editingActivityId, () => values)
-      : records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
+    return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
         ...values, id: crypto.randomUUID(), eventId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
-      }] })), () => { setActivityTitle(''); setActivityDescription(''); setEditingActivityId(null); setActivityDialogOpen(false); }).catch(() => {});
+      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityDialogOpen(false); }).catch(() => {});
   };
-
-  const editActivity = (activity) => {
-    setPendingDeleteActivity(null);
-    setActivityError('');
-    setEditingActivityId(activity.id);
-    setActivityTitle(activity.title || '');
-    setActivityDescription(activity.description || '');
-    setActivityDate(formatMomentDate(parseMomentDate(activity.date)));
-    setActivityPriority(activity.priority || 'medium');
-    setActivityDialogOpen(true);
-  };
-
-  const linkExistingExpense = async (expense) => {
-    try {
-      // Use the same master + activity-mirror coordinator as Transactions.
-      // Directly updating the expense alone leaves nested activity copies stale.
-      await saveTransaction({
-        transactionKind: 'expense',
-        title: expense.name || expense.description || 'Expense',
-        amount: expense.amount,
-        category: expense.category || 'Other',
-        date: expense.date,
-        notes: expense.notes || expense.description || '',
-        eventId,
-        activityId: linkExpenseActivity.id,
-      }, { ...expense, transactionKind: 'expense' });
-      setLinkExpenseActivity(null);
-      setExpenseError('');
-      showToast('Transaction linked to activity', 'success');
-    } catch {
-      setExpenseError('Could not link this expense. Please try again.');
-    }
-  };
-
-  const openActivityTransaction = (activity) => {
-    if (transactionSavingRef.current) return;
-    setTransactionError('');
-    setLinkExpenseActivity(null);
-    setTransactionActivity({ eventId, activityId: activity.id, date: activity.date, context: transactionContext });
-  };
-
-  const closeActivityTransaction = () => {
-    if (transactionSavingRef.current) return;
-    setTransactionActivity(null);
-    setTransactionError('');
-  };
-
-  const saveActivityTransaction = async (form) => {
-    if (transactionSavingRef.current) return;
-    transactionSavingRef.current = true;
-    setTransactionBusy(true);
-    setTransactionError('');
-    const context = transactionContext;
-    try {
-      await saveTransaction(form);
-      if (transactionContextRef.current === context) {
-        setTransactionActivity(null);
-        showToast('Transaction added', 'success');
-      }
-    } catch (saveError) {
-      if (transactionContextRef.current === context) setTransactionError(saveError?.message || 'Could not save this transaction.');
-      throw saveError;
-    } finally {
-      transactionSavingRef.current = false;
-      setTransactionBusy(false);
-    }
-  };
-
-  const removeActivity = (activityId) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId, () => null),
-    () => setPendingDeleteActivity(null)).catch(() => {});
-  const toggleActivity = (activityId, view) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId,
-    (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')),
-  () => setActivityAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed')).catch(() => {});
-  const toggleActivityCancellation = (activityId) => runActivityWrite(() => records.mutateActivity(mutationContext, eventId, activityId, (activity) => {
-    const cancelled = activity.cancelled || activity.status === 'cancelled';
-    return { cancelled: !cancelled, status: cancelled ? activity.completed ? 'completed' : 'in-progress' : 'cancelled' };
-  }), () => setActivityAnnouncement('Activity status updated')).catch(() => {});
 
   const saveNotes = async (submitEvent) => {
     submitEvent.preventDefault();
@@ -557,22 +457,7 @@ export function EventWorkspaceContent() {
 
     if (activeSection.label === 'Transactions') return <LinkedTransactions eventId={eventId} />;
 
-    if (activeSection.label === 'Activities' || activeSection.label === 'Timeline') {
-      if (activeSection.label === 'Timeline') {
-        return activities.length ? (
-          <div className="timeline-list">
-                {activities.map((activity) => (
-              <div key={activity.id} className="timeline-item">
-                <span>{formatDate(activity.date)}</span>
-                <Link to={activityDetailPath(eventId, activity.id)}>{activity.title || 'Untitled activity'}</Link>
-                    <small className={activity.cancelled || activity.status === 'cancelled' ? 'is-cancelled' : activity.completed ? 'is-complete' : 'is-pending'}>{activity.cancelled || activity.status === 'cancelled' ? 'Cancelled' : activity.completed ? 'Completed' : 'In progress'}</small>
-                {activity.description ? <RichText value={activity.description} className="free-text-content" /> : null}
-              </div>
-            ))}
-          </div>
-        ) : <p style={{ margin: 0, color: 'var(--ink-soft)' }}>Add an activity to start this event timeline.</p>;
-      }
-
+    if (activeSection.label === 'Activities') {
       return (
         <div className="workspace-activities">
           <ListControls
@@ -610,7 +495,7 @@ export function EventWorkspaceContent() {
             </DropdownSelect>
           </div>
           </ListControls>
-          <ActivityList
+          <ActivityList readOnly
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
             allActivities={activities}
@@ -619,12 +504,7 @@ export function EventWorkspaceContent() {
             expensesByActivity={expensesByActivity}
             renderAttachments={(activity) => <AttachmentGallery compact uid={user?.uid} isGuest={isGuest} attachments={attachments.filter((attachment) => recordId(attachment.activityId) === recordId(activity.id))} />}
             onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id))}
-            onToggleComplete={toggleActivity}
-            onToggleCancelled={toggleActivityCancellation}
-            onAddExpense={openActivityTransaction}
-            onLinkExpense={(activity) => { setExpenseError(''); setLinkExpenseActivity(activity); }}
-            onEdit={editActivity}
-            onDelete={(activityId) => setPendingDeleteActivity(activities.find((activity) => activity.id === activityId))}
+
           />
         </div>
       );
@@ -633,6 +513,7 @@ export function EventWorkspaceContent() {
     if (activeSection.label === 'Attachments') {
       return (
         <div className="workspace-resource-list">
+          <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
           {event.attachments?.length ? <AttachmentGallery uid={user?.uid} isGuest={isGuest} attachments={attachments} onRemove={setPendingDeleteAttachment} /> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Use + to attach original photos and files to this Moment or one of its activities.</p></div>}
         </div>
       );
@@ -700,9 +581,8 @@ export function EventWorkspaceContent() {
         ))}
       </nav>
 
-      <p className="sr-only" role="status" aria-live="polite">{activityAnnouncement}</p>
       {activityBusy ? <p role="status">Saving activity…</p> : null}
-      {activityError && !activityDialogOpen && !pendingDeleteActivity ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
+      {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
         <div className="event-section-heading">
@@ -730,6 +610,7 @@ export function EventWorkspaceContent() {
 
       {attachmentDraft ? <ModalDialog title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
         <form className="form-surface" onSubmit={saveAttachment} style={{ display: 'grid', gap: '12px' }}>
+          <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
           <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
           {attachmentError ? <p className="quick-create-error" role="alert">{attachmentError}</p> : null}
           <label htmlFor="attachment-activity">Keep with</label>
@@ -741,7 +622,7 @@ export function EventWorkspaceContent() {
         </form>
       </ModalDialog> : null}
       {activityDialogOpen ? (
-        <ModalDialog title={editingActivityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setEditingActivityId(null); setActivityError(''); } }}>
+        <ModalDialog title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
           <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
@@ -754,23 +635,9 @@ export function EventWorkspaceContent() {
             <RichTextEditor label="Activity notes" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{editingActivityId ? 'Save activity' : 'Add activity'}</button>
+              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
             </div>
           </form>
-        </ModalDialog>
-      ) : null}
-      {linkExpenseActivity ? (
-        <ModalDialog title={`Link expense · ${linkExpenseActivity.title || 'Activity'}`} onClose={() => setLinkExpenseActivity(null)}>
-          {expenseError ? <p className="quick-create-error" role="alert">{expenseError}</p> : null}
-          {linkableExpenses.length ? <div className="activity-expense-link-list">{linkableExpenses.map((expense) => <button type="button" className="activity-expense-link-option" key={expense.id || expense.firestoreId} onClick={() => linkExistingExpense(expense)}><span><strong>{expense.name || expense.description || 'Expense'}</strong><small>{expense.category || 'Other'} · {formatDate(expense.date)}</small></span><b>{currency(expense.amount)}</b></button>)}</div> : <p className="activity-expense-link-empty">No unlinked expenses are available. Add a transaction for this activity instead.</p>}
-          <div className="activity-expense-link-footer"><button type="button" className="secondaryButton" onClick={() => openActivityTransaction(linkExpenseActivity)}><Plus size={15} aria-hidden="true" /> Add transaction</button><button type="button" className="secondaryButton" onClick={() => setLinkExpenseActivity(null)}>Close</button></div>
-        </ModalDialog>
-      ) : null}
-      {transactionActivity?.context === transactionContext ? (
-        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={closeActivityTransaction}>
-          {transactionError ? <p className="dn-transaction-form-error" role="alert">{transactionError}</p> : null}
-          <TransactionForm defaultKind="expense" presetLink={transactionActivity} events={events}
-            onSubmit={saveActivityTransaction} busy={transactionBusy} onCancel={closeActivityTransaction} />
         </ModalDialog>
       ) : null}
       {notesDialogOpen ? (
@@ -795,21 +662,6 @@ export function EventWorkspaceContent() {
       ) : null}
       {pendingDeleteMemory ? <ConfirmDialog title="Remove memory?" message={`Remove “${pendingDeleteMemory.title}” from this event?`} onCancel={() => setPendingDeleteMemory(null)} onConfirm={() => removeMemory(pendingDeleteMemory.id)} /> : null}
       {pendingDeleteAttachment ? <ConfirmDialog title="Remove attachment?" message={`Remove “${pendingDeleteAttachment.name}” from this event?`} onCancel={() => setPendingDeleteAttachment(null)} onConfirm={() => removeAttachment(pendingDeleteAttachment.id)} /> : null}
-      {pendingDeleteActivity ? (
-        <ConfirmDialog
-          title="Remove activity?"
-          message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`}
-          onCancel={() => { if (!activitySavingRef.current) setPendingDeleteActivity(null); }}
-          busy={activityBusy} error={activityError}
-          onConfirm={() => removeActivity(pendingDeleteActivity.id)}
-        />
-      ) : null}
-      {eventEditOpen ? (
-        <ModalDialog title="Edit Moment" onClose={() => setEventEditOpen(false)}>
-          <EventForm initialValues={event} onSubmit={editEventDetails}
-            onCancel={() => setEventEditOpen(false)} submitLabel="Save Changes" />
-        </ModalDialog>
-      ) : null}
       {pendingDeleteEvent ? (
         <ConfirmDialog
           title="Delete event?"
