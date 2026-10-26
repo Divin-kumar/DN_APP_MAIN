@@ -2,7 +2,7 @@ import { CalendarDays, Check, Circle } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import RichText from '../common/RichText';
 import { getEventStatus } from '../../utils/eventStatus';
-import MomentSummaryExtras from './MomentSummaryExtras';
+import MomentSummaryExtras, { MomentSummaryPhotos } from './MomentSummaryExtras';
 import GreetingCard from '../common/GreetingCard';
 import { activityStatus } from '../../utils/activityDetail';
 
@@ -28,6 +28,7 @@ export default function EventSummaryDialog({ event, onClose }) {
         </header>
         {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
         {event.greetingCard ? <GreetingCard {...event.greetingCard} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} /> : null}
+        <MomentSummaryPhotos event={event} />
         <section className="event-summary-activities" aria-label="Activity summary">
           <h4>Activities <span>{activities.length}</span></h4>
           {activities.length ? <ul>
@@ -43,6 +44,7 @@ export default function EventSummaryDialog({ event, onClose }) {
                     <strong>{activity.title || activity.name || 'Untitled activity'}</strong>
                     <small>{formatDate(activity.date)}{activityStatus(activity) === 'cancelled' ? ' · Cancelled' : completed ? ' · Completed' : ''}</small>
                     {hasDescription ? <RichText value={description} /> : null}
+                    <MomentSummaryPhotos event={event} activityId={activity.id || key} />
                   </div>
                 </li>
               );
