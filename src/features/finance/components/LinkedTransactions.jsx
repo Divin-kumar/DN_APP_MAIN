@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import usePersistentListState from '../../../hooks/usePersistentListState';
+import useConditionFilters from '../../../hooks/useConditionFilters';
+import ConditionBuilder from '../../../components/common/ConditionBuilder';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import ListControls from '../../../components/common/ListControls';
@@ -23,6 +25,7 @@ export function MomentFinanceSummary({ summary, label = 'Totals for this Moment'
 // Contextual history is read-only. Creation uses universal +; editing stays in Finance.
 export default function LinkedTransactions({ eventId, activityId = '', minimal = false }) {
   const finance = useMomentFinance(eventId, activityId);
+  const conditions = useConditionFilters(`moment-transactions:${eventId}:${activityId || 'all'}`, finance.transactions);
   const [filters, changeFilters, resetFilters] = usePersistentListState(
     `moment-transactions:${JSON.stringify([finance.sample, eventId, activityId])}`, DEFAULTS, RULES);
   const moment = finance.events.find((item) => recordId(item.id || item.firestoreId) === eventId);
@@ -32,7 +35,8 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
     ? [{ value: filters.month, label: `${filters.month} (no records)` }, ...months] : months;
   const selectedActivityAvailable = activities.some((item) => recordId(item.id) === filters.activityId);
   const filtered = filterTransactions(finance.transactions, activityId ? {} : filters)
-    .filter((item) => activityId || !filters.activityId || (selectedActivityAvailable && item.activityId === filters.activityId));
+    .filter((item) => activityId || !filters.activityId || (selectedActivityAvailable && item.activityId === filters.activityId))
+    .filter(conditions.matches);
   const totals = <MomentFinanceSummary summary={finance.summary} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
   if (activityId && minimal && finance.ready && !finance.error && finance.transactions.length === 0) return null;
@@ -55,6 +59,7 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
           {monthOptions.length > 1 || filters.month !== 'all' ? <div className="dn-list-controls-field"><label htmlFor="moment-transaction-month">Month</label><DropdownSelect id="moment-transaction-month" value={filters.month} onChange={(event) => changeFilters({ month: event.target.value })}>
             <option value="all">All months</option>{monthOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</DropdownSelect></div> : null}
         </ListControls> : null}
+        {!minimal && finance.transactions.length ? <ConditionBuilder filter={conditions} resultCount={filtered.length} resultLabel="transactions" title="Moment transaction conditions" /> : null}
         {filtered.length || !minimal ? <div className="dn-transactions-results" role="list" aria-label="Linked transactions">
           {filtered.length ? filtered.map((item) => <TransactionCard key={item.stableTransactionKey} transaction={item} events={finance.events}
             readOnly showActivity={!minimal} />)
