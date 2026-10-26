@@ -1,0 +1,11 @@
+/* Summary images keep natural proportions and remain beneath their owner story. */
+html[data-theme] .moment-summary-media { min-width: 0; margin: 12px 0 18px; }
+html[data-theme] .moment-summary-media .dn-attachment-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
+html[data-theme] .moment-summary-media .dn-attachment-tile { min-width: 0; align-items: stretch; }
+html[data-theme] .moment-summary-media .dn-attachment-open { flex-direction: column; align-items: stretch; overflow: hidden; gap: 6px; padding: 8px; }
+html[data-theme] .moment-summary-media .dn-attachment-open img { display: block; width: 100%; height: auto; max-height: none; object-fit: contain; border-radius: 8px; }
+html[data-theme] .moment-summary-media .dn-attachment-open > svg { margin: 10px auto; }
+html[data-theme] .moment-summary-media .dn-attachment-open span { width: 100%; }
+html[data-theme] .moment-summary-media .dn-attachment-open strong { white-space: normal; overflow-wrap: anywhere; }
+html[data-theme] .event-summary-activity-copy > .moment-summary-media, html[data-theme] .dashboard-summary-activity-copy > .moment-summary-media { margin-top: 10px; }
+@media (max-width: 600px) { html[data-theme] .moment-summary-media .dn-attachment-gallery { grid-template-columns: 1fr; } }
