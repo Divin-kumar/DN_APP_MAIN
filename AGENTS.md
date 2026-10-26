@@ -4,6 +4,8 @@
 
 Scope: `OldVersion` in `Divin-kumar/DN_APP_MAIN`. Owner instructions and existing session authorization take precedence.
 
+**ABSOLUTE MAIN BRANCH PROTECTION (owner reaffirmed 2026-10-26):** `main` is frozen and read-only. Never push, commit, edit, reset, cherry-pick, merge, or deploy changes through `main`. Never open, retarget, or merge a pull request whose **base/target is `main`**. All DN implementation, fixes, releases, and documentation changes go to `OldVersion`, or a feature/release branch whose pull-request **base is `OldVersion`**. Before creating a PR or merging, verify the base is exactly `OldVersion`; if not, stop without proceeding. This applies even if GitHub branch protection is disabled, an integration defaults to `main`, or a tool suggests `main`. Do not silently change this policy.
+
 ## Authority and inventory
 
 Keep exactly five approved Markdown files:
