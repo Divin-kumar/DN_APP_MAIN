@@ -1,0 +1,127 @@
+import { test, expect } from '@playwright/test';
+import { addOriginal, fixtureMoments, seedGuest } from './fixtures.js';
+
+async function openSummary(page) {
+  await page.goto('/events');
+  const moment = page.getByRole('group', { name: /Weekend in Ooty/ });
+  await moment.focus(); await page.keyboard.press('Enter');
+  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
+  return page.getByRole('dialog', { name: 'Moment summary', exact: true });
+}
+
+async function assertViewport(page, locator) {
+  // Measure the presented dialog after its entrance, not its clipped incoming
+  // transform. Both ordinary motion and reduced-motion settings are supported.
+  await locator.evaluate((node) => Promise.all(node.getAnimations().map((animation) => animation.finished.catch(() => {}))));
+  const rect = await locator.boundingBox();
+  const viewport = page.viewportSize();
+  expect(rect.x).toBeGreaterThanOrEqual(-1); expect(rect.y).toBeGreaterThanOrEqual(-1);
+  expect(rect.x + rect.width).toBeLessThanOrEqual(viewport.width + 1);
+  expect(rect.y + rect.height).toBeLessThanOrEqual(viewport.height + 1);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+}
+
+for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { width:1440, height:960 }]) {
+  test(`story ownership and compact Activity cards at ${viewport.width}px`, async ({ page }) => {
+    await page.setViewportSize(viewport);
+    const moments = fixtureMoments();
+    moments[0].notes = 'All Moment notes remain visible. END_NOTES';
+    moments[0].activities[0].description = 'The owner Activity details precede its photographs. END_DETAILS';
+    const errors = await seedGuest(page, { moments });
+    const reference = await addOriginal(page, { count:3 });
+    await page.evaluate((reference) => {
+      const moments = JSON.parse(localStorage.getItem('dn_guest_eventGroups'));
+      moments[0].attachments.push(
+        { id:'train-photo', name:'Train photo.png', type:'image/png', activityId:'completed', ...reference },
+        { id:'legacy-photo', name:'Legacy Moment photo.png', type:'image/png', activityId:'removed-activity', ...reference },
+      );
+      localStorage.setItem('dn_guest_eventGroups', JSON.stringify(moments));
+    }, reference);
+    const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+    const summary = await openSummary(page);
+    await assertViewport(page, summary);
+    await expect(summary.locator('.moment-summary-moment')).toContainText('END_NOTES');
+    await expect(summary.locator('.moment-summary-moment .dn-attachment-tile')).toHaveCount(2);
+    const owner = summary.locator('.moment-summary-activity').filter({ hasText:'Book a lakeside stay' });
+    await expect(owner.locator('.dn-attachment-tile')).toHaveCount(3);
+    await expect(owner).toContainText('END_DETAILS');
+    await expect(summary.locator('.moment-summary-activity').filter({ hasText:'Choose the train' }).locator('.dn-attachment-tile')).toHaveCount(1);
+    expect(await owner.evaluate((node) => Boolean(node.querySelector('.dn-rich-text').compareDocumentPosition(node.querySelector('.moment-summary-media')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
+    expect(await summary.locator('.dn-attachment-tile').evaluateAll((nodes) => nodes.every((node) => node.closest('.moment-summary-story')))).toBe(true);
+    await expect(summary.locator('.moment-summary-attachments')).toHaveCount(0);
+    await expect(summary.locator('.event-summary-activities li').first()).toContainText('Choose the train');
+    await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
+
+    await page.goto('/dashboard');
+    await page.locator('.dashboard-moment-row').filter({ hasText:moments[0].name }).locator('.dashboard-upcoming-row').click();
+    await expect(summary.locator('.moment-summary-moment .dn-attachment-tile')).toHaveCount(2);
+    await expect(summary.locator('.moment-summary-activity').filter({ hasText:'Book a lakeside stay' }).locator('.dn-attachment-tile')).toHaveCount(3);
+    expect(await summary.locator('.dn-attachment-tile').evaluateAll((nodes) => nodes.every((node) => node.closest('.moment-summary-story')))).toBe(true);
+    await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
+    await page.goto('/activities');
+    const card = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
+    await expect(card).toBeVisible();
+    expect((await card.boundingBox()).height).toBeLessThan(115);
+    const trigger = await card.getByRole('button', { name:'Activity options', exact:true }).boundingBox();
+    expect(Math.round(trigger.width)).toBeGreaterThanOrEqual(44); expect(Math.round(trigger.height)).toBeGreaterThanOrEqual(44);
+    const columns = await page.locator('.event-activity-list').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
+    expect(columns).toBe(viewport.width < 768 ? 1 : viewport.width < 1440 ? 2 : 3);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByRole('button', { name:/^Filters and sort/ }).click();
+    await page.getByRole('button', { name:'Clear all', exact:true }).click();
+    await expect(page.getByRole('group', { name:'Open A cancelled plan', exact:true })).toBeAttached();
+    await expect(page.locator('.event-activity-card')).toHaveCount(4);
+    expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('Activity transaction section appears and disappears with its actual linked data; failed reads offer retry', async ({ page }) => {
+  const moments = fixtureMoments(); moments[0].activities[0].expenses = [];
+  await seedGuest(page, { moments, incomes:[], expenses:[{ id:'unrelated', name:'Other Activity cost', amount:75, date:'2026-10-01', eventId:'moment-one', activityId:'completed', category:'Other' }] });
+  await page.goto('/events/moment-one/activities/shared');
+  await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
+  await expect(page.locator('.moment-transactions')).toHaveCount(0);
+  await expect(page.getByText(/No transactions|Totals for this Activity/)).toHaveCount(0);
+  const changeExpense = async (present) => page.evaluate(async (present) => {
+    const store = (await import('/src/store/useEventStore.js')).default;
+    const moment = store.getState().events.find((item) => item.id === 'moment-one');
+    await store.getState().updateEventItem(null, true, { ...moment, activities:moment.activities.map((item) => item.id === 'shared'
+      ? { ...item, expenses:present ? [{ id:'new-cost', name:'New linked cost', amount:125, date:'2026-10-01', category:'Other' }] : [] } : item) });
+  }, present);
+  await changeExpense(true);
+  await expect(page.getByRole('list', { name:'Linked transactions', exact:true })).toContainText('New linked cost');
+  await expect(page.getByRole('group', { name:'Totals for this Activity', exact:true }).locator('dd')).toHaveText(['₹0', '₹125', '-₹125']);
+  await changeExpense(false);
+  await expect(page.locator('.moment-transactions')).toHaveCount(0);
+  // A failed read has no completed loaded scope. Model that state, rather than
+  // attaching an impossible load error to an already-completed cache hit.
+  await page.evaluate(async () => (await import('/src/store/useExpenseStore.js')).default.setState({ error:'Unable to load expenses.', loadedFor:null, loading:false }));
+  await expect(page.getByRole('alert')).toContainText('Transactions couldn’t be loaded.');
+  await page.getByRole('button', { name:'Try again', exact:true }).click();
+  await expect(page.locator('.moment-transactions')).toHaveCount(0);
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+test('summary, nested original preview and Activity menu remain within a reduced viewport', async ({ page }) => {
+  await page.setViewportSize({ width:320, height:480 });
+  await seedGuest(page); await addOriginal(page);
+  const summary = await openSummary(page);
+  await assertViewport(page, summary);
+  const preview = summary.getByRole('button', { name:'Preview Activity photo 0.png', exact:true });
+  await preview.scrollIntoViewIfNeeded(); await preview.click();
+  const original = page.getByRole('dialog', { name:'Activity photo 0.png', exact:true });
+  await assertViewport(page, original);
+  await page.keyboard.press('Escape'); await expect(preview).toBeFocused();
+  await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
+  await page.goto('/events/moment-one/activities/shared');
+  await page.getByRole('button', { name:'Activity options', exact:true }).click();
+  await assertViewport(page, page.getByRole('menu'));
+  await expect(page.getByRole('menuitem', { name:'Edit', exact:true })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await page.goto('/activities');
+  await page.getByRole('button', { name:/^Filters and sort/ }).click();
+  await page.getByRole('group', { name:'Open Book a lakeside stay', exact:true }).getByRole('button', { name:'Activity options', exact:true }).click();
+  await expect(page.getByRole('menuitem', { name:'Edit', exact:true })).toBeVisible();
+  await assertViewport(page, page.getByRole('menu'));
+});

@@ -68,7 +68,7 @@ test('Finance card delegates Edit and Delete through the same surface', () => {
 test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
   const page = read('../pages/Financials.jsx');
   assert.match(page, /summarizeTransactions\(/);
-  assert.match(page, /filterTransactions\(allTransactions, \{ month: filters\.month \}\)/);
+  assert.match(page, /transactionDateConditions\(conditions\.state\.group\)/);
   for (const label of ['Income','Expense','Balance']) assert.match(page, new RegExp('> ' + label + '</span>'));
   assert.match(page, /className="dn-finance-summary-grid"/);
   assert.doesNotMatch(page, /<NavLink|dn-financial-tabs/);

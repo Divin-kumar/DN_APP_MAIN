@@ -51,7 +51,7 @@ const openActivities = async (t) => {
       }
       return slots[index].value;
     },
-    filters: null, navigations: [],
+    filters: null, filterStates: {}, navigations: [],
     app: { user: { uid: 'synthetic-owner' }, isGuest: false,
       adminValues: { eventTypes: [], activityPriorities: [] },
       showToast: (...args) => toasts.push(args) },
@@ -97,13 +97,13 @@ const openActivities = async (t) => {
         if (id === '\0activities-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
         if (id === '\0activities-router') return `export const Link="Link",useNavigate=()=>(...args)=>${fixture}.navigations.push(args);`;
         if (id === '\0activities-icons') return 'export const ListChecks="icon",Plus="icon";';
-        if (id.startsWith('\0activities-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
+        if (id.startsWith('\0activities-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog",ConditionChips="ConditionChips";`;
         if (id === '\0activities-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0activities-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0activities-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0activities-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
         if (id === '\0activities-manager') return `export default ()=>({saveTransaction:${fixture}.save});`;
-        if (id === '\0activities-filters') return `export default (_key,defaults)=>{const api=${fixture}; api.filters??=defaults; return [api.filters,(patch)=>{api.filters={...api.filters,...patch}},()=>{api.filters=defaults}];};`;
+        if (id === '\0activities-filters') return `export default (key,defaults)=>{const api=${fixture}; const read=()=>key==="activities"?(api.filters??=defaults):(api.filterStates[key]??=defaults); const write=(value)=>{if(key==="activities")api.filters=value;else api.filterStates[key]=value;}; return [read(),(patch)=>write({...read(),...(typeof patch==="function"?patch(read()):patch)}),()=>write(defaults)];};`;
         return null;
       },
     }],
@@ -118,45 +118,30 @@ const openActivities = async (t) => {
     setSaver: (next) => { saver = next; } };
 };
 
-test('Moment filter excludes archived choices by default and preserves explicit visibility on selection', async (t) => {
+test('the existing filter location contains only the condition builder and conditions control visible records', async (t) => {
   const h = await openActivities(t);
-  h.second.archived = true;
-  const control = (id) => nodes(h.render()).find((node) => node.props?.id === id);
-  const values = () => nodes(control('activities-moment-filter')).filter((node) => node.type === 'option').map((node) => node.props.value);
-  assert.deepEqual(values(), ['', 'moment-one']);
-  assert.equal(nodes(h.render()).some((node) => node.type === 'details'), false);
-  control('activities-moment-filter').props.onChange({ target: { value: 'moment-one' } });
-  assert.equal(h.api.filters.parentScope, 'active');
-  control('activities-parent-filter').props.onChange({ target: { value: 'archived' } });
-  assert.equal(h.api.filters.momentId, '', 'incompatible selection is cleared');
-  assert.deepEqual(values(), ['', 'moment-two']);
-  control('activities-moment-filter').props.onChange({ target: { value: 'moment-two' } });
-  assert.equal(h.api.filters.parentScope, 'archived');
-  control('activities-status-filter').props.onChange({ target: { value: 'completed' } });
-  assert.equal(h.api.filters.momentId, 'moment-two');
-  h.find('ListControls').props.onReset();
-  assert.deepEqual(values(), ['', 'moment-one']);
+  const controls = h.find('ListControls');
+  assert.equal(controls.props.builder, true);
+  assert.equal(nodes(h.render()).filter((node) => node.type === 'ConditionBuilder').length, 1);
+  const condition = h.find('ConditionBuilder').props.filter;
+  condition.setGroup({ id: 'root', kind: 'group', join: 'AND', children: [
+    { id: 'title', kind: 'rule', field: 'activity.title', operator: 'contains', value: 'first' },
+  ] });
+  assert.deepEqual(h.list().props.activities.map((item) => item.title), ['Synthetic first activity']);
   assert.equal(h.writes.length, 0);
 });
 
-test('Moment type narrows picker, activities and progress together without writing records', async (t) => {
+test('condition fields and values include actual custom Moment types and clear restores the complete list', async (t) => {
   const h = await openActivities(t);
-  h.second.type = 'Other';
-  h.second.customType = 'Travel';
-  const control = (id) => nodes(h.render()).find((node) => node.props?.id === id);
-  const values = (id) => nodes(control(id)).filter((node) => node.type === 'option').map((node) => node.props.value);
-  assert.deepEqual(values('activities-status-filter'), ['all', 'in-progress', 'completed', 'cancelled']);
-  control('activities-moment-filter').props.onChange({ target: { value: 'moment-one' } });
-  control('activities-type-filter').props.onChange({ target: { value: 'Travel' } });
-  assert.equal(h.api.filters.momentId, '');
-  assert.deepEqual(values('activities-moment-filter'), ['', 'moment-two']);
+  h.second.type = 'Other'; h.second.customType = 'Travel';
+  const condition = h.find('ConditionBuilder').props.filter;
+  assert.ok(condition.schema.find((field) => field.path === 'momentType').values.includes('Travel'));
+  condition.setGroup({ id: 'root', kind: 'group', join: 'AND', children: [
+    { id: 'type', kind: 'rule', field: 'momentType', operator: 'eq', value: 'Travel' },
+  ] });
   assert.equal(h.list().props.activities.length, 2);
-  assert.equal(h.list().props.allActivities.length, 2);
-  control('activities-moment-filter').props.onChange({ target: { value: 'moment-two' } });
-  assert.equal(h.api.filters.momentType, 'Travel');
   h.find('ListControls').props.onReset();
-  assert.equal(h.api.filters.momentType, '');
-  assert.equal(h.list().props.allActivities.length, 3);
+  assert.equal(h.list().props.activities.length, 3);
   assert.equal(h.writes.length, 0);
 });
 

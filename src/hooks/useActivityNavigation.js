@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import usePersistentListState from './usePersistentListState';
+import useConditionFilters from './useConditionFilters';
+import { activityConditions, activityEntryConditionRecord } from '../utils/listConditionMigration';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES } from '../utils/activityListState';
 import { projectActivities, selectActivityEntries } from '../utils/activityRecords';
 import { resolveActivitySequence } from '../utils/activitySequence';
@@ -12,7 +14,12 @@ export default function useActivityNavigation({ scoped, eventId, activityId, dis
   const location = useLocation(), navigate = useNavigate();
   const [filters] = usePersistentListState('activities', ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES);
   const entries = useMemo(() => projectActivities(scoped.events), [scoped.events]);
-  const sequence = resolveActivitySequence(entries, selectActivityEntries(entries, filters), location.state?.activitySequence, scoped.scopeIdentity, eventId, activityId);
+  const conditionRecords = useMemo(() => entries.map(activityEntryConditionRecord), [entries]);
+  const conditions = useConditionFilters('activities', conditionRecords, usePersistentListState,
+    { initialGroup: activityConditions(filters), contextKey: scoped.sample });
+  const selected = selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
+    direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches);
+  const sequence = resolveActivitySequence(entries, selected, location.state?.activitySequence, scoped.scopeIdentity, eventId, activityId);
   const context = records.capture();
   const gesture = useRef(null), suppress = useRef(false), frame = useRef(null), navigating = useRef(false);
   useEffect(() => () => { if (frame.current) cancelAnimationFrame(frame.current); }, []);

@@ -31,7 +31,9 @@ const openWorkspace = async (t) => {
     originalRemove(type, callback, options);
   };
   const previousWindow = Object.getOwnPropertyDescriptor(globalThis, 'window');
+  const previousDocument = Object.getOwnPropertyDescriptor(globalThis, 'document');
   Object.defineProperty(globalThis, 'window', { configurable: true, writable: true, value: windowTarget });
+  Object.defineProperty(globalThis, 'document', { configurable: true, writable: true, value: new EventTarget() });
   const writes = [];
   const fileClicks = [];
   const originalSaves = [];
@@ -132,6 +134,8 @@ const openWorkspace = async (t) => {
     delete globalThis[key];
     if (previousWindow) Object.defineProperty(globalThis, 'window', previousWindow);
     else delete globalThis.window;
+    if (previousDocument) Object.defineProperty(globalThis, 'document', previousDocument);
+    else delete globalThis.document;
   });
   const { EventWorkspaceContent: Workspace } = await server.ssrLoadModule('/src/features/events/components/EventWorkspaceShell.jsx');
   const render = () => {

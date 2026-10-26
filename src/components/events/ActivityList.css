@@ -1,0 +1,29 @@
+/* Shared compact cards retain the same 44px action target at every width. */
+html[data-theme] .event-activity-content { min-width:0; }
+html[data-theme] .event-activity-content .event-activity-progress { gap:12px; padding:8px 10px; margin-bottom:10px; }
+html[data-theme] .event-activity-content .event-activity-list { min-width:0; gap:8px; align-items:start; }
+html[data-theme] .event-activity-content .event-activity-card { border-radius:12px; box-shadow:0 2px 8px rgb(0 0 0 / 3%); }
+html[data-theme] .event-activity-content .event-activity-card .event-activity-main { padding:8px 0 8px 10px !important; }
+html[data-theme] .event-activity-content .event-activity-card.is-readonly .event-activity-main { padding-right:10px !important; }
+html[data-theme] .event-activity-content .event-activity-card .event-activity-copy { gap:3px; }
+html[data-theme] .event-activity-content .event-activity-card .event-activity-title-row { gap:3px 6px; }
+html[data-theme] .event-activity-content .event-activity-card .event-activity-title-row > strong { font-size:14px !important; line-height:1.35; }
+html[data-theme] .event-activity-content .event-activity-card .event-activity-context { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:3px 8px; font-size:11px; line-height:1.4; }
+html[data-theme] .event-activity-content .event-activity-context > i { display:none; }
+html[data-theme] .event-activity-content .event-activity-context > span { min-width:0; }
+html[data-theme] .event-activity-content .event-activity-context > span:first-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+html[data-theme] .event-activity-content .event-activity-context > span:first-child > a { display:block; min-height:44px; padding:14px 0; box-sizing:border-box; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+html[data-theme] .event-activity-content .event-activity-context > span:last-child { align-self:center; font-size:10px; text-align:right; }
+html[data-theme] .event-activity-content .event-activity-card .dn-record-menu-trigger { margin:2px 2px 0 0; }
+html[data-theme] .event-activity-content .event-activity-card .dn-swipe-main { min-height:76px; }
+html[data-theme] .event-activity-content .event-activity-filter-empty { grid-column:1 / -1; }
+@media(min-width:768px) {
+  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@media(min-width:1440px) {
+  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media(max-width:480px) {
+  html[data-theme] .event-activity-content .event-activity-progress { grid-template-columns:minmax(0,1fr) 56px; gap:8px; }
+  html[data-theme] .event-activity-content .event-activity-progress > div { flex-wrap:wrap; white-space:normal; gap:2px 5px; }
+}

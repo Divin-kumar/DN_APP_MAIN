@@ -5,6 +5,8 @@ import { activityDateLabel } from '../../utils/activityDetail';
 import { summaryAttachmentsFor } from '../../utils/summaryAttachments';
 import './MomentSummaryExtras.css';
 
+export { sortedSummaryActivities } from '../../utils/summaryAttachments';
+
 // Keep media inside its story card: the main Moment first, then each Activity.
 export function MomentSummaryPhotos({ event, activityId = null }) {
   const uid = useAppStore((state) => state.user?.uid);

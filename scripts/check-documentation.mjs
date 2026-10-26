@@ -1,6 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { verifyAuditLog } from './audit-log.mjs';
 
@@ -9,7 +9,7 @@ const allowed = ['AGENTS.md', 'README.md', 'docs/CHANGE_AUDIT_LOG.md', 'docs/DN_
 const ignored = new Set(['.git', 'node_modules', 'dist', 'coverage', '.verification', 'playwright-report', 'test-results']);
 const walk = (directory) => readdirSync(directory, { withFileTypes: true }).flatMap((entry) => {
   const path = join(directory, entry.name);
-  return entry.isDirectory() ? ignored.has(entry.name) ? [] : walk(path) : /\.(md|markdown)$/i.test(entry.name) ? [relative(root, path)] : [];
+    return entry.isDirectory() ? ignored.has(entry.name) ? [] : walk(path) : /\.(md|markdown)$/i.test(entry.name) ? [relative(root, path).split(sep).join('/')] : [];
 });
 if (JSON.stringify(walk(root).sort()) !== JSON.stringify(allowed)) throw new Error('Keep exactly the five authorized Markdown documents.');
 let links = 0;

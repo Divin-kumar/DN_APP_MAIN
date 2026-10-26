@@ -1,104 +1,214 @@
-// Data-driven condition filtering for Moments, Activities and Transactions.
-// UI state is browser-scoped; filtering never mutates business records.
-const isPlain = (value) => value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
+// Conditions are browser UI choices; no business record is modified here.
+const MAX_DEPTH = 12;
+const MAX_NODES = 300;
+const own = (value, key) => value != null && Object.prototype.hasOwnProperty.call(value, key);
+const forbidden = new Set(['__proto__', 'prototype', 'constructor']);
 const text = (value) => String(value ?? '').trim();
-export const emptyGroup = () => ({ id: 'root', kind: 'group', join: 'AND', children: [] });
-const primitives = (record, prefix = '', depth = 0) => {
-  if (!isPlain(record) || depth > 1) return [];
-  return Object.entries(record).flatMap(([key, value]) => {
-    if (key.startsWith('_') || typeof value === 'function' || Array.isArray(value)) return [];
-    const path = prefix ? prefix + '.' + key : key;
-    if (isPlain(value) && depth < 1) return primitives(value, path, depth + 1);
-    return !isPlain(value) && value !== undefined && !(value instanceof Date)
-      ? [{ path, value }] : value instanceof Date ? [{ path, value: value.toISOString() }] : [];
-  });
+const isObject = (value) => value !== null && typeof value === 'object';
+const isEmpty = (value) => value == null || value === '' || (Array.isArray(value) && !value.length);
+const dateText = /^\d{4}-\d{2}-\d{2}(?:$|T)/;
+const valueCollator = new Intl.Collator(undefined, { numeric: true });
+const sampleSignature = (value) => {
+  if (isEmpty(value)) return null;
+  if (typeof value === 'string') return dateText.test(value) ? 'string:date' : 'string:text';
+  if (typeof value === 'number') return Number.isFinite(value) ? 'number:finite' : 'number:invalid';
+  return typeof value;
 };
-const labelFor = (path) => path.split('.').map((part) => part
-  .replace(/([a-z])([A-Z])/g, '$1 $2')
-  .replace(/_/g, ' ')
-  .replace(/^./, (c) => c.toUpperCase())).join(' · ');
+export const emptyGroup = () => ({ id: 'root', kind: 'group', join: 'AND', children: [] });
+const labelFor = (path) => path.replaceAll('[]', '').split('.').map((part) => part
+  .replace(/([a-z])([A-Z])/g, '$1 $2').replace(/_/g, ' ').replace(/^./, (c) => c.toUpperCase())).join(' · ');
+const dateObject = (value) => {
+  if (value instanceof Date) return value;
+  if (!isObject(value)) return null;
+  if (typeof value.toDate === 'function') { try { return value.toDate(); } catch { return null; } }
+  if (Number.isFinite(value._seconds)) return new Date(value._seconds * 1000 + (Number(value._nanoseconds) || 0) / 1e6);
+  if (Number.isFinite(value.seconds) && (own(value, 'nanoseconds') || Object.keys(value).length === 1)) return new Date(value.seconds * 1000 + (Number(value.nanoseconds) || 0) / 1e6);
+  return null;
+};
+const scalar = (value) => { const date = dateObject(value); return date ? Number.isFinite(date.getTime()) ? date.toISOString() : null : value; };
 const guessType = (name, values) => {
-  const nonEmpty = values.filter((value) => value !== null && value !== undefined && value !== '');
-  if (nonEmpty.length && nonEmpty.every((value) => typeof value === 'boolean')) return 'boolean';
-  if (nonEmpty.length && nonEmpty.every((value) => typeof value === 'number' && Number.isFinite(value))) return 'number';
-  if (/(^|\.|_)(date|createdat|updatedat|completedat|dueat|timestamp|startdate|enddate)$/i.test(name)
-    || (nonEmpty.length && nonEmpty.every((value) => /^\d{4}-\d{2}-\d{2}/.test(String(value))))) return 'date';
+  const present = values.filter((value) => !isEmpty(value));
+  if (present.length && present.every((value) => typeof value === 'boolean')) return 'boolean';
+  const leaf = name.split('.').at(-1).replace(/\[\]$/, '');
+  if (/^(?:date|createdAt|updatedAt|completedAt|dueAt|timestamp|startDate|endDate)$/i.test(leaf) || /(?:Date|At)$/.test(leaf)
+    || (present.length && present.every((value) => typeof value === 'string' && dateText.test(value)))) return 'date';
+  if (present.length && present.every((value) => typeof value === 'number' && Number.isFinite(value))) return 'number';
   return 'text';
 };
-export const discoverConditionFields = (records = []) => {
-  const fields = new Map();
-  (Array.isArray(records) ? records : []).forEach((record) => {
-    primitives(record).forEach(({ path, value }) => {
-      if (!fields.has(path)) fields.set(path, []);
-      if (fields.get(path).length < 40 && !fields.get(path).includes(value)) fields.get(path).push(value);
-    });
+const schemaType = (field) => field.enum || field.type === 'dropdown' || field.type === 'enum' ? 'dropdown'
+  : field.format === 'date' || field.format === 'date-time' ? 'date'
+    : field.type === 'integer' ? 'number' : ['text', 'number', 'date', 'boolean'].includes(field.type) ? field.type : null;
+// Descriptors or JSON Schema expose fields/enumerations before records exist.
+const descriptors = (schema, prefix = '', depth = 0) => {
+  if (!schema || depth > MAX_DEPTH) return [];
+  if (Array.isArray(schema)) return schema.filter((field) => typeof field?.path === 'string');
+  return Object.entries(schema.properties || {}).flatMap(([key, definition]) => {
+    if (forbidden.has(key)) return [];
+    const path = prefix ? `${prefix}.${key}` : key;
+    if (definition?.type === 'object' || definition?.properties) return descriptors(definition, path, depth + 1);
+    if (definition?.type === 'array' && definition.items?.properties) return descriptors(definition.items, `${path}[]`, depth + 1);
+    return [{ ...(definition?.type === 'array' ? definition.items : definition), path: definition?.type === 'array' ? `${path}[]` : path }];
   });
-  return [...fields.entries()].map(([path, values]) => ({
-    path, label: labelFor(path), type: guessType(path, values),
-    values: values.filter((v) => v !== null && v !== '' && v !== undefined).map(String).slice(0, 30),
+};
+export const discoverConditionFields = (records = [], schema = []) => {
+  const fields = new Map();
+  const ensure = (path) => {
+    let field = fields.get(path);
+    if (!field) { field = { path, values: new Set(), samples: [], sampleSignatures: new Set(), label: labelFor(path) }; fields.set(path, field); }
+    return field;
+  };
+  for (const hint of descriptors(schema)) {
+    if (!hint.path || hint.path.split('.').some((key) => forbidden.has(key))) continue;
+    const field = ensure(hint.path); field.label = hint.label || hint.title || field.label; field.type = schemaType(hint);
+    for (const value of hint.enum || hint.values || []) if (!isEmpty(value)) field.values.add(String(value));
+  }
+  const visit = (value, path, depth, ancestors) => {
+    if (depth > MAX_DEPTH) return;
+    const normalized = scalar(value);
+    if (normalized !== value || !isObject(value)) {
+      if (!path || typeof normalized === 'function' || typeof normalized === 'symbol' || normalized === undefined) return;
+      const field = ensure(path);
+      const signature = sampleSignature(normalized);
+      if (signature && !field.sampleSignatures.has(signature)) { field.sampleSignatures.add(signature); field.samples.push(normalized); }
+      if (!isEmpty(normalized)) field.values.add(String(normalized));
+      return;
+    }
+    if (ancestors.has(value)) return;
+    const next = new Set(ancestors).add(value);
+    if (Array.isArray(value)) { for (const entry of value) visit(entry, `${path}[]`, depth + 1, next); return; }
+    for (const [key, entry] of Object.entries(value)) {
+      if (key.startsWith('_') || forbidden.has(key) || typeof entry === 'function') continue;
+      visit(entry, path ? `${path}.${key}` : key, depth + 1, next);
+    }
+  };
+  for (const record of Array.isArray(records) ? records : []) visit(record, '', 0, new Set());
+  return [...fields.values()].map(({ samples, sampleSignatures, values, ...field }) => ({ ...field,
+    type: field.type || guessType(field.path, samples), values: [...values].sort(valueCollator.compare),
   })).sort((a, b) => a.label.localeCompare(b.label));
 };
+export const noValueOperators = new Set(['empty', 'not_empty', 'today', 'this_week', 'this_month', 'this_year', 'is_true', 'is_false']);
 export const operatorsFor = (type) => {
   const universal = [['empty', 'Is empty'], ['not_empty', 'Is not empty']];
-  if (type === 'number') return [['eq', 'Equals'], ['ne', 'Does not equal'], ['gt', 'Greater than'], ['gte', 'At least'], ['lt', 'Less than'], ['lte', 'At most'], ...universal];
-  if (type === 'date') return [['eq', 'On'], ['ne', 'Not on'], ['gt', 'After'], ['lt', 'Before'], ...universal];
-  if (type === 'boolean') return [['eq', 'Is'], ['ne', 'Is not'], ...universal];
-  return [['contains', 'Contains'], ['not_contains', 'Does not contain'], ['eq', 'Equals'], ['ne', 'Does not equal'], ['starts', 'Starts with'], ['ends', 'Ends with'], ...universal];
+  if (type === 'number') return [['eq', 'Equals'], ['ne', 'Does not equal'], ['gt', 'Greater than'], ['gte', 'At least'], ['lt', 'Less than'], ['lte', 'At most'], ['between', 'Between'], ...universal];
+  if (type === 'date') return [['eq', 'On'], ['ne', 'Not on'], ['gt', 'After'], ['lt', 'Before'], ['between', 'Custom range'], ['today', 'Today'], ['this_week', 'This week'], ['this_month', 'This month'], ['this_year', 'This year'], ...universal];
+  if (type === 'boolean') return [['is_true', 'Is true'], ['is_false', 'Is false'], ['eq', 'Is'], ['ne', 'Is not'], ...universal];
+  if (type === 'dropdown') return [['eq', 'Is'], ['ne', 'Is not'], ['any_of', 'Any of'], ['none_of', 'None of'], ...universal];
+  return [['contains', 'Contains'], ['not_contains', 'Does not contain'], ['eq', 'Equals'], ['ne', 'Does not equal'], ['starts', 'Starts with'], ['ends', 'Ends with'], ['any_of', 'Any of'], ['none_of', 'None of'], ...universal];
 };
-export const getConditionValue = (record, path) => path.split('.').reduce((acc, key) => acc?.[key], record);
-export const testCondition = (record, rule, schema = []) => {
-  if (!rule?.field || !rule.operator) return true;
-  const value = getConditionValue(record, rule.field);
-  if (rule.operator === 'empty') return value === undefined || value === null || value === '';
-  if (rule.operator === 'not_empty') return value !== undefined && value !== null && value !== '';
-  const kind = schema.find((field) => field.path === rule.field)?.type || guessType(rule.field, [value]);
-  const actual = kind === 'boolean' ? String(Boolean(value)) : text(value);
-  const expected = text(rule.value);
-  if (kind === 'number') {
-    const left = Number(value); const right = Number(rule.value);
-    if (value === '' || value === null || value === undefined || !Number.isFinite(left) || !Number.isFinite(right)) return false;
-    switch (rule.operator) {
-      case 'eq': return left === right; case 'ne': return left !== right; case 'gt': return left > right;
-      case 'gte': return left >= right; case 'lt': return left < right; case 'lte': return left <= right;
-      default: return false;
-    }
+export const isActiveCondition = (rule) => Boolean(rule?.field && rule.operator && (noValueOperators.has(rule.operator)
+  || (rule.operator === 'between' ? Array.isArray(rule.value) && rule.value.length === 2 && rule.value.every((value) => !isEmpty(value))
+    : Array.isArray(rule.value) ? rule.value.length > 0 : text(rule.value) !== '')));
+export const getConditionValue = (record, path) => {
+  const read = (value, parts) => {
+    if (!parts.length) return scalar(value);
+    const [part, ...rest] = parts, key = part.replace(/(?:\[\])+$/, ''), arrays = (part.length - key.length) / 2;
+    if (forbidden.has(key) || !own(value, key)) return undefined;
+    const next = value[key];
+    const descend = (entry, remaining) => {
+      if (!remaining) return read(entry, rest);
+      return Array.isArray(entry) ? entry.flatMap((item) => { const result = descend(item, remaining - 1); return Array.isArray(result) ? result : [result]; }) : undefined;
+    };
+    return descend(next, arrays);
+  };
+  return typeof path === 'string' ? read(record, path.split('.')) : undefined;
+};
+const calendarKey = (value) => {
+  const normalized = scalar(value);
+  if (typeof normalized === 'number' && Number.isFinite(normalized)) {
+    const date = new Date(normalized);
+    return Number.isFinite(date.getTime()) ? localKey(date) : null;
   }
-  if (kind === 'date') {
-    const left = Date.parse(actual); const right = Date.parse(expected);
-    if (!Number.isFinite(left) || !Number.isFinite(right)) return false;
-    if (rule.operator === 'eq') return actual.slice(0, 10) === expected.slice(0, 10);
-    if (rule.operator === 'ne') return actual.slice(0, 10) !== expected.slice(0, 10);
-    return rule.operator === 'gt' ? left > right : rule.operator === 'lt' ? left < right : false;
-  }
-  const normalized = actual.toLocaleLowerCase();
-  const compare = expected.toLocaleLowerCase();
-  switch (rule.operator) {
-    case 'eq': return normalized === compare;
-    case 'ne': return normalized !== compare;
-    case 'contains': return normalized.includes(compare);
-    case 'not_contains': return !normalized.includes(compare);
-    case 'starts': return normalized.startsWith(compare);
-    case 'ends': return normalized.endsWith(compare);
-    default: return false;
-  }
+  if (typeof normalized !== 'string' || !/^\d{4}-\d{2}-\d{2}(?:$|T)/.test(normalized)) return null;
+  const day = normalized.slice(0, 10), date = new Date(`${day}T12:00:00`);
+  return Number.isFinite(date.getTime()) && `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}` === day ? day : null;
 };
-export const matchesConditionGroup = (record, group, schema = []) => {
-  if (!group || !Array.isArray(group.children) || !group.children.length) return true;
-  const results = group.children.map((node) => node?.kind === 'group'
-    ? matchesConditionGroup(record, node, schema) : testCondition(record, node, schema));
-  return group.join === 'OR' ? results.some(Boolean) : results.every(Boolean);
+const localKey = (date) => `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+const relativeRange = (operator, now) => {
+  const first = new Date(now.getFullYear(), now.getMonth(), now.getDate()), last = new Date(first);
+  if (operator === 'this_week') { first.setDate(first.getDate() - (first.getDay() + 6) % 7); last.setTime(first.getTime()); last.setDate(last.getDate() + 6); }
+  if (operator === 'this_month') { first.setDate(1); last.setMonth(last.getMonth() + 1, 0); }
+  if (operator === 'this_year') { first.setMonth(0, 1); last.setMonth(11, 31); }
+  return [localKey(first), localKey(last)];
 };
-export const conditionCount = (group) => !Array.isArray(group?.children) ? 0 : group.children.reduce(
-  (total, node) => total + (node.kind === 'group' ? conditionCount(node) : node.field ? 1 : 0), 0);
-export const mapConditions = (node, id, transform) => {
-  if (node.id === id) return transform(node);
-  return node.kind === 'group'
-    ? { ...node, children: node.children.map((child) => mapConditions(child, id, transform)).filter(Boolean) } : node;
+const booleanValue = (value) => value === true || value === 'true' ? true : value === false || value === 'false' ? false : null;
+const compileRule = (rule, fields, now) => {
+  if (!isActiveCondition(rule)) return null;
+  const type = fields.get(rule.field)?.type;
+  if (type && !operatorsFor(type).some(([operator]) => operator === rule.operator)) return () => false;
+  const expected = text(rule.value).toLocaleLowerCase();
+  const choices = new Set((Array.isArray(rule.value) ? rule.value : [rule.value]).map((entry) => text(entry).toLocaleLowerCase()));
+  const range = ['today', 'this_week', 'this_month', 'this_year'].includes(rule.operator) ? relativeRange(rule.operator, now) : rule.value;
+  return (record) => {
+    const raw = getConditionValue(record, rule.field), values = Array.isArray(raw) ? raw : [raw];
+    if (rule.operator === 'empty') return values.every(isEmpty);
+    if (rule.operator === 'not_empty') return values.some((value) => !isEmpty(value));
+    const compare = (value) => {
+      if (isEmpty(value)) return false;
+      const kind = type || guessType(rule.field, [value]);
+      if (kind === 'number') {
+        const left = Number(value), right = Number(rule.value);
+        if (!Number.isFinite(left)) return false;
+        if (rule.operator === 'between') return Array.isArray(range) && range.every((entry) => text(entry) && Number.isFinite(Number(entry))) && left >= Number(range[0]) && left <= Number(range[1]);
+        if (!Number.isFinite(right)) return false;
+        return ({ eq: () => left === right, ne: () => left !== right, gt: () => left > right, gte: () => left >= right, lt: () => left < right, lte: () => left <= right })[rule.operator]?.() || false;
+      }
+      if (kind === 'date') {
+        const left = calendarKey(value), right = calendarKey(rule.value);
+        if (!left) return false;
+        if (['between', 'today', 'this_week', 'this_month', 'this_year'].includes(rule.operator)) {
+          const from = calendarKey(range?.[0]), to = calendarKey(range?.[1]); return Boolean(from && to && left >= from && left <= to);
+        }
+        if (!right) return false;
+        return ({ eq: () => left === right, ne: () => left !== right, gt: () => left > right, lt: () => left < right })[rule.operator]?.() || false;
+      }
+      if (kind === 'boolean') {
+        const actual = booleanValue(value), target = rule.operator === 'is_true' ? true : rule.operator === 'is_false' ? false : booleanValue(rule.value);
+        return actual !== null && target !== null && (rule.operator === 'ne' ? actual !== target : actual === target);
+      }
+      const actual = text(value).toLocaleLowerCase();
+      return ({ eq: () => actual === expected, ne: () => actual !== expected, contains: () => actual.includes(expected), not_contains: () => !actual.includes(expected), starts: () => actual.startsWith(expected), ends: () => actual.endsWith(expected), any_of: () => choices.has(actual), none_of: () => !choices.has(actual) })[rule.operator]?.() || false;
+    };
+    // Negative operators require all array members to differ. Missing data
+    // never becomes a false boolean or passes a negative comparison.
+    return ['ne', 'not_contains', 'none_of'].includes(rule.operator) ? values.length > 0 && values.every(compare) : values.some(compare);
+  };
 };
-export const removeCondition = (node, id) => node.id === id ? null
-  : node.kind === 'group' ? { ...node, children: node.children.map((child) => removeCondition(child, id)).filter(Boolean) } : node;
-export const conditionChips = (group, schema = []) => {
-  const visit = (node) => node.kind === 'group' ? node.children.flatMap(visit) : node.field
-    ? [`${schema.find((field) => field.path === node.field)?.label || labelFor(node.field)} ${operatorsFor(schema.find((field) => field.path === node.field)?.type || 'text').find(([value]) => value === node.operator)?.[1] || node.operator} ${['empty', 'not_empty'].includes(node.operator) ? '' : text(node.value)}`.trim()] : [];
+export const compileConditionGroup = (group, schema = [], now = new Date()) => {
+  const fields = new Map(schema.map((field) => [field.path, field]));
+  const compile = (node, depth = 0) => {
+    if (!node || depth > MAX_DEPTH) return null;
+    if (node.kind !== 'group') return compileRule(node, fields, now);
+    const children = (Array.isArray(node.children) ? node.children : []).map((child) => compile(child, depth + 1)).filter(Boolean);
+    if (!children.length) return null;
+    return node.join === 'OR' ? (record) => children.some((match) => match(record)) : (record) => children.every((match) => match(record));
+  };
+  return compile(group) || (() => true);
+};
+export const testCondition = (record, rule, schema = []) => (compileRule(rule, new Map(schema.map((field) => [field.path, field])), new Date()) || (() => true))(record);
+export const matchesConditionGroup = (record, group, schema = []) => compileConditionGroup(group, schema)(record);
+// Browser storage is untrusted: bound shape, depth, IDs and values before use.
+export const normalizeConditionGroup = (value) => {
+  let remaining = MAX_NODES;
+  const ids = new Set();
+  const visit = (node, depth, position) => {
+    if (!node || typeof node !== 'object' || depth > MAX_DEPTH || remaining-- <= 0) return null;
+    let id = typeof node.id === 'string' && node.id ? node.id.slice(0, 120) : position;
+    if (ids.has(id)) { let suffix = 0; id = position; while (ids.has(id)) id = `${position}-${++suffix}`; }
+    ids.add(id);
+    if (node.kind === 'group') return { id, kind: 'group', join: node.join === 'OR' ? 'OR' : 'AND', children: (Array.isArray(node.children) ? node.children : []).map((child, index) => visit(child, depth + 1, `${position}-${index}`)).filter(Boolean) };
+    if (node.kind !== 'rule' || typeof node.field !== 'string' || node.field.split('.').some((part) => forbidden.has(part))) return null;
+    return { id, kind: 'rule', field: node.field.slice(0, 500), operator: typeof node.operator === 'string' ? node.operator.slice(0, 40) : '', value: Array.isArray(node.value) ? node.value.filter((entry) => ['string', 'number', 'boolean'].includes(typeof entry)).slice(0, 1000) : ['string', 'number', 'boolean'].includes(typeof node.value) ? node.value : '' };
+  };
+  const root = visit(value, 0, 'root'); return root?.kind === 'group' ? root : emptyGroup();
+};
+export const conditionCount = (group) => !Array.isArray(group?.children) ? 0 : group.children.reduce((total, node) => total + (node?.kind === 'group' ? conditionCount(node) : isActiveCondition(node) ? 1 : 0), 0);
+export const mapConditions = (node, id, transform) => node.id === id ? transform(node) : node.kind === 'group' ? { ...node, children: node.children.map((child) => mapConditions(child, id, transform)).filter(Boolean) } : node;
+export const removeCondition = (node, id) => node.id === id ? null : node.kind === 'group' ? { ...node, children: node.children.map((child) => removeCondition(child, id)).filter(Boolean) } : node;
+export const conditionChipEntries = (group, schema = []) => {
+  const fields = new Map(schema.map((field) => [field.path, field]));
+  const visit = (node, logic = []) => node?.kind === 'group' ? node.children.flatMap((child) => visit(child, [...logic, node.join])) : isActiveCondition(node) ? [{ id: node.id,
+    label: `${logic.includes('OR') ? `${logic.join(' › ')} · ` : ''}${fields.get(node.field)?.label || labelFor(node.field)} ${operatorsFor(fields.get(node.field)?.type || 'text').find(([operator]) => operator === node.operator)?.[1] || node.operator}${noValueOperators.has(node.operator) ? '' : ` ${Array.isArray(node.value) ? node.value.join(node.operator === 'between' ? ' – ' : ', ') : text(node.value)}`}`,
+  }] : [];
   return group ? visit(group) : [];
 };
+export const conditionChips = (group, schema = []) => conditionChipEntries(group, schema).map((entry) => entry.label);

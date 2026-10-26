@@ -4,17 +4,18 @@ import SwipeToComplete from '../common/SwipeToComplete';
 import { activityStatus, activityStatusLabel } from '../../utils/activityDetail';
 import { parseMomentDate } from '../../utils/momentDates';
 import { isActivityEditable } from '../../utils/scopedRecordActions';
+import './ActivityList.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
-export default function ActivityList({ eventName = 'This event', activities, allActivities = activities,
-  showCancelled = false, hasActiveFilters = false, getActivityKey = (activity) => activity.id,
+export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
+  showCancelled = false, includeCancelled = false, hasActiveFilters = false, getActivityKey = (activity) => activity.id,
   getEventName, onOpen, onDelete, onEdit, onToggleComplete, onToggleCancelled, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
     : <div className="event-activity-empty"><span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
       <strong>A few helpful steps can make this moment easier</strong><p>Activities help you track things to do for {eventName}.</p></div>;
-  const activeActivities = allActivities.filter((activity) => activityStatus(activity) !== 'cancelled');
-  const visibleActivities = activities.filter((activity) => (activityStatus(activity) === 'cancelled') === showCancelled);
+  const activeActivities = progressActivities.filter((activity) => activityStatus(activity) !== 'cancelled');
+  const visibleActivities = includeCancelled ? activities : activities.filter((activity) => (activityStatus(activity) === 'cancelled') === showCancelled);
   const completedCount = activeActivities.filter((activity) => activityStatus(activity) === 'completed').length;
   const progress = activeActivities.length ? Math.round(completedCount / activeActivities.length * 100) : 0;
   return <div className="event-activity-content">
@@ -23,7 +24,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
       <span className="event-activity-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></span>
     </div>
     <div className="event-activity-list">
-      {!visibleActivities.length ? <div className="event-activity-filter-empty">{showCancelled ? 'No cancelled activities.' : activeActivities.length === 0 ? 'All activities are cancelled.' : 'No activities match these filters.'}</div> : visibleActivities.map((activity) => {
+      {!visibleActivities.length ? <div className="event-activity-filter-empty">{includeCancelled || hasActiveFilters ? 'No activities match these filters.' : showCancelled ? 'No cancelled activities.' : activeActivities.length === 0 ? 'All activities are cancelled.' : 'No activities match these filters.'}</div> : visibleActivities.map((activity) => {
         const key = getActivityKey(activity), status = activityStatus(activity);
         const completed = status === 'completed', cancelled = status === 'cancelled';
         let date; try { date = parseMomentDate(activity.date); } catch { /* Safe legacy date. */ }

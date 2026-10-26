@@ -13,7 +13,7 @@ import {
   updateDoc,
 } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { getEventStatus } from '../utils/eventStatus';
+import { getEventStatus, getStoredEventStatus } from '../utils/eventStatus';
 import { normalizeActivityExpense } from '../utils/transactionRelations';
 import { formatMomentDate, getEventDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
@@ -90,7 +90,7 @@ export const normalizeEvent = (item = {}) => {
       ? item.activities.map((activity) => normalizeActivity({ ...activity, eventId: recordId(activity.eventId) || id }))
       : [],
     archived: Boolean(item.archived),
-    status: getEventStatus(item),
+    status: getStoredEventStatus(item),
     createdAt: item.createdAt || new Date().toISOString(),
   };
 };

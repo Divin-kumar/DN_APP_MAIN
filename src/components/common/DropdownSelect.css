@@ -1,4 +1,11 @@
 /* Shared polished select surface; portals retain the same design inside sheets. */
+html[data-theme] .dropdown-options-scroll.is-virtual { display:block; }
+html[data-theme] .dropdown-options-scroll.is-virtual .dropdown-option {
+  height:44px; min-height:44px; max-height:44px; box-sizing:border-box; border-radius:7px;
+}
+html[data-theme] .dropdown-options-scroll.is-virtual .dropdown-option > span {
+  display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
 html[data-theme] .dropdown-field .dropdown-trigger {
   min-height: 44px;
   padding: 11px 13px !important;

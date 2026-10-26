@@ -1,6 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { addOriginal, activityDetailAction, fixtureMoments, seedGuest } from './fixtures.js';
+import { setActivityStatusCondition } from './fixtures.js';
 
 async function drag(page, locator, dx, dy = 0) {
   await locator.scrollIntoViewIfNeeded(); const rect = await locator.boundingBox();
@@ -78,7 +79,7 @@ test('completed Activities require reopening before Edit, and a stale editor can
 
 test('detail swipes follow the Activities sort order across reused child IDs, with short/vertical gestures ignored', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
-  await page.getByRole('button', { name: 'Filters and sort', exact: true }).click();
+  await page.getByRole('button', { name: /Filters and sort/ }).click();
   await page.getByRole('button', { name: 'Sort by Title, ascending', exact: true }).click();
   const titles = await page.locator('.event-activity-title-row > strong').allTextContents();
   expect(titles).toEqual(['A different activity with the same ID', 'Book a lakeside stay', 'Choose the train']);
@@ -106,8 +107,7 @@ test('the opening filtered sequence survives completion, while single-result fil
   await expect(page.getByRole('navigation', { name: 'Activity navigation' })).toHaveCount(0);
   await drag(page, page.locator('.activity-cover'), -150); await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
   await page.goto('/activities'); await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('');
-  await page.getByRole('button', { name: 'Filters and sort', exact: true }).click();
-  await page.locator('#activities-status-filter').click(); await page.getByRole('option', { name: 'In progress', exact: true }).click();
+  await setActivityStatusCondition(page, 'in-progress');
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).locator('.event-activity-title-row > strong').click();
   await activityDetailAction(page, 'Close'); await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await drag(page, page.locator('.activity-cover'), -150);

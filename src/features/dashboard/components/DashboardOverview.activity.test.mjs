@@ -53,7 +53,7 @@ const openDashboard = async (t) => {
       if (source.endsWith('/services/scopedRecordActions')) return '\0dashboard-shared-writer';
       if (source === 'react-router-dom') return '\0dashboard-activity-router';
       if (source === 'lucide-react') return '\0dashboard-activity-icons';
-      if (source.includes('/components/') || source === './DashboardActivityEditor') return `\0dashboard-activity-child:${source.split('/').at(-1)}`;
+      if (source.includes('/components/') || ['./DashboardActivityEditor', './DashboardGreeting'].includes(source)) return `\0dashboard-activity-child:${source.split('/').at(-1)}`;
       if (source.endsWith('/store/useAppStore')) return '\0dashboard-activity-app';
       if (source.endsWith('/store/useEventStore')) return '\0dashboard-activity-events';
       if (source.endsWith('/dev/sampleData')) return '\0dashboard-activity-sample';
@@ -64,7 +64,7 @@ const openDashboard = async (t) => {
       if (id === '\0dashboard-activity-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
       if (id === '\0dashboard-activity-router') return `export const useNavigate=()=>${fixture}.navigate;`;
       if (id === '\0dashboard-activity-icons') return 'export const Copy="icon",Download="icon",Sparkles="icon",Pencil="icon",BookOpen="icon",Check="icon",RotateCcw="icon",XCircle="icon";';
-      if (id.startsWith('\0dashboard-activity-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const buildGreetingCardHtml=()=>"";`;
+      if (id.startsWith('\0dashboard-activity-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const buildGreetingCardHtml=()=>"", MomentSummaryPhotos="photos", sortedSummaryActivities=(items)=>items || [];`;
       if (id === '\0dashboard-shared-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore,getSample:()=>${fixture}.sample});`;
       if (id === '\0dashboard-activity-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
       if (id === '\0dashboard-activity-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;

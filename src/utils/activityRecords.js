@@ -36,7 +36,7 @@ const cancelled = (activity) => Boolean(activity.cancelled || activity.status ==
 const priorityRank = (activity) => ({ high: 3, medium: 2, low: 1 })[String(activity.priority || 'medium').toLowerCase()] || 0;
 
 export const selectActivityEntries = (entries = [], {
-  search = '', filter = 'all', momentId = '', momentType = '', parentScope = 'active', field = 'date', direction = 'asc',
+  search = '', filter = 'all', momentId = '', momentType = '', parentScope = 'active', field = 'date', direction = 'asc', includeCancelled = false,
 } = {}, referenceDate = new Date()) => {
   const query = String(search).trim().toLowerCase();
   const selectedMoment = recordId(momentId);
@@ -71,7 +71,7 @@ export const selectActivityEntries = (entries = [], {
       .some((value) => String(value || '').toLowerCase().includes(query));
     if (!matchesSearch) return false;
     if (filter === 'cancelled') return cancelled(activity);
-    if (cancelled(activity)) return false;
+    if (cancelled(activity)) return includeCancelled;
     return filter === 'all'
       || (filter === 'in-progress' && activityStatus(activity) === 'in-progress')
       || (filter === 'completed' && activityStatus(activity) === 'completed')

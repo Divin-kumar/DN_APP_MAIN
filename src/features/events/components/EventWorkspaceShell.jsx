@@ -1,6 +1,7 @@
+import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Receipt, Save, Search, Sparkles, Trash2, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
@@ -23,7 +24,8 @@ import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
 import usePersistentListState from '../../../hooks/usePersistentListState';
 import useConditionFilters from '../../../hooks/useConditionFilters';
-import ConditionBuilder from '../../../components/common/ConditionBuilder';
+import ConditionBuilder, { ConditionChips } from '../../../components/common/ConditionBuilder';
+import { activityConditions as migrateActivityConditions, activityConditionRecord } from '../../../utils/listConditionMigration';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
@@ -183,7 +185,8 @@ export function EventWorkspaceContent() {
   useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
-  const activityConditions = useConditionFilters(`moment-activities:${eventId}`, event?.activities || [], usePersistentListState);
+  const conditionRecords = useMemo(() => (event?.activities || []).map(activityConditionRecord), [event?.activities]);
+  const activityConditions = useConditionFilters(`moment-activities:${eventId}`, conditionRecords, usePersistentListState, { initialGroup: migrateActivityConditions(activityList, true), contextKey: getActiveSampleScenario(user?.uid) });
 
   useLayoutEffect(() => {
     const nav = workspaceNavRef.current;
@@ -263,15 +266,8 @@ export function EventWorkspaceContent() {
     return activitySortDirection === 'desc' ? -result : result;
   });
   const filteredActivities = activities.filter((activity) => {
-    const matchesSearch = String(activity.title || '').toLowerCase().includes(activitySearch.trim().toLowerCase());
-    const isCancelled = activity.cancelled || activity.status === 'cancelled';
-    if (activityFilter === 'cancelled') return isCancelled && matchesSearch && activityConditions.matches(activity);
-    if (isCancelled) return false;
-    const matchesFilter = activityFilter === 'all'
-      || (activityFilter === 'in-progress' && !activity.completed)
-      || (activityFilter === 'completed' && activity.completed)
-      || (activity.priority || 'medium') === activityFilter;
-    return matchesSearch && matchesFilter && activityConditions.matches(activity);
+    const matchesSearch = [activity.title, activity.description].some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase()));
+    return matchesSearch && activityConditions.matches(activityConditionRecord(activity));
   });
   const totalSpent = finance.summary.expense;
   const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
@@ -458,48 +454,23 @@ export function EventWorkspaceContent() {
     if (activeSection.label === 'Activities') {
       return (
         <div className="workspace-activities">
-          <ListControls
-            title="Activity filters"
-            activeCount={Number(Boolean(activitySearch.trim())) + Number(activityFilter !== 'all') + Number(activitySort !== 'date' || activitySortDirection !== 'asc')}
-            resultCount={filteredActivities.length}
-            resultLabel="activities"
-            summary={[
-              ({ all: 'Active activities', 'in-progress': 'In Progress', completed: 'Completed', cancelled: 'Cancelled', high: 'High Priority', medium: 'Medium Priority', low: 'Low Priority' })[activityFilter],
-              `${({ date: 'Due date', title: 'Title', priority: 'Priority', status: 'Status' })[activitySort]} ${activitySortDirection === 'asc' ? '↑' : '↓'}`,
-              activitySearch.trim() ? `Search: ${activitySearch.trim()}` : '',
-            ].filter(Boolean).join(' · ')}
-            hasSort
-            onReset={resetActivityList}
-            sort={<div className="dn-list-controls-field">
-              <span>Sort by</span>
+          <ListControls title="Activity filters" builder hasSort
+            activeCount={activityConditions.activeCount} resultCount={filteredActivities.length} resultLabel="activities"
+            chips={<ConditionChips filter={activityConditions} />}
+            summary={activitySort + (activitySortDirection === 'asc' ? ' ↑' : ' ↓')}
+            canReset={Boolean(activityConditions.activeCount || activitySearch || activitySort !== 'date' || activitySortDirection !== 'asc')} onReset={() => { resetActivityList(); activityConditions.clear(); }}
+            sort={<div className="dn-list-controls-field"><span>Sort by</span>
               <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
             </div>}
-            search={<input id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}
-          >
-          <div className="dn-list-controls-field">
-            <span>Status or priority</span>
-            <DropdownSelect value={activityFilter} onChange={(changeEvent) => setActivityFilter(changeEvent.target.value)} aria-label="Filter activities">
-              {[
-                ['all', 'All'],
-                ['in-progress', 'In Progress'],
-                ['completed', 'Completed'],
-                ['cancelled', 'Cancelled'],
-                ['high', 'High Priority'],
-                ['medium', 'Medium Priority'],
-                ['low', 'Low Priority'],
-              ].map(([value, label]) => (
-                <option key={value} value={value}>{label}</option>
-              ))}
-            </DropdownSelect>
-          </div>
+            search={<DebouncedFilterInput scopeKey={activityConditions.editorKey} id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}>
+            <ConditionBuilder filter={activityConditions} title="Moment Activity conditions" />
           </ListControls>
-          <ConditionBuilder filter={activityConditions} resultCount={filteredActivities.length} resultLabel="activities" title="Moment Activity conditions" />
           <ActivityList readOnly
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
-            allActivities={activities}
-            showCancelled={activityFilter === 'cancelled'}
-            hasActiveFilters={Boolean(activitySearch.trim()) || activityFilter !== 'all'}
+            allActivities={activities} progressActivities={filteredActivities}
+            includeCancelled
+            hasActiveFilters={Boolean(activitySearch.trim()) || Boolean(activityConditions.activeCount)}
             onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id))}
 
           />

@@ -17,13 +17,15 @@ import SwipeToComplete from '../../../components/common/SwipeToComplete';
 import ActivityActionDialogs from '../../../components/events/ActivityActionDialogs';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import useActivityActions from '../../../hooks/useActivityActions';
-import { activityDetailPath, activityStatus } from '../../../utils/activityDetail';
+import { activityDateLabel, activityDetailPath, activityStatus } from '../../../utils/activityDetail';
 import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
-import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
+import MomentSummaryExtras, { MomentSummaryPhotos, sortedSummaryActivities } from '../../../components/events/MomentSummaryExtras';
+import { summaryAttachmentsFor } from '../../../utils/summaryAttachments';
 import './DashboardSections.css';
-import DashboardMonthlyInsight from './DashboardMonthlyInsight';
+import DashboardGreeting from './DashboardGreeting';
+import useDashboardClock from '../useDashboardClock';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -37,13 +39,6 @@ const readDashboardSections = (key) => {
   } catch { return { ...DASHBOARD_SECTIONS }; }
 };
 
-const isSameDay = (first, second) => (
-  first && second
-  && first.getFullYear() === second.getFullYear()
-  && first.getMonth() === second.getMonth()
-  && first.getDate() === second.getDate()
-);
-
 const formatDisplayDate = (date) => {
   if (!date) return 'Date not set';
   return new Intl.DateTimeFormat('en-GB', {
@@ -51,18 +46,6 @@ const formatDisplayDate = (date) => {
     month: 'short',
     year: 'numeric',
   }).format(date);
-};
-
-const formatActivityDate = (value) => {
-  if (!value) return 'No date';
-  const date = /^\d{4}-\d{2}-\d{2}$/.test(String(value))
-    ? (() => {
-      const [year, month, day] = String(value).split('-').map(Number);
-      return new Date(year, month - 1, day);
-    })()
-    : new Date(value);
-  if (Number.isNaN(date.getTime())) return 'No date';
-  return new Intl.DateTimeFormat('en-GB', { day: '2-digit', month: 'short' }).format(date);
 };
 
 const getOrdinal = (value) => {
@@ -209,7 +192,7 @@ const getGreetingMessage = (event, greetingTemplates = {}, momentTypes = []) => 
 
 function EventSummaryModal({ event, onClose }) {
   const eventDate = getNextOccurrenceForStatus(event);
-  const activities = Array.isArray(event.activities) ? event.activities : [];
+  const activities = sortedSummaryActivities(event.activities);
   const totalActivities = activities.length;
   const completedActivities = activities.filter((activity) => Boolean(activity.completed)).length;
   const daysRemaining = getDaysRemaining(eventDate);
@@ -248,6 +231,8 @@ function EventSummaryModal({ event, onClose }) {
       lines.push(plainRichText(greeting.title), plainRichText(greeting.body), '');
     }
     if (event.notes) lines.push(plainRichText(event.notes), '');
+    const momentFiles = summaryAttachmentsFor(event);
+    if (momentFiles.length) lines.push('Moment photos and files:', ...momentFiles.map((item) => item.name || 'Attachment'), '');
 
     if (activities.length) {
       lines.push('Activities:');
@@ -255,15 +240,17 @@ function EventSummaryModal({ event, onClose }) {
         const label = activity.title || activity.name || 'Untitled activity';
         const check = activity.completed ? '✓' : '○';
         lines.push(`${check} ${label}`);
+        lines.push(`  Date: ${activityDateLabel(activity.date)}`);
         const description = plainRichText(activity.description || '');
         if (description) lines.push(`  Description: ${description}`);
+        const files = recordId(activity.id) ? summaryAttachmentsFor(event, activity.id) : [];
+        if (files.length) lines.push('  Photos and files:', ...files.map((item) => `  ${item.name || 'Attachment'}`));
       });
     }
     if (event.memories?.length) {
       lines.push('', 'Memories:');
       event.memories.forEach((memory) => lines.push(memory.title || '', plainRichText(memory.body || '')));
     }
-    if (event.attachments?.length) lines.push('', 'Photos and files:', ...event.attachments.map((item) => item.name || 'Attachment'));
 
     const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
     downloadBlob(blob, `${(event.name || 'event').toLowerCase().replace(/\s+/g, '-')}-summary.txt`);
@@ -272,6 +259,7 @@ function EventSummaryModal({ event, onClose }) {
   return (
     <ModalDialog title="Moment summary" onClose={onClose} className="dashboard-event-summary-modal">
       <div style={styles.cardWrap}>
+        <div className="moment-summary-story moment-summary-moment">
         <div style={styles.hero}>
           <div>
             <div style={styles.kicker}>Moment</div>
@@ -291,6 +279,7 @@ function EventSummaryModal({ event, onClose }) {
         ) : null}
         {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
         <MomentSummaryPhotos event={event} />
+        </div>
 
         <div style={styles.section}>
           <div style={styles.statusRow}>{statusText}</div>
@@ -306,19 +295,19 @@ function EventSummaryModal({ event, onClose }) {
                 const hasDescription = Boolean(description.trim());
 
                 return (
-                  <li key={`${label}-${activity.id || index}`} className="dashboard-summary-activity-item" style={styles.activityItem}>
+                  <li key={`${label}-${activity.id ?? index}`} className="dashboard-summary-activity-item moment-summary-story moment-summary-activity" style={styles.activityItem}>
                     <span style={isComplete ? styles.activityCheckComplete : styles.activityCheckPending}>
                       {isComplete ? '✓' : '○'}
                     </span>
                     <div className="dashboard-summary-activity-copy">
                       <span style={styles.activityLabel}>{label}</span>
-                      <span style={styles.activityDate}>{formatActivityDate(activity.date)}</span>
+                      <span style={styles.activityDate}>{activityDateLabel(activity.date)}</span>
                       {hasDescription ? (
                         <div className="dashboard-summary-description-wrap">
                           <RichText className="dashboard-summary-description" value={description} />
                         </div>
                       ) : null}
-                      <MomentSummaryPhotos event={event} activityId={activity.id || String(index)} />
+                      {recordId(activity.id) ? <MomentSummaryPhotos event={event} activityId={activity.id} /> : null}
                     </div>
                   </li>
                 );
@@ -371,6 +360,7 @@ export function DashboardOverviewContent() {
   const activityActions = useActivityActions();
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
+  const eventLoadError = error === 'Unable to load events.';
   const events = ready ? storedEvents : EMPTY_EVENTS;
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
@@ -389,26 +379,21 @@ export function DashboardOverviewContent() {
     loadEvents(user?.uid, isGuest);
   }, [isGuest, loadEvents, user?.uid, loadedFor]);
 
-  const todayKey = new Date().toDateString();
-  const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
-  const onThisDayEvents = useMemo(() => getOnThisDayDashboardEvents(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const today = useDashboardClock();
+  const todayKey = today.toDateString();
+  const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, today, momentTypes), [events, momentTypes, todayKey]);
+  const onThisDayEvents = useMemo(() => getOnThisDayDashboardEvents(events, today, momentTypes), [events, momentTypes, todayKey]);
   const dashboardMoments = momentView === 'upcoming' ? upcomingEvents : onThisDayEvents;
-  const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
-  const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, new Date(), momentTypes), [events, momentTypes, todayKey]);
+  const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
+  const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
 
 
-  const hour = new Date().getHours();
-  const greeting = hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening';
-  const profileName = user?.displayName?.split(' ')[0] || user?.email?.split('@')[0] || (isGuest ? 'Guest' : 'there');
-  const today = new Date();
   const getMomentGreeting = (event) => {
     const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;
     return event.greetingCard?.title ? event.greetingCard : getGreetingMessage(greetingSource, greetingTemplates, momentTypes);
   };
   const selectedGreeting = greetingEvent?.greeting;
-  const activeTodayCount = events.filter((event) => isSameDay(getNextOccurrenceForStatus(event, today), today)).length;
-  const dateText = new Intl.DateTimeFormat('en-GB', { weekday: 'long', day: '2-digit', month: 'short' }).format(today);
   const copyTodaysGreeting = async () => {
     if (!selectedGreeting) return;
     try {
@@ -421,12 +406,9 @@ export function DashboardOverviewContent() {
 
   return (
     <>
-      <div className="dashboard-overview">
-        <header className="dashboard-greeting">
-          <span>{greeting}, {profileName}</span>
-          <p>{activeTodayCount} {activeTodayCount === 1 ? 'moment' : 'moments'} today <i>·</i> {dateText}</p>
-        </header>
-        {ready && !loading && !error ? <DashboardMonthlyInsight events={events} /> : null}
+      <div className="dashboard-overview dashboard-compact">
+        <DashboardGreeting events={events} eventsReady={ready && !loading && !eventLoadError} eventsError={eventLoadError}
+          momentTypes={momentTypes} now={today} onRetryEvents={() => loadEvents(user?.uid, isGuest)} />
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header style={styles.upcomingHeader}>
             <span>Moments</span>

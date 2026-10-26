@@ -15,7 +15,7 @@ import {
   updateEvent,
 } from '../services/eventService';
 import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
-import { getEventStatus } from '../utils/eventStatus';
+import { getStoredEventStatus } from '../utils/eventStatus';
 import { createEventLoader } from '../utils/eventLoadScope';
 import { recordId } from '../utils/recordIdentity';
 
@@ -66,7 +66,7 @@ const useEventStore = create((set, get) => {
       id: recordId(event.id) || crypto.randomUUID(),
       activities: Array.isArray(event.activities) ? event.activities : [],
     };
-    normalized.status = getEventStatus(normalized);
+    normalized.status = getStoredEventStatus(normalized);
 
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
@@ -119,7 +119,7 @@ const useEventStore = create((set, get) => {
   },
 
   updateEventItem: async (uid, isGuest, event) => {
-    const normalizedEvent = { ...event, status: getEventStatus(event) };
+    const normalizedEvent = { ...event, status: getStoredEventStatus(event) };
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
       const updated = sampleData.events.map((item) => (

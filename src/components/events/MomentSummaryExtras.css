@@ -1,5 +1,5 @@
 /* Summary images keep natural proportions and remain beneath their owner story. */
-html[data-theme] .moment-summary-media { min-width: 0; margin: 12px 0 18px; }
+html[data-theme] .moment-summary-media { min-width: 0; margin: 12px 0 0; }
 html[data-theme] .moment-summary-media .dn-attachment-gallery { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 12px; }
 html[data-theme] .moment-summary-media .dn-attachment-tile { min-width: 0; align-items: stretch; }
 html[data-theme] .moment-summary-media .dn-attachment-open { flex-direction: column; align-items: stretch; overflow: hidden; gap: 6px; padding: 8px; }
@@ -9,3 +9,20 @@ html[data-theme] .moment-summary-media .dn-attachment-open span { width: 100%; }
 html[data-theme] .moment-summary-media .dn-attachment-open strong { white-space: normal; overflow-wrap: anywhere; }
 html[data-theme] .event-summary-activity-copy > .moment-summary-media, html[data-theme] .dashboard-summary-activity-copy > .moment-summary-media { margin-top: 10px; }
 @media (max-width: 600px) { html[data-theme] .moment-summary-media .dn-attachment-gallery { grid-template-columns: 1fr; } }
+
+html[data-theme] .moment-summary-story { min-width:0; overflow-wrap:anywhere; }
+html[data-theme] .moment-summary-moment { padding:16px; border:1px solid var(--color-border); border-radius:16px; background:linear-gradient(145deg,color-mix(in srgb,var(--color-primary) 5%,var(--color-card)),var(--color-card)); }
+html[data-theme] .moment-summary-moment .event-summary-header { padding:0; border:0; border-radius:0; background:transparent; }
+html[data-theme] .moment-summary-moment > .event-summary-notes { margin-top:10px; font-size:14px; line-height:1.6; color:var(--color-text); }
+html[data-theme] .event-summary-activities li.moment-summary-activity { padding:12px; border-radius:14px; align-items:start; gap:10px; }
+html[data-theme] .dashboard-event-summary-modal li.moment-summary-activity { grid-template-columns:18px minmax(0,1fr) !important; align-items:start !important; padding:12px !important; border-radius:14px !important; }
+html[data-theme] .event-summary-activity-copy > strong { display:block; font-size:14px; line-height:1.45; }
+html[data-theme] .event-summary-activity-copy > small { display:block; margin:4px 0 8px; color:var(--color-text-muted); font-size:12px; }
+html[data-theme] .event-summary-activity-copy > .dn-rich-text { font-size:14px; line-height:1.6; }
+html[data-theme] .moment-summary-story .dn-rich-text > :first-child { margin-top:0; }
+html[data-theme] .moment-summary-story .dn-rich-text > :last-child { margin-bottom:0; }
+@media(max-width:600px) {
+  html[data-theme] .moment-summary-moment { padding:12px; border-radius:14px; }
+  html[data-theme] .event-summary-activities li.moment-summary-activity,
+  html[data-theme] .dashboard-event-summary-modal li.moment-summary-activity { padding:10px !important; gap:7px; }
+}

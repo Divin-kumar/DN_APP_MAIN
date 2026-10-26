@@ -8,8 +8,10 @@ import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useConditionFilters from '../hooks/useConditionFilters';
-import ConditionBuilder from '../components/common/ConditionBuilder';
-import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
+import { transactionConditions } from '../utils/listConditionMigration';
+import { compileConditionGroup } from '../utils/conditionEngine';
+import { transactionDateConditions } from '../utils/listConditionMigration';
+import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions } from '../utils/transactionFilters';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -58,26 +60,17 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
-  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState);
-  const monthOptions = useMemo(() => {
-    const options = transactionMonthOptions(allTransactions);
-    // Loading, deletion and a temporarily empty account must not erase a choice.
-    if (filters.month !== 'all' && !options.some((item) => item.value === filters.month)) {
-      const date = new Date(`${filters.month}-01T00:00:00`);
-      options.unshift({ value: filters.month, label: date.toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }),
-        shortLabel: date.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }) });
-    }
-    return options;
-  }, [allTransactions, filters.month]);
-  const filtered = useMemo(() => filterTransactions(allTransactions, filters).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
+  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters) });
+  const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
   const sorted = useMemo(() => sortTransactions(filtered, 'date-desc'), [filtered]);
   // Summary is tied to the selected month, not list search or the type selector.
   // Selecting Expense must not artificially zero out the Income and Balance cards.
+  const dateGroup = useMemo(() => transactionDateConditions(conditions.state.group), [conditions.state.group]);
+  const matchesSummaryDate = useMemo(() => compileConditionGroup(dateGroup, conditions.schema), [dateGroup, conditions.schema, conditions.matches]);
   const summary = useMemo(() => summarizeTransactions(
-    filterTransactions(allTransactions, { month: filters.month }),
-  ), [allTransactions, filters.month]);
-  const summaryPeriod = filters.month === 'all' ? 'All months'
-    : monthOptions.find((item) => item.value === filters.month)?.label || 'Selected month';
+    allTransactions.filter(matchesSummaryDate),
+  ), [allTransactions, matchesSummaryDate]);
+  const summaryPeriod = 'Event date conditions (all months when unrestricted)';
   const hasLoadError = Boolean(incomeError || expenseError);
 
   useEffect(() => {
@@ -147,9 +140,8 @@ export default function Financials() {
               </div>
             </div>
           </section>
-          <ConditionBuilder filter={conditions} resultCount={sorted.length} resultLabel="transactions" title="Transaction conditions" />
-          <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}
-            monthOptions={monthOptions} events={events} onAdd={() => openAdd()} onEdit={openEdit}
+          <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters} conditions={conditions}
+            events={events} onAdd={() => openAdd()} onEdit={openEdit}
             onDelete={setDeleteTarget} />
         </section>}
       {dialogOpen ? (

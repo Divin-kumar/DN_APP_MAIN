@@ -5,7 +5,7 @@ import './ListControls.css';
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
   title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
-  summary = '', onReset, hasSort = false, hasPanel = true, search, sort, children,
+  summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, children,
 }) {
   const [open, setOpen] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
@@ -23,11 +23,10 @@ export default function ListControls({
   };
   useEffect(() => {
     if (!open) return undefined;
-    updateEdges();
+    if (!builder) updateEdges();
     const rail = railRef.current;
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(updateEdges) : null;
-    observer?.observe(rail);
-    [...rail.children].forEach((child) => observer?.observe(child));
+    if (rail) { observer?.observe(rail); [...rail.children].forEach((child) => observer?.observe(child)); }
     window.addEventListener('resize', updateEdges);
     const closeOnEscape = (event) => {
       if (event.key !== 'Escape' || event.defaultPrevented || event.target.closest?.('.dn-modal, [role="dialog"]')) return;
@@ -55,7 +54,7 @@ export default function ListControls({
       document.removeEventListener('keydown', closeOnEscape);
       document.removeEventListener('click', closeOnOutsideClick, true);
     };
-  }, [open]);
+  }, [open, builder]);
   const moveRail = (direction) => {
     const rail = railRef.current;
     rail?.scrollBy({ left: direction * Math.max(160, rail.clientWidth * .75),
@@ -75,17 +74,18 @@ export default function ListControls({
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
       </div>
       {hasPanel && open ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
-        <div className="dn-list-controls-filters-row">
+        {builder ? <div className="dn-list-controls-builder">{children}</div> : <div className="dn-list-controls-filters-row">
           <div ref={railRef} className="dn-list-controls-body" onScroll={updateEdges}>{children}</div>
           {edges.previous || edges.next ? <div className="dn-list-controls-scroll" role="group" aria-label="More filter controls">
             <button type="button" aria-label="Previous filter controls" disabled={!edges.previous} onClick={() => moveRail(-1)}><ChevronLeft size={16} aria-hidden="true" /></button>
             <button type="button" aria-label="More filter controls" disabled={!edges.next} onClick={() => moveRail(1)}><ChevronRight size={16} aria-hidden="true" /></button>
           </div> : null}
-        </div>
+        </div>}
         {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}
         {onReset ? <div className="dn-list-controls-reset-row"><button type="button" className="dn-list-controls-reset" onClick={onReset}
-          disabled={!activeCount}>Reset</button></div> : null}
+          disabled={!(canReset ?? activeCount)}>Reset</button></div> : null}
       </section> : null}
+      {chips}
       <div className="dn-list-controls-topline">
         {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}

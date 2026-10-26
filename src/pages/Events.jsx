@@ -1,3 +1,4 @@
+import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
   Events workspace: event focus mode, activity management, linked expenses, and memory export.
 
@@ -23,7 +24,8 @@ import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
 import { parseMomentDate } from '../utils/momentDates';
-import ConditionBuilder from '../components/common/ConditionBuilder';
+import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
+import { momentConditions, momentConditionRecord } from '../utils/listConditionMigration';
 import useConditionFilters from '../hooks/useConditionFilters';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
@@ -32,6 +34,7 @@ import RichText from '../components/common/RichText';
 import { plainRichText } from '../utils/richText';
 import useScopedMoments from '../hooks/useScopedMoments';
 import { recordId } from '../utils/recordIdentity';
+import { getActiveSampleScenario } from '../dev/sampleData';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -123,8 +126,7 @@ export default function Events() {
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
-  const events = useEventStore((state) => state.events);
-  const conditions = useConditionFilters('moments', events, usePersistentListState);
+  const events = scopedMoments.events;
   const loading = useEventStore((state) => state.loading);
   const error = useEventStore((state) => state.error);
   const loadEvents = useEventStore((state) => state.loadEvents);
@@ -147,9 +149,10 @@ export default function Events() {
   useEffect(() => { setSummaryEvent(null); }, [scopedMoments.scopeIdentity]);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
-  const { search, category } = momentFilters;
+  const { search } = momentFilters;
   const setSearch = (value) => changeMomentFilters({ search: value });
-  const setCategory = (value) => changeMomentFilters({ category: value });
+  const conditionRecords = useMemo(() => events.map(momentConditionRecord), [events]);
+  const conditions = useConditionFilters('moments', conditionRecords, usePersistentListState, { initialGroup: momentConditions(momentFilters), contextKey: getActiveSampleScenario(user?.uid) });
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
@@ -203,24 +206,21 @@ export default function Events() {
     .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
     + eventExpenses.filter((expense) => !expense.activityId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
 
-  const categories = useMemo(() => ['All moments', 'Archived', ...new Set(events.filter((event) => !event.archived).map((event) => event.type || 'Personal').filter(Boolean))], [events]);
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
     return [...events]
       .filter((event) => {
-        const matchesCategory = category === 'Archived' ? Boolean(event.archived) : !event.archived && (category === 'All moments' || (event.type || 'Personal') === category);
         const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
           .some((value) => String(value || '').toLowerCase().includes(query));
-        return matchesCategory && matchesSearch && conditions.matches(event);
+        return matchesSearch && conditions.matches(momentConditionRecord(event));
       })
       .sort((first, second) => {
         // The story always follows the recorded Event Date, never creation or update time.
         const firstDate = parseMomentDate(first.date)?.getTime() ?? Number.POSITIVE_INFINITY;
         const secondDate = parseMomentDate(second.date)?.getTime() ?? Number.POSITIVE_INFINITY;
-        if (firstDate !== secondDate) return firstDate - secondDate;
-        return String(first.id || first.firestoreId || '').localeCompare(String(second.id || second.firestoreId || ''));
+        return firstDate === secondDate ? 0 : firstDate - secondDate;
       });
-  }, [events, category, search, conditions.matches]);
+  }, [events, search, conditions.matches]);
   const upcomingCount = events.filter((event) => {
     if (event.archived) return false;
     const date = getTimelineDate(event);
@@ -480,21 +480,14 @@ export default function Events() {
       </header>
 
       <div className="event-discovery-bar">
-        <ListControls title="Moment filters"
-          activeCount={Number(Boolean(search.trim())) + Number(category !== 'All moments')}
-          resultCount={visibleEvents.length} resultLabel="moments"
-          summary={[category, 'Event Date: oldest first', search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
-          onReset={resetMomentFilters}
-          search={<input id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
-          <div className="dn-list-controls-field">
-            <label htmlFor="moment-filter-category">Category</label>
-            <DropdownSelect id="moment-filter-category" aria-label="Filter by event category" value={category} onChange={(changeEvent) => setCategory(changeEvent.target.value)}>
-              {!categories.includes(category) ? <option value={category}>{category}</option> : null}
-              {categories.map((item) => <option key={item} value={item}>{item}</option>)}
-            </DropdownSelect>
-          </div>
+        <ListControls title="Moment filters" builder
+          activeCount={conditions.activeCount} resultCount={visibleEvents.length} resultLabel="moments"
+          chips={<ConditionChips filter={conditions} />}
+          summary="Event Date · Oldest to newest"
+          canReset={Boolean(conditions.activeCount || search)} onReset={() => { resetMomentFilters(); conditions.clear(); }}
+          search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
+          <ConditionBuilder filter={conditions} title="Moment conditions" />
         </ListControls>
-        <ConditionBuilder filter={conditions} resultCount={visibleEvents.length} resultLabel="moments" title="Moment conditions" />
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
@@ -510,7 +503,7 @@ export default function Events() {
           <span className="life-journey-empty-icon"><BookHeart size={25} /></span>
           <span className="life-timeline-eyebrow">A fresh page</span>
           <h3>{events.length ? 'No moments found' : 'Your story starts with one moment'}</h3>
-          <p>{events.length ? 'Try another search or category.' : 'Save the dates and people that make life feel like yours. Add the first moment whenever you are ready.'}</p>
+          <p>{events.length ? 'Try another search or clear a condition.' : 'Save the dates and people that make life feel like yours. Add the first moment whenever you are ready.'}</p>
         </div>
       )}
 

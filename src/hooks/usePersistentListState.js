@@ -31,5 +31,7 @@ export default function usePersistentListState(listKey, defaults, rules = {}) {
   const reset = () => {
     if (canWrite()) listStateMemory.reset(key, defaults, rules);
   };
-  return [value, change, reset];
+  // Optional fourth entry lets draft editors cancel delayed input on a scope
+  // switch without changing the existing value/change/reset tuple contract.
+  return [value, change, reset, key];
 }

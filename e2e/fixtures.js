@@ -95,3 +95,19 @@ export async function accountScope(page, uid, moments) {
     app.setState({ user: { uid }, isGuest: false, authReady: true });
   }, { uid, moments });
 }
+
+// Exercise the replacement builder through the same existing Filters button.
+export async function setActivityStatusCondition(page, status) {
+  await page.getByRole('button', { name: /Filters and sort/ }).click();
+  await page.getByRole('button', { name: 'Clear all', exact: true }).click();
+  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Condition field', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search fields', exact: true }).fill('Activity · Status');
+  await page.getByRole('option', { name: 'Activity · Status', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Condition operator', exact: true }).click();
+  await page.getByRole('option', { name: 'Equals', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Value for Activity · Status', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search values', exact: true }).fill(status);
+  await page.getByRole('option', { name: status, exact: true }).click();
+  await page.getByRole('button', { name: /Filters and sort/ }).click();
+}

@@ -1,3 +1,4 @@
+import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { ListChecks, Plus } from 'lucide-react';
@@ -11,10 +12,11 @@ import RichTextEditor from '../components/common/RichTextEditor';
 import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useConditionFilters from '../hooks/useConditionFilters';
-import ConditionBuilder from '../components/common/ConditionBuilder';
+import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
+import { activityConditions as migrateActivityConditions, activityEntryConditionRecord } from '../utils/listConditionMigration';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
-import { getActivityMomentType, projectActivities, selectActivityEntries } from '../utils/activityRecords';
+import { projectActivities, selectActivityEntries } from '../utils/activityRecords';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
@@ -73,13 +75,12 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     }));
     return { entries, context, views };
   }, [events]);
-  const conditions = useConditionFilters('activities', projection.entries, usePersistentListState);
-  const selected = selectActivityEntries(projection.entries, filters).filter((entry) => conditions.matches(entry));
-  const allInScope = projection.entries.filter((entry) => (
-    (!filters.momentId || entry.momentId === filters.momentId)
-    && (!filters.momentType || entry.momentType === filters.momentType)
-    && (filters.parentScope === 'all' || entry.archived === (filters.parentScope === 'archived'))
-  ));
+  const conditionRecords = useMemo(() => projection.entries.map(activityEntryConditionRecord), [projection]);
+  const conditions = useConditionFilters('activities', conditionRecords, usePersistentListState, { initialGroup: migrateActivityConditions(filters), contextKey: getActiveSampleScenario(uid) });
+  const selected = useMemo(() => selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
+    direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches),
+  [conditionRecords, filters.search, filters.field, filters.direction, conditions.matches]);
+  const allInScope = projection.entries;
   const visible = selected.map((entry) => projection.views.get(entry.key));
   const reference = (view) => {
     const entry = projection.context.get(view);
@@ -149,76 +150,34 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     }, () => { setDraft(null); showToast(draft.activityId ? 'Activity updated' : 'Activity added', 'success'); });
   };
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
-  const currentMoment = events.find((item) => momentId(item) === filters.momentId);
-  const momentTypes = [...new Set(events.map(getActivityMomentType))].sort((a, b) => a.localeCompare(b));
-  const pickerMoments = events.filter((moment) => (!filters.momentType || getActivityMomentType(moment) === filters.momentType)
-    && (filters.parentScope === 'all' || Boolean(moment.archived) === (filters.parentScope === 'archived')));
-  const activeCount = Number(Boolean(filters.search.trim())) + Number(Boolean(filters.momentId))
-    + Number(Boolean(filters.momentType))
-    + Number(filters.filter !== 'all') + Number(filters.parentScope !== 'active') + Number(filters.field !== 'date' || filters.direction !== 'asc');
-  const summary = [currentMoment?.name || (filters.momentId ? 'Saved Moment (unavailable)' : 'All Moments'),
-    filters.momentType,
-    filters.parentScope === 'active' ? 'Unarchived Moments' : filters.parentScope === 'archived' ? 'Archived Moments' : 'Including archived Moments',
-    FILTERS.find(([value]) => value === filters.filter)?.[1], `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`].filter(Boolean).join(' · ');
+  const activeCount = conditions.activeCount;
+  const summary = `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`;
 
   return (
-    <div className="events-page life-timeline-page">
+    <div className="events-page life-timeline-page activities-page">
       <header className="life-timeline-heading">
         <div><span className="life-timeline-eyebrow"><ListChecks size={13} /> Across your Moments</span><h2>Activities</h2><p>Find and manage your activities in one place.</p></div>
       </header>
       <div className="event-discovery-bar">
-        <ListControls title="Activity filters" hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
-          summary={summary} onReset={resetFilters}
+        <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
+          summary={summary} chips={<ConditionChips filter={conditions} />} canReset={Boolean(conditions.activeCount || filters.search || filters.field !== 'date' || filters.direction !== 'asc')} onReset={() => { resetFilters(); conditions.clear(); }}
           sort={<div className="dn-list-controls-field"><span>Sort by</span>
             <SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
               onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />
           </div>}
-          search={<input type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
-          <div className="dn-list-controls-field"><label htmlFor="activities-status-filter">Status</label>
-            <DropdownSelect id="activities-status-filter" value={filters.filter} onChange={(event) => changeFilters({ filter: event.target.value })}>
-              {FILTERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-            </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><label htmlFor="activities-moment-filter">Moment</label>
-            <DropdownSelect id="activities-moment-filter" menuMinWidth={280} value={filters.momentId} onChange={(event) => changeFilters({ momentId: event.target.value })}>
-              <option value="">All Moments</option>
-              {filters.momentId && !currentMoment ? <option value={filters.momentId}>Saved Moment (unavailable)</option> : null}
-              {currentMoment && !pickerMoments.includes(currentMoment) ? <option value={filters.momentId}>{currentMoment.name || 'Saved Moment'} (outside filters)</option> : null}
-              {pickerMoments.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
-            </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><label htmlFor="activities-type-filter">Moment type</label>
-            <DropdownSelect id="activities-type-filter" value={filters.momentType} onChange={(event) => {
-              const momentType = event.target.value;
-              changeFilters({ momentType, momentId: currentMoment && momentType
-                && getActivityMomentType(currentMoment) !== momentType ? '' : filters.momentId });
-            }}>
-              <option value="">All types</option>
-              {filters.momentType && !momentTypes.includes(filters.momentType) ? <option value={filters.momentType}>{filters.momentType} (unavailable)</option> : null}
-              {momentTypes.map((type) => <option key={type} value={type}>{type}</option>)}
-            </DropdownSelect>
-          </div>
-          <div className="dn-list-controls-field"><label htmlFor="activities-parent-filter">Moment visibility</label>
-            <DropdownSelect id="activities-parent-filter" value={filters.parentScope} onChange={(event) => {
-              const parentScope = event.target.value;
-              changeFilters({ parentScope, momentId: currentMoment && parentScope !== 'all'
-                && Boolean(currentMoment.archived) !== (parentScope === 'archived') ? '' : filters.momentId });
-            }}>
-              <option value="active">Unarchived Moments</option><option value="archived">Archived Moments</option><option value="all">All Moments</option>
-            </DropdownSelect>
-          </div>
+          search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
+          <ConditionBuilder filter={conditions} title="Activity conditions" />
         </ListControls>
-        <ConditionBuilder filter={conditions} resultCount={visible.length} resultLabel="activities" title="Activity conditions" />
       </div>
       {saveError && !draft ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
       {busy ? <p role="status">Saving…</p> : null}
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
-          : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))}
+          : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => { const entry = projection.context.get(view); return <Link to={`/events/${encodeURIComponent(entry.momentId)}/activities`}>{entry.momentName}</Link>; }}
-            showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount || conditions.activeCount)}
+            includeCancelled hasActiveFilters={Boolean(activeCount || conditions.activeCount)}
             onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId), {
               state: { activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
             }); }}

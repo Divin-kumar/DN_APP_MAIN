@@ -1,8 +1,9 @@
+import DebouncedFilterInput from '../common/DebouncedFilterInput';
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import RichText from '../common/RichText';
-import DropdownSelect from '../common/DropdownSelect';
+import ConditionBuilder, { ConditionChips } from '../common/ConditionBuilder';
 import { Link } from 'react-router-dom';
 import { activityDetailPath } from '../../utils/activityDetail';
 
@@ -85,12 +86,8 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 }
 
 export default function TransactionHistory({
-  transactions, filters, onFilters, monthOptions, events, onEdit, onDelete,
+  transactions, filters, onFilters, conditions, events, onEdit, onDelete,
 }) {
-  const activeCount = Number(filters.type !== 'all') + Number(filters.month !== 'all') + Number(Boolean(filters.search));
-  const period = filters.month === 'all' ? 'All months' : monthOptions.find((month) => month.value === filters.month)?.shortLabel || filters.month;
-  const scope = [filters.type === 'all' ? 'Income + expense' : filters.type === 'income' ? 'Income' : 'Expense', period,
-    filters.search ? `Search: ${filters.search}` : ''].filter(Boolean).join(' · ');
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
@@ -99,28 +96,12 @@ export default function TransactionHistory({
           <p title="All income and expenses in one place">All income and expenses</p>
         </div>
       </header>
-      <ListControls title="Transaction filters" activeCount={activeCount} resultCount={transactions.length}
-        resultLabel="transactions" summary={scope}
-        onReset={() => onFilters({ type: 'all', month: 'all', search: '' })}
-        search={<input id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
+      <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
+        resultLabel="transactions" summary="Newest transactions first" chips={<ConditionChips filter={conditions} />}
+        canReset={Boolean(conditions.activeCount || filters.search)} onReset={() => { onFilters({ type: 'all', month: 'all', search: '' }); conditions.clear(); }}
+        search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
-        <div className="dn-list-controls-field">
-          <label htmlFor="transaction-filter-type">Type</label>
-          <DropdownSelect id="transaction-filter-type" aria-label="Transaction Type" value={filters.type}
-            onChange={(event) => onFilters({ type: event.target.value })}>
-            <option value="all">All</option>
-            <option value="income">Income</option>
-            <option value="expense">Expense</option>
-          </DropdownSelect>
-        </div>
-        <div className="dn-list-controls-field">
-          <label htmlFor="transaction-filter-month">Month</label>
-          <DropdownSelect id="transaction-filter-month" aria-label="Month" value={filters.month}
-            onChange={(event) => onFilters({ month: event.target.value })}>
-            <option value="all">All Months</option>
-            {monthOptions.map((month) => <option key={month.value} value={month.value}>{month.label}</option>)}
-          </DropdownSelect>
-        </div>
+        <ConditionBuilder filter={conditions} title="Transaction conditions" />
       </ListControls>
       <div className="dn-transactions-results" role="list" aria-label="Filtered transactions">
         {transactions.length ? transactions.map((item) => (

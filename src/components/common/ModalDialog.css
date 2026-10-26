@@ -91,3 +91,8 @@ html[data-theme] .dn-modal-body :is(form, .field-group, .event-form-fields, .mom
 @media (max-width: 360px) {
   html[data-theme] .dn-modal-viewport .event-form-fields { grid-template-columns: minmax(0, 1fr) !important; }
 }
+@media (prefers-reduced-motion: reduce) {
+  /* The older phone sheet animation also moves dialogs after Framer Motion
+     has disabled its own transition. Honor the preference in both layers. */
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport > .dn-modal { animation:none !important; transition:none !important; }
+}

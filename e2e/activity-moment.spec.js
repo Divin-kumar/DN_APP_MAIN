@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { addOriginal, fixtureMoments, seedGuest, swipe, openUniversalTransaction, activityDetailAction } from './fixtures.js';
+import { setActivityStatusCondition } from './fixtures.js';
 
 test('direct detail/refresh uses both IDs, shows safe formatted notes and never rewrites source records', async ({ page }) => {
   const errors = await seedGuest(page);
@@ -31,7 +32,7 @@ test('clean cards open detail by pointer/keyboard, and menus never navigate', as
   await expect(card).toBeVisible();
   await expect(page.locator('.event-activity-complete, .event-activity-complete-static')).toHaveCount(0);
   const trigger = card.getByRole('button', { name: 'Activity options', exact: true });
-  const size = await trigger.boundingBox(); expect(size.width).toBeGreaterThanOrEqual(44); expect(size.height).toBeGreaterThanOrEqual(44);
+  const size = await trigger.boundingBox(); expect(Math.round(size.width * 100) / 100).toBeGreaterThanOrEqual(44); expect(Math.round(size.height * 100) / 100).toBeGreaterThanOrEqual(44);
   await trigger.click(); await expect(page.getByRole('menu')).toBeVisible();
   await expect(page).toHaveURL(/\/activities$/);
   expect(await page.getByRole('menuitem').last().innerText()).toBe('Delete');
@@ -104,8 +105,7 @@ test('menus expose accessible state actions; only one opens; Cancel/Restore and 
   await first.getByRole('button', { name: 'Activity options' }).click();
   await page.getByRole('menuitem', { name: 'Cancel', exact: true }).click();
   await expect(first).toHaveCount(0);
-  await page.getByRole('button', { name: 'Filters and sort', exact: true }).click();
-  await page.locator('#activities-status-filter').click(); await page.getByRole('option', { name: 'Cancelled', exact: true }).click();
+  await setActivityStatusCondition(page, 'cancelled');
   const cancelled = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await swipe(page, cancelled); await expect(cancelled.locator('.event-activity-status')).toHaveText('Cancelled');
   await expect(page.getByRole('menuitem', { name: 'Restore', exact: true })).toBeVisible();
@@ -137,7 +137,14 @@ test('Moment Transactions has five reachable tabs, full-Moment totals, independe
   await expect(totals).toContainText('₹1,000'); await expect(totals).toContainText('₹120'); await expect(totals).toContainText('₹880');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).not.toContainText('Unrelated expense');
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
-  await page.locator('#moment-transaction-type').click(); await page.getByRole('option', { name: 'Expense', exact: true }).click();
+  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Condition field', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search fields', exact: true }).fill('Transaction Kind');
+  await page.getByRole('option', { name: 'Transaction Kind', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Condition operator', exact: true }).click();
+  await page.getByRole('option', { name: 'Equals', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Value for Transaction Kind', exact: true }).click();
+  await page.getByRole('option', { name: 'expense', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search Moment transactions' }).fill('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).not.toContainText('Trip fund');

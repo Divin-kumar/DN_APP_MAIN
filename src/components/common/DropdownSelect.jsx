@@ -1,6 +1,6 @@
 // Shared viewport-aware select used in filters and forms.
 // The portal avoids clipping by cards, scroll panes, modals, and bottom navigation.
-import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown, Search } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
@@ -10,10 +10,12 @@ const getOptionLabel = (children) => Children.toArray(children)
   .map((child) => (typeof child === 'string' || typeof child === 'number' ? String(child) : ''))
   .join('');
 const SEARCH_LIMIT = 10;
+const ROW_HEIGHT = 44;
 
 export default function DropdownSelect({
   id, name, value, onChange, children, disabled = false, required = false,
-  placeholder = 'Select an option', className = '', menuMinWidth = 220, ...accessibilityProps
+  placeholder = 'Select an option', className = '', menuMinWidth = 220,
+  searchable: searchableProp, allowCustom = false, searchLabel = 'Search options', ...accessibilityProps
 }) {
   const generatedId = useId();
   const triggerId = id || `dropdown-${generatedId}`;
@@ -27,26 +29,37 @@ export default function DropdownSelect({
   const [activeIndex, setActiveIndex] = useState(-1);
   const [query, setQuery] = useState('');
   const [placement, setPlacement] = useState(null);
-  const options = Children.toArray(children)
+  const [scrollTop, setScrollTop] = useState(0);
+  const sourceOptions = useMemo(() => Children.toArray(children)
     .filter((child) => isValidElement(child) && child.type === 'option')
     .map((child) => ({
       value: String(child.props.value ?? getOptionLabel(child.props.children)),
       label: getOptionLabel(child.props.children),
       shortLabel: String(child.props['data-short-label'] || getOptionLabel(child.props.children)),
       disabled: Boolean(child.props.disabled),
-    }));
+    })), [children]);
+  const options = useMemo(() => allowCustom && query.trim()
+    && !sourceOptions.some((option) => option.value.toLowerCase() === query.trim().toLowerCase())
+    ? [...sourceOptions, { value: query.trim(), label: query.trim(), shortLabel: query.trim(), disabled: false, custom: true }]
+    : sourceOptions, [sourceOptions, allowCustom, query]);
   const selectedIndex = options.findIndex((option) => option.value === String(value ?? ''));
-  const selectedOption = options[selectedIndex];
-  const searchable = options.length > SEARCH_LIMIT;
-  const visibleIndices = options.map((option, index) => ({ option, index }))
+  const selectedOption = options[selectedIndex] || (allowCustom && value ? { label: String(value), shortLabel: String(value) } : null);
+  const searchable = searchableProp ?? (allowCustom || options.length > SEARCH_LIMIT);
+  const visibleIndices = useMemo(() => options.map((option, index) => ({ option, index }))
     .filter(({ option }) => option.label.toLowerCase().includes(query.trim().toLowerCase()))
-    .map(({ index }) => index);
+    .map(({ index }) => index), [options, query]);
   const enabledIndices = visibleIndices.filter((index) => !options[index].disabled);
   const shownActiveIndex = enabledIndices.includes(activeIndex) ? activeIndex : (enabledIndices[0] ?? -1);
+  const virtual = visibleIndices.length > 60;
+  const visibleHeight = Math.max(44, (placement?.maxHeight || 360) - (searchable ? 66 : 14));
+  const virtualStart = virtual ? Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 4) : 0;
+  const virtualEnd = virtual ? Math.min(visibleIndices.length, virtualStart + Math.ceil(visibleHeight / ROW_HEIGHT) + 9) : visibleIndices.length;
+  const renderedIndices = visibleIndices.slice(virtualStart, virtualEnd);
 
   const close = useCallback((restoreFocus = false) => {
     setOpen(false);
     setQuery('');
+    setScrollTop(0);
     setPlacement(null);
     if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
   }, []);
@@ -104,6 +117,10 @@ export default function DropdownSelect({
   }, [open, reposition]);
 
   useEffect(() => {
+    if (open && placement && searchable) searchRef.current?.focus({ preventScroll: true });
+  }, [open, Boolean(placement), searchable]);
+
+  useEffect(() => {
     if (!open) return undefined;
     const onOutsidePointer = (event) => {
       if (!rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) close();
@@ -116,13 +133,20 @@ export default function DropdownSelect({
     if (!open || shownActiveIndex < 0 || !listRef.current) return;
     const item = document.getElementById(`${listboxId}-option-${shownActiveIndex}`);
     const list = listRef.current;
+    if (virtual) {
+      const position = visibleIndices.indexOf(shownActiveIndex), top = position * ROW_HEIGHT;
+      if (top < list.scrollTop) list.scrollTop = top;
+      else if (top + ROW_HEIGHT > list.scrollTop + list.clientHeight) list.scrollTop = top + ROW_HEIGHT - list.clientHeight;
+      setScrollTop(list.scrollTop);
+      return;
+    }
     if (!item) return;
     const itemTop = item.offsetTop - list.offsetTop;
     if (itemTop < list.scrollTop) list.scrollTop = itemTop;
     else if (itemTop + item.offsetHeight > list.scrollTop + list.clientHeight) {
       list.scrollTop = itemTop + item.offsetHeight - list.clientHeight;
     }
-  }, [shownActiveIndex, listboxId, open, query, placement]);
+  }, [shownActiveIndex, listboxId, open, query, placement, virtual]);
 
   const commitOption = (index) => {
     const option = options[index];
@@ -163,6 +187,12 @@ export default function DropdownSelect({
       event.preventDefault();
       if (open) commitOption(shownActiveIndex);
       else { setOpen(true); setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); }
+      return;
+    }
+    if (searchable && event.target === triggerRef.current && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+      event.preventDefault();
+      setQuery((current) => open ? current + event.key : event.key);
+      setScrollTop(0); setActiveIndex(-1); setOpen(true);
     }
   };
 
@@ -192,26 +222,31 @@ export default function DropdownSelect({
           {searchable ? (
             <label className="dropdown-search-wrap">
               <Search size={16} aria-hidden="true" />
-              <input ref={searchRef} type="search" aria-label="Search options"
-                value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(-1); }}
-                placeholder="Search options" />
+              <input ref={searchRef} type="search" aria-label={searchLabel}
+                aria-controls={listboxId} aria-activedescendant={shownActiveIndex >= 0 ? `${listboxId}-option-${shownActiveIndex}` : undefined}
+                value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(-1); setScrollTop(0); if (listRef.current) listRef.current.scrollTop = 0; }}
+                placeholder={allowCustom ? 'Search or type a value' : searchLabel} />
             </label>
           ) : null}
-          <div ref={listRef} id={listboxId} className="dropdown-options-scroll" role="listbox"
+          <div ref={listRef} id={listboxId} className={`dropdown-options-scroll${virtual ? ' is-virtual' : ''}`} role="listbox"
             aria-labelledby={triggerId} aria-label={accessibilityProps['aria-label'] || name || 'Options'}
+            onScroll={(event) => { if (virtual) setScrollTop(event.currentTarget.scrollTop); }}
             onWheel={(e) => e.stopPropagation()} onTouchMove={(e) => e.stopPropagation()}>
-            {visibleIndices.map((index) => {
+            {virtual && virtualStart > 0 ? <div role="presentation" style={{ height: virtualStart * ROW_HEIGHT }} /> : null}
+            {renderedIndices.map((index) => {
               const option = options[index];
               return <div id={`${listboxId}-option-${index}`} key={`${option.value}-${index}`}
                 role="option" aria-selected={index === selectedIndex}
+                aria-setsize={visibleIndices.length} aria-posinset={visibleIndices.indexOf(index) + 1}
                 aria-disabled={option.disabled || undefined}
                 className={`dropdown-option${index === selectedIndex ? ' is-selected' : ''}${index === shownActiveIndex ? ' is-active' : ''}`}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => commitOption(index)}>
-                <span>{option.label}</span>
+                <span title={option.label}>{option.custom ? `Use “${option.label}”` : option.label}</span>
                 {index === selectedIndex ? <Check size={15} aria-hidden="true" /> : null}
               </div>;
             })}
+            {virtual && virtualEnd < visibleIndices.length ? <div role="presentation" style={{ height: (visibleIndices.length - virtualEnd) * ROW_HEIGHT }} /> : null}
             {!visibleIndices.length ? <div className="dropdown-no-results">No matching options</div> : null}
           </div>
         </div>, document.body,

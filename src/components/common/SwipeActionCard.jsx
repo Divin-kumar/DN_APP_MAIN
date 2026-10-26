@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Ellipsis, Trash2 } from 'lucide-react';
 import { resolveSwipeGesture } from '../../utils/swipeGestures';
@@ -16,7 +16,6 @@ export default function SwipeActionCard({
   const [position, setPosition] = useState(null);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
-  const anchorAtOpen = useRef(null);
   const popupRef = useRef(null);
   const gesture = useRef(null);
   const suppressClick = useRef(0);
@@ -31,15 +30,19 @@ export default function SwipeActionCard({
     setOpen(false);
     if (restoreFocus) (triggerRef.current || rootRef.current)?.focus({ preventScroll: true });
   };
-  const showMenu = (isTouch = false, fromKeyboard = false) => {
-    if (disabled || !actions.length || !rootRef.current) return;
-    const rect = (triggerRef.current || rootRef.current).getBoundingClientRect();
-    anchorAtOpen.current = { top: rect.top, left: rect.left };
+  const positionMenu = () => {
+    const anchor = (triggerRef.current || rootRef.current)?.getBoundingClientRect();
+    if (!anchor) return;
     const viewport = getVisibleViewport(window);
+    if (anchor.bottom <= viewport.top || anchor.top >= viewport.top + viewport.height) { close(); return; }
     setPosition(computeSwipeMenuPlacement({
-      anchor: rect, viewport, count: actions.length,
+      anchor, viewport, count: actions.length,
       bottomReserve: viewport.width < 768 ? 80 : 12,
     }));
+  };
+  const showMenu = (isTouch = false, fromKeyboard = false) => {
+    if (disabled || !actions.length || !rootRef.current) return;
+    positionMenu();
     focusOnOpen.current = fromKeyboard;
     window.dispatchEvent(new CustomEvent('dn:record-menu', { detail: menuId }));
     window.dispatchEvent(new CustomEvent('dn:activity-swipe', { detail: rootRef.current }));
@@ -48,6 +51,9 @@ export default function SwipeActionCard({
     }
     setOpen(true);
   };
+  // The same click can collapse a filter panel before this menu mounts. Measure
+  // its final anchor after that layout commit, before the browser paints it.
+  useLayoutEffect(() => { if (open) positionMenu(); }, [open]);
   const finishGesture = (x, y, isTouch) => {
     const start = gesture.current;
     gesture.current = null;
@@ -59,36 +65,38 @@ export default function SwipeActionCard({
   };
   useEffect(() => {
     if (!open) return undefined;
+    let frame;
     const outside = (event) => {
       if (rootRef.current?.contains(event.target) || popupRef.current?.contains(event.target)) return;
       close();
     };
     const onScroll = (event) => {
       if (popupRef.current?.contains(event.target)) return;
-      const rect = (triggerRef.current || rootRef.current)?.getBoundingClientRect();
-      // A focus/click can deliver a previously queued scroll event after the
-      // menu opens. Dismiss only when this anchor actually moves in the list.
-      if (rect && anchorAtOpen.current && Math.abs(rect.top - anchorAtOpen.current.top) < 2
-        && Math.abs(rect.left - anchorAtOpen.current.left) < 2) return;
-      close();
+      // Follow a still-visible record during layout/viewport changes. A queued
+      // focus scroll must not dismiss the action the user has just opened.
+      if (frame) cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(positionMenu);
     };
-    const onResize = () => close();
+    const onResize = () => onScroll();
     const onOtherMenu = (event) => { if (event.detail !== menuId) close(); };
     document.addEventListener('pointerdown', outside);
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', onResize);
     window.addEventListener('dn:record-menu', onOtherMenu);
     window.visualViewport?.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('scroll', onResize);
     if (focusOnOpen.current) {
       popupRef.current?.querySelector('button:not([disabled])')?.focus({ preventScroll: true });
       focusOnOpen.current = false;
     }
     return () => {
+      if (frame) cancelAnimationFrame(frame);
       document.removeEventListener('pointerdown', outside);
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('dn:record-menu', onOtherMenu);
       window.visualViewport?.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('scroll', onResize);
     };
   }, [open]);
 

@@ -1,14 +1,14 @@
+import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 import { Link } from 'react-router-dom';
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import usePersistentListState from '../../../hooks/usePersistentListState';
 import useConditionFilters from '../../../hooks/useConditionFilters';
-import ConditionBuilder from '../../../components/common/ConditionBuilder';
+import ConditionBuilder, { ConditionChips } from '../../../components/common/ConditionBuilder';
+import { transactionConditions } from '../../../utils/listConditionMigration';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
-import DropdownSelect from '../../../components/common/DropdownSelect';
 import ListControls from '../../../components/common/ListControls';
 import { TransactionCard, formatTransactionMoney as momentMoney } from '../../../components/financials/TransactionHistory';
-import { filterTransactions, transactionMonthOptions } from '../../../utils/transactionFilters';
-import { recordId } from '../../../utils/recordIdentity';
+import { filterTransactions } from '../../../utils/transactionFilters';
 
 const DEFAULTS = Object.freeze({ search: '', type: 'all', activityId: '', month: 'all' });
 const RULES = Object.freeze({ type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value) });
@@ -25,18 +25,11 @@ export function MomentFinanceSummary({ summary, label = 'Totals for this Moment'
 // Contextual history is read-only. Creation uses universal +; editing stays in Finance.
 export default function LinkedTransactions({ eventId, activityId = '', minimal = false }) {
   const finance = useMomentFinance(eventId, activityId);
-  const conditions = useConditionFilters(`moment-transactions:${eventId}:${activityId || 'all'}`, finance.transactions, usePersistentListState);
   const [filters, changeFilters, resetFilters] = usePersistentListState(
     `moment-transactions:${JSON.stringify([finance.sample, eventId, activityId])}`, DEFAULTS, RULES);
-  const moment = finance.events.find((item) => recordId(item.id || item.firestoreId) === eventId);
-  const activities = moment?.activities || [];
-  const months = transactionMonthOptions(finance.transactions);
-  const monthOptions = filters.month !== 'all' && !months.some((item) => item.value === filters.month)
-    ? [{ value: filters.month, label: `${filters.month} (no records)` }, ...months] : months;
-  const selectedActivityAvailable = activities.some((item) => recordId(item.id) === filters.activityId);
-  const filtered = filterTransactions(finance.transactions, activityId ? {} : filters)
-    .filter((item) => activityId || !filters.activityId || (selectedActivityAvailable && item.activityId === filters.activityId))
-    .filter(conditions.matches);
+  const conditions = useConditionFilters('moment-transactions:' + eventId + ':' + (activityId || 'all'), finance.transactions, usePersistentListState,
+    { initialGroup: transactionConditions(filters), contextKey: finance.sample });
+  const filtered = activityId ? finance.transactions : filterTransactions(finance.transactions, { search: filters.search }).filter(conditions.matches);
   const totals = <MomentFinanceSummary summary={finance.summary} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
   if (activityId && minimal && finance.ready && !finance.error && finance.transactions.length === 0) return null;
@@ -45,21 +38,12 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
       <button type="button" className="secondaryButton" onClick={finance.retry}>Try again</button></div>
       : finance.pending ? <LoadingSkeleton rows={3} label="Loading linked transactions" /> : <>
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
-        {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" resultCount={filtered.length} resultLabel="transactions"
-          activeCount={Number(Boolean(filters.search)) + Number(filters.type !== 'all') + Number(Boolean(filters.activityId)) + Number(filters.month !== 'all')}
-          summary={[filters.type === 'all' ? 'Income + expense' : filters.type === 'income' ? 'Income' : 'Expense',
-            filters.activityId ? activities.find((item) => recordId(item.id) === filters.activityId)?.title || 'Saved activity (unavailable)' : 'All Activities',
-            filters.month === 'all' ? 'All months' : filters.month].join(' · ')} onReset={resetFilters}
-          search={<input type="search" aria-label="Search Moment transactions" placeholder="Search transactions" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} />}>
-          <div className="dn-list-controls-field"><label htmlFor="moment-transaction-type">Type</label><DropdownSelect id="moment-transaction-type" value={filters.type} onChange={(event) => changeFilters({ type: event.target.value })}>
-            <option value="all">All</option><option value="income">Income</option><option value="expense">Expense</option></DropdownSelect></div>
-          <div className="dn-list-controls-field"><label htmlFor="moment-transaction-activity">Activity</label><DropdownSelect id="moment-transaction-activity" value={filters.activityId} onChange={(event) => changeFilters({ activityId: event.target.value })}>
-            <option value="">All Activities</option>{filters.activityId && !activities.some((item) => recordId(item.id) === filters.activityId) ? <option value={filters.activityId}>Saved activity (unavailable)</option> : null}
-            {activities.map((item) => <option key={item.id} value={recordId(item.id)}>{item.title || 'Untitled activity'}</option>)}</DropdownSelect></div>
-          {monthOptions.length > 1 || filters.month !== 'all' ? <div className="dn-list-controls-field"><label htmlFor="moment-transaction-month">Month</label><DropdownSelect id="moment-transaction-month" value={filters.month} onChange={(event) => changeFilters({ month: event.target.value })}>
-            <option value="all">All months</option>{monthOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}</DropdownSelect></div> : null}
+        {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder resultCount={filtered.length} resultLabel="transactions"
+          activeCount={conditions.activeCount} chips={<ConditionChips filter={conditions} />}
+          summary="Income + expense · All Activities" canReset={Boolean(conditions.activeCount || filters.search)} onReset={() => { resetFilters(); conditions.clear(); }}
+          search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" aria-label="Search Moment transactions" placeholder="Search transactions" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} />}>
+          <ConditionBuilder filter={conditions} title="Moment transaction conditions" />
         </ListControls> : null}
-        {!minimal && finance.transactions.length ? <ConditionBuilder filter={conditions} resultCount={filtered.length} resultLabel="transactions" title="Moment transaction conditions" /> : null}
         {filtered.length || !minimal ? <div className="dn-transactions-results" role="list" aria-label="Linked transactions">
           {filtered.length ? filtered.map((item) => <TransactionCard key={item.stableTransactionKey} transaction={item} events={finance.events}
             readOnly showActivity={!minimal} />)
