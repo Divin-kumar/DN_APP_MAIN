@@ -22,7 +22,9 @@ import { getActiveCodeListMeta } from '../utils/codeLists';
 import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
-import SortControl from '../components/common/SortControl';
+import { parseMomentDate } from '../utils/momentDates';
+import ConditionBuilder from '../components/common/ConditionBuilder';
+import useConditionFilters from '../hooks/useConditionFilters';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
 import RichTextEditor from '../components/common/RichTextEditor';
@@ -33,8 +35,8 @@ import { recordId } from '../utils/recordIdentity';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
-const momentFilterRules = { field: ['date', 'name', 'status'], direction: ['asc', 'desc'] };
+const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments' });
+const momentFilterRules = Object.freeze({});
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
   const baseDate = new Date(event.date || event.startDate || event.createdAt);
@@ -55,7 +57,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
 };
 
 function EventStoryCard({ event, expenseTotal, onOpen, onSummary, onEdit, onArchive, onDelete }) {
-  const date = getTimelineDate(event);
+  const date = parseMomentDate(event.date);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
   const statusLabel = status === 'archived' ? 'Archived' : status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
@@ -122,6 +124,7 @@ export default function Events() {
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
+  const conditions = useConditionFilters('moments', events, usePersistentListState);
   const loading = useEventStore((state) => state.loading);
   const error = useEventStore((state) => state.error);
   const loadEvents = useEventStore((state) => state.loadEvents);
@@ -144,11 +147,9 @@ export default function Events() {
   useEffect(() => { setSummaryEvent(null); }, [scopedMoments.scopeIdentity]);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
-  const { search, category, field: eventSort, direction: eventSortDirection } = momentFilters;
+  const { search, category } = momentFilters;
   const setSearch = (value) => changeMomentFilters({ search: value });
   const setCategory = (value) => changeMomentFilters({ category: value });
-  const setEventSort = (field) => changeMomentFilters({ field, direction: 'asc' });
-  const toggleEventSortDirection = () => changeMomentFilters((current) => ({ direction: current.direction === 'asc' ? 'desc' : 'asc' }));
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
@@ -210,59 +211,22 @@ export default function Events() {
         const matchesCategory = category === 'Archived' ? Boolean(event.archived) : !event.archived && (category === 'All moments' || (event.type || 'Personal') === category);
         const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
           .some((value) => String(value || '').toLowerCase().includes(query));
-        return matchesCategory && matchesSearch;
+        return matchesCategory && matchesSearch && conditions.matches(event);
       })
-      .sort((first, second) => new Date(first.date || 0).getTime() - new Date(second.date || 0).getTime());
-  }, [events, category, search]);
+      .sort((first, second) => {
+        // The story always follows the recorded Event Date, never creation or update time.
+        const firstDate = parseMomentDate(first.date)?.getTime() ?? Number.POSITIVE_INFINITY;
+        const secondDate = parseMomentDate(second.date)?.getTime() ?? Number.POSITIVE_INFINITY;
+        if (firstDate !== secondDate) return firstDate - secondDate;
+        return String(first.id || first.firestoreId || '').localeCompare(String(second.id || second.firestoreId || ''));
+      });
+  }, [events, category, search, conditions.matches]);
   const upcomingCount = events.filter((event) => {
     if (event.archived) return false;
     const date = getTimelineDate(event);
     return date && date >= new Date(new Date().setHours(0, 0, 0, 0));
   }).length;
   const memoryCount = events.reduce((count, event) => count + (event.memories?.length || 0) + (event.activities?.length || 0), 0);
-  const todayStart = new Date(new Date().setHours(0, 0, 0, 0));
-  const compareEventDate = (first, second) => {
-    const firstDate = getTimelineDate(first)?.getTime() ?? 0;
-    const secondDate = getTimelineDate(second)?.getTime() ?? 0;
-    return firstDate - secondDate;
-  };
-  const compareEventStatus = (first, second) => {
-    const getRank = (event) => {
-      const status = getEventStatus(event);
-      if (status === 'cancelled') return 3;
-      if (status === 'completed') return 2;
-      const date = getTimelineDate(event);
-      return date && date >= todayStart ? 1 : 0;
-    };
-    return getRank(first) - getRank(second);
-  };
-  const compareEvents = (first, second) => {
-    const primary = eventSort === 'name'
-      ? String(first.name || '').localeCompare(String(second.name || ''), undefined, { sensitivity: 'base' })
-      : eventSort === 'status' ? compareEventStatus(first, second) : compareEventDate(first, second);
-    const secondary = primary || compareEventDate(first, second);
-    return eventSortDirection === 'desc' ? -secondary : secondary;
-  };
-  const nextMoments = visibleEvents.filter((event) => {
-    if (event.archived || getEventStatus(event) === 'cancelled') return false;
-    const date = getTimelineDate(event);
-    return date && date >= todayStart;
-  }).sort(compareEvents);
-  const pastMoments = visibleEvents.filter((event) => {
-    if (event.archived) return false;
-    if (getEventStatus(event) === 'cancelled') return true;
-    const date = getTimelineDate(event);
-    return date && date < todayStart;
-  }).sort(compareEvents);
-  const archivedMoments = visibleEvents.filter((event) => event.archived).sort(compareEvents);
-  const statusMomentGroups = [
-    { label: 'In Progress', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) < todayStart },
-    { label: 'Upcoming / Planned', matches: (event) => getEventStatus(event) === 'in-progress' && getTimelineDate(event) >= todayStart },
-    { label: 'Completed', matches: (event) => getEventStatus(event) === 'completed' },
-    { label: 'Cancelled', matches: (event) => getEventStatus(event) === 'cancelled' },
-    { label: 'Archived', matches: (event) => getEventStatus(event) === 'archived' },
-  ].map((group) => ({ ...group, events: visibleEvents.filter(group.matches).sort(compareEvents) })).filter((group) => group.events.length);
-  if (eventSortDirection === 'desc') statusMomentGroups.reverse();
   const pickerQuery = activityEventSearch.trim().toLowerCase();
   const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery))));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
@@ -516,15 +480,11 @@ export default function Events() {
       </header>
 
       <div className="event-discovery-bar">
-        <ListControls title="Moment filters" hasSort
-          activeCount={Number(Boolean(search.trim())) + Number(category !== 'All moments') + Number(eventSort !== 'date' || eventSortDirection !== 'asc')}
+        <ListControls title="Moment filters"
+          activeCount={Number(Boolean(search.trim())) + Number(category !== 'All moments')}
           resultCount={visibleEvents.length} resultLabel="moments"
-          summary={[category, `${eventSort === 'name' ? 'Name' : eventSort === 'status' ? 'Status' : 'Date'} ${eventSortDirection === 'asc' ? '↑' : '↓'}`, search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
+          summary={[category, 'Event Date: oldest first', search.trim() ? `Search: ${search.trim()}` : ''].filter(Boolean).join(' · ')}
           onReset={resetMomentFilters}
-          sort={<div className="dn-list-controls-field">
-            <span>Sort by</span>
-            <SortControl className="event-sort-select" field={eventSort} direction={eventSortDirection} onFieldChange={setEventSort} onToggleDirection={toggleEventSortDirection} options={[{ value: 'date', label: 'Date' }, { value: 'name', label: 'Name' }, { value: 'status', label: 'Status' }]} label="Sort events" />
-          </div>}
           search={<input id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <div className="dn-list-controls-field">
             <label htmlFor="moment-filter-category">Category</label>
@@ -534,40 +494,16 @@ export default function Events() {
             </DropdownSelect>
           </div>
         </ListControls>
+        <ConditionBuilder filter={conditions} resultCount={visibleEvents.length} resultLabel="moments" title="Moment conditions" />
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
         <div className="life-journey">
-          {eventSort === 'status' ? statusMomentGroups.map((group) => (
-            <section className="life-journey-section" key={group.label}>
-              <div className="life-journey-label"><CalendarDays size={16} /><div><span>{group.label}</span><small>Moments grouped by status</small></div><b>{group.events.length}</b></div>
-              <div className="life-journey-items">{group.events.map(renderEventCard)}</div>
-            </section>
-          )) : <>
-          {nextMoments.length ? (
-            <section className="life-journey-section">
-              <div className="life-journey-label"><CalendarDays size={16} /><div><span>On the horizon</span><small>Your next chapters</small></div><b>{nextMoments.length}</b></div>
-              <div className="life-journey-items">
-                {nextMoments.map(renderEventCard)}
-              </div>
-            </section>
-          ) : null}
-          {pastMoments.length ? (
-            <section className="life-journey-section past-journey-section">
-              <div className="life-journey-label"><BookHeart size={16} /><div><span>Life so far</span><small>Moments you have lived</small></div><b>{pastMoments.length}</b></div>
-              <div className="life-journey-items">
-                {pastMoments.map(renderEventCard)}
-              </div>
-            </section>
-          ) : null}
-          {archivedMoments.length ? (
-            <section className="life-journey-section">
-              <div className="life-journey-label"><CalendarDays size={16} /><div><span>Archived</span><small>Stored moments, ready to restore</small></div><b>{archivedMoments.length}</b></div>
-              <div className="life-journey-items">{archivedMoments.map(renderEventCard)}</div>
-            </section>
-          ) : null}
-          </>}
+          <section className="life-journey-section" aria-label="Moments ordered by Event Date">
+            <div className="life-journey-label"><CalendarDays size={16} /><div><span>Life timeline</span><small>Event Date · Oldest to newest</small></div><b>{visibleEvents.length}</b></div>
+            <div className="life-journey-items">{visibleEvents.map(renderEventCard)}</div>
+          </section>
         </div>
       ) : (
         <div className="life-journey-empty">

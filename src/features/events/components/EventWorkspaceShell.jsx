@@ -22,6 +22,8 @@ import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import { getActiveCodeListMeta } from '../../../utils/codeLists';
 import usePersistentListState from '../../../hooks/usePersistentListState';
+import useConditionFilters from '../../../hooks/useConditionFilters';
+import ConditionBuilder from '../../../components/common/ConditionBuilder';
 import SortControl from '../../../components/common/SortControl';
 import ListControls from '../../../components/common/ListControls';
 import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes';
@@ -181,6 +183,7 @@ export function EventWorkspaceContent() {
   useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
+  const activityConditions = useConditionFilters(`moment-activities:${eventId}`, event?.activities || [], usePersistentListState);
 
   useLayoutEffect(() => {
     const nav = workspaceNavRef.current;
@@ -262,13 +265,13 @@ export function EventWorkspaceContent() {
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch = String(activity.title || '').toLowerCase().includes(activitySearch.trim().toLowerCase());
     const isCancelled = activity.cancelled || activity.status === 'cancelled';
-    if (activityFilter === 'cancelled') return isCancelled && matchesSearch;
+    if (activityFilter === 'cancelled') return isCancelled && matchesSearch && activityConditions.matches(activity);
     if (isCancelled) return false;
     const matchesFilter = activityFilter === 'all'
       || (activityFilter === 'in-progress' && !activity.completed)
       || (activityFilter === 'completed' && activity.completed)
       || (activity.priority || 'medium') === activityFilter;
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesFilter && activityConditions.matches(activity);
   });
   const totalSpent = finance.summary.expense;
   const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
@@ -490,6 +493,7 @@ export function EventWorkspaceContent() {
             </DropdownSelect>
           </div>
           </ListControls>
+          <ConditionBuilder filter={activityConditions} resultCount={filteredActivities.length} resultLabel="activities" title="Moment Activity conditions" />
           <ActivityList readOnly
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}

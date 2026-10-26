@@ -1,7 +1,7 @@
 import { Sparkles } from 'lucide-react';
 import RichText from './RichText';
 import { plainRichText } from '../../utils/richText';
-import { createGreetingCardHtml } from '../../utils/greetingCard';
+import { createGreetingCardHtml, greetingToneFromType } from '../../utils/greetingCard';
 import greetingCardStyles from './GreetingCard.css?raw';
 import './GreetingCard.css';
 
@@ -9,7 +9,7 @@ export const buildGreetingCardHtml = (details) => createGreetingCardHtml(details
 
 export default function GreetingCard({ title, body, momentName = '', momentType = '', dateLabel = '', className = '' }) {
   return (
-    <article className={`dn-greeting-card ${className}`} aria-label="Greeting card preview">
+    <article className={`dn-greeting-card dn-greeting-card--${greetingToneFromType(momentType)} ${className}`.trim()} aria-label="Greeting card preview">
       <div className="dn-greeting-card-frame">
         <span className="dn-greeting-card-kicker"><Sparkles size={15} aria-hidden="true" /> A moment to celebrate</span>
         <div className="dn-greeting-card-message">

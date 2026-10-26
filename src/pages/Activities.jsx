@@ -10,6 +10,8 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import RichTextEditor from '../components/common/RichTextEditor';
 import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useConditionFilters from '../hooks/useConditionFilters';
+import ConditionBuilder from '../components/common/ConditionBuilder';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import { getActivityMomentType, projectActivities, selectActivityEntries } from '../utils/activityRecords';
@@ -71,7 +73,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     }));
     return { entries, context, views };
   }, [events]);
-  const selected = selectActivityEntries(projection.entries, filters);
+  const conditions = useConditionFilters('activities', projection.entries, usePersistentListState);
+  const selected = selectActivityEntries(projection.entries, filters).filter((entry) => conditions.matches(entry));
   const allInScope = projection.entries.filter((entry) => (
     (!filters.momentId || entry.momentId === filters.momentId)
     && (!filters.momentType || entry.momentType === filters.momentType)
@@ -205,6 +208,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             </DropdownSelect>
           </div>
         </ListControls>
+        <ConditionBuilder filter={conditions} resultCount={visible.length} resultLabel="activities" title="Activity conditions" />
       </div>
       {saveError && !draft ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
       {busy ? <p role="status">Saving…</p> : null}
@@ -214,7 +218,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))}
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => { const entry = projection.context.get(view); return <Link to={`/events/${encodeURIComponent(entry.momentId)}/activities`}>{entry.momentName}</Link>; }}
-            showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount)}
+            showCancelled={filters.filter === 'cancelled'} hasActiveFilters={Boolean(activeCount || conditions.activeCount)}
             onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId), {
               state: { activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
             }); }}

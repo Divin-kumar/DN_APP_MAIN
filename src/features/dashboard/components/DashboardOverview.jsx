@@ -21,11 +21,21 @@ import { activityDetailPath, activityStatus } from '../../../utils/activityDetai
 import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
-import MomentSummaryExtras from '../../../components/events/MomentSummaryExtras';
+import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
+import './DashboardSections.css';
+import DashboardMonthlyInsight from './DashboardMonthlyInsight';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
+const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true });
+const readDashboardSections = (key) => {
+  try {
+    const saved = JSON.parse(globalThis.localStorage?.getItem(key) || 'null');
+    return { moments: typeof saved?.moments === 'boolean' ? saved.moments : true,
+      activities: typeof saved?.activities === 'boolean' ? saved.activities : true };
+  } catch { return { ...DASHBOARD_SECTIONS }; }
+};
 
 const isSameDay = (first, second) => (
   first && second
@@ -280,6 +290,7 @@ function EventSummaryModal({ event, onClose }) {
           <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={formatDisplayDate(eventDate)} />
         ) : null}
         {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
+        <MomentSummaryPhotos event={event} />
 
         <div style={styles.section}>
           <div style={styles.statusRow}>{statusText}</div>
@@ -307,6 +318,7 @@ function EventSummaryModal({ event, onClose }) {
                           <RichText className="dashboard-summary-description" value={description} />
                         </div>
                       ) : null}
+                      <MomentSummaryPhotos event={event} activityId={activity.id || String(index)} />
                     </div>
                   </li>
                 );
@@ -364,6 +376,14 @@ export function DashboardOverviewContent() {
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
+  const sectionKey = `dn_dashboard_sections_${isGuest ? 'guest' : user?.uid || 'signed-out'}_${getActiveSampleScenario(user?.uid) || 'live'}`;
+  const [sectionState, setSectionState] = useState(() => ({ key: sectionKey, visible: readDashboardSections(sectionKey) }));
+  const sections = sectionState.key === sectionKey ? sectionState.visible : readDashboardSections(sectionKey);
+  const changeSections = (patch) => {
+    const next = { ...sections, ...patch };
+    try { globalThis.localStorage?.setItem(sectionKey, JSON.stringify(next)); } catch { /* Remain usable without storage. */ }
+    setSectionState({ key: sectionKey, visible: next });
+  };
   useEffect(() => {
     if (!user && !isGuest) return;
     loadEvents(user?.uid, isGuest);
@@ -406,10 +426,15 @@ export function DashboardOverviewContent() {
           <span>{greeting}, {profileName}</span>
           <p>{activeTodayCount} {activeTodayCount === 1 ? 'moment' : 'moments'} today <i>·</i> {dateText}</p>
         </header>
+        {ready && !loading && !error ? <DashboardMonthlyInsight events={events} /> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header style={styles.upcomingHeader}>
             <span>Moments</span>
+            <button type="button" className="dashboard-section-toggle" aria-expanded={sections.moments}
+              aria-label={sections.moments ? 'Hide Moments on dashboard' : 'Show Moments on dashboard'}
+              onClick={() => changeSections({ moments: !sections.moments })}>{sections.moments ? 'Hide' : 'Show'}</button>
           </header>
+          {sections.moments ? <>
           <div role="group" aria-label="Moment dates" className="dashboard-date-views">
             <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
             <button type="button" aria-pressed={momentView === 'on-this-day'} onClick={() => setMomentView('on-this-day')}>On This Day</button>
@@ -442,11 +467,16 @@ export function DashboardOverviewContent() {
           ) : (
             <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p>
           )}
+          </> : null}
         </section>
         <section className="dashboard-upcoming-card" aria-label="Activities">
           <header style={styles.upcomingHeader}>
             <span>Activities</span>
+            <button type="button" className="dashboard-section-toggle" aria-expanded={sections.activities}
+              aria-label={sections.activities ? 'Hide Activities on dashboard' : 'Show Activities on dashboard'}
+              onClick={() => changeSections({ activities: !sections.activities })}>{sections.activities ? 'Hide' : 'Show'}</button>
           </header>
+          {sections.activities ? <>
           <div role="group" aria-label="Activity dates" className="dashboard-date-views">
             <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
             <button type="button" aria-pressed={activityView === 'on-this-day'} onClick={() => setActivityView('on-this-day')}>On This Day</button>
@@ -490,6 +520,7 @@ export function DashboardOverviewContent() {
             <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
+          </> : null}
           <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
         </section>
       </div>

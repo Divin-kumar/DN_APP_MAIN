@@ -1,15 +1,18 @@
 .dn-greeting-card {
   --greeting-accent: #b5cdf1;
+  --greeting-ambient: rgba(112, 148, 207, .28);
+  --greeting-rim: #506684;
   position: relative;
   isolation: isolate;
   overflow: hidden;
   width: 100%;
-  border: 1px solid #405575;
+  border: 1px solid var(--greeting-rim);
   border-radius: 22px;
   padding: clamp(12px, 3vw, 20px);
-  background: radial-gradient(ellipse at 100% 0, #30466a 0, transparent 58%), linear-gradient(145deg, #1c2c46, #111c30);
+  background: radial-gradient(ellipse at 98% 0, var(--greeting-ambient) 0, transparent 52%), radial-gradient(ellipse at 0 95%, #253b5838 0, transparent 57%), linear-gradient(145deg, #202c44, #111b2d);
   color: #f4f7fe;
   text-align: left;
+  box-shadow: 0 18px 52px rgba(8, 17, 33, .22), inset 0 1px 0 rgba(255, 255, 255, .09);
 }
 
 .dn-greeting-card::after {
@@ -26,10 +29,10 @@
   pointer-events: none;
 }
 
-.dn-greeting-card-frame { display: grid; gap: 25px; min-width: 0; padding: clamp(18px, 4vw, 34px); border: 1px solid #93b2df35; border-radius: 12px; }
+.dn-greeting-card-frame { position: relative; display: grid; gap: clamp(20px, 3.5vw, 32px); min-width: 0; padding: clamp(18px, 4vw, 36px); border: 1px solid #93b2df45; border-radius: 12px; backdrop-filter: blur(6px); }
 .dn-greeting-card-kicker { display: inline-flex; align-items: center; gap: 8px; color: var(--greeting-accent); font-size: .64rem; font-weight: 650; letter-spacing: .11em; line-height: 1.5; text-transform: uppercase; }
-.dn-greeting-card-message { display: grid; gap: 17px; min-width: 0; padding: 6px 0 13px; }
-.dn-greeting-card h2 { margin: 0; max-width: 22ch; color: #f4f7fe; font-family: inherit; font-size: clamp(1.6rem, 5.7vw, 2.55rem); font-weight: 600; line-height: 1.2; letter-spacing: -.045em; overflow-wrap: anywhere; }
+.dn-greeting-card-message { display: grid; gap: clamp(12px, 2vw, 19px); min-width: 0; padding: 7px 0 15px; }
+.dn-greeting-card h2 { margin: 0; max-width: 21ch; color: #f8f5f2; font-family: Georgia, 'Times New Roman', serif; font-size: clamp(1.8rem, 6vw, 3rem); font-weight: 500; line-height: 1.17; letter-spacing: -.035em; overflow-wrap: anywhere; text-wrap: balance; }
 .dn-greeting-card .dn-greeting-card-body { max-width: 52ch; color: #d4dfef; font-size: .94rem; font-weight: 400; line-height: 1.8; overflow-wrap: anywhere; }
 .dn-greeting-card-body .dn-rich-text-line { white-space: pre-wrap; min-height: 1em; }
 .dn-greeting-card-body :is(h3, h4, h5) { margin: 14px 0 6px; color: #edf3ff; font-size: 1.1em; line-height: 1.4; }
@@ -62,4 +65,23 @@
 
 @media print {
   .dn-greeting-card { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+}
+
+/* Occasion accents are class-based and export alongside the same HTML. */
+.dn-greeting-card--romance { --greeting-accent: #f1ccac; --greeting-ambient: rgba(193, 101, 137, .30); --greeting-rim: #8b6374; }
+.dn-greeting-card--celebration { --greeting-accent: #f5d79c; --greeting-ambient: rgba(181, 119, 66, .28); --greeting-rim: #8e7557; }
+.dn-greeting-card--journey { --greeting-accent: #9be0d6; --greeting-ambient: rgba(64, 165, 148, .28); --greeting-rim: #547e83; }
+.dn-greeting-card-frame::before {
+  content: '✦'; position: absolute; inset: 19px 22px auto auto; color: var(--greeting-accent);
+  font-size: 16px; opacity: .68; pointer-events: none;
+}
+.dn-greeting-card-kicker { max-width: calc(100% - 28px); }
+.dn-greeting-card-footer { align-items: center; }
+.dn-greeting-card-signature { display: inline-grid; place-items: center; width: 34px; height: 34px; border: 1px solid #ffffff4d; border-radius: 50%; letter-spacing: -.08em; flex: 0 0 auto; }
+@media (max-width:480px) {
+  .dn-greeting-card-frame::before { inset: 15px 15px auto auto; }
+  .dn-greeting-card h2 { font-size: clamp(1.75rem, 8vw, 2.5rem); }
+}
+@media (prefers-reduced-motion:reduce) {
+  .dn-greeting-card * { scroll-behavior: auto; }
 }

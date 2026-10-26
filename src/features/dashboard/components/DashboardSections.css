@@ -1,0 +1,8 @@
+/* Dashboard panel visibility is independent and scoped to the current account. */
+html[data-theme] .dashboard-section-toggle {
+  min-height: 36px; min-width: 58px; border: 1px solid var(--color-border);
+  border-radius: 999px; padding: 6px 12px; background: var(--color-surface);
+  color: var(--color-text); font-size: 12px; font-weight: 600; cursor: pointer;
+}
+html[data-theme] .dashboard-section-toggle:hover { background: var(--color-surface-secondary, var(--color-surface)); }
+html[data-theme] .dashboard-section-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
