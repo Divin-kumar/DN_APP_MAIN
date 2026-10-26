@@ -1,4 +1,3 @@
-import { useCallback, useMemo } from 'react';
 import usePersistentListState from './usePersistentListState';
 import { conditionCount, discoverConditionFields, emptyGroup, matchesConditionGroup } from '../utils/conditionEngine';
 
@@ -10,10 +9,12 @@ const RULES = Object.freeze({
 });
 const newId = () => globalThis.crypto?.randomUUID?.() || `filter-${Date.now()}-${Math.random()}`;
 
-export default function useConditionFilters(scope, records = []) {
-  const [state, change] = usePersistentListState(`conditions:${scope}`, DEFAULT, RULES);
-  const schema = useMemo(() => discoverConditionFields(records), [records]);
-  const matches = useCallback((record) => matchesConditionGroup(record, state.group, schema), [state.group, schema]);
+// Accept the caller's persistent-list hook so isolated page harnesses use the
+// same account-scoped hook they already inject, rather than a second React tree.
+export default function useConditionFilters(scope, records = [], useListState = usePersistentListState) {
+  const [state, change] = useListState(`conditions:${scope}`, DEFAULT, RULES);
+  const schema = discoverConditionFields(records);
+  const matches = (record) => matchesConditionGroup(record, state.group, schema);
   const setGroup = (transform) => change((current) => ({
     group: typeof transform === 'function' ? transform(current.group) : transform,
   }));
