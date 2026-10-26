@@ -1,0 +1,13 @@
+html[data-theme] .dashboard-insight-strip {
+ display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;min-width:0;margin:2px 0 12px;
+}
+html[data-theme] .dashboard-insight-strip > div {
+ display:grid;align-content:center;gap:5px;min-width:0;padding:12px;
+ border:1px solid var(--color-border);border-radius:14px;background:var(--color-surface);
+}
+html[data-theme] .dashboard-insight-strip span {font-size:11px;color:var(--color-text-muted);overflow-wrap:anywhere;}
+html[data-theme] .dashboard-insight-strip strong {font-size:clamp(13px,2vw,17px);font-weight:720;color:var(--color-text);overflow-wrap:anywhere;font-variant-numeric:tabular-nums;}
+@media(max-width:390px) {
+ html[data-theme] .dashboard-insight-strip {grid-template-columns:repeat(2,minmax(0,1fr));}
+ html[data-theme] .dashboard-insight-strip > div:first-child {grid-column:1 / -1;}
+}
