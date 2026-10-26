@@ -51,7 +51,7 @@ test('Advanced Activity conditions support nested filters, clear and saved prese
   await page.getByRole('button', { name: 'Condition', exact: true }).click();
   await page.getByRole('combobox', { name: 'Condition field' }).selectOption('activity.title');
   await page.getByRole('combobox', { name: 'Condition operator' }).selectOption('contains');
-  await page.getByRole('textbox', { name: 'Value for Activity · Title' }).fill('Book a');
+  await page.locator('.dn-condition-rule input.dn-condition-value').fill('Book a');
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
   await page.getByPlaceholder('Filter name').fill('My book plan');
