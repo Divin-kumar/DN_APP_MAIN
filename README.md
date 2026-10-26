@@ -9,7 +9,7 @@ Development branch: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
 
 ## Run locally
 
-Use Node.js 20.19+ (or supported Node 22/24) and npm. Smoke-test CI uses Node 20; the opt-in preview workflow uses Node 22. Install locked dependencies when authorized:
+Use Node.js 20.19+ (or supported Node 22/24) and npm. App smoke CI uses Node 20; Firebase preview and production workflows use Node 22. Install locked dependencies when authorized:
 
 ```sh
 npm ci
@@ -23,7 +23,7 @@ npm run preview
 
 Dev uses port 5173; preview uses 4173 and requires a successful build. Both bind `0.0.0.0`.
 
-`npm run deploy:hosting` increments package/lock patch versions, builds and publishes Hosting. It requires deployment authorization and is not a build check. Firebase configuration and hosting details are in the [master](docs/MASTER_SOURCE_OF_TRUTH.md#architecture-overview).
+`npm run deploy:hosting` is the legacy manual authenticated release command: it increments package/lock patch versions, builds and publishes Hosting. The opt-in GitHub **production** workflow targets the permanent `dn-10` Firebase Hosting site only when an `OldVersion` push commit title/message contains `[deploy-live]`, or when authorized manually through `workflow_dispatch`. It runs unit, lint and Chromium tests and a production build before uploading. Publication requires an appropriately scoped GitHub Actions repository secret named `FIREBASE_SERVICE_ACCOUNT` (service account JSON for `expense-tracker-divin`); the job fails before upload if it is absent. Never commit or paste the private credential. After upload it checks live index bytes against the exact build. For previews, use the existing `[deploy-preview]` workflow, which never publishes the permanent site. Firebase configuration and hosting details are in the [master](docs/MASTER_SOURCE_OF_TRUTH.md#architecture-overview).
 
 Browser regressions use synthetic records and do not require signing in or writing to Firebase:
 
@@ -32,4 +32,4 @@ npx playwright install chromium
 npm run test:e2e
 ```
 
-Test output and the browser test server’s separate dependency cache go to ignored `.verification/`. For isolated runtimes, add `--host 127.0.0.1` when starting Vite. Source 1.0.31 adds selectable/draggable Activity covers, list-order detail swiping, completed-edit protection, clean Activity cards and full Moment summaries. Cover appearance is a scoped browser-only setting; originals are unchanged. All new originals stay in scoped browser IndexedDB; contextual transactions and Moment Activity cards remain read-only. Transaction creation uses universal +; see the master for routes, source precedence and scope rules. No migration or backup-format update is required.
+Test output and the browser test server’s separate dependency cache go to ignored `.verification/`. For isolated runtimes, add `--host 127.0.0.1` when starting Vite. Published release 1.0.31 added selectable/draggable Activity covers, list-order detail swiping, completed-edit protection, clean Activity cards and full Moment summaries. Source 1.0.32 is a release candidate covering the Moments story timeline, media ownership, dashboard visibility/snapshot, advanced conditions and greeting redesign; a source version bump alone does not publish it. Cover appearance is a scoped browser-only setting; originals are unchanged. All new originals stay in scoped browser IndexedDB; contextual transactions and Moment Activity cards remain read-only. Transaction creation uses universal +; see the master for routes, source precedence and scope rules. No migration or backup-format update is required.
