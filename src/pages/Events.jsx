@@ -57,7 +57,7 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
 };
 
 function EventStoryCard({ event, expenseTotal, onOpen, onSummary, onEdit, onArchive, onDelete }) {
-  const date = getTimelineDate(event);
+  const date = parseMomentDate(event.date);
   const validDate = Boolean(date);
   const status = getEventStatus(event);
   const statusLabel = status === 'archived' ? 'Archived' : status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
