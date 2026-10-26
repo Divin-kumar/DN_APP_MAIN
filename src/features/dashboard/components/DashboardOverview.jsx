@@ -22,10 +22,13 @@ import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRe
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
+import usePersistentListState from '../../../hooks/usePersistentListState';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
+const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true });
+const DASHBOARD_SECTION_RULES = Object.freeze({ moments: (value) => typeof value === 'boolean', activities: (value) => typeof value === 'boolean' });
 
 const isSameDay = (first, second) => (
   first && second
@@ -366,6 +369,7 @@ export function DashboardOverviewContent() {
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
+  const [sections, changeSections] = usePersistentListState('dashboard-sections', DASHBOARD_SECTIONS, DASHBOARD_SECTION_RULES);
   useEffect(() => {
     if (!user && !isGuest) return;
     loadEvents(user?.uid, isGuest);
@@ -411,7 +415,11 @@ export function DashboardOverviewContent() {
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header style={styles.upcomingHeader}>
             <span>Moments</span>
+            <button type="button" className="dashboard-section-toggle" aria-expanded={sections.moments}
+              aria-label={sections.moments ? 'Hide Moments on dashboard' : 'Show Moments on dashboard'}
+              onClick={() => changeSections({ moments: !sections.moments })}>{sections.moments ? 'Hide' : 'Show'}</button>
           </header>
+          {sections.moments ? <>
           <div role="group" aria-label="Moment dates" className="dashboard-date-views">
             <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
             <button type="button" aria-pressed={momentView === 'on-this-day'} onClick={() => setMomentView('on-this-day')}>On This Day</button>
@@ -444,11 +452,16 @@ export function DashboardOverviewContent() {
           ) : (
             <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p>
           )}
+          </> : null}
         </section>
         <section className="dashboard-upcoming-card" aria-label="Activities">
           <header style={styles.upcomingHeader}>
             <span>Activities</span>
+            <button type="button" className="dashboard-section-toggle" aria-expanded={sections.activities}
+              aria-label={sections.activities ? 'Hide Activities on dashboard' : 'Show Activities on dashboard'}
+              onClick={() => changeSections({ activities: !sections.activities })}>{sections.activities ? 'Hide' : 'Show'}</button>
           </header>
+          {sections.activities ? <>
           <div role="group" aria-label="Activity dates" className="dashboard-date-views">
             <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
             <button type="button" aria-pressed={activityView === 'on-this-day'} onClick={() => setActivityView('on-this-day')}>On This Day</button>
@@ -492,6 +505,7 @@ export function DashboardOverviewContent() {
             <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
+          </> : null}
           <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
         </section>
       </div>
