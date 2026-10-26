@@ -29,8 +29,19 @@ test('upcoming excludes completed/cancelled activities and hidden/archived/cance
     { id: 'hidden', type: 'Private', activities: [activity] },
     { id: 'other-hidden', type: 'Other', customType: 'Private', activities: [activity] },
   ];
-  const types = [{ value: 'Private', showInDashboardUpcoming: false }];
+  const types = [{ value: 'Private', showActivitiesOnDashboard: false }];
   assert.deepEqual(ids(getUpcomingDashboardActivities(events, referenceDate, types)), ['visible']);
+});
+
+test('Activity date views use only the Activity type flag and default legacy types to visible', () => {
+  const events = ['Moment hidden', 'Activities hidden', 'Legacy'].map((type) => ({ type, activities: [
+    { id: `${type}-upcoming`, date: '2026-10-23' }, { id: `${type}-history`, date: '2025-10-23' },
+  ] }));
+  const types = [{ value: 'Moment hidden', showInDashboardUpcoming: false, showActivitiesOnDashboard: true },
+    { value: 'Activities hidden', showInDashboardUpcoming: true, showActivitiesOnDashboard: false },
+    { value: 'Legacy', showInDashboardUpcoming: false }];
+  assert.deepEqual(ids(getUpcomingDashboardActivities(events, referenceDate, types)), ['Moment hidden-upcoming', 'Legacy-upcoming']);
+  assert.deepEqual(ids(getOnThisDayDashboardActivities(events, referenceDate, types)), ['Moment hidden-history', 'Legacy-history']);
 });
 
 test('On This Day shows actual dates from past years newest first, including completed activities', () => {

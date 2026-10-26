@@ -1,7 +1,7 @@
-import { getDashboardVisibleEvents } from './dashboardVisibility.js';
+import { getDashboardVisibleActivityEvents } from './dashboardVisibility.js';
 import { getStartOfDay, parseMomentDate } from './momentDates.js';
 
-const getVisibleActivities = (events, momentTypes) => getDashboardVisibleEvents(events, momentTypes)
+const getVisibleActivities = (events, momentTypes) => getDashboardVisibleActivityEvents(events, momentTypes)
   .flatMap((event) => (Array.isArray(event.activities) ? event.activities : [])
     .filter((activity) => activity && !activity.cancelled && !['cancelled', 'canceled'].includes(String(activity.status || '').trim().toLowerCase()))
     .map((activity) => ({ event, activity, date: parseMomentDate(activity.date) }))

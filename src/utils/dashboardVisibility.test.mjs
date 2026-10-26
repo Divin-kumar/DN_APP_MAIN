@@ -1,13 +1,36 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getDashboardVisibleEvents, getMomentTypeConfig, getMomentTypeGreetingTemplate } from './dashboardVisibility.js';
+import { getDashboardVisibleActivityEvents, getDashboardVisibleEvents, getMomentTypeConfig, getMomentTypeGreetingTemplate } from './dashboardVisibility.js';
 
 test('new moment types default to dashboard visibility and greeting generation enabled', () => {
   const birthday = getMomentTypeConfig('Birthday', [{ value: 'Birthday', label: 'Birthday' }]);
   assert.equal(birthday.canGenerateGreetingCards, true);
   assert.equal(birthday.showInDashboardUpcoming, true);
+  assert.equal(birthday.showActivitiesOnDashboard, true);
   assert.equal(birthday.greetingTemplate, '');
+});
+
+test('Moment and Activity visibility are independent and preserve archived/cancelled exclusions', () => {
+  const types = [
+    { value: 'Moments only', showInDashboardUpcoming: true, showActivitiesOnDashboard: false },
+    { value: 'Activities only', showInDashboardUpcoming: false, showActivitiesOnDashboard: true },
+    { value: 'Legacy hidden moment', showInDashboard: false },
+  ];
+  const events = [{ id: 'moment', type: 'Moments only' }, { id: 'activity', type: 'Activities only' },
+    { id: 'legacy', type: 'Legacy hidden moment' }, { id: 'unknown', type: 'Unknown type' },
+    { id: 'archived', type: 'Activities only', archived: true }, { id: 'cancelled', type: 'Activities only', status: 'cancelled' }];
+  assert.deepEqual(getDashboardVisibleEvents(events, types).map(({ id }) => id), ['moment', 'unknown']);
+  assert.deepEqual(getDashboardVisibleActivityEvents(events, types).map(({ id }) => id), ['activity', 'legacy', 'unknown']);
+});
+
+test('Activity visibility resolves custom Other values and configured labels independently', () => {
+  const events = [{ id: 'custom', type: 'Other', customType: 'fAmIlY' },
+    { id: 'generic', type: 'Other', customType: 'Unconfigured' }, { id: 'label', type: 'FAMILY' }];
+  const types = [{ value: 'Other', showInDashboardUpcoming: true, showActivitiesOnDashboard: false },
+    { value: 'family-value', label: 'Family', showInDashboardUpcoming: false, showActivitiesOnDashboard: true }];
+  assert.deepEqual(getDashboardVisibleEvents(events, types).map(({ id }) => id), ['generic']);
+  assert.deepEqual(getDashboardVisibleActivityEvents(events, types).map(({ id }) => id), ['custom', 'label']);
 });
 
 test('config disables greeting cards and dashboard visibility when set on the moment type', () => {

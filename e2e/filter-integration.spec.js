@@ -24,8 +24,8 @@ async function selectOption(page, control, label) {
 }
 
 async function addTextCondition(page, field, value) {
-  await page.getByRole('button', { name: 'Add condition', exact: true }).first().click();
-  await selectOption(page, 'Condition field', field);
+  await page.getByRole('button', { name: 'Add filter', exact: true }).first().click();
+  await selectOption(page, 'Filter by', field);
   await page.getByRole('textbox', { name: `Value for ${field}`, exact: true }).fill(value);
   await expect(page.getByRole('button', { name: new RegExp(`Remove filter ${field} Contains ${value}`) })).toBeVisible();
 }
@@ -94,18 +94,18 @@ test('Guest and synthetic Account conditions and saved presets remain isolated w
   await page.goto('/events');
   await openFilters(page);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await addTextCondition(page, 'Name', 'Weekend');
-  await page.getByPlaceholder('Filter name').fill('Guest weekend');
+  await addTextCondition(page, 'Moment name', 'Weekend');
+  await page.getByPlaceholder('Give it a name').fill('Guest weekend');
   await page.getByRole('button', { name: 'Save filter', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toBeVisible();
 
   await accountScope(page, 'filter-isolation-owner', moments);
   await openFilters(page);
-  await expect(page.getByRole('button', { name: /Remove filter Name Contains Weekend/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await addTextCondition(page, 'Name', 'separate');
-  await page.getByPlaceholder('Filter name').fill('Account plan');
+  await addTextCondition(page, 'Moment name', 'separate');
+  await page.getByPlaceholder('Give it a name').fill('Account plan');
   await page.getByRole('button', { name: 'Save filter', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Account plan', exact: true })).toBeVisible();
   await expect(page.locator('.event-story-main')).toHaveCount(1);
@@ -119,7 +119,7 @@ test('Guest and synthetic Account conditions and saved presets remain isolated w
     app.setState({ user: null, isGuest: true, authReady: true });
   }, moments);
   await openFilters(page);
-  await expect(page.getByRole('button', { name: /Remove filter Name Contains Weekend/ })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Account plan', exact: true })).toHaveCount(0);
   await expect(page.locator('.event-story-main')).toHaveCount(1);
@@ -140,23 +140,23 @@ test('Finance totals follow only date conditions and retain full totals when an 
   ] });
   await page.goto('/financials');
   await openFilters(page);
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await selectOption(page, 'Condition field', 'Date');
-  await selectOption(page, 'Condition operator', 'Custom range');
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await selectOption(page, 'Filter by', 'Date');
+  await selectOption(page, 'Comparison', 'Custom range');
   await page.getByLabel('From Date', { exact: true }).fill('2026-10-01');
   await page.getByLabel('To Date', { exact: true }).fill('2026-10-31');
   await expect(page.locator('.dn-condition-chip')).toHaveCount(1);
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await selectOption(page, 'Condition field', 'Transaction Kind');
-  await selectOption(page, 'Condition operator', 'Equals');
-  await selectOption(page, 'Value for Transaction Kind', 'expense');
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await selectOption(page, 'Filter by', 'Type');
+  await selectOption(page, 'Comparison', 'Is');
+  await selectOption(page, 'Value for Type', 'Expense');
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(1);
   await expect(page.locator('.dn-transaction-copy strong')).toHaveText('October expense');
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,000');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹230');
   await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹770');
 
-  await selectOption(page, 'Condition group logic', 'Any condition (OR)');
+  await selectOption(page, 'Match filters', 'Any filter');
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(3);
   await expect(page.locator('.dn-transaction-copy strong').filter({ hasText: 'September income' })).toHaveCount(0);
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,500');
@@ -172,7 +172,7 @@ test('Archive and Restore from a filtered Moment list preserve the original canc
   await page.goto('/events');
   await openFilters(page);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await addTextCondition(page, 'Name', 'Cancelled');
+  await addTextCondition(page, 'Moment name', 'Cancelled');
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   const card = page.getByRole('group', { name: /^Cancelled plan\. Swipe either direction for actions\.$/ });
   const storedMoment = () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find((item) => item.id === 'cancelled-moment'));
@@ -186,6 +186,6 @@ test('Archive and Restore from a filtered Moment list preserve the original canc
     expect(stored.archived).toBe(archived);
     expect(stored.id).toBe('cancelled-moment');
     await expect(page.locator('.event-story-main')).toHaveCount(1);
-    await expect(page.getByRole('button', { name: /Remove filter Name Contains Cancelled/ })).toBeVisible();
+    await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Cancelled/ })).toBeVisible();
   }
 });

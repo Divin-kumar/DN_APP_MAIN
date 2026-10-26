@@ -149,6 +149,7 @@ const normalizeMetaEntry = (item) => {
       canGenerateGreetingCards: true,
       greetingTemplate: '',
       showInDashboardUpcoming: true,
+      showActivitiesOnDashboard: true,
     } : null;
   }
 
@@ -166,6 +167,7 @@ const normalizeMetaEntry = (item) => {
       canGenerateGreetingCards: item.canGenerateGreetingCards ?? item.generateGreetingCards ?? true,
       greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
       showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
+      showActivitiesOnDashboard: item.showActivitiesOnDashboard ?? true,
     };
   }
 
@@ -226,7 +228,7 @@ export const serializeCodeListEntries = (items) => {
     .map((item) => {
       if (typeof item === 'string') {
         const value = item.trim();
-        return value ? { value, label: value, active: true, isActive: true, canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true } : null;
+        return value ? { value, label: value, active: true, isActive: true, canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true, showActivitiesOnDashboard: true } : null;
       }
       if (item && typeof item === 'object') {
         const value = String(item.value ?? item.id ?? '').trim();
@@ -241,6 +243,7 @@ export const serializeCodeListEntries = (items) => {
           canGenerateGreetingCards: item.canGenerateGreetingCards ?? item.generateGreetingCards ?? true,
           greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
           showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
+          showActivitiesOnDashboard: item.showActivitiesOnDashboard ?? true,
         };
       }
       return null;

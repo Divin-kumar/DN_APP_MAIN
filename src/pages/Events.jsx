@@ -29,6 +29,8 @@ import { momentConditions, momentConditionRecord } from '../utils/listConditionM
 import useConditionFilters from '../hooks/useConditionFilters';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
+import SortControl from '../components/common/SortControl';
+import { MOMENT_SORT_OPTIONS, momentSortSummary, sortMoments } from '../utils/userListSort';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import { plainRichText } from '../utils/richText';
@@ -38,8 +40,8 @@ import { getActiveSampleScenario } from '../dev/sampleData';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments' });
-const momentFilterRules = Object.freeze({});
+const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
+const momentFilterRules = Object.freeze({ field: MOMENT_SORT_OPTIONS.map(({ value }) => value), direction: ['asc', 'desc'] });
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
   const baseDate = new Date(event.date || event.startDate || event.createdAt);
@@ -149,7 +151,8 @@ export default function Events() {
   useEffect(() => { setSummaryEvent(null); }, [scopedMoments.scopeIdentity]);
   const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
-  const { search } = momentFilters;
+  const { search, field: sortField, direction: sortDirection } = momentFilters;
+  const sortSummary = momentSortSummary(sortField, sortDirection);
   const setSearch = (value) => changeMomentFilters({ search: value });
   const conditionRecords = useMemo(() => events.map(momentConditionRecord), [events]);
   const conditions = useConditionFilters('moments', conditionRecords, usePersistentListState, { initialGroup: momentConditions(momentFilters), contextKey: getActiveSampleScenario(user?.uid) });
@@ -208,19 +211,12 @@ export default function Events() {
 
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return [...events]
-      .filter((event) => {
+    return sortMoments(events.filter((event) => {
         const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
           .some((value) => String(value || '').toLowerCase().includes(query));
         return matchesSearch && conditions.matches(momentConditionRecord(event));
-      })
-      .sort((first, second) => {
-        // The story always follows the recorded Event Date, never creation or update time.
-        const firstDate = parseMomentDate(first.date)?.getTime() ?? Number.POSITIVE_INFINITY;
-        const secondDate = parseMomentDate(second.date)?.getTime() ?? Number.POSITIVE_INFINITY;
-        return firstDate === secondDate ? 0 : firstDate - secondDate;
-      });
-  }, [events, search, conditions.matches]);
+      }), sortField, sortDirection);
+  }, [events, search, sortField, sortDirection, conditions.matches]);
   const upcomingCount = events.filter((event) => {
     if (event.archived) return false;
     const date = getTimelineDate(event);
@@ -483,8 +479,11 @@ export default function Events() {
         <ListControls title="Moment filters" builder
           activeCount={conditions.activeCount} resultCount={visibleEvents.length} resultLabel="moments"
           chips={<ConditionChips filter={conditions} />}
-          summary="Event Date · Oldest to newest"
-          canReset={Boolean(conditions.activeCount || search)} onReset={() => { resetMomentFilters(); conditions.clear(); }}
+          summary={sortSummary}
+          sort={<SortControl field={sortField} direction={sortDirection} options={MOMENT_SORT_OPTIONS} label="Sort moments"
+            onFieldChange={(field) => changeMomentFilters({ field, direction: 'asc' })}
+            onToggleDirection={() => changeMomentFilters({ direction: sortDirection === 'asc' ? 'desc' : 'asc' })} />}
+          canReset={Boolean(conditions.activeCount || search || sortField !== 'date' || sortDirection !== 'asc')} onReset={() => { resetMomentFilters(); conditions.clear(); }}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <ConditionBuilder filter={conditions} title="Moment conditions" />
         </ListControls>
@@ -493,8 +492,8 @@ export default function Events() {
       {error ? <p style={styles.errorText}>{error}</p> : null}
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
         <div className="life-journey">
-          <section className="life-journey-section" aria-label="Moments ordered by Event Date">
-            <div className="life-journey-label"><CalendarDays size={16} /><div><span>Life timeline</span><small>Event Date · Oldest to newest</small></div><b>{visibleEvents.length}</b></div>
+          <section className="life-journey-section" aria-label={`Moments ordered by ${sortSummary}`}>
+            <div className="life-journey-label"><CalendarDays size={16} /><div><span>Life timeline</span><small>{sortSummary}</small></div><b>{visibleEvents.length}</b></div>
             <div className="life-journey-items">{visibleEvents.map(renderEventCard)}</div>
           </section>
         </div>

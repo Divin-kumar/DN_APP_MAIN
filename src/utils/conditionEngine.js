@@ -95,6 +95,11 @@ export const operatorsFor = (type) => {
   if (type === 'dropdown') return [['eq', 'Is'], ['ne', 'Is not'], ['any_of', 'Any of'], ['none_of', 'None of'], ...universal];
   return [['contains', 'Contains'], ['not_contains', 'Does not contain'], ['eq', 'Equals'], ['ne', 'Does not equal'], ['starts', 'Starts with'], ['ends', 'Ends with'], ['any_of', 'Any of'], ['none_of', 'None of'], ...universal];
 };
+export const operatorsForField = (field, currentOperator) => {
+  const operators = operatorsFor(field?.type);
+  const legacy = field?.legacyTextComparisons && operatorsFor('text').find(([operator]) => operator === currentOperator);
+  return legacy && !operators.some(([operator]) => operator === currentOperator) ? [...operators, legacy] : operators;
+};
 export const isActiveCondition = (rule) => Boolean(rule?.field && rule.operator && (noValueOperators.has(rule.operator)
   || (rule.operator === 'between' ? Array.isArray(rule.value) && rule.value.length === 2 && rule.value.every((value) => !isEmpty(value))
     : Array.isArray(rule.value) ? rule.value.length > 0 : text(rule.value) !== '')));
@@ -134,12 +139,13 @@ const booleanValue = (value) => value === true || value === 'true' ? true : valu
 const compileRule = (rule, fields, now) => {
   if (!isActiveCondition(rule)) return null;
   const type = fields.get(rule.field)?.type;
-  if (type && !operatorsFor(type).some(([operator]) => operator === rule.operator)) return () => false;
+  if (type && !operatorsForField(fields.get(rule.field), rule.operator).some(([operator]) => operator === rule.operator)) return () => false;
   const expected = text(rule.value).toLocaleLowerCase();
   const choices = new Set((Array.isArray(rule.value) ? rule.value : [rule.value]).map((entry) => text(entry).toLocaleLowerCase()));
   const range = ['today', 'this_week', 'this_month', 'this_year'].includes(rule.operator) ? relativeRange(rule.operator, now) : rule.value;
   return (record) => {
-    const raw = getConditionValue(record, rule.field), values = Array.isArray(raw) ? raw : [raw];
+    const field = fields.get(rule.field);
+    const raw = field?.readValue ? field.readValue(record, rule) : getConditionValue(record, rule.field), values = Array.isArray(raw) ? raw : [raw];
     if (rule.operator === 'empty') return values.every(isEmpty);
     if (rule.operator === 'not_empty') return values.some((value) => !isEmpty(value));
     const compare = (value) => {
@@ -206,8 +212,17 @@ export const mapConditions = (node, id, transform) => node.id === id ? transform
 export const removeCondition = (node, id) => node.id === id ? null : node.kind === 'group' ? { ...node, children: node.children.map((child) => removeCondition(child, id)).filter(Boolean) } : node;
 export const conditionChipEntries = (group, schema = []) => {
   const fields = new Map(schema.map((field) => [field.path, field]));
+  const describe = (node) => {
+    const field = fields.get(node.field);
+    if (!field) return 'Unavailable filter';
+    const labelValue = (value) => field.options?.find((option) => option.value === String(value))?.label
+      || (field.type === 'dropdown' ? field.labelValue?.(value) || 'Unavailable choice' : text(value));
+    const value = Array.isArray(node.value) ? node.value.map(labelValue).join(node.operator === 'between' ? ' – ' : ', ') : labelValue(node.value);
+    const operator = operatorsForField(field, node.operator).find(([operator]) => operator === node.operator)?.[1] || 'is';
+    return `${field.label} ${operator}${noValueOperators.has(node.operator) ? '' : ` ${value}`}`;
+  };
   const visit = (node, logic = []) => node?.kind === 'group' ? node.children.flatMap((child) => visit(child, [...logic, node.join])) : isActiveCondition(node) ? [{ id: node.id,
-    label: `${logic.includes('OR') ? `${logic.join(' › ')} · ` : ''}${fields.get(node.field)?.label || labelFor(node.field)} ${operatorsFor(fields.get(node.field)?.type || 'text').find(([operator]) => operator === node.operator)?.[1] || node.operator}${noValueOperators.has(node.operator) ? '' : ` ${Array.isArray(node.value) ? node.value.join(node.operator === 'between' ? ' – ' : ', ') : text(node.value)}`}`,
+    label: `${logic.includes('OR') ? `${logic.join(' › ')} · ` : ''}${describe(node)}`,
   }] : [];
   return group ? visit(group) : [];
 };

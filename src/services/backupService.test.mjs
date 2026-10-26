@@ -56,6 +56,15 @@ test('v3 restore reconstructs embedded current Moment records and nested expense
   assert.equal(moment.attachments[0].id, 'attachment-1');
 });
 
+test('v3 backup preserves independent Moment type Dashboard flags', () => {
+  const backup = fixture();
+  backup.codeLists.eventTypes = [{ value: 'Private', showInDashboardUpcoming: true, showActivitiesOnDashboard: false }];
+  const restored = parseBackupDocument(JSON.parse(JSON.stringify(backup)));
+  assert.equal(restored.codeLists.eventTypes[0].showInDashboardUpcoming, true);
+  assert.equal(restored.codeLists.eventTypes[0].showActivitiesOnDashboard, false);
+  assert.equal(restored.backupVersion, 3);
+});
+
 test('v3 validator rejects unsupported versions, duplicate IDs, and broken required relationships', () => {
   const backup = fixture();
   assert.throws(() => parseBackupDocument({ backupVersion: 4 }), /Unsupported backup version/);

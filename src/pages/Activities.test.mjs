@@ -131,11 +131,17 @@ test('the existing filter location contains only the condition builder and condi
   assert.equal(h.writes.length, 0);
 });
 
-test('condition fields and values include actual custom Moment types and clear restores the complete list', async (t) => {
+test('Activity filters use product fields, keep actual custom Moment types and clear restores the complete list', async (t) => {
   const h = await openActivities(t);
   h.second.type = 'Other'; h.second.customType = 'Travel';
   const condition = h.find('ConditionBuilder').props.filter;
+  assert.deepEqual(condition.schema.map((field) => field.label), [
+    'Activity name', 'Date', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility',
+  ]);
+  assert.equal(condition.schema.some((field) => /metadata|createdAt|expense|firestore/.test(field.path)), false);
   assert.ok(condition.schema.find((field) => field.path === 'momentType').values.includes('Travel'));
+  assert.equal(condition.schema.find((field) => field.path === 'momentId').options
+    .find((option) => option.value === 'moment-two').label, 'Synthetic second Moment');
   condition.setGroup({ id: 'root', kind: 'group', join: 'AND', children: [
     { id: 'type', kind: 'rule', field: 'momentType', operator: 'eq', value: 'Travel' },
   ] });

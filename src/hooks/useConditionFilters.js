@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import usePersistentListState from './usePersistentListState';
 import { compileConditionGroup, conditionCount, discoverConditionFields, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine';
+import { getUserFilterFields, normalizeUserFilterGroup } from '../utils/userFilterSchema';
 
 const DEFAULT = Object.freeze({ group: emptyGroup(), saved: [], recent: [], history: [], migrationVersion: 0 });
 const RULES = Object.freeze({
@@ -9,12 +10,13 @@ const RULES = Object.freeze({
   migrationVersion: (value) => Number.isSafeInteger(value) && value >= 0,
 });
 const newId = () => globalThis.crypto?.randomUUID?.() || `filter-${Date.now()}-${Math.random()}`;
-const normalizePresets = (items) => {
+const normalizeGroup = (scope, group) => normalizeUserFilterGroup(scope, normalizeConditionGroup(group));
+const normalizePresets = (items, scope) => {
   const ids = new Set();
   return (Array.isArray(items) ? items : []).filter((item) => {
     if (!item || typeof item.id !== 'string' || ids.has(item.id) || typeof item.label !== 'string') return false;
     ids.add(item.id); return item.group?.kind === 'group';
-  }).slice(0, 30).map((item) => ({ id: item.id, label: item.label.slice(0, 80), group: normalizeConditionGroup(item.group), favorite: item.favorite === true }));
+  }).slice(0, 30).map((item) => ({ id: item.id, label: item.label.slice(0, 80), group: normalizeGroup(scope, item.group), favorite: item.favorite === true }));
 };
 const combineGroups = (existing, legacy) => {
   if (!legacy.children.length) return existing;
@@ -35,18 +37,19 @@ export default function useConditionFilters(scope, records = [], useListState = 
   const [stored, change, , storageKey] = useListState(listKey, DEFAULT, RULES);
   const [editorRevision, setEditorRevision] = useState(0);
   const [calendarDay, setCalendarDay] = useState(todayKey);
-  const storedGroup = useMemo(() => normalizeConditionGroup(stored.group), [stored.group]);
-  const legacyGroup = normalizeConditionGroup(configuration.initialGroup);
+  const storedGroup = useMemo(() => normalizeGroup(scope, stored.group), [scope, stored.group]);
+  const legacyGroup = normalizeGroup(scope, configuration.initialGroup);
   const migrationVersion = configuration.migrationVersion ?? (configuration.initialGroup ? 1 : 0);
   const needsMigration = stored.migrationVersion < migrationVersion;
   const legacyKey = JSON.stringify(legacyGroup);
   const group = useMemo(() => needsMigration ? combineGroups(storedGroup, JSON.parse(legacyKey)) : storedGroup,
     [storedGroup, needsMigration, legacyKey]);
-  const state = useMemo(() => ({ ...stored, group, saved: normalizePresets(stored.saved),
-    recent: stored.recent.filter((id) => typeof id === 'string').slice(0, 8), history: normalizePresets(stored.history).slice(0, 8),
-  }), [stored, group]);
+  const state = useMemo(() => ({ ...stored, group, saved: normalizePresets(stored.saved, scope),
+    recent: stored.recent.filter((id) => typeof id === 'string').slice(0, 8), history: normalizePresets(stored.history, scope).slice(0, 8),
+  }), [stored, group, scope]);
   const schemaHints = configuration.schema || NO_SCHEMA;
-  const schema = useMemo(() => discoverConditionFields(records, schemaHints), [records, schemaHints]);
+  const moments = configuration.moments || NO_SCHEMA;
+  const schema = useMemo(() => getUserFilterFields(scope, records, moments) || discoverConditionFields(records, schemaHints), [scope, records, moments, schemaHints]);
   const matches = useMemo(() => compileConditionGroup(group, schema), [group, schema, calendarDay]);
   const activeCount = useMemo(() => conditionCount(group), [group]);
 
@@ -71,16 +74,16 @@ export default function useConditionFilters(scope, records = [], useListState = 
     if (state.history[0] && groupKey(state.history[0].group) === groupKey(group)) return undefined;
     const timer = setTimeout(() => change((current) => {
       const key = groupKey(group);
-      const history = normalizePresets(current.history);
+      const history = normalizePresets(current.history, scope);
       if (history[0] && groupKey(history[0].group) === key) return {};
       return { history: [{ id: newId(), label: `${activeCount} condition${activeCount === 1 ? '' : 's'}`, group, favorite: false },
         ...history.filter((item) => groupKey(item.group) !== key)].slice(0, 8) };
     }), 900);
     return () => clearTimeout(timer);
-  }, [activeCount, group, listKey, needsMigration, change, state.history]);
+  }, [activeCount, group, listKey, needsMigration, change, state.history, scope]);
 
-  const setGroup = (transform) => change((current) => ({ group: normalizeConditionGroup(typeof transform === 'function'
-    ? transform(normalizeConditionGroup(current.group)) : transform) }));
+  const setGroup = (transform) => change((current) => ({ group: normalizeGroup(scope, typeof transform === 'function'
+    ? transform(normalizeGroup(scope, current.group)) : transform) }));
   const clear = () => {
     change({ group: emptyGroup(), migrationVersion: Math.max(migrationVersion, stored.migrationVersion) });
     setEditorRevision((current) => current + 1);
@@ -88,23 +91,23 @@ export default function useConditionFilters(scope, records = [], useListState = 
   const save = (title) => {
     const label = String(title || '').trim().slice(0, 80);
     if (!label || !activeCount) return;
-    change((current) => ({ saved: [{ id: newId(), label, group: normalizeConditionGroup(current.group), favorite: false }, ...normalizePresets(current.saved)].slice(0, 30) }));
+    change((current) => ({ saved: [{ id: newId(), label, group: normalizeGroup(scope, current.group), favorite: false }, ...normalizePresets(current.saved, scope)].slice(0, 30) }));
   };
   const apply = (id) => {
     setEditorRevision((current) => current + 1);
     change((current) => {
-      const choice = [...normalizePresets(current.saved), ...normalizePresets(current.history)].find((item) => item.id === id);
-      return choice ? { group: normalizeConditionGroup(choice.group), recent: [id, ...current.recent.filter((item) => item !== id)].slice(0, 8) } : {};
+      const choice = [...normalizePresets(current.saved, scope), ...normalizePresets(current.history, scope)].find((item) => item.id === id);
+      return choice ? { group: normalizeGroup(scope, choice.group), recent: [id, ...current.recent.filter((item) => item !== id)].slice(0, 8) } : {};
     });
   };
   const favorite = (id) => change((current) => {
-    const saved = normalizePresets(current.saved), preset = saved.find((item) => item.id === id);
+    const saved = normalizePresets(current.saved, scope), preset = saved.find((item) => item.id === id);
     if (preset) return { saved: saved.map((item) => item.id === id ? { ...item, favorite: !item.favorite } : item) };
-    const historical = normalizePresets(current.history).find((item) => item.id === id);
+    const historical = normalizePresets(current.history, scope).find((item) => item.id === id);
     return historical ? { saved: [{ ...historical, favorite: true }, ...saved].slice(0, 30) } : {};
   });
-  const forget = (id) => change((current) => ({ saved: normalizePresets(current.saved).filter((item) => item.id !== id),
-    history: normalizePresets(current.history).filter((item) => item.id !== id), recent: current.recent.filter((item) => item !== id) }));
+  const forget = (id) => change((current) => ({ saved: normalizePresets(current.saved, scope).filter((item) => item.id !== id),
+    history: normalizePresets(current.history, scope).filter((item) => item.id !== id), recent: current.recent.filter((item) => item !== id) }));
   return { state, schema, matches, setGroup, clear, save, apply, favorite, forget, activeCount,
     scopeKey: storageKey || listKey, editorKey: `${storageKey || listKey}:${editorRevision}` };
 }

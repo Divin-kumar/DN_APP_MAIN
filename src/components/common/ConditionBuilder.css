@@ -19,9 +19,12 @@ html[data-theme] .dn-conditions .dropdown-field .dropdown-trigger,
 html[data-theme] .dn-list-controls-panel .dn-conditions .dropdown-field .dropdown-trigger { width:100%; min-height:44px; padding:8px 10px !important; border:1px solid var(--color-border) !important; border-radius:9px !important; background:var(--color-surface) !important; box-shadow:none; font-size:14px !important; font-weight:500; }
 html[data-theme] .dn-condition-value { min-width:0; width:100%; min-height:44px; background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border); padding:8px 10px; border-radius:9px; font-size:16px; }
 html[data-theme] .dn-condition-children { display:grid; gap:8px; min-width:0; }
-html[data-theme] .dn-condition-rule { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 44px; align-items:start; gap:7px; min-width:0; }
+html[data-theme] .dn-condition-rule { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 44px; align-items:center; gap:7px; min-width:0; }
 html[data-theme] .dn-condition-rule > *, html[data-theme] .dn-condition-value-slot { min-width:0; max-width:100%; }
-html[data-theme] .dn-condition-no-value { display:flex; align-items:center; min-height:44px; font-size:11px; color:var(--color-text-muted); }
+html[data-theme] .dn-condition-rule .dropdown-field { display:block; width:100%; min-width:0; }
+html[data-theme] .dn-condition-rule .dropdown-trigger { gap:4px; }
+html[data-theme] .dn-condition-rule .dropdown-trigger > svg { flex:0 0 auto; }
+html[data-theme] .dn-condition-no-value { display:block; min-height:44px; line-height:44px; font-size:11px; color:var(--color-text-muted); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 html[data-theme] .dn-condition-icon { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; border:0; background:transparent; color:var(--color-text-muted); cursor:pointer; border-radius:8px; }
 html[data-theme] .dn-condition-group-actions { display:flex; flex-wrap:wrap; gap:7px; margin-top:8px; }
 html[data-theme] .dn-condition-group-actions button, html[data-theme] .dn-conditions-save > button { display:inline-flex; align-items:center; gap:6px; min-height:44px; border-radius:9px; padding:7px 11px; border:1px solid var(--color-border); background:var(--color-surface); color:var(--color-text); font-size:12px; cursor:pointer; }
@@ -36,24 +39,22 @@ html[data-theme] .dn-condition-preset { display:flex; align-items:center; gap:4p
 html[data-theme] .dn-condition-preset-name { flex:1; min-width:0; text-align:left; border:0; padding:6px 4px; background:transparent; color:var(--color-text); cursor:pointer; min-height:44px; overflow-wrap:anywhere; }
 html[data-theme] .dn-condition-empty { margin:6px 0; color:var(--color-text-muted); font-size:12px; }
 html[data-theme] .dn-condition-range { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:5px; }
-html[data-theme] .dn-condition-range label { display:grid; gap:3px; min-width:0; }
-html[data-theme] .dn-condition-range label > span { color:var(--color-text-muted); font-size:10px; }
-html[data-theme] .dn-condition-multi { min-width:0; }
-html[data-theme] .dn-condition-selected-values { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
-html[data-theme] .dn-condition-selected-values button { display:inline-flex; align-items:center; gap:4px; max-width:100%; min-height:32px; padding:4px 7px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font-size:11px; cursor:pointer; overflow-wrap:anywhere; }
+html[data-theme] .dn-condition-range label { position:relative; display:block; min-width:0; }
+html[data-theme] .dn-condition-range label > span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+html[data-theme] .dn-condition-multi { display:flex; align-items:center; gap:4px; min-width:0; }
+html[data-theme] .dn-condition-multi > .dropdown-field { flex:1 1 0; }
+html[data-theme] .dn-condition-selected-values { display:flex; flex:1 1 0; gap:4px; min-width:0; overflow-x:auto; overflow-y:hidden; scrollbar-width:none; }
+html[data-theme] .dn-condition-selected-values::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-condition-selected-values button { display:inline-flex; flex:0 0 auto; align-items:center; gap:4px; max-width:100%; min-height:32px; padding:4px 7px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font-size:11px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 html[data-theme] .dn-conditions button:focus-visible, html[data-theme] .dn-conditions input:focus-visible, html[data-theme] .dn-condition-chip:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
-@media (max-width:850px) {
- html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1fr) minmax(0,1fr) 44px; }
- html[data-theme] .dn-condition-rule > .dn-condition-value-slot { grid-column:1 / span 2; }
- html[data-theme] .dn-condition-rule > .dn-condition-icon { grid-column:3; grid-row:1 / span 2; }
-}
 @media (max-width:620px) {
  html[data-theme] .dn-condition-group { padding:8px; }
  html[data-theme] .dn-condition-group.is-nested { padding:6px; }
- html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1fr) 44px; gap:6px; }
- html[data-theme] .dn-condition-rule > .dropdown-field, html[data-theme] .dn-condition-rule > .dn-condition-value-slot { grid-column:1; }
- html[data-theme] .dn-condition-rule > .dn-condition-icon { grid-column:2; grid-row:1 / span 3; }
+ html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) minmax(0,1.2fr) 44px; gap:4px; }
+ html[data-theme] .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger,
+ html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger { padding:6px !important; font-size:12px !important; }
+ html[data-theme] .dn-condition-rule .dn-condition-value { padding:6px; }
  html[data-theme] .dn-condition-group-head { flex-wrap:wrap; gap:4px; }
  html[data-theme] .dn-condition-group-head .dropdown-field { flex:1 1 120px; max-width:none; }
- html[data-theme] .dn-condition-range { grid-template-columns:minmax(0,1fr); }
+ html[data-theme] .dn-condition-range { gap:3px; }
 }

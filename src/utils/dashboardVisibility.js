@@ -7,6 +7,7 @@ export const DEFAULT_MOMENT_TYPE_CONFIG = Object.freeze({
   canGenerateGreetingCards: true,
   greetingTemplate: '',
   showInDashboardUpcoming: true,
+  showActivitiesOnDashboard: true,
 });
 
 export const getMomentTypeConfig = (momentType, customValues = []) => {
@@ -34,10 +35,11 @@ export const getMomentTypeConfig = (momentType, customValues = []) => {
     canGenerateGreetingCards: match.canGenerateGreetingCards ?? true,
     greetingTemplate: typeof match.greetingTemplate === 'string' ? match.greetingTemplate : '',
     showInDashboardUpcoming: match.showInDashboardUpcoming ?? true,
+    showActivitiesOnDashboard: match.showActivitiesOnDashboard ?? true,
   };
 };
 
-export const getDashboardVisibleEvents = (events = [], customValues = []) => {
+const getDashboardEventsFor = (events = [], customValues = [], visibilityKey) => {
   const momentTypes = getCodeListMeta('eventTypes', customValues);
   return (Array.isArray(events) ? events : []).filter((event) => {
     if (!event || event.archived || ['archived', 'cancelled'].includes(String(event.status || '').trim().toLowerCase())) return false;
@@ -47,9 +49,14 @@ export const getDashboardVisibleEvents = (events = [], customValues = []) => {
       entry.value.toLowerCase() === customType.toLowerCase() || entry.label.toLowerCase() === customType.toLowerCase()
     ));
     const effectiveType = configuredCustomType ? customType : eventType;
-    return getMomentTypeConfig(effectiveType, momentTypes).showInDashboardUpcoming !== false;
+    return getMomentTypeConfig(effectiveType, momentTypes)[visibilityKey] !== false;
   });
 };
+
+export const getDashboardVisibleEvents = (events = [], customValues = []) => getDashboardEventsFor(events, customValues, 'showInDashboardUpcoming');
+
+// Activity visibility is independent of whether the parent Moment appears.
+export const getDashboardVisibleActivityEvents = (events = [], customValues = []) => getDashboardEventsFor(events, customValues, 'showActivitiesOnDashboard');
 
 export const getUpcomingDashboardEvents = (events = [], referenceDate = new Date(), customValues = []) => {
   const today = getStartOfDay(referenceDate);

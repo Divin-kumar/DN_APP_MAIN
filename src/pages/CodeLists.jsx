@@ -113,13 +113,14 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   };
 
   const openMomentTypeEditor = (entry = null) => {
-    const baseEntry = entry || { value: '', label: '', canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true };
+    const baseEntry = entry || { value: '', label: '', canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true, showActivitiesOnDashboard: true };
     setMomentTypeEditor({
       existingValue: baseEntry.value || null,
       title: baseEntry.label || baseEntry.value || '',
       canGenerateGreetingCards: baseEntry.canGenerateGreetingCards ?? true,
       greetingTemplate: typeof baseEntry.greetingTemplate === 'string' ? baseEntry.greetingTemplate : '',
       showInDashboardUpcoming: baseEntry.showInDashboardUpcoming ?? true,
+      showActivitiesOnDashboard: baseEntry.showActivitiesOnDashboard ?? true,
     });
   };
 
@@ -135,6 +136,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       canGenerateGreetingCards: Boolean(momentTypeEditor.canGenerateGreetingCards),
       greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate : '',
       showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
+      showActivitiesOnDashboard: momentTypeEditor.showActivitiesOnDashboard !== false,
     };
 
     const nextEntries = entries.some((entry) => entry.value === (momentTypeEditor.existingValue || title))
@@ -194,6 +196,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
           canGenerateGreetingCards: item.canGenerateGreetingCards ?? true,
           greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : '',
           showInDashboardUpcoming: item.showInDashboardUpcoming ?? true,
+          showActivitiesOnDashboard: item.showActivitiesOnDashboard ?? true,
         };
       }
       return { ...item, value: trimmed, label: trimmed };
@@ -317,8 +320,14 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
             <div className="moment-type-switch-list">
               <div className="moment-type-switch-row">
-                <span>Show on Dashboard</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Show on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
+                <span>Show Moments on Dashboard</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Show Moments on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
+                  <span className="moment-type-switch-thumb" />
+                </button>
+              </div>
+              <div className="moment-type-switch-row">
+                <span>Show Activities on Dashboard</span>
+                <button type="button" className="moment-type-switch" role="switch" aria-label="Show Activities on Dashboard" aria-checked={momentTypeEditor.showActivitiesOnDashboard} onClick={() => setMomentTypeEditor((current) => ({ ...current, showActivitiesOnDashboard: !current.showActivitiesOnDashboard }))}>
                   <span className="moment-type-switch-thumb" />
                 </button>
               </div>
@@ -409,7 +418,7 @@ export default function CodeLists() {
         </section>
       ) : null}
       {!adminValuesLoading && !adminValuesError ? <>
-        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type controls greeting generation and visibility in upcoming Dashboard moments." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type controls greeting generation and separate Dashboard visibility for its Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />

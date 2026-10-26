@@ -62,7 +62,7 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     expect(active.x).toBeGreaterThanOrEqual(rail.x - 1); expect(active.x + active.width).toBeLessThanOrEqual(rail.x + rail.width + 1);
     await page.goto('/events/moment-one/transactions');
     await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Filters', exact: true }).click();
+    await page.getByRole('button', { name: /^Filters and sort(?:,|$)/ }).click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await expectTextContrast(page.locator('.moment-finance-summary dt, .moment-finance-summary dd, .moment-transactions .dn-transaction-value'));
     await page.goto('/activities');

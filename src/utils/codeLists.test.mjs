@@ -52,6 +52,7 @@ test('legacy migration preserves custom values, edits, metadata, inactive values
     canGenerateGreetingCards: false,
     greetingTemplate: 'Keep this',
     showInDashboardUpcoming: true,
+    showActivitiesOnDashboard: true,
     customFlag: 'preserve me',
   });
   assert.equal(result.adminValues.eventTypes.some((entry) => entry.value === 'Custom Moment'), true);
@@ -144,7 +145,22 @@ test('moment-type metadata is preserved with legacy entries', () => {
   const meta = getCodeListMeta('eventTypes', [{ value: 'Birthday', label: 'Birthday', canGenerateGreetingCards: false, greetingTemplate: 'Custom', showInDashboardUpcoming: false }]);
   assert.equal(meta[0].canGenerateGreetingCards, false);
   assert.equal(meta[0].showInDashboardUpcoming, false);
+  assert.equal(meta[0].showActivitiesOnDashboard, true, 'older Moment visibility never opts out of Activity visibility');
   assert.equal(meta[0].greetingTemplate, 'Custom');
+});
+
+test('independent dashboard flags survive Guest persistence and account settings resolution', () => {
+  const entries = [{ value: 'Private', showInDashboardUpcoming: true, showActivitiesOnDashboard: false },
+    { value: 'Activities only', showInDashboardUpcoming: false, showActivitiesOnDashboard: true }];
+  const values = new Map();
+  const storage = { getItem: (key) => values.get(key) ?? null, setItem: (key, value) => values.set(key, value) };
+  writeGuestCodeListSettings({ ...DEFAULT_CODE_LISTS, eventTypes: entries }, storage);
+  const guest = readGuestCodeListSettings(storage);
+  assert.deepEqual(guest.adminValues.eventTypes.map(({ showInDashboardUpcoming, showActivitiesOnDashboard }) => [showInDashboardUpcoming, showActivitiesOnDashboard]), [[true, false], [false, true]]);
+
+  const account = resolveCodeListSettings({ adminValues: { ...DEFAULT_CODE_LISTS, eventTypes: ['Private'] }, schemaVersion: CODE_LIST_SCHEMA_VERSION }, guest);
+  assert.deepEqual(account.adminValues.eventTypes.map(({ showInDashboardUpcoming, showActivitiesOnDashboard }) => [showInDashboardUpcoming, showActivitiesOnDashboard]), [[true, true]], 'account settings remain authoritative over Guest visibility choices');
+  assert.equal(guest.adminValues.eventTypes[0].showActivitiesOnDashboard, false, 'resolving the account does not change Guest settings');
 });
 
 test('remote Code Lists are authoritative over legacy browser-local values', () => {

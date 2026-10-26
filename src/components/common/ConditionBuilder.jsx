@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Plus, Save, Star, Trash2, X } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
-import { conditionChipEntries, mapConditions, noValueOperators, operatorsFor, removeCondition } from '../../utils/conditionEngine';
+import { conditionChipEntries, mapConditions, noValueOperators, operatorsFor, operatorsForField, removeCondition } from '../../utils/conditionEngine';
 import './ConditionBuilder.css';
 
 const newId = () => globalThis.crypto?.randomUUID?.() || `node-${Date.now()}-${Math.random()}`;
@@ -19,7 +19,10 @@ function DebouncedValue({ value, onChange, ...props }) {
     onBlur={() => { if (draft !== (value ?? '')) notify.current(draft); }} />;
 }
 function ValueEditor({ field, node, onChange }) {
-  const label = `Value for ${field?.label || node.field || 'field'}`;
+  const label = `Value for ${field?.label || 'filter'}`;
+  const options = field?.options || (field?.values || []).map((value) => ({ value: String(value), label: String(value) }));
+  const allowCustom = field?.allowCustom ?? !field?.options;
+  const valueLabel = (value) => options.find((option) => String(option.value) === String(value))?.label || field?.labelValue?.(value) || (allowCustom ? String(value) : 'Unavailable choice');
   if (noValueOperators.has(node.operator)) return <span className="dn-condition-no-value">No value needed</span>;
   if (node.operator === 'between') {
     const range = Array.isArray(node.value) ? [node.value[0] ?? '', node.value[1] ?? ''] : ['', ''];
@@ -30,44 +33,49 @@ function ValueEditor({ field, node, onChange }) {
     </label>)}</div>;
   }
   if (['any_of', 'none_of'].includes(node.operator)) {
-    const selected = Array.isArray(node.value) ? node.value : node.value ? [String(node.value)] : [];
+    const selected = Array.isArray(node.value) ? node.value.map(String) : node.value ? [String(node.value)] : [];
     return <div className="dn-condition-multi">
-      <DropdownSelect aria-label={label} value="" searchable allowCustom placeholder="Add a value" searchLabel="Search values"
+      <DropdownSelect aria-label={label} value="" searchable allowCustom={allowCustom} placeholder="Choose an option" searchLabel="Search options"
         onChange={(event) => { if (!selected.includes(event.target.value)) onChange([...selected, event.target.value]); }}>
-        {(field?.values || []).filter((value) => !selected.includes(value)).map((value) => <option key={value} value={value}>{value}</option>)}
+        {options.filter((option) => !selected.includes(String(option.value))).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </DropdownSelect>
-      {selected.length ? <div className="dn-condition-selected-values">{selected.map((value) => <button key={value} type="button" aria-label={`Remove value ${value}`} onClick={() => onChange(selected.filter((entry) => entry !== value))}>{value}<X size={12} /></button>)}</div> : null}
+      {selected.length ? <div className="dn-condition-selected-values">{selected.map((value) => <button key={value} type="button" aria-label={`Remove ${valueLabel(value)}`} onClick={() => onChange(selected.filter((entry) => entry !== value))}>{valueLabel(value)}<X size={12} /></button>)}</div> : null}
     </div>;
   }
   if (field?.type === 'boolean') return <DropdownSelect aria-label={label} value={node.value} searchable
-    onChange={(event) => onChange(event.target.value)} placeholder="Choose true or false"><option value="true">True</option><option value="false">False</option></DropdownSelect>;
-  if (field?.type === 'dropdown' || ['eq', 'ne'].includes(node.operator) && field?.type === 'text') return <DropdownSelect
-    aria-label={label} value={node.value} searchable allowCustom placeholder="Choose or type a value" searchLabel="Search values"
-    onChange={(event) => onChange(event.target.value)}>{(field?.values || []).map((value) => <option key={value} value={value}>{value}</option>)}</DropdownSelect>;
-  return <DebouncedValue className="dn-condition-value" aria-label={label} placeholder="Value"
+    onChange={(event) => onChange(event.target.value)} placeholder="Choose an option">{(field.options || [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}</DropdownSelect>;
+  const legacyText = field?.legacyTextComparisons && !operatorsFor('dropdown').some(([operator]) => operator === node.operator);
+  if (field?.type === 'dropdown' && (!legacyText || field.hideRawValues)) return <DropdownSelect
+    aria-label={label} value={node.value} searchable allowCustom={allowCustom} placeholder={allowCustom ? 'Choose or type a value' : 'Choose an option'} searchLabel="Search options"
+    onChange={(event) => onChange(event.target.value)}>
+    {!allowCustom && node.value !== '' && !options.some((option) => String(option.value) === String(node.value)) ? <option value={node.value}>{valueLabel(node.value)}</option> : null}
+    {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+  </DropdownSelect>;
+  return <DebouncedValue className="dn-condition-value" aria-label={label} placeholder={field?.type === 'number' ? 'Enter a number' : 'Enter text'}
     type={field?.type === 'date' ? 'date' : field?.type === 'number' ? 'number' : 'text'} step={field?.type === 'number' ? 'any' : undefined}
     value={node.value} onChange={onChange} />;
 }
 function RuleEditor({ node, schema, onEdit, onRemove }) {
   const field = schema.find((item) => item.path === node.field);
-  const operators = operatorsFor(field?.type);
+  const operators = operatorsForField(field, node.operator);
   return <div className="dn-condition-rule">
-    <DropdownSelect aria-label="Condition field" value={node.field || ''} searchable placeholder="Choose a field" searchLabel="Search fields"
+    <DropdownSelect aria-label="Filter by" value={node.field || ''} searchable placeholder="Filter by" searchLabel="Search filters"
       onChange={(event) => {
         const next = schema.find((item) => item.path === event.target.value);
         onEdit({ ...node, field: next?.path || '', operator: operatorsFor(next?.type)[0][0], value: '' });
       }}>
-      {node.field && !field ? <option value={node.field}>{node.field} (unavailable)</option> : null}
+      {node.field && !field ? <option value={node.field}>Unavailable filter</option> : null}
       {schema.map((item) => <option key={item.path} value={item.path}>{item.label}</option>)}
     </DropdownSelect>
-    <DropdownSelect aria-label="Condition operator" value={node.operator} searchable disabled={!node.field}
+    <DropdownSelect aria-label="Comparison" value={node.operator} disabled={!field} placeholder="Choose a comparison"
       onChange={(event) => onEdit({ ...node, operator: event.target.value, value: ['between', 'any_of', 'none_of'].includes(event.target.value) ? [] : '' })}>
-      {!operators.some(([operator]) => operator === node.operator) ? <option value={node.operator}>{node.operator} (unavailable)</option> : null}
+      {!operators.some(([operator]) => operator === node.operator) ? <option value={node.operator}>Unavailable comparison</option> : null}
       {operators.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
     </DropdownSelect>
-    <div className="dn-condition-value-slot"><ValueEditor key={`${node.field}:${node.operator}`} node={node} field={field}
-      onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} /></div>
-    <button type="button" className="dn-condition-icon" aria-label="Remove condition" onClick={onRemove}><X size={16} /></button>
+    <div className="dn-condition-value-slot">{field ? <ValueEditor key={`${node.field}:${node.operator}`} node={node} field={field}
+      onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} />
+      : node.field ? <span className="dn-condition-no-value">Choose another filter or remove this one.</span> : null}</div>
+    <button type="button" className="dn-condition-icon" aria-label="Remove filter" onClick={onRemove}><X size={16} /></button>
   </div>;
 }
 function GroupEditor({ node, schema, update, remove, depth = 0 }) {
@@ -75,10 +83,10 @@ function GroupEditor({ node, schema, update, remove, depth = 0 }) {
   const addRule = () => modify(node.id, (group) => ({ ...group, children: [...group.children, blankRule()] }));
   const addGroup = () => modify(node.id, (group) => ({ ...group, children: [...group.children, { id: newId(), kind: 'group', join: 'AND', children: [blankRule()] }] }));
   return <div className={`dn-condition-group${depth ? ' is-nested' : ''}`}>
-    <div className="dn-condition-group-head"><span>{depth ? 'Group' : 'Match'}</span>
-      <DropdownSelect aria-label={depth ? 'Nested group logic' : 'Condition group logic'} value={node.join}
+    <div className="dn-condition-group-head"><span>{depth ? 'In this group' : 'Show results matching'}</span>
+      <DropdownSelect aria-label={depth ? 'Match filters in this group' : 'Match filters'} value={node.join}
         onChange={(event) => modify(node.id, (group) => ({ ...group, join: event.target.value }))}>
-        <option value="AND">All conditions (AND)</option><option value="OR">Any condition (OR)</option>
+        <option value="AND">All filters</option><option value="OR">Any filter</option>
       </DropdownSelect>
       {depth ? <button type="button" className="dn-condition-icon" aria-label="Remove group" onClick={() => remove(node.id)}><Trash2 size={15} /></button> : null}
     </div>
@@ -86,14 +94,14 @@ function GroupEditor({ node, schema, update, remove, depth = 0 }) {
       ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} />
       : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} />)}</div>
     <div className="dn-condition-group-actions">
-      <button type="button" onClick={addRule} disabled={!schema.length}><Plus size={14} /> Add condition</button>
-      {depth < 10 ? <button type="button" onClick={addGroup} disabled={!schema.length}><Plus size={14} /> AND/OR group</button> : null}
+      <button type="button" onClick={addRule} disabled={!schema.length}><Plus size={14} /> Add filter</button>
+      {depth < 10 ? <button type="button" onClick={addGroup} disabled={!schema.length}><Plus size={14} /> Add filter group</button> : null}
     </div>
   </div>;
 }
 export function ConditionChips({ filter }) {
   const chips = conditionChipEntries(filter.state.group, filter.schema);
-  return chips.length ? <div className="dn-condition-chips" aria-label="Active conditions">{chips.map((chip) =>
+  return chips.length ? <div className="dn-condition-chips" aria-label="Active filters">{chips.map((chip) =>
     <button type="button" className="dn-condition-chip" key={chip.id} aria-label={`Remove filter ${chip.label}`}
       onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><span>{chip.label}</span><X size={12} /></button>)}</div> : null;
 }
@@ -117,18 +125,18 @@ export default function ConditionBuilder({ filter, resultCount, resultLabel = 'r
   const shown = presetTab === 'favorites' ? saved.filter((item) => item.favorite) : presetTab === 'recent' ? recent : saved;
   const remove = (id) => filter.setGroup((group) => removeCondition(group, id) || group);
   return <section className="dn-conditions" aria-label={title}>
-    <div className="dn-conditions-toolbar"><span className="dn-conditions-count" aria-live="polite">{typeof resultCount === 'number' ? `${resultCount} ${resultLabel} · ` : ''}{filter.activeCount ? `${filter.activeCount} active` : 'Build conditions'}</span>
+    <div className="dn-conditions-toolbar"><span className="dn-conditions-count" aria-live="polite">{typeof resultCount === 'number' ? `${resultCount} ${resultLabel} · ` : ''}{filter.activeCount ? `${filter.activeCount} active` : 'Find the items you need'}</span>
       {filter.activeCount || filter.state.group.children.length ? <button type="button" className="dn-conditions-clear" onClick={filter.clear}>Clear all</button> : null}</div>
     {showChips ? <ConditionChips filter={filter} /> : null}
-    {!filter.schema.length ? <p className="dn-condition-empty">Fields and values appear when records are available.</p> : null}
+    {!filter.schema.length ? <p className="dn-condition-empty">Filter options will appear here when available.</p> : null}
     <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove} />
-    <div className="dn-conditions-save"><label>Save these conditions<input type="text" maxLength={80} placeholder="Filter name" value={presetName} onChange={(event) => setPresetName(event.target.value)} /></label>
+    <div className="dn-conditions-save"><label>Save this filter<input type="text" maxLength={80} placeholder="Give it a name" value={presetName} onChange={(event) => setPresetName(event.target.value)} /></label>
       <button type="button" disabled={!presetName.trim() || !filter.activeCount} onClick={() => { filter.save(presetName); setPresetName(''); }}><Save size={14} /> Save filter</button></div>
     <div className="dn-condition-presets" aria-label="Reusable filters">
       <div className="dn-condition-preset-tabs" role="tablist" aria-label="Filter presets">{[['saved', 'Saved'], ['recent', 'Recent'], ['favorites', 'Favorites']].map(([id, label]) =>
         <button key={id} type="button" role="tab" aria-selected={presetTab === id} onClick={() => setPresetTab(id)}>{label}</button>)}</div>
       <div role="tabpanel" aria-label={`${presetTab} filters`}>{shown.length ? shown.map((preset) => <PresetRow key={preset.id} preset={preset} filter={filter}
-        favorite={Boolean(saved.find((item) => item.id === preset.id)?.favorite)} />) : <p className="dn-condition-empty">{presetTab === 'recent' ? 'Recently used conditions will appear here.' : presetTab === 'favorites' ? 'Star a filter to keep it here.' : 'Save conditions to reuse them.'}</p>}</div>
+        favorite={Boolean(saved.find((item) => item.id === preset.id)?.favorite)} />) : <p className="dn-condition-empty">{presetTab === 'recent' ? 'Recently used filters will appear here.' : presetTab === 'favorites' ? 'Star a filter to keep it here.' : 'Save a filter to use it again.'}</p>}</div>
     </div>
   </section>;
 }

@@ -7,11 +7,13 @@ import ConditionBuilder, { ConditionChips } from '../../../components/common/Con
 import { transactionConditions } from '../../../utils/listConditionMigration';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 import ListControls from '../../../components/common/ListControls';
+import SortControl from '../../../components/common/SortControl';
+import { TRANSACTION_SORT_OPTIONS, TRANSACTION_SORT_VALUES, transactionSortForField, transactionSortSummary } from '../../../utils/userListSort';
 import { TransactionCard, formatTransactionMoney as momentMoney } from '../../../components/financials/TransactionHistory';
-import { filterTransactions } from '../../../utils/transactionFilters';
+import { filterTransactions, sortTransactions } from '../../../utils/transactionFilters';
 
-const DEFAULTS = Object.freeze({ search: '', type: 'all', activityId: '', month: 'all' });
-const RULES = Object.freeze({ type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value) });
+const DEFAULTS = Object.freeze({ search: '', type: 'all', activityId: '', month: 'all', sort: 'date-desc' });
+const RULES = Object.freeze({ type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES });
 
 export function MomentFinanceSummary({ summary, label = 'Totals for this Moment', showCaption = true }) {
   return <div className="moment-finance-summary" role="group" aria-label={label}>
@@ -28,8 +30,9 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
   const [filters, changeFilters, resetFilters] = usePersistentListState(
     `moment-transactions:${JSON.stringify([finance.sample, eventId, activityId])}`, DEFAULTS, RULES);
   const conditions = useConditionFilters('moment-transactions:' + eventId + ':' + (activityId || 'all'), finance.transactions, usePersistentListState,
-    { initialGroup: transactionConditions(filters), contextKey: finance.sample });
-  const filtered = activityId ? finance.transactions : filterTransactions(finance.transactions, { search: filters.search }).filter(conditions.matches);
+    { initialGroup: transactionConditions(filters), contextKey: finance.sample, moments: finance.events });
+  const [sortField, sortDirection] = filters.sort.split('-');
+  const filtered = activityId ? finance.transactions : sortTransactions(filterTransactions(finance.transactions, { search: filters.search }).filter(conditions.matches), filters.sort);
   const totals = <MomentFinanceSummary summary={finance.summary} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
   if (activityId && minimal && finance.ready && !finance.error && finance.transactions.length === 0) return null;
@@ -40,7 +43,10 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
         {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder resultCount={filtered.length} resultLabel="transactions"
           activeCount={conditions.activeCount} chips={<ConditionChips filter={conditions} />}
-          summary="Income + expense · All Activities" canReset={Boolean(conditions.activeCount || filters.search)} onReset={() => { resetFilters(); conditions.clear(); }}
+          summary={transactionSortSummary(filters.sort)} canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={() => { resetFilters(); conditions.clear(); }}
+          sort={<SortControl field={sortField} direction={sortDirection} options={TRANSACTION_SORT_OPTIONS} label="Sort Moment transactions"
+            onFieldChange={(field) => changeFilters({ sort: transactionSortForField(field) })}
+            onToggleDirection={() => changeFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" aria-label="Search Moment transactions" placeholder="Search transactions" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} />}>
           <ConditionBuilder filter={conditions} title="Moment transaction conditions" />
         </ListControls> : null}

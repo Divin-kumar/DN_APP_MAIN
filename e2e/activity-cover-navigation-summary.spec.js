@@ -80,7 +80,8 @@ test('completed Activities require reopening before Edit, and a stale editor can
 test('detail swipes follow the Activities sort order across reused child IDs, with short/vertical gestures ignored', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
   await page.getByRole('button', { name: /Filters and sort/ }).click();
-  await page.getByRole('button', { name: 'Sort by Title, ascending', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Sort activities field', exact: true }).click();
+  await page.getByRole('option', { name: 'Title', exact: true }).click();
   const titles = await page.locator('.event-activity-title-row > strong').allTextContents();
   expect(titles).toEqual(['A different activity with the same ID', 'Book a lakeside stay', 'Choose the train']);
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));

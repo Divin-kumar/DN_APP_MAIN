@@ -1,23 +1,20 @@
+import { ArrowDown, ArrowUp } from 'lucide-react';
+import DropdownSelect from './DropdownSelect';
+import './SortControl.css';
+
 export default function SortControl({ field, direction, onFieldChange, onToggleDirection, options, label = 'Sort by', className = '' }) {
-  return (
-    <div className={`sort-control${className ? ` ${className}` : ''}`} role="group" aria-label={label}>
-      {options.map((option) => {
-        const selected = option.value === field;
-        const marker = selected ? (direction === 'asc' ? '↑' : '↓') : '';
-        return (
-          <button
-            key={option.value}
-            type="button"
-            className={`sort-option${selected ? ' is-selected' : ''}`}
-            onClick={() => (selected ? onToggleDirection() : onFieldChange(option.value))}
-            aria-pressed={selected}
-            aria-label={selected ? `${option.label}, ${direction === 'asc' ? 'ascending' : 'descending'}. Click to reverse.` : `Sort by ${option.label}, ascending`}
-            title={selected ? `Click to sort ${option.label.toLowerCase()} ${direction === 'asc' ? 'descending' : 'ascending'}` : `Sort by ${option.label} ascending`}
-          >
-            {option.label}{selected ? <span aria-hidden="true"> {marker}</span> : null}
-          </button>
-        );
-      })}
-    </div>
-  );
+  const selected = options.find((option) => option.value === field);
+  const date = field === 'date', name = ['name', 'title'].includes(field), amount = field === 'amount';
+  const directionLabel = direction === 'asc' ? (date ? 'Oldest first' : name ? 'A–Z' : amount ? 'Lowest first' : 'Ascending')
+    : date ? 'Newest first' : name ? 'Z–A' : amount ? 'Highest first' : 'Descending';
+  return <div className={`sort-control dn-user-sort${className ? ` ${className}` : ''}`} role="group" aria-label={label}>
+    <DropdownSelect aria-label={`${label} field`} value={field} onChange={(event) => onFieldChange(event.target.value)}>
+      {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </DropdownSelect>
+    <button type="button" className="dn-sort-direction" onClick={onToggleDirection}
+      aria-label={direction === 'asc' ? 'Sort descending' : 'Sort ascending'} title={`${selected?.label || 'Sort'}: ${directionLabel}`}>
+      {direction === 'asc' ? <ArrowUp size={15} aria-hidden="true" /> : <ArrowDown size={15} aria-hidden="true" />}
+      <span>{directionLabel}</span>
+    </button>
+  </div>;
 }

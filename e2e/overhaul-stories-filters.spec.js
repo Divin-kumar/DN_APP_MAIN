@@ -8,7 +8,7 @@ async function selectConditionOption(page, name, option) {
   await page.getByRole('option', { name: option, exact: true }).click();
 }
 
-test('Moments always follow recorded Event Date, including across past and future years', async ({ page }) => {
+test('Moments default to recorded Event Date, including across past and future years', async ({ page }) => {
   const moments = fixtureMoments();
   moments[0].date = '2027-11-20'; moments[1].date = '2025-01-08';
   moments[0].createdAt = '2024-01-01'; moments[1].createdAt = '2026-12-31';
@@ -21,7 +21,8 @@ test('Moments always follow recorded Event Date, including across past and futur
   await expect(cards.nth(0)).toContainText('08 Jan 2025');
   await page.reload();
   await expect(cards.nth(0)).toContainText('A separate Moment');
-  await expect(page.getByRole('button', { name: 'Sort by Name, ascending' })).toHaveCount(0);
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toBeVisible();
 });
 
 test('Summary photos belong to their Moment/Activity card, never a footer gallery', async ({ page }) => {
@@ -58,14 +59,14 @@ test('The sole Activity Filters panel supports conditions, chips, saved, recent 
   await page.getByRole('button', { name: /^Filters/ }).click();
   await expect(page.getByRole('button', { name: 'Advanced filters', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await selectConditionOption(page, 'Condition field', 'Activity · Title');
-  await selectConditionOption(page, 'Condition operator', 'Contains');
-  await page.getByRole('textbox', { name: 'Value for Activity · Title', exact: true }).fill('Book a');
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await selectConditionOption(page, 'Filter by', 'Activity name');
+  await selectConditionOption(page, 'Comparison', 'Contains');
+  await page.getByRole('textbox', { name: 'Value for Activity name', exact: true }).fill('Book a');
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: /Remove filter Activity · Title Contains Book a/ })).toBeVisible();
-  await page.getByPlaceholder('Filter name').fill('My book plan');
+  await expect(page.getByRole('button', { name: /Remove filter Activity name Contains Book a/ })).toBeVisible();
+  await page.getByPlaceholder('Give it a name').fill('My book plan');
   await page.getByRole('button', { name: 'Save filter', exact: true }).click();
   await page.getByRole('button', { name: 'Favorite My book plan', exact: true }).click();
   await page.getByRole('tab', { name: 'Favorites', exact: true }).click();
@@ -78,34 +79,34 @@ test('The sole Activity Filters panel supports conditions, chips, saved, recent 
   await expect(page.getByRole('button', { name: 'My book plan', exact: true })).toBeVisible();
   await page.reload();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: /Remove filter Activity · Title Contains Book a/ }).click();
+  await page.getByRole('button', { name: /Remove filter Activity name Contains Book a/ }).click();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('Future metadata fields and large field/value selectors are searchable and virtualized with keyboard selection', async ({ page }) => {
-  const moments = fixtureMoments();
-  moments[0].activities = Array.from({ length: 160 }, (_, index) => ({ id: `large-${index}`, title: `Plan ${String(index).padStart(3, '0')}`, completed: false,
-    metadata: index === 0 ? { future: Object.fromEntries(Array.from({ length: 100 }, (_, field) => [`field${field}`, `value${field}`])) } : undefined }));
+test('Product filter choices stay limited while large named Moment choices remain searchable and virtualized', async ({ page }) => {
+  const moments = Array.from({ length: 160 }, (_, index) => ({ id: `private-moment-${index}`, name: `Plan ${String(index).padStart(3, '0')}`,
+    type: 'Personal', date: '2026-10-26',
+    metadata: index === 0 ? { future: Object.fromEntries(Array.from({ length: 100 }, (_, field) => [`field${field}`, `value${field}`])) } : undefined,
+    activities: [{ id: `private-activity-${index}`, title: `Task ${String(index).padStart(3, '0')}`, completed: false }] }));
   await seedGuest(page, { moments }); await page.goto('/activities');
   await page.getByRole('button', { name: /^Filters/ }).click();
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Condition field', exact: true }).click();
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Filter by', exact: true }).click();
+  const fields = await page.getByRole('option').allTextContents();
+  expect(fields.length).toBeLessThanOrEqual(15);
+  expect(fields.join(' ')).not.toMatch(/metadata|future|field99|private-|\bid\b| · /i);
+  await page.keyboard.press('Escape');
+  await selectConditionOption(page, 'Filter by', 'Moment');
+  await selectConditionOption(page, 'Comparison', 'Is');
+  await page.getByRole('combobox', { name: 'Value for Moment', exact: true }).click();
   await expect(page.locator('.dropdown-options-scroll.is-virtual')).toBeVisible();
   expect(await page.getByRole('option').count()).toBeLessThan(30);
-  await page.getByRole('searchbox', { name: 'Search fields', exact: true }).fill('Activity · Metadata · Future · Field99');
-  await page.keyboard.press('ArrowDown'); await page.keyboard.press('Enter');
-  await expect(page.getByRole('combobox', { name: 'Condition field', exact: true })).toContainText('Field99');
-  await selectConditionOption(page, 'Condition field', 'Activity · Title');
-  await selectConditionOption(page, 'Condition operator', 'Equals');
-  await page.getByRole('combobox', { name: 'Value for Activity · Title', exact: true }).click();
-  await expect(page.locator('.dropdown-options-scroll.is-virtual')).toBeVisible();
-  expect(await page.getByRole('option').count()).toBeLessThan(30);
-  await page.getByRole('searchbox', { name: 'Search values', exact: true }).fill('Plan 159');
+  await page.getByRole('searchbox', { name: 'Search options', exact: true }).fill('Plan 159');
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('group', { name: 'Open Plan 159', exact: true })).toBeVisible();
-  await expect(page.getByRole('group', { name: 'Open Plan 000', exact: true })).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Open Task 159', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Open Task 000', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
@@ -114,18 +115,18 @@ test('Numeric ranges retain both edited boundaries and nested OR groups expose t
   await page.getByRole('button', { name: /^Filters/ }).click();
   const clear = page.getByRole('button', { name: 'Clear all', exact: true });
   if (await clear.count()) await clear.click();
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await selectConditionOption(page, 'Condition field', 'Amount');
-  await selectConditionOption(page, 'Condition operator', 'Between');
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await selectConditionOption(page, 'Filter by', 'Amount');
+  await selectConditionOption(page, 'Comparison', 'Between');
   await page.getByRole('spinbutton', { name: 'From Amount', exact: true }).fill('99');
   await page.getByRole('spinbutton', { name: 'To Amount', exact: true }).fill('101');
   await expect(page.getByRole('button', { name: /Remove filter Amount Between 99 – 101/ })).toBeVisible();
   await expect(page.locator('.dn-transaction-copy strong', { hasText: 'Room deposit' })).toBeVisible();
-  await page.getByRole('button', { name: 'AND/OR group', exact: true }).first().click();
-  await page.getByRole('combobox', { name: 'Nested group logic', exact: true }).click();
-  await page.getByRole('option', { name: 'Any condition (OR)', exact: true }).click();
-  await selectConditionOption(page, 'Condition field', 'Amount');
-  await selectConditionOption(page, 'Condition operator', 'Greater than');
+  await page.getByRole('button', { name: 'Add filter group', exact: true }).first().click();
+  await page.getByRole('combobox', { name: 'Match filters in this group', exact: true }).click();
+  await page.getByRole('option', { name: 'Any filter', exact: true }).click();
+  await selectConditionOption(page, 'Filter by', 'Amount');
+  await selectConditionOption(page, 'Comparison', 'Greater than');
   await page.getByRole('spinbutton', { name: 'Value for Amount', exact: true }).fill('50');
   await expect(page.getByRole('button', { name: /Remove filter AND › OR · Amount Greater than 50/ })).toBeVisible();
 });
@@ -142,15 +143,15 @@ test('An uncommitted filter draft cannot cross a Guest to synthetic Account scop
   await page.goto('/events');
   await page.evaluate(async () => { await Promise.all([import('/src/store/useAppStore.js'), import('/src/store/useEventStore.js'), import('/src/store/useIncomeStore.js'), import('/src/store/useExpenseStore.js')]); });
   await page.getByRole('button', { name: /^Filters/ }).click();
-  await page.getByRole('textbox', { name: 'Value for Name', exact: true }).fill('Weekend');
+  await page.getByRole('textbox', { name: 'Value for Moment name', exact: true }).fill('Weekend');
   await accountScope(page, 'filter-owner', moments);
-  await expect(page.getByRole('textbox', { name: 'Value for Name', exact: true })).toHaveValue('');
+  await expect(page.getByRole('textbox', { name: 'Value for Moment name', exact: true })).toHaveValue('');
   // Observe beyond the 220ms debounce so a delayed cross-scope write would run.
   await page.waitForTimeout(350);
   await expect.poll(() => page.evaluate(() => {
     const key = `dn_list_state_${encodeURIComponent('account:filter-owner')}_${encodeURIComponent('conditions:moments')}`;
     return JSON.parse(localStorage.getItem(key)).group.children[0].value;
   }), { timeout: 1200 }).toBe('');
-  await expect(page.getByRole('button', { name: /Remove filter Name Contains Weekend/ })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toHaveCount(0);
   expect(await page.evaluate(() => window.__dnAccountWrites)).toEqual([]);
 });

@@ -37,6 +37,8 @@ export default function useActivityNavigation({ scoped, eventId, activityId, dis
     gestureProps: {
       onPointerDownCapture: (event) => {
         gesture.current = null;
+        // A second finger belongs to a photo pinch/browser gesture, never paging.
+        if (event.pointerType === 'touch' && !event.isPrimary) return;
         if (blocked() || frame.current || event.button !== 0 || event.clientX < 20 || event.clientX > innerWidth - 20
           || event.target.closest('button, a, input, select, textarea, details, summary, .dn-transaction-card, .dn-attachment-gallery, [contenteditable="true"], [data-swipe-ignore]')) return;
         gesture.current = { x: event.clientX, y: event.clientY, axis: null, pointer: event.pointerId };

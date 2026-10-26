@@ -100,14 +100,15 @@ export async function accountScope(page, uid, moments) {
 export async function setActivityStatusCondition(page, status) {
   await page.getByRole('button', { name: /Filters and sort/ }).click();
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await page.getByRole('button', { name: 'Add condition', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Condition field', exact: true }).click();
-  await page.getByRole('searchbox', { name: 'Search fields', exact: true }).fill('Activity · Status');
-  await page.getByRole('option', { name: 'Activity · Status', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Condition operator', exact: true }).click();
-  await page.getByRole('option', { name: 'Equals', exact: true }).click();
-  await page.getByRole('combobox', { name: 'Value for Activity · Status', exact: true }).click();
-  await page.getByRole('searchbox', { name: 'Search values', exact: true }).fill(status);
-  await page.getByRole('option', { name: status, exact: true }).click();
+  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Filter by', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Search filters', exact: true }).fill('Status');
+  await page.getByRole('option', { name: 'Status', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Comparison', exact: true }).click();
+  await page.getByRole('option', { name: 'Is', exact: true }).click();
+  await page.getByRole('combobox', { name: 'Value for Status', exact: true }).click();
+  const label = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled' }[status] || status;
+  await page.getByRole('searchbox', { name: 'Search options', exact: true }).fill(label);
+  await page.getByRole('option', { name: label, exact: true }).click();
   await page.getByRole('button', { name: /Filters and sort/ }).click();
 }

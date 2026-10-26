@@ -1,4 +1,4 @@
-import { getDashboardVisibleEvents } from '../../utils/dashboardVisibility.js';
+import { getDashboardVisibleActivityEvents, getDashboardVisibleEvents } from '../../utils/dashboardVisibility.js';
 import { getStartOfDay, parseMomentDate } from '../../utils/momentDates.js';
 import { filterTransactions, summarizeTransactions, toTransactions } from '../../utils/transactionFilters.js';
 
@@ -22,13 +22,16 @@ export function summarizeDashboard(events = [], now = new Date(), momentTypes = 
   const today = getStartOfDay(now);
   const tomorrow = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1);
   const firstRecentDay = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 6);
-  const visible = getDashboardVisibleEvents(events, momentTypes);
+  const visibleMoments = getDashboardVisibleEvents(events, momentTypes);
+  const visibleActivityParents = getDashboardVisibleActivityEvents(events, momentTypes);
   const result = { todayActivities: 0, todayCompleted: 0, recentMoments: 0, pending: 0,
     overdue: 0, recentActivities: 0, recentCompleted: 0, totalActivities: 0 };
-  for (const moment of visible) {
+  for (const moment of visibleMoments) {
     // An undecided Event Date must not turn into a recent Moment via createdAt.
     const momentDate = safeDate(moment.date) || safeDate(moment.startDate);
     if (momentDate && momentDate >= firstRecentDay && momentDate < tomorrow) result.recentMoments += 1;
+  }
+  for (const moment of visibleActivityParents) {
     for (const activity of Array.isArray(moment.activities) ? moment.activities : []) {
       if (!activity) continue;
       const status = statusOf(activity);

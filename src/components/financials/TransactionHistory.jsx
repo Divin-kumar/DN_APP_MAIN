@@ -2,6 +2,8 @@ import DebouncedFilterInput from '../common/DebouncedFilterInput';
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
+import SortControl from '../common/SortControl';
+import { TRANSACTION_SORT_OPTIONS, transactionSortForField, transactionSortSummary } from '../../utils/userListSort';
 import RichText from '../common/RichText';
 import ConditionBuilder, { ConditionChips } from '../common/ConditionBuilder';
 import { Link } from 'react-router-dom';
@@ -88,6 +90,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 export default function TransactionHistory({
   transactions, filters, onFilters, conditions, events, onEdit, onDelete,
 }) {
+  const [sortField, sortDirection] = filters.sort.split('-');
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
@@ -97,8 +100,11 @@ export default function TransactionHistory({
         </div>
       </header>
       <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
-        resultLabel="transactions" summary="Newest transactions first" chips={<ConditionChips filter={conditions} />}
-        canReset={Boolean(conditions.activeCount || filters.search)} onReset={() => { onFilters({ type: 'all', month: 'all', search: '' }); conditions.clear(); }}
+        resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}
+        sort={<SortControl field={sortField} direction={sortDirection} options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
+          onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
+          onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
+        canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={() => { onFilters({ type: 'all', month: 'all', search: '', sort: 'date-desc' }); conditions.clear(); }}
         search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />

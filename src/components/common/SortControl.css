@@ -1,0 +1,12 @@
+html[data-theme] .dn-list-controls-panel .sort-control.dn-user-sort {
+  display:flex !important; width:100% !important; max-width:340px; min-width:0; gap:6px;
+}
+html[data-theme] .dn-user-sort > .dropdown-field { flex:1 1 130px; min-width:0; }
+html[data-theme] .dn-user-sort .dropdown-trigger { width:100%; min-height:44px; font-size:13px !important; }
+html[data-theme] .dn-user-sort .dn-sort-direction {
+  display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:4px;
+  min-height:44px; padding:0 7px; border:1px solid var(--color-border); border-radius:9px;
+  background:var(--color-surface); color:var(--color-text); font:inherit; font-size:12px; white-space:nowrap; cursor:pointer;
+}
+html[data-theme] .dn-user-sort .dn-sort-direction:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+html[data-theme] .dn-list-controls-sort-row > .dn-list-controls-field:has(.dn-user-sort) { width:100%; max-width:100%; }

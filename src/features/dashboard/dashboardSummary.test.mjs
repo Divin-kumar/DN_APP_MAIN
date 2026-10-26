@@ -32,10 +32,21 @@ test('daily summary uses visible scopes, actual calendar dates and both complete
     { ...moment, type: 'Hidden' },
     { date: '2026-10-27', activities: [] },
     { createdAt: '2026-10-26', activities: [] },
-  ], new Date(2026, 9, 26, 23, 59), [{ value: 'Hidden', showInDashboardUpcoming: false }]);
+  ], new Date(2026, 9, 26, 23, 59), [{ value: 'Hidden', showInDashboardUpcoming: false, showActivitiesOnDashboard: false }]);
   assert.deepEqual(result, { todayActivities: 3, todayCompleted: 2, recentMoments: 1, pending: 5,
     overdue: 2, recentActivities: 4, recentCompleted: 2, totalActivities: 7 });
   assert.equal(activities.length, 10, 'projection must not mutate stored records');
+});
+
+test('daily summary applies the separate type flags to Moment and Activity counts', () => {
+  const moment = (type) => ({ type, date: '2026-10-26', activities: [{ date: '2026-10-26' }, { date: '2026-10-25', completed: true }] });
+  const result = summarizeDashboard([moment('Moments only'), moment('Activities only'), moment('Legacy hidden moment')], new Date(2026, 9, 26), [
+    { value: 'Moments only', showInDashboardUpcoming: true, showActivitiesOnDashboard: false },
+    { value: 'Activities only', showInDashboardUpcoming: false, showActivitiesOnDashboard: true },
+    { value: 'Legacy hidden moment', showInDashboard: false },
+  ]);
+  assert.deepEqual(result, { todayActivities: 2, todayCompleted: 0, recentMoments: 1, pending: 2,
+    overdue: 0, recentActivities: 4, recentCompleted: 2, totalActivities: 4 });
 });
 
 test('seven-day range crosses calendar years and accepts legacy timestamps without counting invalid dates', () => {

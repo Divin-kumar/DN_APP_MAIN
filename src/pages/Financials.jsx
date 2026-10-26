@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
-import useEventStore from '../store/useEventStore';
+import useScopedMoments from '../hooks/useScopedMoments';
 import useTransactionManager from '../hooks/useTransactionManager';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useConditionFilters from '../hooks/useConditionFilters';
@@ -12,6 +12,7 @@ import { transactionConditions } from '../utils/listConditionMigration';
 import { compileConditionGroup } from '../utils/conditionEngine';
 import { transactionDateConditions } from '../utils/listConditionMigration';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions } from '../utils/transactionFilters';
+import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -22,8 +23,8 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(value) || 0);
 
-const defaultFilters = Object.freeze({ type: 'all', month: 'all', search: '' });
-const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value) };
+const defaultFilters = Object.freeze({ type: 'all', month: 'all', search: '', sort: 'date-desc' });
+const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES };
 
 export default function Financials() {
   const location = useLocation();
@@ -34,7 +35,7 @@ export default function Financials() {
   const uid = user?.uid;
   const { incomes, loading: loadingIncome, error: incomeError, loadedFor: incomeScope, loadIncomes } = useIncomeStore();
   const { expenses, loading: loadingExpense, error: expenseError, loadedFor: expenseScope, loadExpenses } = useExpenseStore();
-  const { events, loadEvents } = useEventStore();
+  const { events } = useScopedMoments();
   const { saveTransaction, removeTransaction } = useTransactionManager();
   const [filters, changeFilters] = usePersistentListState('transactions', defaultFilters, filterRules);
   const [editing, setEditing] = useState(null);
@@ -49,8 +50,7 @@ export default function Financials() {
     if (!user && !isGuest) return;
     loadIncomes(uid, isGuest);
     loadExpenses(uid, isGuest);
-    loadEvents(uid, isGuest);
-  }, [uid, isGuest, user, loadIncomes, loadExpenses, loadEvents]);
+  }, [uid, isGuest, user, loadIncomes, loadExpenses]);
 
   const expectedScope = (isGuest ? 'guest' : 'user') + ':' + (uid || 'anonymous');
   // Never display transactions belonging to a previous signed-in user while
@@ -60,9 +60,9 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
-  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters) });
+  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters), moments: events });
   const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
-  const sorted = useMemo(() => sortTransactions(filtered, 'date-desc'), [filtered]);
+  const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
   // Summary is tied to the selected month, not list search or the type selector.
   // Selecting Expense must not artificially zero out the Income and Balance cards.
   const dateGroup = useMemo(() => transactionDateConditions(conditions.state.group), [conditions.state.group]);
