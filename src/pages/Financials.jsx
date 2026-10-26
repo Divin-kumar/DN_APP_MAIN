@@ -58,7 +58,7 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
-  const conditions = useConditionFilters('transactions', allTransactions);
+  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState);
   const monthOptions = useMemo(() => {
     const options = transactionMonthOptions(allTransactions);
     // Loading, deletion and a temporarily empty account must not erase a choice.
