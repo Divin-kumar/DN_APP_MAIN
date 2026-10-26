@@ -1,0 +1,80 @@
+name: DN production Firebase Hosting
+# Production is opt-in. A verified release merge must explicitly include [deploy-live].
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: dn-firebase-hosting-production
+  cancel-in-progress: false
+jobs:
+  production-release:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[deploy-live]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Verify unit tests and lint
+        run: |
+          npm test
+          npm run lint
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify responsive browser journeys
+        run: npm run test:e2e
+      - name: Build production release
+        env:
+          VITE_DEPLOY_ENV: Production
+        run: npm run build
+      - name: Require configured Firebase service account
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        shell: bash
+        run: |
+          if [[ -z "$FIREBASE_SERVICE_ACCOUNT" ]]; then
+            echo "::error::Production publication is blocked: add the FIREBASE_SERVICE_ACCOUNT GitHub Actions secret for Firebase project expense-tracker-divin. No files were uploaded."
+            exit 1
+          fi
+      - name: Publish to permanent dn-10 Firebase Hosting
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: expense-tracker-divin
+          channelId: live
+      - name: Read back exact production build
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if curl --fail --silent --show-error --location --retry 2 --max-time 20 \
+              -H 'Cache-Control: no-cache' "https://dn-10.web.app/?build=$GITHUB_SHA" -o /tmp/dn-live-index.html \
+              && cmp -s dist/index.html /tmp/dn-live-index.html; then
+              echo "Verified production index bytes match this exact Vite build."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Firebase Hosting returned an index that does not match the release build. Investigate the published site."
+          exit 1
+      - name: Publication summary
+        shell: bash
+        run: |
+          {
+            echo "## DN production release"
+            echo "- Site: https://dn-10.web.app"
+            echo "- Firebase project: expense-tracker-divin"
+            echo "- Source commit: $GITHUB_SHA"
+            echo "- Build: unit, lint, browser and production Vite checks passed"
+            echo "- Verification: live index bytes match dist/index.html"
+          } >> "$GITHUB_STEP_SUMMARY"
