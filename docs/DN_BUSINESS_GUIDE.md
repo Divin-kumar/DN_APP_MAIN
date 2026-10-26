@@ -2,7 +2,7 @@
 
 Current release: **26 October 2026 · Version 1.0.31 is published** at [DN](https://dn-10.web.app), with movable/selectable cover photos, Activity swiping, completed-edit protection and full Moment summaries.
 
-**In development, not yet published:** A separate GitHub branch now includes an oldest-to-newest Moment timeline, photos directly alongside the corresponding Moment or Activity inside summaries, an empty-transaction-free Activity Detail, independent Dashboard Show/Hide preferences, a current-month financial snapshot, and a new saved nested-condition filter panel across the main lists. These changes have not completed the full redesign, testing or a new Firebase release. The descriptions below remain those of the published 1.0.31 app.
+**In development, not yet published:** A separate GitHub branch now includes an oldest-to-newest Moment timeline, photos directly alongside the corresponding Moment or Activity inside summaries, an empty-transaction-free Activity Detail, independent Dashboard Show/Hide preferences, a current-month financial snapshot, occasion-tinted greeting cards whose downloads match the preview, and a new saved nested-condition filter panel across the main lists. These changes have not completed the full redesign, testing or a new Firebase release. The descriptions below remain those of the published 1.0.31 app.
 
 ## 1. What DN helps you do
 
