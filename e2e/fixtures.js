@@ -102,13 +102,11 @@ export async function setActivityStatusCondition(page, status) {
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
   await page.getByRole('combobox', { name: 'Filter by', exact: true }).click();
-  await page.getByRole('searchbox', { name: 'Search filters', exact: true }).fill('Status');
   await page.getByRole('option', { name: 'Status', exact: true }).click();
   await page.getByRole('combobox', { name: 'Comparison', exact: true }).click();
   await page.getByRole('option', { name: 'Is', exact: true }).click();
   await page.getByRole('combobox', { name: 'Value for Status', exact: true }).click();
   const label = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled' }[status] || status;
-  await page.getByRole('searchbox', { name: 'Search options', exact: true }).fill(label);
   await page.getByRole('option', { name: label, exact: true }).click();
   await page.getByRole('button', { name: /Filters and sort/ }).click();
 }

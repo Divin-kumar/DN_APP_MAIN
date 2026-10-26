@@ -36,8 +36,8 @@ const publishedDate = Number.isNaN(deployedAt.getTime())
 const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 
 const guideItems = [
-  { title: 'Home', description: 'Your daily greeting highlights Activities, recent Moments and this month’s finances. Moments and Activities have separate Upcoming and On This Day views. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
-  { title: 'Moments', description: 'Create and search your Moments in one list. Filters offers short, relevant choices with all/any matching and reusable saved filters. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Reset restores the defaults. Swipe a Moment for Edit, Summary, Archive or Delete.' },
+  { title: 'Home', description: 'A short personal greeting welcomes you. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
+  { title: 'Moments', description: 'Create and search your Moments in one list. The compact Filters panel remembers your last choices automatically. Choose a field, a simple comparison and a value; add another filter when needed. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Reset restores the defaults. Swipe a Moment for Edit, Summary, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Overview, Activities, Transactions, Memories and Attachments using one horizontally scrolling section row. Overview is a compact contents list. Moment Activity cards are read-only; open Activity Detail for actions. Timeline is removed. Moment Transactions shows existing income and expenses with full-Moment totals and no transaction editing. Use the universal + to add items; Memory and Attachment are available there while a Moment is open.' },
   { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page, and each phone filter stays on one row. Completed titles stay readable; Reopen is required before editing. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
   { title: 'Memories and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Memories stay within their Moment; personalized greeting cards have a matching preview and HTML download.' },
@@ -48,10 +48,10 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Filters show short, relevant choices and named Moments and Activities. Each phone filter stays on one row; saved, recent and favorite filters remain available.',
-  'Choose a sort field and direction for Moments and Transactions. Each list remembers its order in this browser; Reset restores its default.',
-  'Pinch Activity cover photos or use the zoom buttons from 1× to 3×. Reset restores the centered view; Done saves and Cancel discards. Original files remain unchanged.',
-  'Every Moment type has separate Dashboard switches for its Moments and Activities in Code Lists, alongside the existing whole-section Show/Hide controls.',
+  'Phone filters use a small inline panel with simple comparisons. Your last choices are remembered automatically, with no saved-filter tabs or group-creation controls.',
+  'Opening choices keeps the keyboard closed. Tap a search or text field when you want to type; long choice lists still support searching.',
+  'The Dashboard welcome card is a short personal greeting without activity or finance statistics.',
+  'Small Upcoming and On This Day controls sit beside each Moments or Activities heading and its Hide button.',
 ];
 
 const dataInfo = [

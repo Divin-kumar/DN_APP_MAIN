@@ -139,7 +139,6 @@ test('Moment Transactions has five reachable tabs, full-Moment totals, independe
   await page.getByRole('button', { name: /^Filters(?: and sort)?$/ }).click();
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
   await page.getByRole('combobox', { name: 'Filter by', exact: true }).click();
-  await page.getByRole('searchbox', { name: 'Search filters', exact: true }).fill('Type');
   await page.getByRole('option', { name: 'Type', exact: true }).click();
   await page.getByRole('combobox', { name: 'Comparison', exact: true }).click();
   await page.getByRole('option', { name: 'Is', exact: true }).click();

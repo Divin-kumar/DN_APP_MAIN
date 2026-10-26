@@ -54,7 +54,7 @@ test('Dashboard sections remember separate visibility choices across reloads', a
   await expect(page.getByRole('button', { name: 'Hide Activities on dashboard' })).toBeVisible();
 });
 
-test('The sole Activity Filters panel supports conditions, chips, saved, recent and favorite presets', async ({ page }) => {
+test('the compact Activity Filters panel remembers its last filter and offers no preset or group controls', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
   await page.getByRole('button', { name: /^Filters/ }).click();
   await expect(page.getByRole('button', { name: 'Advanced filters', exact: true })).toHaveCount(0);
@@ -66,17 +66,8 @@ test('The sole Activity Filters panel supports conditions, chips, saved, recent 
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Remove filter Activity name Contains Book a/ })).toBeVisible();
-  await page.getByPlaceholder('Give it a name').fill('My book plan');
-  await page.getByRole('button', { name: 'Save filter', exact: true }).click();
-  await page.getByRole('button', { name: 'Favorite My book plan', exact: true }).click();
-  await page.getByRole('tab', { name: 'Favorites', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'My book plan', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-  await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'My book plan', exact: true }).click();
-  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
-  await page.getByRole('tab', { name: 'Recent', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'My book plan', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Save filter|Add filter group/ })).toHaveCount(0);
+  await expect(page.getByRole('tab', { name: /Saved|Recent|Favorites/ })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: /Remove filter Activity name Contains Book a/ }).click();
@@ -110,23 +101,22 @@ test('Product filter choices stay limited while large named Moment choices remai
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
-test('Numeric ranges retain both edited boundaries and nested OR groups expose their logic', async ({ page }) => {
-  await seedGuest(page); await page.goto('/financials');
+test('numeric ranges keep both boundaries and existing nested OR rules retain their logic without group-creation controls', async ({ page }) => {
+  await seedGuest(page);
+  await page.addInitScript(() => {
+    const group = { id: 'root', kind: 'group', join: 'AND', children: [
+      { id: 'range', kind: 'rule', field: 'amount', operator: 'between', value: ['', ''] },
+      { id: 'legacy-or', kind: 'group', join: 'OR', children: [{ id: 'lower-bound', kind: 'rule', field: 'amount', operator: 'gt', value: '' }] },
+    ] };
+    localStorage.setItem('dn_list_state_guest_conditions%3Atransactions', JSON.stringify({ group, migrationVersion: 1, saved: [], recent: [], history: [] }));
+  });
+  await page.goto('/financials');
   await page.getByRole('button', { name: /^Filters/ }).click();
-  const clear = page.getByRole('button', { name: 'Clear all', exact: true });
-  if (await clear.count()) await clear.click();
-  await page.getByRole('button', { name: 'Add filter', exact: true }).click();
-  await selectConditionOption(page, 'Filter by', 'Amount');
-  await selectConditionOption(page, 'Comparison', 'Between');
   await page.getByRole('spinbutton', { name: 'From Amount', exact: true }).fill('99');
   await page.getByRole('spinbutton', { name: 'To Amount', exact: true }).fill('101');
   await expect(page.getByRole('button', { name: /Remove filter Amount Between 99 – 101/ })).toBeVisible();
   await expect(page.locator('.dn-transaction-copy strong', { hasText: 'Room deposit' })).toBeVisible();
-  await page.getByRole('button', { name: 'Add filter group', exact: true }).first().click();
-  await page.getByRole('combobox', { name: 'Match filters in this group', exact: true }).click();
-  await page.getByRole('option', { name: 'Any filter', exact: true }).click();
-  await selectConditionOption(page, 'Filter by', 'Amount');
-  await selectConditionOption(page, 'Comparison', 'Greater than');
+  await expect(page.getByRole('button', { name: 'Add filter group', exact: true })).toHaveCount(0);
   await page.getByRole('spinbutton', { name: 'Value for Amount', exact: true }).fill('50');
   await expect(page.getByRole('button', { name: /Remove filter AND › OR · Amount Greater than 50/ })).toBeVisible();
 });

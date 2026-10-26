@@ -30,7 +30,7 @@ async function addTextCondition(page, field, value) {
   await expect(page.getByRole('button', { name: new RegExp(`Remove filter ${field} Contains ${value}`) })).toBeVisible();
 }
 
-test('all five list consumers migrate legacy choices into their sole Filters panel once and keep preliminary conditions and presets', async ({ page }) => {
+test('all five lists migrate legacy choices once and keep the active conditions without preset or group controls', async ({ page }) => {
   test.setTimeout(60_000);
   const cases = [
     { route: '/events', legacy: 'moments', value: { category: 'Vacation' }, conditions: 'conditions:moments',
@@ -71,8 +71,8 @@ test('all five list consumers migrate legacy choices into their sole Filters pan
       const migrated = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey('guest', item.conditions));
       const findRules = (node) => node.kind === 'rule' ? [node] : node.children.flatMap(findRules);
       expect(findRules(migrated.group)).toContainEqual(item.preliminary);
-      expect(migrated.saved).toHaveLength(1);
-      expect(migrated.saved[0].label).toBe('Existing preset');
+      await expect(page.getByRole('button', { name: /Save filter|Add filter group/ })).toHaveCount(0);
+      await expect(page.getByRole('tab', { name: /Saved|Recent|Favorites/ })).toHaveCount(0);
 
       await page.getByRole('button', { name: 'Clear all', exact: true }).click();
       await expect(page.locator('.dn-condition-chip')).toHaveCount(0);
@@ -83,31 +83,24 @@ test('all five list consumers migrate legacy choices into their sole Filters pan
       const cleared = await page.evaluate((key) => JSON.parse(localStorage.getItem(key)), storageKey('guest', item.conditions));
       expect(cleared.migrationVersion).toBe(1);
       expect(cleared.group.children).toEqual([]);
-      expect(cleared.saved[0].label).toBe('Existing preset');
     });
   }
 });
 
-test('Guest and synthetic Account conditions and saved presets remain isolated when switching back and forth', async ({ page }) => {
+test('the last active Guest and synthetic Account filters persist separately when switching back and forth', async ({ page }) => {
   const moments = fixtureMoments();
   await seedGuest(page, { moments });
   await page.goto('/events');
   await openFilters(page);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await addTextCondition(page, 'Moment name', 'Weekend');
-  await page.getByPlaceholder('Give it a name').fill('Guest weekend');
-  await page.getByRole('button', { name: 'Save filter', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toBeVisible();
 
   await accountScope(page, 'filter-isolation-owner', moments);
   await openFilters(page);
   await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toHaveCount(0);
-  await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await addTextCondition(page, 'Moment name', 'separate');
-  await page.getByPlaceholder('Give it a name').fill('Account plan');
-  await page.getByRole('button', { name: 'Save filter', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Account plan', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains separate/ })).toBeVisible();
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   await expect(page.locator('.event-story-main')).toContainText('A separate Moment');
 
@@ -120,14 +113,18 @@ test('Guest and synthetic Account conditions and saved presets remain isolated w
   }, moments);
   await openFilters(page);
   await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Guest weekend', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Account plan', exact: true })).toHaveCount(0);
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   await expect(page.locator('.event-story-main')).toContainText('Weekend in Ooty');
-  const saved = await page.evaluate((keys) => keys.map((key) => JSON.parse(localStorage.getItem(key)).saved.map((item) => item.label)),
+  const saved = await page.evaluate((keys) => {
+    const values = (node) => node.kind === 'rule' ? [node.value] : node.children.flatMap(values);
+    return keys.map((key) => values(JSON.parse(localStorage.getItem(key)).group));
+  },
     [storageKey('guest', 'conditions:moments'), storageKey('account:filter-isolation-owner', 'conditions:moments')]);
-  expect(saved).toEqual([['Guest weekend'], ['Account plan']]);
+  expect(saved).toEqual([['Weekend'], ['separate']]);
   expect(await page.evaluate(() => window.__dnAccountWrites)).toEqual([]);
+  await page.reload();
+  await expect(page.locator('.event-story-main')).toHaveCount(1);
+  await expect(page.locator('.event-story-main')).toContainText('Weekend in Ooty');
 });
 
 test('Finance totals follow only date conditions and retain full totals when an OR branch permits every date', async ({ page }) => {
@@ -156,7 +153,14 @@ test('Finance totals follow only date conditions and retain full totals when an 
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹230');
   await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹770');
 
-  await selectOption(page, 'Match filters', 'Any filter');
+  await page.evaluate((key) => {
+    const state = JSON.parse(localStorage.getItem(key));
+    state.group.join = 'OR';
+    localStorage.setItem(key, JSON.stringify(state));
+  }, storageKey('guest', 'conditions:transactions'));
+  await page.reload();
+  await openFilters(page);
+  await expect(page.getByRole('combobox', { name: 'Match filters', exact: true })).toHaveCount(0);
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(3);
   await expect(page.locator('.dn-transaction-copy strong').filter({ hasText: 'September income' })).toHaveCount(0);
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,500');

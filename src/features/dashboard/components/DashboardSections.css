@@ -1,8 +1,29 @@
-/* Dashboard panel visibility is independent and scoped to the current account. */
-html[data-theme] .dashboard-section-toggle {
-  min-height: 36px; min-width: 58px; border: 1px solid var(--color-border);
-  border-radius: 999px; padding: 6px 12px; background: var(--color-surface);
-  color: var(--color-text); font-size: 12px; font-weight: 600; cursor: pointer;
+html[data-theme] .dashboard-overview.dashboard-compact { gap:12px !important; }
+html[data-theme] .dashboard-compact .dashboard-upcoming-card { min-width:0; align-content:start; padding:12px 14px; gap:5px; border-radius:16px; }
+html[data-theme] .dashboard-compact .dashboard-upcoming-empty { margin:6px 0; font-size:13px; }
+html[data-theme] .dashboard-compact .dashboard-upcoming-row { min-height:54px; }
+html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
+  display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; min-width:0; min-height:44px; gap:6px;
 }
-html[data-theme] .dashboard-section-toggle:hover { background: var(--color-surface-secondary, var(--color-surface)); }
-html[data-theme] .dashboard-section-toggle:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-section-title { flex:none; font-size:13px; font-weight:700; }
+html[data-theme] .dashboard-section-actions { display:flex; flex:0 1 auto; align-items:center; min-width:0; gap:4px; }
+html[data-theme] .dashboard-section-actions .dashboard-date-views {
+  display:inline-flex; flex:none; align-items:center; width:auto; max-width:none; height:28px; gap:0; overflow:visible;
+  padding:0 2px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface);
+}
+html[data-theme] .dashboard-section-actions .dashboard-date-views button {
+  position:relative; isolation:isolate; min-height:44px; min-width:0; padding:0 5px; border:0; border-radius:5px; background:transparent;
+  color:var(--color-text-muted); box-shadow:none; font:inherit; font-size:11px; line-height:1.2; white-space:nowrap; cursor:pointer;
+}
+html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"] { background:transparent; color:var(--color-text); box-shadow:none; font-weight:650; }
+html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"]::before { position:absolute; z-index:-1; inset:10px 0; border-radius:5px; background:var(--color-card); box-shadow:var(--shadow-sm); content:''; pointer-events:none; }
+html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"]::after { display:none; }
+html[data-theme] .dashboard-section-actions .dashboard-section-toggle {
+  flex:none; min-height:44px; min-width:44px; padding:0 3px; border:0; border-radius:6px; background:transparent;
+  color:var(--color-text-muted); font:inherit; font-size:11px; font-weight:600; cursor:pointer;
+}
+html[data-theme] .dashboard-section-actions .dashboard-section-toggle:hover { color:var(--color-text); background:var(--color-surface); }
+html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+@media(min-width:820px) {
+  html[data-theme] .dashboard-overview.dashboard-compact { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1120px; }
+}

@@ -1,5 +1,4 @@
-// This component is the main dashboard summary screen.
-// It gathers upcoming events, activity progress, greeting ideas, and quick export actions in one place.
+// Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -360,7 +359,6 @@ export function DashboardOverviewContent() {
   const activityActions = useActivityActions();
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
-  const eventLoadError = error === 'Unable to load events.';
   const events = ready ? storedEvents : EMPTY_EVENTS;
   const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
@@ -407,20 +405,21 @@ export function DashboardOverviewContent() {
   return (
     <>
       <div className="dashboard-overview dashboard-compact">
-        <DashboardGreeting events={events} eventsReady={ready && !loading && !eventLoadError} eventsError={eventLoadError}
-          momentTypes={momentTypes} now={today} onRetryEvents={() => loadEvents(user?.uid, isGuest)} />
+        <DashboardGreeting now={today} />
         <section className="dashboard-upcoming-card" aria-label="Moments">
-          <header style={styles.upcomingHeader}>
-            <span>Moments</span>
+          <header className="dashboard-section-heading">
+            <span className="dashboard-section-title">Moments</span>
+            <div className="dashboard-section-actions">
+            {sections.moments ? <div role="group" aria-label="Moment dates" className="dashboard-date-views">
+              <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
+              <button type="button" aria-pressed={momentView === 'on-this-day'} onClick={() => setMomentView('on-this-day')}>On This Day</button>
+            </div> : null}
             <button type="button" className="dashboard-section-toggle" aria-expanded={sections.moments}
               aria-label={sections.moments ? 'Hide Moments on dashboard' : 'Show Moments on dashboard'}
               onClick={() => changeSections({ moments: !sections.moments })}>{sections.moments ? 'Hide' : 'Show'}</button>
+            </div>
           </header>
           {sections.moments ? <>
-          <div role="group" aria-label="Moment dates" className="dashboard-date-views">
-            <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
-            <button type="button" aria-pressed={momentView === 'on-this-day'} onClick={() => setMomentView('on-this-day')}>On This Day</button>
-          </div>
           {error === 'Unable to load events.' ? (
             <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
           ) : !ready || loading ? (
@@ -452,17 +451,19 @@ export function DashboardOverviewContent() {
           </> : null}
         </section>
         <section className="dashboard-upcoming-card" aria-label="Activities">
-          <header style={styles.upcomingHeader}>
-            <span>Activities</span>
+          <header className="dashboard-section-heading">
+            <span className="dashboard-section-title">Activities</span>
+            <div className="dashboard-section-actions">
+            {sections.activities ? <div role="group" aria-label="Activity dates" className="dashboard-date-views">
+              <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
+              <button type="button" aria-pressed={activityView === 'on-this-day'} onClick={() => setActivityView('on-this-day')}>On This Day</button>
+            </div> : null}
             <button type="button" className="dashboard-section-toggle" aria-expanded={sections.activities}
               aria-label={sections.activities ? 'Hide Activities on dashboard' : 'Show Activities on dashboard'}
               onClick={() => changeSections({ activities: !sections.activities })}>{sections.activities ? 'Hide' : 'Show'}</button>
+            </div>
           </header>
           {sections.activities ? <>
-          <div role="group" aria-label="Activity dates" className="dashboard-date-views">
-            <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
-            <button type="button" aria-pressed={activityView === 'on-this-day'} onClick={() => setActivityView('on-this-day')}>On This Day</button>
-          </div>
           {error === 'Unable to load events.' ? (
             <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
           ) : !ready || loading ? (
@@ -571,13 +572,6 @@ const styles = {
     color: '#1f6f5d',
     fontSize: '0.82rem',
     fontWeight: 800,
-  },
-  upcomingHeader: {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: '10px',
-    flexWrap: 'wrap',
   },
   upcomingListContainer: {
     maxHeight: '220px',

@@ -39,7 +39,7 @@ async function editType(page, name) {
   return page.getByRole('dialog', { name: 'Edit moment type', exact: true });
 }
 
-const metric = (page, label) => page.locator('.dashboard-summary-metric').filter({ has: page.getByText(label, { exact: true }) }).locator('strong');
+const items = (page, section) => page.getByRole('region', { name: section, exact: true }).locator(section === 'Moments' ? '.dashboard-moment-row' : '.dashboard-activity-card');
 
 test('Moment type switches independently save Dashboard Moments and Activities visibility', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
@@ -47,8 +47,8 @@ test('Moment type switches independently save Dashboard Moments and Activities v
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await seedTypeSettings(page);
   await page.goto('/dashboard');
-  await expect(metric(page, 'Activities today')).toHaveText('3');
-  await expect(metric(page, 'Recent moments')).toHaveText('3');
+  await expect(items(page, 'Activities')).toHaveCount(3);
+  await expect(items(page, 'Moments')).toHaveCount(3);
   await expect(page.getByRole('button', { name: 'Open Family task today', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Open Generic task today', exact: true })).toHaveCount(0);
 
@@ -59,8 +59,8 @@ test('Moment type switches independently save Dashboard Moments and Activities v
   await editor.getByRole('button', { name: 'Save moment type', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await page.goto('/dashboard');
-  await expect(metric(page, 'Activities today')).toHaveText('2');
-  await expect(metric(page, 'Recent moments')).toHaveText('3');
+  await expect(items(page, 'Activities')).toHaveCount(2);
+  await expect(items(page, 'Moments')).toHaveCount(3);
   await expect(page.getByRole('region', { name: 'Moments', exact: true })).toContainText('Personal moment');
   await expect(page.getByRole('button', { name: 'Open Personal task today', exact: true })).toHaveCount(0);
   await page.getByRole('group', { name: 'Activity dates', exact: true }).getByRole('button', { name: 'On This Day', exact: true }).click();
@@ -68,7 +68,7 @@ test('Moment type switches independently save Dashboard Moments and Activities v
   await expect(page.getByRole('button', { name: 'Open Personal task last year', exact: true })).toHaveCount(0);
   await page.reload();
   await expect(page.getByRole('button', { name: 'Open Personal task today', exact: true })).toHaveCount(0);
-  await expect(metric(page, 'Activities today')).toHaveText('2');
+  await expect(items(page, 'Activities')).toHaveCount(2);
 
   editor = await editType(page, 'Personal');
   await expect(editor.getByRole('switch', { name: 'Show Activities on Dashboard', exact: true })).not.toBeChecked();
@@ -77,8 +77,8 @@ test('Moment type switches independently save Dashboard Moments and Activities v
   await editor.getByRole('button', { name: 'Save moment type', exact: true }).click();
   await expect(editor).toHaveCount(0);
   await page.goto('/dashboard');
-  await expect(metric(page, 'Activities today')).toHaveText('3');
-  await expect(metric(page, 'Recent moments')).toHaveText('2');
+  await expect(items(page, 'Activities')).toHaveCount(3);
+  await expect(items(page, 'Moments')).toHaveCount(2);
   await expect(page.getByRole('button', { name: 'Open Personal task today', exact: true })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Moments', exact: true })).not.toContainText('Personal moment');
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_admin_values')).eventTypes.find(({ value }) => value === 'Personal'));
@@ -102,8 +102,8 @@ test('synthetic account Dashboard type choices do not inherit or overwrite Guest
         { value: 'Vacation', showInDashboardUpcoming: false, showActivitiesOnDashboard: true },
         { value: 'Other', showInDashboardUpcoming: false, showActivitiesOnDashboard: false }] } });
   });
-  await expect(metric(page, 'Activities today')).toHaveText('1');
-  await expect(metric(page, 'Recent moments')).toHaveText('1');
+  await expect(items(page, 'Activities')).toHaveCount(1);
+  await expect(items(page, 'Moments')).toHaveCount(1);
   await expect(page.getByRole('button', { name: 'Open Personal task today', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Open Vacation task today', exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_admin_values'))).toBe(guestSettings);

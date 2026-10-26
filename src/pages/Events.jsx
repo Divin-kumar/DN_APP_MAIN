@@ -515,7 +515,7 @@ export default function Events() {
           {events.length ? (
             <div className="activity-event-picker">
               <p>Activities belong to an event. Choose the moment this next step will help with.</p>
-              <label className="activity-event-search"><Search size={16} /><input autoFocus value={activityEventSearch} onChange={(changeEvent) => setActivityEventSearch(changeEvent.target.value)} placeholder="Search your moments" aria-label="Search moments for activity" /></label>
+              <label className="activity-event-search"><Search size={16} /><input value={activityEventSearch} onChange={(changeEvent) => setActivityEventSearch(changeEvent.target.value)} placeholder="Search your moments" aria-label="Search moments for activity" /></label>
               <div className="activity-event-picker-results">
                 {pickerSuggested && !pickerQuery ? <section className="activity-picker-group"><div className="activity-picker-label">A good place to begin <span>Suggested</span></div><ActivityEventOption event={pickerSuggested} badge="Next up" favorite={favoriteEventIds.includes(pickerSuggested.id || pickerSuggested.firestoreId)} onChoose={() => chooseEventForActivity(pickerSuggested)} onToggleFavorite={() => toggleFavoriteEvent(pickerSuggested)} /></section> : null}
                 {pickerFavorites.length ? <section className="activity-picker-group"><div className="activity-picker-label">Favorites</div>{pickerFavorites.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}

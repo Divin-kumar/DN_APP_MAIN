@@ -10,99 +10,65 @@ const textOf = (node) => Array.isArray(node) ? node.map(textOf).join('')
 
 async function openGreeting(t) {
   const key = `__dnGreeting${Date.now()}${Math.random().toString(36).slice(2)}`;
-  const calls = [];
-  const state = { app: { user: { uid: 'owner', displayName: 'Kumar Divin' }, isGuest: false }, sample: null,
-    income: { incomes: [{ id: 'i', date: '2026-10-26', amount: 1000 }], loadedFor: 'user:owner', activeLoadKey: 'user:owner', loadIncomes: (...args) => calls.push(['income', ...args]) },
-    expense: { expenses: [{ id: 'e', date: '2026-10-26', amount: 450 }], loadedFor: 'user:owner', activeLoadKey: 'user:owner', loadExpenses: (...args) => calls.push(['expense', ...args]) } };
+  const state = { app: { user: { uid: 'owner', displayName: 'Kumar Divin' }, isGuest: false } };
   globalThis[key] = state;
   const server = await createServer({ configFile: false, envFile: false, esbuild: { jsx: 'automatic' },
     ssr: { noExternal: ['react', 'lucide-react'] },
     server: { middlewareMode: true, watch: null, hmr: { server: createHttpServer() } },
-    plugins: [{ name: 'isolated-daily-summary', enforce: 'pre', resolveId(source) {
-      if (source === 'react') return '\0daily-react';
-      if (source === 'react/jsx-runtime' || source === 'react/jsx-dev-runtime') return '\0daily-jsx';
-      if (source === 'lucide-react') return '\0daily-icons';
-      if (source.endsWith('/store/useAppStore')) return '\0daily-app';
-      if (source.endsWith('/store/useIncomeStore')) return '\0daily-income';
-      if (source.endsWith('/store/useExpenseStore')) return '\0daily-expense';
-      if (source.endsWith('/dev/sampleData')) return '\0daily-sample';
+    plugins: [{ name: 'isolated-dashboard-greeting', enforce: 'pre', resolveId(source) {
+      if (source === 'react/jsx-runtime' || source === 'react/jsx-dev-runtime') return '\0greeting-jsx';
+      if (source === 'lucide-react') return '\0greeting-icons';
+      if (source.endsWith('/store/useAppStore')) return '\0greeting-app';
+      if (/\/store\/use(?:Income|Expense|Event)Store$/.test(source)) throw new Error('The greeting must not read or load business data.');
       return null;
     }, load(id) {
-      const fixture = `globalThis[${JSON.stringify(key)}]`;
-      if (id === '\0daily-react') return 'export const useEffect=()=>{}, useMemo=(fn)=>fn();';
-      if (id === '\0daily-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
-      if (id === '\0daily-icons') return 'export const CalendarDays="icon", CheckCheck="icon", Clock3="icon", Images="icon", Sparkles="icon", Sunrise="icon", Sun="icon", Moon="icon", Wallet="icon";';
-      if (id === '\0daily-app') return `export default (select)=>select(${fixture}.app);`;
-      if (id === '\0daily-income') return `export default ()=>${fixture}.income;`;
-      if (id === '\0daily-expense') return `export default ()=>${fixture}.expense;`;
-      if (id === '\0daily-sample') return `export const getActiveSampleScenario=()=>${fixture}.sample;`;
+      if (id === '\0greeting-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
+      if (id === '\0greeting-icons') return 'export const Sunrise="sunrise", Sun="sun", Moon="moon";';
+      if (id === '\0greeting-app') return `export default (select)=>select(globalThis[${JSON.stringify(key)}].app);`;
       return null;
     } }],
   });
   t.after(async () => { await server.close(); delete globalThis[key]; });
   const { default: Greeting } = await server.ssrLoadModule('/src/features/dashboard/components/DashboardGreeting.jsx');
-  const props = { events: [{ date: '2026-10-26', activities: [{ date: '2026-10-26' }] }], eventsReady: true,
-    eventsError: false, momentTypes: [], now: new Date(2026, 9, 26, 9), onRetryEvents: () => calls.push(['events']) };
+  const props = { now: new Date(2026, 9, 26, 9) };
   const render = () => Greeting(props);
-  const metric = (label) => nodes(render()).find((node) => node.props?.label === label)?.props;
-  return { state, props, calls, render, metric };
+  const salutation = () => textOf(nodes(render()).find((node) => node.type === 'h2'));
+  return { state, props, render, salutation };
 }
 
-test('daily greeting presents real activity and monthly ledger values with an explicit recent-date window', async (t) => {
-  const h = await openGreeting(t);
-  assert.match(textOf(h.render()), /Good morning, Kumar/);
-  assert.equal(h.metric('Activities today').value, 1);
-  assert.equal(h.metric('Recent moments').value, 1);
-  assert.equal(h.metric('Recent moments').detail, 'Dated in the past 7 days');
-  assert.equal(h.metric('Pending activities').value, 1);
-  assert.equal(h.metric('Spent · Oct 2026').value, '₹450');
-  assert.equal(h.metric('Spent · Oct 2026').detail, 'Balance ₹550');
+test('Dashboard greeting contains the time-of-day salutation, first name and a small dated time only', async (t) => {
+  const h = await openGreeting(t), tree = h.render();
+  assert.equal(tree.props['aria-label'], 'Dashboard greeting');
+  assert.equal(h.salutation(), 'Good morning, Kumar');
+  assert.equal(nodes(tree).find((node) => node.type === 'time').props.dateTime, '2026-10-26');
+  assert.doesNotMatch(textOf(tree), /Divin|activit|moment|spent|balance|pending|completed|summary|retry/i);
+  assert.equal(nodes(tree).filter((node) => ['button', 'p', 'section'].includes(node.type)).length, 0);
 });
 
-test('failed or loading event reads never become zero counts and expose an effective retry', async (t) => {
+test('greeting changes its salutation and icon across local morning, afternoon and evening', async (t) => {
   const h = await openGreeting(t);
-  h.props.eventsReady = false;
-  assert.equal(h.metric('Activities today').value, '…');
-  assert.equal(h.metric('Activities today').pending, true);
-  h.props.eventsError = true;
-  assert.equal(h.metric('Activities today').value, '—');
-  assert.equal(h.metric('Pending activities').value, '—');
-  nodes(h.render()).find((node) => node.type === 'button' && node.props.children === 'Retry summary').props.onClick();
-  assert.deepEqual(h.calls, [['events']]);
+  for (const [hour, expected, icon] of [[0, 'Good morning', 'sunrise'], [11, 'Good morning', 'sunrise'],
+    [12, 'Good afternoon', 'sun'], [17, 'Good afternoon', 'sun'], [18, 'Good evening', 'moon'], [23, 'Good evening', 'moon']]) {
+    h.props.now = new Date(2026, 9, 26, hour);
+    assert.equal(h.salutation(), `${expected}, Kumar`);
+    assert.ok(nodes(h.render()).some((node) => node.type === icon));
+  }
 });
 
-test('finance values hide for a previous account, a changed Sample, loading or failed reads', async (t) => {
+test('greeting immediately reflects the current account or Guest identity without a previous name', async (t) => {
   const h = await openGreeting(t);
-  h.state.app.user = { uid: 'other' };
-  assert.equal(h.metric('Spent · Oct 2026').value, '…');
-  assert.equal(h.metric('Spent · Oct 2026').detail, 'Balance unavailable');
-  h.state.app.user = { uid: 'owner' };
-  h.state.sample = 'isolated';
-  assert.equal(h.metric('Spent · Oct 2026').value, '…');
-  h.state.sample = null;
-  h.state.expense.loading = true;
-  assert.equal(h.metric('Spent · Oct 2026').value, '…');
-  h.state.expense.loading = false;
-  h.state.expense.error = 'Unable to load expenses.';
-  assert.equal(h.metric('Spent · Oct 2026').value, '—');
-  assert.match(textOf(h.render()), /Spending couldn’t be loaded/);
-  nodes(h.render()).find((node) => node.type === 'button' && node.props.children === 'Retry finances').props.onClick();
-  assert.deepEqual(h.calls, [['income', 'owner', false], ['expense', 'owner', false]]);
+  h.state.app.user = { uid: 'other', displayName: '  Priya   Kumar ' };
+  assert.equal(h.salutation(), 'Good morning, Priya');
+  h.state.app = { user: null, isGuest: true };
+  assert.equal(h.salutation(), 'Good morning, Guest');
+  h.state.app = { user: { uid: 'email', email: 'divin@example.com' }, isGuest: false };
+  assert.equal(h.salutation(), 'Good morning, divin');
 });
 
-test('income failure keeps independently loaded spending available and never invents a balance', async (t) => {
-  const h = await openGreeting(t);
-  h.state.income.error = 'Unable to load incomes.';
-  assert.equal(h.metric('Spent · Oct 2026').value, '₹450');
-  assert.equal(h.metric('Spent · Oct 2026').detail, 'Balance unavailable');
-  assert.match(textOf(h.render()), /Balance couldn’t be loaded/);
-});
-
-test('rolled-back save errors do not hide successfully loaded financial ledgers behind an ineffective load retry', async (t) => {
-  const h = await openGreeting(t);
-  h.state.income.error = 'Unable to save the income. Your changes were restored.';
-  h.state.expense.error = 'Unable to delete the expense. It has been restored.';
-  assert.equal(h.metric('Spent · Oct 2026').value, '₹450');
-  assert.equal(h.metric('Spent · Oct 2026').detail, 'Balance ₹550');
-  assert.doesNotMatch(textOf(h.render()), /Retry finances/);
+test('loading or failed business inputs cannot replace the greeting with metrics, status or retry UI', async (t) => {
+  const h = await openGreeting(t), before = textOf(h.render());
+  Object.assign(h.props, { events: [{ name: 'Private moment', activities: [{ title: 'Private activity' }] }],
+    eventsReady: false, eventsError: true, onRetryEvents: () => { throw new Error('Unexpected business retry.'); } });
+  assert.equal(textOf(h.render()), before);
+  assert.equal(nodes(h.render()).some((node) => ['alert', 'status'].includes(node.props?.role)), false);
 });

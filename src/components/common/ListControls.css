@@ -181,6 +181,11 @@ html[data-theme] .event-discovery-bar > .dn-list-controls { flex: 1 1 230px; }
 html[data-theme] .insights-tools:has(> .dn-list-controls) { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 html[data-theme] .insights-tools > .dn-list-controls { flex: 1 1 200px; }
 @media (max-width: 640px) {
+  html[data-theme] .dn-list-controls-panel {
+    max-height: min(320px, 42svh);
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+  }
   html[data-theme] .dn-list-controls-context { font-size: 11px; }
   html[data-theme] .dn-list-controls .dn-list-controls-trigger { gap: 5px; padding-inline: 10px; }
   html[data-theme] .dn-list-controls-summary { font-size: 11px; }

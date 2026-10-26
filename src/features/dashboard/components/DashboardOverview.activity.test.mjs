@@ -160,3 +160,34 @@ test('On This Day opens Activity Detail and exposes deliberate reopening and men
   assert.equal(swipe.props.actionLabel,'Reopen');
   assert.equal(h.writes.length,0);
 });
+
+test('Moment and Activity date toggles share their heading with Hide and retain the chosen view after showing again', async (t) => {
+  const h = await openDashboard(t);
+  const section = (label) => nodes(h.render()).find((node) => node.type === 'section' && node.props['aria-label'] === label);
+  const heading = (label) => nodes(section(label)).find((node) => node.type === 'header');
+  for (const [label, dates] of [['Moments', 'Moment dates'], ['Activities', 'Activity dates']]) {
+    const header = heading(label);
+    const actions = nodes(header).find((node) => node.props?.className === 'dashboard-section-actions');
+    const group = nodes(actions).find((node) => node.props?.['aria-label'] === dates);
+    assert.ok(group, `${dates} belongs to the heading actions`);
+    assert.ok(nodes(actions).some((node) => node.props?.['aria-label'] === `Hide ${label} on dashboard`));
+    assert.equal(nodes(section(label)).filter((node) => node.props?.['aria-label'] === dates).length, 1);
+    nodes(group).find((node) => node.type === 'button' && node.props.children === 'On This Day').props.onClick();
+    nodes(heading(label)).find((node) => node.props?.['aria-label'] === `Hide ${label} on dashboard`).props.onClick();
+    assert.equal(nodes(section(label)).some((node) => node.props?.['aria-label'] === dates), false);
+    nodes(heading(label)).find((node) => node.props?.['aria-label'] === `Show ${label} on dashboard`).props.onClick();
+    const restored = nodes(heading(label)).find((node) => node.props?.['aria-label'] === dates);
+    assert.equal(nodes(restored).find((node) => node.type === 'button' && node.props.children === 'On This Day').props['aria-pressed'], true);
+  }
+  assert.equal(h.writes.length, 0);
+});
+
+test('business read failures keep meaningful list retries while the greeting receives only the clock', async (t) => {
+  const h = await openDashboard(t);
+  h.api.eventStore.error = 'Unable to load events.';
+  const tree = h.render(), greeting = nodes(tree).find((node) => node.type === 'DashboardGreeting');
+  assert.deepEqual(Object.keys(greeting.props), ['now']);
+  const alerts = nodes(tree).filter((node) => node.props?.role === 'alert' && node.props?.className === 'financial-load-error');
+  assert.equal(alerts.length, 2);
+  assert.ok(alerts.every((node) => nodes(node).some((child) => child.type === 'button' && child.props.children === 'Try again')));
+});

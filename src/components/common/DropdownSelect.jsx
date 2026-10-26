@@ -25,6 +25,7 @@ export default function DropdownSelect({
   const menuRef = useRef(null);
   const listRef = useRef(null);
   const searchRef = useRef(null);
+  const typeahead = useRef({ text: '', time: 0 });
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [query, setQuery] = useState('');
@@ -117,10 +118,6 @@ export default function DropdownSelect({
   }, [open, reposition]);
 
   useEffect(() => {
-    if (open && placement && searchable) searchRef.current?.focus({ preventScroll: true });
-  }, [open, Boolean(placement), searchable]);
-
-  useEffect(() => {
     if (!open) return undefined;
     const onOutsidePointer = (event) => {
       if (!rootRef.current?.contains(event.target) && !menuRef.current?.contains(event.target)) close();
@@ -170,7 +167,17 @@ export default function DropdownSelect({
       close(true);
       return;
     }
-    if (event.key === 'Tab') { close(); return; }
+    if (event.key === 'Tab') {
+      if (open && searchable && event.target === triggerRef.current && !event.shiftKey) {
+        // Tab is an explicit request to enter search; pointer opening never is.
+        event.preventDefault(); searchRef.current?.focus({ preventScroll: true }); return;
+      }
+      if (event.target === searchRef.current) {
+        triggerRef.current?.focus({ preventScroll: true });
+        if (event.shiftKey) { event.preventDefault(); return; }
+      }
+      close(); return;
+    }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       if (!open) { setOpen(true); setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); }
@@ -183,16 +190,31 @@ export default function DropdownSelect({
       if (enabledIndices.length) setActiveIndex(event.key === 'Home' ? enabledIndices[0] : enabledIndices[enabledIndices.length - 1]);
       return;
     }
-    if (event.key === 'Enter' || (event.key === ' ' && event.target !== searchRef.current)) {
+    if (event.key === 'Enter' || (event.key === ' ' && event.target !== searchRef.current && !(searchable && open && query))) {
       event.preventDefault();
       if (open) commitOption(shownActiveIndex);
       else { setOpen(true); setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); }
       return;
     }
-    if (searchable && event.target === triggerRef.current && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
+    if (event.target === triggerRef.current && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
-      setQuery((current) => open ? current + event.key : event.key);
-      setScrollTop(0); setActiveIndex(-1); setOpen(true);
+      if (searchable) {
+        setQuery((current) => open ? current + event.key : event.key);
+        setScrollTop(0); setActiveIndex(-1);
+      } else {
+        const now = Date.now();
+        const prefix = now - typeahead.current.time < 700 ? typeahead.current.text + event.key : event.key;
+        const find = (text) => options.findIndex((option) => !option.disabled && option.label.toLocaleLowerCase().startsWith(text.toLocaleLowerCase()));
+        const match = find(prefix);
+        typeahead.current = { text: match >= 0 ? prefix : event.key, time: now };
+        const next = match >= 0 ? match : find(event.key);
+        if (next >= 0) setActiveIndex(next);
+      }
+      setOpen(true);
+    } else if (searchable && open && event.target === triggerRef.current && event.key === 'Backspace' && query) {
+      event.preventDefault();
+      setQuery((current) => current.slice(0, -1));
+      setScrollTop(0); setActiveIndex(-1);
     }
   };
 
@@ -204,6 +226,9 @@ export default function DropdownSelect({
         aria-activedescendant={open && shownActiveIndex >= 0 && placement ? `${listboxId}-option-${shownActiveIndex}` : undefined}
         aria-required={required || undefined} disabled={disabled}
         onClick={() => {
+          // Opening choices must not summon the mobile keyboard. Searching is
+          // available only when the user explicitly focuses the search input.
+          triggerRef.current?.focus({ preventScroll: true });
           if (open) close(true);
           else { setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); setOpen(true); }
         }}
