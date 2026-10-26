@@ -21,7 +21,7 @@ import { activityDetailPath, activityStatus } from '../../../utils/activityDetai
 import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
-import MomentSummaryExtras from '../../../components/events/MomentSummaryExtras';
+import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -280,6 +280,7 @@ function EventSummaryModal({ event, onClose }) {
           <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={formatDisplayDate(eventDate)} />
         ) : null}
         {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
+        <MomentSummaryPhotos event={event} />
 
         <div style={styles.section}>
           <div style={styles.statusRow}>{statusText}</div>
@@ -307,6 +308,7 @@ function EventSummaryModal({ event, onClose }) {
                           <RichText className="dashboard-summary-description" value={description} />
                         </div>
                       ) : null}
+                      <MomentSummaryPhotos event={event} activityId={activity.id || String(index)} />
                     </div>
                   </li>
                 );
