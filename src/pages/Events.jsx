@@ -23,6 +23,8 @@ import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
 import { parseMomentDate } from '../utils/momentDates';
+import ConditionBuilder from '../components/common/ConditionBuilder';
+import useConditionFilters from '../hooks/useConditionFilters';
 import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
 import RichTextEditor from '../components/common/RichTextEditor';
@@ -122,6 +124,7 @@ export default function Events() {
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
+  const conditions = useConditionFilters('moments', events);
   const loading = useEventStore((state) => state.loading);
   const error = useEventStore((state) => state.error);
   const loadEvents = useEventStore((state) => state.loadEvents);
@@ -208,7 +211,7 @@ export default function Events() {
         const matchesCategory = category === 'Archived' ? Boolean(event.archived) : !event.archived && (category === 'All moments' || (event.type || 'Personal') === category);
         const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
           .some((value) => String(value || '').toLowerCase().includes(query));
-        return matchesCategory && matchesSearch;
+        return matchesCategory && matchesSearch && conditions.matches(event);
       })
       .sort((first, second) => {
         // The story always follows the recorded Event Date, never creation or update time.
@@ -217,7 +220,7 @@ export default function Events() {
         if (firstDate !== secondDate) return firstDate - secondDate;
         return String(first.id || first.firestoreId || '').localeCompare(String(second.id || second.firestoreId || ''));
       });
-  }, [events, category, search]);
+  }, [events, category, search, conditions.matches]);
   const upcomingCount = events.filter((event) => {
     if (event.archived) return false;
     const date = getTimelineDate(event);
@@ -491,6 +494,7 @@ export default function Events() {
             </DropdownSelect>
           </div>
         </ListControls>
+        <ConditionBuilder filter={conditions} resultCount={visibleEvents.length} resultLabel="moments" title="Moment conditions" />
       </div>
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
