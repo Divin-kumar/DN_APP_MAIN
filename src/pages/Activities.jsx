@@ -73,7 +73,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     }));
     return { entries, context, views };
   }, [events]);
-  const conditions = useConditionFilters('activities', projection.entries);
+  const conditions = useConditionFilters('activities', projection.entries, usePersistentListState);
   const selected = selectActivityEntries(projection.entries, filters).filter((entry) => conditions.matches(entry));
   const allInScope = projection.entries.filter((entry) => (
     (!filters.momentId || entry.momentId === filters.momentId)
