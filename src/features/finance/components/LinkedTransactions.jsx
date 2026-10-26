@@ -25,7 +25,7 @@ export function MomentFinanceSummary({ summary, label = 'Totals for this Moment'
 // Contextual history is read-only. Creation uses universal +; editing stays in Finance.
 export default function LinkedTransactions({ eventId, activityId = '', minimal = false }) {
   const finance = useMomentFinance(eventId, activityId);
-  const conditions = useConditionFilters(`moment-transactions:${eventId}:${activityId || 'all'}`, finance.transactions);
+  const conditions = useConditionFilters(`moment-transactions:${eventId}:${activityId || 'all'}`, finance.transactions, usePersistentListState);
   const [filters, changeFilters, resetFilters] = usePersistentListState(
     `moment-transactions:${JSON.stringify([finance.sample, eventId, activityId])}`, DEFAULTS, RULES);
   const moment = finance.events.find((item) => recordId(item.id || item.firestoreId) === eventId);
