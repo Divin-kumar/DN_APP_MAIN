@@ -22,14 +22,19 @@ import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRe
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
-import usePersistentListState from '../../../hooks/usePersistentListState';
 import './DashboardSections.css';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
 const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true });
-const DASHBOARD_SECTION_RULES = Object.freeze({ moments: (value) => typeof value === 'boolean', activities: (value) => typeof value === 'boolean' });
+const readDashboardSections = (key) => {
+  try {
+    const saved = JSON.parse(globalThis.localStorage?.getItem(key) || 'null');
+    return { moments: typeof saved?.moments === 'boolean' ? saved.moments : true,
+      activities: typeof saved?.activities === 'boolean' ? saved.activities : true };
+  } catch { return { ...DASHBOARD_SECTIONS }; }
+};
 
 const isSameDay = (first, second) => (
   first && second
@@ -370,7 +375,14 @@ export function DashboardOverviewContent() {
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
-  const [sections, changeSections] = usePersistentListState('dashboard-sections', DASHBOARD_SECTIONS, DASHBOARD_SECTION_RULES);
+  const sectionKey = `dn_dashboard_sections_${isGuest ? 'guest' : user?.uid || 'signed-out'}_${getActiveSampleScenario(user?.uid) || 'live'}`;
+  const [sectionState, setSectionState] = useState(() => ({ key: sectionKey, visible: readDashboardSections(sectionKey) }));
+  const sections = sectionState.key === sectionKey ? sectionState.visible : readDashboardSections(sectionKey);
+  const changeSections = (patch) => {
+    const next = { ...sections, ...patch };
+    try { globalThis.localStorage?.setItem(sectionKey, JSON.stringify(next)); } catch { /* Remain usable without storage. */ }
+    setSectionState({ key: sectionKey, visible: next });
+  };
   useEffect(() => {
     if (!user && !isGuest) return;
     loadEvents(user?.uid, isGuest);
