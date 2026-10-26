@@ -23,6 +23,7 @@ import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
 import usePersistentListState from '../../../hooks/usePersistentListState';
+import './DashboardSections.css';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
