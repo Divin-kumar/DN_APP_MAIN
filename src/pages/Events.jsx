@@ -124,7 +124,7 @@ export default function Events() {
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const events = useEventStore((state) => state.events);
-  const conditions = useConditionFilters('moments', events);
+  const conditions = useConditionFilters('moments', events, usePersistentListState);
   const loading = useEventStore((state) => state.loading);
   const error = useEventStore((state) => state.error);
   const loadEvents = useEventStore((state) => state.loadEvents);
