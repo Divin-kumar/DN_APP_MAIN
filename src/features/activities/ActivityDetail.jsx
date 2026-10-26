@@ -82,9 +82,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <h2 className="sr-only" id="activity-description-heading">Description</h2>
         <RichText value={activity.description} headingLevel={3} className="activity-description" />
       </section> : null}
-      <section className="activity-detail-section" aria-labelledby="activity-transactions-heading">
-        <h2 className="sr-only" id="activity-transactions-heading">Transactions</h2><LinkedTransactions eventId={eventId} activityId={activityId} minimal />
-      </section>
+      <LinkedTransactions eventId={eventId} activityId={activityId} minimal />
       <section className="activity-detail-section"><ActivityAttachments moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} /></section>
       {navigation.index >= 0 && navigation.ids.length > 1 ? <nav className="activity-pagination" aria-label="Activity navigation">
         <button type="button" className="dn-record-menu-trigger" aria-label="Previous activity" disabled={!navigation.previous || coverEditing || actions.busy} onClick={() => navigation.move(-1)}><ChevronLeft size={19} aria-hidden="true" /></button>
