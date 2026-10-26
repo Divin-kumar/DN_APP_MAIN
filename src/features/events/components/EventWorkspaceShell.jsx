@@ -183,7 +183,7 @@ export function EventWorkspaceContent() {
   useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
-  const activityConditions = useConditionFilters(`moment-activities:${eventId}`, event?.activities || []);
+  const activityConditions = useConditionFilters(`moment-activities:${eventId}`, event?.activities || [], usePersistentListState);
 
   useLayoutEffect(() => {
     const nav = workspaceNavRef.current;
