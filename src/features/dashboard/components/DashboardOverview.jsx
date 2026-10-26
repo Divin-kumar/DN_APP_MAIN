@@ -23,6 +23,7 @@ import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import MomentSummaryExtras, { MomentSummaryPhotos } from '../../../components/events/MomentSummaryExtras';
 import './DashboardSections.css';
+import DashboardMonthlyInsight from './DashboardMonthlyInsight';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -425,6 +426,7 @@ export function DashboardOverviewContent() {
           <span>{greeting}, {profileName}</span>
           <p>{activeTodayCount} {activeTodayCount === 1 ? 'moment' : 'moments'} today <i>·</i> {dateText}</p>
         </header>
+        {ready && !loading && !error ? <DashboardMonthlyInsight events={events} /> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header style={styles.upcomingHeader}>
             <span>Moments</span>
