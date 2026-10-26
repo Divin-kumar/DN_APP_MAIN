@@ -76,7 +76,7 @@ export default function ConditionBuilder({ filter, resultCount, resultLabel = 'r
   return <section className="dn-conditions" aria-label={title}>
     <div className="dn-conditions-toolbar">
       <button type="button" className="dn-conditions-toggle" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-        <Filter size={16} aria-hidden="true" /> Filters {filter.activeCount ? <strong>{filter.activeCount}</strong> : null}
+        <Filter size={16} aria-hidden="true" /> Advanced filters {filter.activeCount ? <strong>{filter.activeCount}</strong> : null}
         {open ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
       </button>
       <span className="dn-conditions-count" aria-live="polite">{resultCount} {resultLabel}</span>
