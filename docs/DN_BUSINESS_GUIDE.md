@@ -2,6 +2,8 @@
 
 Current release: **26 October 2026 · Version 1.0.31 is published** at [DN](https://dn-10.web.app), with movable/selectable cover photos, Activity swiping, completed-edit protection and full Moment summaries.
 
+**In development, not yet published:** A separate GitHub branch now includes an oldest-to-newest Moment timeline, photos directly alongside the corresponding Moment or Activity inside summaries, an empty-transaction-free Activity Detail, independent Dashboard Show/Hide preferences, and a new saved nested-condition filter panel across the main lists. These changes have not completed the full redesign, testing or a new Firebase release. The descriptions below remain those of the published 1.0.31 app.
+
 ## 1. What DN helps you do
 
 DN brings your important life moments, plans, memories and money records into one place. It helps you answer:
