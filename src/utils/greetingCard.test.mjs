@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createGreetingCardHtml } from './greetingCard.js';
+import { createGreetingCardHtml, greetingToneFromType } from './greetingCard.js';
 
 test('downloaded greeting preserves supported formatting and safely escapes every user field', () => {
   const html = createGreetingCardHtml({
@@ -25,4 +25,15 @@ test('empty greeting exports remain readable and downloadable without disabling 
   assert.match(html, /Your message will appear here\./);
   assert.match(html, /A special moment/);
   assert.doesNotMatch(html, /user-scalable=no|maximum-scale=1/);
+});
+
+
+test('greeting palettes use constrained occasion classes without echoing untrusted markup', () => {
+  assert.equal(greetingToneFromType('Wedding'), 'romance');
+  assert.equal(greetingToneFromType('BIRTHDAY'), 'celebration');
+  assert.equal(greetingToneFromType('Family vacation'), 'journey');
+  assert.equal(greetingToneFromType(''), 'classic');
+  const card = createGreetingCardHtml({ momentType: '<svg onload=alert(1)>' });
+  assert.match(card, /dn-greeting-card--classic/);
+  assert.doesNotMatch(card, /<svg/);
 });
