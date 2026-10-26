@@ -7,6 +7,8 @@ import useExpenseStore from '../store/useExpenseStore';
 import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useConditionFilters from '../hooks/useConditionFilters';
+import ConditionBuilder from '../components/common/ConditionBuilder';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions, transactionMonthOptions } from '../utils/transactionFilters';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
@@ -56,6 +58,7 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
+  const conditions = useConditionFilters('transactions', allTransactions);
   const monthOptions = useMemo(() => {
     const options = transactionMonthOptions(allTransactions);
     // Loading, deletion and a temporarily empty account must not erase a choice.
@@ -66,7 +69,7 @@ export default function Financials() {
     }
     return options;
   }, [allTransactions, filters.month]);
-  const filtered = useMemo(() => filterTransactions(allTransactions, filters), [allTransactions, filters]);
+  const filtered = useMemo(() => filterTransactions(allTransactions, filters).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
   const sorted = useMemo(() => sortTransactions(filtered, 'date-desc'), [filtered]);
   // Summary is tied to the selected month, not list search or the type selector.
   // Selecting Expense must not artificially zero out the Income and Balance cards.
@@ -144,6 +147,7 @@ export default function Financials() {
               </div>
             </div>
           </section>
+          <ConditionBuilder filter={conditions} resultCount={sorted.length} resultLabel="transactions" title="Transaction conditions" />
           <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters}
             monthOptions={monthOptions} events={events} onAdd={() => openAdd()} onEdit={openEdit}
             onDelete={setDeleteTarget} />
