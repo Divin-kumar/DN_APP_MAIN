@@ -58,7 +58,7 @@ test('Advanced Activity conditions support nested filters, clear and saved prese
   await page.getByRole('button', { name: 'Save filter', exact: true }).click();
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /My book plan/ }).click();
+  await page.getByRole('button', { name: 'My book plan', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
