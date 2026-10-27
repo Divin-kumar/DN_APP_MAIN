@@ -179,6 +179,9 @@ export default function DropdownSelect({
   };
 
   const onKeyDown = (event) => {
+    // Let an explicit Search button handle Enter/Space as a real button, not
+    // as an option-selection shortcut on the parent portaled dropdown.
+    if (event.target.closest?.('.dropdown-search-reveal') && event.key !== 'Escape') return;
     if (event.key === 'Escape' && open) {
       event.preventDefault();
       event.stopPropagation();

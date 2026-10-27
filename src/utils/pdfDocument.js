@@ -51,7 +51,7 @@ export function pdfFromJpegPages(pages) {
 }
 
 export function momentPdfFilename(name) {
-  const root = String(name || 'moment').normalize('NFKC').replace(/[\\/<>:"|?*\x00-\x1f]/g, '-')
+  const root = String(name || 'moment').normalize('NFKC').replace(/[\\/<>:"|?*]/g, '-').replace(/\p{Cc}/gu, '-')
     .replace(/\s+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90);
   return `${root || 'moment'}-summary.pdf`;
 }
