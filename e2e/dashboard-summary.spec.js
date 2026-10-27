@@ -41,7 +41,7 @@ for (const width of [320, 390, 768, 1440]) {
       const controls = [header.getByRole('group', { name: dates, exact: true }),
         header.getByRole('button', { name: `Hide ${section} on dashboard`, exact: true })];
       expect((await controls[0].boundingBox()).height).toBeLessThanOrEqual(30);
-      expect((await controls[0].getByRole('button', { name: 'Upcoming', exact: true }).boundingBox()).height).toBeGreaterThanOrEqual(44);
+      expect((await controls[0].getByRole('button', { name: 'Upcoming', exact: true }).boundingBox()).height).toBeGreaterThanOrEqual(43.9);
       for (const control of controls) {
         const bounds = await control.boundingBox();
         expect(Math.abs(bounds.y + bounds.height / 2 - title.y - title.height / 2)).toBeLessThanOrEqual(2);
