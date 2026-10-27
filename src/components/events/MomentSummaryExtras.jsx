@@ -15,7 +15,7 @@ export function MomentSummaryPhotos({ event, activityId = null }) {
   if (!attachments.length) return null;
   const label = activityId === null ? 'Moment photos and files' : 'Activity photos and files';
   return <section className="moment-summary-media" aria-label={label}>
-    <AttachmentGallery attachments={attachments} uid={uid} isGuest={isGuest} retainLoaded />
+    <AttachmentGallery attachments={attachments} uid={uid} isGuest={isGuest} showImageNames={false} retainLoaded />
   </section>;
 }
 

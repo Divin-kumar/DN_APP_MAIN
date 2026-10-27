@@ -15,7 +15,7 @@ const ROW_HEIGHT = 44;
 export default function DropdownSelect({
   id, name, value, onChange, children, disabled = false, required = false,
   placeholder = 'Select an option', className = '', menuMinWidth = 220,
-  searchable: searchableProp, allowCustom = false, searchLabel = 'Search options', ...accessibilityProps
+  searchable: searchableProp, searchOnDemand = false, allowCustom = false, searchLabel = 'Search options', ...accessibilityProps
 }) {
   const generatedId = useId();
   const triggerId = id || `dropdown-${generatedId}`;
@@ -29,6 +29,7 @@ export default function DropdownSelect({
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [query, setQuery] = useState('');
+  const [searchOpen, setSearchOpen] = useState(false);
   const [placement, setPlacement] = useState(null);
   const [scrollTop, setScrollTop] = useState(0);
   const sourceOptions = useMemo(() => Children.toArray(children)
@@ -46,13 +47,19 @@ export default function DropdownSelect({
   const selectedIndex = options.findIndex((option) => option.value === String(value ?? ''));
   const selectedOption = options[selectedIndex] || (allowCustom && value ? { label: String(value), shortLabel: String(value) } : null);
   const searchable = searchableProp ?? (allowCustom || options.length > SEARCH_LIMIT);
+  // On forms, show the choices first. Only an explicit Search tap or keyboard
+  // request creates/focuses a search input, avoiding an unsolicited iOS keyboard.
+  const searchVisible = searchable && (!searchOnDemand || searchOpen);
+  useEffect(() => {
+    if (open && searchOnDemand && searchOpen) searchRef.current?.focus({ preventScroll: true });
+  }, [open, searchOnDemand, searchOpen]);
   const visibleIndices = useMemo(() => options.map((option, index) => ({ option, index }))
     .filter(({ option }) => option.label.toLowerCase().includes(query.trim().toLowerCase()))
     .map(({ index }) => index), [options, query]);
   const enabledIndices = visibleIndices.filter((index) => !options[index].disabled);
   const shownActiveIndex = enabledIndices.includes(activeIndex) ? activeIndex : (enabledIndices[0] ?? -1);
   const virtual = visibleIndices.length > 60;
-  const visibleHeight = Math.max(44, (placement?.maxHeight || 360) - (searchable ? 66 : 14));
+  const visibleHeight = Math.max(44, (placement?.maxHeight || 360) - (searchVisible ? 66 : searchOnDemand && searchable ? 54 : 14));
   const virtualStart = virtual ? Math.max(0, Math.floor(scrollTop / ROW_HEIGHT) - 4) : 0;
   const virtualEnd = virtual ? Math.min(visibleIndices.length, virtualStart + Math.ceil(visibleHeight / ROW_HEIGHT) + 9) : visibleIndices.length;
   const renderedIndices = visibleIndices.slice(virtualStart, virtualEnd);
@@ -60,6 +67,7 @@ export default function DropdownSelect({
   const close = useCallback((restoreFocus = false) => {
     setOpen(false);
     setQuery('');
+    setSearchOpen(false);
     setScrollTop(0);
     setPlacement(null);
     if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
@@ -71,24 +79,34 @@ export default function DropdownSelect({
     const win = element.ownerDocument.defaultView;
     const bounds = element.getBoundingClientRect();
     const viewport = getVisibleViewport(win);
-    if (bounds.bottom < viewport.top || bounds.top > viewport.top + viewport.height) {
+    const keyboardSearch = searchRef.current && element.ownerDocument.activeElement === searchRef.current;
+    if ((bounds.bottom < viewport.top || bounds.top > viewport.top + viewport.height) && !keyboardSearch) {
       close();
       return;
     }
+    // A focused search can shift the iOS visualViewport away from the anchor.
+    // Keep the choices reachable instead of unmounting the focused input.
+    const anchor = keyboardSearch && (bounds.bottom < viewport.top || bounds.top > viewport.top + viewport.height)
+      ? { ...bounds, top: viewport.top + 14, bottom: viewport.top + 58 }
+      : bounds;
     const obstruction = [...element.ownerDocument.querySelectorAll('.mobile-tabbar, .mobile-dock, .mobile-bottom-nav')]
       .filter((node) => node.getClientRects().length && getComputedStyle(node).position === 'fixed')
       .map((node) => node.getBoundingClientRect().top)
       .filter((top) => top > bounds.bottom && top < viewport.top + viewport.height);
-    const preferredHeight = Math.min(360, options.length * 44 + 14 + (searchable ? 52 : 0));
+    const preferredHeight = Math.min(360, options.length * 44 + 14 + (searchVisible ? 52 : searchOnDemand && searchable ? 44 : 0));
     const next = computeOverlayPlacement({
-      anchor: bounds,
+      anchor,
       viewport,
       preferredHeight,
       minimumWidth: Math.max(bounds.width, menuMinWidth),
       bottomObstruction: obstruction.length ? Math.min(...obstruction) : null,
     });
+    if (keyboardSearch && next.maxHeight < 90) {
+      next.top = viewport.top + 8;
+      next.maxHeight = Math.max(90, viewport.height - 16);
+    }
     setPlacement(next);
-  }, [close, options.length, searchable, menuMinWidth]);
+  }, [close, options.length, searchVisible, searchOnDemand, searchable, menuMinWidth]);
 
   useLayoutEffect(() => {
     if (!open) return undefined;
@@ -170,7 +188,10 @@ export default function DropdownSelect({
     if (event.key === 'Tab') {
       if (open && searchable && event.target === triggerRef.current && !event.shiftKey) {
         // Tab is an explicit request to enter search; pointer opening never is.
-        event.preventDefault(); searchRef.current?.focus({ preventScroll: true }); return;
+        event.preventDefault();
+        if (searchOnDemand && !searchOpen) setSearchOpen(true);
+        else searchRef.current?.focus({ preventScroll: true });
+        return;
       }
       if (event.target === searchRef.current) {
         triggerRef.current?.focus({ preventScroll: true });
@@ -199,6 +220,7 @@ export default function DropdownSelect({
     if (event.target === triggerRef.current && event.key.length === 1 && !event.ctrlKey && !event.metaKey && !event.altKey) {
       event.preventDefault();
       if (searchable) {
+        if (searchOnDemand) setSearchOpen(true);
         setQuery((current) => open ? current + event.key : event.key);
         setScrollTop(0); setActiveIndex(-1);
       } else {
@@ -230,7 +252,7 @@ export default function DropdownSelect({
           // available only when the user explicitly focuses the search input.
           triggerRef.current?.focus({ preventScroll: true });
           if (open) close(true);
-          else { setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); setOpen(true); }
+          else { setQuery(''); setSearchOpen(false); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); setOpen(true); }
         }}
         onKeyDown={onKeyDown} {...accessibilityProps}>
         <span className={selectedOption ? '' : 'dropdown-placeholder'}>
@@ -244,7 +266,13 @@ export default function DropdownSelect({
           style={{ position: 'fixed', top: placement.top, left: placement.left,
             width: placement.width, maxHeight: placement.maxHeight, right: 'auto', bottom: 'auto' }}
           onKeyDown={onKeyDown}>
-          {searchable ? (
+          {searchOnDemand && searchable && !searchVisible ? (
+            <button className="dropdown-search-reveal" type="button" aria-label={searchLabel}
+              onClick={(event) => { event.stopPropagation(); setSearchOpen(true); }}>
+              <Search size={16} aria-hidden="true" /> Search
+            </button>
+          ) : null}
+          {searchVisible ? (
             <label className="dropdown-search-wrap">
               <Search size={16} aria-hidden="true" />
               <input ref={searchRef} type="search" aria-label={searchLabel}

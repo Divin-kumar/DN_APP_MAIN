@@ -6,7 +6,7 @@ import { downloadBlob } from '../../utils/download';
 import ModalDialog from './ModalDialog';
 import './AttachmentGallery.css';
 
-function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetadata, onSelect, selectedKey, retainLoaded }) {
+function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetadata, showImageNames, onSelect, selectedKey, retainLoaded }) {
   const [broken, setBroken] = useState('');
   const [open, setOpen] = useState(false);
   const tile = useRef(null);
@@ -32,7 +32,7 @@ function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetad
       aria-label={`${onSelect ? 'Use as cover:' : 'Preview'} ${attachment.name || 'attachment'}`}>
       {source && !error && isImage(attachment.type) ? <img src={source} alt={attachment.name || 'Attached photo'} loading="lazy" onError={() => setBroken(source)} />
         : error ? <ImageOff size={20} aria-hidden="true" /> : <FileText size={20} aria-hidden="true" />}
-      <span><strong>{attachment.name || 'Attachment'}</strong>{!compact && showMetadata ? <small>{error || `${Math.ceil(Number(attachment.size || 0) / 1024)} KB`}</small> : null}</span>
+      {showImageNames || !isImage(attachment.type) ? <span><strong>{attachment.name || 'Attachment'}</strong>{!compact && showMetadata ? <small>{error || `${Math.ceil(Number(attachment.size || 0) / 1024)} KB`}</small> : null}</span> : null}
     </button>
     {onRemove ? <button className="dn-attachment-remove" type="button" aria-label={`Remove ${attachment.name}`} onClick={() => onRemove(attachment)}><X size={14} /></button> : null}
     {open ? <ModalDialog title={attachment.name || 'Attachment'} className="dn-attachment-viewer" onClose={() => setOpen(false)}>
@@ -41,9 +41,9 @@ function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetad
     </ModalDialog> : null}
   </div>;
 }
-export default function AttachmentGallery({ attachments = [], uid, isGuest, onRemove, compact = false, showMetadata = true, onSelect, selectedKey, retainLoaded = false }) {
+export default function AttachmentGallery({ attachments = [], uid, isGuest, onRemove, compact = false, showMetadata = true, showImageNames = true, onSelect, selectedKey, retainLoaded = false }) {
   if (!attachments.length) return null;
   return <div className={`dn-attachment-gallery${compact ? ' is-compact' : ''}`} aria-label="Attachments">
-    {attachments.map((attachment) => <AttachmentTile key={attachment.id} attachment={attachment} uid={uid} isGuest={isGuest} onRemove={onRemove} compact={compact} showMetadata={showMetadata} onSelect={onSelect} selectedKey={selectedKey} retainLoaded={retainLoaded} />)}
+    {attachments.map((attachment) => <AttachmentTile key={attachment.id} attachment={attachment} uid={uid} isGuest={isGuest} onRemove={onRemove} compact={compact} showMetadata={showMetadata} showImageNames={showImageNames} onSelect={onSelect} selectedKey={selectedKey} retainLoaded={retainLoaded} />)}
   </div>;
 }

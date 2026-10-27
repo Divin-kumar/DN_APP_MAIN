@@ -91,14 +91,14 @@ export default function TransactionForm({
 
   return (
     <form className="dn-transaction-form form-surface" onSubmit={handleSubmit}>
-      <label className="dn-transaction-field">
+      <div className="dn-transaction-field">
         <span>Transaction Type *</span>
         <DropdownSelect aria-label="Transaction Type" value={form.transactionKind}
           onChange={(event) => handleType(event.target.value)} disabled={busy}>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </DropdownSelect>
-      </label>
+      </div>
       <label className="dn-transaction-field">
         <span>Amount *</span>
         <input type="number" inputMode="decimal" min="0.01" step="0.01" required
@@ -111,16 +111,16 @@ export default function TransactionForm({
           onChange={(event) => change('title', event.target.value)}
           placeholder="What was this for?" disabled={busy} />
       </label>
-      <label className="dn-transaction-field">
+      <div className="dn-transaction-field">
         <span>Category *</span>
         <DropdownSelect aria-label="Category" value={form.category}
           onChange={(event) => change('category', event.target.value)} disabled={busy}>
           {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </DropdownSelect>
-      </label>
-      <label className="dn-transaction-field">
+      </div>
+      <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
-        <DropdownSelect aria-label="Linked Moment" value={form.eventId}
+        <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
           onChange={(event) => changeMoment(event.target.value)} disabled={busy}>
           <option value="">No linked moment</option>
           {moments.map((moment) => (
@@ -129,10 +129,10 @@ export default function TransactionForm({
           {form.eventId && !selectedMomentExists
             ? <option value={form.eventId}>Previously linked moment (unavailable)</option> : null}
         </DropdownSelect>
-      </label>
-      <label className="dn-transaction-field">
+      </div>
+      <div className="dn-transaction-field">
         <span>Linked Activity (optional)</span>
-        <DropdownSelect aria-label="Linked Activity" value={form.activityId}
+        <DropdownSelect aria-label="Linked Activity" searchOnDemand searchLabel="Search linked activities" value={form.activityId}
           onChange={(event) => change('activityId', event.target.value)}
           disabled={busy || !form.eventId || !selectedMomentExists}
           placeholder={form.eventId ? 'Choose an activity' : 'Choose a moment first'}>
@@ -147,7 +147,7 @@ export default function TransactionForm({
           : selectedMomentExists && !activities.length
             ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
             : null}
-      </label>
+      </div>
       <DateField label="Date *" name="date" required value={form.date}
         onChange={(event) => change('date', event.target.value)} disabled={busy} />
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}

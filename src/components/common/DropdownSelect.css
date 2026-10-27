@@ -100,3 +100,18 @@ html[data-theme] .dn-list-controls-panel .dropdown-trigger > svg { width: 13px; 
   html[data-theme] .dropdown-field .dropdown-trigger,
   html[data-theme] .dropdown-menu-portal .dropdown-option { transition: none; }
 }
+
+/* Searchable form dropdowns open to choices, with search revealed only on request. */
+html[data-theme] .dropdown-menu-portal .dropdown-search-reveal {
+  display:flex; width:100%; min-height:42px; align-items:center; justify-content:flex-start;
+  gap:9px; padding:7px 11px; border:1px solid var(--color-border);
+  border-radius:9px; background:var(--color-surface); color:var(--color-text);
+  font-size:13px; font-weight:600; cursor:pointer;
+}
+html[data-theme] .dropdown-menu-portal .dropdown-search-reveal:hover,
+html[data-theme] .dropdown-menu-portal .dropdown-search-reveal:focus-visible {
+  border-color:var(--action-border); background:var(--action-fill); color:var(--action-ink);
+}
+html[data-theme] .dropdown-menu-portal .dropdown-search-wrap input[type="search"] {
+  min-height:40px; min-width:0; font-size:16px;
+}

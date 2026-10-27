@@ -9,6 +9,7 @@ import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeG
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
+import { downloadMomentPdf } from '../../../utils/momentPdf';
 import RichText from '../../../components/common/RichText';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
@@ -21,7 +22,6 @@ import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRe
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import MomentSummaryExtras, { MomentSummaryPhotos, sortedSummaryActivities } from '../../../components/events/MomentSummaryExtras';
-import { summaryAttachmentsFor } from '../../../utils/summaryAttachments';
 import './DashboardSections.css';
 import DashboardGreeting from './DashboardGreeting';
 import useDashboardClock from '../useDashboardClock';
@@ -217,42 +217,19 @@ function EventSummaryModal({ event, onClose }) {
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
 
-  const handleDownload = () => {
-    const lines = [
-      `${event.name || 'Untitled moment'}`,
-      `Type: ${event.type || 'Moment'}`,
-      `Date: ${formatDisplayDate(eventDate)}`,
-      `Status: ${statusText}`,
-      '',
-    ];
-
-    if (greeting) {
-      lines.push(plainRichText(greeting.title), plainRichText(greeting.body), '');
+  const [exportBusy, setExportBusy] = useState(false);
+  const [exportError, setExportError] = useState('');
+  const handleDownload = async () => {
+    if (exportBusy) return;
+    setExportBusy(true);
+    setExportError('');
+    try {
+      await downloadMomentPdf(event, { greeting, status: statusText, date: formatDisplayDate(eventDate) });
+    } catch (error) {
+      setExportError(error?.message || 'Unable to create the PDF. Please try again.');
+    } finally {
+      setExportBusy(false);
     }
-    if (event.notes) lines.push(plainRichText(event.notes), '');
-    const momentFiles = summaryAttachmentsFor(event);
-    if (momentFiles.length) lines.push('Moment photos and files:', ...momentFiles.map((item) => item.name || 'Attachment'), '');
-
-    if (activities.length) {
-      lines.push('Activities:');
-      activities.forEach((activity) => {
-        const label = activity.title || activity.name || 'Untitled activity';
-        const check = activity.completed ? '✓' : '○';
-        lines.push(`${check} ${label}`);
-        lines.push(`  Date: ${activityDateLabel(activity.date)}`);
-        const description = plainRichText(activity.description || '');
-        if (description) lines.push(`  Description: ${description}`);
-        const files = recordId(activity.id) ? summaryAttachmentsFor(event, activity.id) : [];
-        if (files.length) lines.push('  Photos and files:', ...files.map((item) => `  ${item.name || 'Attachment'}`));
-      });
-    }
-    if (event.memories?.length) {
-      lines.push('', 'Memories:');
-      event.memories.forEach((memory) => lines.push(memory.title || '', plainRichText(memory.body || '')));
-    }
-
-    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
-    downloadBlob(blob, `${(event.name || 'event').toLowerCase().replace(/\s+/g, '-')}-summary.txt`);
   };
 
   return (
@@ -316,9 +293,10 @@ function EventSummaryModal({ event, onClose }) {
         ) : null}
 
         <MomentSummaryExtras event={event} />
-        <button type="button" onClick={handleDownload} style={styles.downloadButton}>
+        {exportError ? <p role="alert" className="dn-summary-export-error">{exportError}</p> : null}
+        <button type="button" onClick={handleDownload} style={styles.downloadButton} disabled={exportBusy} aria-label="Download summary PDF">
           <Download size={16} />
-          Download Summary
+          {exportBusy ? 'Preparing PDF…' : 'Download PDF'}
         </button>
       </div>
     </ModalDialog>
