@@ -95,9 +95,9 @@ test('Code Lists owns sorting and live filter preferences without a duplicate Se
   const editor = section.getByRole('region', { name: 'activities filters' });
   await expect(editor).toBeVisible();
   await editor.getByRole('button', { name: 'Add filter' }).click();
-  await editor.getByRole('combobox', { name: 'Filter by' }).click();
+  await editor.getByRole('combobox', { name: 'Filter by' }).last().click();
   await page.getByRole('option', { name: 'Status', exact: true }).click();
-  await editor.getByRole('combobox', { name: 'Value for Status' }).click();
+  await editor.getByRole('combobox', { name: 'Value for Status' }).last().click();
   await page.getByRole('option', { name: 'Completed', exact: true }).click();
 
   await page.goto('/activities');
@@ -111,7 +111,7 @@ test('Code Lists owns sorting and live filter preferences without a duplicate Se
   await expect(preferences.getByRole('combobox', { name: 'Sort Activities in settings field' })).toContainText('Title');
   await preferences.getByRole('button', { name: /Activities filters/ }).click();
   const reopened = preferences.getByRole('region', { name: 'activities filters' });
-  await expect(reopened.getByRole('button', { name: /Remove filter Status/ })).toBeVisible();
+  await expect(reopened.locator('.dn-condition-chip').filter({ hasText: 'Completed' })).toBeVisible();
   await reopened.getByRole('button', { name: 'Clear all' }).click();
 
   await preferences.getByRole('button', { name: /Moments filters/ }).click();

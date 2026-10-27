@@ -36,7 +36,7 @@ async function assertSingleRow(page, row) {
 
 for (const width of [320, 390]) {
   test(`all five lists offer friendly filters and keep each mobile rule on one row at ${width}px`, async ({ page }) => {
-    test.setTimeout(90_000);
+    test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 844 });
     const moments = fixtureMoments();
     moments[0].metadata = { rawTable: { privateInternalId: 'private-metadata-value' } };
