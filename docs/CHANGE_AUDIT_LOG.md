@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261027-114 | Align legacy regressions with Activity Detail as the action surface
+- Follow-up to CHG-113 on the same existing OldVersion branch. The initial source commit removed the overview Activity menu/priority/link and moved the due date to its own metadata line. Preexisting Chromium tests still expected the old overview menu, direct-link Back to Moment, 40svh empty-photo cover and due date inside the status row.
+- Updated browser checks to test the intended interactions instead of the obsolete UI: Activity Detail owns completed-state Reopen and standalone-safe Delete/Cancel actions; overall Activity cards have no menu; a direct-link Back arrow leads to overall Activities; long-name, text-contrast, 20svh empty-cover and invalid-date checks use the new semantic targets. No production logic is relaxed and financial/account/cancel/reopen safeguards remain tested.
+- **Validation status at authoring:** Browser and unit checks pending GitHub CI. The 1.0.38 release is still a source-only update; the owner deploys through their local `npm run deploy:hosting`. Main is untouched.
+
 ## CHG-20261027-113 | Source for owner's 1.0.38 Activities refinement and List sorting
 - The owner reports deploying DN 1.0.37 locally using `npm run deploy:hosting`; they will deploy the next patch themselves. Changes are confined to the existing `OldVersion` branch. No new branch, PR, main write or Hosting publication is authorized in this task.
 - Overall Activity cards omit their large Priority badge, menu trigger and clickable Moment name, replacing the status with a lightweight Moment-style corner badge. The whole card remains a keyboard/pointer entry to Activity Detail and left-swipe Complete/Reopen is retained. Existing editor/status/cancellation/delete actions live in Activity Detail, not removed from the product.

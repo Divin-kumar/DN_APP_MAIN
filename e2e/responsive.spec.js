@@ -40,13 +40,13 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     await page.goto('/events/moment-one/activities/shared');
     await expect(page.locator('h1')).toHaveText(moments[0].activities[0].title);
     await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
-    await expect(page.getByRole('link', { name: 'Back to Moment activities', exact: true })).toBeVisible();
-    await expectTextContrast(page.locator('.activity-cover-back, .activity-parent-context a, .activity-status-pill'));
+    await expect(page.getByRole('link', { name: 'Back to Activities', exact: true })).toBeVisible();
+    await expectTextContrast(page.locator('.activity-cover-back, .activity-parent-context, .activity-status-pill'));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const frame = await page.locator('.activity-cover').boundingBox();
-    if (width < 768) expect(Math.abs(frame.height - height * .4)).toBeLessThan(2);
-    else expect(frame.width).toBeGreaterThan(frame.height);
-    if (height < 500) expect(frame.height).toBeLessThanOrEqual(height * .45);
+    expect(Math.abs(frame.height - Math.max(96, Math.min(height * .2, 220)))).toBeLessThanOrEqual(2);
+    if (width >= 768) expect(frame.width).toBeGreaterThan(frame.height);
+    if (height < 500) expect(frame.height).toBeLessThanOrEqual(Math.max(96, height * .25));
     await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
     const end = await page.locator('.activity-detail-footer').boundingBox();
     if (width < 768) {
@@ -68,11 +68,9 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     await page.goto('/activities');
     const card = page.getByRole('group', { name: `Open ${moments[0].activities[0].title}`, exact: true });
     await expect(card).toBeVisible();
-    const title = await card.locator('.event-activity-title-row > strong').boundingBox();
-    const menu = await card.getByRole('button', { name: 'Activity options', exact: true }).boundingBox();
-    expect(title.x + title.width).toBeLessThanOrEqual(menu.x + 1);
-    expect(Math.round(menu.width * 100) / 100).toBeGreaterThanOrEqual(44); expect(Math.round(menu.height * 100) / 100).toBeGreaterThanOrEqual(44);
-    await expectTextContrast(page.locator('.event-activity-title-row > strong, .event-activity-status, .event-activity-priority, .event-activity-context a'));
+    await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+    await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
+    await expectTextContrast(page.locator('.event-activity-title-row > strong, .event-activity-status, .event-activity-context > span'));
     expect(errors).toEqual([]);
     await page.screenshot({ path: `.verification/activity-card-${theme}-${width}x${height}.png` });
   });

@@ -52,7 +52,9 @@ test('contextual transaction rows have no edit, delete, swipe or Add controls; m
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  await card.getByRole('button', { name: 'Activity options' }).click();
+  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await card.click();
+  await page.getByRole('button', { name: 'Activity options' }).click();
   await expect(page.getByRole('menuitem', { name: 'Add transaction', exact: true })).toHaveCount(0);
 });
 

@@ -9,7 +9,7 @@ test('detail shows actual content in reading order, compact file previews and re
     eventId: 'moment-one', activityId: 'shared', type: 'Other' }] });
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
-  await expect(page.getByRole('navigation', { name: 'Activity parent' })).toContainText('Moment: Weekend in Ooty');
+  await expect(page.locator('.activity-parent-context')).toContainText('Vacation / Weekend in Ooty');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await expect(page.getByRole('button', { name: /^(Edit|Complete|Close|Reopen|Delete activity)$/ })).toHaveCount(0);
   await expect(page.getByText(/^(Parent Moment|Finance|Transaction history|All Moment transactions|Manage transactions|No description added\.|No attachments added\.)$/)).toHaveCount(0);
@@ -83,7 +83,7 @@ test('empty sections stay quiet and absent legacy metadata does not invent dates
   await seedGuest(page, { moments, incomes: [], expenses: [] });
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.locator('h1')).toHaveText(activity.title);
-  await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
+  await expect(page.locator('.activity-detail-due')).toContainText('Date to be decided');
   await expect(page.locator('.activity-description, .activity-detail-footer')).toHaveCount(0);
   await expect(page.getByText(/^(No description added\.|No attachments added\.|No transactions have been recorded for this Activity\.)$/)).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Totals for this Activity' })).toHaveCount(0);

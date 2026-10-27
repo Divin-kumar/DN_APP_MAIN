@@ -72,7 +72,9 @@ test('completed Activities require reopening before Edit, and a stale editor can
   await expect(page.locator('.activity-detail-content > :last-child')).toContainText('Completed25 Oct 2026');
   await page.goto('/activities');
   const completed = page.getByRole('group', { name: 'Open Choose the train', exact: true });
-  await completed.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await expect(completed.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+  await completed.click();
+  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toHaveCount(0);
   await expect(page.getByRole('menuitem', { name: 'Reopen', exact: true })).toBeVisible();
 });

@@ -80,14 +80,14 @@ test('archived parents remain readable, cancelled restore stays explicit and inv
   const moments = fixtureMoments(); moments[0].archived = true; moments[0].activities[0].date = 'invalid';
   await seedGuest(page, { moments }); await page.goto('/events/moment-one/activities/shared');
   await expect(page.getByText('Archived Moment', { exact: true })).toBeVisible();
-  await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
+  await expect(page.locator('.activity-detail-due')).toContainText('Date to be decided');
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Close', exact: true })).toBeDisabled();
   await page.goto('/events/moment-one/activities/cancelled');
   await expect(page.locator('.activity-status-pill')).toHaveText('Cancelled');
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Restore', exact: true })).toBeEnabled();
-  await expect(page.locator('.activity-detail-metadata')).toContainText('Date to be decided');
+  await expect(page.locator('.activity-detail-due')).toContainText('Date to be decided');
 });
 
 test('Universal + transaction presets both IDs and retains route/draft through failure, cancellation and retry', async ({ page }) => {
@@ -178,12 +178,15 @@ test('legacy completed status exposes Reopen consistently in the list and detail
   await seedGuest(page, { moments }); await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card.locator('.event-activity-status')).toHaveText('Completed');
-  await card.getByRole('button', { name: 'Activity options' }).click();
+  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await card.focus(); await page.keyboard.press('Enter');
+  await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
+  await page.getByRole('button', { name: 'Activity options' }).click();
   await expect(page.getByRole('menuitem', { name: 'Reopen', exact: true })).toBeVisible();
   await page.getByRole('menuitem', { name: 'Reopen', exact: true }).click();
-  await expect(card.locator('.event-activity-status')).toHaveText('In progress');
-  await card.focus(); await page.keyboard.press('Enter');
   await expect(page.locator('.activity-status-pill')).toHaveText('In progress');
+  await page.getByRole('link', { name: 'Back to Activities' }).click();
+  await expect(card.locator('.event-activity-status')).toHaveText('In progress');
 });
 
 test('unreadable Guest Moments show a retry instead of a false not-found state and preserve source bytes', async ({ page }) => {
