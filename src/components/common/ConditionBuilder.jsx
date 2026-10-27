@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
 import { conditionChipEntries, mapConditions, noValueOperators, operatorsFor, removeCondition } from '../../utils/conditionEngine';
 import { appendFilterRule, filterEditorOperators } from '../../utils/conditionEditor';
@@ -79,15 +79,19 @@ function RuleEditor({ node, schema, onEdit, onRemove }) {
     <button type="button" className="dn-condition-icon" aria-label="Remove filter" onClick={onRemove}><X size={16} /></button>
   </div>;
 }
-function GroupEditor({ node, schema, update, remove, depth = 0 }) {
+function GroupEditor({ node, schema, update, remove, depth = 0, railRef, onRailScroll, railEdges }) {
   const modify = (id, transform) => update((root) => mapConditions(root, id, transform));
   if (!node.children.length) return null;
   return <div className={`dn-condition-group${depth ? ' is-nested' : ''}`}>
     {depth || node.join === 'OR' ? <div className="dn-condition-group-note"><span>{node.join === 'OR' ? 'Any of these filters' : 'All of these filters'}</span>
       {depth ? <button type="button" className="dn-condition-icon" aria-label="Remove filter group" onClick={() => remove(node.id)}><X size={14} /></button> : null}</div> : null}
-    <div className="dn-condition-children">{node.children.map((child) => child.kind === 'group'
-      ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} />
-      : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} />)}</div>
+    <div className={`dn-condition-rail${!depth && railEdges?.previous ? ' has-previous' : ''}${!depth && railEdges?.next ? ' has-next' : ''}`}>
+      <div className="dn-condition-children" ref={!depth ? railRef : undefined} onScroll={!depth ? onRailScroll : undefined}
+        role="region" aria-label={`${node.join === 'OR' ? 'Any of' : 'All'} filter conditions, horizontal scroll`}
+        tabIndex={node.children.length > 1 ? 0 : undefined}>{node.children.map((child) => child.kind === 'group'
+        ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} />
+        : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} />)}</div>
+    </div>
   </div>;
 }
 export function ConditionChips({ filter }) {
@@ -99,15 +103,53 @@ export function ConditionChips({ filter }) {
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.
 export default function ConditionBuilder({ filter, resultCount, resultLabel = 'results', title = 'Filters', showChips = false }) {
+  const railRef = useRef(null);
+  const previousRuleCount = useRef(filter.state.group.children.length);
+  const [railEdges, setRailEdges] = useState({ previous: false, next: false });
+  const updateRailEdges = useCallback(() => {
+    const rail = railRef.current;
+    const next = rail ? { previous: rail.scrollLeft > 2, next: rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 2 }
+      : { previous: false, next: false };
+    setRailEdges((current) => current.previous === next.previous && current.next === next.next ? current : next);
+  }, []);
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    const count = filter.state.group.children.length;
+    // Reveal the new editable rule without changing the scroll position when
+    // reopening a saved filter set or when editing an existing rule.
+    if (rail && count > previousRuleCount.current) rail.scrollLeft = rail.scrollWidth;
+    previousRuleCount.current = count;
+    updateRailEdges();
+  }, [filter.state.group.children.length, filter.editorKey, updateRailEdges]);
+  useEffect(() => {
+    const rail = railRef.current;
+    if (!rail) return undefined;
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(updateRailEdges) : null;
+    observer?.observe(rail);
+    [...rail.children].forEach((child) => observer?.observe(child));
+    window.addEventListener('resize', updateRailEdges);
+    return () => { observer?.disconnect(); window.removeEventListener('resize', updateRailEdges); };
+  }, [filter.state.group.children.length, filter.editorKey, updateRailEdges]);
+  const moveRail = (direction) => {
+    const rail = railRef.current;
+    if (!rail) return;
+    rail.scrollBy({ left: direction * Math.max(220, rail.clientWidth * .82),
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+  };
   const remove = (id) => filter.setGroup((group) => removeCondition(group, id) || group);
   const addRule = () => filter.setGroup((group) => appendFilterRule(group, blankRule()));
   return <section className="dn-conditions" aria-label={title}>
     {showChips ? <ConditionChips filter={filter} /> : null}
     {!filter.schema.length ? <p className="dn-condition-empty">Filter options will appear here when available.</p> : null}
-    <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove} />
+    <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove}
+      railRef={railRef} onRailScroll={updateRailEdges} railEdges={railEdges} />
     <div className="dn-conditions-actions"><button type="button" className="dn-conditions-add" onClick={addRule} disabled={!filter.schema.length}><Plus size={14} /> Add filter</button>
       {filter.activeCount || filter.state.group.children.length ? <button type="button" className="dn-conditions-clear" onClick={filter.clear}>Clear all</button> : null}
       {typeof resultCount === 'number' ? <span className="dn-conditions-count" aria-live="polite">{resultCount} {resultLabel}</span> : null}
+      {railEdges.previous || railEdges.next ? <div className="dn-condition-rail-nav" role="group" aria-label="Navigate filter conditions">
+        <button type="button" aria-label="Previous filter conditions" disabled={!railEdges.previous} onClick={() => moveRail(-1)}><ChevronLeft size={17} /></button>
+        <button type="button" aria-label="Next filter conditions" disabled={!railEdges.next} onClick={() => moveRail(1)}><ChevronRight size={17} /></button>
+      </div> : null}
     </div>
   </section>;
 }

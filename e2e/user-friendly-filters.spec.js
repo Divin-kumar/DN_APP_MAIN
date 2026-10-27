@@ -221,3 +221,42 @@ test('many phone filters stay inside a short scrollable panel with its final act
   await expect(page.locator('.dn-condition-rule')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
+
+for (const width of [320, 390, 768, 1440]) {
+  test(`multiple conditions form one horizontally scrollable rail at ${width}px without growing the page`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 740 });
+    const errors = await seedGuest(page);
+    await page.goto('/financials');
+    await page.getByRole('button', { name: /^Filters/ }).click();
+    const add = page.getByRole('button', { name: 'Add filter', exact: true });
+    for (let index = 0; index < 6; index += 1) await add.click();
+
+    const rail = page.locator('.dn-condition-children').first();
+    await expect(page.locator('.dn-condition-rule')).toHaveCount(6);
+    const metrics = await rail.evaluate((element) => ({
+      scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
+      left: element.scrollLeft, tops: [...element.children].map((child) => child.getBoundingClientRect().top),
+    }));
+    expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth + 10);
+    expect(Math.max(...metrics.tops) - Math.min(...metrics.tops)).toBeLessThanOrEqual(2);
+    expect(metrics.left).toBeGreaterThan(0); // Newest condition is brought into view.
+    const panel = page.locator('.dn-list-controls-panel');
+    if (width <= 390) expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740 * .42 + 1);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+    const back = page.getByRole('button', { name: 'Previous filter conditions' });
+    const forward = page.getByRole('button', { name: 'Next filter conditions' });
+    await expect(back).toBeEnabled();
+    await back.click();
+    await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeLessThan(metrics.left);
+    await expect(forward).toBeEnabled();
+    await forward.click();
+    await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+    await page.locator('.dn-condition-rule').last().getByRole('button', { name: 'Remove filter' }).click();
+    await expect(page.locator('.dn-condition-rule')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Clear all' }).click();
+    await expect(page.locator('.dn-condition-children')).toHaveCount(0);
+    await expect(back).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}

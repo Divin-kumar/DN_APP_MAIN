@@ -1,7 +1,11 @@
 /* The condition builder lives inside the existing Filters control. */
 html[data-theme] .dn-conditions { display:grid; gap:4px; min-width:0; width:100%; color:var(--color-text); }
 html[data-theme] .dn-conditions *, html[data-theme] .dn-condition-chips * { box-sizing:border-box; }
-html[data-theme] .dn-conditions-actions { display:flex; align-items:center; gap:6px; min-width:0; }
+html[data-theme] .dn-conditions-actions { display:flex; align-items:center; gap:6px; min-width:0; min-height:44px; }
+html[data-theme] .dn-condition-rail-nav { display:flex; flex:0 0 auto; align-items:center; gap:3px; margin-inline-start:auto; padding:2px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-surface); }
+html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button { display:grid; place-items:center; width:36px; min-height:36px; padding:0; border-radius:9px; color:var(--color-text); }
+html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button:not(:disabled):hover { background:var(--action-fill); color:var(--action-ink); }
+html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button:disabled { opacity:.26; }
 html[data-theme] .dn-conditions-count { font-size:12px; color:var(--color-text-muted); }
 html[data-theme] .dn-conditions-actions > button { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:4px 8px; background:transparent; border:0; border-radius:8px; color:var(--color-primary); font-size:12px; cursor:pointer; }
 html[data-theme] .dn-condition-chips { display:flex; flex-wrap:wrap; gap:6px; min-width:0; width:100%; }
@@ -9,13 +13,20 @@ html[data-theme] .dn-condition-chip { display:inline-flex; align-items:center; g
 html[data-theme] .dn-condition-chip > span { min-width:0; overflow-wrap:anywhere; }
 html[data-theme] .dn-condition-chip > svg { flex:0 0 auto; }
 html[data-theme] .dn-condition-group { min-width:0; }
-html[data-theme] .dn-condition-group.is-nested { padding-inline-start:8px; }
+html[data-theme] .dn-condition-group.is-nested { padding:4px; border:1px dashed var(--color-border); border-radius:12px; background:var(--color-surface); }
 html[data-theme] .dn-condition-group-note { display:flex; align-items:center; justify-content:space-between; gap:4px; font-size:11px; color:var(--color-text-muted); min-width:0; }
 html[data-theme] .dn-conditions .dropdown-field .dropdown-trigger,
 html[data-theme] .dn-list-controls-panel .dn-conditions .dropdown-field .dropdown-trigger { width:100%; min-height:44px; padding:8px 10px !important; border:1px solid var(--color-border) !important; border-radius:9px !important; background:var(--color-surface) !important; box-shadow:none; font-size:14px !important; font-weight:500; }
 html[data-theme] .dn-condition-value { min-width:0; width:100%; min-height:44px; background:var(--color-surface); color:var(--color-text); border:1px solid var(--color-border); padding:8px 10px; border-radius:9px; font-size:16px; }
-html[data-theme] .dn-condition-children { display:grid; gap:4px; min-width:0; }
-html[data-theme] .dn-condition-rule { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 44px; align-items:center; gap:7px; min-width:0; }
+html[data-theme] .dn-condition-rail { position:relative; min-width:0; width:100%; }
+html[data-theme] .dn-condition-children { display:flex; align-items:stretch; flex-wrap:nowrap; gap:8px; min-width:0; width:100%; padding:2px 1px 4px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:contain; scroll-snap-type:x proximity; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+html[data-theme] .dn-condition-children::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-condition-rail.has-next > .dn-condition-children { -webkit-mask-image:linear-gradient(to right,#000 calc(100% - 16px),transparent); mask-image:linear-gradient(to right,#000 calc(100% - 16px),transparent); }
+html[data-theme] .dn-condition-rail.has-previous:not(.has-next) > .dn-condition-children { -webkit-mask-image:linear-gradient(to left,#000 calc(100% - 16px),transparent); mask-image:linear-gradient(to left,#000 calc(100% - 16px),transparent); }
+html[data-theme] .dn-condition-children > .dn-condition-group { flex:0 0 min(100%,480px); max-width:480px; scroll-snap-align:start; }
+html[data-theme] .dn-condition-rule { display:grid; flex:0 0 min(100%,480px); grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1.3fr) 44px; align-items:center; gap:6px; min-width:0; max-width:480px; min-height:48px; padding:1px 5px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-card); box-shadow:0 2px 9px rgba(0,0,0,.035); scroll-snap-align:start; }
+html[data-theme] .dn-condition-rule:focus-within { border-color:var(--action-border); box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 9%,transparent); }
+html[data-theme] .dn-condition-children:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; border-radius:12px; }
 html[data-theme] .dn-condition-rule > *, html[data-theme] .dn-condition-value-slot { min-width:0; max-width:100%; }
 html[data-theme] .dn-condition-rule .dropdown-field { display:block; width:100%; min-width:0; }
 html[data-theme] .dn-condition-rule .dropdown-trigger { gap:4px; }
@@ -34,7 +45,10 @@ html[data-theme] .dn-condition-selected-values::-webkit-scrollbar { display:none
 html[data-theme] .dn-condition-selected-values button { display:inline-flex; flex:0 0 auto; align-items:center; gap:4px; max-width:100%; min-height:32px; padding:4px 7px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font-size:11px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 html[data-theme] .dn-conditions button:focus-visible, html[data-theme] .dn-conditions input:focus-visible, html[data-theme] .dn-condition-chip:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
 @media (max-width:620px) {
- html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) minmax(0,1.2fr) 44px; gap:4px; }
+ html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) minmax(0,1.2fr) 44px; gap:3px; padding-inline:3px; }
+ html[data-theme] .dn-conditions-actions { gap:3px; }
+ html[data-theme] .dn-condition-rail-nav { gap:0; }
+ html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button { width:34px; min-height:34px; }
  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger,
  html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger { padding:6px !important; font-size:12px !important; }
  html[data-theme] .dn-condition-rule .dn-condition-value { padding:6px; }
