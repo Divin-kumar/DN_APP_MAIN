@@ -1,6 +1,6 @@
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ListChecks, Plus } from 'lucide-react';
 import ActivityList from '../components/events/ActivityList';
 import DateField from '../components/common/DateField';
@@ -176,10 +176,11 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
             getActivityKey={(view) => projection.context.get(view).key}
-            getEventName={(view) => { const entry = projection.context.get(view); return <Link to={`/events/${encodeURIComponent(entry.momentId)}/activities`}>{entry.momentName}</Link>; }}
+            getEventName={(view) => projection.context.get(view).momentName}
             includeCancelled hasActiveFilters={Boolean(activeCount || conditions.activeCount)}
             onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId), {
-              state: { activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
+              state: { activityOrigin: '/activities',
+                activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
             }); }}
             onEdit={edit}
             onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')), () => setAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed'))}

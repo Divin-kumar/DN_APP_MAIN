@@ -1,15 +1,14 @@
-import { Check, Circle, Pencil, RotateCcw, Sparkles, XCircle } from 'lucide-react';
+import { Check, Circle, RotateCcw, Sparkles } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import SwipeToComplete from '../common/SwipeToComplete';
 import { activityStatus, activityStatusLabel } from '../../utils/activityDetail';
 import { parseMomentDate } from '../../utils/momentDates';
-import { isActivityEditable } from '../../utils/scopedRecordActions';
 import './ActivityList.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
   showCancelled = false, includeCancelled = false, hasActiveFilters = false, getActivityKey = (activity) => activity.id,
-  getEventName, onOpen, onDelete, onEdit, onToggleComplete, onToggleCancelled, readOnly = false }) {
+  getEventName, onOpen, onToggleComplete, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
     : <div className="event-activity-empty"><span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
@@ -32,19 +31,13 @@ export default function ActivityList({ eventName = 'This event', activities, all
         const dueText = !date ? 'Date to be decided' : overdue
           ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date)}`
           : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)}`;
-        const hasActions = !readOnly && Boolean(onEdit || onToggleComplete || onToggleCancelled || onDelete);
+        // List cards are navigation-first. Full Edit/Cancel/Restore/Delete actions live on Activity Detail.
         const card = <SwipeActionCard key={key} as="article" className={`event-activity-card${readOnly ? ' is-readonly' : ''}${completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${cancelled ? ' is-cancelled' : ''}`}
-          label={activity.title || 'Untitled activity'} menuButton={hasActions} menuLabel="Activity options"
-          onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={!readOnly && cancelled && hasActions}
-          otherActions={readOnly ? [] : [
-            ...(onEdit && isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
-            ...(onToggleComplete && !cancelled ? [{ label: completed ? 'Reopen' : 'Complete', icon: completed ? RotateCcw : Check, onClick: () => onToggleComplete(activity.id, activity) }] : []),
-            ...(onToggleCancelled ? [{ label: cancelled ? 'Restore' : 'Cancel', icon: cancelled ? RotateCcw : XCircle, onClick: () => onToggleCancelled(activity.id, activity) }] : []),
-          ]} onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
+          label={activity.title || 'Untitled activity'} menuButton={false}
+          onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={false} otherActions={[]}>
           <div className="event-activity-main"><div className="event-activity-copy">
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
-              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`}>{completed ? <Check size={12} aria-hidden="true" /> : cancelled ? <XCircle size={12} aria-hidden="true" /> : <Circle size={12} aria-hidden="true" />}{activityStatusLabel(activity)}</span>
-              <span className={`event-activity-priority ${activity.priority || 'medium'}`}>{activity.priority || 'medium'}</span>
+              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}`}>{activityStatusLabel(activity)}</span>
             </div>
             <div className="event-activity-context"><span>{getEventName ? getEventName(activity) : eventName}</span><i>·</i><span>{dueText}</span></div>
           </div></div>

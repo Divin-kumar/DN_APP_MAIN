@@ -14,7 +14,7 @@
  */
 import { ArrowLeft, BellRing, Check, Hash, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -24,6 +24,10 @@ import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
+import SortControl from '../components/common/SortControl';
+import usePersistentListState from '../hooks/usePersistentListState';
+import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
+import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, TRANSACTION_SORT_VALUES, transactionSortForField } from '../utils/userListSort';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -379,8 +383,60 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   );
 }
 
+
+// Safe, fixed sort fields are view preferences, not editable Code List IDs.
+// Use the same scoped list-state keys and validation rules as each live list.
+const MOMENT_SORT_DEFAULTS = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
+const MOMENT_SORT_RULES = Object.freeze({ field: MOMENT_SORT_OPTIONS.map(({ value }) => value), direction: ['asc', 'desc'] });
+const FINANCE_SORT_DEFAULTS = Object.freeze({ type: 'all', month: 'all', search: '', sort: 'date-desc' });
+const FINANCE_SORT_RULES = Object.freeze({
+  type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value),
+  sort: TRANSACTION_SORT_VALUES,
+});
+
+function ListOrderingPreferences() {
+  const [moments, setMoments] = usePersistentListState('moments', MOMENT_SORT_DEFAULTS, MOMENT_SORT_RULES);
+  const [activities, setActivities] = usePersistentListState('activities', ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES);
+  const [finance, setFinance] = usePersistentListState('transactions', FINANCE_SORT_DEFAULTS, FINANCE_SORT_RULES);
+  const [financeField, financeDirection] = finance.sort.split('-');
+  return <section className="settings-section code-list-section" id="list-order" aria-label="List sorting preferences">
+    <div className="settings-section-heading">
+      <span className="settings-accordion-icon"><Hash size={18} aria-hidden="true" /></span>
+      <div><h3>List sorting</h3></div>
+    </div>
+    <p className="code-list-description">Choose which fields order your lists. Changes apply immediately to this browser's current Guest or account view, without changing records or shared Code List values. Each Moment's own Activity list keeps its separate remembered order.</p>
+    <div className="settings-admin-grid dn-list-sort-settings">
+      <div className="settings-input-block">
+        <span>Moments</span>
+        <SortControl label="Sort Moments in settings" field={moments.field} direction={moments.direction}
+          options={MOMENT_SORT_OPTIONS} onFieldChange={(field) => setMoments({ field, direction: 'asc' })}
+          onToggleDirection={() => setMoments({ direction: moments.direction === 'asc' ? 'desc' : 'asc' })} />
+      </div>
+      <div className="settings-input-block">
+        <span>Activities</span>
+        <SortControl label="Sort Activities in settings" field={activities.field} direction={activities.direction}
+          options={ACTIVITY_SORTS} onFieldChange={(field) => setActivities({ field, direction: 'asc' })}
+          onToggleDirection={() => setActivities({ direction: activities.direction === 'asc' ? 'desc' : 'asc' })} />
+      </div>
+      <div className="settings-input-block">
+        <span>Transactions</span>
+        <SortControl label="Sort Transactions in settings" field={financeField} direction={financeDirection}
+          options={TRANSACTION_SORT_OPTIONS}
+          onFieldChange={(field) => setFinance({ sort: transactionSortForField(field) })}
+          onToggleDirection={() => setFinance({ sort: `${financeField}-${financeDirection === 'asc' ? 'desc' : 'asc'}` })} />
+      </div>
+    </div>
+  </section>;
+}
+
 export default function CodeLists() {
   const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    if (location.hash !== '#list-order') return undefined;
+    const frame = requestAnimationFrame(() => document.getElementById('list-order')?.scrollIntoView({ block: 'start' }));
+    return () => cancelAnimationFrame(frame);
+  }, [location.hash]);
   const user = useAppStore((state) => state.user);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
@@ -424,6 +480,7 @@ export default function CodeLists() {
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
         <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
       </> : null}
+      <ListOrderingPreferences />
 
       <section className="settings-section">
         <div className="settings-section-heading">

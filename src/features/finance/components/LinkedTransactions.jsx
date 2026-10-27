@@ -36,7 +36,7 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
   const totals = <MomentFinanceSummary summary={finance.summary} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
   if (activityId && minimal && finance.ready && !finance.error && finance.transactions.length === 0) return null;
-  return <div className={`moment-transactions${minimal ? ' is-minimal' : ''}`}>
+  return <div className={`moment-transactions${minimal ? ' is-minimal' : ''}${minimal && finance.ready && !finance.error && finance.transactions.length ? ' has-linked-transactions' : ''}`}>
     {finance.error ? <div className="financial-load-error" role="alert"><span>Transactions couldn’t be loaded.</span>
       <button type="button" className="secondaryButton" onClick={finance.retry}>Try again</button></div>
       : finance.pending ? <LoadingSkeleton rows={3} label="Loading linked transactions" /> : <>

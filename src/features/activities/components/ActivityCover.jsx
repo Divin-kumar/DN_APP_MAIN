@@ -10,7 +10,7 @@ import { COVER_POSITION_DEFAULTS, COVER_POSITION_RULES, COVER_ZOOM_MIN, COVER_ZO
 
 const dimensions = new Map();
 const SELECTION_DEFAULTS = Object.freeze({ imageKey: '' });
-export default function ActivityCover({ moment, activityId, uid, isGuest, backTo, preferenceKey, onEditingChange }) {
+export default function ActivityCover({ moment, activityId, uid, isGuest, backTo, backLabel = 'Back to Activities', preferenceKey, onEditingChange }) {
   const [selection, select] = usePersistentListState(preferenceKey, SELECTION_DEFAULTS);
   const [choosing, setChoosing] = useState(false);
   const root = useRef(null), restoreChoiceFocus = useRef(false);
@@ -23,7 +23,7 @@ export default function ActivityCover({ moment, activityId, uid, isGuest, backTo
     }
   }, [choosing, selection.imageKey]);
   return <div ref={root} className="activity-hero">
-    <CoverImage key={coverImageKey(selected)} attachment={selected} uid={uid} isGuest={isGuest} backTo={backTo}
+    <CoverImage key={coverImageKey(selected)} attachment={selected} uid={uid} isGuest={isGuest} backTo={backTo} backLabel={backLabel}
       preferenceKey={`${preferenceKey}:position:${coverImageKey(selected)}`} onEditingChange={onEditingChange}
       onChoose={photos.length > 1 ? () => setChoosing(true) : null} />
     {choosing ? <ModalDialog title="Choose cover photo" className="activity-cover-picker" onClose={() => setChoosing(false)}>
@@ -33,7 +33,7 @@ export default function ActivityCover({ moment, activityId, uid, isGuest, backTo
   </div>;
 }
 
-function CoverImage({ attachment, uid, isGuest, backTo, preferenceKey, onChoose, onEditingChange }) {
+function CoverImage({ attachment, uid, isGuest, backTo, backLabel, preferenceKey, onChoose, onEditingChange }) {
   const original = useAttachmentOriginal(attachment, { uid, isGuest });
   const [position, savePosition] = usePersistentListState(preferenceKey, COVER_POSITION_DEFAULTS, COVER_POSITION_RULES);
   const [editing, setEditing] = useState(false), [draft, setDraft] = useState(position);
@@ -142,7 +142,7 @@ function CoverImage({ attachment, uid, isGuest, backTo, preferenceKey, onChoose,
       </div>
       <div className="activity-cover-controls"><button type="button" onClick={() => finish(false)}>Cancel</button><button type="button" onClick={() => finish(true)}>Done</button></div>
     </> : <>
-      <Link to={backTo} className="activity-cover-back" aria-label="Back to Moment activities"><ArrowLeft size={19} aria-hidden="true" /></Link>
+      <Link to={backTo} className="activity-cover-back" aria-label={backLabel}><ArrowLeft size={19} aria-hidden="true" /></Link>
       <div className="activity-cover-controls">
         {onChoose ? <button type="button" aria-label="Choose cover photo" title="Choose cover photo" onClick={onChoose}><Images size={18} aria-hidden="true" /></button> : null}
         {usable && readySource === original.source ? <button type="button" aria-label="Reposition cover photo" title="Reposition cover photo" onClick={beginEditing}><Move size={18} aria-hidden="true" /></button> : null}

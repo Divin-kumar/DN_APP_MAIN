@@ -62,8 +62,8 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
     const card = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
     await expect(card).toBeVisible();
     expect((await card.boundingBox()).height).toBeLessThan(115);
-    const trigger = await card.getByRole('button', { name:'Activity options', exact:true }).boundingBox();
-    expect(Math.round(trigger.width)).toBeGreaterThanOrEqual(44); expect(Math.round(trigger.height)).toBeGreaterThanOrEqual(44);
+    await expect(card.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+    await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     const columns = await page.locator('.event-activity-list').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
     expect(columns).toBe(viewport.width < 768 ? 1 : viewport.width < 1440 ? 2 : 3);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -91,9 +91,11 @@ test('Activity transaction section appears and disappears with its actual linked
   }, present);
   await changeExpense(true);
   await expect(page.getByRole('list', { name:'Linked transactions', exact:true })).toContainText('New linked cost');
+  await expect(page.locator('.moment-transactions.has-linked-transactions')).toBeVisible();
   await expect(page.getByRole('group', { name:'Totals for this Activity', exact:true }).locator('dd')).toHaveText(['₹0', '₹125', '-₹125']);
   await changeExpense(false);
   await expect(page.locator('.moment-transactions')).toHaveCount(0);
+  await expect(page.locator('.moment-transactions.has-linked-transactions')).toHaveCount(0);
   // A failed read has no completed loaded scope. Model that state, rather than
   // attaching an impossible load error to an already-completed cache hit.
   await page.evaluate(async () => (await import('/src/store/useExpenseStore.js')).default.setState({ error:'Unable to load expenses.', loadedFor:null, loading:false }));
@@ -120,8 +122,10 @@ test('summary, nested original preview and Activity menu remain within a reduced
   await expect(page.getByRole('menuitem', { name:'Edit', exact:true })).toBeVisible();
   await page.keyboard.press('Escape');
   await page.goto('/activities');
-  await page.getByRole('button', { name:/^Filters and sort/ }).click();
-  await page.getByRole('group', { name:'Open Book a lakeside stay', exact:true }).getByRole('button', { name:'Activity options', exact:true }).click();
+  const activityCard = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
+  await expect(activityCard.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+  await activityCard.click();
+  await page.getByRole('button', { name:'Activity options', exact:true }).click();
   await expect(page.getByRole('menuitem', { name:'Edit', exact:true })).toBeVisible();
   await assertViewport(page, page.getByRole('menu'));
 });

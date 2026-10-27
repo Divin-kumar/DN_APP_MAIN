@@ -12,6 +12,7 @@ import LinkedTransactions from '../finance/components/LinkedTransactions';
 import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
 import { activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
+import { getActivityMomentType } from '../../utils/activityRecords';
 import { isActivityEditable } from '../../utils/scopedRecordActions';
 import './ActivityDetail.css';
 
@@ -43,7 +44,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const target = { momentId: eventId, activityId };
   const status = activityStatus(activity);
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
-  const parentTo = `/events/${encodeURIComponent(eventId)}/activities`;
+  const parentTo = navigation.returnTo;
   const menuActions = [
     status === 'cancelled'
       ? { label: 'Restore', icon: RotateCcw, onClick: () => actions.setCancelled(target, false) }
@@ -58,24 +59,28 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
     { label: 'Completed', value: activityDateLabel(activity.completedAt, '') },
   ].filter(({ value }) => value);
   return <article className="activity-detail-page" {...navigation.gestureProps}>
-    <ActivityCover moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} backTo={parentTo}
+    <ActivityCover moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest}
+      backTo={parentTo} backLabel={parentTo === '/activities' ? 'Back to Activities' : 'Back to Moment activities'}
       preferenceKey={`activity-cover:${JSON.stringify([scoped.sample, eventId, activityId])}`} onEditingChange={setCoverEditing} />
     <div className="activity-detail-content">
       <header className="activity-detail-heading">
-        <nav className="activity-parent-context" aria-label="Activity parent">Moment: <Link to={parentTo}>{moment.name || 'Untitled Moment'}</Link></nav>
-        <span className="activity-title-divider" aria-hidden="true"> — </span><h1 ref={heading} tabIndex={-1}>{activity.title || 'Untitled activity'}</h1>
+        <div className="activity-parent-context" aria-label="Activity parent">
+          <span className="activity-parent-context-label">Moment Type / Moment:</span>
+          <span>{getActivityMomentType(moment)} / {moment.name || 'Untitled Moment'}</span>
+        </div>
+        <h1 ref={heading} tabIndex={-1}>{activity.title || 'Untitled activity'}</h1>
       </header>
       {moment.archived ? <p className="activity-archived"><Archive size={14} aria-hidden="true" /> Archived Moment</p> : null}
       <div className="activity-detail-metadata" aria-busy={actions.busy}>
         <div className="activity-detail-facts">
-          <span className={`activity-status-pill status-${status}`}><StatusIcon size={14} aria-hidden="true" />{activityStatusLabel(activity)}</span>
-          <span><CalendarDays size={14} aria-hidden="true" />{activityDateLabel(activity.date)}</span>
-          <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={14} aria-hidden="true" />{activity.priority || 'medium'}</span>
+          <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
+          <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
           otherActions={menuActions}
           onDelete={() => actions.requestDelete(target)} />
       </div>
+      <p className="activity-detail-due"><CalendarDays size={13} aria-hidden="true" />{activityDateLabel(activity.date)}</p>
       {actions.error && !actions.draft && !actions.deleteTarget ? <p className="quick-create-error" role="alert">{actions.error}</p> : null}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{actions.announcement}</p>
       {activity.description ? <section className="activity-detail-section" aria-labelledby="activity-description-heading">
@@ -93,6 +98,6 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <dl className="activity-secondary-metadata">{dates.map(({ label, value }) => <div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}</dl>
       </footer> : null}
     </div>
-    <ActivityActionDialogs actions={actions} onDeleted={() => navigate('/activities', { replace: true })} />
+    <ActivityActionDialogs actions={actions} onDeleted={() => navigate(parentTo, { replace: true })} />
   </article>;
 }

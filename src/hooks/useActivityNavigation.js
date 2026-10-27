@@ -20,6 +20,8 @@ export default function useActivityNavigation({ scoped, eventId, activityId, dis
   const selected = selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
     direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches);
   const sequence = resolveActivitySequence(entries, selected, location.state?.activitySequence, scoped.scopeIdentity, eventId, activityId);
+  const momentReturn = `/events/${encodeURIComponent(eventId)}/activities`;
+  const returnTo = location.state?.activityOrigin === momentReturn ? momentReturn : '/activities';
   const context = records.capture();
   const gesture = useRef(null), suppress = useRef(false), frame = useRef(null), navigating = useRef(false);
   useEffect(() => () => { if (frame.current) cancelAnimationFrame(frame.current); }, []);
@@ -30,10 +32,11 @@ export default function useActivityNavigation({ scoped, eventId, activityId, dis
     if (!target || blocked()) return;
     try { records.resolveActivity(context, target[0], target[1]); } catch { return; }
     navigating.current = true;
-    navigate(activityDetailPath(...target), { state: { activityPaging: true,
-      activitySequence: { scope: scoped.scopeIdentity, ids: sequence.ids } } });
+    navigate(activityDetailPath(...target), { state: { activityPaging: true, activityOrigin: returnTo,
+      activitySequence: { scope: scoped.scopeIdentity, ids: sequence.ids,
+        ...(location.state?.activitySequence?.momentId === eventId ? { momentId: eventId } : {}) } } });
   };
-  return { ...sequence, isPaging: Boolean(location.state?.activityPaging), move,
+  return { ...sequence, returnTo, isPaging: Boolean(location.state?.activityPaging), move,
     gestureProps: {
       onPointerDownCapture: (event) => {
         gesture.current = null;

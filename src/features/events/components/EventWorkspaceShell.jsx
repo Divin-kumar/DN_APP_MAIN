@@ -471,7 +471,14 @@ export function EventWorkspaceContent() {
             allActivities={activities} progressActivities={filteredActivities}
             includeCancelled
             hasActiveFilters={Boolean(activitySearch.trim()) || Boolean(activityConditions.activeCount)}
-            onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id))}
+            onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id), { state: {
+              activityOrigin: `/events/${encodeURIComponent(eventId)}/activities`,
+              activitySequence: {
+                scope: JSON.stringify([mutationContext.scope, mutationContext.sample]),
+                ids: filteredActivities.map((item) => [recordId(eventId), recordId(item.id)]),
+                momentId: recordId(eventId),
+              },
+            } })}
 
           />
         </div>

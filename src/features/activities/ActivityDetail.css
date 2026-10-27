@@ -76,3 +76,59 @@ html[data-theme] .activity-detail-page .dn-attachment-open strong { white-space:
   .activity-detail-content { padding-top:10px; }
 }
 @media(prefers-reduced-motion:reduce) { .activity-detail-page *, .activity-detail-page *::before { animation:none !important; transition:none !important; } }
+
+/* Activity Detail: compact empty cover and quiet, predictable information order. */
+.activity-cover.is-fallback {
+  aspect-ratio:auto !important;
+  height:20svh !important;
+  min-height:96px;
+  max-height:220px !important;
+}
+.activity-cover.is-fallback .activity-cover-fallback { gap:5px; padding:12px 56px; }
+.activity-cover.is-fallback .activity-cover-fallback > span:first-child svg { width:23px; height:23px; opacity:.65; }
+.activity-detail-heading { display:grid; justify-items:start; align-items:start; gap:7px; }
+.activity-parent-context {
+  display:flex; flex-wrap:wrap; align-items:baseline; gap:3px 7px;
+  font-size:12px; line-height:1.5; color:var(--color-text-muted);
+  overflow-wrap:anywhere;
+}
+.activity-parent-context-label { font-weight:600; color:var(--color-text-muted); }
+.activity-detail-content h1 { line-height:1.28; }
+.activity-detail-metadata {
+  display:grid; grid-template-columns:minmax(0,1fr) 44px;
+  gap:8px; margin-top:13px; min-height:44px;
+}
+.activity-detail-facts {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+  align-items:center; gap:10px; min-width:0;
+}
+.activity-detail-facts > .activity-status-pill,
+.activity-detail-facts > .activity-detail-priority {
+  display:inline-flex; min-width:0; justify-self:start;
+  align-items:center; gap:6px; font-size:11px;
+  line-height:1.3;
+}
+.activity-detail-facts > .activity-status-pill {
+  padding:5px 8px; border:1px solid var(--color-border);
+  border-radius:999px; font-weight:600;
+  background:color-mix(in srgb,var(--color-primary) 6%,var(--color-card));
+}
+.activity-detail-facts > .activity-detail-priority {
+  color:var(--color-text-muted); font-weight:500;
+  text-transform:capitalize; overflow-wrap:anywhere;
+}
+.activity-detail-due {
+  display:flex; align-items:center; gap:6px; min-height:25px;
+  margin:0; font-size:11px; color:var(--color-text-muted);
+}
+html[data-theme] .activity-detail-more .dn-record-menu-trigger {
+  opacity:.68; border:0; background:transparent; box-shadow:none;
+  margin:0; border-radius:10px;
+}
+html[data-theme] .activity-detail-more .dn-record-menu-trigger:hover,
+html[data-theme] .activity-detail-more .dn-record-menu-trigger:focus-visible { opacity:1; background:var(--color-surface); }
+/* The minimal transaction component disappears entirely when ready and empty. */
+html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linked-transactions {
+  margin-top:19px; padding-top:17px;
+  border-top:1px solid var(--color-border);
+}

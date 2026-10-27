@@ -19,3 +19,17 @@ test('history snapshots retain opening order, drop missing/duplicate entries and
   assert.deepEqual(resolveActivitySequence(entries, selected, snapshot, 'B', 'one', 'same').previous, ['two', 'same']);
   assert.deepEqual(moments[0].activities[0], { id: 'same', title: 'Bravo', date: '2026-10-24' });
 });
+
+test('Moment-origin paging uses only that Moment, preserving its filter order and protecting reused IDs', () => {
+  const entries = projectActivities(moments);
+  const selected = selectActivityEntries(entries, { field: 'title' });
+  const snapshot = { scope: 'A', momentId: 'two', ids: [['two', 'last'], ['one', 'same'], ['two', 'same']] };
+  const sequence = resolveActivitySequence(entries, selected, snapshot, 'A', 'two', 'last');
+  assert.deepEqual(sequence.ids, [['two', 'last'], ['two', 'same']]);
+  assert.equal(sequence.previous, null);
+  assert.deepEqual(sequence.next, ['two', 'same']);
+  const wrongScope = resolveActivitySequence(entries, selected, snapshot, 'B', 'two', 'same');
+  assert.deepEqual(wrongScope.ids, [['two', 'same'], ['two', 'last']]);
+  assert.equal(wrongScope.previous, null);
+  assert.deepEqual(moments[0].activities[0], { id:'same', title:'Bravo', date:'2026-10-24' });
+});

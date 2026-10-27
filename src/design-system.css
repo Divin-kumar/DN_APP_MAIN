@@ -2785,3 +2785,13 @@ html[data-theme] .moment-summary-attachments .dn-attachment-open img { width:100
 html[data-theme] .moment-summary-attachments .dn-attachment-open strong { white-space:normal; overflow:visible; overflow-wrap:anywhere; text-overflow:clip; }
 html[data-theme] .event-summary-dialog .dn-modal-body,
 html[data-theme] .dashboard-event-summary-modal .dn-modal-body { min-width:0; overflow-wrap:anywhere; }
+
+/* Scoped List sorting preferences in Code Lists: existing fields, no new record taxonomy. */
+html[data-theme] .code-lists-page .dn-list-sort-settings {
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr));
+  gap:12px; min-width:0; margin-top:12px;
+}
+html[data-theme] .code-lists-page .dn-list-sort-settings > .settings-input-block { min-width:0; }
+html[data-theme] .code-lists-page .dn-list-sort-settings .sort-control { width:100%; max-width:100%; min-width:0; }
+html[data-theme] .code-lists-page .dn-list-sort-settings .sort-control > * { min-width:0; }
+html[data-theme] .code-lists-page #list-order { scroll-margin-top:90px; }

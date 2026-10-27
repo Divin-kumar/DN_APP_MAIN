@@ -225,7 +225,7 @@ test('clean cards preserve composite identity without expense or attachment prev
   assert.notEqual(firstKey, secondKey);
   assert.equal(list.expensesByActivity, undefined);
   assert.equal(list.renderAttachments, undefined);
-  assert.equal(list.getEventName(second).props.to, '/events/moment-two/activities');
+  assert.equal(list.getEventName(second), 'Synthetic second Moment');
   assert.equal('momentId' in second, false, 'presentation context does not alter stored activity fields');
 });
 
@@ -270,6 +270,7 @@ test('opening snapshots scoped list order using both IDs without copying records
   assert.equal(path, '/events/moment-two/activities/shared-activity');
   assert.deepEqual(options.state.activitySequence.ids, [['moment-one', 'shared-activity'], ['moment-two', 'shared-activity'], ['moment-two', 'unrelated']]);
   assert.equal(options.state.activitySequence.scope, JSON.stringify(['user:synthetic-owner', null]));
+  assert.equal(options.state.activityOrigin, '/activities');
   assert.deepEqual(harness.writes, []);
 });
 
