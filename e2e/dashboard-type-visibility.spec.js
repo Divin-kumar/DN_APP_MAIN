@@ -93,6 +93,9 @@ test('synthetic account Dashboard type choices do not inherit or overwrite Guest
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await seedTypeSettings(page);
   await page.goto('/dashboard');
+  // Ensure Guest auth/data hydration has settled before simulating a different account.
+  // Otherwise a late Guest initialization can overwrite the synthetic test scope.
+  await expect(items(page, 'Activities')).toHaveCount(3);
   const guestSettings = await page.evaluate(() => localStorage.getItem('dn_guest_admin_values'));
   await accountScope(page, 'dashboard-types-owner', moments);
   await page.evaluate(async () => {
