@@ -29,10 +29,14 @@ for (const width of [320, 390, 768, 1440]) {
     await page.goto('/dashboard');
     const greeting = page.locator('.dashboard-greeting[aria-label="Dashboard greeting"]');
     await expect(greeting.getByRole('heading', { name: 'Good morning, Guest' })).toBeVisible();
-    await expect(greeting.locator('time')).toHaveText('Mon, 26 Oct');
+    await expect(greeting.locator('time')).toHaveText('Monday, 26 October 2026');
+    await expect(greeting.locator('.dashboard-greeting-emoji')).toHaveText('☀️');
+    await expect(greeting).toContainText('A fresh day, a few good moments ahead.');
+    await expect(greeting).toContainText('Your plans and memories are right here.');
     await expect(page.locator('.dashboard-summary-metric, .dashboard-summary-footer, .dashboard-summary-status')).toHaveCount(0);
     await expect(greeting).not.toContainText(/Spent|Balance|Pending|Past 7 days|Preparing|completed/);
-    expect((await greeting.boundingBox()).height).toBeLessThan(105);
+    expect((await greeting.boundingBox()).height).toBeGreaterThanOrEqual(170);
+    expect((await greeting.boundingBox()).height).toBeLessThan(260);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const [section, dates] of [['Moments', 'Moment dates'], ['Activities', 'Activity dates']]) {
       const panel = page.getByRole('region', { name: section, exact: true });
@@ -86,4 +90,31 @@ test('an unreadable expense ledger does not affect the simple Dashboard greeting
   await page.getByRole('button', { name: 'Retry', exact: true }).click();
   // The existing nested-only expense remains part of the ledger after recovery.
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹1,036');
+});
+
+test('Dashboard welcome refreshes its greeting and emoji when local time changes without reloading', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.clock.install({ time: new Date('2026-10-26T11:59:00+05:30') });
+  const errors = await seedGuest(page);
+  await page.goto('/dashboard');
+  const greeting = page.locator('.dashboard-greeting[aria-label="Dashboard greeting"]');
+  const emoji = greeting.locator('.dashboard-greeting-emoji');
+  await expect(greeting.getByRole('heading', { name: 'Good morning, Guest' })).toBeVisible();
+  await expect(emoji).toHaveText('☀️');
+  await expect(greeting.locator('time')).toBeVisible();
+
+  for (const [clockTime, heading, symbol] of [
+    ['2026-10-26T12:00:00+05:30', 'Good afternoon, Guest', '🌤️'],
+    ['2026-10-26T18:00:00+05:30', 'Good evening, Guest', '🌙'],
+    ['2026-10-27T00:00:00+05:30', 'Good morning, Guest', '☀️'],
+  ]) {
+    await page.clock.setFixedTime(new Date(clockTime));
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(greeting.getByRole('heading', { name: heading, exact: true })).toBeVisible();
+    await expect(emoji).toHaveText(symbol);
+  }
+  await expect(greeting.locator('time')).toHaveText('Tuesday, 27 October 2026');
+  await expect(greeting).toContainText('Your plans and memories are right here.');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
 });

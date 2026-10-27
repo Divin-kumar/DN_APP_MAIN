@@ -36,22 +36,31 @@ async function openGreeting(t) {
   return { state, props, render, salutation };
 }
 
-test('Dashboard greeting contains the time-of-day salutation, first name and a small dated time only', async (t) => {
+test('Dashboard greeting shows a four-line welcome, local date and personal name without business metrics', async (t) => {
   const h = await openGreeting(t), tree = h.render();
   assert.equal(tree.props['aria-label'], 'Dashboard greeting');
   assert.equal(h.salutation(), 'Good morning, Kumar');
-  assert.equal(nodes(tree).find((node) => node.type === 'time').props.dateTime, '2026-10-26');
-  assert.doesNotMatch(textOf(tree), /Divin|activit|moment|spent|balance|pending|completed|summary|retry/i);
-  assert.equal(nodes(tree).filter((node) => ['button', 'p', 'section'].includes(node.type)).length, 0);
+  const time = nodes(tree).find((node) => node.type === 'time');
+  assert.equal(time.props.dateTime, '2026-10-26');
+  assert.equal(textOf(time), 'Monday, 26 October 2026');
+  assert.equal(textOf(nodes(tree).find((node) => node.props?.className === 'dashboard-greeting-eyebrow')), 'Your day');
+  assert.equal(textOf(nodes(tree).find((node) => node.props?.className === 'dashboard-greeting-emoji')), '☀️');
+  assert.deepEqual(nodes(tree).filter((node) => node.type === 'p').map(textOf),
+    ['A fresh day, a few good moments ahead.', 'Your plans and memories are right here.']);
+  assert.doesNotMatch(textOf(tree), /activit|spent|balance|pending|completed|summary|retry/i);
+  assert.equal(nodes(tree).filter((node) => ['button', 'section'].includes(node.type)).length, 0);
 });
 
-test('greeting changes its salutation and icon across local morning, afternoon and evening', async (t) => {
+test('greeting and emoji change together at local morning, afternoon and evening boundaries', async (t) => {
   const h = await openGreeting(t);
-  for (const [hour, expected, icon] of [[0, 'Good morning', 'sunrise'], [11, 'Good morning', 'sunrise'],
-    [12, 'Good afternoon', 'sun'], [17, 'Good afternoon', 'sun'], [18, 'Good evening', 'moon'], [23, 'Good evening', 'moon']]) {
+  for (const [hour, expected, emoji] of [[0, 'Good morning', '☀️'], [11, 'Good morning', '☀️'],
+    [12, 'Good afternoon', '🌤️'], [17, 'Good afternoon', '🌤️'],
+    [18, 'Good evening', '🌙'], [23, 'Good evening', '🌙']]) {
     h.props.now = new Date(2026, 9, 26, hour);
+    const tree = h.render();
     assert.equal(h.salutation(), `${expected}, Kumar`);
-    assert.ok(nodes(h.render()).some((node) => node.type === icon));
+    assert.equal(textOf(nodes(tree).find((node) => node.props?.className === 'dashboard-greeting-emoji')), emoji);
+    assert.equal(nodes(tree).find((node) => node.type === 'time').props.dateTime, '2026-10-26');
   }
 });
 
