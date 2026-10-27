@@ -260,3 +260,33 @@ for (const width of [320, 390, 768, 1440]) {
     expect(errors).toEqual([]);
   });
 }
+
+test('many active filter chips remain one horizontal line with keyboard-scroll access on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 740 });
+  const errors = await seedGuest(page);
+  await page.addInitScript(() => {
+    const group = { id: 'root', kind: 'group', join: 'AND', children: Array.from({ length: 8 }, (_, index) => ({
+      id: `existing-${index}`, kind: 'rule', field: 'name', operator: 'contains',
+      value: `Detailed saved condition ${index}`,
+    })) };
+    localStorage.setItem('dn_list_state_guest_conditions%3Atransactions', JSON.stringify({ group, migrationVersion: 1 }));
+  });
+  await page.goto('/financials');
+  const chips = page.getByRole('region', { name: 'Active filters' });
+  await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
+  const measurements = await chips.evaluate((element) => ({
+    scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
+    heights: [...element.children].map((chip) => chip.getBoundingClientRect().top),
+    height: element.getBoundingClientRect().height,
+  }));
+  expect(measurements.scrollWidth).toBeGreaterThan(measurements.clientWidth);
+  expect(Math.max(...measurements.heights) - Math.min(...measurements.heights)).toBeLessThanOrEqual(2);
+  expect(measurements.height).toBeLessThanOrEqual(44);
+  await chips.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect.poll(() => chips.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+  await chips.locator('.dn-condition-chip').last().click();
+  await expect(chips.locator('.dn-condition-chip')).toHaveCount(7);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});

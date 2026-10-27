@@ -96,7 +96,7 @@ function GroupEditor({ node, schema, update, remove, depth = 0, railRef, onRailS
 }
 export function ConditionChips({ filter }) {
   const chips = conditionChipEntries(filter.state.group, filter.schema);
-  return chips.length ? <div className="dn-condition-chips" aria-label="Active filters">{chips.map((chip) =>
+  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{chips.map((chip) =>
     <button type="button" className="dn-condition-chip" key={chip.id} aria-label={`Remove filter ${chip.label}`}
       onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><span>{chip.label}</span><X size={12} /></button>)}</div> : null;
 }
