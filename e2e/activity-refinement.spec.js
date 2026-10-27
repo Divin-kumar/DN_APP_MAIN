@@ -28,8 +28,10 @@ test('Moment-opening detail pages retain that Moment only, in its own filtered l
   // Parent one: deliberately distinguish this Moment's three children from another Moment's same-ID child.
   const errors = await seedGuest(page, { moments });
   await page.goto('/events/moment-one/activities');
-  await expect(page.getByRole('button', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Open Book a lakeside stay', exact: true }).click();
+  const momentCard = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+  await expect(momentCard).toBeVisible();
+  await momentCard.focus();
+  await page.keyboard.press('Enter');
   await expect(page.getByRole('link', { name: 'Back to Moment activities' })).toHaveAttribute('href', '/events/moment-one/activities');
   await expect(page.getByLabel('Activity parent')).toContainText('Vacation / Weekend in Ooty');
   const paging = page.getByRole('navigation', { name: 'Activity navigation' });
@@ -61,7 +63,7 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 1440, height: 900 
     await expect(heading.locator('h1')).toHaveText('Book a lakeside stay');
     const metadata = page.locator('.activity-detail-metadata');
     await expect(metadata.locator('.activity-status-pill')).toHaveText('In progress');
-    await expect(metadata.locator('.activity-detail-priority')).toContainText('medium');
+    await expect(metadata.locator('.activity-detail-priority')).toContainText('high');
     await expect(metadata.getByRole('button', { name: 'Activity options' })).toHaveCount(1);
     const fields = await Promise.all(['.activity-status-pill', '.activity-detail-priority', '.dn-record-menu-trigger']
       .map((selector) => metadata.locator(selector).first().boundingBox()));

@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261027-116 | Tighten tiny status contrast and correct browser fixtures
+- The full run 40513924809 for CHG-115 passed 406/406 Node tests, lint, documentation checks and 94/107 Chromium journeys. Ten responsive light-theme cases detected 4.27:1 Completed badge text contrast, below the existing 4.5:1 standard. The remaining three cases were in the newly added tests: the Moment Activity card is an accessible group rather than a button, and the seeded Activity priority is high rather than medium.
+- Blended the small Completed badge's accent toward standard text color (30%) to keep the subdued design while improving legibility in light/dark themes. Corrected Moment origin interaction to focus/Enter the accessible card and verified the seed's actual high priority. Kept the same strict contrast/role tests and original navigation/data semantics.
+- **Validation:** full CI and build pending the next OldVersion run; no Firebase publication or main change.
+
 ## CHG-20261027-115 | Verify Moment-origin navigation metadata in the existing unit test
 - Initial CHG-113 source commit GitHub CI run 40512902616 passed documentation checks and 405/406 Node tests; a single existing EventWorkspaceShell.transaction unit assertion expected navigation with a URL only. The enhanced behavior now passes a scoped Moment-only ID sequence and return destination in route state, so the old exact-call assertion no longer reflected the intended contract.
 - Updated that unit regression to verify both the canonical child Detail URL and exact origin/scope/parent/ID history state, instead of weakening the navigation assertions. All prior test changes from CHG-114 remain in effect. No production source, business record, Firebase, original-file or main branch change in this follow-up.

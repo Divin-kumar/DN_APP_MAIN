@@ -47,7 +47,8 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status.complete {
   border-color:color-mix(in srgb,var(--color-success) 28%,var(--color-border));
   background:color-mix(in srgb,var(--color-success) 9%,var(--color-card));
-  color:var(--color-success) !important;
+  /* Muted success hue with readable text weight in both light and dark palettes. */
+  color:color-mix(in srgb,var(--color-success) 70%,var(--color-text) 30%) !important;
 }
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status.cancelled {
   color:var(--color-text-muted) !important; background:var(--color-surface);
