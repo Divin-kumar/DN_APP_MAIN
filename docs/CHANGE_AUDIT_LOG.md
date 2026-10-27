@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261027-115 | Verify Moment-origin navigation metadata in the existing unit test
+- Initial CHG-113 source commit GitHub CI run 40512902616 passed documentation checks and 405/406 Node tests; a single existing EventWorkspaceShell.transaction unit assertion expected navigation with a URL only. The enhanced behavior now passes a scoped Moment-only ID sequence and return destination in route state, so the old exact-call assertion no longer reflected the intended contract.
+- Updated that unit regression to verify both the canonical child Detail URL and exact origin/scope/parent/ID history state, instead of weakening the navigation assertions. All prior test changes from CHG-114 remain in effect. No production source, business record, Firebase, original-file or main branch change in this follow-up.
+- **Validation:** final lint, unit, Chromium and build execution pending CI; owner will handle 1.0.38 Hosting deployment after verification.
+
 ## CHG-20261027-114 | Align legacy regressions with Activity Detail as the action surface
 - Follow-up to CHG-113 on the same existing OldVersion branch. The initial source commit removed the overview Activity menu/priority/link and moved the due date to its own metadata line. Preexisting Chromium tests still expected the old overview menu, direct-link Back to Moment, 40svh empty-photo cover and due date inside the status row.
 - Updated browser checks to test the intended interactions instead of the obsolete UI: Activity Detail owns completed-state Reopen and standalone-safe Delete/Cancel actions; overall Activity cards have no menu; a direct-link Back arrow leads to overall Activities; long-name, text-contrast, 20svh empty-cover and invalid-date checks use the new semantic targets. No production logic is relaxed and financial/account/cancel/reopen safeguards remain tested.

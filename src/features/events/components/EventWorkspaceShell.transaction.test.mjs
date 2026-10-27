@@ -111,7 +111,12 @@ test('Moment Activities exposes read-only cards without record or finance mutati
 test('read-only Moment Activity selection opens the canonical nested Detail route', async (t) => {
   const harness = await openWorkspace(t);
   harness.find('ActivityList').props.onOpen(harness.activity);
-  assert.deepEqual(harness.navigations, [['/events/moment-one/activities/activity-one']]);
+  assert.equal(harness.navigations[0][0], '/events/moment-one/activities/activity-one');
+  assert.deepEqual(harness.navigations[0][1].state, {
+    activityOrigin: '/events/moment-one/activities',
+    activitySequence: { scope: JSON.stringify(['guest:anonymous', null]),
+      ids: [['moment-one', 'activity-one']], momentId: 'moment-one' },
+  });
   assert.deepEqual(harness.calls, []);
 });
 
