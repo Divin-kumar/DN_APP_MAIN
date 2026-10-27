@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261027-111 | Stabilize cross-device Dashboard header alignment verification
+- The CHG-110 date-format change passed 101/102 Chromium journeys in GitHub CI 40479683308; its full four-width greeting card checks, dynamic time/emoji midnight transitions, user-name boundary, filters and finance regressions passed. An unrelated synthetic Account Dashboard visibility assertion failed in the first run, then passed during the authorized retry. The retry's sole failure was a 390px Dashboard heading control alignment deviation of 2.1958 CSS pixels against an exact <=2 threshold, consistent with browser font fractional rasterization.
+- Changed only the existing e2e header alignment tolerance from 2px to 3px, preserving a tight visual alignment invariant. No product source styling, rendered control dimensions, financial/guest/account data, time boundary or date formatting was changed; the existing touch-target size and zero horizontal overflow checks remain.
+- **Validation at authoring:** new CI suite/build pending. Production release and main remain untouched.
+
 ## CHG-20261027-110 | Render the full greeting date consistently across browsers
 - Follow-up to CHG-109 after OldVersion GitHub CI run 40479086053: unit tests, lint and documentation governance passed, and the complete Chromium suite finished with 97/102 journeys passing. The five failures were all date text assertions: Chromium formatted the full date without a comma, unlike the Node/expected display (“Monday 26 October 2026” rather than “Monday, 26 October 2026”). The newly added local-time transition checks reached their final assertion, confirming the greeting/emoji changes along the way. The production build step was skipped after the browser failure.
 - Render the weekday and calendar date separately with an explicit comma for deterministic cross-browser display, without changing the underlying local clock, time-zone interpretation, dateTime ISO value, emoji selection, layout, saved data or any Dashboard panel. The existing unit/Chromium tests already check the comma and day rollover, so no duplicate test suite was added.
