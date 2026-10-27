@@ -58,3 +58,31 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
 }
 html[data-theme] .activities-page .event-activity-content .event-activity-card .dn-record-menu-trigger,
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-priority { display:none; }
+
+/* Keep the parent Moment visible on its own unclipped, noninteractive metadata line. */
+html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:3px;
+  align-items:start;
+}
+html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > .event-activity-moment-name {
+  display:-webkit-box;
+  -webkit-box-orient:vertical;
+  -webkit-line-clamp:2;
+  line-clamp:2;
+  min-width:0;
+  overflow:hidden;
+  white-space:normal;
+  text-overflow:clip;
+  overflow-wrap:anywhere;
+  color:var(--color-text) !important;
+  font-size:11px;
+  font-weight:550;
+  line-height:1.4;
+}
+html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > span:last-child {
+  justify-self:start;
+  text-align:left;
+  color:var(--color-text-muted);
+}

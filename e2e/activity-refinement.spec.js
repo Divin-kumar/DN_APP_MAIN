@@ -11,7 +11,11 @@ test('compact Activities list shows status but no priority, menu or Moment hyper
   await expect(card.locator('.event-activity-priority')).toHaveCount(0);
   await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
   await expect(card.locator('.event-activity-context a')).toHaveCount(0);
-  await expect(card).toContainText('Weekend in Ooty');
+  const momentName = card.locator('.event-activity-moment-name');
+  await expect(momentName).toContainText('Weekend in Ooty');
+  await expect(momentName).toBeVisible();
+  expect((await momentName.boundingBox()).height).toBeGreaterThan(10);
+  expect(await momentName.evaluate((node) => getComputedStyle(node).pointerEvents)).not.toBe('none');
   await expect(page).toHaveURL(/\/activities$/);
   await expect(page.locator('.event-activity-status').first()).toHaveCSS('font-size', '9px');
   await card.click();
@@ -74,22 +78,49 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 1440, height: 900 
   });
 }
 
-test('Code Lists sorting fields update Activities and are reachable from Settings without editing records', async ({ page }) => {
+test('Code Lists owns sorting and live filter preferences without a duplicate Settings shortcut', async ({ page }) => {
   const errors = await seedGuest(page);
   await page.goto('/settings');
-  await page.getByRole('link', { name: 'Open List sorting preferences' }).click();
-  await expect(page).toHaveURL(/\/settings\/code-lists#list-order$/);
-  const section = page.getByRole('region', { name: 'List sorting preferences' });
+  await expect(page.getByRole('link', { name: 'Open List sorting preferences' })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Open Code Lists page' }).click();
+  await expect(page).toHaveURL(/\/settings\/code-lists$/);
+  const section = page.getByRole('region', { name: 'List sorting and filters preferences' });
   await expect(section).toBeVisible();
   const sorter = section.getByRole('combobox', { name: 'Sort Activities in settings field' });
   await sorter.click();
   await page.getByRole('option', { name: 'Title', exact: true }).click();
+
+  const originalRecords = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await section.getByRole('button', { name: /Activities filters/ }).click();
+  const editor = section.getByRole('region', { name: 'activities filters' });
+  await expect(editor).toBeVisible();
+  await editor.getByRole('button', { name: 'Add filter' }).click();
+  await editor.getByRole('combobox', { name: 'Filter by' }).click();
+  await page.getByRole('option', { name: 'Status', exact: true }).click();
+  await editor.getByRole('combobox', { name: 'Value for Status' }).click();
+  await page.getByRole('option', { name: 'Completed', exact: true }).click();
+
   await page.goto('/activities');
   await page.getByRole('button', { name: /^Filters/ }).click();
   await expect(page.getByRole('combobox', { name: 'Sort activities field' })).toContainText('Title');
-  const saved = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await expect(page.getByRole('group', { name: 'Open Choose the train', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toHaveCount(0);
+
   await page.goto('/settings/code-lists');
-  await expect(page.getByRole('combobox', { name: 'Sort Activities in settings field' })).toContainText('Title');
-  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(saved);
+  const preferences = page.getByRole('region', { name: 'List sorting and filters preferences' });
+  await expect(preferences.getByRole('combobox', { name: 'Sort Activities in settings field' })).toContainText('Title');
+  await preferences.getByRole('button', { name: /Activities filters/ }).click();
+  const reopened = preferences.getByRole('region', { name: 'activities filters' });
+  await expect(reopened.getByRole('button', { name: /Remove filter Status/ })).toBeVisible();
+  await reopened.getByRole('button', { name: 'Clear all' }).click();
+
+  await preferences.getByRole('button', { name: /Moments filters/ }).click();
+  await expect(preferences.getByRole('region', { name: 'moments filters' })).toBeVisible();
+  await preferences.getByRole('button', { name: /Transactions filters/ }).click();
+  await expect(preferences.getByRole('region', { name: 'transactions filters' })).toBeVisible();
+
+  await page.goto('/activities');
+  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(originalRecords);
   expect(errors).toEqual([]);
 });

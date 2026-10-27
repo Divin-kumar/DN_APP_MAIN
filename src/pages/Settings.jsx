@@ -822,16 +822,7 @@ export default function Settings() {
           <span className="settings-hub-icon"><Settings2 size={18} /></span>
           <span className="settings-hub-copy">
             <strong>Code Lists</strong>
-            <small>Manage moment types, categories, priorities, and reminder presets</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/code-lists#list-order" className="settings-hub-card" aria-label="Open List sorting preferences">
-          <span className="settings-hub-icon"><Settings2 size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>List sorting</strong>
-            <small>Choose how Moments, Activities and Transactions are ordered on this device</small>
+            <small>Manage types, categories, priorities, reminders, sorting and filters</small>
           </span>
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>

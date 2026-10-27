@@ -39,7 +39,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
               <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}`}>{activityStatusLabel(activity)}</span>
             </div>
-            <div className="event-activity-context"><span>{getEventName ? getEventName(activity) : eventName}</span><i>·</i><span>{dueText}</span></div>
+            <div className="event-activity-context"><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i><span>{dueText}</span></div>
           </div></div>
         </SwipeActionCard>;
         return !readOnly && onToggleComplete && !cancelled ? <SwipeToComplete key={key} label={activity.title || 'Activity'} direction="left"

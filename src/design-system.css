@@ -2795,3 +2795,76 @@ html[data-theme] .code-lists-page .dn-list-sort-settings > .settings-input-block
 html[data-theme] .code-lists-page .dn-list-sort-settings .sort-control { width:100%; max-width:100%; min-width:0; }
 html[data-theme] .code-lists-page .dn-list-sort-settings .sort-control > * { min-width:0; }
 html[data-theme] .code-lists-page #list-order { scroll-margin-top:90px; }
+
+/* Code Lists owns view preferences. The filter editor is mounted only on request. */
+html[data-theme] .code-lists-page .dn-list-filter-preferences {
+  margin-top:20px;
+  padding-top:17px;
+  border-top:1px solid var(--color-border);
+  min-width:0;
+}
+html[data-theme] .code-lists-page .dn-list-filter-intro h4 {
+  margin:0 0 4px;
+  font-size:14px;
+  font-weight:700;
+  color:var(--color-text);
+}
+html[data-theme] .code-lists-page .dn-list-filter-intro p { margin:0 0 11px; }
+html[data-theme] .code-lists-page .dn-list-filter-switches {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+  min-width:0;
+}
+html[data-theme] .code-lists-page .dn-list-filter-switch {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-wrap:wrap;
+  gap:6px;
+  min-width:0;
+  min-height:44px;
+  padding:8px;
+  border:1px solid var(--color-border);
+  border-radius:11px;
+  background:var(--color-card);
+  color:var(--color-text);
+  font-size:12px;
+  font-weight:600;
+  cursor:pointer;
+}
+html[data-theme] .code-lists-page .dn-list-filter-switch > svg { flex:0 0 auto; color:var(--color-text-muted); }
+html[data-theme] .code-lists-page .dn-list-filter-switch > small {
+  font-size:10px;
+  font-weight:550;
+  color:var(--color-text-muted);
+}
+html[data-theme] .code-lists-page .dn-list-filter-switch.is-active {
+  border-color:var(--action-border);
+  background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
+}
+html[data-theme] .code-lists-page .dn-list-filter-switch:focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:2px;
+}
+html[data-theme] .code-lists-page .dn-list-filter-expanded {
+  margin-top:12px;
+  padding:13px;
+  min-width:0;
+  border:1px solid var(--color-border);
+  border-radius:13px;
+  background:var(--color-surface);
+}
+html[data-theme] .code-lists-page .dn-code-list-filter-editor { min-width:0; }
+html[data-theme] .code-lists-page .dn-code-list-filter-editor .dn-conditions { max-width:100%; }
+html[data-theme] .code-lists-page .dn-code-list-filter-editor .dn-conditions-actions { flex-wrap:wrap; }
+html[data-theme] .code-lists-page .dn-code-list-filter-editor > .code-list-description { margin:10px 0 0; }
+@media(max-width:570px) {
+  html[data-theme] .code-lists-page .dn-list-filter-switches { grid-template-columns:1fr; }
+  html[data-theme] .code-lists-page .dn-list-filter-switch {
+    justify-content:flex-start;
+    padding:10px 13px;
+  }
+  html[data-theme] .code-lists-page .dn-list-filter-switch > small { margin-left:auto; }
+  html[data-theme] .code-lists-page .dn-list-filter-expanded { padding:9px; }
+}

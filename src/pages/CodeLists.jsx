@@ -12,9 +12,9 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { ArrowLeft, BellRing, Check, Hash, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
+import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -25,6 +25,13 @@ import SwipeActionCard from '../components/common/SwipeActionCard';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import SortControl from '../components/common/SortControl';
+import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
+import useConditionFilters from '../hooks/useConditionFilters';
+import useScopedMoments from '../hooks/useScopedMoments';
+import { momentConditions, momentConditionRecord, activityConditions, activityEntryConditionRecord, transactionConditions } from '../utils/listConditionMigration';
+import { projectActivities } from '../utils/activityRecords';
+import { getActiveSampleScenario } from '../dev/sampleData';
+import { toTransactions } from '../utils/transactionFilters';
 import usePersistentListState from '../hooks/usePersistentListState';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
 import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, TRANSACTION_SORT_VALUES, transactionSortForField } from '../utils/userListSort';
@@ -394,17 +401,80 @@ const FINANCE_SORT_RULES = Object.freeze({
   sort: TRANSACTION_SORT_VALUES,
 });
 
+
+// Use precisely the same keys, schemas and migration defaults as each main list.
+// Mount this editor only when requested, to avoid loading finance on ordinary Settings visits.
+function ListFilterPreferences({ domain }) {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const uid = user?.uid;
+  const scope = `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+  const scoped = useScopedMoments();
+  const incomes = useIncomeStore((state) => state.incomes);
+  const incomeScope = useIncomeStore((state) => state.loadedFor);
+  const incomeError = useIncomeStore((state) => state.error);
+  const loadIncomes = useIncomeStore((state) => state.loadIncomes);
+  const expenses = useExpenseStore((state) => state.expenses);
+  const expenseScope = useExpenseStore((state) => state.loadedFor);
+  const expenseError = useExpenseStore((state) => state.error);
+  const loadExpenses = useExpenseStore((state) => state.loadExpenses);
+  const settings = domain === 'moments' ? MOMENT_SORT_DEFAULTS
+    : domain === 'activities' ? ACTIVITY_LIST_DEFAULTS : FINANCE_SORT_DEFAULTS;
+  const rules = domain === 'moments' ? MOMENT_SORT_RULES
+    : domain === 'activities' ? ACTIVITY_LIST_RULES : FINANCE_SORT_RULES;
+  const [filters] = usePersistentListState(domain, settings, rules);
+  const isFinance = domain === 'transactions';
+  useEffect(() => {
+    if (!isFinance || (!uid && !isGuest)) return;
+    loadIncomes(uid, isGuest);
+    loadExpenses(uid, isGuest);
+  }, [isFinance, uid, isGuest, loadIncomes, loadExpenses]);
+  const isFinanceReady = incomeScope === scope && expenseScope === scope;
+  const records = useMemo(() => {
+    if (isFinance) return isFinanceReady ? toTransactions(incomes, expenses) : [];
+    if (!scoped.ready) return [];
+    if (domain === 'moments') return scoped.events.map(momentConditionRecord);
+    return projectActivities(scoped.events).map(activityEntryConditionRecord);
+  }, [domain, isFinance, isFinanceReady, incomes, expenses, scoped.ready, scoped.events]);
+  const initialGroup = domain === 'moments' ? momentConditions(filters)
+    : domain === 'activities' ? activityConditions(filters) : transactionConditions(filters);
+  const sample = getActiveSampleScenario(uid);
+  const config = isFinance ? { initialGroup, moments: scoped.events }
+    : { initialGroup, contextKey: sample };
+  const conditions = useConditionFilters(domain, records, usePersistentListState, config);
+  const notSignedIn = !uid && !isGuest;
+  const loading = !notSignedIn && (!scoped.ready || (isFinance && !isFinanceReady));
+  const error = Boolean(scoped.loadError || (isFinance && (incomeError || expenseError)));
+  const retry = () => {
+    scoped.retry();
+    if (isFinance) { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }
+  };
+  return <div className="dn-code-list-filter-editor" aria-label={`${domain} filter preferences`}>
+    {notSignedIn ? <p className="settings-helper">Sign in or continue as Guest to change your list filters.</p>
+      : error ? <div role="alert" className="settings-helper">
+        Your filter choices are saved, but records could not be loaded.
+        <button type="button" className="settings-secondary-button" onClick={retry}>Retry loading filters</button>
+      </div>
+        : loading ? <p className="settings-helper" role="status">Loading your available filter choices…</p>
+          : <>
+            <ConditionBuilder filter={conditions} title={`${domain} filters`} showChips />
+            <p className="code-list-description">These filters apply immediately to your ${domain === 'moments' ? 'Moments' : domain === 'activities' ? 'Activities' : 'Transactions'} page. Changes are remembered in this browser.</p>
+          </>}
+  </div>;
+}
+
 function ListOrderingPreferences() {
   const [moments, setMoments] = usePersistentListState('moments', MOMENT_SORT_DEFAULTS, MOMENT_SORT_RULES);
   const [activities, setActivities] = usePersistentListState('activities', ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES);
   const [finance, setFinance] = usePersistentListState('transactions', FINANCE_SORT_DEFAULTS, FINANCE_SORT_RULES);
   const [financeField, financeDirection] = finance.sort.split('-');
-  return <section className="settings-section code-list-section" id="list-order" aria-label="List sorting preferences">
+  const [editingFilters, setEditingFilters] = useState(null);
+  return <section className="settings-section code-list-section" id="list-order" aria-label="List sorting and filters preferences">
     <div className="settings-section-heading">
       <span className="settings-accordion-icon"><Hash size={18} aria-hidden="true" /></span>
-      <div><h3>List sorting</h3></div>
+      <div><h3>List sorting and filters</h3></div>
     </div>
-    <p className="code-list-description">Choose which fields order your lists. Changes apply immediately to this browser's current Guest or account view, without changing records or shared Code List values. Each Moment's own Activity list keeps its separate remembered order.</p>
+    <p className="code-list-description">Choose how your lists are sorted and filtered. These are browser-local preferences for the current Guest or account, not changes to saved records or Code List values. Each Moment's Activities tab keeps its own independent view.</p>
     <div className="settings-admin-grid dn-list-sort-settings">
       <div className="settings-input-block">
         <span>Moments</span>
@@ -426,17 +496,33 @@ function ListOrderingPreferences() {
           onToggleDirection={() => setFinance({ sort: `${financeField}-${financeDirection === 'asc' ? 'desc' : 'asc'}` })} />
       </div>
     </div>
+    <div className="dn-list-filter-preferences">
+      <div className="dn-list-filter-intro">
+        <h4>List filters</h4>
+        <p className="code-list-description">Choose filter fields, comparisons and values for each main list, using the same filters as on those pages.</p>
+      </div>
+      <div className="dn-list-filter-switches" role="group" aria-label="Choose list filters to edit">
+        {[
+          { domain: 'moments', label: 'Moments' },
+          { domain: 'activities', label: 'Activities' },
+          { domain: 'transactions', label: 'Transactions' },
+        ].map(({ domain, label }) => <button key={domain} type="button"
+          className={`dn-list-filter-switch${editingFilters === domain ? ' is-active' : ''}`}
+          aria-expanded={editingFilters === domain} aria-controls={`dn-filter-editor-${domain}`}
+          onClick={() => setEditingFilters((current) => current === domain ? null : domain)}>
+          <ListFilter size={15} aria-hidden="true" /><span>{label} filters</span>
+          <small>{editingFilters === domain ? 'Close' : 'Edit'}</small>
+        </button>)}
+      </div>
+      {editingFilters ? <div className="dn-list-filter-expanded" id={`dn-filter-editor-${editingFilters}`}>
+        <ListFilterPreferences key={editingFilters} domain={editingFilters} />
+      </div> : null}
+    </div>
   </section>;
 }
 
 export default function CodeLists() {
   const navigate = useNavigate();
-  const location = useLocation();
-  useEffect(() => {
-    if (location.hash !== '#list-order') return undefined;
-    const frame = requestAnimationFrame(() => document.getElementById('list-order')?.scrollIntoView({ block: 'start' }));
-    return () => cancelAnimationFrame(frame);
-  }, [location.hash]);
   const user = useAppStore((state) => state.user);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
