@@ -26,7 +26,12 @@ test('Moments page exports a real multi-page PDF with photo previews and no file
   await page.keyboard.press('Enter');
   await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
   const summary = page.getByRole('dialog', { name: 'Moment summary', exact: true });
-  await expect(summary.locator('.moment-summary-media .dn-attachment-open img')).toHaveCount(3);
+  const tiles = summary.locator('.moment-summary-media .dn-attachment-tile');
+  await expect(tiles).toHaveCount(3);
+  for (let index = 0; index < 3; index += 1) {
+    await tiles.nth(index).scrollIntoViewIfNeeded();
+    await expect(tiles.nth(index).locator('img')).toBeVisible();
+  }
   await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
   await expect(summary.getByRole('button', { name: 'Preview Activity photo 1.png' })).toBeVisible();
   const action = summary.getByRole('button', { name: 'Download summary PDF' });

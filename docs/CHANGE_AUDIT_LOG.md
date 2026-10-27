@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261027-121 | Verify lazy summary photos at their actual viewport position
+- GitHub CI 40550811870 passed 408/408 Node tests, lint, documentation and 108/109 Chromium tests. The only browser failure was a new Moments-page PDF regression expecting all `img` elements immediately, but `AttachmentGallery` intentionally creates photo elements only when their tiles enter the viewport via `IntersectionObserver`. The same run passed the actual edited Transaction → Linked Moment optional search/save test and the Dashboard PDF report download.
+- Updated the new Moments-page regression to assert the actual attachment-tile count first, then reveal each tile before verifying its preview. This retains lazy loading, prevents eager original-file reads, and preserves the new no-caption assertion. No runtime feature or business data was changed.
+- **Validation at authoring:** complete CI rerun and production build pending. No main or Firebase publish.
+
 ## CHG-20261027-120 | Clear PDF lint gate and preserve keyboard access to optional transaction search
 - First CI after CHG-119 (run 40550500733) passed all 408/408 Node tests and documentation checks but lint stopped on the PDF filename sanitizer's explicit C0 control character range. Replaced that regex control range with the Unicode General Category `Cc` form accepted by the repository's strict `no-control-regex` rule, without weakening filename sanitization.
 - Explicit Search buttons in portaled linked-transaction dropdowns now own their Enter/Space keyboard activation rather than triggering the parent dropdown's option-commit logic. This is an accessibility regression prevention, with the existing choice-first, on-demand search design unchanged.
