@@ -12,6 +12,8 @@ export default function DashboardGreeting({ now = new Date() }) {
   const isGuest = useAppStore((state) => state.isGuest);
   const name = dashboardProfileName(user, isGuest);
   const salutation = dashboardGreeting(now);
+  // Explicit punctuation is consistent across browser/Node Intl implementations.
+  const displayDate = `${now.toLocaleDateString('en-GB', { weekday: 'long' })}, ${now.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
 
   return <header className="dashboard-greeting dashboard-greeting-compact" aria-label="Dashboard greeting">
     <div className="dashboard-greeting-topline">
@@ -21,7 +23,7 @@ export default function DashboardGreeting({ now = new Date() }) {
     <h2 className="dashboard-greeting-title">{salutation}, {name}</h2>
     <time className="dashboard-greeting-date"
       dateTime={`${dashboardMonthKey(now)}-${String(now.getDate()).padStart(2, '0')}`}>
-      {now.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+      {displayDate}
     </time>
     <div className="dashboard-greeting-copy">
       <p>A fresh day, a few good moments ahead.</p>
