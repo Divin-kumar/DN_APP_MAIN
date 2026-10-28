@@ -138,7 +138,7 @@ const taskTime = (entry) => {
   const activity = entry.activity || {};
   for (const raw of [activity.time, activity.dueTime, activity.startTime]) {
     if (typeof raw !== 'string') continue;
-    const match = /^(\\d{1,2}):(\\d{2})(?::\\d{2})?$/.exec(raw.trim());
+    const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(raw.trim());
     if (!match) continue;
     const hour = Number(match[1]), minute = Number(match[2]);
     if (hour <= 23 && minute <= 59) return `${String(hour).padStart(2, '0')}:${match[2]}`;
