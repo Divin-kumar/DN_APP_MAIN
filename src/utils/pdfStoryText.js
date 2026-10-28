@@ -23,7 +23,7 @@ export const pdfStoryText = (value) => {
     .replace(FORMAT_TAG, '')
     .replace(/&(?:(amp|lt|gt|quot|apos|nbsp)|#x([0-9a-f]+)|#([0-9]+));/gi, decodeEntity)
     .replace(/[ \t]+\n/g, '\n')
-    .replace(/\n{3,}/g, '\n\n')
+    .replace(/\n{2,}/g, '\n')
     .trim();
   return plainRichText(normalized);
 };
