@@ -396,7 +396,7 @@ export function EventWorkspaceContent() {
   const renderSectionContent = () => {
     if (activeSection.label === 'Overview') {
       return (
-        <div className="event-moment-overview">
+        <div className="event-moment-overview dn-v2-story-overview">
           <MomentStory moment={event} momentTypes={momentTypes} uid={user?.uid} isGuest={isGuest}
             onEditIntro={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }} />
           <MomentContents moment={event} finance={finance} />

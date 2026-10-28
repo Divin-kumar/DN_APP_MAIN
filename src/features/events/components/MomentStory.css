@@ -51,3 +51,7 @@ html[data-theme] .dn-v2-story-reflections article { min-width:0;padding:14px;bor
 html[data-theme] .dn-v2-story-reflections article h4 { margin:0 0 9px;color:var(--color-text);font-size:.85rem; }
 html[data-theme] .dn-v2-story-reflections .free-text-content { color:var(--color-text-muted);font-size:.78rem;line-height:1.6;overflow-wrap:anywhere; }
 @media(max-width:680px) { html[data-theme] .dn-v2-story-day { grid-template-columns:minmax(0,1fr);gap:6px; } html[data-theme] .dn-v2-story-day-date { padding:3px 0 0 5px; } html[data-theme] .dn-v2-story-entry { padding:12px;gap:9px; } }
+
+/* Override the legacy two-column Overview so Story chapters are never squeezed. */
+html[data-theme] .event-moment-overview.dn-v2-story-overview { display:grid !important;grid-template-columns:minmax(0,1fr) !important;gap:20px;min-width:0; }
+html[data-theme] .dn-v2-story-overview > .moment-contents { min-width:0; }
