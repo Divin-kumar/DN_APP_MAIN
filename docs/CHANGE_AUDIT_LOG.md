@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-125 | DN 2.0 Phase 3 Moment Story workspace (OldVersion only)
+- Connected Phase 1 read-only chronology to Moment Overview. Added responsive month/day chapters, status-aware Activity links and scoped linked attachment galleries, separate future unfinished and undated entries, existing editable Moment notes as introduction, and preserved Moment-level/orphan keepsakes.
+- Removed standalone Memories navigation/Contents entry and both quick-create Memory shortcuts; stopped contextual new-Memory creation. Legacy Memories are preserved as read-only Earlier reflections with no fabricated occurrence dates. The old /events/:id/memories route remains a compatible Story view; original Activity, finance, attachments, search/sort, PDF, backup and account/Guest boundaries are unchanged.
+- Phase 4 type-aware visual treatments and Phase 6 PDF Studio remain separate. **Verification at authoring:** source-derived; OldVersion CI pending. No main write, PR or Firebase deployment.
+
 ## CHG-20261028-124 | Preserve Moment-card keyboard action-menu behavior and browser coverage
 - During Phase 2 source review, retained the existing focused-card Enter/Space action-menu contract (instead of changing Enter to navigate) while the distinct Open button and visible accessible action-menu control stay available. This preserves existing summary/open-menu Chromium flows and swipe gestures. No data or business behavior changed.
 - Added Chromium coverage for the latest Activity preview, 320/390/768/1280 viewport containment, accessible menu controls, unchanged Guest records, and lazy saved-original photo covers.

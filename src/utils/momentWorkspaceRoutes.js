@@ -19,7 +19,7 @@ export const getMomentWorkspaceKey = (pathname) => {
 
 export const getMomentWorkspaceSection = (pathname) => {
   const section = matchWorkspaceRoute(pathname)?.[2];
-  return !section || section === 'timeline' ? 'overview' : section;
+  return !section || section === 'timeline' || section === 'memories' ? 'overview' : section;
 };
 
 // Keep one mounted Moment workspace when changing its section. Different

@@ -36,6 +36,7 @@ import { activityDateLabel, activityDetailPath } from '../../../utils/activityDe
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import LinkedTransactions from '../../finance/components/LinkedTransactions';
 import MomentContents from './MomentContents';
+import MomentStory from './MomentStory';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
@@ -78,7 +79,6 @@ export function EventWorkspaceContent() {
   const workspaceNavRef = useRef(null);
   const attachmentInputRef = useRef(null);
   const attachmentContextRef = useRef(null);
-  const memoryContextRef = useRef(null);
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -107,11 +107,6 @@ export function EventWorkspaceContent() {
   const [activityError, setActivityError] = useState('');
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
-  const [memoryDialogOpen, setMemoryDialogOpen] = useState(false);
-  const [memoryTitle, setMemoryTitle] = useState('');
-  const [memoryBody, setMemoryBody] = useState('');
-  const [memoryExpanded, setMemoryExpanded] = useState(false);
-  const [pendingDeleteMemory, setPendingDeleteMemory] = useState(null);
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
   const [attachmentDraft, setAttachmentDraft] = useState(null);
   const [attachmentActivityId, setAttachmentActivityId] = useState('');
@@ -147,21 +142,15 @@ export function EventWorkspaceContent() {
     workspaceMountedRef.current = true;
     const receiveCreate = (request) => {
       const context = request.detail;
-      if (!['memory', 'attachment'].includes(context?.kind) || !resolveCreateMoment(context)) return;
-      if (context.kind === 'memory') {
-        memoryContextRef.current = { eventId, scope: workspaceScope };
-        setMemoryDialogOpen(true);
-      } else {
-        attachmentContextRef.current = { eventId, scope: workspaceScope };
-        attachmentInputRef.current?.click();
-      }
+      if (context?.kind !== 'attachment' || !resolveCreateMoment(context)) return;
+      attachmentContextRef.current = { eventId, scope: workspaceScope };
+      attachmentInputRef.current?.click();
     };
     window.addEventListener('dn:moment-create', receiveCreate);
     return () => {
       workspaceMountedRef.current = false;
       window.removeEventListener('dn:moment-create', receiveCreate);
       attachmentContextRef.current = null;
-      memoryContextRef.current = null;
     };
   }, [eventId, workspaceScope]);
 
@@ -182,7 +171,6 @@ export function EventWorkspaceContent() {
     navigate(location.pathname, { replace: true });
   }, [location.pathname, location.search, navigate]);
 
-  useEffect(() => setMemoryExpanded(false), [eventId]);
 
   const event = events.find((item) => (item.id || item.firestoreId) === eventId);
   const conditionRecords = useMemo(() => (event?.activities || []).map(activityConditionRecord), [event?.activities]);
@@ -239,7 +227,6 @@ export function EventWorkspaceContent() {
     { label: 'Overview', path: `/events/${encodeURIComponent(eventId)}/overview`, detail: 'Event details and current status', icon: FileText },
     { label: 'Activities', path: `/events/${encodeURIComponent(eventId)}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
     { label: 'Transactions', path: `/events/${encodeURIComponent(eventId)}/transactions`, detail: 'Income and expenses linked to this Moment', icon: Receipt },
-    { label: 'Memories', path: `/events/${encodeURIComponent(eventId)}/memories`, detail: `${event.memories?.length || 0} memories saved`, icon: BookHeart },
     { label: 'Attachments', path: `/events/${encodeURIComponent(eventId)}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
   ];
   const sectionName = getMomentWorkspaceSection(location.pathname);
@@ -270,13 +257,8 @@ export function EventWorkspaceContent() {
     return matchesSearch && activityConditions.matches(activityConditionRecord(activity));
   });
   const totalSpent = finance.summary.expense;
-  const activeActivities = activities.filter((activity) => !activity.cancelled && activity.status !== 'cancelled');
-  const completedActivities = activeActivities.filter((activity) => activity.completed).length;
   const memoryCount = (event.memories || []).length;
   const attachments = event.attachments || [];
-  const latestMemory = [...(event.memories || [])].sort((first, second) => new Date(second.createdAt || 0) - new Date(first.createdAt || 0))[0];
-  const latestMemoryBody = String(latestMemory?.body || '');
-  const latestMemoryNeedsExpansion = latestMemoryBody.length > 110 || latestMemoryBody.split(/\r\n|\r|\n/).length > 3;
   const eventDateValue = new Date(event.date || event.startDate || event.createdAt);
   const validEventDate = !Number.isNaN(eventDateValue.getTime());
   const daysUntilEvent = validEventDate ? Math.ceil((new Date(eventDateValue.getFullYear(), eventDateValue.getMonth(), eventDateValue.getDate()).getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / 86400000) : null;
@@ -341,33 +323,6 @@ export function EventWorkspaceContent() {
     submitEvent.preventDefault();
     await updateEventItem(user?.uid, isGuest, { ...event, notes: notesDraft });
     setNotesDialogOpen(false);
-  };
-
-  const saveMemory = async (submitEvent) => {
-    submitEvent.preventDefault();
-    if (!memoryTitle.trim()) return;
-    const currentMoment = resolveCreateMoment(memoryContextRef.current);
-    if (!currentMoment) {
-      showToast('This Moment is no longer available in the active session. Please reopen it.', 'danger');
-      return;
-    }
-    await updateEventItem(user?.uid, isGuest, {
-      ...currentMoment,
-      memories: [...(currentMoment.memories || []), {
-        id: crypto.randomUUID(),
-        title: memoryTitle.trim(),
-        body: memoryBody,
-        createdAt: new Date().toISOString(),
-      }],
-    });
-    setMemoryTitle('');
-    setMemoryBody('');
-    setMemoryDialogOpen(false);
-  };
-
-  const removeMemory = async (memoryId) => {
-    await updateEventItem(user?.uid, isGuest, { ...event, memories: (event.memories || []).filter((memory) => memory.id !== memoryId) });
-    setPendingDeleteMemory(null);
   };
 
   const addAttachment = (changeEvent) => {
@@ -442,9 +397,9 @@ export function EventWorkspaceContent() {
     if (activeSection.label === 'Overview') {
       return (
         <div className="event-moment-overview">
+          <MomentStory moment={event} momentTypes={momentTypes} uid={user?.uid} isGuest={isGuest}
+            onEditIntro={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }} />
           <MomentContents moment={event} finance={finance} />
-
-          {event.notes ? <section className="event-reflection-note"><div className="event-overview-section-title"><span>Why this moment matters</span><button type="button" onClick={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}>Edit</button></div><RichText value={event.notes} className="free-text-content" /></section> : null}
         </div>
       );
     }
@@ -494,16 +449,6 @@ export function EventWorkspaceContent() {
       );
     }
 
-    if (activeSection.label === 'Memories') {
-      return (
-        <div className="workspace-resource-list">
-          {event.memories?.length ? event.memories.map((memory) => (
-            <div className="workspace-resource-row workspace-memory-card" key={memory.id}><span className="workspace-memory-kind"><BookHeart size={15} />{/decision/i.test(memory.title || '') ? 'Key decision' : /milestone|first|achievement/i.test(memory.title || '') ? 'Milestone' : 'Memory note'}</span><div><strong>{memory.title}</strong><RichText className="workspace-memory-body free-text-preview is-truncated" value={memory.body || 'A memory worth keeping.'} /><small>{formatDate(memory.createdAt)}</small></div><button type="button" onClick={() => setPendingDeleteMemory(memory)} style={styles.iconButtonDanger} aria-label={`Remove ${memory.title}`}><Trash2 size={15} /></button></div>
-          )) : <div className="workspace-empty-surface"><BookHeart size={24} /><strong>Memory space ready</strong><p>Capture the stories and favorite moments that make {event.name} meaningful.</p></div>}
-        </div>
-      );
-    }
-
     return <div className="workspace-empty-surface"><Download size={24} /><strong>Export summary</strong><p>A printable summary for {event.name} will be available here.</p><button type="button" className="primaryButton" onClick={printSummary} style={styles.primaryButton}>Print summary</button></div>;
   };
 
@@ -535,7 +480,7 @@ export function EventWorkspaceContent() {
             {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge + 1}</span> : null}
             <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
           </div>
-          <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Memories <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
+          <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Reflections <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
         </div>
       </header>
       </SwipeActionCard>
@@ -551,7 +496,6 @@ export function EventWorkspaceContent() {
             <section.icon size={16} />
             <span>{section.label}</span>
             {section.label === 'Activities' && activities.length ? <small>{activities.length}</small> : null}
-            {section.label === 'Memories' && memoryCount ? <small>{memoryCount}</small> : null}
           </Link>
         ))}
       </nav>
@@ -561,8 +505,8 @@ export function EventWorkspaceContent() {
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
       <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
         <div className="event-section-heading">
-          <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.label === 'Memories' ? 'Hold on to this' : activeSection.detail}</span>
-          <h2>{activeSection.label === 'Overview' ? 'A moment worth keeping' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label === 'Memories' ? 'Memories' : activeSection.label}</h2>
+          <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.detail}</span>
+          <h2>{activeSection.label === 'Overview' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
@@ -626,16 +570,6 @@ export function EventWorkspaceContent() {
           </form>
         </ModalDialog>
       ) : null}
-      {memoryDialogOpen ? (
-        <ModalDialog title="Add memory" onClose={() => setMemoryDialogOpen(false)}>
-          <form onSubmit={saveMemory} style={{ display: 'grid', gap: '12px' }}>
-            <input value={memoryTitle} onChange={(eventChange) => setMemoryTitle(eventChange.target.value)} placeholder="Memory title" style={styles.input} autoFocus />
-            <RichTextEditor label="Memory notes" value={memoryBody} onChange={setMemoryBody} placeholder="What do you want to remember?" rows={6} />
-            <div className="dialog-actions" style={styles.dialogActions}><button type="button" className="secondaryButton" onClick={() => setMemoryDialogOpen(false)}>Cancel</button><button type="submit" className="primaryButton" style={styles.primaryButton}>Save memory</button></div>
-          </form>
-        </ModalDialog>
-      ) : null}
-      {pendingDeleteMemory ? <ConfirmDialog title="Remove memory?" message={`Remove “${pendingDeleteMemory.title}” from this event?`} onCancel={() => setPendingDeleteMemory(null)} onConfirm={() => removeMemory(pendingDeleteMemory.id)} /> : null}
       {pendingDeleteAttachment ? <ConfirmDialog title="Remove attachment?" message={`Remove “${pendingDeleteAttachment.name}” from this event?`} onCancel={() => setPendingDeleteAttachment(null)} onConfirm={() => removeAttachment(pendingDeleteAttachment.id)} /> : null}
       {pendingDeleteEvent ? (
         <ConfirmDialog

@@ -261,7 +261,7 @@ export default function DashboardLayout() {
   };
 
   const beginMomentCreate = (kind) => {
-    if (!workspaceMoment) return;
+    if (!workspaceMoment || kind !== 'attachment') return;
     setQuickCreateOpen(false);
     // Keep file selection inside this click; navigating or deferring it can
     // discard the user gesture required by mobile browsers.
@@ -445,7 +445,6 @@ export default function DashboardLayout() {
               <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
               <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
               <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
-              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('memory')}><BookHeart size={17} /><span>Memory</span></button> : null}
               {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
             </div>
           ) : null}
@@ -461,7 +460,6 @@ export default function DashboardLayout() {
             <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
             <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
-            {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('memory')}><BookHeart size={17} /><span>Memory</span></button> : null}
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
         ) : null}
