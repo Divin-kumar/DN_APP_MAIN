@@ -292,6 +292,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   // A cover photo is part of the book, not another copy in the body.
   const coverHero = options.includeCover && template === 'journey'
     ? story.keepsakes.find((item) => isAttachmentImage(item.type)) : null;
+  let drawnCoverHero = null;
   if (options.includeCover) {
     pdf.y += 100;
     await pdf.text(PDF_TEMPLATE_NAMES[template].toUpperCase(), { size: 12, bold: true, color: palette.accent, after: 26 });
@@ -303,7 +304,10 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       const photo = await pdf.photo(coverHero, scope, {
         large: true, fitToRemaining: true, reserveAfter: 18,
       });
-      if (photo) layout.push({ kind: 'cover', imagePage: photo.page });
+      if (photo) {
+        drawnCoverHero = coverHero;
+        layout.push({ kind: 'cover', imagePage: photo.page });
+      }
     }
     await pdf.finishPage();
     pdf.begin();
@@ -321,7 +325,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   }
 
   if (template === 'journey') {
-    const remainingKeepsakes = story.keepsakes.filter((item) => item !== coverHero);
+    const remainingKeepsakes = story.keepsakes.filter((item) => item !== drawnCoverHero);
     if (remainingKeepsakes.length) {
       await pdf.heading('Photographs to remember', { keepWithNext: 135 });
       await pdf.attachments(remainingKeepsakes, scope, {
@@ -332,13 +336,18 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       const first = day.entries[0];
       const firstHasPhoto = first?.attachments?.some((item) => isAttachmentImage(item.type));
       await pdf.heading(studioDate(day.date), { keepWithNext: firstHasPhoto ? 330 : 105 });
-      const datePage = pdf.pageNumber;
       for (const entry of day.entries) {
         const hasPhoto = entry.attachments?.some((item) => isAttachmentImage(item.type));
         // A new chapter must not leave its date/title at the page bottom.
-        // Reserve date + title + a lead photograph and the start of its prose.
-        if (hasPhoto && entry !== first) await pdf.ensure(300);
-        if (!hasPhoto) await pdf.ensure(60);
+        // If a second same-day entry moves to a new page, repeat its real date.
+        if (entry !== first) {
+          const oldPage = pdf.pageNumber;
+          await pdf.ensure(hasPhoto ? 335 : 90);
+          if (pdf.pageNumber !== oldPage) {
+            await pdf.heading(studioDate(day.date), { keepWithNext: hasPhoto ? 315 : 80 });
+          }
+        }
+        const datePage = pdf.pageNumber;
         const titlePage = pdf.pageNumber;
         await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 9 });
         const photos = entry.attachments.filter((item) => isAttachmentImage(item.type));
