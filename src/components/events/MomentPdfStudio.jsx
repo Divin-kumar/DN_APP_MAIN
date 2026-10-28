@@ -29,6 +29,8 @@ export default function MomentPdfStudio({ event, onClose }) {
   const [pageIndex, setPageIndex] = useState(0);
   const requestRef = useRef(0);
   const urlsRef = useRef([]);
+  const settingsRef = useRef(settings);
+  const customizedRef = useRef(false);
 
   const renderPreview = useCallback(async (next) => {
     const id = ++requestRef.current;
@@ -55,10 +57,15 @@ export default function MomentPdfStudio({ event, onClose }) {
     }
   }, [event, momentTypes]);
 
-  // Opening Studio prepares real PDF pages once. Further changes only render
-  // when "Update preview" is chosen, to avoid repeating large local photo reads.
+  // Opening Studio prepares real pages. A source/Code List refresh must use the
+  // same choices shown by the controls, rather than silently exporting defaults.
+  // User changes still wait for an explicit "Update preview".
   useEffect(() => {
-    void renderPreview(normalizePdfStudioOptions({}, originalTemplate));
+    const next = customizedRef.current ? settingsRef.current
+      : normalizePdfStudioOptions({}, originalTemplate);
+    settingsRef.current = next;
+    setSettings(next);
+    void renderPreview(next);
     return () => {
       requestRef.current += 1;
       urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
@@ -71,7 +78,10 @@ export default function MomentPdfStudio({ event, onClose }) {
     setBusy(false);
     setDirty(true);
     setError('');
-    setSettings((current) => ({ ...current, [key]: value }));
+    const next = { ...settingsRef.current, [key]: value };
+    customizedRef.current = true;
+    settingsRef.current = next;
+    setSettings(next);
   };
   const download = () => {
     if (!preview || dirty || busy) return;

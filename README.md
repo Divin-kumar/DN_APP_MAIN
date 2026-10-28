@@ -2,6 +2,8 @@
 
 Development branch: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
 
+Approved changes are committed and pushed to `OldVersion` for owner review through the existing Vercel integration. Firebase publication remains a separately authorized step after that review; see [agent rules](AGENTS.md).
+
 - [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
 - [Agent rules](AGENTS.md) — authorization, development and documentation workflow.

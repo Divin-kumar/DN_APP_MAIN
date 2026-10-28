@@ -128,17 +128,22 @@ export class MomentPdfPainter {
     }
     this.y += after * (this.density === 'airy' ? 1.2 : this.density === 'compact' ? .74 : 1);
   }
-  async heading(title, { keepWithNext = 0 } = {}) {
+  async heading(title, { keepWithNext = this.template === 'legacy' ? 0 : 90 } = {}) {
     // Avoid orphaned dates/section titles. A leading photograph or paragraph
     // must have space *on this page*, not on the next one.
-    await this.ensure(52 + keepWithNext);
+    this.font(15, true);
+    const lines = String(title).split(/\r\n?|\n/).reduce((count, row) => count + this.wrap(row, CONTENT_WIDTH).length, 0);
+    const density = this.density === 'airy' ? 1.17 : this.density === 'compact' ? .91 : 1;
+    const after = this.density === 'airy' ? 12 : this.density === 'compact' ? 7.4 : 10;
+    const headingHeight = this.template === 'legacy' ? 52 : 32 + lines * 15 * 1.48 * density + after;
+    await this.ensure(headingHeight + keepWithNext);
     this.y += 17;
     this.ctx.fillStyle = palette.line;
     this.ctx.fillRect(INSET, this.y, CONTENT_WIDTH, 1);
     this.y += 15;
     await this.text(title, { size: 15, bold: true, color: palette.accent, after: 10 });
   }
-  async photo(attachment, context, { large = false, fitToRemaining = false, reserveAfter = 0 } = {}) {
+  async photo(attachment, context, { large = false, fitToRemaining = false, reserveAfter = 0, reportUnavailable = true } = {}) {
     if (!isAttachmentImage(attachment.type)) {
       await this.text(`Other file: ${attachment.name || 'Attachment'}`, { size: 10, color: palette.muted });
       return;
@@ -187,7 +192,7 @@ export class MomentPdfPainter {
       return { page: this.pageNumber, width, height };
     } catch (error) {
       if (String(error?.message).includes('session changed')) throw error;
-      await this.text('Photo preview unavailable on this device.', { size: 10, color: palette.muted });
+      if (reportUnavailable) await this.text('Photo preview unavailable on this device.', { size: 10, color: palette.muted });
     } finally { bitmap?.close?.(); }
   }
   async attachments(attachments, context, options = {}) {
@@ -383,10 +388,12 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const template = options.template;
   const layout = [];
   // A cover photo is part of the book, not another copy in the body.
-  const coverHero = options.includeCover && template === 'journey'
+  const coverCandidates = options.includeCover && template === 'journey'
     ? [...story.keepsakes, ...story.timeline.flatMap((month) => month.days.flatMap((day) =>
-      day.entries.flatMap((entry) => entry.attachments || [])))].find((item) => isAttachmentImage(item.type))
-    : null;
+      day.entries.flatMap((entry) => entry.attachments || []))),
+    ...(options.includeUpcoming ? story.upcoming.flatMap((entry) => entry.attachments) : []),
+    ...story.undated.flatMap((entry) => entry.attachments)].filter((item) => isAttachmentImage(item.type))
+    : [];
   let drawnCoverHero = null;
   if (options.includeCover) {
     pdf.y += 100;
@@ -395,13 +402,14 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     await pdf.text(template === 'journey' ? 'Photographs and memories' : template === 'diary' ? 'A month in words' : 'Tasks and progress',
       { size: 14, color: palette.muted, after: 23 });
     if (story.momentDate) await pdf.text(studioDate(story.momentDate), { size: 12, color: palette.muted });
-    if (coverHero) {
-      const photo = await pdf.photo(coverHero, scope, {
-        large: true, fitToRemaining: true, reserveAfter: 18,
+    for (const candidate of coverCandidates) {
+      const photo = await pdf.photo(candidate, scope, {
+        large: true, fitToRemaining: true, reserveAfter: 18, reportUnavailable: false,
       });
       if (photo) {
-        drawnCoverHero = coverHero;
-        layout.push({ kind: 'cover', imagePage: photo.page });
+        drawnCoverHero = candidate;
+        layout.push({ kind: 'cover', imagePage: photo.page, attachmentId: candidate.id });
+        break;
       }
     }
     await pdf.finishPage();
@@ -419,6 +427,29 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     await pdf.text(studioText(event.greetingCard.body), { size: 12, after: 14 });
   }
 
+  const renderJournalEntry = async (entry, { section = 'timeline', datePage = pdf.pageNumber,
+    title = entry.title || 'A memory' } = {}) => {
+    const titlePage = pdf.pageNumber;
+    await pdf.text(studioText(title), { size: 16, bold: true, after: 9 });
+    if (entry.description) await pdf.text(studioText(entry.description), {
+      size: 12, leading: 1.58, after: 18,
+    });
+    // Each selected Journal entry keeps its own photos, including entries
+    // without a date and optional future plans. Do not invent occurrence dates.
+    const photos = entry.attachments.filter((item) =>
+      isAttachmentImage(item.type) && item !== drawnCoverHero);
+    const textEndPage = pdf.pageNumber;
+    const grid = photos.length ? await pdf.photoGrid(photos, scope) : [];
+    for (const item of entry.attachments.filter((attachment) => !isAttachmentImage(attachment.type))) {
+      await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
+    }
+    layout.push({ kind: 'journal-entry', section, date: entry.date, id: entry.id,
+      datePage, titlePage, textEndPage,
+      leadPhotoPage: grid.find((item) => item.kind === 'grid')?.page ?? null,
+      gridPages: grid.filter((item) => item.kind === 'grid').map((item) => item.page),
+      photoCount: photos.length });
+  };
+
   if (template === 'journey') {
     const remainingKeepsakes = story.keepsakes.filter((item) => item !== drawnCoverHero);
     if (remainingKeepsakes.length) {
@@ -433,7 +464,6 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       const first = day.entries[0];
       await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
       for (const entry of day.entries) {
-        const hasPhoto = entry.attachments?.some((item) => isAttachmentImage(item.type));
         // A new chapter must not leave its date/title at the page bottom.
         // If a second same-day entry moves to a new page, repeat its real date.
         if (entry !== first) {
@@ -443,27 +473,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
             await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
           }
         }
-        const datePage = pdf.pageNumber;
-        const titlePage = pdf.pageNumber;
-        await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 9 });
-        if (entry.description) await pdf.text(studioText(entry.description), {
-          size: 12, leading: 1.58, after: 18,
-        });
-        // Story prose precedes the photo spread. Up to five pictures occupy a
-        // coordinated page, rather than making five isolated photo pages.
-        const photos = (entry.attachments || []).filter((item) =>
-          isAttachmentImage(item.type) && item !== drawnCoverHero);
-        const textEndPage = pdf.pageNumber;
-        const grid = hasPhoto && photos.length ? await pdf.photoGrid(photos, scope) : [];
-        const gridPage = grid.find((item) => item.kind === 'grid')?.page ?? null;
-        // Original non-photo files remain recorded with their own Activity.
-        for (const item of entry.attachments.filter((attachment) => !isAttachmentImage(attachment.type))) {
-          await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
-        }
-        layout.push({ kind: 'journal-entry', date: day.date, id: entry.id,
-          datePage, titlePage, textEndPage, leadPhotoPage: gridPage,
-          gridPages: grid.filter((item) => item.kind === 'grid').map((item) => item.page),
-          photoCount: photos.length });
+        await renderJournalEntry(entry);
       }
     }
   } else if (template === 'diary') {
@@ -495,15 +505,27 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     if (options.includeUpcoming && story.upcoming.length) {
       await pdf.heading('Upcoming');
       for (const entry of story.upcoming) {
-        await pdf.text(studioDate(entry.date) + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
-        if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+        if (template === 'journey') {
+          await pdf.ensure(74);
+          await renderJournalEntry(entry, { section: 'upcoming',
+            title: studioDate(entry.date) + '  |  ' + (entry.title || 'Future plan') });
+        } else {
+          await pdf.text(studioDate(entry.date) + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
+          if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+        }
       }
     }
     if (story.undated.length) {
       await pdf.heading('Without a recorded date');
       for (const entry of story.undated) {
-        await pdf.text(studioText(entry.title || 'Untitled entry'), { size: 12, bold: true, after: 8 });
-        if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+        if (template === 'journey') {
+          await pdf.ensure(74);
+          await renderJournalEntry(entry, { section: 'undated', datePage: null,
+            title: entry.title || 'Untitled entry' });
+        } else {
+          await pdf.text(studioText(entry.title || 'Untitled entry'), { size: 12, bold: true, after: 8 });
+          if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+        }
       }
     }
   }

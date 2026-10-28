@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
-import { addOriginal, fixtureMoments, seedGuest } from './fixtures.js';
+import { addOriginal, calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
 
 async function openStudio(page) {
   await page.goto('/events');
@@ -146,5 +146,141 @@ test('Journal keeps 1–5 photos together after the writing, with a cover photo 
     expect(entry.chapter.gridPages[0]).toBeGreaterThanOrEqual(entry.chapter.textEndPage);
     expect(entry.pages).toBeGreaterThanOrEqual(entry.chapter.gridPages[0]);
   }
+  expect(errors).toEqual([]);
+});
+
+test('a Code List refresh preserves customized controls and the actual PDF preview', async ({ page }) => {
+  const errors = await seedGuest(page);
+  const studio = await openStudio(page);
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  await studio.getByRole('combobox', { name: 'PDF story format' }).selectOption('diary');
+  await studio.getByRole('combobox', { name: 'PDF page spacing' }).selectOption('compact');
+  await studio.getByRole('checkbox', { name: /^Cover page/ }).uncheck();
+  await studio.getByRole('checkbox', { name: /^Earlier reflections/ }).check();
+  await studio.getByRole('button', { name: 'Update preview' }).click();
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  const before = await fingerprint(page);
+  const image = studio.getByRole('img', { name: 'Rendered PDF page 1' });
+  const oldUrl = await image.getAttribute('src');
+  await page.evaluate(async () => {
+    const app = (await import('/src/store/useAppStore.js')).default;
+    const values = app.getState().adminValues;
+    app.setState({ adminValues: { ...values, eventTypes: [...values.eventTypes] } });
+  });
+  await expect(image).not.toHaveAttribute('src', oldUrl);
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toHaveValue('diary');
+  await expect(studio.getByRole('combobox', { name: 'PDF page spacing' })).toHaveValue('compact');
+  await expect(studio.getByRole('checkbox', { name: /^Cover page/ })).not.toBeChecked();
+  await expect(studio.getByRole('checkbox', { name: /^Earlier reflections/ })).toBeChecked();
+  expect(await fingerprint(page)).toBe(before);
+
+  // Download still embeds the exact JPEG bytes shown by this refreshed preview.
+  const previewBytes = await image.evaluate(async (element) =>
+    Array.from(new Uint8Array(await (await fetch(element.src)).arrayBuffer())));
+  const download = page.waitForEvent('download');
+  await studio.getByRole('button', { name: 'Download customized PDF' }).click();
+  const pdf = await readFile(await (await download).path());
+  expect(pdf.includes(Buffer.from(previewBytes))).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('Journal cover skips an unavailable original and uses the first readable owned photo', async ({ page }) => {
+  const moments = fixtureMoments();
+  moments[0].activities[0].date = calendarDate(-2);
+  moments[0].activities[0].completed = true;
+  const errors = await seedGuest(page, { moments });
+  await addOriginal(page, { count: 2 });
+  await page.goto('/events');
+  const result = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const event = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    event.attachments[0].assetId = 'a'.repeat(64);
+    const before = JSON.stringify(event);
+    const book = await renderMomentStudioPdf(event, { template: 'journey', includeCover: true });
+    return { cover: book.layout.find((entry) => entry.kind === 'cover'),
+      chapter: book.layout.find((entry) => entry.id === 'shared'), unchanged: before === JSON.stringify(event) };
+  });
+  expect(result.cover).toMatchObject({ imagePage: 1, attachmentId: 'photo-0' });
+  expect(result.chapter.photoCount).toBe(1);
+  expect(result.unchanged).toBe(true);
+  expect(errors).toEqual([]);
+});
+
+test('Journal includes owned photos and files for undated and selected upcoming entries without inventing dates', async ({ page }) => {
+  const moments = fixtureMoments();
+  moments[0].activities[0].date = '';
+  moments[0].activities.push({ id: 'future-photo', title: 'Our next visit', date: calendarDate(10), completed: false });
+  const errors = await seedGuest(page, { moments });
+  await addOriginal(page, { count: 2 });
+  await page.goto('/events');
+  const cases = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const event = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    event.attachments.push({ ...event.attachments[1], id: 'future-photo-file', activityId: 'future-photo' },
+      { id: 'future-document', name: 'Next visit.pdf', type: 'application/pdf', activityId: 'future-photo' });
+    const before = JSON.stringify(event);
+    const originalDraw = CanvasRenderingContext2D.prototype.drawImage;
+    const originalText = CanvasRenderingContext2D.prototype.fillText;
+    const cases = [];
+    try {
+      for (const options of [
+        { template: 'journey', includeUpcoming: true }, { template: 'journey', includeUpcoming: false },
+        { template: 'diary', includeUpcoming: true }, { template: 'chronicle' },
+      ]) {
+        let photoCount = 0;
+        const text = [];
+        CanvasRenderingContext2D.prototype.drawImage = function (...args) { photoCount += 1; return originalDraw.apply(this, args); };
+        CanvasRenderingContext2D.prototype.fillText = function (...args) { text.push(args[0]); return originalText.apply(this, args); };
+        const book = await renderMomentStudioPdf(event, { ...options, includeCover: false });
+        cases.push({ options, photoCount, text: text.join('\n'), layout: book.layout,
+          unchanged: before === JSON.stringify(event) });
+      }
+    } finally {
+      CanvasRenderingContext2D.prototype.drawImage = originalDraw;
+      CanvasRenderingContext2D.prototype.fillText = originalText;
+    }
+    return cases;
+  });
+  expect(cases.map((entry) => entry.photoCount)).toEqual([4, 3, 0, 0]);
+  expect(cases.every((entry) => entry.unchanged)).toBe(true);
+  expect(cases[0].layout.find((entry) => entry.id === 'shared')).toMatchObject({ section: 'undated', date: null, datePage: null, photoCount: 2 });
+  expect(cases[0].layout.find((entry) => entry.id === 'future-photo')).toMatchObject({ section: 'upcoming', date: calendarDate(10), photoCount: 1 });
+  expect(cases[0].text).toContain('Other file: Next visit.pdf');
+  expect(cases[1].text).not.toContain('Next visit.pdf');
+  expect(cases[1].layout.some((entry) => entry.id === 'future-photo')).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('public Guest Journal keeps the reflections heading with its writing on the actual rendered page', async ({ page }) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await page.goto('/login');
+  await page.getByRole('button', { name: 'Continue as Guest' }).click();
+  await page.goto('/events');
+  await expect.poll(() => page.evaluate(() =>
+    JSON.parse(localStorage.getItem('dn_dev_fixture_data') || 'null')?.imagesReady), { timeout: 20000 }).toBe(true);
+  const pages = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const event = JSON.parse(localStorage.getItem('dn_dev_fixture_data')).events[0];
+    const draw = CanvasRenderingContext2D.prototype.fillText;
+    const canvases = new WeakMap();
+    let count = 0;
+    const writing = {};
+    CanvasRenderingContext2D.prototype.fillText = function (...args) {
+      if (!canvases.has(this.canvas)) canvases.set(this.canvas, ++count);
+      if (['Earlier reflections', 'Why we keep photos', 'Pictures hold the scene. Our words hold the feeling.'].includes(args[0])) {
+        writing[args[0]] = canvases.get(this.canvas);
+      }
+      return draw.apply(this, args);
+    };
+    try {
+      await renderMomentStudioPdf(event, { template: 'journey', includeReflections: true });
+      return writing;
+    } finally { CanvasRenderingContext2D.prototype.fillText = draw; }
+  });
+  expect(pages['Earlier reflections']).toBeGreaterThan(0);
+  expect(pages['Why we keep photos']).toBe(pages['Earlier reflections']);
+  expect(pages['Pictures hold the scene. Our words hold the feeling.']).toBe(pages['Earlier reflections']);
   expect(errors).toEqual([]);
 });
