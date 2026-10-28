@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-126 | Phase 2 acceptance closed and Phase 3 documentation reconciled
+- Owner confirmed all Phase 2 Guest/manual acceptance checks passed, with no observations; Phase 2 is closed on OldVersion at f1561a7e (GitHub unit, lint, browser, build and governance CI all green). This is a development-baseline acceptance, **not** a Firebase deployment or DN 2.0.0 release.
+- The Phase 3 Story work continues after acceptance and is subject to its own CI and manual review. The master now distinguishes the mounted Phase 2/3 Story consumers from unchanged Dashboard/summary/PDF/backup consumers. No business-data migration, main changes or release publication.
+
 ## CHG-20261028-125 | DN 2.0 Phase 3 Moment Story workspace (OldVersion only)
 - Connected Phase 1 read-only chronology to Moment Overview. Added responsive month/day chapters, status-aware Activity links and scoped linked attachment galleries, separate future unfinished and undated entries, existing editable Moment notes as introduction, and preserved Moment-level/orphan keepsakes.
 - Removed standalone Memories navigation/Contents entry and both quick-create Memory shortcuts; stopped contextual new-Memory creation. Legacy Memories are preserved as read-only Earlier reflections with no fabricated occurrence dates. The old /events/:id/memories route remains a compatible Story view; original Activity, finance, attachments, search/sort, PDF, backup and account/Guest boundaries are unchanged.
