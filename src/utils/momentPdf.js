@@ -7,6 +7,8 @@ import { plainRichText } from './richText';
 import { summaryAttachmentsFor, sortedSummaryActivities } from './summaryAttachments';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
 import { downloadBlob } from './download';
+import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES } from './pdfStudioOptions';
 
 const SCALE = 1.65;
 const INSET = 43;
@@ -37,10 +39,12 @@ const imageFromBlob = async (blob) => {
 };
 
 export class MomentPdfPainter {
-  constructor(assertCurrent = () => {}) {
+  constructor(assertCurrent = () => {}, options = {}) {
     this.assertCurrent = assertCurrent;
     this.pages = [];
     this.pageNumber = 0;
+    this.template = options.template || 'chronicle';
+    this.density = options.density || 'balanced';
     this.begin();
   }
   begin() {
@@ -50,13 +54,14 @@ export class MomentPdfPainter {
     this.ctx = this.canvas.getContext('2d');
     if (!this.ctx) throw new Error('PDF rendering is unavailable in this browser.');
     this.ctx.scale(SCALE, SCALE);
-    this.ctx.fillStyle = '#fff';
+    this.ctx.fillStyle = this.template === 'journey' ? '#fffcf6'
+      : this.template === 'diary' ? '#fffefa' : '#fff';
     this.ctx.fillRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT);
     this.ctx.textBaseline = 'top';
     this.y = INSET;
     this.ctx.fillStyle = palette.accent;
     this.ctx.font = '700 10px system-ui, sans-serif';
-    this.ctx.fillText('DN  /  MOMENT SUMMARY', INSET, 23);
+    this.ctx.fillText('DN  /  ' + (PDF_TEMPLATE_NAMES[this.template] || 'Moment summary').toUpperCase(), INSET, 23);
   }
   async finishPage() {
     if (!this.canvas) return;
@@ -79,7 +84,10 @@ export class MomentPdfPainter {
     await this.finishPage();
     this.begin();
   }
-  font(size, bold) { this.ctx.font = `${bold ? 700 : 400} ${size}px system-ui, sans-serif`; }
+  font(size, bold) {
+    const family = this.template === 'chronicle' ? 'system-ui, sans-serif' : 'Georgia, serif';
+    this.ctx.font = `${bold ? 700 : 400} ${size}px ${family}`;
+  }
   wrap(text, maxWidth) {
     // All stored content is treated as literal user text: nothing is parsed as HTML.
     const words = String(text).split(/(\s+)/).filter(Boolean);
@@ -105,7 +113,7 @@ export class MomentPdfPainter {
   async text(value, { size = 11, bold = false, color = palette.ink, indent = 0, leading = 1.48, after = 5 } = {}) {
     this.font(size, bold);
     const rows = String(value ?? '').replace(/\r\n?/g, '\n').split('\n');
-    const height = size * leading;
+    const height = size * leading * (this.density === 'airy' ? 1.17 : this.density === 'compact' ? .91 : 1);
     for (const row of rows) {
       this.font(size, bold);
       const chunks = this.wrap(row, CONTENT_WIDTH - indent);
@@ -117,7 +125,7 @@ export class MomentPdfPainter {
         this.y += height;
       }
     }
-    this.y += after;
+    this.y += after * (this.density === 'airy' ? 1.2 : this.density === 'compact' ? .74 : 1);
   }
   async heading(title) {
     await this.ensure(52);
@@ -127,7 +135,7 @@ export class MomentPdfPainter {
     this.y += 15;
     await this.text(title, { size: 15, bold: true, color: palette.accent, after: 10 });
   }
-  async photo(attachment, context) {
+  async photo(attachment, context, { large = false } = {}) {
     if (!isAttachmentImage(attachment.type)) {
       await this.text(`Other file: ${attachment.name || 'Attachment'}`, { size: 10, color: palette.muted });
       return;
@@ -152,8 +160,9 @@ export class MomentPdfPainter {
       const naturalHeight = bitmap.height || bitmap.naturalHeight;
       if (!naturalWidth || !naturalHeight) throw new Error('Invalid image');
       // Each available photo appears with its natural proportions, never cropped.
-      const width = Math.min(CONTENT_WIDTH, naturalWidth / naturalHeight * 420);
-      const height = Math.min(420, width * naturalHeight / naturalWidth);
+      const maxHeight = large ? 620 : 420;
+      const width = Math.min(CONTENT_WIDTH, naturalWidth / naturalHeight * maxHeight);
+      const height = Math.min(maxHeight, width * naturalHeight / naturalWidth);
       await this.ensure(height + 13);
       this.ctx.drawImage(bitmap, INSET + (CONTENT_WIDTH - width) / 2, this.y, width, height);
       this.y += height + 13;
@@ -162,14 +171,17 @@ export class MomentPdfPainter {
       await this.text('Photo preview unavailable on this device.', { size: 10, color: palette.muted });
     } finally { bitmap?.close?.(); }
   }
-  async attachments(attachments, context) {
-    for (const attachment of attachments) await this.photo(attachment, context);
+  async attachments(attachments, context, options = {}) {
+    for (const attachment of attachments) await this.photo(attachment, context, options);
   }
-  async done() {
+  async renderedPages() {
     await this.finishPage();
     const pages = this.pages;
     this.pages = [];
-    return pdfFromJpegPages(pages);
+    return { blob: pdfFromJpegPages(pages), pages };
+  }
+  async done() {
+    return (await this.renderedPages()).blob;
   }
 }
 
@@ -227,4 +239,124 @@ export async function downloadMomentPdf(event, { greeting = event?.greetingCard,
   assertCurrent();
   downloadBlob(blob, momentPdfFilename(event.name));
   return blob;
+}
+
+const studioDate = (value) => activityDateLabel(value, 'Undated');
+const studioText = (value) => plainRichText(value || '');
+
+// Every preview image uses the exact JPEG page bytes embedded into its PDF.
+// The scoped context and originals reader enforce existing Account/Guest guards.
+export async function renderMomentStudioPdf(event, studioOptions = {}, { momentTypes } = {}) {
+  if (!event) throw new Error('This Moment is no longer available.');
+  const initial = useAppStore.getState();
+  const uid = initial.user?.uid || null;
+  const isGuest = Boolean(initial.isGuest);
+  const sample = getActiveSampleScenario(uid);
+  if (!uid && !isGuest) throw new Error('Sign in or continue as Guest before exporting.');
+  const assertCurrent = () => {
+    const now = useAppStore.getState();
+    if ((now.user?.uid || null) !== uid || Boolean(now.isGuest) !== isGuest
+      || getActiveSampleScenario(uid) !== sample) {
+      throw new Error('Your session changed. Reopen PDF Studio before exporting.');
+    }
+  };
+  const scope = { uid, isGuest, sample: Boolean(sample), assertCurrent };
+  const story = buildMomentStory(event, {
+    momentTypes: momentTypes || initial.adminValues?.eventTypes || [],
+  });
+  const options = normalizePdfStudioOptions(studioOptions, story.presentation);
+  const pdf = new MomentPdfPainter(assertCurrent, options);
+  const template = options.template;
+  if (options.includeCover) {
+    pdf.y += 100;
+    await pdf.text(PDF_TEMPLATE_NAMES[template].toUpperCase(), { size: 12, bold: true, color: palette.accent, after: 26 });
+    await pdf.text(event.name || 'Untitled Moment', { size: 30, bold: true, color: palette.ink, leading: 1.26, after: 22 });
+    await pdf.text(template === 'journey' ? 'Photographs and memories' : template === 'diary' ? 'A month in words' : 'Tasks and progress',
+      { size: 14, color: palette.muted, after: 23 });
+    if (story.momentDate) await pdf.text(studioDate(story.momentDate), { size: 12, color: palette.muted });
+    if (template === 'journey') {
+      const hero = story.keepsakes.find((item) => isAttachmentImage(item.type));
+      if (hero) await pdf.photo(hero, scope, { large: true });
+    }
+    await pdf.finishPage();
+    pdf.begin();
+  }
+  await pdf.text(event.name || 'Untitled Moment', { size: template === 'chronicle' ? 21 : 24, bold: true, after: 10 });
+  await pdf.text(`${PDF_TEMPLATE_NAMES[template]}  |  ${story.momentDate ? studioDate(story.momentDate) : 'No Moment date'}`,
+    { size: 10, color: palette.muted, after: 18 });
+  if (options.includeIntro && story.introduction) {
+    await pdf.heading(template === 'journey' ? 'The opening page' : template === 'diary' ? 'This month' : 'About these tasks');
+    await pdf.text(studioText(story.introduction), { size: 12, after: 17 });
+  }
+  if (options.includeIntro && template === 'journey' && event.greetingCard?.body) {
+    await pdf.text(studioText(event.greetingCard.title || 'Greeting'), { size: 14, bold: true, after: 7 });
+    await pdf.text(studioText(event.greetingCard.body), { size: 12, after: 14 });
+  }
+
+  if (template === 'journey') {
+    if (story.keepsakes.length) {
+      await pdf.heading('Photographs to remember');
+      await pdf.attachments(story.keepsakes, scope, { large: true });
+    }
+    for (const month of story.timeline) for (const day of month.days) {
+      await pdf.heading(studioDate(day.date));
+      for (const entry of day.entries) {
+        await pdf.attachments(entry.attachments, scope, { large: true });
+        await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 7 });
+        if (entry.description) await pdf.text(studioText(entry.description), { size: 12, after: 18 });
+      }
+    }
+  } else if (template === 'diary') {
+    await pdf.heading(story.momentDate
+      ? new Date(story.momentDate + 'T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
+      : 'Monthly entries');
+    for (const day of story.timeline.flatMap((month) => month.days)) {
+      await pdf.ensure(74);
+      await pdf.text(studioDate(day.date), { size: 10, bold: true, color: palette.accent, after: 12 });
+      for (const entry of day.entries) {
+        await pdf.text(studioText(entry.title || 'Diary entry'), { size: 15, bold: true, after: 8 });
+        if (entry.description) await pdf.text(studioText(entry.description), { size: 12, leading: 1.7, after: 20 });
+      }
+    }
+  } else {
+    for (const group of pdfStudioTaskSections(groupMomentStoryTasks(story), options)) {
+      await pdf.heading(group.status === 'in-progress' ? 'In progress' : group.status === 'completed' ? 'Completed' : 'Cancelled');
+      if (!group.entries.length) await pdf.text('No tasks in this section.', { size: 11, color: palette.muted });
+      for (const entry of group.entries) {
+        await pdf.ensure(43);
+        await pdf.text(studioText(entry.title || 'Untitled task'), { size: 12, bold: true, after: 3 });
+        const when = entry.date ? studioDate(entry.date) + (entry.displayTime ? '  ' + entry.displayTime : '') : 'No date';
+        await pdf.text(when, { size: 9, color: palette.muted, after: 5 });
+        if (entry.description) await pdf.text(studioText(entry.description), { size: 10.5, after: 12 });
+      }
+    }
+  }
+  if (template !== 'chronicle') {
+    if (options.includeUpcoming && story.upcoming.length) {
+      await pdf.heading('Upcoming');
+      for (const entry of story.upcoming) {
+        await pdf.text(studioDate(entry.date) + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
+        if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+      }
+    }
+    if (story.undated.length) {
+      await pdf.heading('Without a recorded date');
+      for (const entry of story.undated) {
+        await pdf.text(studioText(entry.title || 'Untitled entry'), { size: 12, bold: true, after: 8 });
+        if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+      }
+    }
+  }
+  if (options.includeReflections && story.reflections.length) {
+    await pdf.heading('Earlier reflections');
+    for (const item of story.reflections) {
+      if (item.title) await pdf.text(studioText(item.title), { size: 13, bold: true, after: 6 });
+      if (item.body) await pdf.text(studioText(item.body), { size: 11, after: 13 });
+    }
+  }
+  assertCurrent();
+  const output = await pdf.renderedPages();
+  assertCurrent();
+  return { ...output, options, filename: momentPdfFilename(event.name),
+    scope: { uid, isGuest, sample: Boolean(sample) } };
 }
