@@ -256,3 +256,52 @@ test('Settings original restoration failure leaves every guest record unchanged 
   assert.equal(harness.reloads(), 0);
   assert.equal(harness.toasts.some(([, kind]) => kind === 'success'), false);
 });
+
+
+test('Guest demo restore confirmation switches to personal storage and merges backup without copying demo records', async (t) => {
+  const privateMoment = { id: 'private-guest', name: 'My existing Guest Moment', date: '2026-10-28',
+    activities: [], attachments: [], memories: [] };
+  const demoMoment = { id: 'tour-only', name: 'Sample Journey', activities: [], attachments: [], memories: [] };
+  const tour = { scenario: 'tour', demoVersion: '2026.10.28.2',
+    events: [demoMoment], incomes: [], expenses: [] };
+  const harness = await openSettings(t, {
+    dn_guest_eventGroups: JSON.stringify([privateMoment]),
+    dn_guest_expenses: '[]', dn_guest_incomes: '[]',
+    dn_dev_fixture_scenario: 'tour', dn_dev_fixture_data: JSON.stringify(tour),
+  });
+  const imported = { id: 'backup-new', name: 'Restored private Moment', date: '2026-10-21',
+    activities: [], attachments: [], memories: [] };
+  const backup = createBackupDocument({ moments: [imported], codeLists: DEFAULT_CODE_LISTS,
+    settings: { restoreCodeLists: false } });
+  const confirm = await harness.prepareRestore(backup);
+  assert.equal(harness.values.get('dn_dev_fixture_scenario'), 'tour',
+    'selecting and validating a file must not exit or destroy the demo');
+  assert.match(label(harness.render()), /leave the demo and merge this backup/i);
+  await confirm.props.onClick();
+  assert.equal(harness.reloads(), 1);
+  assert.equal(harness.values.has('dn_dev_fixture_scenario'), false);
+  assert.equal(harness.values.get('dn_guest_tour_declined'), 'true');
+  const saved = harness.eventService.getGuestEvents();
+  assert.deepEqual(saved.map((item) => item.id), ['private-guest', 'backup-new']);
+  assert.equal(saved.some((item) => item.id === demoMoment.id), false,
+    'guided demo data is never imported into personal Guest records');
+  assert.equal(harness.toasts.some(([message, kind]) => message === 'Backup restore finished' && kind === 'success'), true);
+});
+
+test('Guest demo restore preflight preserves demo on invalid personal Guest ledger', async (t) => {
+  const tour = { scenario: 'tour', events: [{id:'tour',name:'Example',activities:[]}],
+    incomes: [], expenses: [] };
+  const harness = await openSettings(t, {
+    dn_dev_fixture_scenario: 'tour', dn_dev_fixture_data: JSON.stringify(tour),
+    dn_guest_eventGroups: '{"malformed":true}', dn_guest_expenses: '[]', dn_guest_incomes: '[]',
+  });
+  t.mock.method(console, 'error', () => {});
+  const restore = await harness.prepareRestore(backupFor([]));
+  assert.equal(harness.values.get('dn_dev_fixture_scenario'), 'tour');
+  await restore.props.onClick();
+  assert.match(label(harness.render()), /Guest Moment storage is invalid/i);
+  assert.equal(harness.values.get('dn_dev_fixture_scenario'), 'tour',
+    'a failed preflight must not exit the demo or alter personal data');
+  assert.equal(harness.values.get('dn_guest_eventGroups'), '{"malformed":true}');
+  assert.equal(harness.reloads(), 0);
+});
