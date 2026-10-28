@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-142 | Delay Guest tour exit until successful restore
+- **Additional safety refinement:** Following CHG-141, the tour now stays active during attachment integrity/storage, record merge and configuration writes to the separate real Guest destination. Only a completed restore clears the active tour and marks it dismissed. On original-file quota errors or partial failure, the user's edited tour remains accessible rather than being discarded. Destination ledger preflight, session checks, and backup validation still precede writes.
+- **Tests:** Added a real Settings handler unit case for original-file restore failure preserving the active edited demo. Existing successful Guest tour restore and invalid ledger tests retained. No schema, tour fixture/content version or Firebase/main changes.
+
 ## CHG-20261028-141 | Fix Guest backup restore from tour and simplify Guest data switch
 - **Owner report:** The Use my Guest data control was too visually prominent, and Restore backup no longer worked after the new public Guest tour shipped. Source inspection found an explicit guard rejecting all restores whenever a demo was active; the file selector also hid its native input with display:none.
 - **Behavior:** Validated backup selection leaves the tour untouched; the confirmation now clearly explains merging into real Guest data and exiting the demo. On confirm, a personal-ledger preflight and session guard run before removing isolated demo scope and restoring original file bytes and records through existing SHA/scoped merger. Existing Guest IDs win, demo records never merge. Invalid destination ledgers preserve the tour. Other development-only samples still block restore. Backup format and limits unchanged.
