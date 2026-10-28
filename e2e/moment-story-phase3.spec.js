@@ -10,7 +10,7 @@ test('Phase 3 reads original Activity dates and shows future, undated and legacy
   await expect(story.getByRole('region', { name: 'Upcoming activities' })).toContainText('Book a lakeside stay');
   await expect(story.getByRole('region', { name: 'Activities without dates' })).toContainText('A cancelled plan');
   await expect(story.getByRole('region', { name: 'Legacy reflections' })).toContainText('Planning together');
-  await expect(story.getByRole('button', { name: 'Edit introduction' })).toBeVisible();
+  await expect(story.getByRole('button', { name: 'Add introduction' })).toBeVisible();
   await story.getByRole('link', { name: /Choose the train/ }).click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/completed$/);
   expect(errors).toEqual([]);
