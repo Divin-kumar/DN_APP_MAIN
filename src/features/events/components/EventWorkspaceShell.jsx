@@ -311,13 +311,16 @@ export function EventWorkspaceContent() {
       throw reason;
     } finally { activitySavingRef.current = false; if (workspaceMountedRef.current && records.isCurrent(mutationContext)) setActivityBusy(false); }
   };
-  const commitTaskStatus = (activityId, targetStatus) => runActivityWrite(
+  const commitTaskStatus = (activityId, targetStatus) => {
+    if (activitySavingRef.current) return Promise.resolve();
+    return runActivityWrite(
     () => records.mutateActivity(mutationContext, eventId, activityId,
       (activity, moment) => activityStatusTransitionPatch(activity, moment, targetStatus),
       'status:' + targetStatus),
     () => showToast(targetStatus === 'completed' ? 'Task completed'
       : targetStatus === 'cancelled' ? 'Task cancelled' : 'Task moved to In progress', 'success'),
   ).catch(() => {});
+  };
 
   const requestTaskStatus = (activityId, targetStatus) => {
     if (activitySavingRef.current) return;

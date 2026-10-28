@@ -167,3 +167,90 @@ test('all three Story views keep text and original files responsive from 320px t
   }
   expect(errors).toEqual([]);
 });
+
+
+test('Journal album prioritizes one hero photo, preserves portraits, and stays legible on iPhone', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await addOriginal(page, { width: 600, height: 900, count: 3 });
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto('/events/moment-one/overview');
+  const story = page.locator('.dn-v2-story');
+  const photos = story.locator('[data-story-activity="shared"] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-tile');
+  await expect(photos).toHaveCount(3);
+  await photos.first().scrollIntoViewIfNeeded();
+  await expect(photos.first().locator('img')).toBeVisible();
+  const lead = await photos.first().evaluate(node => ({
+    width: node.getBoundingClientRect().width,
+    column: getComputedStyle(node).gridColumn,
+    fit: getComputedStyle(node.querySelector('img')).objectFit,
+  }));
+  const following = await photos.nth(1).evaluate(node => node.getBoundingClientRect().width);
+  expect(lead.width).toBeGreaterThan(following * 1.4);
+  expect(lead.fit).toBe('contain');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await photos.nth(1).scrollIntoViewIfNeeded();
+  await expect(photos.nth(1).locator('img')).toBeVisible();
+  const mobile = await photos.nth(1).evaluate(node => ({
+    fit: getComputedStyle(node.querySelector('img')).objectFit,
+    width: node.getBoundingClientRect().width,
+    clipped: document.documentElement.scrollWidth > innerWidth + 1,
+  }));
+  expect(mobile.fit).toBe('contain');
+  expect(mobile.width).toBeLessThan(390);
+  expect(mobile.clipped).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('Tasks status controls persist, re-group, and confirm cancellation without changing other records', async ({ page }) => {
+  const moments = records();
+  const originalDiary = structuredClone(moments[1]);
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  await page.goto('/events/tasks/overview');
+  const groups = page.locator('.dn-task-group');
+  const open = groups.nth(0);
+  const completed = groups.nth(1);
+  const cancelled = groups.nth(2);
+  const future = page.getByRole('combobox', { name: 'Change status for Future plan' });
+  await expect(future).toHaveValue('in-progress');
+  await future.selectOption('completed');
+  await expect(completed.locator('[data-story-activity="planned"]')).toBeVisible();
+  const completedSaved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[2].activities.find(a => a.id === 'planned'));
+  expect(completedSaved.completed).toBe(true);
+  expect(completedSaved.status).toBe('completed');
+  expect(completedSaved.completedAt).toBeTruthy();
+
+  const changed = page.getByRole('combobox', { name: 'Change status for Future plan' });
+  await changed.selectOption('cancelled');
+  await expect(page.getByRole('dialog', { name: 'Cancel task?' })).toBeVisible();
+  // The status control stays bound to saved state until confirmation.
+  await expect(changed).toHaveValue('completed');
+  await page.getByRole('dialog', { name: 'Cancel task?' }).getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(changed).toHaveValue('completed');
+  await changed.selectOption('cancelled');
+  await page.getByRole('dialog', { name: 'Cancel task?' }).getByRole('button', { name: 'Cancel task' }).click();
+  await expect(cancelled.locator('[data-story-activity="planned"]')).toBeVisible();
+  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[2].activities.find(a => a.id === 'planned'))).cancelled).toBe(true);
+
+  await page.getByRole('combobox', { name: 'Change status for Future plan' }).selectOption('in-progress');
+  await expect(open.locator('[data-story-activity="planned"]')).toBeVisible();
+  const restored = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[2].activities.find(a => a.id === 'planned'));
+  expect(restored.completed).toBe(false);
+  expect(restored.cancelled).toBe(false);
+  expect(restored.completedAt).toBe(null);
+  expect(restored.status).toBe('in-progress');
+  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))))[1]).toEqual(originalDiary);
+  expect(errors).toEqual([]);
+});
+
+test('Task completion is disabled for an archived parent and original Activity detail stays reachable', async ({ page }) => {
+  const moments = records();
+  moments[2].archived = true;
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  await page.goto('/events/tasks/overview');
+  const control = page.getByRole('combobox', { name: 'Change status for Future plan' });
+  await expect(control).toBeVisible();
+  await expect(control.locator('option[value="completed"]')).toBeDisabled();
+  await page.locator('.dn-task-row[data-story-activity="planned"] .dn-task-row-heading a').click();
+  await expect(page).toHaveURL(/\/events\/tasks\/activities\/planned/);
+  expect(errors).toEqual([]);
+});
