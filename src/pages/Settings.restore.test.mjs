@@ -305,3 +305,22 @@ test('Guest demo restore preflight preserves demo on invalid personal Guest ledg
   assert.equal(harness.values.get('dn_guest_eventGroups'), '{"malformed":true}');
   assert.equal(harness.reloads(), 0);
 });
+
+test('A failed original-file restore keeps the active Guest tour and its edits available', async (t) => {
+  const tour = { scenario: 'tour', demoVersion: '2026.10.28.2',
+    events: [{id:'tour-example',name:'My edited demo',activities:[]}],
+    activities: [], memories: [], attachments: [], incomes: [], expenses: [] };
+  const harness = await openSettings(t, {
+    dn_dev_fixture_scenario: 'tour', dn_dev_fixture_data: JSON.stringify(tour),
+    dn_guest_eventGroups: '[]', dn_guest_expenses: '[]', dn_guest_incomes: '[]',
+  });
+  const confirm = await harness.prepareRestore(backupFor([]));
+  harness.api.restoreOriginals = async () => { throw new Error('Storage quota exceeded'); };
+  t.mock.method(console, 'error', () => {});
+  await confirm.props.onClick();
+  assert.match(label(harness.render()), /Storage quota exceeded/);
+  assert.equal(harness.values.get('dn_dev_fixture_scenario'), 'tour');
+  assert.deepEqual(JSON.parse(harness.values.get('dn_dev_fixture_data')).events, tour.events);
+  assert.equal(harness.values.get('dn_guest_tour_declined'), undefined);
+  assert.equal(harness.reloads(), 0);
+});
