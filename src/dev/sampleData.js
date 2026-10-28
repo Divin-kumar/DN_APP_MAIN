@@ -1,9 +1,10 @@
+import { formatMomentDate } from '../utils/momentDates.js';
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
 // This file creates realistic demo data for development and testing.
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.28.3';
+export const GUEST_TOUR_VERSION = '2026.10.28.4';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -59,7 +60,7 @@ const expenseNames = ['Weekend accommodation', 'Family dinner', 'Thoughtful gift
 const incomeTypes = ['Salary', 'Bonus', 'Interest', 'Investment returns', 'Freelance'];
 
 const seededId = (scenario, kind, index) => `demo-${scenario}-${kind}-${String(index + 1).padStart(4, '0')}`;
-const dateString = (date) => new Date(date).toISOString().slice(0, 10);
+const dateString = (date) => formatMomentDate(new Date(date));
 const monthOffset = (date, amount) => {
   const next = new Date(date);
   next.setMonth(next.getMonth() + amount);
@@ -287,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Save photographs, stories and moments together. Open Summary then Customize PDF for your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. Save photographs, stories and moments together. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [

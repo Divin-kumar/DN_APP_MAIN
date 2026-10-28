@@ -80,7 +80,7 @@ export default function DashboardLayout() {
   const quickActivityType = activityPickerFilter.type;
   const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
   const [quickActivityTitle, setQuickActivityTitle] = useState('');
-  const [quickActivityDate, setQuickActivityDate] = useState(new Date().toISOString().slice(0, 10));
+  const [quickActivityDate, setQuickActivityDate] = useState(financialDate(new Date()));
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
@@ -254,7 +254,7 @@ export default function DashboardLayout() {
       if (workspaceMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
-      setQuickActivityDate(new Date().toISOString().slice(0, 10));
+      setQuickActivityDate(financialDate(new Date()));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');
     }

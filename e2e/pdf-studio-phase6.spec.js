@@ -7,10 +7,8 @@ async function openStudio(page) {
   const card = page.getByRole('group', { name: /Weekend in Ooty.*Swipe either direction for actions/ });
   await card.focus();
   await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
-  const summary = page.getByRole('dialog', { name: 'Moment summary', exact: true });
-  await summary.getByRole('button', { name: 'Open PDF Studio' }).click();
-  const studio = page.getByRole('dialog', { name: 'PDF Studio' });
+  await page.getByRole('menuitem', { name: 'PDF Studio', exact: true }).click();
+  const studio = page.getByRole('region', { name: 'PDF Studio', exact: true });
   await expect(studio).toBeVisible();
   return studio;
 }

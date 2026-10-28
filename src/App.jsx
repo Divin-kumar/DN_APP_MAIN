@@ -160,6 +160,8 @@ export default function App() {
 
             {/* Each event has its own workspace and sub-pages for overview, activities, transactions, etc. */}
             <Route path="events/:eventId" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
+            <Route path="events/:eventId/story" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
+            <Route path="events/:eventId/gallery" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/overview" element={loadScreen(<EventWorkspaceShell />, 'moment')} />
             <Route path="events/:eventId/activities" element={loadScreen(<EventWorkspaceShell />, 'activities')} />
             <Route path="events/:eventId/activities/:activityId" element={loadScreen(<ActivityDetail />, 'activity')} />

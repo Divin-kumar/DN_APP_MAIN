@@ -1,3 +1,4 @@
+import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useState } from 'react';
 import DateField from '../common/DateField';
@@ -11,7 +12,7 @@ const createDefaultState = (defaultEventType) => ({
   name: '',
   type: defaultEventType || 'Personal',
   customType: '',
-  date: new Date().toISOString().slice(0, 10),
+  date: formatMomentDate(new Date()),
   recurrence: 'none',
   budget: '',
   notes: '',

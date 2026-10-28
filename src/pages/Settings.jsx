@@ -2,7 +2,7 @@ import { clearDnLocalData } from '../utils/storageMigration';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -15,7 +15,7 @@ import { createExpense, getExpensesForUser, getGuestExpenseMasters, getGuestExpe
 import { createIncome, getIncomesForUser, getGuestIncomes, setGuestIncomes } from '../services/incomeService';
 import { activateSampleScenario, clearActiveSampleScenario, clearGuestTourDeclined, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel, GUEST_TOUR_SCENARIO, GUEST_TOUR_VERSION, guestTourNeedsUpdate, hydrateGuestTourPhotos, markGuestTourDeclined } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
-import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
+import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
 import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, mergeEventGroupsForRestore, mergeRecordsById } from '../services/backupService';
 import { createBackupFile, readBackupFile } from '../services/backupFileService';
@@ -75,40 +75,6 @@ const ValueListEditor = ({ label, value, onChange }) => {
       </div>
     </div>
   );
-};
-
-const normalizeReminderTime = (value = '') => {
-  if (!value || typeof value !== 'string') return '09:00';
-
-  const trimmed = value.trim();
-  if (!trimmed) return '09:00';
-
-  const match = trimmed.match(/^\s*(\d{1,2})\s*[:.]\s*(\d{1,2})\s*(am|pm)?\s*$/i);
-  if (!match) {
-    const fallback = trimmed.replace(/[^\d]/g, '').slice(0, 4);
-    if (fallback.length === 3) {
-      return `${fallback.slice(0, 1)}:${fallback.slice(1)}`; 
-    }
-    if (fallback.length === 4) {
-      const hours = fallback.slice(0, 2);
-      const minutes = fallback.slice(2, 4);
-      return `${hours}:${minutes}`;
-    }
-    return '09:00';
-  }
-
-  let hours = Number(match[1]);
-  const minutes = Number(match[2]);
-  const period = match[3]?.toLowerCase();
-
-  if (minutes > 59) return `${String(hours).padStart(2, '0')}:00`;
-
-  if (period === 'pm' && hours < 12) hours += 12;
-  if (period === 'am' && hours === 12) hours = 0;
-
-  const normalizedHours = String(hours % 24).padStart(2, '0');
-  const normalizedMinutes = String(minutes).padStart(2, '0');
-  return `${normalizedHours}:${normalizedMinutes}`;
 };
 
 export default function Settings() {
@@ -211,10 +177,7 @@ export default function Settings() {
   const savePreferences = () => {
     const normalized = {
       ...prefForm,
-      notifications: {
-        ...prefForm.notifications,
-        reminderTime: normalizeReminderTime(prefForm.notifications.reminderTime),
-      },
+      notifications: preferences.notifications,
     };
     setPrefForm(normalized);
     setPreferences(normalized);
@@ -757,86 +720,8 @@ export default function Settings() {
 
   const renderNotificationsSection = () => (
     <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              eventReminders: !current.notifications.eventReminders,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.eventReminders}
-        >
-          <span className="settings-choice-icon"><Bell size={17} /></span>
-          <span><strong>Event reminders</strong><small>Get nudges before key dates and activities.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.eventReminders ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              monthlySummary: !current.notifications.monthlySummary,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.monthlySummary}
-        >
-          <span className="settings-choice-icon"><Clock3 size={17} /></span>
-          <span><strong>Monthly summary</strong><small>Receive a quick recap of spending and key events.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.monthlySummary ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-
-        <button
-          type="button"
-          className="settings-choice"
-          onClick={() => setPrefForm((current) => ({
-            ...current,
-            notifications: {
-              ...current.notifications,
-              budgetAlerts: !current.notifications.budgetAlerts,
-            },
-          }))}
-          aria-pressed={prefForm.notifications.budgetAlerts}
-        >
-          <span className="settings-choice-icon"><Database size={17} /></span>
-          <span><strong>Budget alerts</strong><small>Warn when your monthly spend is trending high.</small></span>
-          <span className={`settings-switch ${prefForm.notifications.budgetAlerts ? 'settings-switch-on' : ''}`} aria-hidden="true"><span /></span>
-        </button>
-      </div>
-
-      <div className="settings-admin-grid">
-        <label className="settings-input-block">
-          <span>Daily reminder time</span>
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="9:00 AM"
-            value={prefForm.notifications.reminderTime}
-            onChange={(event) => {
-              const nextValue = event.target.value;
-              setPrefForm((current) => ({
-                ...current,
-                notifications: {
-                  ...current.notifications,
-                  reminderTime: normalizeReminderTime(nextValue),
-                },
-              }));
-            }}
-            title="Enter a time like 9:00 AM or 21:00"
-          />
-        </label>
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={() => setPreferences(prefForm)}>Save notifications</button>
-        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
-      </div>
+      <p><strong>Coming Soon</strong></p>
+      <p>Notifications and reminders will be available in a future update.</p>
     </div>
   );
 
@@ -867,7 +752,7 @@ export default function Settings() {
   const sections = [
     { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
-    { key: 'notifications', heading: 'Notifications', description: 'Manage reminder and notification preferences.', icon: Bell, body: renderNotificationsSection() },
+    { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
     { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
   ];
 
@@ -940,7 +825,7 @@ export default function Settings() {
           <span className="settings-hub-icon"><Settings2 size={18} /></span>
           <span className="settings-hub-copy">
             <strong>Code Lists</strong>
-            <small>Manage types, categories, priorities, reminders, sorting and filters</small>
+            <small>Manage types, categories, priorities, saved presets, sorting and filters</small>
           </span>
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>
@@ -1020,7 +905,7 @@ export default function Settings() {
             <ul>
               <li>Theme and appearance</li>
               <li>Currency, dashboard view, and default moment, income, and expense selections</li>
-              <li>Notifications and reminder time</li>
+              <li>Saved preferences; Notifications is Coming Soon</li>
               <li>Greeting types and templates</li>
               <li>All Code Lists and their system default values</li>
             </ul>

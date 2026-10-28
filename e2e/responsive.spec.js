@@ -55,7 +55,7 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     }
     await page.goto('/events/moment-one/attachments');
     const tabs = page.locator('.event-workspace-nav a');
-    await expect(tabs).toHaveCount(4);
+    await expect(tabs).toHaveCount(5);
     expect(new Set(await tabs.evaluateAll((links) => links.map((node) => Math.round(node.getBoundingClientRect().top)))).size).toBe(1);
     const active = await page.locator('.event-workspace-nav [aria-current="page"]').boundingBox();
     const rail = await page.locator('.event-workspace-nav').boundingBox();

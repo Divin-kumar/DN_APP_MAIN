@@ -3,7 +3,7 @@ import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScop
 
 // Only the Firestore store edge is mocked; file IO uses the real scoped IndexedDB repository.
 
-test('Moment Activities is read-only, still opens Detail, and the retired Timeline URL shows Overview', async ({ page }) => {
+test('Moment Activities is read-only, still opens Detail, and the retired Timeline URL shows Story', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
@@ -15,9 +15,9 @@ test('Moment Activities is read-only, still opens Detail, and the retired Timeli
   await swipe(page, card);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
   await page.goto('/events/moment-one/timeline');
-  await expect(page.locator('.event-workspace-nav a')).toHaveCount(4);
+  await expect(page.locator('.event-workspace-nav a')).toHaveCount(5);
   await expect(page.locator('.event-workspace-nav a').filter({ hasText: 'Timeline' })).toHaveCount(0);
-  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Overview');
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Story');
   await page.getByRole('navigation', { name: 'Moment contents' }).getByRole('link', { name: /Activities/ }).click();
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);

@@ -1,3 +1,4 @@
+import { formatMomentDate } from '../utils/momentDates';
 /*
   Income state actions keep persisted entries and summaries synchronized.
 
@@ -71,7 +72,7 @@ const useIncomeStore = create((set, get) => {
       ...income,
       id: income.id || crypto.randomUUID(),
       amount: Number(income.amount || 0),
-      date: income.date || new Date().toISOString().slice(0, 10),
+      date: income.date || formatMomentDate(new Date()),
     };
 
     const sampleData = getActiveSampleData(uid);

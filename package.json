@@ -11,7 +11,8 @@
     "deploy:hosting": "node scripts/deploy-hosting.mjs",
     "lint": "eslint .",
     "test:e2e": "playwright test",
-    "check:docs": "node scripts/check-documentation.mjs"
+    "check:docs": "node scripts/check-documentation.mjs",
+    "test:production": "node scripts/check-production-shell.mjs"
   },
   "dependencies": {
     "@tiptap/extension-code": "3.32.0",

@@ -21,7 +21,7 @@ test('old Memories bookmarks show preserved reflections and no redundant navigat
   await page.goto('/events/moment-one/memories');
   await expect(page.getByRole('heading', { name: 'Your Moment Story' })).toBeVisible();
   await expect(page.getByRole('region', { name: 'Legacy reflections' })).toContainText('Planning together');
-  await expect(page.locator('.event-workspace-nav a')).toHaveCount(4);
+  await expect(page.locator('.event-workspace-nav a')).toHaveCount(5);
   await expect(page.locator('.event-workspace-nav')).not.toContainText('Memories');
   await expect(page.getByRole('button', { name: /Remove Planning together/ })).toHaveCount(0);
   expect(errors).toEqual([]);

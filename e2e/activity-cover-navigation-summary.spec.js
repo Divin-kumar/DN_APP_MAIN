@@ -117,43 +117,33 @@ test('the opening filtered sequence survives completion, while single-result fil
   await expect(page).toHaveURL(/\/events\/moment-two\/activities\/shared$/);
 });
 
-test('Moment summaries show full text and every photo, and a nested preview closes without closing the summary', async ({ page }) => {
+test('Story keeps full writing, original previews and Dashboard access to the same PDF Studio', async ({ page }) => {
   const moments = fixtureMoments(); moments[0].notes = 'Moment notes. '.repeat(120) + 'END_MOMENT_NOTES';
   moments[0].activities[0].description = 'Activity paragraph.\n'.repeat(80) + 'END_ACTIVITY_DESCRIPTION';
   moments[0].memories[0].body = 'Memory paragraph.\n'.repeat(60) + 'END_MEMORY';
-  await seedGuest(page, { moments }); await addOriginal(page, { width: 600, height: 900, count: 3 });
+  await seedGuest(page, { moments }); await addOriginal(page, { width:600, height:900, count:3 });
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-  await page.goto('/events');
-  const momentCard = page.getByRole('group', { name: `${moments[0].name}. Swipe either direction for actions.`, exact: true });
-  await momentCard.focus(); await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
-  const summary = page.getByRole('dialog', { name: 'Moment summary', exact: true });
-  await expect(summary).toContainText('END_MOMENT_NOTES'); await expect(summary).toContainText('END_ACTIVITY_DESCRIPTION'); await expect(summary).toContainText('END_MEMORY');
-  await expect(summary.locator('.is-truncated')).toHaveCount(0);
-  await expect(summary.getByRole('button', { name: /Show more|Show less/ })).toHaveCount(0);
-  await expect(summary.locator('.dn-attachment-tile')).toHaveCount(4);
-  await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
-  const preview = summary.getByRole('button', { name: 'Preview Activity photo 2.png', exact: true });
-  await preview.scrollIntoViewIfNeeded(); await expect.poll(() => preview.locator('img').evaluate((node) => node.naturalWidth)).toBe(600);
-  const shape = await preview.locator('img').boundingBox(); expect(Math.abs(shape.width / shape.height - 600 / 900)).toBeLessThan(.01);
-  await preview.click(); await expect(page.getByRole('dialog')).toHaveCount(2);
-  await expect.poll(() => summary.locator('img').evaluateAll((nodes) => nodes.every((node) => node.complete))).toBe(true);
-  const scroll = await summary.locator('.dn-modal-body').evaluate((node) => node.scrollTop);
-  await page.keyboard.press('Escape'); await expect(page.getByRole('dialog')).toHaveCount(1); await expect(summary).toBeVisible(); await expect(preview).toBeFocused();
-  expect(Math.abs(await summary.locator('.dn-modal-body').evaluate((node) => node.scrollTop) - scroll)).toBeLessThan(2);
-  await summary.getByRole('button', { name: 'Close dialog', exact: true }).click();
+  await page.goto('/events/moment-one/story');
+  const story = page.locator('.dn-v2-story');
+  for (const text of ['END_MOMENT_NOTES', 'END_ACTIVITY_DESCRIPTION', 'END_MEMORY']) await expect(story).toContainText(text);
+  await expect(story.locator('.is-truncated')).toHaveCount(0);
+  await expect(story.getByRole('button', { name:/Show more|Show less/ })).toHaveCount(0);
+  await expect(story.locator('.dn-attachment-tile')).toHaveCount(4);
+  const preview = story.getByRole('button', { name:'Preview Activity photo 2.png', exact:true });
+  await preview.scrollIntoViewIfNeeded();
+  await expect.poll(() => preview.locator('img').evaluate((node) => node.naturalWidth)).toBe(600);
+  await preview.click();
+  const original = page.getByRole('dialog', { name:'Activity photo 2.png', exact:true });
+  await expect(original).toBeVisible();
+  await expect.poll(() => original.locator('img').evaluate((node) => node.naturalWidth)).toBe(600);
+  const scroll = await page.locator('.dn-content').evaluate((node) => node.scrollTop);
+  await page.keyboard.press('Escape'); await expect(page.getByRole('dialog')).toHaveCount(0); await expect(preview).toBeFocused();
+  expect(Math.abs(await page.locator('.dn-content').evaluate((node) => node.scrollTop) - scroll)).toBeLessThan(2);
   await page.goto('/dashboard');
-  await page.locator('.dashboard-moment-row').filter({ hasText: moments[0].name }).locator('.dashboard-upcoming-row').click();
-  await expect(summary).toContainText('END_MOMENT_NOTES'); await expect(summary).toContainText('END_ACTIVITY_DESCRIPTION'); await expect(summary).toContainText('END_MEMORY');
-  await expect(summary.locator('.is-truncated')).toHaveCount(0);
-  await expect(summary.locator('.dn-attachment-tile')).toHaveCount(4);
-  await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
-  const studioAction = summary.getByRole('button', { name: 'Open PDF Studio', exact: true });
-  await expect(studioAction).toBeInViewport();
-  await studioAction.click();
-  const studio = page.getByRole('dialog', { name: 'PDF Studio' });
-  await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
-  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  await page.getByRole('button', { name:`PDF Studio for ${moments[0].name}`, exact:true }).click();
+  const studio = page.getByRole('region', { name:'PDF Studio', exact:true });
+  await expect(studio.getByRole('img', { name:'Rendered PDF page 1' })).toBeVisible();
+  await expect(studio.getByRole('button', { name:'Download customized PDF' })).toBeEnabled();
   const downloaded = page.waitForEvent('download'); await studio.getByRole('button', { name: 'Download customized PDF' }).click();
   const pdfDownload = await downloaded;
   expect(pdfDownload.suggestedFilename()).toMatch(/-summary\.pdf$/i);
@@ -165,9 +155,9 @@ test('Moment summaries show full text and every photo, and a nested preview clos
   expect(structure).toContain('/Filter /DCTDecode');
   expect(structure).toMatch(/%%EOF/);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
-  await studio.getByRole('button', { name: 'Close dialog', exact: true }).click();
-  await summary.getByRole('button', { name: 'Close dialog', exact: true }).click();
-  await expect.poll(() => page.evaluate(() => window.__dnUrls.created.every((url) => window.__dnUrls.revoked.includes(url)))).toBe(true);
+  await page.getByRole('link', { name:'Story', exact:true }).click();
+  await expect(studio).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.__dnUrls.created.filter((url) => !window.__dnUrls.revoked.includes(url)).length)).toBeLessThanOrEqual(4);
 });
 
 test('cover choices and originals stay isolated when the same IDs are loaded for another Account', async ({ page }) => {

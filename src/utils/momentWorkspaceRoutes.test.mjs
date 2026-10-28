@@ -3,7 +3,7 @@ import test from 'node:test';
 import { getMomentWorkspaceKey, getMomentWorkspaceSection, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from './momentWorkspaceRoutes.js';
 
 test('Moment section links share a stable transition key, including direct aliases and trailing slashes', () => {
-  for (const suffix of ['', '/overview', '/activities', '/transactions', '/timeline', '/memories', '/attachments', '/pdf', '/memories/']) {
+  for (const suffix of ['', '/story', '/gallery', '/overview', '/activities', '/transactions', '/timeline', '/memories', '/attachments', '/pdf', '/memories/']) {
     assert.equal(getRouteTransitionKey(`/events/moment-1${suffix}`), '/events/moment-1');
     assert.equal(isSameMomentWorkspace('/events/moment-1/activities', `/events/moment-1${suffix}`), true);
   }
@@ -34,17 +34,17 @@ test('encoded Moment IDs normalize consistently without treating encoded slashes
   assert.equal(getMomentWorkspaceKey('/events/invalid%/memories'), '/events/invalid%');
 });
 
-test('section selection handles overview aliases and trailing slash deep links', () => {
-  assert.equal(getMomentWorkspaceSection('/events/moment-1'), 'overview');
-  assert.equal(getMomentWorkspaceSection('/events/moment-1/overview'), 'overview');
-  assert.equal(getMomentWorkspaceSection('/events/moment-1/attachments/'), 'attachments');
-  assert.equal(getMomentWorkspaceSection('/events/moment-1/timeline'), 'overview');
+test('section selection handles Story and Gallery aliases and trailing slash deep links', () => {
+  assert.equal(getMomentWorkspaceSection('/events/moment-1'), 'story');
+  assert.equal(getMomentWorkspaceSection('/events/moment-1/overview'), 'story');
+  assert.equal(getMomentWorkspaceSection('/events/moment-1/attachments/'), 'gallery');
+  assert.equal(getMomentWorkspaceSection('/events/moment-1/timeline'), 'story');
 });
 
-test('legacy Memories links render the Story Overview but retain workspace navigation identity', () => {
-  assert.equal(getMomentWorkspaceSection('/events/example/memories'), 'overview');
-  assert.equal(getMomentWorkspaceSection('/events/example/timeline'), 'overview');
-  assert.equal(getMomentWorkspaceSection('/events/example/overview'), 'overview');
+test('legacy Memories links render Story but retain workspace navigation identity', () => {
+  assert.equal(getMomentWorkspaceSection('/events/example/memories'), 'story');
+  assert.equal(getMomentWorkspaceSection('/events/example/timeline'), 'story');
+  assert.equal(getMomentWorkspaceSection('/events/example/overview'), 'story');
   assert.equal(getMomentWorkspaceSection('/events/example/transactions'), 'transactions');
   assert.equal(getMomentWorkspaceKey('/events/example/memories'), getMomentWorkspaceKey('/events/example/overview'));
 });

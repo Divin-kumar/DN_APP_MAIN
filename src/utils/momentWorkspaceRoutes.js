@@ -1,4 +1,4 @@
-const workspaceRoute = /^\/events\/([^/]+)(?:\/(overview|activities|transactions|timeline|memories|attachments|pdf))?\/?$/;
+const workspaceRoute = /^\/events\/([^/]+)(?:\/(story|overview|activities|transactions|timeline|memories|gallery|attachments|pdf))?\/?$/;
 const activityDetailRoute = /^\/events\/[^/]+\/activities\/[^/]+\/?$/;
 
 export const isActivityDetailRoute = (pathname) => activityDetailRoute.test(pathname || '');
@@ -19,7 +19,8 @@ export const getMomentWorkspaceKey = (pathname) => {
 
 export const getMomentWorkspaceSection = (pathname) => {
   const section = matchWorkspaceRoute(pathname)?.[2];
-  return !section || section === 'timeline' || section === 'memories' ? 'overview' : section;
+  if (!section || ['overview', 'timeline', 'memories'].includes(section)) return 'story';
+  return section === 'attachments' ? 'gallery' : section;
 };
 
 // Keep one mounted Moment workspace when changing its section. Different

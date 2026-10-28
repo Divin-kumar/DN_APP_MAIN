@@ -14,7 +14,7 @@ const assertRealPdf = async (download) => {
   return { file, source };
 };
 
-test('Moments page exports a real multi-page PDF with photo previews and no filenames in the summary UI', async ({ page }) => {
+test('Moments actions export a real multi-page PDF with original photos', async ({ page }) => {
   const moments = fixtureMoments();
   moments[0].notes = ('The family enjoyed a beautiful weekend. ').repeat(110);
   const errors = await seedGuest(page, { moments });
@@ -24,20 +24,8 @@ test('Moments page exports a real multi-page PDF with photo previews and no file
   const card = page.getByRole('group', { name: new RegExp('Weekend in Ooty.*Swipe either direction for actions') });
   await card.focus();
   await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
-  const summary = page.getByRole('dialog', { name: 'Moment summary', exact: true });
-  const tiles = summary.locator('.moment-summary-media .dn-attachment-tile');
-  await expect(tiles).toHaveCount(3);
-  for (let index = 0; index < 3; index += 1) {
-    await tiles.nth(index).scrollIntoViewIfNeeded();
-    await expect(tiles.nth(index).locator('img')).toBeVisible();
-  }
-  await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
-  await expect(summary.getByRole('button', { name: 'Preview Activity photo 1.png' })).toBeVisible();
-  const action = summary.getByRole('button', { name: 'Open PDF Studio' });
-  await action.scrollIntoViewIfNeeded();
-  await action.click();
-  const studio = page.getByRole('dialog', { name: 'PDF Studio' });
+  await page.getByRole('menuitem', { name: 'PDF Studio', exact: true }).click();
+  const studio = page.getByRole('region', { name: 'PDF Studio', exact: true });
   await expect(studio).toBeVisible();
   await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
   const downloadButton = studio.getByRole('button', { name: 'Download customized PDF' });

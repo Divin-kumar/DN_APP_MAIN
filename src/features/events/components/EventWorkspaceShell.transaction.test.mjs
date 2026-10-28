@@ -121,7 +121,7 @@ test('read-only Moment Activity selection opens the canonical nested Detail rout
   assert.deepEqual(harness.calls, []);
 });
 
-test('retired Timeline links display Overview without a Timeline tab or record writes', async (t) => {
+test('retired Timeline links display Story without a Timeline tab or record writes', async (t) => {
   const harness = await openWorkspace(t);
   harness.api.location.pathname = '/events/moment-one/timeline';
   assert.ok(harness.find('MomentContents'));

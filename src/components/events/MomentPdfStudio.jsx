@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Download, RefreshCw, SlidersHorizontal } from 'lucide-react';
-import ModalDialog from '../common/ModalDialog';
 import useAppStore from '../../store/useAppStore';
 import { getActiveSampleScenario } from '../../dev/sampleData';
 import { resolveMomentStoryPresentation } from '../../utils/momentStory';
@@ -18,7 +17,7 @@ const optionLabels = [
   { key: 'includeCancelled', title: 'Cancelled tasks', help: 'Show cancelled entries at the end' },
 ];
 
-export default function MomentPdfStudio({ event, onClose }) {
+export default function MomentPdfStudio({ event }) {
   const momentTypes = useAppStore((state) => state.adminValues?.eventTypes || []);
   const originalTemplate = resolveMomentStoryPresentation(event, momentTypes);
   const [settings, setSettings] = useState(() => normalizePdfStudioOptions({}, originalTemplate));
@@ -96,7 +95,7 @@ export default function MomentPdfStudio({ event, onClose }) {
     downloadBlob(preview.blob, preview.filename);
   };
 
-  return <ModalDialog title="PDF Studio" className="dn-pdf-studio-dialog" onClose={onClose}>
+  return <section className="dn-pdf-studio-page" aria-label="PDF Studio">
     <div className="dn-pdf-studio">
       <section className="dn-pdf-studio-controls" aria-label="PDF customization">
         <div className="dn-pdf-studio-intro">
@@ -164,5 +163,5 @@ export default function MomentPdfStudio({ event, onClose }) {
         </div>
       </section>
     </div>
-  </ModalDialog>;
+  </section>;
 }

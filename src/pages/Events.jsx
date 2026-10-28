@@ -1,33 +1,29 @@
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
-  Events workspace: event focus mode, activity management, linked expenses, and memory export.
+  Moments listing, saved filters and scoped create/edit actions.
 
   In simple terms, this page is the main event dashboard.
   It shows life moments, lets the user search and filter them, open an event in detail,
-  add activities, attach expenses, and manage memories or keepsakes.
+  and create or edit Moments.
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search, Sparkles } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
-import ActivityList from '../components/events/ActivityList';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
-import { downloadBlob } from '../utils/download';
 import { getActiveCodeListMeta } from '../utils/codeLists';
-import { getEventStatus } from '../utils/eventStatus';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
-import { parseMomentDate } from '../utils/momentDates';
+import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import { momentConditions, momentConditionRecord } from '../utils/listConditionMigration';
 import useConditionFilters from '../hooks/useConditionFilters';
-import EventSummaryDialog from '../components/events/EventSummaryDialog';
 import ListControls from '../components/common/ListControls';
 import SortControl from '../components/common/SortControl';
 import { MOMENT_SORT_OPTIONS, momentSortSummary, sortMoments } from '../utils/userListSort';
@@ -35,7 +31,6 @@ import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import { plainRichText } from '../utils/richText';
 import useScopedMoments from '../hooks/useScopedMoments';
-import { recordId } from '../utils/recordIdentity';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import useAttachmentOriginal from '../hooks/useAttachmentOriginal';
 import { activityDateLabel } from '../utils/activityDetail';
@@ -92,7 +87,7 @@ function MomentCardCover({ attachment, uid, isGuest, date }) {
   );
 }
 
-function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onSummary, onEdit, onArchive, onDelete }) {
+function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEdit, onArchive, onDelete }) {
   const date = parseMomentDate(event.date);
   const preview = useMemo(() => selectMomentListPreview(event), [event]);
   const status = preview.status;
@@ -107,7 +102,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onSummary, 
       menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
-        ...(onSummary ? [{ label: 'Summary', icon: ClipboardList, onClick: onSummary }] : []),
+        ...(onPdf ? [{ label: 'PDF Studio', icon: ClipboardList, onClick: onPdf }] : []),
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
       <button type="button" className="event-story-main dn-v2-moment-open" onClick={onOpen}
@@ -168,19 +163,13 @@ export default function Events() {
   const deleteEventItem = useEventStore((state) => state.deleteEventItem);
   const expenses = useExpenseStore((state) => state.expenses);
   const loadExpenses = useExpenseStore((state) => state.loadExpenses);
-  const addExpense = useExpenseStore((state) => state.addExpense);
-  const [focusedId, setFocusedId] = useState(null);
   const [drawer, setDrawer] = useState(null);
   const [editingEvent, setEditingEvent] = useState(null);
-  const [editingActivity, setEditingActivity] = useState(null);
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
-  const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
+  const [activityDate, setActivityDate] = useState(formatMomentDate(new Date()));
   const [activityPriority, setActivityPriority] = useState('medium');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
-  const [summaryEvent, setSummaryEvent] = useState(null);
-  useEffect(() => { setSummaryEvent(null); }, [scopedMoments.scopeIdentity]);
-  const [pendingDeleteActivity, setPendingDeleteActivity] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
   const { search, field: sortField, direction: sortDirection } = momentFilters;
   const sortSummary = momentSortSummary(sortField, sortDirection);
@@ -206,8 +195,6 @@ export default function Events() {
     loadExpenses(user?.uid, isGuest);
   }, [user, isGuest, loadEvents, loadExpenses]);
 
-  const focusedEvent = useMemo(() => events.find((event) => (event.id || event.firestoreId) === focusedId) || null, [events, focusedId]);
-  const eventExpenses = useMemo(() => expenses.filter((expense) => expense.eventId === focusedId), [expenses, focusedId]);
   const eventExpenseTotals = useMemo(() => {
     const totals = new Map();
     expenses.forEach((expense) => {
@@ -216,30 +203,6 @@ export default function Events() {
     });
     return totals;
   }, [expenses]);
-  const expensesByActivity = useMemo(() => {
-    if (!focusedEvent) return {};
-
-    const merged = {};
-    const addExpense = (activityId, expense) => {
-      if (!activityId) return;
-      if (!merged[activityId]) merged[activityId] = new Map();
-      const expenseId = expense.id || expense.firestoreId || `${activityId}-${expense.date}-${expense.amount}-${expense.description}`;
-      if (!merged[activityId].has(expenseId)) merged[activityId].set(expenseId, expense);
-    };
-
-    eventExpenses.forEach((expense) => addExpense(expense.activityId, expense));
-    focusedEvent.activities?.forEach((activity) => {
-      activity.expenses?.forEach((expense) => addExpense(activity.id, expense));
-    });
-
-    return Object.fromEntries(Object.entries(merged).map(([activityId, records]) => [activityId, [...records.values()]]));
-  }, [eventExpenses, focusedEvent]);
-
-  const actualSpent = Object.values(expensesByActivity)
-    .flat()
-    .reduce((sum, expense) => sum + Number(expense.amount || 0), 0)
-    + eventExpenses.filter((expense) => !expense.activityId).reduce((sum, expense) => sum + Number(expense.amount || 0), 0);
-
   const visibleEvents = useMemo(() => {
     const query = search.trim().toLowerCase();
     return sortMoments(events.filter((event) => {
@@ -276,7 +239,7 @@ export default function Events() {
     setActivityChooserEvent(event);
     setActivityTitle('');
     setActivityDescription('');
-    setActivityDate(new Date().toISOString().slice(0, 10));
+    setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
   };
 
@@ -320,14 +283,12 @@ export default function Events() {
   const closeDrawer = () => {
     setDrawer(null);
     setEditingEvent(null);
-    setEditingActivity(null);
     setActivityTitle('');
     setActivityDescription('');
-    setActivityDate(new Date().toISOString().slice(0, 10));
+    setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
   };
   const openNewEvent = () => { setEditingEvent(null); setDrawer('event'); };
-  const openEditEvent = () => { setEditingEvent(focusedEvent); setDrawer('event'); };
 
   useEffect(() => {
     if (!location.search.includes('create=event')) return;
@@ -354,16 +315,6 @@ export default function Events() {
     }
   };
 
-  const toggleEventCancellation = async (event) => {
-    const nextStatus = getEventStatus(event) === 'cancelled' ? 'in-progress' : 'cancelled';
-    try {
-      await updateEventItem(user?.uid, isGuest, { ...event, status: nextStatus });
-      showToast(nextStatus === 'cancelled' ? 'Event cancelled' : 'Event restored', 'success');
-    } catch {
-      showToast('Could not update event status', 'danger');
-    }
-  };
-
   const archiveMoment = async (event) => {
     try {
       await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
@@ -371,112 +322,16 @@ export default function Events() {
     } catch { showToast('Could not update archive state', 'danger'); }
   };
 
-  const saveActivity = async () => {
-    if (!focusedEvent || !activityTitle.trim()) return;
-    const activities = focusedEvent.activities || [];
-    const next = {
-      id: editingActivity?.id || crypto.randomUUID(),
-      eventId: focusedId,
-      title: activityTitle.trim(),
-      description: activityDescription,
-      date: activityDate || editingActivity?.date || focusedEvent.date,
-      completed: editingActivity?.completed || false,
-      completedAt: editingActivity?.completedAt || null,
-      priority: activityPriority,
-      createdAt: editingActivity?.createdAt || new Date().toISOString(),
-    };
-    await updateEventItem(user?.uid, isGuest, {
-      ...focusedEvent,
-      activities: editingActivity ? activities.map((item) => item.id === editingActivity.id ? { ...item, ...next } : item) : [...activities, next],
-    });
-    showToast(editingActivity ? 'Activity updated' : 'Activity saved', 'success');
-    closeDrawer();
-  };
-
-  const removeActivity = async (activityId) => {
-    if (!focusedEvent) return;
-    await updateEventItem(user?.uid, isGuest, { ...focusedEvent, activities: (focusedEvent.activities || []).filter((item) => item.id !== activityId) });
-    showToast('Activity deleted', 'danger');
-    setPendingDeleteActivity(null);
-  };
-
-  const toggleActivity = async (activityId) => {
-    if (!focusedEvent) return;
-    await updateEventItem(user?.uid, isGuest, {
-      ...focusedEvent,
-      activities: (focusedEvent.activities || []).map((activity) => (
-        activity.id === activityId
-          ? { ...activity, completed: !activity.completed, completedAt: activity.completed ? null : new Date().toISOString() }
-          : activity
-      )),
-    });
-  };
-
-  const toggleActivityCancellation = async (activityId) => {
-    if (!focusedEvent) return;
-    await updateEventItem(user?.uid, isGuest, {
-      ...focusedEvent,
-      activities: (focusedEvent.activities || []).map((activity) => (
-        activity.id === activityId
-          ? { ...activity, cancelled: !(activity.cancelled || activity.status === 'cancelled'), status: activity.cancelled || activity.status === 'cancelled' ? 'in-progress' : 'cancelled' }
-          : activity
-      )),
-    });
-  };
-
   const removeEvent = async (event) => {
     try {
       await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
       showToast('Event deleted', 'danger');
-      setFocusedId(null);
       setPendingDeleteEvent(null);
     } catch (deleteError) {
       console.error('Event deletion failed:', deleteError);
       showToast('Delete failed', 'danger');
     }
   };
-
-  // ============================
-  // Memory album export
-  // ============================
-  const exportAlbum = (format) => {
-    if (!focusedEvent) return;
-    const activityText = (focusedEvent.activities || []).map((item) => `<article class="memory-card"><h2>${item.title}</h2><p class="date">${dateLabel(item.date)}</p><p>${item.description || 'A memory from this event.'}</p><strong>₹${(expensesByActivity[item.id] || []).reduce((sum, expense) => sum + Number(expense.amount || 0), 0).toLocaleString('en-IN')} spent</strong></article>`).join('');
-    const html = `<html><head><title>${focusedEvent.name} Memory Album</title><style>@page{size:A4;margin:0}body{margin:0;background:#f6efe5;color:#3b2f2a;font-family:Georgia,serif}.page{min-height:100vh;box-sizing:border-box;padding:80px 70px;page-break-after:always;display:flex;flex-direction:column;justify-content:center}.cover{text-align:center;background:linear-gradient(135deg,#f0d8c8,#f8efe4)}h1{font-size:64px;margin:0 0 18px}.kicker{letter-spacing:4px;text-transform:uppercase;color:#9a6d5b}.date{color:#9a6d5b;font-style:italic}.memory-card{background:#fffaf4;border:1px solid #e3cfc0;border-radius:22px;padding:28px;margin:18px 0;box-shadow:0 10px 24px rgba(104,70,51,.08)}.memory-card strong{color:#a6533d}.closing{text-align:center}</style></head><body><section class="page cover"><p class="kicker">A memory to keep</p><h1>${focusedEvent.name}</h1><p>${dateLabel(focusedEvent.date)}</p><p>${focusedEvent.type} · DN Memories</p></section><section class="page"><p class="kicker">Our memories</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.notes || 'A collection of moments, people, and stories from this special day.'}</p><p>${focusedEvent.activities?.length || 0} memories captured</p></section><section class="page"><p class="kicker">The moments</p>${activityText}</section><section class="page closing"><p class="kicker">Until next time</p><h1>${focusedEvent.name}</h1><p>${focusedEvent.activities?.length || 0} activities</p><h2>₹${actualSpent.toLocaleString('en-IN')} spent</h2><p>${focusedEvent.notes || 'Thank you for being part of this memory.'}</p></section></body></html>`;
-    if (format === 'pdf') {
-      const popup = window.open('', '_blank');
-      if (!popup) return;
-      popup.document.write(html);
-      popup.document.close();
-      popup.focus();
-      let printed = false;
-      const printPopup = () => {
-        if (printed) return;
-        printed = true;
-        popup.print();
-      };
-      popup.onload = printPopup;
-      window.setTimeout(printPopup, 350);
-    } else {
-      const blob = new Blob([html], { type: 'application/msword' });
-      downloadBlob(blob, `${focusedEvent.name}-memory-album.doc`);
-    }
-  };
-
-  if (focusedEvent) {
-    return (
-      <div className="events-page event-workspace-page" style={styles.page}>
-        <div style={styles.workspaceHeader}>
-          <button type="button" className="secondaryButton" onClick={() => setFocusedId(null)} style={styles.backButton}>← Back to Events</button>
-          <div style={styles.workspaceActions}><button type="button" className="secondaryButton" onClick={openEditEvent} style={styles.secondaryButton}>Edit Event</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('pdf')} style={styles.secondaryButton}>PDF</button><button type="button" className="secondaryButton" onClick={() => exportAlbum('doc')} style={styles.secondaryButton}>Word</button></div>
-        </div>
-        <header style={styles.workspaceTitle}><span style={styles.eyebrow}>Event workspace</span><h2 style={styles.title}>{focusedEvent.name}</h2><div style={styles.metaRow}><span>{dateLabel(focusedEvent.date)}</span><span style={styles.metaDivider}>·</span><span>{focusedEvent.type}</span><span style={styles.metaDivider}>·</span><span>Activities: {focusedEvent.activities?.length || 0}</span><span style={styles.metaDivider}>·</span><span>Total spent: {currency(actualSpent)}</span></div></header>
-        <section className="workspace-panel" style={styles.panel}><div style={styles.panelHeader}><h3 style={styles.sectionTitle}>Activities</h3><button type="button" className="primaryButton" onClick={() => { setEditingActivity(null); setActivityTitle(''); setActivityDescription(''); setActivityDate(focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority('medium'); setDrawer('activity'); }} style={styles.primaryButton}><Plus size={16} aria-hidden="true" /> Add Activity</button></div><ActivityList activities={focusedEvent.activities || []} expensesByActivity={expensesByActivity} onEdit={(activity) => { setEditingActivity(activity); setActivityTitle(activity.title); setActivityDescription(activity.description || ''); setActivityDate(activity.date || focusedEvent.date || new Date().toISOString().slice(0, 10)); setActivityPriority(activity.priority || 'medium'); setDrawer('activity'); }} onAddExpense={(activity) => navigate('/financials/transactions?create=transaction&event=' + encodeURIComponent(focusedEvent.id || focusedEvent.firestoreId) + '&activity=' + encodeURIComponent(activity.id))} onDelete={(activityId) => setPendingDeleteActivity((focusedEvent.activities || []).find((item) => item.id === activityId))} onToggleComplete={toggleActivity} onToggleCancelled={toggleActivityCancellation} /></section>
-        {pendingDeleteActivity ? <ConfirmDialog title="Remove activity?" message={`Remove “${pendingDeleteActivity.title || 'Untitled activity'}” from this event?`} onCancel={() => setPendingDeleteActivity(null)} onConfirm={() => removeActivity(pendingDeleteActivity.id)} /> : null}
-        {drawer ? <Drawer type={drawer} event={focusedEvent} editingEvent={editingEvent} editingActivity={editingActivity} activityTitle={activityTitle} activityDescription={activityDescription} activityDate={activityDate} activityPriority={activityPriority} setActivityTitle={setActivityTitle} setActivityDescription={setActivityDescription} setActivityDate={setActivityDate} setActivityPriority={setActivityPriority} onClose={closeDrawer} onSaveEvent={saveEvent} onSaveActivity={saveActivity} /> : null}
-      </div>
-    );
-  }
 
   const renderEventCard = (event) => (
     <EventStoryCard
@@ -485,8 +340,8 @@ export default function Events() {
       uid={user?.uid}
       isGuest={isGuest}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
-      onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
-      onSummary={() => setSummaryEvent({ id: recordId(event.id || event.firestoreId), scope: scopedMoments.scopeIdentity })}
+      onOpen={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}
+      onPdf={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/pdf`)}
       onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
       onArchive={() => archiveMoment(event)}
       onDelete={() => setPendingDeleteEvent(event)}
@@ -547,9 +402,7 @@ export default function Events() {
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
-      {summaryEvent?.scope === scopedMoments.scopeIdentity && scopedMoments.ready ? <EventSummaryDialog
-        event={scopedMoments.events.find((item) => recordId(item.id || item.firestoreId) === summaryEvent.id)} onClose={() => setSummaryEvent(null)} /> : null}
-      {drawer === 'event' ? <Drawer type="event" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
+      {drawer === 'event' ? <Drawer editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
       {activityChooserOpen ? (
         <ModalDialog title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
           {events.length ? (
@@ -590,64 +443,15 @@ export default function Events() {
   );
 }
 
-function Drawer({ type, editingEvent, editingActivity, activityTitle, activityDescription, activityDate, activityPriority, setActivityTitle, setActivityDescription, setActivityDate, setActivityPriority, onClose, onSaveEvent, onSaveActivity }) {
-  const adminValues = useAppStore((state) => state.adminValues);
-  const heading = type === 'event' ? (editingEvent?.name || 'New event') : (editingActivity?.title || 'New activity');
-  return (
-    <ModalDialog title={heading} onClose={onClose} variant="drawer">
-      <div className="event-drawer-content">
-        {type === 'event' ? (
-          <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose}
-            submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />
-        ) : type === 'activity' ? (
-          <div style={styles.formStack}>
-            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)}
-              placeholder="Activity title" style={styles.input} />
-            <RichTextEditor label="Activity description" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" />
-            <DateField label="Date" name="activity-date" value={activityDate || ''}
-              onChange={(event) => setActivityDate(event.target.value)} />
-            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)}
-              aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </DropdownSelect>
-            <button type="button" className="primaryButton" onClick={onSaveActivity}
-              style={styles.primaryButton}>Save Activity</button>
-          </div>
-        ) : null}
-      </div>
-    </ModalDialog>
-  );
+function Drawer({ editingEvent, onClose, onSaveEvent }) {
+  return <ModalDialog title={editingEvent?.name || 'New event'} onClose={onClose} variant="drawer">
+    <div className="event-drawer-content">
+      <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose}
+        submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />
+    </div>
+  </ModalDialog>;
 }
 
 const styles = {
-  page: { display: 'flex', flexDirection: 'column', gap: '18px', color: 'var(--ink)' },
-  headerRow: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '18px' },
-  workspaceHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' },
-  workspaceActions: { display: 'flex', gap: '8px', flexWrap: 'wrap' },
-  workspaceTitle: { padding: '4px 0 2px' },
-  eyebrow: { fontSize: '0.72rem', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-soft)' },
-  title: { margin: '6px 0 0', fontSize: '1.8rem', color: 'var(--ink)' },
-  metaText: { margin: '6px 0 0', color: 'var(--ink-soft)' },
-  metaRow: { margin: '8px 0 0', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px', color: 'var(--ink-soft)', fontSize: '0.95rem' },
-  metaDivider: { color: 'var(--ink-soft)', fontWeight: 700 },
-  card: { background: 'var(--surface)', borderRadius: '18px', border: '1px solid var(--border)', padding: '18px', boxShadow: '0 8px 18px rgba(47, 70, 58, 0.04)' },
-  listHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' },
-  count: { color: 'var(--ink-soft)', fontSize: '0.82rem' },
-  summaryGrid: { display: 'grid', gridTemplateColumns: 'repeat(3, minmax(0, 1fr))', gap: '12px' },
-  metric: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '14px', padding: '14px', display: 'grid', gap: '6px', color: 'var(--ink)' },
-  panel: { background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: '16px', padding: '16px', color: 'var(--ink)' },
-  panelHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', marginBottom: '12px' },
-  sectionTitle: { margin: 0, fontSize: '1.2rem', color: 'var(--ink)' },
-  primaryButton: { border: 'none', borderRadius: '10px', background: '#2d6a4f', color: '#fff', padding: '11px 14px', fontWeight: 700, cursor: 'pointer' },
-  secondaryButton: { border: '1px solid var(--border)', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink)', padding: '9px 12px', fontWeight: 600, cursor: 'pointer' },
-  backButton: { border: 'none', background: 'transparent', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer', padding: '8px 0' },
-  detailHeader: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '12px', marginBottom: '18px' },
-  detailTitle: { margin: '4px 0 0', fontSize: '1.4rem', color: 'var(--ink)' },
-  closeButton: { width: '34px', height: '34px', border: '1px solid var(--border)', borderRadius: '9px', background: 'var(--surface-soft)', color: 'var(--ink)', cursor: 'pointer', fontSize: '1.2rem' },
-  input: { width: '100%', padding: '12px 14px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--surface-soft)', color: 'var(--ink)', resize: 'vertical' },
-  formStack: { display: 'grid', gap: '12px' },
-  linkedContext: { padding: '12px', borderRadius: '10px', background: 'var(--surface-soft)', color: 'var(--ink-soft)', lineHeight: 1.5 },
-  errorText: { margin: '0 0 12px', padding: '10px 12px', borderRadius: '10px', background: '#fff1f1', color: '#9d3c3c', border: '1px solid #efcaca' },
+  errorText: { margin: '0 0 12px', padding: '10px 12px', borderRadius: '10px', background: '#fff1f1', color: '#9d3c3c', border: '1px solid #efcaca' }
 };

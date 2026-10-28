@@ -584,7 +584,7 @@ export default function CodeLists() {
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
-        <CodeListSection title="Reminder Presets" description="Common reminder times shown for notifications and daily nudges." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
+        <CodeListSection title="Reminder Presets" description="Saved presets for the future Notifications feature." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
       </> : null}
       <ListOrderingPreferences />
 

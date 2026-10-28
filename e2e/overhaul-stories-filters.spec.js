@@ -25,18 +25,15 @@ test('Moments default to recorded Event Date, including across past and future y
   await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toBeVisible();
 });
 
-test('Summary photos belong to their Moment/Activity card, never a footer gallery', async ({ page }) => {
+test('Story photos belong to their exact Moment or Activity', async ({ page }) => {
   await seedGuest(page); await addOriginal(page, { count: 3 });
-  await page.goto('/events');
-  const card = page.getByRole('group', { name: /Weekend in Ooty/ });
-  await card.focus(); await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
-  const dialog = page.getByRole('dialog', { name: 'Moment summary', exact: true });
-  const activity = dialog.locator('.event-summary-activities li').filter({ hasText: 'Book a lakeside stay' });
+  await page.goto('/events/moment-one/story');
+  const story = page.locator('.dn-v2-story');
+  const activity = story.locator('[data-story-activity="shared"]');
   await expect(activity.locator('.dn-attachment-tile')).toHaveCount(3);
   await expect(activity).toContainText('Book a lakeside stay');
-  await expect(dialog.locator('.moment-summary-media').first().locator('.dn-attachment-tile')).toHaveCount(1);
-  await expect(dialog.locator('.moment-summary-attachments')).toHaveCount(0);
+  await expect(story.getByRole('region', { name: 'Moment introduction' }).locator('.dn-attachment-tile')).toHaveCount(1);
+  await expect(story.locator('.moment-summary-attachments')).toHaveCount(0);
 });
 
 test('Dashboard sections remember separate visibility choices across reloads', async ({ page }) => {

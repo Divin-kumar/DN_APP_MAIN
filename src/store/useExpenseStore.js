@@ -1,3 +1,4 @@
+import { formatMomentDate } from '../utils/momentDates';
 /*
   Expense state actions keep master financial records in sync with the UI.
 
@@ -81,7 +82,7 @@ const useExpenseStore = create((set, get) => {
       ...expense,
       id: expense.id || crypto.randomUUID(),
       amount: Number(expense.amount || 0),
-      date: expense.date || new Date().toISOString().slice(0, 10),
+      date: expense.date || formatMomentDate(new Date()),
     };
 
     const sampleData = getActiveSampleData(uid);

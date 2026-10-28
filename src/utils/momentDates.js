@@ -63,3 +63,10 @@ export const getCalendarDaysRemaining = (date, referenceDate = new Date()) => {
   const dayNumber = (value) => Date.UTC(value.getFullYear(), value.getMonth(), value.getDate()) / 86400000;
   return Math.max(dayNumber(date) - dayNumber(referenceDate), 0);
 };
+
+export const getNextBirthdayAge = (value, referenceDate = new Date()) => {
+  const birthday = parseMomentDate(value);
+  if (!birthday) return null;
+  const next = getNextOccurrenceDate({ date: value, recurrence: 'yearly' }, referenceDate);
+  return Math.max(0, next.getFullYear() - birthday.getFullYear());
+};

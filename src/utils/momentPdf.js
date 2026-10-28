@@ -1,12 +1,8 @@
 import useAppStore from '../store/useAppStore';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { attachmentRepository } from '../services/attachmentService';
-import { activityDateLabel, activityStatusLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
-import { getEventStatus } from './eventStatus';
-import { plainRichText } from './richText';
-import { summaryAttachmentsFor, sortedSummaryActivities } from './summaryAttachments';
+import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
-import { downloadBlob } from './download';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
 import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES } from './pdfStudioOptions';
 import { pdfStoryText } from './pdfStoryText';
@@ -16,7 +12,6 @@ const INSET = 43;
 const CONTENT_WIDTH = PDF_PAGE_WIDTH - INSET * 2;
 const BOTTOM = PDF_PAGE_HEIGHT - 51;
 const palette = { ink: '#28313f', muted: '#64748b', accent: '#266a65', line: '#e0e6e9', surface: '#f1f7f5' };
-const statusLabel = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled', archived: 'Archived' };
 const makeCanvas = () => {
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(PDF_PAGE_WIDTH * SCALE);
@@ -302,62 +297,6 @@ export class MomentPdfPainter {
   async done() {
     return (await this.renderedPages()).blob;
   }
-}
-
-// Exact current Account/Guest/Sample scope is checked before and after each
-// asynchronous original read. Export only the Moment supplied by the scoped UI.
-export async function downloadMomentPdf(event, { greeting = event?.greetingCard, status, date } = {}) {
-  if (!event) throw new Error('This Moment is no longer available.');
-  const state = useAppStore.getState();
-  const uid = state.user?.uid || null;
-  const isGuest = Boolean(state.isGuest);
-  const sample = getActiveSampleScenario(uid);
-  if (!uid && !isGuest) throw new Error('Sign in or continue as Guest before downloading.');
-  const assertCurrent = () => {
-    const current = useAppStore.getState();
-    if ((current.user?.uid || null) !== uid || Boolean(current.isGuest) !== isGuest
-      || getActiveSampleScenario(uid) !== sample) throw new Error('Your session changed. Reopen the summary before downloading.');
-  };
-  const context = { uid, isGuest, sample: Boolean(sample), assertCurrent };
-  const pdf = new MomentPdfPainter(assertCurrent);
-  await pdf.text(event.name || 'Untitled moment', { size: 24, bold: true, color: palette.accent, after: 13 });
-  await pdf.text(`${event.type || 'Moment'}   |   ${date || activityDateLabel(event.date)}   |   ${status || statusLabel[getEventStatus(event)] || 'Upcoming'}`,
-    { size: 11, color: palette.muted, after: 18 });
-  if (greeting?.title || greeting?.body) {
-    await pdf.heading('Greeting');
-    if (greeting.title) await pdf.text(plainRichText(greeting.title), { size: 15, bold: true });
-    if (greeting.body) await pdf.text(plainRichText(greeting.body));
-  }
-  if (event.notes) {
-    await pdf.heading('Moment notes');
-    await pdf.text(plainRichText(event.notes));
-  }
-  await pdf.attachments(summaryAttachmentsFor(event), context);
-  const activities = sortedSummaryActivities(event.activities);
-  await pdf.heading(`Activities (${activities.length})`);
-  for (const activity of activities) {
-    await pdf.ensure(55);
-    await pdf.text(activity.title || activity.name || 'Untitled activity', { size: 13, bold: true, after: 2 });
-    await pdf.text(`${activityDateLabel(activity.date)}  |  ${activityStatusLabel(activity)}`, { size: 10, color: palette.muted, after: 7 });
-    if (activity.description) await pdf.text(plainRichText(activity.description), { indent: 10, after: 11 });
-    if (activity.id !== undefined && activity.id !== null && String(activity.id).trim()) {
-      await pdf.attachments(summaryAttachmentsFor(event, activity.id), context);
-    }
-    pdf.y += 7;
-  }
-  if (event.memories?.length) {
-    await pdf.heading('Memories');
-    for (const memory of event.memories) {
-      if (memory.title) await pdf.text(memory.title, { size: 13, bold: true, after: 2 });
-      if (memory.createdAt) await pdf.text(activityDateLabel(memory.createdAt, ''), { size: 10, color: palette.muted, after: 5 });
-      if (memory.body) await pdf.text(plainRichText(memory.body), { after: 13 });
-    }
-  }
-  assertCurrent();
-  const blob = await pdf.done();
-  assertCurrent();
-  downloadBlob(blob, momentPdfFilename(event.name));
-  return blob;
 }
 
 const studioDate = (value) => activityDateLabel(value, 'Undated');

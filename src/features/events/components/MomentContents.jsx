@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ChevronRight, Images, ListChecks, Receipt } from 'lucide-react';
+import { ChevronRight, Images, ListChecks, Receipt, SlidersHorizontal } from 'lucide-react';
 import { activityStatus, isAttachmentImage } from '../../../utils/activityDetail';
 import { formatTransactionMoney as momentMoney } from '../../../components/financials/TransactionHistory';
 
@@ -16,8 +16,10 @@ export default function MomentContents({ moment, finance }) {
     { section: 'transactions', title: 'Transactions', icon: Receipt,
       description: finance.error ? 'Transactions couldn’t be loaded. Open to retry.' : !finance.ready ? 'Loading transactions…'
         : `${momentMoney(finance.summary.income)} income · ${momentMoney(finance.summary.expense)} expense · ${momentMoney(finance.summary.balance)} balance · ${finance.transactions.length} transactions` },
-    { section: 'attachments', title: 'Attachments', icon: Images,
+    { section: 'gallery', title: 'Gallery', icon: Images,
       description: attachments.length ? `${attachments.length} attachments${imageCount ? ` · ${imageCount} images` : ''}` : 'No attachments added yet' },
+    { section: 'pdf', title: 'PDF Studio', icon: SlidersHorizontal,
+      description: 'Customize, preview and download your Moment' },
   ];
   return <nav className="moment-contents" aria-label="Moment contents">{rows.map(({ section, title, icon: Icon, description }) =>
     <Link key={section} className="moment-contents-row" to={`${base}/${section}`}><Icon size={19} aria-hidden="true" />

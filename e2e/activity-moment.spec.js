@@ -115,12 +115,12 @@ test('Activity Detail owns Cancel/Restore/Delete actions; overview cards stay me
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Room deposit');
 });
 
-test('Moment Transactions has four reachable tabs, full-Moment totals, independent filters and in-place forms', async ({ page }) => {
+test('Moment Transactions has five reachable tabs, full-Moment totals, independent filters and in-place forms', async ({ page }) => {
   const errors = await seedGuest(page); await page.goto('/events/moment-one/transactions');
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
   await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Moments');
   const tabs = page.locator('.event-workspace-nav a');
-  expect(await tabs.allTextContents()).toEqual(['Overview', 'Activities3', 'Transactions', 'Attachments']);
+  expect(await tabs.allTextContents()).toEqual(['Story', 'Activities3', 'Transactions', 'Gallery', 'PDF Studio']);
   const bounds = await tabs.evaluateAll((links) => links.map((link) => Math.round(link.getBoundingClientRect().top)));
   expect(new Set(bounds).size).toBe(1);
   const totals = page.getByRole('group', { name: 'Totals for this Moment' });
@@ -151,7 +151,7 @@ test('Moment Transactions has four reachable tabs, full-Moment totals, independe
   await expect(dialog).toHaveCount(0); await expect(page).toHaveURL(/\/events\/moment-one\/transactions$/);
   await expect(totals).toContainText('₹170');
   await page.reload(); await expect(totals).toContainText('₹170');
-  await page.getByRole('link', { name: 'Overview', exact: true }).click();
+  await page.getByRole('link', { name: 'Story', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Moment contents' })).toContainText('Transactions');
   await page.goBack(); await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
   await page.goForward(); await expect(page.getByRole('navigation', { name: 'Moment contents' })).toBeVisible();

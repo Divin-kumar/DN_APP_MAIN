@@ -129,6 +129,7 @@ test('new Guest backup guidance is versioned and older edited tours wait for exp
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
   const current = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')));
   expect(current.events[0].notes).toContain('Data & Backup');
-  expect(current.demoVersion).toBe('2026.10.28.3');
+  expect(current.demoVersion).toBe('2026.10.28.4');
+  for (const destination of ['Story', 'Gallery', 'PDF Studio']) expect(current.events[0].notes).toContain(destination);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups') || '[]')).toBe('[]');
 });

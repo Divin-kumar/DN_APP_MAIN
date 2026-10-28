@@ -1,9 +1,9 @@
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
-// It is the full detail page for one life moment, where the user can edit the event and manage activities, notes, memories, and spending.
+// It is the full detail page for one life moment and its existing linked records.
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { Archive, ArchiveRestore, ArrowLeft, BookHeart, CalendarDays, Check, CircleCheck, Clock3, Download, FileText, Heart, Images, ListChecks, Pencil, Plus, Receipt, Save, Search, Sparkles, Trash2, X } from 'lucide-react';
+import { Archive, ArchiveRestore, ArrowLeft, CalendarDays, Download, FileText, Images, ListChecks, Pencil, Receipt, Save, Search, Sparkles, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
@@ -37,6 +37,8 @@ import useMomentFinance from '../../../hooks/useMomentFinance';
 import LinkedTransactions from '../../finance/components/LinkedTransactions';
 import MomentContents from './MomentContents';
 import MomentStory from './MomentStory';
+import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
+import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
@@ -48,22 +50,6 @@ const ACTIVITY_LIST_OPTIONS = Object.freeze({
 });
 
 const formatDate = activityDateLabel;
-
-const getBirthdayAge = (value) => {
-  if (!value) return null;
-
-  const birthDate = new Date(value);
-  if (Number.isNaN(birthDate.getTime())) return null;
-
-  const today = new Date();
-  const todayDate = new Date(today.getFullYear(), today.getMonth(), today.getDate());
-  const birthdayThisYear = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate());
-
-  let age = today.getFullYear() - birthDate.getFullYear();
-  if (todayDate < birthdayThisYear) age -= 1;
-
-  return Math.max(age, 0);
-};
 
 export default function EventWorkspaceShell() {
   const { eventId } = useParams();
@@ -94,7 +80,7 @@ export function EventWorkspaceContent() {
   const activitySavingRef = useRef(false);
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityTitle, setActivityTitle] = useState('');
-  const [activityDate, setActivityDate] = useState(new Date().toISOString().slice(0, 10));
+  const [activityDate, setActivityDate] = useState(() => formatMomentDate(new Date()));
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
@@ -165,7 +151,7 @@ export function EventWorkspaceContent() {
     if (!location.search.includes('create=activity')) return;
     setActivityTitle('');
     setActivityDescription('');
-    setActivityDate(new Date().toISOString().slice(0, 10));
+    setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
     setActivityError('');
     setActivityDialogOpen(true);
@@ -225,14 +211,15 @@ export function EventWorkspaceContent() {
   }
 
   const sections = [
-    { label: 'Overview', path: `/events/${encodeURIComponent(eventId)}/overview`, detail: 'Event details and current status', icon: FileText },
-    { label: 'Activities', path: `/events/${encodeURIComponent(eventId)}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
-    { label: 'Transactions', path: `/events/${encodeURIComponent(eventId)}/transactions`, detail: 'Income and expenses linked to this Moment', icon: Receipt },
-    { label: 'Attachments', path: `/events/${encodeURIComponent(eventId)}/attachments`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
+    { key: 'story', label: 'Story', path: `/events/${encodeURIComponent(eventId)}/story`, detail: 'Your Moment, in your words', icon: FileText },
+    { key: 'activities', label: 'Activities', path: `/events/${encodeURIComponent(eventId)}/activities`, detail: `${event.activities?.length || 0} activities captured`, icon: ListChecks },
+    { key: 'transactions', label: 'Transactions', path: `/events/${encodeURIComponent(eventId)}/transactions`, detail: 'Income and expenses linked to this Moment', icon: Receipt },
+    { key: 'gallery', label: 'Gallery', path: `/events/${encodeURIComponent(eventId)}/gallery`, detail: `${event.attachments?.length || 0} keepsakes attached`, icon: Images },
+    { key: 'pdf', label: 'PDF Studio', path: `/events/${encodeURIComponent(eventId)}/pdf`, detail: 'Customize and preview your pages', icon: Download },
   ];
   const sectionName = getMomentWorkspaceSection(location.pathname);
-  const activeSection = sections.find((section) => section.label.toLowerCase() === sectionName) || sections[0];
-  const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getBirthdayAge(event.date) : null;
+  const activeSection = sections.find((section) => section.key === sectionName) || sections[0];
+  const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getNextBirthdayAge(event.date) : null;
   const activities = [...(event.activities || [])].sort((first, second) => {
     const dateOrder = new Date(first.date || '9999-12-31').getTime() - new Date(second.date || '9999-12-31').getTime();
     let result = dateOrder;
@@ -260,9 +247,10 @@ export function EventWorkspaceContent() {
   const totalSpent = finance.summary.expense;
   const memoryCount = (event.memories || []).length;
   const attachments = event.attachments || [];
-  const eventDateValue = new Date(event.date || event.startDate || event.createdAt);
-  const validEventDate = !Number.isNaN(eventDateValue.getTime());
-  const daysUntilEvent = validEventDate ? Math.ceil((new Date(eventDateValue.getFullYear(), eventDateValue.getMonth(), eventDateValue.getDate()).getTime() - new Date(new Date().getFullYear(), new Date().getMonth(), new Date().getDate()).getTime()) / 86400000) : null;
+  const eventDateValue = getNextOccurrenceDate(event);
+  const today = new Date();
+  const daysUntilEvent = eventDateValue ? (Date.UTC(eventDateValue.getFullYear(), eventDateValue.getMonth(), eventDateValue.getDate())
+    - Date.UTC(today.getFullYear(), today.getMonth(), today.getDate())) / 86400000 : null;
   const eventStyle = String(event.type || '').toLowerCase();
   const eventMood = eventStyle.includes('birth') || eventStyle.includes('wedding') || eventStyle.includes('engagement') ? 'celebration' : eventStyle.includes('vacation') || eventStyle.includes('travel') ? 'travel' : eventStyle.includes('investment') || eventStyle.includes('insurance') || eventStyle.includes('finance') ? 'finance' : eventStyle.includes('anniversary') || eventStyle.includes('marriage') ? 'romance' : 'life';
   const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -413,8 +401,6 @@ export function EventWorkspaceContent() {
     } catch { showToast('Could not update archive state', 'danger'); }
   };
 
-  const printSummary = () => window.print();
-
   const removeEvent = async () => {
     try {
       await deleteEventItem(user?.uid, isGuest, eventId);
@@ -426,7 +412,7 @@ export function EventWorkspaceContent() {
   };
 
   const renderSectionContent = () => {
-    if (activeSection.label === 'Overview') {
+    if (activeSection.key === 'story') {
       return (
         <div className="event-moment-overview dn-v2-story-overview">
           <MomentStory moment={event} momentTypes={momentTypes} uid={user?.uid} isGuest={isGuest}
@@ -473,7 +459,7 @@ export function EventWorkspaceContent() {
       );
     }
 
-    if (activeSection.label === 'Attachments') {
+    if (activeSection.key === 'gallery') {
       return (
         <div className="workspace-resource-list">
           <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
@@ -482,7 +468,7 @@ export function EventWorkspaceContent() {
       );
     }
 
-    return <div className="workspace-empty-surface"><Download size={24} /><strong>Export summary</strong><p>A printable summary for {event.name} will be available here.</p><button type="button" className="primaryButton" onClick={printSummary} style={styles.primaryButton}>Print summary</button></div>;
+    return <MomentPdfStudio key={eventId} event={event} />;
   };
 
   return (
@@ -510,7 +496,7 @@ export function EventWorkspaceContent() {
           <h1>{event.name}</h1>
           <div className="event-moment-date">
             <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}</span>
-            {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge + 1}</span> : null}
+            {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge}</span> : null}
             <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
           </div>
           <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Reflections <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
@@ -536,10 +522,10 @@ export function EventWorkspaceContent() {
       {activityBusy ? <p role="status">Saving activity…</p> : null}
       {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
-      <main className={`event-workspace-section-panel event-section-${activeSection.label.toLowerCase()}`}>
+      <main className={`event-workspace-section-panel event-section-${activeSection.key}`}>
         <div className="event-section-heading">
-          <span>{activeSection.label === 'Overview' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.detail}</span>
-          <h2>{activeSection.label === 'Overview' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
+          <span>{activeSection.key === 'story' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.detail}</span>
+          <h2>{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}

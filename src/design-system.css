@@ -608,8 +608,6 @@ html[data-theme] .event-moment-turning { color: var(--color-text-muted); white-s
 html[data-theme] .event-moment-countdown { display: inline; margin: 0; color: var(--color-success); font-weight: 650; white-space: nowrap; }
 html[data-theme] .event-moment-hero { animation-duration: .14s !important; }
 html[data-theme] .event-workspace-section-panel { animation-duration: .12s !important; }
-html[data-theme] .dashboard-event-summary-modal { scrollbar-width: none; -ms-overflow-style: none; }
-html[data-theme] .dashboard-event-summary-modal::-webkit-scrollbar { display: none; }
 
 /* Finance: fixed summary, horizontal segmented control, shared content panel. */
 html[data-theme] .financials-page { display: grid !important; grid-template-columns: minmax(0,1fr); align-content: start; gap: var(--space-md) !important; width: min(100%, 920px); margin: 0 auto; }
@@ -1203,26 +1201,6 @@ html[data-theme] .sort-option { display: inline-flex; min-height: 36px; flex: 0 
 html[data-theme] .sort-option.is-selected { border-color: color-mix(in srgb,var(--color-primary) 54%,var(--color-border)); background: color-mix(in srgb,var(--color-primary) 14%,var(--color-card)); color: var(--color-primary); font-weight: 750; }
 html[data-theme] .sort-option:hover { background: var(--color-card-raised); }
 html[data-theme] .financial-module-toolbar .sort-control { min-width: 0; }
-html[data-theme] .event-summary-content { display: grid; gap: var(--space-md); color: var(--color-text); }
-html[data-theme] .event-summary-header { padding: var(--space-lg); border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-card-raised); }
-html[data-theme] .event-summary-header > span { display: inline-flex; align-items: center; gap: 6px; color: var(--color-primary); font-size: var(--font-caption); }
-html[data-theme] .event-summary-header h3 { margin: var(--space-sm) 0; color: var(--color-text); font-size: var(--font-title); }
-html[data-theme] .event-summary-header p,
-html[data-theme] .event-summary-notes { margin: 0; color: var(--color-text-muted); font-size: var(--font-caption); line-height: 1.5; }
-html[data-theme] .event-summary-activities { display: grid; gap: var(--space-sm); }
-html[data-theme] .event-summary-activities h4 { display: flex; justify-content: space-between; margin: 0; color: var(--color-text); }
-html[data-theme] .event-summary-activities h4 span { color: var(--color-text-muted); }
-html[data-theme] .event-summary-activities ul { display: grid; gap: var(--space-sm); margin: 0; padding: 0; list-style: none; }
-html[data-theme] .event-summary-activities li { display: grid; grid-template-columns: 18px minmax(0,1fr); gap: var(--space-sm); padding: var(--space-md); border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-card); }
-html[data-theme] .event-summary-activities li > span { display: grid; width: 18px; height: 18px; place-items: center; color: var(--color-text-muted); }
-html[data-theme] .event-summary-activities li > span.is-complete { color: var(--color-success); }
-html[data-theme] .event-summary-activity-copy { display: grid; min-width: 0; gap: 4px; }
-html[data-theme] .event-summary-activity-copy strong { color: var(--color-text); font-size: var(--font-body); }
-html[data-theme] .event-summary-activity-copy small { color: var(--color-text-muted); font-size: var(--font-caption); }
-html[data-theme] .event-summary-activity-copy p { margin: 3px 0 0; color: var(--color-text-muted); font-size: var(--font-caption); line-height: 1.45; overflow-wrap: anywhere; }
-html[data-theme] .event-summary-activity-copy p.is-truncated { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
-html[data-theme] .event-summary-activity-copy button { justify-self: start; padding: 2px 0; border: 0; background: transparent; color: var(--color-primary); font-size: var(--font-caption); font-weight: 700; }
-html[data-theme] .event-summary-empty { margin: 0; color: var(--color-text-muted); font-size: var(--font-caption); }
 html[data-theme] .about-version-footer { padding: var(--space-md) 0; color: var(--color-text-muted); font-size: var(--font-caption); text-align: center; }
 html[data-theme] .about-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
 html[data-theme] .about-version-badge { padding: 4px 9px; border: 1px solid color-mix(in srgb,var(--color-primary) 28%,var(--color-border)); border-radius: 999px; background: color-mix(in srgb,var(--color-primary) 10%,var(--color-card)); color: var(--color-primary); font-size: var(--font-caption); font-weight: 750; letter-spacing: .01em; line-height: 1.2; }
@@ -1234,12 +1212,6 @@ html[data-theme] .about-refresh-button { flex: 0 0 auto; white-space: nowrap; }
 html[data-theme] .about-refresh-button:disabled { opacity: .72; cursor: progress; }
 html[data-theme] .about-refresh-button .is-spinning { animation: about-refresh-spin .9s linear infinite; }
 @keyframes about-refresh-spin { to { transform: rotate(360deg); } }
-html[data-theme] .dashboard-summary-activity-copy { display: grid; min-width: 0; gap: 3px; }
-html[data-theme] .dashboard-event-summary-modal .dashboard-summary-activity-item { grid-template-columns: 18px minmax(0,1fr) !important; }
-html[data-theme] .dashboard-summary-description-wrap { display: grid; justify-items: start; gap: 2px; min-width: 0; grid-column: 1 / -1; }
-html[data-theme] .dashboard-summary-description { color: var(--color-text-muted); font-size: var(--font-caption); line-height: 1.4; overflow-wrap: anywhere; }
-html[data-theme] .dashboard-summary-description.is-truncated { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-clamp: 2; }
-html[data-theme] .dashboard-summary-description-toggle { padding: 2px 0; border: 0; background: transparent; color: var(--color-primary); font-size: var(--font-caption); font-weight: 700; }
 
 @media (max-width: 760px) {
   html[data-theme] .event-discovery-bar { grid-template-columns: minmax(0,1fr); }
@@ -1511,8 +1483,6 @@ html[data-theme] .free-text-preview:not(.is-truncated) { display: block !importa
 html[data-theme] .event-story-note { --free-text-lines: 2; }
 html[data-theme] .event-memory-story-copy { --free-text-lines: 3; }
 html[data-theme] .workspace-memory-body { --free-text-lines: 3; }
-html[data-theme] .event-summary-activity-copy > p { --free-text-lines: 2; }
-html[data-theme] .dashboard-summary-description { --free-text-lines: 2; }
 html[data-theme] .dashboard-greeting > p { --free-text-lines: 2; }
 html[data-theme] .event-memory-story-copy.is-expanded { display: block !important; overflow: visible !important; -webkit-line-clamp: unset !important; line-clamp: unset; }
 
@@ -2652,7 +2622,6 @@ html[data-theme] .dn-rich-text code { padding:1px 4px; border-radius:4px; backgr
 html[data-theme] .dn-rich-text-inline { white-space:pre-wrap; }
 html[data-theme] .dn-rich-text.free-text-preview { white-space:normal !important; }
 html[data-theme] .dn-rich-text.free-text-preview .dn-rich-text-line { white-space:pre-wrap; }
-html[data-theme] .event-summary-activity-copy > .dn-rich-text { --free-text-lines:2; }
 html[data-theme] .dn-transaction-note.dn-rich-text { color:var(--color-text-muted); font-size:12px; }
 html[data-theme] .event-activity-copy > .dn-rich-text { margin-top:4px; color:var(--color-text-muted); font-size:13px; }
 @media screen and (max-width:1024px) {
@@ -2767,24 +2736,6 @@ html[data-theme] .dn-swipe-popup-item:focus-visible { outline:2px solid var(--co
 html[data-theme] .event-activity-card.is-readonly .event-activity-main { padding-right:12px !important; }
 
 /* Moment summaries expose the entire content; the shared dialog body handles scrolling. */
-html[data-theme] .event-summary-dialog,
-html[data-theme] .dashboard-event-summary-modal { width:min(920px, calc(100vw - 24px)); max-width:920px; }
-html[data-theme] .event-summary-content,
-html[data-theme] .dashboard-event-summary-modal .dashboard-summary-activity-copy { min-width:0; overflow-wrap:anywhere; }
-html[data-theme] .event-summary-header h3,
-html[data-theme] .event-summary-activity-copy strong,
-html[data-theme] .dashboard-event-summary-modal .dashboard-summary-activity-copy > span { white-space:normal !important; overflow:visible !important; text-overflow:clip !important; overflow-wrap:anywhere; }
-html[data-theme] .event-summary-dialog .dn-rich-text,
-html[data-theme] .dashboard-event-summary-modal .dn-rich-text { display:block; max-height:none; overflow:visible; -webkit-line-clamp:unset; line-clamp:unset; }
-html[data-theme] .moment-summary-memories { display:grid; gap:14px; }
-html[data-theme] .moment-summary-memories > div { display:grid; gap:6px; min-width:0; overflow-wrap:anywhere; }
-html[data-theme] .moment-summary-memories small { color:var(--color-text-muted); }
-html[data-theme] .moment-summary-attachments { min-width:0; }
-html[data-theme] .moment-summary-attachments .dn-attachment-open { flex-direction:column; align-items:stretch; }
-html[data-theme] .moment-summary-attachments .dn-attachment-open img { width:100%; height:auto; max-height:none; object-fit:contain; }
-html[data-theme] .moment-summary-attachments .dn-attachment-open strong { white-space:normal; overflow:visible; overflow-wrap:anywhere; text-overflow:clip; }
-html[data-theme] .event-summary-dialog .dn-modal-body,
-html[data-theme] .dashboard-event-summary-modal .dn-modal-body { min-width:0; overflow-wrap:anywhere; }
 
 /* Scoped List sorting preferences in Code Lists: existing fields, no new record taxonomy. */
 html[data-theme] .code-lists-page .dn-list-sort-settings {

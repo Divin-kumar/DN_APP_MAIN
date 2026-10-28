@@ -1,12 +1,11 @@
 import { test, expect } from '@playwright/test';
 import { addOriginal, fixtureMoments, seedGuest } from './fixtures.js';
 
-async function openSummary(page) {
-  await page.goto('/events');
-  const moment = page.getByRole('group', { name: /Weekend in Ooty/ });
-  await moment.focus(); await page.keyboard.press('Enter');
-  await page.getByRole('menuitem', { name: 'Summary', exact: true }).click();
-  return page.getByRole('dialog', { name: 'Moment summary', exact: true });
+async function openStory(page) {
+  await page.goto('/events/moment-one/story');
+  const story = page.locator('.dn-v2-story');
+  await expect(story).toBeVisible();
+  return story;
 }
 
 async function assertViewport(page, locator) {
@@ -38,26 +37,19 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
       localStorage.setItem('dn_guest_eventGroups', JSON.stringify(moments));
     }, reference);
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-    const summary = await openSummary(page);
-    await assertViewport(page, summary);
-    await expect(summary.locator('.moment-summary-moment')).toContainText('END_NOTES');
-    await expect(summary.locator('.moment-summary-moment .dn-attachment-tile')).toHaveCount(2);
-    const owner = summary.locator('.moment-summary-activity').filter({ hasText:'Book a lakeside stay' });
+    const story = await openStory(page);
+    await expect(story.getByRole('region', { name:'Moment introduction' })).toContainText('END_NOTES');
+    await expect(story.getByRole('region', { name:'Moment introduction' }).locator('.dn-attachment-tile')).toHaveCount(2);
+    const owner = story.locator('[data-story-activity="shared"]');
     await expect(owner.locator('.dn-attachment-tile')).toHaveCount(3);
     await expect(owner).toContainText('END_DETAILS');
-    await expect(summary.locator('.moment-summary-activity').filter({ hasText:'Choose the train' }).locator('.dn-attachment-tile')).toHaveCount(1);
-    expect(await owner.evaluate((node) => Boolean(node.querySelector('.dn-rich-text').compareDocumentPosition(node.querySelector('.moment-summary-media')) & Node.DOCUMENT_POSITION_FOLLOWING))).toBe(true);
-    expect(await summary.locator('.dn-attachment-tile').evaluateAll((nodes) => nodes.every((node) => node.closest('.moment-summary-story')))).toBe(true);
-    await expect(summary.locator('.moment-summary-attachments')).toHaveCount(0);
-    await expect(summary.locator('.event-summary-activities li').first()).toContainText('Choose the train');
-    await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
-
+    await expect(story.locator('[data-story-activity="completed"]').locator('.dn-attachment-tile')).toHaveCount(1);
+    expect(await story.locator('.dn-attachment-tile').evaluateAll((nodes) => nodes.every((node) => node.closest('[data-story-activity], .dn-v2-story-intro')))).toBe(true);
     await page.goto('/dashboard');
     await page.locator('.dashboard-moment-row').filter({ hasText:moments[0].name }).locator('.dashboard-upcoming-row').click();
-    await expect(summary.locator('.moment-summary-moment .dn-attachment-tile')).toHaveCount(2);
-    await expect(summary.locator('.moment-summary-activity').filter({ hasText:'Book a lakeside stay' }).locator('.dn-attachment-tile')).toHaveCount(3);
-    expect(await summary.locator('.dn-attachment-tile').evaluateAll((nodes) => nodes.every((node) => node.closest('.moment-summary-story')))).toBe(true);
-    await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
+    await expect(page).toHaveURL(/\/events\/moment-one\/story$/);
+    await expect(story.getByRole('region', { name:'Moment introduction' }).locator('.dn-attachment-tile')).toHaveCount(2);
+    await expect(owner.locator('.dn-attachment-tile')).toHaveCount(3);
     await page.goto('/activities');
     const card = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
     await expect(card).toBeVisible();
@@ -105,17 +97,16 @@ test('Activity transaction section appears and disappears with its actual linked
   await expect(page.getByRole('alert')).toHaveCount(0);
 });
 
-test('summary, nested original preview and Activity menu remain within a reduced viewport', async ({ page }) => {
+test('Story, original preview and Activity menu remain within a reduced viewport', async ({ page }) => {
   await page.setViewportSize({ width:320, height:480 });
   await seedGuest(page); await addOriginal(page);
-  const summary = await openSummary(page);
-  await assertViewport(page, summary);
-  const preview = summary.getByRole('button', { name:'Preview Activity photo 0.png', exact:true });
+  const story = await openStory(page);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  const preview = story.getByRole('button', { name:'Preview Activity photo 0.png', exact:true });
   await preview.scrollIntoViewIfNeeded(); await preview.click();
   const original = page.getByRole('dialog', { name:'Activity photo 0.png', exact:true });
   await assertViewport(page, original);
   await page.keyboard.press('Escape'); await expect(preview).toBeFocused();
-  await summary.getByRole('button', { name:'Close dialog', exact:true }).click();
   await page.goto('/events/moment-one/activities/shared');
   await page.getByRole('button', { name:'Activity options', exact:true }).click();
   await assertViewport(page, page.getByRole('menu'));

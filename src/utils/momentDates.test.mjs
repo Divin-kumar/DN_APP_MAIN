@@ -1,8 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
-import { formatMomentDate, getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, parseMomentDate } from './momentDates.js';
+import { formatMomentDate, getCalendarDaysRemaining, getEventDate, getNextBirthdayAge, getNextOccurrenceDate, parseMomentDate } from './momentDates.js';
 import { getUpcomingDashboardEvents } from './dashboardVisibility.js';
+
+test('next birthday age includes today, advances only after the birthday and respects the original start', () => {
+  assert.equal(getNextBirthdayAge('2000-10-28', new Date(2026, 9, 27)), 26);
+  assert.equal(getNextBirthdayAge('2000-10-28', new Date(2026, 9, 28)), 26);
+  assert.equal(getNextBirthdayAge('2000-10-28', new Date(2026, 9, 29)), 27);
+  assert.equal(getNextBirthdayAge('2027-10-28', new Date(2026, 9, 28)), 0);
+  assert.equal(getNextBirthdayAge('2000-02-29', new Date(2026, 1, 28)), 26);
+  assert.equal(getNextBirthdayAge('invalid'), null);
+});
 
 test('date-only Moments retain their local calendar day in negative UTC time zones', () => {
   const moduleUrl = new URL('./momentDates.js', import.meta.url).href;

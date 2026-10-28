@@ -24,7 +24,7 @@ test('Phase 2 Moment discovery is responsive, readable and action-safe', async (
   await page.keyboard.press('Escape');
   await card.focus();
   await page.keyboard.press('Enter');
-  await expect(page.getByRole('menuitem', { name: 'Summary', exact: true })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'PDF Studio', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
   expect(errors).toEqual([]);

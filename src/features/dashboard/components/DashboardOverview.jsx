@@ -9,19 +9,16 @@ import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeG
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
-import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
-import RichText from '../../../components/common/RichText';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
 import SwipeToComplete from '../../../components/common/SwipeToComplete';
 import ActivityActionDialogs from '../../../components/events/ActivityActionDialogs';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import useActivityActions from '../../../hooks/useActivityActions';
-import { activityDateLabel, activityDetailPath, activityStatus } from '../../../utils/activityDetail';
+import { activityDetailPath, activityStatus } from '../../../utils/activityDetail';
 import { isActivityEditable, isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
 import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
-import MomentSummaryExtras, { MomentSummaryPhotos, sortedSummaryActivities } from '../../../components/events/MomentSummaryExtras';
 import './DashboardSections.css';
 import DashboardGreeting from './DashboardGreeting';
 import useDashboardClock from '../useDashboardClock';
@@ -189,111 +186,6 @@ const getGreetingMessage = (event, greetingTemplates = {}, momentTypes = []) => 
   };
 };
 
-function EventSummaryModal({ event, onClose }) {
-  const eventDate = getNextOccurrenceForStatus(event);
-  const activities = sortedSummaryActivities(event.activities);
-  const totalActivities = activities.length;
-  const completedActivities = activities.filter((activity) => Boolean(activity.completed)).length;
-  const daysRemaining = getDaysRemaining(eventDate);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
-  const isRecurring = isRecurringEvent(event);
-  const eventStatus = (() => {
-    if (!eventDate) return 'Upcoming';
-    if (isRecurring) {
-      if (eventDate.getTime() === today.getTime()) return 'Today';
-      if (eventDate.getTime() === new Date(today.getFullYear(), today.getMonth(), today.getDate() + 1).getTime()) return 'Tomorrow';
-      if (daysRemaining !== null && daysRemaining <= 7) return 'This Week';
-      return 'Upcoming';
-    }
-    if (eventDate.getTime() === today.getTime()) return 'Today';
-    if (eventDate < today) return completedActivities === totalActivities && totalActivities > 0 ? 'Completed' : 'Missed';
-    return 'Upcoming';
-  })();
-
-  const statusText = eventStatus === 'Upcoming' && daysRemaining !== null && daysRemaining <= 3 && !isRecurring ? 'Moment is approaching' : eventStatus;
-  const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
-  const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
-  const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
-
-  const [studioOpen, setStudioOpen] = useState(false);
-
-  return (
-    <>
-    <ModalDialog title="Moment summary" onClose={onClose} className="dashboard-event-summary-modal">
-      <div style={styles.cardWrap}>
-        <div className="dn-summary-export-top">
-          <button type="button" className="secondaryButton dn-summary-export-button" onClick={() => setStudioOpen(true)}
-            aria-label="Open PDF Studio"><SlidersHorizontal size={16} /> Customize PDF</button>
-          <span>Preview and arrange your pages before downloading.</span>
-        </div>
-        <div className="moment-summary-story moment-summary-moment">
-        <div style={styles.hero}>
-          <div>
-            <div style={styles.kicker}>Moment</div>
-            <h4 style={styles.heroTitle}>{event.name || 'Untitled moment'}</h4>
-          </div>
-          <div style={styles.heroMeta}>
-            <span style={styles.typePill}>{event.type || 'Moment'}</span>
-            <strong style={styles.daysText}>
-              {daysRemaining === null ? 'Date pending' : daysRemaining === 0 ? 'Today' : `${daysRemaining} days left`}
-            </strong>
-            <span style={styles.dateText}>{formatDisplayDate(eventDate)}</span>
-          </div>
-        </div>
-
-        {greeting ? (
-          <GreetingCard title={greeting.title} body={greeting.body} momentName={event.name} momentType={event.type} dateLabel={formatDisplayDate(eventDate)} />
-        ) : null}
-        {event.notes ? <RichText className="event-summary-notes" value={event.notes} /> : null}
-        <MomentSummaryPhotos event={event} />
-        </div>
-
-        <div style={styles.section}>
-          <div style={styles.statusRow}>{statusText}</div>
-        </div>
-
-        {activities.length ? (
-          <div style={styles.section}>
-            <ul style={styles.activityList}>
-              {activities.map((activity, index) => {
-                const label = activity.title || activity.name || 'Untitled activity';
-                const isComplete = Boolean(activity.completed);
-                const description = String(activity.description || '');
-                const hasDescription = Boolean(description.trim());
-
-                return (
-                  <li key={`${label}-${activity.id ?? index}`} className="dashboard-summary-activity-item moment-summary-story moment-summary-activity" style={styles.activityItem}>
-                    <span style={isComplete ? styles.activityCheckComplete : styles.activityCheckPending}>
-                      {isComplete ? '✓' : '○'}
-                    </span>
-                    <div className="dashboard-summary-activity-copy">
-                      <span style={styles.activityLabel}>{label}</span>
-                      <span style={styles.activityDate}>{activityDateLabel(activity.date)}</span>
-                      {hasDescription ? (
-                        <div className="dashboard-summary-description-wrap">
-                          <RichText className="dashboard-summary-description" value={description} />
-                        </div>
-                      ) : null}
-                      {recordId(activity.id) ? <MomentSummaryPhotos event={event} activityId={activity.id} /> : null}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-        ) : null}
-
-        <MomentSummaryExtras event={event} />
-
-      </div>
-    </ModalDialog>
-    {studioOpen ? <MomentPdfStudio event={event} onClose={() => setStudioOpen(false)} /> : null}
-    </>
-  );
-}
-
 function GreetingCardModal({ event, greeting, dateLabel, onClose, onCopy }) {
   const downloadGreeting = () => {
     const html = buildGreetingCardHtml({ ...greeting, momentName: event.name, momentType: event.type, dateLabel });
@@ -329,7 +221,6 @@ export function DashboardOverviewContent() {
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
   const events = ready ? storedEvents : EMPTY_EVENTS;
-  const [selectedEvent, setSelectedEvent] = useState(null);
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
@@ -403,11 +294,12 @@ export function DashboardOverviewContent() {
                   const momentGreeting = getMomentGreeting(event);
                   return (
                     <div className="dashboard-moment-row" key={event.id || event.firestoreId}>
-                      <button type="button" className="dashboard-upcoming-row" onClick={() => setSelectedEvent(event)}>
+                      <button type="button" className="dashboard-upcoming-row" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}>
                         <span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
                         <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {momentView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
                         <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
                       </button>
+                      <button type="button" className="dashboard-moment-greeting-button" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/pdf`)} aria-label={`PDF Studio for ${event.name || 'this moment'}`} title="PDF Studio"><SlidersHorizontal size={17} aria-hidden="true" /></button>
                       {momentGreeting ? <button type="button" className="dashboard-moment-greeting-button" onClick={() => setGreetingEvent({ event, greeting: momentGreeting, dateLabel: formatDisplayDate(momentView === 'on-this-day' ? today : date) })} aria-label={`Greeting for ${event.name || 'this moment'}`} title="View greeting"><Sparkles size={17} aria-hidden="true" /></button> : null}
                     </div>
                   );
@@ -477,8 +369,6 @@ export function DashboardOverviewContent() {
         </section>
       </div>
 
-      {selectedEvent && events.find((item) => recordId(item.id || item.firestoreId) === recordId(selectedEvent.id || selectedEvent.firestoreId)) ? <EventSummaryModal
-        event={events.find((item) => recordId(item.id || item.firestoreId) === recordId(selectedEvent.id || selectedEvent.firestoreId))} onClose={() => setSelectedEvent(null)} /> : null}
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
       <ActivityActionDialogs actions={activityActions} />
     </>
@@ -486,62 +376,6 @@ export function DashboardOverviewContent() {
 }
 
 const styles = {
-  cardWrap: {
-    display: 'grid',
-    gap: '16px',
-    color: 'var(--ink)',
-  },
-  hero: {
-    display: 'flex',
-    alignItems: 'flex-start',
-    justifyContent: 'space-between',
-    gap: '12px',
-    padding: '18px 16px',
-    borderRadius: '16px',
-    background: 'linear-gradient(135deg, rgba(31,111,93,0.10), rgba(31,111,93,0.02))',
-    border: '1px solid rgba(31,111,93,0.12)',
-  },
-  kicker: {
-    marginBottom: '6px',
-    fontSize: '0.68rem',
-    fontWeight: 700,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-    color: '#5f756a',
-  },
-  heroTitle: {
-    margin: 0,
-    fontSize: '1.8rem',
-    lineHeight: 1.2,
-    color: 'var(--ink)',
-  },
-  heroMeta: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'flex-end',
-    gap: '6px',
-    textAlign: 'right',
-  },
-  typePill: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    padding: '5px 10px',
-    background: 'rgba(31,111,93,0.10)',
-    border: '1px solid rgba(31,111,93,0.16)',
-    borderRadius: '999px',
-    color: '#1f6f5d',
-    fontSize: '0.76rem',
-    fontWeight: 700,
-  },
-  dateText: {
-    color: 'var(--ink-soft)',
-    fontSize: '0.8rem',
-  },
-  daysText: {
-    color: '#1f6f5d',
-    fontSize: '0.82rem',
-    fontWeight: 800,
-  },
   upcomingListContainer: {
     maxHeight: '220px',
     overflowY: 'auto',
@@ -555,117 +389,5 @@ const styles = {
     display: 'grid',
     gap: '4px',
     minHeight: 0,
-  },
-  section: {
-    display: 'grid',
-    gap: '10px',
-    padding: '14px 0 0',
-    borderTop: '1px solid var(--border)',
-  },
-  sectionHeading: {
-    color: '#2d4c3d',
-    fontSize: '0.8rem',
-    fontWeight: 800,
-    letterSpacing: '0.08em',
-    textTransform: 'uppercase',
-  },
-  statusRow: {
-    display: 'flex',
-    alignItems: 'center',
-    gap: '8px',
-    fontSize: '1rem',
-    fontWeight: 700,
-  },
-  statusDot: {
-    display: 'inline-block',
-    width: '10px',
-    height: '10px',
-    borderRadius: '50%',
-    background: '#2e8b57',
-    boxShadow: '0 0 0 4px rgba(46,139,87,0.12)',
-  },
-  statusMeta: {
-    display: 'flex',
-    flexWrap: 'wrap',
-    gap: '10px 16px',
-    color: 'var(--ink-soft)',
-    fontSize: '0.82rem',
-  },
-  activityList: {
-    listStyle: 'none',
-    margin: 0,
-    padding: 0,
-    display: 'grid',
-    gap: '8px',
-  },
-  activityItem: {
-    display: 'grid',
-    gridTemplateColumns: '18px minmax(0, 1fr) auto',
-    alignItems: 'center',
-    gap: '10px',
-    padding: '8px 10px',
-    border: '1px solid var(--border)',
-    borderRadius: '10px',
-    background: 'var(--surface-soft)',
-    color: 'var(--ink-soft)',
-  },
-  activityCheckComplete: {
-    display: 'inline-flex',
-    width: '18px',
-    height: '18px',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    background: 'rgba(31,111,93,0.10)',
-    color: '#1f6f5d',
-    fontWeight: 800,
-    fontSize: '0.72rem',
-  },
-  activityCheckPending: {
-    display: 'inline-flex',
-    width: '18px',
-    height: '18px',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: '50%',
-    border: '1px solid var(--border)',
-    color: '#6a7a70',
-    fontWeight: 700,
-    fontSize: '0.72rem',
-  },
-  activityLabel: {
-    color: 'var(--ink)',
-    lineHeight: 1.5,
-    minWidth: 0,
-    overflow: 'hidden',
-    textOverflow: 'ellipsis',
-    whiteSpace: 'nowrap',
-  },
-  activityDate: {
-    color: 'var(--ink-soft)',
-    fontSize: '0.68rem',
-    fontWeight: 600,
-    opacity: 0.78,
-    whiteSpace: 'nowrap',
-  },
-  emptyState: {
-    margin: 0,
-    color: 'var(--ink-soft)',
-    lineHeight: 1.6,
-  },
-  downloadButton: {
-    display: 'inline-flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: '8px',
-    width: '100%',
-    border: '1px solid rgba(31,111,93,0.12)',
-    borderRadius: '12px',
-    background: 'linear-gradient(135deg, #1f6f5d 0%, #2a8c72 100%)',
-    color: '#ffffff',
-    padding: '12px 14px',
-    fontWeight: 700,
-    cursor: 'pointer',
-    boxShadow: '0 12px 22px rgba(31, 111, 93, 0.18)',
-  },
+  }
 };

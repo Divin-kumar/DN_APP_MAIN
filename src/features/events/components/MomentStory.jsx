@@ -210,7 +210,7 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
       {isJournal ? <Media items={story.keepsakes} uid={uid} isGuest={isGuest}
         label="Moment keepsakes and older unlinked files" album /> : null}
       {!isJournal && story.keepsakes.length ? <Link className="dn-story-entry-files"
-        to={'/events/' + encodeURIComponent(story.momentId) + '/attachments'}>
+        to={'/events/' + encodeURIComponent(story.momentId) + '/gallery'}>
         {story.keepsakes.length} {story.keepsakes.length === 1 ? 'file' : 'files'} saved with this Moment <ArrowUpRight size={13}/>
       </Link> : null}
     </section>

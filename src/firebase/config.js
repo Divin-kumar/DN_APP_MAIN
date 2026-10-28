@@ -21,8 +21,9 @@ export const googleProvider = new GoogleAuthProvider();
 // Keep optional Analytics out of the initial app bundle and never block core Firebase services.
 export const initializeFirebaseAnalytics = async () => {
   try {
+    if (globalThis.navigator?.onLine === false) return null;
     const { getAnalytics, isSupported } = await import('firebase/analytics');
-    if (!(await isSupported())) return null;
+    if (!(await isSupported()) || globalThis.navigator?.onLine === false) return null;
     return getAnalytics(firebaseApp);
   } catch (error) {
     console.info('Firebase Analytics is unavailable in this environment:', error);

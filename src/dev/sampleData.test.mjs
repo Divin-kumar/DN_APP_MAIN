@@ -16,7 +16,7 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.deepEqual(new Set([...demo.incomes, ...demo.expenses].map((item) => item.paymentMethod)), new Set(['Cash', 'Online']));
   assert.ok(demo.expenses.every((item) => demo.events.some((moment) => moment.id === item.eventId
     && moment.activities.some((activity) => activity.id === item.activityId))));
-  assert.ok(demo.events[0].notes.includes('Customize PDF'));
+  for (const destination of ['Story', 'Gallery', 'PDF Studio']) assert.ok(demo.events[0].notes.includes(destination));
   assert.ok(demo.events[0].notes.includes('Data & Backup'));
   assert.ok(demo.events[0].notes.includes('cancel backup preparation'));
   assert.equal(demo.imagesReady, false);
