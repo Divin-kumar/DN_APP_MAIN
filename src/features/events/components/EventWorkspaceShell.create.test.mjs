@@ -98,6 +98,7 @@ const openWorkspace = async (t) => {
         if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
         if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
         if (source === './MomentContents') return '\0workspace-create-child:MomentContents';
+        if (source === './MomentStory') return '\0workspace-create-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-create-router';
         if (source === 'lucide-react') return '\0workspace-create-icons';
         if (source.includes('/components/')) return `\0workspace-create-child:${source.split('/').at(-1)}`;
@@ -177,16 +178,13 @@ const deferred = () => {
 };
 const submitForm = (modal) => nodes(modal).find((node) => node.type === 'form').props.onSubmit({ preventDefault() {} });
 
-test('matching contextual create event opens the existing Memory dialog without writes', async (t) => {
+test('retired Memory quick-create does not open a dialog or write data', async (t) => {
   const harness = await openWorkspace(t);
   assert.equal(harness.listeners.get('dn:moment-create')?.size, 1);
-  assert.equal(harness.findModal(), undefined);
   harness.emit(harness.detail());
-  assert.ok(harness.findModal());
+  assert.equal(harness.findModal(), undefined);
   assert.equal(harness.fileClicks.length, 0);
   assert.deepEqual(harness.writes, []);
-  harness.findModal().props.onClose();
-  assert.equal(harness.findModal(), undefined);
 });
 
 test('contextual create rejects mismatched Moment, scope, and unsupported action', async (t) => {
@@ -253,28 +251,16 @@ test('Attachment input remains mounted across sections and clicks during synchro
   assert.deepEqual(harness.writes, []);
 });
 
-test('Memory submission and delayed file selection recheck the account before writing', async (t) => {
+test('delayed original-file selection rechecks account before writing', async (t) => {
   const harness = await openWorkspace(t);
-  harness.emit(harness.detail());
-  let modal = harness.findModal();
-  const title = nodes(modal).find((node) => node.type === 'input' && node.props.placeholder === 'Memory title');
-  title.props.onChange({ target: { value: 'Synthetic memory draft' } });
-  modal = harness.findModal();
-  const form = nodes(modal).find((node) => node.type === 'form');
-  harness.api.app.user = { uid: 'another-owner' };
-  await form.props.onSubmit({ preventDefault() {} });
-  assert.deepEqual(harness.writes, [], 'a draft opened by the previous account cannot write');
-
-  harness.api.app.user = { uid: 'synthetic-owner' };
-  harness.findModal().props.onClose();
   const input = nodes(harness.render()).find((node) => node.type === 'input' && node.props.type === 'file');
   harness.emit(harness.detail('attachment'));
   assert.equal(harness.fileClicks.length, 1);
   harness.api.app.user = { uid: 'another-owner' };
   const fileInput = { files: [{ name: 'synthetic.jpg', type: 'image/jpeg', size: 1234 }], value: 'selected-file' };
   await input.props.onChange({ target: fileInput });
-  assert.equal(fileInput.value, '', 'the delayed picker result is cleared even when rejected');
-  assert.deepEqual(harness.writes, [], 'a file selected after an account switch cannot write');
+  assert.equal(fileInput.value, '');
+  assert.deepEqual(harness.writes, []);
 });
 
 test('workspace effect cleanup unregisters the create listener and blocks later actions', async (t) => {
