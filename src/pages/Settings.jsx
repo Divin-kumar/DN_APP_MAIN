@@ -12,7 +12,7 @@ import useIncomeStore from '../store/useIncomeStore';
 import { createEvent, getEventsForUser, getGuestEvents, setGuestEvents, updateEvent } from '../services/eventService';
 import { createExpense, getExpensesForUser, getGuestExpenseMasters, getGuestExpenses, setGuestExpenses } from '../services/expenseService';
 import { createIncome, getIncomesForUser, getGuestIncomes, setGuestIncomes } from '../services/incomeService';
-import { activateSampleScenario, clearActiveSampleScenario, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel } from '../dev/sampleData';
+import { activateSampleScenario, clearActiveSampleScenario, clearGuestTourDeclined, getActiveSampleData, getActiveSampleScenario, getSampleScenarioDefinitions, getSampleScenarioLabel, GUEST_TOUR_SCENARIO, GUEST_TOUR_VERSION, guestTourNeedsUpdate, hydrateGuestTourPhotos, markGuestTourDeclined } from '../dev/sampleData';
 import useAppStore from '../store/useAppStore';
 import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
@@ -258,7 +258,7 @@ export default function Settings() {
       const sampleData = getActiveSampleData(user?.uid || null);
       if (sampleData) {
         ({ events, expenses, incomes } = sampleData);
-        dataSource = 'development-sample';
+        dataSource = sampleData.scenario === GUEST_TOUR_SCENARIO ? 'guided-guest-demo' : 'development-sample';
       } else if (isGuest) {
         events = getGuestEvents();
         expenses = getGuestExpenses();
@@ -375,7 +375,7 @@ export default function Settings() {
     try {
       const sampleData = getActiveSampleData(user?.uid || null);
       if (sampleData) {
-        throw new Error('Clear the isolated development sample scenario before restoring a backup.');
+        throw new Error('Exit the isolated demo/sample session before restoring a personal backup.');
       }
 
       assertDestinationScope();
@@ -568,6 +568,37 @@ export default function Settings() {
     showToast(`${getSampleScenarioLabel(sampleScenario)} sample data ready`, 'success');
   };
 
+  const startOrRefreshGuestTour = async () => {
+    if (user?.uid || !isGuest) return;
+    // Explicit opt-in/reset. Personal Guest data is a separate, untouched scope.
+    try {
+      clearGuestTourDeclined();
+      const data = activateSampleScenario(GUEST_TOUR_SCENARIO);
+      setActiveSampleScenario(GUEST_TOUR_SCENARIO);
+      useEventStore.getState().setEvents(data.events);
+      useExpenseStore.getState().setExpenses(data.expenses);
+      useIncomeStore.getState().setIncomes(data.incomes);
+      const ready = await hydrateGuestTourPhotos();
+      if (ready && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
+        useEventStore.getState().setEvents(ready.events);
+      }
+      showToast('Explore DN demo is ready', 'success');
+    } catch (error) {
+      showToast(error?.message || 'Demo illustrations could not be prepared', 'danger');
+    }
+  };
+  const leaveGuestTour = async () => {
+    if (getActiveSampleScenario() !== GUEST_TOUR_SCENARIO) return;
+    markGuestTourDeclined();
+    clearActiveSampleScenario();
+    setActiveSampleScenario(null);
+    await Promise.all([
+      useEventStore.getState().loadEvents(null, true),
+      useExpenseStore.getState().loadExpenses(null, true),
+      useIncomeStore.getState().loadIncomes(null, true),
+    ]);
+    showToast('Your personal Guest workspace is ready; demo records were not copied.', 'success');
+  };
   const clearSampleData = async () => {
     clearActiveSampleScenario();
     setActiveSampleScenario(null);
@@ -780,12 +811,31 @@ export default function Settings() {
         <p>Keep DN comfortable for the way you plan and remember.</p>
       </div>
 
+      {isGuest && !user ? (
+        <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
+          <div>
+            <span className="settings-section-heading"><Database size={17} /> Explore DN · Guided demo</span>
+            <p>{activeSampleScenario === GUEST_TOUR_SCENARIO
+              ? 'You are exploring isolated example Moments, Activities, Journal photos, Diary writing, Tasks and Cash/Online transactions. Your own Guest records remain separate.'
+              : 'Explore sample Moments, a photo Journal, monthly Diary, Tasks and linked finances without touching your own Guest records.'}</p>
+            <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
+              ? ' · Updated examples available' : ''}</small>
+          </div>
+          <div className="dev-sample-actions">
+            <button type="button" className="settings-primary-button" onClick={startOrRefreshGuestTour}>
+              {activeSampleScenario === GUEST_TOUR_SCENARIO ? 'Refresh demo' : 'Explore demo'}
+            </button>
+            {activeSampleScenario === GUEST_TOUR_SCENARIO ? <button type="button" className="settings-secondary-button"
+              onClick={leaveGuestTour}>Use my Guest data</button> : null}
+          </div>
+        </section>
+      ) : null}
       {import.meta.env.DEV && !user ? (
         <section className="dev-sample-panel" aria-label="Development sample data">
           <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
           <div className={`dev-sample-actions${activeSampleScenario ? ' has-active-sample' : ''}`}>
             <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
-              {Object.entries(getSampleScenarioDefinitions()).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
+              {Object.entries(getSampleScenarioDefinitions()).filter(([key]) => key !== GUEST_TOUR_SCENARIO).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
             </DropdownSelect>
             <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} disabled={Boolean(user)} aria-label="Load sample data" title="Load sample data">
               <Database size={16} aria-hidden="true" /><span className="dev-sample-action-label">Load sample</span>
