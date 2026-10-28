@@ -8,6 +8,8 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 */
 import { createContext, useContext } from 'react';
 import useAppStore from '../store/useAppStore';
+import useEventStore from '../store/useEventStore';
+import { activateSampleScenario, canOfferGuestTour, clearActiveSampleScenario, getActiveSampleScenario, hydrateGuestTourPhotos, GUEST_TOUR_SCENARIO } from '../dev/sampleData';
 
 const GuestContext = createContext(null);
 const GUEST_MODE_KEY = 'dn_guest_mode';
@@ -18,13 +20,24 @@ export function GuestProvider({ children }) {
   const clearSession = useAppStore((state) => state.clearSession);
 
   const continueAsGuest = () => {
-    // Save guest preference so the app knows not to force a login next time.
+    // A first-time empty Guest receives a separate, versioned product tour.
+    // Real Guest records are never seeded, overwritten, or transferred.
+    const startTour = !getActiveSampleScenario() && canOfferGuestTour();
+    if (startTour) activateSampleScenario(GUEST_TOUR_SCENARIO);
     localStorage.setItem(GUEST_MODE_KEY, 'true');
     setGuestMode(true);
+    if (startTour) {
+      hydrateGuestTourPhotos().then((data) => {
+        if (data && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
+          useEventStore.getState().setEvents(data.events);
+        }
+      }).catch((error) => console.warn('Optional Guest tour illustrations could not be prepared:', error));
+    }
   };
 
   const exitGuestMode = () => {
-    // Remove guest session state and clear the app session.
+    // Exit the tour alongside Guest mode; never migrate demo records to login.
+    if (getActiveSampleScenario() === GUEST_TOUR_SCENARIO) clearActiveSampleScenario();
     localStorage.removeItem(GUEST_MODE_KEY);
     localStorage.removeItem(LEGACY_STORAGE_PREFIX + GUEST_MODE_KEY.slice(DN_STORAGE_PREFIX.length));
     clearSession();
