@@ -43,6 +43,25 @@ Filters show named choices from the active account/Guest without exposing record
 
 The production-shell check serves the built `dist` locally, verifies service-worker activation, then tests offline Story, exact-byte original download and PDF export using isolated Guest fixtures. Its screenshots/results go to ignored `.verification/production-shell`. It does not publish Firebase or test a physical installed PWA.
 
-DN 2.0 Phase 8 on OldVersion completes the Story / Activities / Transactions / Gallery / PDF Studio destinations, with legacy links retained, Notifications marked Coming Soon and obsolete Summary/HTML/Word workspace code removed. The version remains 1.0.35 until separately authorized release work; Insights improvements remain deferred. See the master and latest change-log entry for final regression evidence and remaining validation limits.
+DN 2.0 Phase 8 on OldVersion completes the Story / Activities / Transactions / Gallery / PDF Studio destinations, with legacy links retained, Notifications marked Coming Soon and obsolete Summary/HTML/Word workspace code removed. Phase 9 now prepares version 2.0.0 for Vercel review; Insights improvements remain deferred. See the master and latest change-log entry for final regression evidence and remaining validation limits.
 
-The Phase 8 dependency follow-up uses React Router 7.18.5, Vite 7.3.7 and React plugin 5.2.0. Firebase stays on SDK 12.19.0; a scoped npm override selects patched gRPC 1.14.6 for its Firestore Node dependency. The previous JavaScript compilation targets are explicit in vite.config.js. CI checks dependency advisories and the built offline shell before any opt-in Firebase upload. No app release version or publication is changed by this maintenance.
+The Phase 8 dependency follow-up uses React Router 7.18.5, Vite 7.3.7 and React plugin 5.2.0. Firebase stays on SDK 12.19.0; a scoped npm override selects patched gRPC 1.14.6 for its Firestore Node dependency. The previous JavaScript compilation targets are explicit in vite.config.js. CI checks dependency advisories and the built offline shell before any opt-in Firebase upload. That maintenance did not publish Firebase; Phase 9 version preparation is described below.
+
+## DN 2.0.0 review candidate
+
+Phase 9 prepares version 2.0.0 on OldVersion; it is not a Firebase production publication. About includes the DN 2.0 highlights, Build date and separate Vercel review/Local build/Firebase preview/Production labels. The worker upgrade check preserves existing records, preferences, list filters and original files, and prevents a repeated prompt after applying the same release.
+
+To reproduce the pre-release upgrade check, use Node 22 and the current locked dependencies:
+
+```sh
+mkdir -p .verification/phase9/previous
+git archive dfe40bbc90b0a740cf2dd44132d72997634f12c7 | tar -x -C .verification/phase9/previous
+ln -s ../../../node_modules .verification/phase9/previous/node_modules
+npm --prefix .verification/phase9/previous run build
+npm run build
+npm run test:upgrade
+```
+
+Use an empty fixture directory for those setup commands. Alternatively, point DN_UPGRADE_PREVIOUS_DIST at an existing baseline dist and set DN_UPGRADE_PREVIOUS_VERSION to its version. Normal CI rebuilds the pinned previous OldVersion fixture automatically. Results/screenshots stay in ignored .verification/release-upgrade. The check serves two local builds in an isolated browser profile and does not deploy or sign in to Firebase.
+
+After owner Vercel review and explicit Firebase approval, use the existing version-preserving production workflow for 2.0.0. The legacy deploy:hosting command increments the patch and must not be used for this coordinated release. Keep main frozen; record publication and live verification separately from the review candidate.

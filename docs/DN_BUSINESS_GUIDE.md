@@ -1,8 +1,10 @@
 # DN — Your App and Improvement Checklist
 
-Last independently verified Firebase release: **26 October 2026 · version 1.0.35** at [DN](https://dn-10.web.app). Current development on **OldVersion** targets DN 2.0.0 and is reviewed through Vercel before a separately authorized Firebase release.
+Last independently verified Firebase release: **26 October 2026 · version 1.0.35** at [DN](https://dn-10.web.app). **DN 2.0.0 is now prepared on OldVersion for Vercel review.** Firebase publication is a later, separately authorized step; the version displayed on a review build does not mean the live Firebase site has been updated.
 
-Phase 8 completes the application regression review and navigation, Notifications and obsolete-screen cleanup. All 454 unit checks and 148 browser journeys pass locally, along with the built app’s offline Story, original-file download and PDF checks. The dependency follow-up is complete, and its latest scan reports zero findings. An additional check confirms that special characters in record identities survive navigation and refresh. Physical phone, Safari and real signed-in account checks remain outstanding before release acceptance. Vercel owner review and separately authorized Firebase publication remain later steps.
+Phase 8 completes the application regression review and navigation, Notifications and obsolete-screen cleanup. All 454 unit checks and 148 browser journeys pass locally, along with the built app’s offline Story, original-file download and PDF checks. The dependency follow-up is complete, and its latest scan reports zero findings. An additional check confirms that special characters in record identities survive navigation and refresh. Physical phone, Safari and real signed-in account checks remain outstanding before release acceptance. The owner authorized Phase 9 release preparation; the 2.0.0 Vercel build must still be reviewed before separately authorized Firebase publication.
+
+Phase 9 updates the release highlights and clearly labels the build date and review environment. Upgrade checks cover opening the new version and using Refresh app from the older build, while keeping records, saved filters, preferences and original files. The extra prompt for an already-applied update has been corrected. The existing Guest examples remain appropriate and are not reset by this release preparation. The candidate passes 460 unit checks, 151 browser journeys and both upgrade paths locally; physical phone/Safari and real-account checks remain outstanding.
 
 ## 1. What DN helps you do
 

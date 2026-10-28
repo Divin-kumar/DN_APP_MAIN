@@ -18,8 +18,8 @@ import { useNavigate } from 'react-router-dom';
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
 const deployedAt = new Date(import.meta.env.VITE_DEPLOYED_AT);
-const publishedDate = Number.isNaN(deployedAt.getTime())
-  ? 'Not published yet'
+const buildDate = Number.isNaN(deployedAt.getTime())
+  ? 'Not recorded'
   : (() => {
       const parts = new Intl.DateTimeFormat('en-GB', {
         day: '2-digit',
@@ -49,10 +49,14 @@ const guideItems = [
 ];
 
 const whatsNew = [
-  'Phone filters use a small inline panel with simple comparisons. Your last choices are remembered automatically, with no saved-filter tabs or group-creation controls.',
-  'Opening choices keeps the keyboard closed. Tap a search or text field when you want to type; long choice lists still support searching.',
-  'The Dashboard welcome card is a short personal greeting without activity or finance statistics.',
-  'Small Upcoming and On This Day controls sit beside each Moments or Activities heading and its Hide button.',
+  'Read each Moment as a photo-rich Journal, a monthly Diary or a Tasks view, with its original Activity dates and writing.',
+  'Move between Story, Activities, Transactions, Gallery and PDF Studio. Older Moment links still open their current destination.',
+  'Customize your PDF format, spacing and included sections, review the actual pages, then download the same previewed PDF.',
+  'Choose Cash or Online for new transactions. Older entries keep Not specified until you edit them.',
+  'Recovery backups keep records, settings and stored original files together, with progress and cancellation before restore and no fixed DN backup size cap.',
+  'Explore Journal, Diary, Tasks and PDF Studio through the Guest demo. Existing demo edits stay yours until you explicitly refresh the examples.',
+  'Earlier Memories remain safe as read-only reflections. Original files retain their Moment and Activity links.',
+  'Notifications is Coming Soon. Your existing preferences and Reminder Presets remain saved.',
 ];
 
 const dataInfo = [
@@ -155,8 +159,8 @@ export default function About() {
             <strong>v{appVersion}</strong>
           </div>
           <div className="about-summary-item">
-            <span className="about-summary-label">Published</span>
-            <strong>{publishedDate}</strong>
+            <span className="about-summary-label">Build date</span>
+            <strong>{buildDate}</strong>
           </div>
           <div className="about-summary-item">
             <span className="about-summary-label">Environment</span>

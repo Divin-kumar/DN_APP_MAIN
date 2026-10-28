@@ -5,7 +5,8 @@ import { readFileSync } from 'node:fs';
 const APP_VERSION = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')).version;
 const BUILD_ID = `${APP_VERSION}-${new Date().toISOString().replace(/[:.]/g, '-')}`;
 const DEPLOYED_AT = process.env.VITE_DEPLOYED_AT || new Date().toISOString();
-const DEPLOY_ENV = process.env.VITE_DEPLOY_ENV || (process.env.NODE_ENV === 'production' ? 'Production' : 'Test');
+const DEPLOY_ENV = process.env.VERCEL === '1' || process.env.VERCEL_ENV ? 'Vercel review'
+  : process.env.VITE_DEPLOY_ENV || (process.env.NODE_ENV === 'production' ? 'Local build' : 'Test');
 
 const pwaShellPlugin = () => ({
   name: 'dn-pwa-shell',
@@ -39,6 +40,10 @@ self.addEventListener('install', (event) => {
 });
 
 self.addEventListener('message', (event) => {
+  if (event.data?.type === 'DN_BUILD_VERSION') {
+    event.ports?.[0]?.postMessage({ type: 'DN_BUILD_VERSION', version: ${JSON.stringify(APP_VERSION)} });
+    return;
+  }
   if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 

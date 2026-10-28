@@ -29,6 +29,8 @@ jobs:
       - name: Install Chromium for the built-app check
         run: npx playwright install --with-deps chromium
       - name: Build Vite app
+        env:
+          VITE_DEPLOY_ENV: Firebase preview
         run: npm run build
       - name: Verify built shell, offline originals and PDF export
         run: npm run test:production

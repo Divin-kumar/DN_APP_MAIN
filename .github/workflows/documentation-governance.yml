@@ -32,6 +32,17 @@ jobs:
         run: npm run build
       - name: Verify built shell, offline originals and PDF export
         run: npm run test:production
+      - name: Build the reviewed pre-release upgrade fixture
+        env:
+          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+        run: |
+          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
+          mkdir -p .verification/phase9/previous
+          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
+          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
+          npm --prefix .verification/phase9/previous run build
+      - name: Verify the release update preserves records, preferences and originals
+        run: npm run test:upgrade
   documentation-contract:
     runs-on: ubuntu-latest
     steps:

@@ -1,7 +1,7 @@
 {
   "name": "dn",
   "private": true,
-  "version": "1.0.35",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
@@ -12,7 +12,8 @@
     "lint": "eslint .",
     "test:e2e": "playwright test",
     "check:docs": "node scripts/check-documentation.mjs",
-    "test:production": "node scripts/check-production-shell.mjs"
+    "test:production": "node scripts/check-production-shell.mjs",
+    "test:upgrade": "node scripts/check-release-upgrade.mjs"
   },
   "dependencies": {
     "@tiptap/extension-code": "3.32.0",
