@@ -34,10 +34,16 @@ test('Moments page exports a real multi-page PDF with photo previews and no file
   }
   await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
   await expect(summary.getByRole('button', { name: 'Preview Activity photo 1.png' })).toBeVisible();
-  const action = summary.getByRole('button', { name: 'Download summary PDF' });
+  const action = summary.getByRole('button', { name: 'Open PDF Studio' });
   await action.scrollIntoViewIfNeeded();
-  const promise = page.waitForEvent('download');
   await action.click();
+  const studio = page.getByRole('dialog', { name: 'PDF Studio' });
+  await expect(studio).toBeVisible();
+  await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
+  const downloadButton = studio.getByRole('button', { name: 'Download customized PDF' });
+  await expect(downloadButton).toBeEnabled();
+  const promise = page.waitForEvent('download');
+  await downloadButton.click();
   const { source } = await assertRealPdf(await promise);
   expect(Number(source.match(/\/Count (\d+)/)[1])).toBeGreaterThanOrEqual(2);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
