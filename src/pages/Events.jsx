@@ -508,6 +508,13 @@ export default function Events() {
         </div>
       </header>
 
+      {isGuest && getActiveSampleScenario(user?.uid) === 'tour' ? (
+        <section className="dn-guest-tour-notice" aria-label="Explore DN sample data">
+          <div><strong>You're exploring DN with example data</strong>
+            <p>Try the photo Journal, monthly Diary, Tasks, transactions and PDF Studio. Nothing here is copied into your own Guest records.</p></div>
+          <button type="button" className="secondaryButton" onClick={() => navigate('/settings')}>Manage demo</button>
+        </section>
+      ) : null}
       <div className="event-discovery-bar">
         <ListControls title="Moment filters" builder
           activeCount={conditions.activeCount} resultCount={visibleEvents.length} resultLabel="moments"
