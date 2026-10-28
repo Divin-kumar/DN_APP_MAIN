@@ -43,7 +43,7 @@ export class MomentPdfPainter {
     this.assertCurrent = assertCurrent;
     this.pages = [];
     this.pageNumber = 0;
-    this.template = options.template || 'chronicle';
+    this.template = options.template || 'legacy';
     this.density = options.density || 'balanced';
     this.begin();
   }
