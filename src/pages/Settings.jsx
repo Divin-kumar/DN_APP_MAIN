@@ -368,7 +368,7 @@ export default function Settings() {
     // Restoring a validated personal backup exits the isolated Guest tour
     // only after the user confirms, not when browsing or parsing the file.
     // Scoped original-file writes target real Guest storage, never demo data.
-    let destinationScenario = getActiveSampleScenario();
+    const destinationScenario = getActiveSampleScenario();
     const restoreFromGuestTour = destinationScenario === GUEST_TOUR_SCENARIO && isGuest && !destinationUid;
     const assertDestinationScope = () => {
       const state = useAppStore.getState();
@@ -391,10 +391,8 @@ export default function Settings() {
         getGuestExpenses();
         getGuestIncomes();
         assertDestinationScope();
-        markGuestTourDeclined();
-        clearActiveSampleScenario();
-        destinationScenario = null;
-        setActiveSampleScenario(null);
+        // Keep the demo accessible until all personal restoration succeeds.
+        // This path writes originals and records only into real Guest scope.
       } else if (sampleData) {
         throw new Error('Exit the isolated sample session before restoring a personal backup.');
       }
@@ -507,6 +505,14 @@ export default function Settings() {
 
       const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, and Code Lists were restored where present.`;
 
+      if (restoreFromGuestTour) {
+        // Only conclude the demo after all verified originals, records,
+        // preferences and dashboard configuration have been restored.
+        assertDestinationScope();
+        markGuestTourDeclined();
+        clearActiveSampleScenario();
+        setActiveSampleScenario(null);
+      }
       setPendingBackup(null);
       setBackupMessage(`${importSummary} ${(backup.attachmentFiles || []).length} original attachment files verified and restored. Reloading app.`);
       showToast('Backup restore finished', 'success');
