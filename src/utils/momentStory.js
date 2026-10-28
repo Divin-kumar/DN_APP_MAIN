@@ -14,7 +14,7 @@ export const STORY_PRESENTATIONS = Object.freeze({
 });
 
 const VALID_PRESENTATIONS = Object.freeze(Object.values(STORY_PRESENTATIONS));
-const PROJECT_TYPES = new Set(['application and youtube', 'career', 'iqvia', 'project', 'work']);
+const PROJECT_TYPES = new Set(['application and youtube', 'career', 'iqvia', 'project', 'work', 'task', 'tasks', 'to-do', 'todo']);
 
 const asRecords = (items) => Array.isArray(items)
   ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item)) : [];
@@ -26,7 +26,8 @@ const calendarKey = (value) => {
 
 const defaultPresentation = (name) => {
   const key = String(name || '').trim().toLocaleLowerCase();
-  if (key === 'diary' || key === 'journal') return STORY_PRESENTATIONS.DIARY;
+  if (key === 'diary') return STORY_PRESENTATIONS.DIARY;
+  if (key === 'journal' || key === 'memory book' || key === 'photo journal') return STORY_PRESENTATIONS.JOURNEY;
   if (PROJECT_TYPES.has(key)) return STORY_PRESENTATIONS.CHRONICLE;
   return STORY_PRESENTATIONS.JOURNEY;
 };
@@ -126,4 +127,41 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
     // Callers must still verify the original in the current browser scope.
     keepsakes: summaryAttachmentsFor(source),
   };
+};
+
+
+const TASK_STATUS_ORDER = Object.freeze(['in-progress', 'completed', 'cancelled']);
+
+// The Activity date is the secondary sort. Use a saved clock time only when
+// the record actually contains one. Never derive it from createdAt/completedAt.
+const taskTime = (entry) => {
+  const activity = entry.activity || {};
+  for (const raw of [activity.time, activity.dueTime, activity.startTime]) {
+    if (typeof raw !== 'string') continue;
+    const match = /^(\\d{1,2}):(\\d{2})(?::\\d{2})?$/.exec(raw.trim());
+    if (!match) continue;
+    const hour = Number(match[1]), minute = Number(match[2]);
+    if (hour <= 23 && minute <= 59) return `${String(hour).padStart(2, '0')}:${match[2]}`;
+  }
+  return '';
+};
+
+// Task view uses status as the primary sort, followed by recorded date/time
+// ascending. All entries are taken from the original read-only Story projection
+// including upcoming and undated entries. This does not mutate stored order.
+export const groupMomentStoryTasks = (story = {}) => {
+  const timeline = (story.timeline || []).flatMap((month) => month.days.flatMap((day) => day.entries));
+  const all = [...timeline, ...(story.upcoming || []), ...(story.undated || [])];
+  return TASK_STATUS_ORDER.map((status) => ({
+    status,
+    entries: all.map((entry, index) => ({ entry, index }))
+      .filter(({ entry }) => entry.status === status)
+      .sort((a, b) => {
+        const dayA = a.entry.date || '9999-12-31', dayB = b.entry.date || '9999-12-31';
+        return dayA.localeCompare(dayB)
+          || (taskTime(a.entry) || '99:99').localeCompare(taskTime(b.entry) || '99:99')
+          || a.index - b.index;
+      })
+      .map(({ entry }) => ({ ...entry, displayTime: taskTime(entry) })),
+  }));
 };

@@ -338,13 +338,13 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
               <DropdownSelect id="moment-type-story-presentation" value={momentTypeEditor.storyPresentation}
                 onChange={(changeEvent) => setMomentTypeEditor((current) => ({ ...current, storyPresentation: changeEvent.target.value }))}>
                 <option value="">Automatic (based on type)</option>
-                <option value="journey">Journey · Visual timeline</option>
-                <option value="diary">Diary · Journal pages</option>
-                <option value="chronicle">Chronicle · Milestone log</option>
+                <option value="journey">Journal · Photo memory book</option>
+                <option value="diary">Diary · Monthly writing</option>
+                <option value="chronicle">Tasks · Status-first list</option>
               </DropdownSelect>
               <small className="settings-helper" aria-live="polite">
                 {momentTypeEditor.storyPresentation
-                  ? `This Moment Type displays its Story as ${momentTypeEditor.storyPresentation === 'journey' ? 'a visual timeline' : momentTypeEditor.storyPresentation === 'diary' ? 'dated journal pages' : 'a milestone log'}.`
+                  ? `This Moment Type displays its Story as ${momentTypeEditor.storyPresentation === 'journey' ? 'a photo-focused memory book' : momentTypeEditor.storyPresentation === 'diary' ? 'a monthly writing journal' : 'a status-first task list'}.`
                   : `Automatic selects ${resolveMomentStoryPresentation({ type: momentTypeEditor.title || 'Personal' }, [])} for this type. Changes affect presentation only, not Activities or dates.`}
               </small>
             </div>

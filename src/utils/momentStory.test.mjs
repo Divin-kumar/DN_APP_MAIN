@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildMomentStory, resolveMomentStoryPresentation, STORY_PRESENTATIONS } from './momentStory.js';
+import { buildMomentStory, groupMomentStoryTasks, resolveMomentStoryPresentation, STORY_PRESENTATIONS } from './momentStory.js';
 import { getCodeListMeta, serializeCodeListEntries } from './codeLists.js';
 import { getMomentTypeConfig } from './dashboardVisibility.js';
 
@@ -116,6 +116,8 @@ test('default presentation adapts to known Moment Types without modifying Code L
     ['Mini 💚', STORY_PRESENTATIONS.JOURNEY],
     ['Birthday', STORY_PRESENTATIONS.JOURNEY],
     ['Diary', STORY_PRESENTATIONS.DIARY],
+    ['Journal', STORY_PRESENTATIONS.JOURNEY],
+    ['Tasks', STORY_PRESENTATIONS.CHRONICLE],
     ['Career', STORY_PRESENTATIONS.CHRONICLE],
     ['IQVIA', STORY_PRESENTATIONS.CHRONICLE],
     ['Application and YouTube', STORY_PRESENTATIONS.CHRONICLE],
@@ -207,4 +209,27 @@ test('automatic and explicit presentation choices keep original type defaults', 
     assert.equal(resolveMomentStoryPresentation({ type }, options), expected);
   }
   assert.equal(resolveMomentStoryPresentation({ type: 'Other', customType: 'Journal' }, options), 'chronicle');
+});
+
+test('task groups put active first, completed second, cancelled last, then sort by recorded day and clock', () => {
+  const moment = { id: 'tasks', type: 'Tasks', activities: [
+    { id: 'done-b', status: 'completed', date: '2026-10-04', time: '16:30' },
+    { id: 'active-late', date: '2026-11-02', dueTime: '15:20' },
+    { id: 'cancelled-early', status: 'cancelled', date: '2026-09-01' },
+    { id: 'active-earlier', date: '2026-10-03', time: '07:30' },
+    { id: 'done-a', completed: true, date: '2026-10-04', time: '08:10' },
+    { id: 'active-same-late', date: '2026-10-03', time: '18:30' },
+    { id: 'active-undated', date: null },
+    { id: 'done-undated', status: 'completed' },
+  ] };
+  const original = JSON.stringify(moment);
+  const groups = groupMomentStoryTasks(build(moment));
+  assert.deepEqual(groups.map(({ status }) => status), ['in-progress', 'completed', 'cancelled']);
+  assert.deepEqual(groups[0].entries.map(({ id }) => id),
+    ['active-earlier', 'active-same-late', 'active-late', 'active-undated']);
+  assert.deepEqual(groups[1].entries.map(({ id }) => id), ['done-a', 'done-b', 'done-undated']);
+  assert.deepEqual(groups[2].entries.map(({ id }) => id), ['cancelled-early']);
+  assert.equal(groups[0].entries[0].displayTime, '07:30');
+  assert.equal(groups[0].entries[2].displayTime, '15:20');
+  assert.equal(JSON.stringify(moment), original);
 });
