@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-133 | Owner acceptance of Phase 5 and Phase 6 PDF Studio scope
+- **Owner sign-off:** On 2026-10-28, after receiving CI result `40644170991` (126 passing browser tests, green Node unit tests, lint, production build, documentation contract), owner confirmed verification was done and requested the next phase. **Phase 4 and Phase 5 accepted**, while DN 2.0 remains unreleased. Recorded approval does not imply a new Firebase publish.
+- **Next phase:** Phase 6 PDF Studio is planned as customizable, preview-before-download, type-aware Journal/Diary/Tasks reports. Journal should produce an uncropped large-photo memory book; Diary a single Moment's monthly prose pages; Tasks a status-first, photo-free list. Preview must match the eventual PDF and use the existing scoped original-file reader and valid PDF engine. Detailed design/implementation and owner acceptance are not yet complete.
+- **Scope:** Documentation-only acceptance and roadmap clarification; no app code, branch governance, data, PDF rendering behavior, production deployment or `main` changes.
+
 ## CHG-20261028-132 | DN 2.0 Phase 4 status polish and Phase 5 Cash/Online transactions (unreleased)
 - **Owner approval:** User found current Journal/Diary/Tasks layouts acceptable, asked only for a lightweight Task status switcher before moving to the previously agreed Phase 5. Task status changed to a subtle text-and-chevron chip without modifying underlying Activity mutations.
 - **Phase 5 behavior:** New Income/Expense transactions require Cash or Online. Existing historical transactions show Not specified and require an explicit choice only when edited. Added a compact two-choice transaction form control and display in transaction cards. Persist `paymentMethod` on existing canonical income/expense record shapes; include it when normalizing nested Activity expenses, using existing Guest/account saver and rollback/mirror paths. Optional field travels through v3 backups without a schema/version migration. No changes to totals, links, dates, budgeting, notifications or PDF logic.
