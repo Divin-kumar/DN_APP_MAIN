@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-140 | Final automated validation of Guest tour and PDF grid
+- **Executed:** GitHub Actions run 40655048457 on source SHA d9fe8388c65aa382170885760b3a5ae855884e9b passed 132 Chromium browser tests, Node unit tests, ESLint, production build and documentation governance. Tested photo grids for counts 1–5, genuine PDF Studio output, top actions on Dashboard/Moments summaries, Guest demo activation, original-photo reload recovery and personal Guest data isolation.
+- **Owner review:** PDF visual sign-off remains pending, and no current Vercel preview deployment was independently confirmed. No main changes, Firebase production publish, account migration or release bump.
+
 ## CHG-20261028-139 | Dashboard PDF Studio parity and resilient Guest illustrations
 - **Summary entry:** Dashboard Moment summary now displays Customize PDF above its story, replacing the older fixed download button. It opens the same type-aware Studio used by Moments, preserving the Dashboard's existing summary content and status context. Updated the Dashboard summary regression to preview and download a genuine Studio PDF.
 - **Guest reliability:** Startup demo images are generated through a Guest-session effect that resumes after full-page navigation/reload. A prior browser run found that interrupted first-page hydration left the demo images pending. The Guest sandbox and private Guest storage remain isolated; re-preparation uses deterministic example originals and never uploads or merges them.
