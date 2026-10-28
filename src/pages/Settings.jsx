@@ -3,7 +3,7 @@ import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
 import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -17,8 +17,9 @@ import { activateSampleScenario, clearActiveSampleScenario, clearGuestTourDeclin
 import useAppStore from '../store/useAppStore';
 import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, DEFAULT_CODE_LISTS, getCodeListItems } from '../utils/codeLists';
 import { downloadBlob } from '../utils/download';
-import { BACKUP_SIZE_LIMIT_MESSAGE, MAX_BACKUP_BYTES, buildEventGroupsFromBackup, collectBackupReferenceWarnings, createBackupDocument, mergeEventGroupsForRestore, mergeRecordsById, parseBackupDocument } from '../services/backupService';
-import { exportAttachmentFiles, restoreAttachmentFiles } from '../services/attachmentService';
+import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, mergeEventGroupsForRestore, mergeRecordsById } from '../services/backupService';
+import { createBackupFile, readBackupFile } from '../services/backupFileService';
+import { restoreAttachmentFiles } from '../services/attachmentService';
 
 const normalizeList = (value) =>
   value
@@ -149,6 +150,9 @@ export default function Settings() {
   const [pendingBackup, setPendingBackup] = useState(null);
   const [importingBackup, setImportingBackup] = useState(false);
   const [exportingBackup, setExportingBackup] = useState(false);
+  const [readingBackup, setReadingBackup] = useState(false);
+  const backupOperationRef = useRef(null);
+  useEffect(() => () => backupOperationRef.current?.abort(), []);
   const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
@@ -237,8 +241,10 @@ export default function Settings() {
   };
 
   const exportBackup = async () => {
-    if (exportingBackup || importingBackup) return;
+    if (backupOperationRef.current || exportingBackup || importingBackup || readingBackup) return;
     setExportingBackup(true);
+    const operation = new AbortController();
+    backupOperationRef.current = operation;
     const sourceUid = user?.uid || null;
     const sourceGuest = isGuest;
     const sourceScenario = getActiveSampleScenario();
@@ -279,10 +285,6 @@ export default function Settings() {
         dataSource = 'local-browser';
       }
       assertSourceScope();
-      setBackupMessage('Collecting original attachment files…');
-      const attachmentFiles = await exportAttachmentFiles(events, { uid: sourceUid, isGuest: isGuest || !sourceUid, sample: Boolean(sampleData), assertCurrent: assertSourceScope });
-      assertSourceScope();
-
       const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
       const readIdList = (key) => {
         try {
@@ -292,9 +294,8 @@ export default function Settings() {
           return [];
         }
       };
-      const snapshot = createBackupDocument({
+      const result = await createBackupFile({
         moments: events,
-        attachmentFiles,
         expenses,
         incomes,
         codeLists: adminValues,
@@ -314,48 +315,76 @@ export default function Settings() {
           } : null,
           appVersion: String(import.meta.env.VITE_APP_VERSION || 'dev'),
         },
+      }, { uid: sourceUid, isGuest: isGuest || !sourceUid, sample: Boolean(sampleData),
+        signal: operation.signal, assertCurrent: assertSourceScope,
+        onProgress: (progress) => setBackupMessage(progress.stage === 'originals'
+          ? `Preparing original files: ${progress.completed} of ${progress.total} checked…`
+          : `Preparing backup records: ${progress.records} processed…`),
       });
-
-      const blob = new Blob([JSON.stringify(snapshot, null, 2)], { type: 'application/json' });
-      if (blob.size > MAX_BACKUP_BYTES) throw new Error(`${BACKUP_SIZE_LIMIT_MESSAGE} This complete backup exceeds that limit; no partial backup was downloaded.`);
-      downloadBlob(blob, `dn-backup-${snapshot.createdDate.slice(0, 10)}.json`);
-      const metadataOnlyCount = snapshot.attachments.filter((attachment) => !attachment.assetId).length;
-      setBackupMessage(`Backup downloaded with ${attachmentFiles.length} original attachment ${attachmentFiles.length === 1 ? 'file' : 'files'}.${metadataOnlyCount ? ` ${metadataOnlyCount} older attachment ${metadataOnlyCount === 1 ? 'record has' : 'records have'} no stored original; reattach the original files to include them.` : ''}`);
+      assertSourceScope();
+      if (operation.signal.aborted) throw new DOMException('Backup preparation cancelled.', 'AbortError');
+      downloadBlob(result.blob, `dn-backup-${result.createdDate.slice(0, 10)}.json`);
+      const { originalFileCount, metadataOnlyCount } = result;
+      setBackupMessage(`Backup downloaded with ${originalFileCount} original attachment ${originalFileCount === 1 ? 'file' : 'files'}.${metadataOnlyCount ? ` ${metadataOnlyCount} older attachment ${metadataOnlyCount === 1 ? 'record has' : 'records have'} no stored original; reattach the original files to include them.` : ''}`);
       showToast('Backup exported', 'success');
     } catch (error) {
+      if (error.name === 'AbortError') { setBackupMessage('Backup preparation cancelled. No partial backup was downloaded.'); return; }
       console.error('Failed to export application backup:', error);
       setBackupMessage(`Backup could not be created: ${error.message || 'check your connection and try again'}.`);
       showToast('Backup export failed', 'danger');
     } finally {
       setExportingBackup(false);
+      if (backupOperationRef.current === operation) backupOperationRef.current = null;
     }
   };
 
   const importBackup = async (event) => {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || backupOperationRef.current || readingBackup || exportingBackup || importingBackup) return;
+    setReadingBackup(true);
+    setPendingBackup(null);
+    const operation = new AbortController();
+    backupOperationRef.current = operation;
+    const sourceUid = user?.uid || null;
+    const sourceGuest = isGuest;
+    const sourceScenario = getActiveSampleScenario();
+    let lastProgress = 0;
 
     try {
-      if (file.size > MAX_BACKUP_BYTES) {
-        throw new Error(BACKUP_SIZE_LIMIT_MESSAGE);
-      }
-      const parsed = JSON.parse(await file.text());
-      const backup = parseBackupDocument(parsed);
+      setBackupMessage('Reading and checking your backup…');
+      const result = await readBackupFile(file, { signal: operation.signal,
+        assertCurrent: () => {
+          const current = useAppStore.getState();
+          if ((current.user?.uid || null) !== sourceUid || current.isGuest !== sourceGuest
+            || getActiveSampleScenario() !== sourceScenario) throw new Error('Your session changed. Select the backup again in the intended workspace.');
+        },
+        onProgress: (progress) => {
+          if (Date.now() - lastProgress < 100 && progress.completed !== progress.total) return;
+          lastProgress = Date.now();
+          setBackupMessage(progress.stage === 'checking'
+            ? `Checking original files: ${progress.completed} verified…`
+            : `Reading backup: ${Math.round(progress.completed / progress.total * 100)}%…`);
+        },
+      });
+      const { backup } = result;
       const referenceWarnings = collectBackupReferenceWarnings(backup);
 
       setPendingBackup({
-        backup,
+        ...result,
         fileName: file.name,
         referenceWarnings,
         legacySettingsOnly: Boolean(backup.metadata.legacySettingsOnly),
       });
-      setBackupMessage('Backup schema and required relationships validated. Review the import and conflict policy before restoring.');
+      setBackupMessage('Backup schema, required relationships and stored original files checked. Review the import and conflict policy before restoring.');
     } catch (error) {
+      if (error.name === 'AbortError') { setBackupMessage('Backup reading cancelled. No records or original files were restored.'); return; }
       console.error('Unable to read backup file:', error);
       setBackupMessage(error.message || 'That file is not a valid DN backup.');
       showToast('Backup file could not be read', 'danger');
     } finally {
       event.target.value = '';
+      setReadingBackup(false);
+      if (backupOperationRef.current === operation) backupOperationRef.current = null;
     }
   };
 
@@ -398,7 +427,9 @@ export default function Settings() {
       }
       assertDestinationScope();
       setBackupMessage('Verifying and restoring original attachment files before records…');
-      const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup), backup.attachmentFiles || [], { uid: destinationUid, isGuest: isGuest || !destinationUid, assertCurrent: assertDestinationScope });
+      const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup, { originalFiles: pendingBackup.originalFiles }), backup.attachmentFiles || [], {
+        uid: destinationUid, isGuest: isGuest || !destinationUid, assertCurrent: assertDestinationScope, readOriginal: pendingBackup.readOriginal,
+      });
       assertDestinationScope();
       const imported = { moments: 0, activities: 0, memories: 0, attachments: 0, expenses: 0, incomes: 0, conflicts: 0 };
       let restoredGroups;
@@ -814,21 +845,22 @@ export default function Settings() {
       <div className="settings-admin-grid">
         <div className="settings-input-block">
           <span>Local backup</span>
-          <p className="settings-helper">Export app settings, records and available original attachments to one JSON file, up to 50 MB. Restore adds missing records to the active guest or signed-in account and preserves existing records with matching IDs.</p>
+          <p className="settings-helper">Export app settings, records and available original attachments to one JSON file. DN has no fixed backup size cap; available browser memory and storage still apply. Restore adds missing records to the active Guest or signed-in account and preserves existing records with matching IDs.</p>
         </div>
       </div>
 
       <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={exportBackup} disabled={exportingBackup || importingBackup}><Download size={15} /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}</button>
+        <button type="button" className="settings-primary-button" onClick={exportBackup} disabled={exportingBackup || importingBackup || readingBackup}><Download size={15} /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}</button>
         <label className="settings-secondary-button dn-backup-file-picker">
           <Upload size={15} aria-hidden="true" /> Restore backup
           <input type="file" accept=".json,application/json" aria-label="Choose a DN backup JSON file"
-            onChange={importBackup} disabled={exportingBackup || importingBackup} />
+            onChange={importBackup} disabled={exportingBackup || importingBackup || readingBackup} />
         </label>
-        <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)}><Trash2 size={15} /> Clear local data</button>
+        <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)} disabled={exportingBackup || importingBackup || readingBackup}><Trash2 size={15} /> Clear local data</button>
+        {readingBackup || exportingBackup ? <button type="button" className="settings-secondary-button" onClick={() => backupOperationRef.current?.abort()}>Cancel preparation</button> : null}
       </div>
 
-      {backupMessage ? <p className="settings-message">{backupMessage}</p> : null}
+      {backupMessage ? <p className="settings-message" role="status" aria-live="polite">{backupMessage}</p> : null}
     </div>
   );
 

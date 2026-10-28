@@ -348,3 +348,39 @@ test('Phase 5 backup v3 round-trips Cash and Online without inventing historical
   const [moment]=buildEventGroupsFromBackup(restored);
   assert.equal(moment.activities[0].expenses[0].paymentMethod,'Cash');
 });
+
+test('v3 backup keeps reused child IDs scoped to their actual Moment and never mixes expense mirrors', () => {
+  const backup = createBackupDocument({
+    moments: ['one', 'two'].map((id, index) => ({ id, name: id,
+      activities: [{ id: 'shared-child', title: id, expenses: [{ id: 'expense-' + id, amount: index + 10 }] }],
+      memories: [{ id: 'shared-memory', body: id }],
+      attachments: [{ id: 'shared-file', name: id + '.pdf', type: 'application/pdf' }],
+    })),
+    expenses: [{ id: 'ambiguous-legacy', activityId: 'shared-child', amount: 30 }],
+    codeLists: DEFAULT_CODE_LISTS,
+  });
+  const restored = parseBackupDocument(JSON.parse(JSON.stringify(backup)));
+  const groups = buildEventGroupsFromBackup(restored);
+  assert.deepEqual(groups.map((group) => group.activities[0].expenses.map((expense) => expense.id)), [['expense-one'], ['expense-two']]);
+  assert.deepEqual(groups.map((group) => group.memories[0].body), ['one', 'two']);
+  assert.deepEqual(groups.map((group) => group.attachments[0].name), ['one.pdf', 'two.pdf']);
+  assert.equal(restored.expenses.find((expense) => expense.id === 'ambiguous-legacy').amount, 30);
+  assert.match(collectBackupReferenceWarnings(restored).join(' '), /ambiguous.*ledger record/i);
+  const duplicate = structuredClone(restored);
+  duplicate.activities.push({ ...duplicate.activities[0] });
+  assert.throws(() => validateBackupDocument(duplicate), /duplicate ID/);
+});
+
+test('legacy expenses infer an Activity owner only when that owner is unambiguous', () => {
+  const backup = createBackupDocument({ moments: [
+    { id: 'one', activities: [{ id: 'single-owner' }], memories: [], attachments: [] },
+    { id: 'two', activities: [], memories: [], attachments: [] },
+  ], expenses: [
+    { id: 'unique-link', activityId: 'single-owner', amount: 2 },
+    { id: 'wrong-parent', eventId: 'two', activityId: 'single-owner', amount: 3 },
+  ], codeLists: DEFAULT_CODE_LISTS });
+  const groups = buildEventGroupsFromBackup(backup);
+  assert.deepEqual(groups[0].activities[0].expenses.map((item) => item.id), ['unique-link']);
+  assert.equal(backup.expenses.length, 2, 'unmatched expense remains available to the standalone restore');
+  assert.match(collectBackupReferenceWarnings(backup).join(' '), /wrong-parent.*mismatched/i);
+});

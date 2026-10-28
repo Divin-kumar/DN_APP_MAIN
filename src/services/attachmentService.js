@@ -84,8 +84,8 @@ const toBase64 = async (blob) => {
   for (let start = 0; start < bytes.length; start += 32768) binary += String.fromCharCode(...bytes.subarray(start, start + 32768));
   return btoa(binary);
 };
-export const exportAttachmentFiles = async (moments, context, repository = attachmentRepository) => {
-  const files = new Map();
+export async function* iterateAttachmentFiles(moments, context, repository = attachmentRepository) {
+  const files = new Set();
   for (const attachment of moments.flatMap((moment) => moment.attachments || [])) {
     context.assertCurrent?.();
     if (!attachment.assetId || files.has(attachment.assetId)) continue;
@@ -93,9 +93,23 @@ export const exportAttachmentFiles = async (moments, context, repository = attac
     context.assertCurrent?.();
     if (!blob) throw new Error(`The original for ${attachment.name || 'a file'} could not be backed up.`);
     if (await attachmentAssetId(blob) !== attachment.assetId) throw new Error('An attachment failed its integrity check and could not be backed up.');
-    files.set(attachment.assetId, { assetId: attachment.assetId, type: blob.type || attachment.type || 'application/octet-stream', size: blob.size, base64: await toBase64(blob) });
+    files.add(attachment.assetId);
+    yield { assetId: attachment.assetId, type: blob.type || attachment.type || 'application/octet-stream', size: blob.size, base64: await toBase64(blob) };
   }
-  return [...files.values()];
+}
+export const exportAttachmentFiles = async (moments, context, repository = attachmentRepository) => {
+  const files = [];
+  for await (const file of iterateAttachmentFiles(moments, context, repository)) files.push(file);
+  return files;
+};
+
+export const attachmentBlobFromBackup = async (file) => {
+  if (!file || !/^[A-Za-z0-9+/]*={0,2}$/.test(file.base64 || '')) throw new Error('Backup is missing a valid original attachment file.');
+  const bytes = Uint8Array.from(atob(file.base64), (character) => character.charCodeAt(0));
+  const blob = new Blob([bytes], { type: file.type });
+  if (blob.size < 1 || blob.size > MAX_ATTACHMENT_BYTES || blob.size !== file.size
+    || await attachmentAssetId(blob) !== file.assetId) throw new Error('An attachment backup failed its size or integrity check.');
+  return blob;
 };
 export const restoreAttachmentFiles = async (moments, files = [], context, repository = attachmentRepository) => {
   const byId = new Map(files.map((file) => [file.assetId, file]));
@@ -108,9 +122,8 @@ export const restoreAttachmentFiles = async (moments, files = [], context, repos
       if (!attachment.assetId) { attachments.push(attachment); continue; }
       if (!restored.has(attachment.assetId)) {
         const file = byId.get(attachment.assetId);
-        if (!file || !/^[A-Za-z0-9+/]*={0,2}$/.test(file.base64 || '')) throw new Error('Backup is missing a valid original attachment file.');
-        const bytes = Uint8Array.from(atob(file.base64), (character) => character.charCodeAt(0));
-        const blob = new Blob([bytes], { type: file.type });
+        if (!file) throw new Error('Backup is missing a valid original attachment file.');
+        const blob = context.readOriginal ? await context.readOriginal(file.assetId) : await attachmentBlobFromBackup(file);
         if (blob.size !== file.size || await attachmentAssetId(blob) !== attachment.assetId) throw new Error('An attachment backup failed its size or integrity check.');
         context.assertCurrent?.();
         restored.set(attachment.assetId, await repository.save(blob, context));

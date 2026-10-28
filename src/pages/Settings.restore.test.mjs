@@ -63,7 +63,7 @@ const openSettings = async (t, initialStorage) => {
       },
       load(id) {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
-        if (id === '\0guest-restore-react') return `export const useState = ${fixture}.state; export const useMemo = (fn) => fn(); export const useEffect = () => {};`;
+        if (id === '\0guest-restore-react') return `export const useState = ${fixture}.state; export const useRef = (initial) => useState(() => ({current: initial}))[0]; export const useMemo = (fn) => fn(); export const useEffect = () => {};`;
         if (id === '\0guest-restore-jsx') return 'export const jsx = (type, props) => ({type, props}); export const jsxs = jsx; export const jsxDEV = jsx; export const Fragment = "fragment";';
         if (id === '\0guest-restore-router') return 'export const Link = "link"; export const useLocation = () => ({hash: ""});';
         if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", RotateCcw="icon", Plus="icon", ArrowRight="icon", RefreshCw="icon";';
@@ -93,7 +93,7 @@ const openSettings = async (t, initialStorage) => {
     const toggle = nodes(tree).find((node) => node.type === 'button' && label(node).includes('Data & Backup'));
     if (!toggle.props['aria-expanded']) { toggle.props.onClick(); tree = render(); }
     const input = nodes(tree).find((node) => node.type === 'input' && node.props.type === 'file');
-    await input.props.onChange({ target: { value: 'synthetic-backup.json', files: [{ size: 1, text: async () => JSON.stringify(backup) }] } });
+    await input.props.onChange({ target: { value: 'synthetic-backup.json', files: [new File([JSON.stringify(backup)], 'synthetic-backup.json', { type: 'application/json' })] } });
     tree = render();
     const confirm = nodes(tree).find((node) => node.type === 'button' && label(node) === 'Confirm restore');
     assert.ok(confirm, 'the real Settings import handler must present restore confirmation');
@@ -224,7 +224,9 @@ test('Settings restores verified destination file references before writing any 
     assert.equal(context.uid, null);
     assert.equal(context.isGuest, true);
     context.assertCurrent();
-    assert.deepEqual(files, backup.attachmentFiles);
+    assert.deepEqual(files, backup.attachmentFiles.map(({ assetId, type, size }) => ({ assetId, type, size })));
+    assert.deepEqual(new Uint8Array(await (await context.readOriginal(files[0].assetId)).arrayBuffer()),
+      Uint8Array.from(atob(backup.attachmentFiles[0].base64), (character) => character.charCodeAt(0)));
     await pending.promise;
     context.assertCurrent();
     return groups.map((group) => ({ ...group, attachments: group.attachments.map((entry) => ({ ...entry, storage: 'local' })) }));

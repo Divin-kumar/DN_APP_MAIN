@@ -5,36 +5,43 @@ import { financialDate } from '../utils/financialRecords.js';
 import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
 
 export const CURRENT_BACKUP_VERSION = 3;
-export const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
-export const BACKUP_SIZE_LIMIT_MESSAGE = 'Backup files must be 50 MB or smaller, including original attachments.';
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
 const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
 const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
 const ASSET_ID = /^[a-f0-9]{64}$/;
 
-const validateAttachmentFiles = (backup) => {
+export const validateBackupAttachmentFile = (file, { descriptorOnly = false } = {}) => {
+  if (!isRecord(file) || Object.keys(file).some((key) => !['assetId', 'type', 'size', 'base64'].includes(key))
+    || typeof file.assetId !== 'string' || !ASSET_ID.test(file.assetId)) throw new Error('Backup contains an invalid original attachment file.');
+  if (typeof file.type !== 'string' || !file.type.trim() || file.type.length > 255 || /[\r\n]/.test(file.type)) throw new Error('Backup attachment file type is invalid.');
+  if (!Number.isInteger(file.size) || file.size < 1 || file.size > MAX_ATTACHMENT_BYTES) throw new Error('Each original attachment must be between 1 byte and 10 MB.');
+  if (descriptorOnly && file.base64 === undefined) return;
+  const encoded = file.base64;
+  if (typeof encoded !== 'string' || !encoded.length || encoded.length % 4 !== 0
+    || encoded.length > Math.ceil(MAX_ATTACHMENT_BYTES / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Backup attachment file data is not valid base64.');
+  const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
+  if ((encoded.length / 4) * 3 - padding !== file.size) throw new Error('Backup attachment file size does not match its data.');
+};
+
+const validateAttachmentFiles = (backup, { originalFiles, deferAttachmentFiles = false } = {}) => {
   if (backup.attachmentFiles !== undefined && !Array.isArray(backup.attachmentFiles)) throw new Error('Backup attachmentFiles must be an array.');
   const files = backup.attachmentFiles || [];
   const assetIds = new Set();
   files.forEach((file) => {
-    if (!isRecord(file) || Object.keys(file).some((key) => !['assetId', 'type', 'size', 'base64'].includes(key))
-      || typeof file.assetId !== 'string' || !ASSET_ID.test(file.assetId)) throw new Error('Backup contains an invalid original attachment file.');
+    // File transport may hold only verified descriptors in memory. Original
+    // bytes stay in the selected immutable File and are read again on restore.
+    const indexed = originalFiles?.get(file?.assetId);
+    validateBackupAttachmentFile(file, { descriptorOnly: Boolean(indexed) });
+    if (indexed && (indexed.size !== file.size || indexed.type !== file.type)) throw new Error('Backup original file index does not match its descriptor.');
     if (assetIds.has(file.assetId)) throw new Error('Backup contains duplicate original attachment files.');
     assetIds.add(file.assetId);
-    if (typeof file.type !== 'string' || !file.type.trim() || file.type.length > 255 || /[\r\n]/.test(file.type)) throw new Error('Backup attachment file type is invalid.');
-    if (!Number.isInteger(file.size) || file.size < 1 || file.size > MAX_ATTACHMENT_BYTES) throw new Error('Each original attachment must be between 1 byte and 10 MB.');
-    const encoded = file.base64;
-    if (typeof encoded !== 'string' || !encoded.length || encoded.length % 4 !== 0
-      || encoded.length > Math.ceil(MAX_ATTACHMENT_BYTES / 3) * 4 || !/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) throw new Error('Backup attachment file data is not valid base64.');
-    const padding = encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0;
-    if ((encoded.length / 4) * 3 - padding !== file.size) throw new Error('Backup attachment file size does not match its data.');
   });
   const referencedAssets = new Set();
   backup.attachments.forEach((attachment) => {
     if (attachment.assetId === undefined || attachment.assetId === null || attachment.assetId === '') return;
     if (typeof attachment.assetId !== 'string' || !ASSET_ID.test(attachment.assetId)) throw new Error('Backup attachment has an invalid original file reference.');
-    if (!assetIds.has(attachment.assetId)) throw new Error(`Backup is missing the original file for attachment "${attachment.id}".`);
+    if (!deferAttachmentFiles && !assetIds.has(attachment.assetId)) throw new Error(`Backup is missing the original file for attachment "${attachment.id}".`);
     referencedAssets.add(attachment.assetId);
   });
   if (files.some((file) => !referencedAssets.has(file.assetId))) throw new Error('Backup contains an original file without an attachment reference.');
@@ -75,12 +82,13 @@ const parseStoredValue = (value) => {
   }
 };
 
-const uniqueById = (items, label) => {
+const uniqueById = (items, label, scoped = false) => {
   const ids = new Set();
   items.forEach((item) => {
     if (!hasId(item)) throw new Error(`Backup ${label} contains a record without a valid ID.`);
-    if (ids.has(item.id)) throw new Error(`Backup ${label} contains duplicate ID "${item.id}".`);
-    ids.add(item.id);
+    const key = scoped ? JSON.stringify([item.momentId, item.id]) : item.id;
+    if (ids.has(key)) throw new Error(`Backup ${label} contains duplicate ID "${item.id}".`);
+    ids.add(key);
   });
   return ids;
 };
@@ -115,7 +123,7 @@ export const createBackupDocument = ({
   settings = {},
   metadata = {},
   createdDate = new Date().toISOString(),
-}) => {
+}, options = {}) => {
   const normalizedMoments = portableMoments(moments);
   const flattened = flattenMoments(normalizedMoments);
   const normalizedExpenses = expenses.map(portableRecord);
@@ -158,11 +166,11 @@ export const createBackupDocument = ({
         ? 'Older attachment records without an original file remain metadata only; reattach those original files to include them in a future backup.' : null,
     },
   };
-  validateBackupDocument(document);
+  validateBackupDocument(document, options);
   return document;
 };
 
-export const validateBackupDocument = (backup) => {
+export const validateBackupDocument = (backup, options = {}) => {
   if (!isRecord(backup)) throw new Error('Backup root must be a JSON object.');
   if (backup.backupVersion !== CURRENT_BACKUP_VERSION) {
     throw new Error(`Unsupported backup version: ${String(backup.backupVersion)}.`);
@@ -188,9 +196,9 @@ export const validateBackupDocument = (backup) => {
   });
 
   const momentIds = uniqueById(backup.moments, 'Moments');
-  uniqueById(backup.activities, 'Activities');
-  uniqueById(backup.memories, 'Memories');
-  uniqueById(backup.attachments, 'Attachments');
+  uniqueById(backup.activities, 'Activities', true);
+  uniqueById(backup.memories, 'Memories', true);
+  uniqueById(backup.attachments, 'Attachments', true);
   uniqueById(backup.expenses, 'Expenses');
   uniqueById(backup.incomes, 'Income');
 
@@ -203,7 +211,7 @@ export const validateBackupDocument = (backup) => {
   backup.attachments.forEach((attachment) => {
     if (!momentIds.has(attachment.momentId)) throw new Error(`Attachment "${attachment.id}" references a missing Moment.`);
   });
-  validateAttachmentFiles(backup);
+  validateAttachmentFiles(backup, options);
   return backup;
 };
 
@@ -263,9 +271,9 @@ const normalizeLegacyBackup = (parsed) => {
   });
 };
 
-export const parseBackupDocument = (parsed) => {
+export const parseBackupDocument = (parsed, options = {}) => {
   if (!isRecord(parsed)) throw new Error('Backup root must be a JSON object.');
-  if (parsed.backupVersion === CURRENT_BACKUP_VERSION) return validateBackupDocument(parsed);
+  if (parsed.backupVersion === CURRENT_BACKUP_VERSION) return validateBackupDocument(parsed, options);
   if (parsed.backupVersion !== undefined) {
     if (parsed.backupFormatVersion === 2 || parsed.backupVersion === 2) return normalizeV2Backup(parsed);
     throw new Error(`Unsupported backup version: ${String(parsed.backupVersion)}.`);
@@ -277,16 +285,20 @@ export const parseBackupDocument = (parsed) => {
   return normalizeLegacyBackup(parsed);
 };
 
-export const buildEventGroupsFromBackup = (backup) => {
-  validateBackupDocument(backup);
+export const buildEventGroupsFromBackup = (backup, options = {}) => {
+  validateBackupDocument(backup, options);
   const activitiesByMoment = new Map(backup.moments.map((moment) => [moment.id, []]));
   const memoriesByMoment = new Map(backup.moments.map((moment) => [moment.id, []]));
   const attachmentsByMoment = new Map(backup.moments.map((moment) => [moment.id, []]));
   const expensesByActivity = new Map();
+  const ownersByActivity = new Map();
+  const childKey = (momentId, activityId) => JSON.stringify([momentId, activityId]);
 
   backup.activities.forEach((activity) => {
     const { momentId, ...activityFields } = activity;
     activitiesByMoment.get(momentId).push({ ...activityFields, eventId: activityFields.eventId || momentId, expenses: [] });
+    if (!ownersByActivity.has(activity.id)) ownersByActivity.set(activity.id, []);
+    ownersByActivity.get(activity.id).push(momentId);
   });
   backup.memories.forEach((memory) => {
     const { momentId, ...memoryFields } = memory;
@@ -298,15 +310,21 @@ export const buildEventGroupsFromBackup = (backup) => {
   });
   backup.expenses.forEach((expense) => {
     if (!expense.activityId) return;
-    if (!expensesByActivity.has(expense.activityId)) expensesByActivity.set(expense.activityId, []);
-    expensesByActivity.get(expense.activityId).push(expense);
+    const owners = ownersByActivity.get(expense.activityId) || [];
+    const momentId = expense.eventId || expense.momentId || (owners.length === 1 ? owners[0] : null);
+    // An ambiguous legacy link remains in the ledger, never copied to two
+    // unrelated Moments merely because they share a child ID.
+    if (!momentId || !owners.includes(momentId)) return;
+    const key = childKey(momentId, expense.activityId);
+    if (!expensesByActivity.has(key)) expensesByActivity.set(key, []);
+    expensesByActivity.get(key).push(expense);
   });
 
   return backup.moments.map((moment) => ({
     ...moment,
     activities: activitiesByMoment.get(moment.id).map((activity) => ({
       ...activity,
-      expenses: expensesByActivity.get(activity.id) || [],
+      expenses: expensesByActivity.get(childKey(moment.id, activity.id)) || [],
     })),
     memories: memoriesByMoment.get(moment.id),
     attachments: attachmentsByMoment.get(moment.id),
@@ -399,12 +417,22 @@ export const mergeRecordsById = mergeById;
 
 export const collectBackupReferenceWarnings = (backup) => {
   const momentIds = new Set(backup.moments.map((moment) => moment.id));
-  const activityIds = new Set(backup.activities.map((activity) => activity.id));
+  const activityOwners = new Map();
+  backup.activities.forEach((activity) => {
+    if (!activityOwners.has(activity.id)) activityOwners.set(activity.id, []);
+    activityOwners.get(activity.id).push(activity.momentId);
+  });
   return backup.expenses.flatMap((expense) => {
     const warnings = [];
-    const momentId = expense.momentId || expense.eventId;
+    const momentId = expense.eventId || expense.momentId;
     if (momentId && !momentIds.has(momentId)) warnings.push(`Expense "${expense.id}" references a Moment not included in this backup.`);
-    if (expense.activityId && !activityIds.has(expense.activityId)) warnings.push(`Expense "${expense.id}" references an Activity not included in this backup.`);
+    if (expense.activityId) {
+      const owners = activityOwners.get(expense.activityId) || [];
+      if (!owners.length) warnings.push(`Expense "${expense.id}" references an Activity not included in this backup.`);
+      else if ((momentId && !owners.includes(momentId)) || (!momentId && owners.length > 1)) {
+        warnings.push(`Expense "${expense.id}" has an ambiguous or mismatched Moment/Activity link; it will remain a ledger record without a new Activity mirror.`);
+      }
+    }
     return warnings;
   });
 };
