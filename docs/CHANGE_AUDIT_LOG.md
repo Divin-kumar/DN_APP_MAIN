@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-128 | DN 2.0 Phase 4 Journey, Diary and Chronicle presentations on OldVersion
+- Implemented three distinctly presented Story treatments over the same Phase 1 read-only timeline and existing Phase 3 Moment Overview: Journey uses linked visual chapters, Diary uses dated journal pages and larger prose, Chronicle uses numbered milestone cards and compact status. No Activity, date, status, attachment ownership, finance, reflection, route, PDF or backup model changes.
+- Exposed a per-Moment-Type Story presentation setting in Code Lists (Automatic/Journey/Diary/Chronicle) using existing optional `storyPresentation` metadata. Auto inference and inactive/custom Other type resolution stay backward compatible; existing serializer preserves the field, no schema migration. Mobile and reduced-motion styles scoped to Story.
+- **Validation at authoring:** source-derived; OldVersion CI and user review pending. No main branch write, merge, PR, Firebase deployment or 2.0.0 publication.
+
 ## CHG-20261028-127 | Phase 3 owner acceptance complete on OldVersion
 - **Acceptance:** Owner manually tested all six Phase 3 Vercel/Guest review checks and reported every check passed: recorded-date chronological Story, separate upcoming plans, correct per-Activity photos, preserved read-only Earlier reflections without a standalone Memories tab, working Activity Detail/Transactions/Attachments navigation, and iPhone Safari responsiveness. No issues or additional observations reported.
 - **Automated evidence:** GitHub Actions run 40633617487 on OldVersion commit c4eb76b3059c14df538839c1ce4b346c3152b339 succeeded for Node unit tests, ESLint, Chromium browser regressions, production build and documentation governance. The run does not constitute a Firebase deployment.

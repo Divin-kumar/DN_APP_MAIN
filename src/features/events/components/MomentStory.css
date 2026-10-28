@@ -55,3 +55,64 @@ html[data-theme] .dn-v2-story-reflections .free-text-content { color:var(--color
 /* Override the legacy two-column Overview so Story chapters are never squeezed. */
 html[data-theme] .event-moment-overview.dn-v2-story-overview { display:grid !important;grid-template-columns:minmax(0,1fr) !important;gap:20px;min-width:0; }
 html[data-theme] .dn-v2-story-overview > .moment-contents { min-width:0; }
+
+
+/* DN 2.0 Phase 4: editorial variations scoped to Story only.
+   All three layouts consume the same recorded chronology and attachment galleries. */
+html[data-theme] .dn-v2-story-header { position:relative;isolation:isolate;padding:18px 20px;border-radius:20px;border:1px solid var(--color-border);background:var(--color-card);overflow:hidden; }
+html[data-theme] .dn-v2-story-header::before { position:absolute;inset:auto -40px -85px auto;width:190px;height:190px;border-radius:50%;content:"";z-index:-1;pointer-events:none;background:var(--color-primary);opacity:.055; }
+html[data-theme] .dn-v2-story-intro { overflow:hidden; }
+html[data-theme] .dn-v2-story-sequence { display:none; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day { position:relative; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day::before { position:absolute;top:0;bottom:-12px;left:126px;width:2px;content:"";background:color-mix(in srgb,var(--color-primary) 21%,transparent);pointer-events:none; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day-items { position:relative;padding-left:14px; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day-items::before { position:absolute;left:7px;top:22px;width:10px;height:10px;border:2px solid var(--color-primary);border-radius:50%;content:"";background:var(--color-card);box-sizing:border-box; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-entry { box-shadow:0 7px 21px color-mix(in srgb,var(--color-text) 4%,transparent); }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-entry:has(.dn-attachment-gallery) { background:linear-gradient(135deg,var(--color-card),var(--color-surface)); }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-entry h4 { font-size:1.03rem; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-media .dn-attachment-gallery { display:flex;flex-wrap:wrap;gap:7px; }
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-intro { border-radius:24px; }
+
+/* Diary: a quiet journal page with dated paragraphs rather than rail markers. */
+html[data-theme] .dn-v2-story[data-presentation="diary"] { gap:26px; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-header { background:linear-gradient(155deg,var(--color-card),var(--color-surface));border-radius:16px; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-header h3 { font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:clamp(1.55rem,3.4vw,2.2rem);letter-spacing:-.028em; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-intro { border-radius:12px;border-left:4px solid var(--color-primary); }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-intro-text { font-family:Georgia,"Times New Roman",serif;font-size:1.01rem;line-height:1.88; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-month { gap:16px; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-month>h4 { padding:0 0 10px 0;font-family:Georgia,"Times New Roman",serif;font-size:1.08rem;font-weight:600; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-day { display:block;padding:10px 0 4px; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-day-date { padding:0 0 10px 3px;color:var(--color-primary);font-size:.75rem;letter-spacing:.045em; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-day-items { display:grid;gap:12px; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-entry { gap:0;padding:22px 23px;border-radius:11px;background:var(--color-card);border-left:3px solid color-mix(in srgb,var(--color-primary) 40%,var(--color-border)); }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-entry-symbol { display:none; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-entry h4 { font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.15rem,2.3vw,1.42rem);font-weight:600;letter-spacing:-.01em; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-entry-description { color:var(--color-text);font-family:Georgia,"Times New Roman",serif;font-size:.99rem;line-height:1.85; }
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-reflections article { border-radius:10px; }
+
+/* Chronicle: numbered milestones, compact metadata and structured cards. */
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-header { border-left:4px solid var(--color-primary); }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-header h3 { letter-spacing:-.045em;font-weight:850; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-intro { border-radius:14px; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-month>h4 { color:var(--color-text-muted);font-size:.7rem;letter-spacing:.09em;text-transform:uppercase; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-day { grid-template-columns:105px minmax(0,1fr);gap:8px; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-day-date { font-size:.68rem; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-entry { gap:9px;border-radius:11px;padding:12px 14px;border-left:3px solid var(--color-primary); }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-entry-symbol { width:21px;flex-basis:21px;height:21px;border-radius:6px; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-sequence { display:inline-flex;justify-content:center;align-items:center;flex:0 0 33px;min-height:25px;color:var(--color-primary);background:color-mix(in srgb,var(--color-primary) 10%,var(--color-card));border-radius:7px;font-size:.7rem;font-weight:800;font-variant-numeric:tabular-nums; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-entry h4 { font-size:.88rem;font-weight:790; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-entry-description { font-size:.75rem;line-height:1.52; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-aux-items { display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,290px),1fr));gap:10px; }
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-section-head h3 { font-size:.89rem;text-transform:uppercase;letter-spacing:.02em; }
+@media(max-width:680px) {
+ html[data-theme] .dn-v2-story-header { padding:15px; }
+ html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day::before { left:8px;bottom:0; }
+ html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day-items { padding-left:18px; }
+ html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-day-items::before { left:3px; }
+ html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-entry { padding:15px; }
+ html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-day { grid-template-columns:minmax(0,1fr); }
+ html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-entry { flex-wrap:wrap; }
+}
+@media(prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-entry { transition:none; }
+}

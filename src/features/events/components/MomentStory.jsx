@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, BookOpenText, CalendarDays, CheckCircle2, Clock3, Compass, FileText, Pencil, Sparkles } from 'lucide-react';
+import { ArrowUpRight, BookOpenText, CalendarDays, CheckCircle2, Clock3, Compass, FileText, NotebookPen, Pencil, Route, Rows3, Sparkles } from 'lucide-react';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import RichText from '../../../components/common/RichText';
-import { buildMomentStory } from '../../../utils/momentStory';
+import { buildMomentStory, STORY_PRESENTATIONS } from '../../../utils/momentStory';
 import { activityDateLabel, activityDetailPath } from '../../../utils/activityDetail';
 import './MomentStory.css';
 
@@ -12,9 +12,40 @@ function Media({ items, uid, isGuest, label }) {
   </div> : null;
 }
 const statuses = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled' };
-function Chapter({ entry, momentId, uid, isGuest }) {
+
+// Presentation is a view of the same Story records, never a separate record
+// model. The configured Moment Type selects one editorial voice for its Story.
+const editions = {
+  [STORY_PRESENTATIONS.JOURNEY]: {
+    label: 'Journey', icon: Route,
+    heading: 'The moments along the way',
+    description: 'Follow the chapters in the order they happened.',
+    introduction: 'How it began',
+    recorded: 'The journey so far', upcoming: 'The road ahead',
+    empty: 'Your journey begins with an Activity',
+  },
+  [STORY_PRESENTATIONS.DIARY]: {
+    label: 'Diary', icon: NotebookPen,
+    heading: 'Pages from this Moment',
+    description: 'A personal record, page by page, in the dates you saved.',
+    introduction: 'Opening note',
+    recorded: 'Dated entries', upcoming: 'Pages still to come',
+    empty: 'Your first journal entry is waiting',
+  },
+  [STORY_PRESENTATIONS.CHRONICLE]: {
+    label: 'Chronicle', icon: Rows3,
+    heading: 'The record of progress',
+    description: 'Milestones and decisions in their recorded order.',
+    introduction: 'Context and purpose',
+    recorded: 'Milestone log', upcoming: 'Next milestones',
+    empty: 'Your first milestone is waiting',
+  },
+};
+function Chapter({ entry, momentId, uid, isGuest, presentation, ordinal = null }) {
   const link = entry.id ? activityDetailPath(momentId, entry.id) : null;
-  return <article className="dn-v2-story-entry" data-story-activity={entry.id || undefined}>
+  return <article className="dn-v2-story-entry" data-story-activity={entry.id || undefined} data-story-entry-style={presentation}>
+    {presentation === STORY_PRESENTATIONS.CHRONICLE && ordinal !== null
+      ? <span className="dn-v2-story-sequence" aria-label={`Milestone ${ordinal}`}>{String(ordinal).padStart(2, '0')}</span> : null}
     <div className="dn-v2-story-entry-symbol" aria-hidden="true">{entry.status === 'completed' ? <CheckCircle2 size={17} /> : <span />}</div>
     <div className="dn-v2-story-entry-body">
       <div className="dn-v2-story-entry-meta">
@@ -34,18 +65,26 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
   const story = buildMomentStory(moment, { momentTypes });
   const recorded = story.timeline.reduce((sum, month) => sum + month.days.reduce((count, day) => count + day.entries.length, 0), 0);
   const hasActivities = recorded || story.upcoming.length || story.undated.length;
+  const edition = editions[story.presentation] || editions[STORY_PRESENTATIONS.JOURNEY];
+  const EditionIcon = edition.icon;
+  const recordedOrder = new Map();
+  let sequence = 0;
+  for (const month of story.timeline) for (const day of month.days) for (const entry of day.entries) {
+    recordedOrder.set(entry, ++sequence);
+  }
   const entries = (items, group) => items.map((entry, i) =>
-    <Chapter key={entry.id || `${group}-${i}`} entry={entry} momentId={story.momentId} uid={uid} isGuest={isGuest} />);
+    <Chapter key={entry.id || `${group}-${i}`} entry={entry} momentId={story.momentId} uid={uid} isGuest={isGuest}
+      presentation={story.presentation} ordinal={recordedOrder.get(entry) ?? null} />);
   return <div className="dn-v2-story" data-presentation={story.presentation}>
     <header className="dn-v2-story-header">
-      <div><span className="dn-v2-story-kicker"><Sparkles size={14} /> The Moment Story</span>
-        <h3>The days that made this Moment</h3>
-        <p>Each chapter follows its recorded Activity date.</p>
+      <div><span className="dn-v2-story-kicker"><EditionIcon size={15} /> {edition.label} Story</span>
+        <h3>{edition.heading}</h3>
+        <p>{edition.description}</p>
       </div>
       <div className="dn-v2-story-stats"><span><strong>{recorded}</strong> recorded</span><span><strong>{story.upcoming.length}</strong> upcoming</span></div>
     </header>
     <section className="dn-v2-story-intro" aria-label="Moment introduction">
-      <div className="dn-v2-story-intro-head"><h4><BookOpenText size={17} /> The beginning</h4>
+      <div className="dn-v2-story-intro-head"><h4><BookOpenText size={17} /> {edition.introduction}</h4>
         <button type="button" onClick={onEditIntro}><Pencil size={14} />{story.introduction ? 'Edit introduction' : 'Add introduction'}</button>
       </div>
       {story.introduction ? <RichText value={story.introduction} className="free-text-content dn-v2-story-intro-text" />
@@ -53,18 +92,18 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
       <Media items={story.keepsakes} uid={uid} isGuest={isGuest} label="Moment keepsakes and older unlinked files" />
     </section>
     {story.timeline.length ? <section aria-label="Recorded chapters" className="dn-v2-story-recorded">
-      <div className="dn-v2-story-section-head"><h3><Compass size={18} /> The journey so far</h3><small>Oldest to newest</small></div>
+      <div className="dn-v2-story-section-head"><h3><Compass size={18} /> {edition.recorded}</h3><small>{edition.label === 'Diary' ? 'In your recorded order' : 'Oldest to newest'}</small></div>
       {story.timeline.map((month) => <section key={month.key} className="dn-v2-story-month" aria-label={`Activities in ${month.key}`}>
         <h4>{new Date(`${month.key}-01T12:00:00`).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h4>
         {month.days.map((day) => <div key={day.date} className="dn-v2-story-day">
-          <div className="dn-v2-story-day-date"><CalendarDays size={14} />{activityDateLabel(day.date)}</div>
+          <div className="dn-v2-story-day-date"><CalendarDays size={14} /> <span>{activityDateLabel(day.date)}</span></div>
           <div className="dn-v2-story-day-items">{entries(day.entries,day.date)}</div>
         </div>)}
       </section>)}
-    </section> : !hasActivities ? <div className="dn-v2-story-empty"><BookOpenText size={23} /><strong>The first chapter is still ahead</strong>
+    </section> : !hasActivities ? <div className="dn-v2-story-empty"><BookOpenText size={23} /><strong>{edition.empty}</strong>
       <p>Every story starts with an Activity.</p><Link to={`/events/${encodeURIComponent(story.momentId)}/activities`}>View Activities <ArrowUpRight size={15} /></Link></div> : null}
     {story.upcoming.length ? <section aria-label="Upcoming activities" className="dn-v2-story-aux">
-      <div className="dn-v2-story-section-head"><h3><Clock3 size={18} /> Coming up</h3><small>Future unfinished plans</small></div>
+      <div className="dn-v2-story-section-head"><h3><Clock3 size={18} /> {edition.upcoming}</h3><small>Future unfinished plans</small></div>
       <div className="dn-v2-story-aux-items">{entries(story.upcoming,'upcoming')}</div>
     </section> : null}
     {story.undated.length ? <section aria-label="Activities without dates" className="dn-v2-story-aux">

@@ -24,6 +24,8 @@ import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
+import DropdownSelect from '../components/common/DropdownSelect';
+import { resolveMomentStoryPresentation, STORY_PRESENTATIONS } from '../utils/momentStory';
 import SortControl from '../components/common/SortControl';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import useConditionFilters from '../hooks/useConditionFilters';
@@ -132,6 +134,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       greetingTemplate: typeof baseEntry.greetingTemplate === 'string' ? baseEntry.greetingTemplate : '',
       showInDashboardUpcoming: baseEntry.showInDashboardUpcoming ?? true,
       showActivitiesOnDashboard: baseEntry.showActivitiesOnDashboard ?? true,
+      storyPresentation: Object.values(STORY_PRESENTATIONS).includes(baseEntry.storyPresentation) ? baseEntry.storyPresentation : '',
     });
   };
 
@@ -148,6 +151,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate : '',
       showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
       showActivitiesOnDashboard: momentTypeEditor.showActivitiesOnDashboard !== false,
+      storyPresentation: momentTypeEditor.storyPresentation || null,
     };
 
     const nextEntries = entries.some((entry) => entry.value === (momentTypeEditor.existingValue || title))
@@ -328,6 +332,22 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
                 placeholder="Enter a title"
               />
             </label>
+
+            <div className="settings-input-block moment-type-story-setting">
+              <label htmlFor="moment-type-story-presentation">Story presentation</label>
+              <DropdownSelect id="moment-type-story-presentation" value={momentTypeEditor.storyPresentation}
+                onChange={(changeEvent) => setMomentTypeEditor((current) => ({ ...current, storyPresentation: changeEvent.target.value }))}>
+                <option value="">Automatic (based on type)</option>
+                <option value="journey">Journey · Visual timeline</option>
+                <option value="diary">Diary · Journal pages</option>
+                <option value="chronicle">Chronicle · Milestone log</option>
+              </DropdownSelect>
+              <small className="settings-helper" aria-live="polite">
+                {momentTypeEditor.storyPresentation
+                  ? `This Moment Type displays its Story as ${momentTypeEditor.storyPresentation === 'journey' ? 'a visual timeline' : momentTypeEditor.storyPresentation === 'diary' ? 'dated journal pages' : 'a milestone log'}.`
+                  : `Automatic selects ${resolveMomentStoryPresentation({ type: momentTypeEditor.title || 'Personal' }, [])} for this type. Changes affect presentation only, not Activities or dates.`}
+              </small>
+            </div>
 
             <div className="moment-type-switch-list">
               <div className="moment-type-switch-row">
@@ -560,7 +580,7 @@ export default function CodeLists() {
         </section>
       ) : null}
       {!adminValuesLoading && !adminValuesError ? <>
-        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type controls greeting generation and separate Dashboard visibility for its Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Choose each type’s Story presentation, greeting generation, and separate Dashboard visibility for Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
