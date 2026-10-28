@@ -141,7 +141,7 @@ test('finance density has one-row totals and a single compact transaction headin
   assert.match(css, /\.dn-transactions-page \.transactions-heading \{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
   assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-copy p \{[\s\S]*?white-space:nowrap/);
 });
-test('Moment hero retains Greeting while universal create reaches Memory and Attachments', () => {
+test('Moment hero retains Greeting and attachment quick create while retiring Memory creation', () => {
   const hero = read('../features/events/components/EventWorkspaceShell.jsx');
   const layout = read('../layouts/DashboardLayout.jsx');
   const css = read('../design-system.css');
@@ -151,12 +151,11 @@ test('Moment hero retains Greeting while universal create reaches Memory and Att
   assert.match(topline, /event-moment-kicker/);
   assert.doesNotMatch(topline, /event-moment-memory-action/);
   assert.match(topline, /event-moment-copy-action/);
-  for (const kind of ['memory', 'attachment']) {
-    assert.match(layout, new RegExp(`onClick=\\{\\(\\) => beginMomentCreate\\('${kind}'\\)\\}`));
-  }
+  assert.match(layout, /onClick=\\{\\(\\) => beginMomentCreate\\('attachment'\\)\\}/);
+  assert.doesNotMatch(layout, /onClick=\\{\\(\\) => beginMomentCreate\\('memory'\\)\\}/);
   assert.match(layout, /window\.dispatchEvent\(new CustomEvent\('dn:moment-create'/);
   assert.match(hero, /window\.addEventListener\('dn:moment-create', receiveCreate\)/);
-  assert.match(hero, /<ModalDialog title="Add memory"[\s\S]*?<form onSubmit=\{saveMemory\}/);
+  assert.doesNotMatch(hero, /<ModalDialog title="Add memory"/);
   assert.match(hero, /<input ref=\{attachmentInputRef\} type="file" hidden aria-label="Add attachment" onChange=\{addAttachment\}/);
   assert.doesNotMatch(hero.slice(topEnd, hero.indexOf('<h1>', topEnd)), /event-moment-kicker/);
   assert.match(css, /\.dn-moment-hero-swipe \.event-moment-topline \{[\s\S]*?justify-content:space-between !important/);

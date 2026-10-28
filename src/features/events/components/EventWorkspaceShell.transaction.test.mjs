@@ -60,6 +60,7 @@ const openWorkspace = async (t) => {
         if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
         if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
         if (source === './MomentContents') return '\0workspace-transaction-child:MomentContents';
+        if (source === './MomentStory') return '\0workspace-transaction-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-transaction-router';
         if (source === 'lucide-react') return '\0workspace-transaction-icons';
         if (source.includes('/components/')) return `\0workspace-transaction-child:${source.split('/').at(-1)}`;
