@@ -151,8 +151,8 @@ test('Moment hero retains Greeting and attachment quick create while retiring Me
   assert.match(topline, /event-moment-kicker/);
   assert.doesNotMatch(topline, /event-moment-memory-action/);
   assert.match(topline, /event-moment-copy-action/);
-  assert.match(layout, /onClick=\\{\\(\\) => beginMomentCreate\\('attachment'\\)\\}/);
-  assert.doesNotMatch(layout, /onClick=\\{\\(\\) => beginMomentCreate\\('memory'\\)\\}/);
+  assert.ok(layout.includes("beginMomentCreate('attachment')"));
+  assert.equal(layout.includes("beginMomentCreate('memory')"), false);
   assert.match(layout, /window\.dispatchEvent\(new CustomEvent\('dn:moment-create'/);
   assert.match(hero, /window\.addEventListener\('dn:moment-create', receiveCreate\)/);
   assert.doesNotMatch(hero, /<ModalDialog title="Add memory"/);
