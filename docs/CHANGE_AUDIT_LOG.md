@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-136 | Owner PDF export critique and layout cohesion fix (Phase 6 still unapproved)
+- **Reported evidence:** Owner's 14-page `PH4-06 · A Year in Pages | Diary-summary.pdf` had an isolated 14 Jan 2025 heading on page 4 with its next photo on page 5, a similar 29 Apr 2025 split across pages 6–7, a mostly blank cover/photo-only next page, duplicate keepsake photography, and literal legacy `<p>` tags. The file is labeled Journal even though its Moment title ends in Diary; PDF Studio's selected template is the export authority, not the Moment's name.
+- **Rendering correction:** Added PDF-only legacy rich-text flattening, chapter-heading keep-with-next pagination, fitted large pictures within current page while reserving room for accompanying prose, date-title-image-caption sequence, repeat date for a same-day entry continuing on a new page, compact cover-photo placement, and no duplicate of a successfully printed cover keepsake. Original aspect ratio, scoped original-file reads, Account/Guest identity and embedded raster-page preview parity remain intact.
+- **Regression:** Added tests for HTML-to-readable-text safety and for a photo-bearing Journal chapter keeping date/title/lead photograph on one rendered PDF page even with preceding long text. Final CI after this fix and owner visual approval are separate pending gates; an older green 128-browser-test run did not cover these reported faults.
+- **Boundary:** Work on OldVersion only, no change to main, no production deploy, no storage/backup migration, no version bump.
+
 ## CHG-20261028-135 | Phase 6 automated verification evidence; owner review pending
 - **Executed:** GitHub Actions `40648781273` on `63990c0324c6fc5100d7929e0670dce8e932a7e3` passed **128 Chromium browser tests**, Node unit tests, ESLint, the production build and documentation governance. Tests exercised Studio opening, three template choices, stale-preview download interlock, valid PDF bytes, 320px responsiveness and no Guest record mutation.
 - **Release boundary:** The available Vercel connection reported no accessible project, so a fresh Vercel preview deployment was **not confirmed**. The GitHub Firebase production and preview workflows were skipped. Owner visual acceptance is pending; no claim of published DN 2.0 or write to main.
