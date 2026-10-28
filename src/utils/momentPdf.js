@@ -195,6 +195,96 @@ export class MomentPdfPainter {
     for (const attachment of attachments) positions.push(await this.photo(attachment, context, options));
     return positions;
   }
+  // A grouped photograph spread is an atomic visual block. Up to five original
+  // photos share one page, fitted into adaptive 1 / 2 / 3 / 4 / 5-image rows.
+  // For larger albums, following groups use subsequent pages. Preview and
+  // exported PDF share these exact pixels, no HTML approximation.
+  async photoGrid(attachments, context, { maxPerPage = 5 } = {}) {
+    const chunks = [];
+    for (let offset = 0; offset < attachments.length; offset += maxPerPage) {
+      chunks.push(attachments.slice(offset, offset + maxPerPage));
+    }
+    const positions = [];
+    for (const chunk of chunks) {
+      const images = [];
+      const missing = [];
+      for (const attachment of chunk) {
+        let bitmap;
+        try {
+          this.assertCurrent();
+          let blob;
+          if (attachment.assetId) blob = await attachmentRepository.read(attachment, context);
+          else {
+            const url = legacyAttachmentImage(attachment);
+            if (!url) throw new Error('Original unavailable');
+            const response = await fetch(url, { mode: 'cors', credentials: 'omit' });
+            if (!response.ok) throw new Error('Original unavailable');
+            blob = await response.blob();
+          }
+          this.assertCurrent();
+          bitmap = await imageFromBlob(blob);
+          this.assertCurrent();
+          if (!(bitmap.width || bitmap.naturalWidth) || !(bitmap.height || bitmap.naturalHeight)) {
+            throw new Error('Invalid photo');
+          }
+          images.push({ attachment, bitmap, ratio: (bitmap.width || bitmap.naturalWidth) / (bitmap.height || bitmap.naturalHeight) });
+        } catch (error) {
+          bitmap?.close?.();
+          if (String(error?.message).includes('session changed')) throw error;
+          missing.push(attachment.name || 'Photo');
+        }
+      }
+      try {
+        if (!images.length) {
+          for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: palette.muted });
+          continue;
+        }
+        const count = images.length;
+        const groups = count === 1 ? [[0]] : count === 2 ? [[0, 1]]
+          : count === 3 ? [[0], [1, 2]] : count === 4 ? [[0, 1], [2, 3]]
+            : [[0, 1], [2, 3, 4]];
+        const gap = 9;
+        const heights = groups.map((row) => {
+          const width = (CONTENT_WIDTH - gap * (row.length - 1)) / row.length;
+          const natural = Math.max(...row.map((index) => width / images[index].ratio));
+          const cap = count === 1 ? 690 : count === 2 ? 485 : count === 3 ? 360 : 300;
+          return Math.min(natural, cap);
+        });
+        const desired = heights.reduce((a, b) => a + b, 0) + gap * (groups.length - 1);
+        const remaining = () => BOTTOM - this.y - 10;
+        if (remaining() < Math.min(desired, 210)) {
+          await this.finishPage();
+          this.begin();
+        }
+        const fit = Math.min(1, Math.max(0, remaining()) / desired);
+        const startPage = this.pageNumber;
+        let top = this.y;
+        for (let rowIndex = 0; rowIndex < groups.length; rowIndex += 1) {
+          const row = groups[rowIndex];
+          const width = (CONTENT_WIDTH - gap * (row.length - 1)) / row.length;
+          const rowHeight = heights[rowIndex] * fit;
+          for (let column = 0; column < row.length; column += 1) {
+            const photo = images[row[column]];
+            const drawWidth = Math.min(width, rowHeight * photo.ratio);
+            const drawHeight = drawWidth / photo.ratio;
+            const left = INSET + column * (width + gap) + (width - drawWidth) / 2;
+            this.assertCurrent();
+            this.ctx.drawImage(photo.bitmap, left, top + (rowHeight - drawHeight) / 2, drawWidth, drawHeight);
+            positions.push({ id: photo.attachment.id, page: this.pageNumber, row: rowIndex, column, width: drawWidth, height: drawHeight });
+          }
+          top += rowHeight + (rowIndex === groups.length - 1 ? 0 : gap);
+        }
+        this.y = top + 14;
+        if (missing.length) for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: palette.muted });
+        // Record the grouped page number for review and regression tests.
+        positions.push({ kind: 'grid', count, page: startPage });
+      } finally {
+        images.forEach(({ bitmap }) => bitmap?.close?.());
+      }
+    }
+    return positions;
+  }
+
   async renderedPages() {
     await this.finishPage();
     const pages = this.pages;
@@ -291,7 +381,9 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const layout = [];
   // A cover photo is part of the book, not another copy in the body.
   const coverHero = options.includeCover && template === 'journey'
-    ? story.keepsakes.find((item) => isAttachmentImage(item.type)) : null;
+    ? [...story.keepsakes, ...story.timeline.flatMap((month) => month.days.flatMap((day) =>
+      day.entries.flatMap((entry) => entry.attachments || [])))].find((item) => isAttachmentImage(item.type))
+    : null;
   let drawnCoverHero = null;
   if (options.includeCover) {
     pdf.y += 100;
@@ -327,48 +419,46 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   if (template === 'journey') {
     const remainingKeepsakes = story.keepsakes.filter((item) => item !== drawnCoverHero);
     if (remainingKeepsakes.length) {
-      await pdf.heading('Photographs to remember', { keepWithNext: 135 });
-      await pdf.attachments(remainingKeepsakes, scope, {
-        large: true, fitToRemaining: true, reserveAfter: 22,
-      });
+      await pdf.heading('Photographs to remember', { keepWithNext: 160 });
+      const keptPhotos = remainingKeepsakes.filter((item) => isAttachmentImage(item.type));
+      if (keptPhotos.length) await pdf.photoGrid(keptPhotos, scope);
+      for (const item of remainingKeepsakes.filter((entry) => !isAttachmentImage(entry.type))) {
+        await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
+      }
     }
     for (const month of story.timeline) for (const day of month.days) {
       const first = day.entries[0];
-      const firstHasPhoto = first?.attachments?.some((item) => isAttachmentImage(item.type));
-      await pdf.heading(studioDate(day.date), { keepWithNext: firstHasPhoto ? 330 : 105 });
+      await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
       for (const entry of day.entries) {
         const hasPhoto = entry.attachments?.some((item) => isAttachmentImage(item.type));
         // A new chapter must not leave its date/title at the page bottom.
         // If a second same-day entry moves to a new page, repeat its real date.
         if (entry !== first) {
           const oldPage = pdf.pageNumber;
-          await pdf.ensure(hasPhoto ? 335 : 90);
+          await pdf.ensure(110);
           if (pdf.pageNumber !== oldPage) {
-            await pdf.heading(studioDate(day.date), { keepWithNext: hasPhoto ? 315 : 80 });
+            await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
           }
         }
         const datePage = pdf.pageNumber;
         const titlePage = pdf.pageNumber;
         await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 9 });
-        const photos = entry.attachments.filter((item) => isAttachmentImage(item.type));
-        const lead = photos[0];
-        const leadPosition = lead ? await pdf.photo(lead, scope, {
-          large: true, fitToRemaining: true, reserveAfter: entry.description ? 100 : 35,
-        }) : null;
         if (entry.description) await pdf.text(studioText(entry.description), {
           size: 12, leading: 1.58, after: 18,
         });
-        if (photos.length > 1) {
-          await pdf.attachments(photos.slice(1), scope, {
-            large: true, fitToRemaining: true, reserveAfter: 20,
-          });
-        }
+        // Story prose precedes the photo spread. Up to five pictures occupy a
+        // coordinated page, rather than making five isolated photo pages.
+        const photos = (entry.attachments || []).filter((item) =>
+          isAttachmentImage(item.type) && item !== drawnCoverHero);
+        const grid = hasPhoto && photos.length ? await pdf.photoGrid(photos, scope) : [];
+        const gridPage = grid.find((item) => item.kind === 'grid')?.page ?? null;
         // Original non-photo files remain recorded with their own Activity.
         for (const item of entry.attachments.filter((attachment) => !isAttachmentImage(attachment.type))) {
           await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
         }
         layout.push({ kind: 'journal-entry', date: day.date, id: entry.id,
-          datePage, titlePage, leadPhotoPage: leadPosition?.page ?? null });
+          datePage, titlePage, leadPhotoPage: gridPage, gridPages: grid.filter((item) =>
+            item.kind === 'grid').map((item) => item.page), photoCount: photos.length });
       }
     }
   } else if (template === 'diary') {
