@@ -9,6 +9,7 @@ import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } 
 import { downloadBlob } from './download';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
 import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES } from './pdfStudioOptions';
+import { pdfStoryText } from './pdfStoryText';
 
 const SCALE = 1.65;
 const INSET = 43;
@@ -127,15 +128,17 @@ export class MomentPdfPainter {
     }
     this.y += after * (this.density === 'airy' ? 1.2 : this.density === 'compact' ? .74 : 1);
   }
-  async heading(title) {
-    await this.ensure(52);
+  async heading(title, { keepWithNext = 0 } = {}) {
+    // Avoid orphaned dates/section titles. A leading photograph or paragraph
+    // must have space *on this page*, not on the next one.
+    await this.ensure(52 + keepWithNext);
     this.y += 17;
     this.ctx.fillStyle = palette.line;
     this.ctx.fillRect(INSET, this.y, CONTENT_WIDTH, 1);
     this.y += 15;
     await this.text(title, { size: 15, bold: true, color: palette.accent, after: 10 });
   }
-  async photo(attachment, context, { large = false } = {}) {
+  async photo(attachment, context, { large = false, fitToRemaining = false, reserveAfter = 0 } = {}) {
     if (!isAttachmentImage(attachment.type)) {
       await this.text(`Other file: ${attachment.name || 'Attachment'}`, { size: 10, color: palette.muted });
       return;
@@ -159,20 +162,38 @@ export class MomentPdfPainter {
       const naturalWidth = bitmap.width || bitmap.naturalWidth;
       const naturalHeight = bitmap.height || bitmap.naturalHeight;
       if (!naturalWidth || !naturalHeight) throw new Error('Invalid image');
-      // Each available photo appears with its natural proportions, never cropped.
-      const maxHeight = large ? 620 : 420;
-      const width = Math.min(CONTENT_WIDTH, naturalWidth / naturalHeight * maxHeight);
-      const height = Math.min(maxHeight, width * naturalHeight / naturalWidth);
+      // Preserve original aspect ratio. Studio spreads shrink to the actual
+      // available space, leaving space for their caption on the same page.
+      // Standard legacy summaries preserve their previous pagination.
+      const desiredHeight = Math.min(large ? 620 : 420, CONTENT_WIDTH * naturalHeight / naturalWidth);
+      if (fitToRemaining) {
+        const remaining = () => BOTTOM - this.y - reserveAfter - 13;
+        // A photo should not be rendered as a postage stamp at the page foot.
+        if (remaining() < Math.min(desiredHeight, 135)) {
+          await this.finishPage();
+          this.begin();
+        }
+        const height = Math.min(desiredHeight, Math.max(0, remaining()));
+        const width = height * naturalWidth / naturalHeight;
+        this.ctx.drawImage(bitmap, INSET + (CONTENT_WIDTH - width) / 2, this.y, width, height);
+        this.y += height + 13;
+        return { page: this.pageNumber, width, height };
+      }
+      const width = Math.min(CONTENT_WIDTH, naturalWidth / naturalHeight * (large ? 620 : 420));
+      const height = Math.min(large ? 620 : 420, width * naturalHeight / naturalWidth);
       await this.ensure(height + 13);
       this.ctx.drawImage(bitmap, INSET + (CONTENT_WIDTH - width) / 2, this.y, width, height);
       this.y += height + 13;
+      return { page: this.pageNumber, width, height };
     } catch (error) {
       if (String(error?.message).includes('session changed')) throw error;
       await this.text('Photo preview unavailable on this device.', { size: 10, color: palette.muted });
     } finally { bitmap?.close?.(); }
   }
   async attachments(attachments, context, options = {}) {
-    for (const attachment of attachments) await this.photo(attachment, context, options);
+    const positions = [];
+    for (const attachment of attachments) positions.push(await this.photo(attachment, context, options));
+    return positions;
   }
   async renderedPages() {
     await this.finishPage();
@@ -242,7 +263,7 @@ export async function downloadMomentPdf(event, { greeting = event?.greetingCard,
 }
 
 const studioDate = (value) => activityDateLabel(value, 'Undated');
-const studioText = (value) => plainRichText(value || '');
+const studioText = (value) => pdfStoryText(value || '');
 
 // Every preview image uses the exact JPEG page bytes embedded into its PDF.
 // The scoped context and originals reader enforce existing Account/Guest guards.
@@ -267,6 +288,10 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const options = normalizePdfStudioOptions(studioOptions, story.presentation);
   const pdf = new MomentPdfPainter(assertCurrent, options);
   const template = options.template;
+  const layout = [];
+  // A cover photo is part of the book, not another copy in the body.
+  const coverHero = options.includeCover && template === 'journey'
+    ? story.keepsakes.find((item) => isAttachmentImage(item.type)) : null;
   if (options.includeCover) {
     pdf.y += 100;
     await pdf.text(PDF_TEMPLATE_NAMES[template].toUpperCase(), { size: 12, bold: true, color: palette.accent, after: 26 });
@@ -274,9 +299,11 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     await pdf.text(template === 'journey' ? 'Photographs and memories' : template === 'diary' ? 'A month in words' : 'Tasks and progress',
       { size: 14, color: palette.muted, after: 23 });
     if (story.momentDate) await pdf.text(studioDate(story.momentDate), { size: 12, color: palette.muted });
-    if (template === 'journey') {
-      const hero = story.keepsakes.find((item) => isAttachmentImage(item.type));
-      if (hero) await pdf.photo(hero, scope, { large: true });
+    if (coverHero) {
+      const photo = await pdf.photo(coverHero, scope, {
+        large: true, fitToRemaining: true, reserveAfter: 18,
+      });
+      if (photo) layout.push({ kind: 'cover', imagePage: photo.page });
     }
     await pdf.finishPage();
     pdf.begin();
@@ -294,16 +321,45 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   }
 
   if (template === 'journey') {
-    if (story.keepsakes.length) {
-      await pdf.heading('Photographs to remember');
-      await pdf.attachments(story.keepsakes, scope, { large: true });
+    const remainingKeepsakes = story.keepsakes.filter((item) => item !== coverHero);
+    if (remainingKeepsakes.length) {
+      await pdf.heading('Photographs to remember', { keepWithNext: 135 });
+      await pdf.attachments(remainingKeepsakes, scope, {
+        large: true, fitToRemaining: true, reserveAfter: 22,
+      });
     }
     for (const month of story.timeline) for (const day of month.days) {
-      await pdf.heading(studioDate(day.date));
+      const first = day.entries[0];
+      const firstHasPhoto = first?.attachments?.some((item) => isAttachmentImage(item.type));
+      await pdf.heading(studioDate(day.date), { keepWithNext: firstHasPhoto ? 330 : 105 });
+      const datePage = pdf.pageNumber;
       for (const entry of day.entries) {
-        await pdf.attachments(entry.attachments, scope, { large: true });
-        await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 7 });
-        if (entry.description) await pdf.text(studioText(entry.description), { size: 12, after: 18 });
+        const hasPhoto = entry.attachments?.some((item) => isAttachmentImage(item.type));
+        // A new chapter must not leave its date/title at the page bottom.
+        // Reserve date + title + a lead photograph and the start of its prose.
+        if (hasPhoto && entry !== first) await pdf.ensure(300);
+        if (!hasPhoto) await pdf.ensure(60);
+        const titlePage = pdf.pageNumber;
+        await pdf.text(studioText(entry.title || 'A memory'), { size: 16, bold: true, after: 9 });
+        const photos = entry.attachments.filter((item) => isAttachmentImage(item.type));
+        const lead = photos[0];
+        const leadPosition = lead ? await pdf.photo(lead, scope, {
+          large: true, fitToRemaining: true, reserveAfter: entry.description ? 100 : 35,
+        }) : null;
+        if (entry.description) await pdf.text(studioText(entry.description), {
+          size: 12, leading: 1.58, after: 18,
+        });
+        if (photos.length > 1) {
+          await pdf.attachments(photos.slice(1), scope, {
+            large: true, fitToRemaining: true, reserveAfter: 20,
+          });
+        }
+        // Original non-photo files remain recorded with their own Activity.
+        for (const item of entry.attachments.filter((attachment) => !isAttachmentImage(attachment.type))) {
+          await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
+        }
+        layout.push({ kind: 'journal-entry', date: day.date, id: entry.id,
+          datePage, titlePage, leadPhotoPage: leadPosition?.page ?? null });
       }
     }
   } else if (template === 'diary') {
@@ -358,5 +414,8 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const output = await pdf.renderedPages();
   assertCurrent();
   return { ...output, options, filename: momentPdfFilename(event.name),
+    // Per-entry page positions are read-only diagnostic evidence for pagination
+    // tests; actual preview still displays the exact exported JPEG bytes.
+    layout,
     scope: { uid, isGuest, sample: Boolean(sample) } };
 }
