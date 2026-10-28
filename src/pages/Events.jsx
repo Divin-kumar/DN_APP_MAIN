@@ -104,7 +104,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onSummary, 
   return (
     <SwipeActionCard className="event-story-card dn-v2-moment-card"
       mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
-      onOpen={onOpen} menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
+      menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
         ...(onSummary ? [{ label: 'Summary', icon: ClipboardList, onClick: onSummary }] : []),

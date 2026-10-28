@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-124 | Preserve Moment-card keyboard action-menu behavior and browser coverage
+- During Phase 2 source review, retained the existing focused-card Enter/Space action-menu contract (instead of changing Enter to navigate) while the distinct Open button and visible accessible action-menu control stay available. This preserves existing summary/open-menu Chromium flows and swipe gestures. No data or business behavior changed.
+- Added Chromium coverage for the latest Activity preview, 320/390/768/1280 viewport containment, accessible menu controls, unchanged Guest records, and lazy saved-original photo covers.
+- **Validation at authoring:** new OldVersion CI pending. No Firebase deploy, main write, release/version bump or schema change.
+
 ## CHG-20261028-123 | DN 2.0 Phase 2 premium Moments listing (OldVersion source)
 - Owner authorized Phase 2 following the Phase 1 Story foundation and its green OldVersion application/doc CI at c0f2090. Reworked only the Moments listing card presentation: balanced responsive grid, stable photo/date cover with verified lazy local original reads, readable Moment title/type/status/date, and a latest recorded Activity preview derived from the Phase 1 chronological projection. Missing originals or image load failures retain the themed fallback; cover selection does not rewrite attachment ownership.
 - Kept Moment list search, sorting, saved filters shared with Code Lists, archive/cancel/completion semantics, and existing navigation. Each card offers a visible keyboard-accessible action menu with Edit, Summary, Archive/Restore and confirmation-gated Delete; the existing swipe gesture remains. Legacy Memories, finance totals, note contents, existing workspace routes, PDF export, backup and Insights are not migrated or changed.
