@@ -240,7 +240,20 @@ test('Tasks status controls persist, re-group, and confirm cancellation without 
   expect(restored.cancelled).toBe(false);
   expect(restored.completedAt).toBe(null);
   expect(restored.status).toBe('in-progress');
-  expect((await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))))[1]).toEqual(originalDiary);
+  // Saving any Guest Moment passes the collection through DN's existing
+  // normalization layer, which can add defaults to unrelated records.
+  // Assert all original Diary values survive, not that no defaults appear.
+  const diaryAfter = (await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))))[1];
+  for (const [key, value] of Object.entries(originalDiary)) {
+    if (key === 'activities') continue;
+    expect(diaryAfter[key], 'unchanged Diary field: ' + key).toEqual(value);
+  }
+  expect(diaryAfter.activities).toHaveLength(originalDiary.activities.length);
+  for (let i = 0; i < originalDiary.activities.length; i += 1) {
+    for (const [key, value] of Object.entries(originalDiary.activities[i])) {
+      expect(diaryAfter.activities[i][key], 'untouched Diary Activity: ' + key).toEqual(value);
+    }
+  }
   expect(errors).toEqual([]);
 });
 
