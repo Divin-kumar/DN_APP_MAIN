@@ -1,34 +1,22 @@
 import { useState } from 'react';
-import { CalendarDays, Check, Circle, Download } from 'lucide-react';
+import { CalendarDays, Check, Circle, SlidersHorizontal } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import RichText from '../common/RichText';
 import { getEventStatus } from '../../utils/eventStatus';
 import MomentSummaryExtras, { MomentSummaryPhotos, sortedSummaryActivities } from './MomentSummaryExtras';
 import GreetingCard from '../common/GreetingCard';
 import { activityDateLabel as formatDate, activityStatus } from '../../utils/activityDetail';
-import { downloadMomentPdf } from '../../utils/momentPdf';
+import MomentPdfStudio from './MomentPdfStudio';
 
 export default function EventSummaryDialog({ event, onClose }) {
-  const [exportBusy, setExportBusy] = useState(false);
-  const [exportError, setExportError] = useState('');
+  const [studioOpen, setStudioOpen] = useState(false);
   if (!event) return null;
-  const handleDownload = async () => {
-    if (exportBusy) return;
-    setExportBusy(true);
-    setExportError('');
-    try {
-      await downloadMomentPdf(event);
-    } catch (error) {
-      setExportError(error?.message || 'Unable to create the PDF. Please try again.');
-    } finally {
-      setExportBusy(false);
-    }
-  };
   const activities = sortedSummaryActivities(event.activities);
   const status = getEventStatus(event);
   const statusLabel = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled', archived: 'Archived' }[status];
 
   return (
+    <>
     <ModalDialog title="Moment summary" onClose={onClose} className="event-summary-dialog">
       <div className="event-summary-content">
         <section className="moment-summary-story moment-summary-moment" aria-label="Moment story">
@@ -64,12 +52,13 @@ export default function EventSummaryDialog({ event, onClose }) {
           </ul> : <p className="event-summary-empty">No activities have been added yet.</p>}
         </section>
         <MomentSummaryExtras event={event} />
-        {exportError ? <p role="alert" className="dn-summary-export-error">{exportError}</p> : null}
-        <button type="button" className="secondaryButton dn-summary-export-button" onClick={handleDownload}
-          disabled={exportBusy} aria-label="Download summary PDF">
-          <Download size={16} aria-hidden="true" /> {exportBusy ? 'Preparing PDF…' : 'Download PDF'}
+        <button type="button" className="secondaryButton dn-summary-export-button" onClick={() => setStudioOpen(true)}
+          aria-label="Open PDF Studio">
+          <SlidersHorizontal size={16} aria-hidden="true" /> Customize PDF
         </button>
       </div>
     </ModalDialog>
+    {studioOpen ? <MomentPdfStudio event={event} onClose={() => setStudioOpen(false)} /> : null}
+    </>
   );
 }
