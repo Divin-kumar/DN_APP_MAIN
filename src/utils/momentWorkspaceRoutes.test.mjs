@@ -40,3 +40,11 @@ test('section selection handles overview aliases and trailing slash deep links',
   assert.equal(getMomentWorkspaceSection('/events/moment-1/attachments/'), 'attachments');
   assert.equal(getMomentWorkspaceSection('/events/moment-1/timeline'), 'overview');
 });
+
+test('legacy Memories links render the Story Overview but retain workspace navigation identity', () => {
+  assert.equal(getMomentWorkspaceSection('/events/example/memories'), 'overview');
+  assert.equal(getMomentWorkspaceSection('/events/example/timeline'), 'overview');
+  assert.equal(getMomentWorkspaceSection('/events/example/overview'), 'overview');
+  assert.equal(getMomentWorkspaceSection('/events/example/transactions'), 'transactions');
+  assert.equal(getMomentWorkspaceKey('/events/example/memories'), getMomentWorkspaceKey('/events/example/overview'));
+});
