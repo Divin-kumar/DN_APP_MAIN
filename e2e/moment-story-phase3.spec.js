@@ -32,7 +32,10 @@ test('real original photos stay with their Moment or Activity in a responsive St
   await addOriginal(page);
   await page.goto('/events/moment-one/overview');
   const story = page.locator('.dn-v2-story');
-  await expect(story.locator('.dn-v2-story-intro .dn-attachment-gallery img')).toBeVisible();
+  const keepsakeTile = story.locator('.dn-v2-story-intro .dn-attachment-tile').first();
+  await expect(keepsakeTile).toBeAttached();
+  await keepsakeTile.scrollIntoViewIfNeeded();
+  await expect(keepsakeTile.locator('img')).toBeVisible();
   const linkedTile = story.locator('[data-story-activity="shared"] .dn-attachment-tile');
   await expect(linkedTile).toBeAttached();
   await linkedTile.scrollIntoViewIfNeeded();
