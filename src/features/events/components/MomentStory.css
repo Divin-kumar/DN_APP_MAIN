@@ -158,3 +158,127 @@ html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-reflec
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-v2-story * {scroll-behavior:auto;transition:none;}
 }
+
+
+/* Phase 4 final Journal photo polish: documentary-size album spreads. Aspect
+   ratios are preserved, including portrait originals; no crop-to-cover. */
+html[data-theme] .dn-journal-gallery .dn-attachment-gallery {
+  grid-template-columns:minmax(0,1fr);
+  gap:clamp(10px,1.5vw,19px);
+  align-items:start;
+}
+html[data-theme] .dn-journal-gallery .dn-attachment-open {
+  overflow:hidden;
+  background:color-mix(in srgb,var(--color-text) 3%,var(--color-card));
+  border-radius:clamp(9px,1.3vw,16px);
+  transition:filter .16s ease,box-shadow .16s ease;
+}
+html[data-theme] .dn-journal-gallery .dn-attachment-open img {
+  width:100%;
+  height:auto;
+  max-height:min(76dvh,820px);
+  object-fit:contain;
+  object-position:center;
+  border-radius:inherit;
+}
+html[data-theme] .dn-journal-gallery .dn-attachment-open:hover {
+  box-shadow:0 10px 26px color-mix(in srgb,var(--color-text) 9%,transparent);
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="solo"] .dn-attachment-gallery {
+  grid-template-columns:minmax(0,1fr);
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="pair"] .dn-attachment-gallery {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="pair"] .dn-attachment-open img {
+  max-height:min(58dvh,600px);
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-gallery {
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-tile:first-child {
+  grid-column:1 / -1;
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-tile:first-child img {
+  max-height:min(78dvh,860px);
+}
+html[data-theme] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-tile:not(:first-child) img {
+  max-height:min(48dvh,490px);
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-page-entries {
+  gap:clamp(28px,5vw,52px);
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-chapter {
+  gap:clamp(16px,2vw,24px);
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-chapter .dn-v2-story-entry-body {
+  max-width:840px;
+  width:100%;
+  margin-inline:auto;
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-page-date {
+  margin-bottom:clamp(18px,3vw,28px);
+}
+@media(max-width:680px) {
+  html[data-theme] .dn-journal-gallery[data-album-layout] .dn-attachment-gallery {
+    grid-template-columns:minmax(0,1fr);
+  }
+  html[data-theme] .dn-journal-gallery[data-album-layout="series"] .dn-attachment-tile:first-child {
+    grid-column:auto;
+  }
+  html[data-theme] .dn-journal-gallery[data-album-layout] .dn-attachment-open img {
+    width:100%;
+    height:auto;
+    max-height:72dvh;
+    object-fit:contain;
+  }
+}
+
+/* Compact, accessible native task status picker. No new status source of truth. */
+html[data-theme] .dn-task-row-end {
+  display:flex;
+  flex-direction:column;
+  align-items:flex-end;
+  justify-content:center;
+  min-width:0;
+  gap:8px;
+}
+html[data-theme] .dn-task-status-control {
+  display:block;
+  width:130px;
+  max-width:100%;
+  min-height:40px;
+  padding:7px 10px;
+  border:1px solid var(--color-border);
+  border-radius:10px;
+  background:var(--color-card-raised,var(--color-card));
+  color:var(--color-text);
+  font:inherit;
+  font-size:.74rem;
+  font-weight:720;
+  cursor:pointer;
+}
+html[data-theme] .dn-task-status-control:focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:2px;
+}
+html[data-theme] .dn-task-status-control:disabled {opacity:.57;cursor:wait;}
+html[data-theme] .dn-task-row.is-completed .dn-task-status-control {border-color:color-mix(in srgb,var(--color-success) 35%,var(--color-border));}
+html[data-theme] .dn-task-row.is-cancelled .dn-task-status-control {color:var(--color-text-muted);}
+@media(max-width:680px) {
+  html[data-theme] .dn-task-row-end {
+    grid-column:2;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  html[data-theme] .dn-task-row-end .dn-task-row-when {
+    grid-column:auto;
+  }
+  html[data-theme] .dn-task-status-control {min-width:114px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-journal-gallery .dn-attachment-open {transition:none;}
+}
