@@ -169,3 +169,42 @@ test('Story construction does not create transactions, enrich files or make assu
   assert.equal(Object.hasOwn(chapters(story)[0].attachments[0], 'originalAvailable'), false);
   assert.equal(JSON.stringify(moment), before);
 });
+
+test('all Story editions preserve chronological records, status and attachment ownership', () => {
+  const moment = {
+    id: 'story-one', type: 'Vacation', date: '2026-09-03', notes: '<p>Important note</p>',
+    activities: [
+      { id: 'a', title: 'First', date: '2026-09-01', status: 'completed' },
+      { id: 'b', title: 'Second', date: '2026-11-06', completed: false },
+      { id: 'c', title: 'Undated', createdAt: '2026-08-01' },
+    ],
+    attachments: [{ id: 'linked', activityId: 'a', type: 'image/png' }, { id: 'orphan', type: 'image/png' }],
+    memories: [{ id: 'legacy', title: 'Older memory', body: '<p>Keep me</p>' }],
+  };
+  const original = JSON.stringify(moment);
+  const baseline = build(moment);
+  for (const mode of ['journey', 'diary', 'chronicle']) {
+    const view = build(moment, { momentTypes: [{ value: 'Vacation', storyPresentation: mode }] });
+    const { presentation: _before, ...sameBefore } = baseline;
+    const { presentation: _after, ...sameAfter } = view;
+    assert.equal(view.presentation, mode);
+    assert.deepEqual(sameAfter, sameBefore, mode + ' must not rewrite or reorder Story data');
+    assert.equal(view.timeline[0].days[0].entries[0].activity, moment.activities[0]);
+    assert.equal(view.timeline[0].days[0].entries[0].attachments[0], moment.attachments[0]);
+    assert.equal(view.reflections[0].memory, moment.memories[0]);
+  }
+  assert.equal(JSON.stringify(moment), original);
+});
+
+test('automatic and explicit presentation choices keep original type defaults', () => {
+  const options = serializeCodeListEntries([
+    { value: 'Vacation', storyPresentation: null },
+    { value: 'Diary', storyPresentation: null },
+    { value: 'Career', storyPresentation: null },
+    { value: 'Journal', storyPresentation: 'chronicle', active: false },
+  ]);
+  for (const [type, expected] of [['Vacation', 'journey'], ['Diary', 'diary'], ['Career', 'chronicle'], ['Journal', 'chronicle']]) {
+    assert.equal(resolveMomentStoryPresentation({ type }, options), expected);
+  }
+  assert.equal(resolveMomentStoryPresentation({ type: 'Other', customType: 'Journal' }, options), 'chronicle');
+});
