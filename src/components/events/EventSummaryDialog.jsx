@@ -19,6 +19,13 @@ export default function EventSummaryDialog({ event, onClose }) {
     <>
     <ModalDialog title="Moment summary" onClose={onClose} className="event-summary-dialog">
       <div className="event-summary-content">
+        <div className="dn-summary-export-top">
+          <button type="button" className="secondaryButton dn-summary-export-button" onClick={() => setStudioOpen(true)}
+            aria-label="Open PDF Studio">
+            <SlidersHorizontal size={16} aria-hidden="true" /> Customize PDF
+          </button>
+          <span>Preview and arrange your pages before downloading.</span>
+        </div>
         <section className="moment-summary-story moment-summary-moment" aria-label="Moment story">
           <header className="event-summary-header">
             <span><CalendarDays size={15} /> {event.type || 'Life moment'}</span>
@@ -52,10 +59,7 @@ export default function EventSummaryDialog({ event, onClose }) {
           </ul> : <p className="event-summary-empty">No activities have been added yet.</p>}
         </section>
         <MomentSummaryExtras event={event} />
-        <button type="button" className="secondaryButton dn-summary-export-button" onClick={() => setStudioOpen(true)}
-          aria-label="Open PDF Studio">
-          <SlidersHorizontal size={16} aria-hidden="true" /> Customize PDF
-        </button>
+
       </div>
     </ModalDialog>
     {studioOpen ? <MomentPdfStudio event={event} onClose={() => setStudioOpen(false)} /> : null}
