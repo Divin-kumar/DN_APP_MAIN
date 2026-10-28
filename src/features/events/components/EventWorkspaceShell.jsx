@@ -32,7 +32,7 @@ import { getMomentWorkspaceSection } from '../../../utils/momentWorkspaceRoutes'
 import { recordId } from '../../../utils/recordIdentity';
 import { scopedRecordActions as records } from '../../../services/scopedRecordActions';
 import { isRecordScopeLoaded } from '../../../utils/scopedRecordActions';
-import { activityDateLabel, activityDetailPath } from '../../../utils/activityDetail';
+import { activityDateLabel, activityDetailPath, activityStatusTransitionPatch } from '../../../utils/activityDetail';
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import LinkedTransactions from '../../finance/components/LinkedTransactions';
 import MomentContents from './MomentContents';
@@ -108,6 +108,7 @@ export function EventWorkspaceContent() {
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [notesDraft, setNotesDraft] = useState('');
   const [pendingDeleteAttachment, setPendingDeleteAttachment] = useState(null);
+  const [pendingTaskCancellation, setPendingTaskCancellation] = useState(null);
   const [attachmentDraft, setAttachmentDraft] = useState(null);
   const [attachmentActivityId, setAttachmentActivityId] = useState('');
   const [attachmentBusy, setAttachmentBusy] = useState(false);
@@ -310,6 +311,34 @@ export function EventWorkspaceContent() {
       throw reason;
     } finally { activitySavingRef.current = false; if (workspaceMountedRef.current && records.isCurrent(mutationContext)) setActivityBusy(false); }
   };
+  const commitTaskStatus = (activityId, targetStatus) => runActivityWrite(
+    () => records.mutateActivity(mutationContext, eventId, activityId,
+      (activity, moment) => activityStatusTransitionPatch(activity, moment, targetStatus),
+      'status:' + targetStatus),
+    () => showToast(targetStatus === 'completed' ? 'Task completed'
+      : targetStatus === 'cancelled' ? 'Task cancelled' : 'Task moved to In progress', 'success'),
+  ).catch(() => {});
+
+  const requestTaskStatus = (activityId, targetStatus) => {
+    if (activitySavingRef.current) return;
+    if (targetStatus === 'cancelled') {
+      const item = event.activities?.find((activity) => recordId(activity.id) === recordId(activityId));
+      if (!item) return;
+      setPendingTaskCancellation({ activityId, title: item.title || 'Untitled task' });
+      return;
+    }
+    return commitTaskStatus(activityId, targetStatus);
+  };
+
+  const confirmTaskCancellation = async () => {
+    if (!pendingTaskCancellation) return;
+    const { activityId } = pendingTaskCancellation;
+    // Closing first returns focus to the original status control; failure
+    // remains visible through the workspace error message and toast.
+    setPendingTaskCancellation(null);
+    await commitTaskStatus(activityId, 'cancelled');
+  };
+
   const addActivity = (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
@@ -398,7 +427,8 @@ export function EventWorkspaceContent() {
       return (
         <div className="event-moment-overview dn-v2-story-overview">
           <MomentStory moment={event} momentTypes={momentTypes} uid={user?.uid} isGuest={isGuest}
-            onEditIntro={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }} />
+            onEditIntro={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}
+            onTaskStatusChange={requestTaskStatus} taskStatusBusy={activityBusy} />
           <MomentContents moment={event} finance={finance} />
         </div>
       );
@@ -570,6 +600,10 @@ export function EventWorkspaceContent() {
           </form>
         </ModalDialog>
       ) : null}
+      {pendingTaskCancellation ? <ConfirmDialog title="Cancel task?"
+        message={`Cancel “${pendingTaskCancellation.title}”? You can restore it later by changing its status.`}
+        confirmLabel="Cancel task" busy={activityBusy} onCancel={() => setPendingTaskCancellation(null)}
+        onConfirm={confirmTaskCancellation} /> : null}
       {pendingDeleteAttachment ? <ConfirmDialog title="Remove attachment?" message={`Remove “${pendingDeleteAttachment.name}” from this event?`} onCancel={() => setPendingDeleteAttachment(null)} onConfirm={() => removeAttachment(pendingDeleteAttachment.id)} /> : null}
       {pendingDeleteEvent ? (
         <ConfirmDialog

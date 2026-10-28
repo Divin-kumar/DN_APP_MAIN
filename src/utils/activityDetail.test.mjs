@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activityCancellationPatch, activityCompletionPatch, activityCoverRatio, activityDateLabel, activityDetailPath, activityStatusLabel, resolveActivityDetail, selectActivityCover } from './activityDetail.js';
+import { activityCancellationPatch, activityCompletionPatch, activityCoverRatio, activityDateLabel, activityDetailPath, activityStatusLabel, activityStatusTransitionPatch, resolveActivityDetail, selectActivityCover } from './activityDetail.js';
 import { isActivityEditable } from './scopedRecordActions.js';
 
 test('detail resolution requires both parent and child IDs, preserving encoded application identity', () => {
@@ -57,4 +57,33 @@ test('cancelling/restoring legacy completed work never silently reopens it or by
   assert.equal(restored.status, 'completed'); assert.equal(restored.description, legacy.description);
   assert.equal(restored.completedAt, undefined);
   assert.equal(isActivityEditable({ ...restored, ...activityCompletionPatch(restored, {}, false) }), true);
+});
+
+test('direct Tasks transitions reuse Activity completion and cancellation safeguards', () => {
+  const open = { id: 'task', title: 'Keep', description: 'Keep details', completed: false };
+  const moment = { id: 'project', activities: [open] };
+  const completedPatch = activityStatusTransitionPatch(open, moment, 'completed');
+  assert.equal(completedPatch.completed, true);
+  assert.equal(completedPatch.status, 'completed');
+  assert.ok(completedPatch.completedAt);
+  const completed = { ...open, ...completedPatch };
+  assert.equal(activityStatusTransitionPatch(completed, moment, 'completed'), undefined);
+  const cancelled = { ...completed, ...activityStatusTransitionPatch(completed, moment, 'cancelled') };
+  assert.equal(cancelled.cancelled, true);
+  assert.equal(cancelled.completed, true, 'legacy completion state is preserved while cancelled');
+  assert.equal(cancelled.status, 'cancelled');
+  const reopened = { ...cancelled, ...activityStatusTransitionPatch(cancelled, moment, 'in-progress') };
+  assert.equal(reopened.status, 'in-progress');
+  assert.equal(reopened.completed, false);
+  assert.equal(reopened.cancelled, false);
+  assert.equal(reopened.completedAt, null);
+  assert.equal(reopened.title, 'Keep');
+  assert.equal(reopened.description, 'Keep details');
+  const reCompleted = { ...cancelled, ...activityStatusTransitionPatch(cancelled, moment, 'completed') };
+  assert.equal(reCompleted.cancelled, false);
+  assert.equal(reCompleted.completed, true);
+  assert.equal(reCompleted.status, 'completed');
+  assert.throws(() => activityStatusTransitionPatch(open, { archived: true }, 'completed'), /Restore this Moment/);
+  assert.throws(() => activityStatusTransitionPatch(cancelled, { status: 'cancelled' }, 'completed'), /Restore this Moment/);
+  assert.throws(() => activityStatusTransitionPatch(open, moment, 'something'), /valid activity status/);
 });

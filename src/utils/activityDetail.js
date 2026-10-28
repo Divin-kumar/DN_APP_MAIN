@@ -21,6 +21,29 @@ export const activityCompletionPatch = (activity, moment, completed) => {
   if ((activityStatus(activity) === 'completed') === completed) return undefined;
   return { completed, completedAt: completed ? new Date().toISOString() : null, status: completed ? 'completed' : 'in-progress' };
 };
+// Explicit status-picker transitions use the same completion/cancellation
+// guards as Activity Detail. A chosen target always wins over legacy flags.
+export const activityStatusTransitionPatch = (activity, moment, targetStatus) => {
+  const previous = activityStatus(activity);
+  if (targetStatus === previous) return undefined;
+  if (!['in-progress', 'completed', 'cancelled'].includes(targetStatus)) {
+    throw new Error('Choose a valid activity status.');
+  }
+  if (targetStatus === 'cancelled') return activityCancellationPatch(activity, true);
+  if (targetStatus === 'in-progress') {
+    if (previous === 'cancelled') return { ...activityCancellationPatch(activity, false), cancelled: false,
+      completed: false, completedAt: null, status: 'in-progress' };
+    return { ...activityCompletionPatch(activity, moment, false), cancelled: false };
+  }
+  // Explicitly restoring a cancelled Activity must not accidentally preserve
+  // a legacy completed flag; pass the restored state through existing guards.
+  const active = previous === 'cancelled'
+    ? { ...activity, ...activityCancellationPatch(activity, false), cancelled: false,
+      completed: false, completedAt: null, status: 'in-progress' } : activity;
+  const patch = activityCompletionPatch(active, moment, true);
+  return { ...(previous === 'cancelled' ? { cancelled: false } : {}), ...patch };
+};
+
 export const activityDateLabel = (value, fallback = 'Date to be decided') => {
   let date;
   try { date = parseMomentDate(value); } catch { /* Unreadable legacy timestamps have no date. */ }

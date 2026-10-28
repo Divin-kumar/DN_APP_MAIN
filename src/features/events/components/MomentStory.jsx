@@ -43,7 +43,9 @@ function Media({ items, uid, isGuest, label, album = false }) {
   if (!items?.length) return null;
   const photos = items.filter((item) => isAttachmentImage(item.type));
   const other = items.filter((item) => !isAttachmentImage(item.type));
-  return <div className={'dn-v2-story-media' + (album ? ' dn-journal-gallery' : '')} aria-label={label}>
+  const spread = photos.length === 1 ? 'solo' : photos.length === 2 ? 'pair' : 'series';
+  return <div className={'dn-v2-story-media' + (album ? ' dn-journal-gallery' : '')}
+    data-album-layout={album ? spread : undefined} aria-label={label}>
     {photos.length ? <AttachmentGallery attachments={photos} uid={uid} isGuest={isGuest}
       showImageNames={false} showMetadata={false} retainLoaded /> : null}
     {other.length ? <div className="dn-story-files"><AttachmentGallery attachments={other} uid={uid}
@@ -107,7 +109,7 @@ function RecordedDiary({ story, entries }) {
   </div>;
 }
 
-function TaskRow({ entry, momentId }) {
+function TaskRow({ entry, momentId, onStatusChange, statusBusy, completionBlocked }) {
   const url = activityLink(momentId, entry);
   return <article className={'dn-task-row is-' + entry.status} data-story-activity={entry.id || undefined}
     data-story-entry-style="chronicle">
@@ -125,16 +127,25 @@ function TaskRow({ entry, momentId }) {
         {entry.attachments.length} {entry.attachments.length === 1 ? 'file' : 'files'} available in Activity detail
       </span> : null}
     </div>
-    <div className="dn-task-row-when">
-      {entry.date ? <time dateTime={entry.date}>{activityDateLabel(entry.date)}</time> : <span>No date</span>}
-      {entry.displayTime ? <span>{entry.displayTime}</span> : null}
+    <div className="dn-task-row-end">
+      <div className="dn-task-row-when">
+        {entry.date ? <time dateTime={entry.date}>{activityDateLabel(entry.date)}</time> : <span>No date</span>}
+        {entry.displayTime ? <span>{entry.displayTime}</span> : null}
+      </div>
+      {entry.id ? <select className="dn-task-status-control" value={entry.status}
+        disabled={statusBusy || !onStatusChange} aria-label={'Change status for ' + (entry.title || 'Untitled task')}
+        onChange={(changeEvent) => onStatusChange?.(entry.id, changeEvent.target.value)}>
+        <option value="in-progress">In progress</option>
+        <option value="completed" disabled={completionBlocked && entry.status !== 'completed'}>Completed</option>
+        <option value="cancelled">Cancelled</option>
+      </select> : null}
     </div>
   </article>;
 }
 
 // Every Activity appears exactly once: status (open/done/cancelled) is primary,
 // then saved Activity date/time is secondary. No picture blocks in the Tasks UI.
-function TaskBoard({ story }) {
+function TaskBoard({ story, onStatusChange, statusBusy, completionBlocked }) {
   const groups = groupMomentStoryTasks(story);
   return <div className="dn-task-board" data-story-layout="task-board" aria-label="Task groups by status">
     {groups.map((group) => {
@@ -147,7 +158,8 @@ function TaskBoard({ story }) {
           <small>{config.subtitle}</small>
         </header>
         {group.entries.length ? <div className="dn-task-group-rows">{group.entries.map((entry, i) =>
-          <TaskRow key={entry.id || group.status + '-' + i} entry={entry} momentId={story.momentId} />)}</div>
+          <TaskRow key={entry.id || group.status + '-' + i} entry={entry} momentId={story.momentId}
+            onStatusChange={onStatusChange} statusBusy={statusBusy} completionBlocked={completionBlocked} />)}</div>
           : <p className="dn-task-group-empty">No {config.label.toLowerCase()} tasks</p>}
       </section>;
     })}
@@ -167,9 +179,9 @@ function EarlierReflections({ reflections }) {
   </section>;
 }
 
-// A read-only presentation layer: the same Activity IDs, dates, links, original
-// attachment scope, transactions and legacy Memory records survive every view.
-export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditIntro }) {
+// Story projection remains read-only. Task status controls dispatch through
+// scoped Event workspace actions; no secondary Activity store or saved fields.
+export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditIntro, onTaskStatusChange, taskStatusBusy = false }) {
   const story = buildMomentStory(moment, { momentTypes });
   const edition = editions[story.presentation] || editions[STORY_PRESENTATIONS.JOURNEY];
   const EditionIcon = edition.icon;
@@ -203,7 +215,8 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
       </Link> : null}
     </section>
     {isTask ? <section className="dn-v2-story-recorded" aria-label="Task status groups">
-      <TaskBoard story={story} />
+      <TaskBoard story={story} onStatusChange={onTaskStatusChange} statusBusy={taskStatusBusy}
+        completionBlocked={Boolean(moment?.archived || ['archived', 'cancelled'].includes(moment?.status))} />
     </section> : <>
       {story.timeline.length ? <section className="dn-v2-story-recorded" aria-label="Recorded chapters">
         <div className="dn-v2-story-section-head"><h3>{edition.recorded}</h3>
