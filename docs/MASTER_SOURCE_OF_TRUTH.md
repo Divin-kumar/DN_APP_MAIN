@@ -78,7 +78,7 @@ Three **structurally distinct PDF compositions** follow Phase 4:
 - **Tasks:** photo-free report with group order In progress → Completed → Cancelled, and recorded date/time secondary sorting via `groupMomentStoryTasks`; owner can omit completed/cancelled groups. No unknown timestamps are invented.
 - **Compatibility:** The PDF backend still emits genuine PDF 1.4 with embedded JPEG pages; V3 backup format and finance logic unchanged. Missing local originals are shown as unavailable instead of borrowing other accounts' data. Up to 300 pages remain the painter safety bound. Mobile iPhone preview is responsive and uses a single page image at a time. A browser regression suite covers preview, changes before download, type variants, PDF validity, record immutability and narrow-screen behavior.
 
-**Phase status:** Phase 6 source is implemented on `OldVersion`; CI and owner visual acceptance are distinct gates. No Firebase production deploy, main commit, PR, version bump or v2 release. Do not describe the Studio as published or owner-accepted until both are verified.
+**Phase status:** Phase 6 source is implemented on `OldVersion` and passed automated verification at commit `63990c0324c6fc5100d7929e0670dce8e932a7e3`: **128 passing Chromium browser journeys**, Node tests, ESLint, production build and documentation governance in GitHub Actions run `40648781273`. **Owner visual acceptance and Vercel deployment confirmation are outstanding**. The connected Vercel account did not expose a matching project for verification. No Firebase production deploy, main commit, PR, version bump or v2 release.
 
 ## DN 2.0 Phase 5 Cash/Online transaction method (unreleased)
 

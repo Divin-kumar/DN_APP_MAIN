@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-135 | Phase 6 automated verification evidence; owner review pending
+- **Executed:** GitHub Actions `40648781273` on `63990c0324c6fc5100d7929e0670dce8e932a7e3` passed **128 Chromium browser tests**, Node unit tests, ESLint, the production build and documentation governance. Tests exercised Studio opening, three template choices, stale-preview download interlock, valid PDF bytes, 320px responsiveness and no Guest record mutation.
+- **Release boundary:** The available Vercel connection reported no accessible project, so a fresh Vercel preview deployment was **not confirmed**. The GitHub Firebase production and preview workflows were skipped. Owner visual acceptance is pending; no claim of published DN 2.0 or write to main.
+
 ## CHG-20261028-134 | Phase 6 PDF Studio source implementation (unreleased, pending owner review)
 - **Owner request:** Begin Phase 6 after approving Phase 5. The agreed Studio requires customization before download and visibly distinct Journal, Diary and Tasks PDF pages.
 - **UI:** Moment Summary's old immediate download becomes Customize PDF, opening a responsive PDF Studio with editable story format, page spacing, cover, intro, prior reflections and type-specific sections. Studio displays the same rasterized JPEG pages embedded in the PDF and allows page-by-page navigation; changed options invalidate the download until Update preview renders new pages.
