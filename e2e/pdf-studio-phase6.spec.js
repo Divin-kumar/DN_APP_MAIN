@@ -78,3 +78,39 @@ test('PDF Studio stays contained at 320px and page navigation remains keyboard a
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 20000 });
   expect(errors).toEqual([]);
 });
+
+
+test('Journal keeps dates, photo captions and lead photographs on one PDF page even at page edges', async ({ page }) => {
+  const moments = fixtureMoments();
+  moments[0].notes = '<p>Remember our morning together, &amp; all the little details.</p>';
+  const chapter = moments[0].activities.find((item) => item.id === 'shared');
+  chapter.date = '2026-03-03';
+  chapter.completed = true;
+  chapter.description = '<p>A memory with a very long story.</p>'.repeat(55);
+  moments[0].activities.unshift({
+    id: 'earlier-journal', title: 'Our opening chapter', date: '2026-02-02',
+    completed: true, description: ('A long first chapter to fill the printed page. ').repeat(95),
+  });
+  const errors = await seedGuest(page, { moments });
+  await addOriginal(page, { width: 600, height: 900, count: 2 });
+  await page.goto('/events');
+  const unchanged = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const layout = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const event = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    const result = await renderMomentStudioPdf(event, {
+      template: 'journey', includeCover: true, density: 'balanced',
+    });
+    return { layout: result.layout, pages: result.pages.length, size: result.blob.size };
+  });
+  const cover = layout.layout.find((item) => item.kind === 'cover');
+  expect(cover?.imagePage).toBe(1);
+  const photoChapter = layout.layout.find((item) => item.id === 'shared');
+  expect(photoChapter).toBeTruthy();
+  expect(photoChapter.leadPhotoPage).toBe(photoChapter.datePage);
+  expect(photoChapter.titlePage).toBe(photoChapter.datePage);
+  expect(layout.pages).toBeGreaterThan(1);
+  expect(layout.size).toBeGreaterThan(2000);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(unchanged);
+  expect(errors).toEqual([]);
+});
