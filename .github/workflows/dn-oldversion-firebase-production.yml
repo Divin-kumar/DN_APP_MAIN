@@ -25,6 +25,8 @@ jobs:
           cache: npm
       - name: Install locked dependencies
         run: npm ci
+      - name: Check dependency advisories
+        run: npm audit --audit-level=moderate
       - name: Verify unit tests and lint
         run: |
           npm test
@@ -37,6 +39,8 @@ jobs:
         env:
           VITE_DEPLOY_ENV: Production
         run: npm run build
+      - name: Verify built shell, offline originals and PDF export
+        run: npm run test:production
       - name: Require configured Firebase service account
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

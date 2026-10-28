@@ -85,6 +85,8 @@ self.addEventListener('fetch', (event) => {
 
 export default defineConfig({
   plugins: [react(), pwaShellPlugin()],
+  // Keep the pre-upgrade JavaScript compilation targets explicit.
+  build: { target: ['es2020', 'edge88', 'firefox78', 'chrome87', 'safari14'] },
   cacheDir: process.env.DN_BROWSER_TEST === '1' ? '.verification/vite-browser-cache' : undefined,
   define: {
     'import.meta.env.VITE_APP_VERSION': JSON.stringify(APP_VERSION),

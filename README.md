@@ -11,12 +11,13 @@ Approved changes are committed and pushed to `OldVersion` for owner review throu
 
 ## Run locally
 
-Use Node.js 20.19+ (or supported Node 22/24) and npm. App smoke CI uses Node 20; Firebase preview and production workflows use Node 22. Install locked dependencies when authorized:
+Use the current Node.js 22 release (22.12 or newer) and npm. The package, Vercel runtime selection and all CI workflows use Node 22; the dependency follow-up was verified locally on 22.23.4. Install locked dependencies:
 
 ```sh
 npm ci
 npm run dev
 npm run lint
+npm audit --audit-level=moderate
 npm test
 npm run check:docs
 npm run build
@@ -43,3 +44,5 @@ Filters show named choices from the active account/Guest without exposing record
 The production-shell check serves the built `dist` locally, verifies service-worker activation, then tests offline Story, exact-byte original download and PDF export using isolated Guest fixtures. Its screenshots/results go to ignored `.verification/production-shell`. It does not publish Firebase or test a physical installed PWA.
 
 DN 2.0 Phase 8 on OldVersion completes the Story / Activities / Transactions / Gallery / PDF Studio destinations, with legacy links retained, Notifications marked Coming Soon and obsolete Summary/HTML/Word workspace code removed. The version remains 1.0.35 until separately authorized release work; Insights improvements remain deferred. See the master and latest change-log entry for final regression evidence and remaining validation limits.
+
+The Phase 8 dependency follow-up uses React Router 7.18.5, Vite 7.3.7 and React plugin 5.2.0. Firebase stays on SDK 12.19.0; a scoped npm override selects patched gRPC 1.14.6 for its Firestore Node dependency. The previous JavaScript compilation targets are explicit in vite.config.js. CI checks dependency advisories and the built offline shell before any opt-in Firebase upload. No app release version or publication is changed by this maintenance.

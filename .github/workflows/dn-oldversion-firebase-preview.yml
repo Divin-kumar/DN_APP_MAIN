@@ -22,10 +22,16 @@ jobs:
           cache: npm
       - name: Install dependencies
         run: npm ci
+      - name: Check dependency advisories
+        run: npm audit --audit-level=moderate
       - name: Verify tests
         run: npm test
+      - name: Install Chromium for the built-app check
+        run: npx playwright install --with-deps chromium
       - name: Build Vite app
         run: npm run build
+      - name: Verify built shell, offline originals and PDF export
+        run: npm run test:production
       - name: Verify Firebase deploy credentials
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}

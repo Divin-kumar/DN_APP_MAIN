@@ -4,6 +4,28 @@ import { fixtureMoments, seedGuest, openUniversalTransaction } from './fixtures.
 const savedRecords = (page) => page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)));
 const noOverflow = async (page) => expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 
+test('encoded Moment and Activity IDs retain their exact identity through Story links and refresh', async ({ page }) => {
+  const momentId = 'family/trip #1';
+  const activityId = 'book\\stay?step=1';
+  const moments = [{ id:momentId, name:'Encoded identity review', type:'Vacation', date:'2026-10-28',
+    activities:[{ id:activityId, eventId:momentId, title:'Keep the exact booking', date:'2026-10-27' }],
+    memories:[], attachments:[] }];
+  const errors = await seedGuest(page, { moments, incomes:[], expenses:[] });
+  const base = `/events/${encodeURIComponent(momentId)}`;
+  const detail = `${base}/activities/${encodeURIComponent(activityId)}`;
+  await page.goto(`${base}/story`);
+  const before = await savedRecords(page);
+  await page.locator('.dn-v2-story').getByRole('link', { name:'Keep the exact booking', exact:true }).click();
+  await expect(page.locator('h1')).toHaveText('Keep the exact booking');
+  expect(new URL(page.url()).pathname).toBe(detail);
+  await page.reload();
+  await expect(page.locator('h1')).toHaveText('Keep the exact booking');
+  await page.goto(`${base}/gallery`);
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Gallery');
+  expect(await savedRecords(page)).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
 for (const [width, theme] of [[320, 'light'], [390, 'dark'], [768, 'light'], [1280, 'dark']]) {
   test(`canonical workspace and legacy links preserve records at ${width}px in ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width, height:900 });

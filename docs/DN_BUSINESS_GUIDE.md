@@ -2,7 +2,7 @@
 
 Last independently verified Firebase release: **26 October 2026 · version 1.0.35** at [DN](https://dn-10.web.app). Current development on **OldVersion** targets DN 2.0.0 and is reviewed through Vercel before a separately authorized Firebase release.
 
-Phase 8 completes the application regression review and navigation, Notifications and obsolete-screen cleanup. All 454 unit checks and 148 browser journeys pass locally, along with the built app’s offline Story, original-file download and PDF checks. Physical phone and real signed-in account checks, plus dependency-upgrade follow-up, remain outstanding before a fully cleared release. Vercel owner review and separately authorized Firebase publication remain later steps.
+Phase 8 completes the application regression review and navigation, Notifications and obsolete-screen cleanup. All 454 unit checks and 148 browser journeys pass locally, along with the built app’s offline Story, original-file download and PDF checks. The dependency follow-up is complete, and its latest scan reports zero findings. An additional check confirms that special characters in record identities survive navigation and refresh. Physical phone, Safari and real signed-in account checks remain outstanding before release acceptance. Vercel owner review and separately authorized Firebase publication remain later steps.
 
 ## 1. What DN helps you do
 
