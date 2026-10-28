@@ -26,7 +26,11 @@ export function GuestProvider({ children }) {
     let live = true;
     hydrateGuestTourPhotos().then((data) => {
       if (live && data && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
-        useEventStore.getState().setEvents(data.events);
+        // The scoped loader owns loadedFor/activeSample markers. Refresh only
+        // the data projection when that exact Guest tour scope is still active.
+        useEventStore.setState((state) => state.loadedFor === 'guest:anonymous'
+          && state.loadedSample === GUEST_TOUR_SCENARIO && state.activeSample === GUEST_TOUR_SCENARIO
+          ? { events: data.events } : state);
       }
     }).catch((error) => {
       if (live) console.warn('Optional Guest tour illustrations could not be prepared:', error);

@@ -23,6 +23,8 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   }));
   expect([guestRecords.moments, guestRecords.incomes, guestRecords.expenses].every(x => x === null || x === '[]')).toBe(true);
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
+  await expect(page.getByText('Explore DN · Our little getaway')).toBeVisible();
+  await expect(page.getByText('Explore DN · This month in words')).toBeVisible();
   await page.goto('/settings');
   const panel = page.getByRole('region', { name: 'Explore DN guest demo' });
   await expect(panel).toContainText('demo');

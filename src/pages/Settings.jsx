@@ -578,9 +578,17 @@ export default function Settings() {
       useEventStore.getState().setEvents(data.events);
       useExpenseStore.getState().setExpenses(data.expenses);
       useIncomeStore.getState().setIncomes(data.incomes);
+      // Restore the isolated scope markers after explicit sample switching.
+      await Promise.all([
+        useEventStore.getState().loadEvents(null, true),
+        useExpenseStore.getState().loadExpenses(null, true),
+        useIncomeStore.getState().loadIncomes(null, true),
+      ]);
       const ready = await hydrateGuestTourPhotos();
       if (ready && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
-        useEventStore.getState().setEvents(ready.events);
+        useEventStore.setState((state) => state.loadedFor === 'guest:anonymous'
+          && state.loadedSample === GUEST_TOUR_SCENARIO && state.activeSample === GUEST_TOUR_SCENARIO
+          ? { events: ready.events } : state);
       }
       showToast('Explore DN demo is ready', 'success');
     } catch (error) {
