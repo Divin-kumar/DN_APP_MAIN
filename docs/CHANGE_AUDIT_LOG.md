@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-139 | Dashboard PDF Studio parity and resilient Guest illustrations
+- **Summary entry:** Dashboard Moment summary now displays Customize PDF above its story, replacing the older fixed download button. It opens the same type-aware Studio used by Moments, preserving the Dashboard's existing summary content and status context. Updated the Dashboard summary regression to preview and download a genuine Studio PDF.
+- **Guest reliability:** Startup demo images are generated through a Guest-session effect that resumes after full-page navigation/reload. A prior browser run found that interrupted first-page hydration left the demo images pending. The Guest sandbox and private Guest storage remain isolated; re-preparation uses deterministic example originals and never uploads or merges them.
+- **Validation:** Unit/lint/docs and Chromium regressions are required for the current head; owner PDF visual sign-off remains pending. No changes to main or Firebase production.
+
 ## CHG-20261028-138 | Public Guest demo covers photo counts 1 through 5
 - **Scope:** Updated curated tour version to 2026.10.28.2, adding Journal examples with 1, 2, 3, 4 and 5 original photos, plus a distinct cover photo (16 illustrations total). The Diary's sample dated entries now stay within the same calendar month. Three Moments carry 14 Activities and Cash/Online financial samples.
 - **Safety:** Existing user-edited demos remain intact until explicitly refreshed; private Guest records and account data remain isolated. Unit tests cover same-month Diary grouping. No production deployment.
