@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-141 | Fix Guest backup restore from tour and simplify Guest data switch
+- **Owner report:** The Use my Guest data control was too visually prominent, and Restore backup no longer worked after the new public Guest tour shipped. Source inspection found an explicit guard rejecting all restores whenever a demo was active; the file selector also hid its native input with display:none.
+- **Behavior:** Validated backup selection leaves the tour untouched; the confirmation now clearly explains merging into real Guest data and exiting the demo. On confirm, a personal-ledger preflight and session guard run before removing isolated demo scope and restoring original file bytes and records through existing SHA/scoped merger. Existing Guest IDs win, demo records never merge. Invalid destination ledgers preserve the tour. Other development-only samples still block restore. Backup format and limits unchanged.
+- **UX:** Use my Guest data is a compact, glass-like touch-safe pill with arrow icon, balanced against a lightweight Refresh demo control at 320px+. Restore backup has a focusable/touch-friendly native input and clear destination explanation.
+- **Coverage:** New real-Settings unit regressions and Playwright Guest tour-to-restore and mobile control tests; final CI/visual approval recorded separately. No sample fixture/version change: no user-facing demo content/schema changed. No main or Firebase production change.
+
 ## CHG-20261028-140 | Final automated validation of Guest tour and PDF grid
 - **Executed:** GitHub Actions run 40655048457 on source SHA d9fe8388c65aa382170885760b3a5ae855884e9b passed 132 Chromium browser tests, Node unit tests, ESLint, production build and documentation governance. Tested photo grids for counts 1–5, genuine PDF Studio output, top actions on Dashboard/Moments summaries, Guest demo activation, original-photo reload recovery and personal Guest data isolation.
 - **Owner review:** PDF visual sign-off remains pending, and no current Vercel preview deployment was independently confirmed. No main changes, Firebase production publish, account migration or release bump.
