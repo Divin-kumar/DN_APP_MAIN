@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ArrowUpRight, BookHeart, BookOpenText, CalendarDays, CheckCircle2, Clock3, FileText, NotebookPen, Pencil, Rows3 } from 'lucide-react';
+import { ArrowUpRight, BookHeart, BookOpenText, CalendarDays, CheckCircle2, ChevronDown, Clock3, FileText, NotebookPen, Pencil, Rows3 } from 'lucide-react';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import RichText from '../../../components/common/RichText';
 import { activityDateLabel, activityDetailPath, isAttachmentImage } from '../../../utils/activityDetail';
@@ -132,13 +132,13 @@ function TaskRow({ entry, momentId, onStatusChange, statusBusy, completionBlocke
         {entry.date ? <time dateTime={entry.date}>{activityDateLabel(entry.date)}</time> : <span>No date</span>}
         {entry.displayTime ? <span>{entry.displayTime}</span> : null}
       </div>
-      {entry.id ? <select className="dn-task-status-control" value={entry.status}
+      {entry.id ? <span className="dn-task-status-switcher"><select className="dn-task-status-control" value={entry.status}
         disabled={statusBusy || !onStatusChange} aria-label={'Change status for ' + (entry.title || 'Untitled task')}
         onChange={(changeEvent) => onStatusChange?.(entry.id, changeEvent.target.value)}>
         <option value="in-progress">In progress</option>
         <option value="completed" disabled={completionBlocked && entry.status !== 'completed'}>Completed</option>
         <option value="cancelled">Cancelled</option>
-      </select> : null}
+      </select><ChevronDown size={12} aria-hidden="true" /></span> : null}
     </div>
   </article>;
 }

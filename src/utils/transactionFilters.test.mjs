@@ -59,12 +59,21 @@ test('date, amount and title sorting are non-mutating', () => {
   assert.equal(transactions[0].name, 'Salary');
 });
 test('unified transaction payload keeps legacy income/expense keys and activity links', () => {
-  const common = { title: 'Refund', amount: '450', date: '2026-10-21', notes: 'For supplies', category: 'Gift', eventId: 'event-1', activityId: 'activity-1' };
+  const common = { title: 'Refund', amount: '450', date: '2026-10-21', notes: 'For supplies', category: 'Gift', paymentMethod: 'Cash', eventId: 'event-1', activityId: 'activity-1' };
   const inc = transactionPayload({ ...common, transactionKind: 'income' });
   assert.equal(inc.type, 'Gift');
   assert.equal(inc.name, 'Refund');
+  assert.equal(inc.paymentMethod, 'Cash');
   assert.equal(inc.activityId, 'activity-1');
   assert.equal(inc.description, 'For supplies');
   assert.equal(transactionPayload({ ...common, transactionKind: 'expense' }).category, 'Gift');
   assert.throws(() => transactionPayload({ ...common, transactionKind: 'other' }), /transaction type/);
+});
+
+test('Phase 5 requires only Cash or Online for saved transaction payloads', () => {
+  const form = { transactionKind:'expense', title:'Taxi', amount:125,date:'2026-10-28',category:'Travel' };
+  assert.throws(() => transactionPayload(form), /Cash or Online/);
+  assert.throws(() => transactionPayload({...form,paymentMethod:'Card'}), /Cash or Online/);
+  assert.deepEqual(['Cash','Online'].map(method=>transactionPayload({...form,paymentMethod:method}).paymentMethod),['Cash','Online']);
+  assert.equal(transactionPayload({...form,transactionKind:'income',paymentMethod:'Online'}).paymentMethod,'Online');
 });

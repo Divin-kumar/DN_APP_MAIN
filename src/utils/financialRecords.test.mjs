@@ -49,3 +49,20 @@ test('legacy creation timestamps retain the exact instant instead of being trunc
   assert.equal(financialTimestamp({ toDate: () => date }), date.toISOString());
   assert.equal(normalizeFinancialRecord({ id: 1, createdAt: raw }).createdAt, date.toISOString());
 });
+
+test('Phase 5 payment method is optional for historical data and normalized for both financial types', () => {
+  for (const kind of ['income','expense']) {
+    const old = normalizeFinancialRecord({ id: 'legacy', name: 'Older', amount: 50 }, kind);
+    assert.equal(old.paymentMethod, null);
+    for (const method of ['Cash','Online']) {
+      const record = normalizeFinancialRecord({ id: method, paymentMethod: method }, kind);
+      assert.equal(record.paymentMethod, method);
+    }
+    assert.equal(normalizeFinancialRecord({ paymentMethod: 'Bank' }, kind).paymentMethod, null);
+  }
+  const entries = toTransactions([normalizeFinancialRecord({id:'income',amount:250,paymentMethod:'Online'},'income')],
+    [normalizeFinancialRecord({id:'expense',amount:100,paymentMethod:'Cash'})]);
+  assert.equal(entries[0].paymentMethod, 'Online');
+  assert.equal(entries[1].paymentMethod, 'Cash');
+  assert.deepEqual(summarizeTransactions(entries), { income:250, expense:100, balance:150 });
+});

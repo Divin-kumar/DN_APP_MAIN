@@ -8,6 +8,7 @@ import RichText from '../common/RichText';
 import ConditionBuilder, { ConditionChips } from '../common/ConditionBuilder';
 import { Link } from 'react-router-dom';
 import { activityDetailPath } from '../../utils/activityDetail';
+import { paymentMethodLabel } from '../../utils/paymentMethod';
 
 export const formatTransactionMoney = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -38,7 +39,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
           </span>
           <span className="dn-transaction-copy">
             <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
-            <small>{dateLabel(transaction.date)} · {category || 'Other'}</small>
+            <small>{dateLabel(transaction.date)} · {category || 'Other'} · {paymentMethodLabel(transaction.paymentMethod)}</small>
           </span>
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
             {isIncome ? '+' : '−'} {money(transaction.amount)}
@@ -64,7 +65,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
         </span>
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
-          <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'}</span>
+          <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'} <span aria-hidden="true">·</span> {paymentMethodLabel(transaction.paymentMethod)}</span>
           {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}
           {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
             <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>

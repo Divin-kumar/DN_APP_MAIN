@@ -5,6 +5,7 @@ import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
+import { PAYMENT_METHODS, normalizePaymentMethod } from '../../utils/paymentMethod';
 
 const today = () => {
   const date = new Date();
@@ -14,6 +15,7 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
   transactionKind: defaultKind,
   title: '',
   amount: '',
+  paymentMethod: '',
   category: defaultKind === 'income' ? preferences.defaultIncomeType || 'Other' : preferences.defaultExpenseCategory || 'Other',
   date: today(),
   eventId: '',
@@ -39,6 +41,7 @@ export default function TransactionForm({
         transactionKind: kind,
         title: initialTransaction.name || initialTransaction.title || '',
         amount: String(initialTransaction.amount ?? ''),
+        paymentMethod: normalizePaymentMethod(initialTransaction.paymentMethod) || '',
         category: (kind === 'income' ? initialTransaction.type : initialTransaction.category) || 'Other',
         date: initialTransaction.date || today(),
         eventId: initialTransaction.eventId || '',
@@ -84,6 +87,10 @@ export default function TransactionForm({
       setError('Enter a title, category, valid positive amount and date.');
       return;
     }
+    if (!normalizePaymentMethod(form.paymentMethod)) {
+      setError('Choose Cash or Online as the payment method.');
+      return;
+    }
     setError('');
     try { await onSubmit({ ...form, title: form.title.trim(), amount }); }
     catch (saveError) { setError(saveError?.message || 'Could not save transaction. Try again.'); }
@@ -118,6 +125,18 @@ export default function TransactionForm({
           {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </DropdownSelect>
       </div>
+      <fieldset className="dn-payment-method-field">
+        <legend>Payment method *</legend>
+        <div className="dn-payment-method-options">
+          {PAYMENT_METHODS.map((method) => <label key={method} className="dn-payment-method-choice">
+            <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
+              onChange={() => change('paymentMethod', method)} disabled={busy} required />
+            <span>{method}</span>
+          </label>)}
+        </div>
+        {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
+          ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
+      </fieldset>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
         <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}

@@ -1,5 +1,6 @@
 // The transaction UI is unified; Firestore collections and guest backups remain backward-compatible.
 import { plainRichText } from './richText.js';
+import { requirePaymentMethod } from './paymentMethod.js';
 
 export const transactionMonthKey = (date) => {
   if (typeof date !== 'string') return null;
@@ -73,6 +74,7 @@ export const summarizeTransactions = (transactions) => {
 export const transactionPayload = (form) => {
   const common = {
     name: String(form.title || '').trim(),
+    paymentMethod: requirePaymentMethod(form.paymentMethod),
     amount: Number(form.amount),
     date: form.date,
     description: String(form.notes || ''),

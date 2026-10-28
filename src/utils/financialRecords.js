@@ -1,4 +1,5 @@
 import { recordId } from './recordIdentity.js';
+import { normalizePaymentMethod } from './paymentMethod.js';
 
 const pad = (value) => String(value).padStart(2, '0');
 
@@ -38,6 +39,7 @@ export const normalizeFinancialRecord = (item = {}, kind = 'expense', fallbackId
   id: recordId(item.id) || recordId(item.firestoreId) || recordId(fallbackId) || crypto.randomUUID(),
   name: String(item.name ?? item.title ?? '').trim(),
   amount: Number(item.amount ?? 0),
+  paymentMethod: normalizePaymentMethod(item.paymentMethod),
   ...(kind === 'income' ? { type: item.type || item.category || 'Other' } : { category: item.category || 'Other' }),
   description: String(item.description ?? item.notes ?? ''),
   notes: String(item.notes ?? item.description ?? ''),

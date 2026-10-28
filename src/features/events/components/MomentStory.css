@@ -282,3 +282,39 @@ html[data-theme] .dn-task-row.is-cancelled .dn-task-status-control {color:var(--
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-journal-gallery .dn-attachment-open {transition:none;}
 }
+
+/* Lightweight status action, not a full-sized form field. Keep a 36px touch
+   target and native select accessibility while visually receding in the row. */
+html[data-theme] .dn-task-status-switcher {
+  position:relative;display:inline-flex;align-items:center;max-width:100%;
+  border-radius:999px;color:var(--color-text-muted);
+  background:transparent;border:1px solid transparent;
+  transition:background .16s ease,border-color .16s ease;
+}
+html[data-theme] .dn-task-status-switcher:hover,
+html[data-theme] .dn-task-status-switcher:focus-within {
+  background:color-mix(in srgb,var(--color-primary) 6%,var(--color-card));
+  border-color:color-mix(in srgb,var(--color-primary) 18%,var(--color-border));
+}
+html[data-theme] .dn-task-status-switcher:focus-within {outline:2px solid var(--color-primary);outline-offset:2px;}
+html[data-theme] .dn-task-status-switcher>svg {
+  position:absolute;right:9px;pointer-events:none;color:var(--color-text-muted);
+}
+html[data-theme] .dn-task-row-end .dn-task-status-control {
+  appearance:none;-webkit-appearance:none;
+  min-height:36px;width:110px;max-width:100%;padding:7px 23px 7px 10px;
+  background:transparent;border:0;border-radius:999px;
+  font-size:.69rem;font-weight:620;letter-spacing:0;
+  color:var(--color-text-muted);cursor:pointer;
+}
+html[data-theme] .dn-task-row.is-in-progress .dn-task-status-control {color:var(--color-text);}
+html[data-theme] .dn-task-row.is-completed .dn-task-status-control,
+html[data-theme] .dn-task-row.is-cancelled .dn-task-status-control {border:0;}
+html[data-theme] .dn-task-row-end .dn-task-status-control:focus-visible {outline:none;}
+html[data-theme] .dn-task-row-end .dn-task-status-control:disabled {cursor:wait;}
+@media(max-width:680px) {
+ html[data-theme] .dn-task-row-end .dn-task-status-control {width:110px;min-width:0;}
+}
+@media(prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-task-status-switcher {transition:none;}
+}
