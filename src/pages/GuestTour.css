@@ -1,0 +1,65 @@
+/* Scoped Guest-tour controls: calm, slim glass actions rather than full
+   Settings CTAs. Reflow as two equal touch-safe controls on small phones. */
+html[data-theme] .dn-guest-tour-panel .dn-guest-tour-actions {
+  display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
+  gap:9px;min-width:0;
+}
+html[data-theme] .dn-guest-tour-actions button {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:42px;padding:8px 14px;
+  border-radius:999px;font-size:.75rem;font-weight:660;
+  line-height:1.15;white-space:nowrap;cursor:pointer;
+  transition:background .16s ease,border-color .16s ease;
+}
+html[data-theme] .dn-guest-tour-actions .dn-tour-refresh-button {
+  background:transparent;color:var(--color-text-muted);
+  border:1px solid var(--color-border);
+}
+html[data-theme] .dn-guest-tour-actions .dn-tour-personal-switch {
+  background:color-mix(in srgb,var(--color-primary) 7%,var(--color-glass));
+  color:var(--color-primary);
+  border:1px solid color-mix(in srgb,var(--color-primary) 20%,var(--color-border));
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  box-shadow:none;
+}
+html[data-theme] .dn-guest-tour-actions button:hover {
+  background:color-mix(in srgb,var(--color-primary) 11%,var(--color-card));
+  border-color:color-mix(in srgb,var(--color-primary) 35%,var(--color-border));
+}
+html[data-theme] .dn-guest-tour-actions button:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:3px;
+}
+html[data-theme] .dn-backup-file-picker {
+  position:relative;display:inline-flex;gap:8px;align-items:center;
+  justify-content:center;overflow:hidden;cursor:pointer;
+}
+html[data-theme] .dn-backup-file-picker input[type="file"] {
+  position:absolute;inset:0;width:100%;height:100%;
+  opacity:0;cursor:pointer;z-index:1;
+}
+html[data-theme] .dn-backup-file-picker:focus-within {
+  outline:2px solid var(--color-primary);outline-offset:2px;
+}
+html[data-theme] .dn-backup-file-picker:has(input:disabled) {
+  opacity:.55;cursor:wait;
+}
+html[data-theme] .dn-restore-tour-note {
+  padding:11px 13px;border:1px solid var(--color-border);
+  border-radius:12px;background:var(--color-card-raised);
+  font-size:.8rem;line-height:1.6;
+}
+@media(max-width:760px) {
+  html[data-theme] .dn-guest-tour-panel .dn-guest-tour-actions {
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;
+  }
+  html[data-theme] .dn-guest-tour-actions button {
+    width:100%;min-width:0;padding:8px 9px;
+    white-space:normal;text-align:center;
+  }
+}
+@media(max-width:345px) {
+  html[data-theme] .dn-guest-tour-panel .dn-guest-tour-actions {grid-template-columns:minmax(0,1fr);}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-guest-tour-actions button {transition:none;}
+}

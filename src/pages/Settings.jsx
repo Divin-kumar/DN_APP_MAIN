@@ -1,4 +1,5 @@
 import { clearDnLocalData } from '../utils/storageMigration';
+import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
 import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';

@@ -263,7 +263,7 @@ test('Guest demo restore confirmation switches to personal storage and merges ba
     activities: [], attachments: [], memories: [] };
   const demoMoment = { id: 'tour-only', name: 'Sample Journey', activities: [], attachments: [], memories: [] };
   const tour = { scenario: 'tour', demoVersion: '2026.10.28.2',
-    events: [demoMoment], incomes: [], expenses: [] };
+    events: [demoMoment], activities: [], memories: [], attachments: [], incomes: [], expenses: [] };
   const harness = await openSettings(t, {
     dn_guest_eventGroups: JSON.stringify([privateMoment]),
     dn_guest_expenses: '[]', dn_guest_incomes: '[]',
@@ -290,7 +290,7 @@ test('Guest demo restore confirmation switches to personal storage and merges ba
 
 test('Guest demo restore preflight preserves demo on invalid personal Guest ledger', async (t) => {
   const tour = { scenario: 'tour', events: [{id:'tour',name:'Example',activities:[]}],
-    incomes: [], expenses: [] };
+    activities: [], memories: [], attachments: [], incomes: [], expenses: [] };
   const harness = await openSettings(t, {
     dn_dev_fixture_scenario: 'tour', dn_dev_fixture_data: JSON.stringify(tour),
     dn_guest_eventGroups: '{"malformed":true}', dn_guest_expenses: '[]', dn_guest_incomes: '[]',
