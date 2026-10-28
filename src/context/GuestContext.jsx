@@ -6,7 +6,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
   The app remembers the guest choice in localStorage, so the user stays in guest mode
   even after refreshing the page.
 */
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import { activateSampleScenario, canOfferGuestTour, clearActiveSampleScenario, getActiveSampleScenario, hydrateGuestTourPhotos, GUEST_TOUR_SCENARIO } from '../dev/sampleData';
@@ -19,6 +19,21 @@ export function GuestProvider({ children }) {
   const setGuestMode = useAppStore((state) => state.setGuestMode);
   const clearSession = useAppStore((state) => state.clearSession);
 
+  // Re-entering Guest mode after a reload must resume any interrupted demo
+  // image preparation. Do not silently edit personal Guest records.
+  useEffect(() => {
+    if (!isGuest || getActiveSampleScenario() !== GUEST_TOUR_SCENARIO) return;
+    let live = true;
+    hydrateGuestTourPhotos().then((data) => {
+      if (live && data && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
+        useEventStore.getState().setEvents(data.events);
+      }
+    }).catch((error) => {
+      if (live) console.warn('Optional Guest tour illustrations could not be prepared:', error);
+    });
+    return () => { live = false; };
+  }, [isGuest]);
+
   const continueAsGuest = () => {
     // A first-time empty Guest receives a separate, versioned product tour.
     // Real Guest records are never seeded, overwritten, or transferred.
@@ -26,13 +41,6 @@ export function GuestProvider({ children }) {
     if (startTour) activateSampleScenario(GUEST_TOUR_SCENARIO);
     localStorage.setItem(GUEST_MODE_KEY, 'true');
     setGuestMode(true);
-    if (startTour) {
-      hydrateGuestTourPhotos().then((data) => {
-        if (data && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
-          useEventStore.getState().setEvents(data.events);
-        }
-      }).catch((error) => console.warn('Optional Guest tour illustrations could not be prepared:', error));
-    }
   };
 
   const exitGuestMode = () => {
