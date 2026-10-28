@@ -8,8 +8,9 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.equal(demo.demoVersion, GUEST_TOUR_VERSION);
   assert.equal(demo.events.length, 3);
   assert.deepEqual(demo.events.map((moment) => moment.type), ['Vacation', 'Diary', 'Project']);
-  assert.deepEqual(demo.events.flatMap((moment) => moment.activities).length, 12);
-  assert.deepEqual(new Set(demo.events.flatMap((m) => m.activities.map((a) => a.id))).size, 12);
+  assert.deepEqual(demo.events.flatMap((moment) => moment.activities).length, 14);
+  assert.deepEqual(new Set(demo.events.flatMap((m) => m.activities.map((a) => a.id))).size, 14);
+  assert.ok(demo.events[1].activities.every((item) => item.date.slice(0, 7) === demo.events[1].date.slice(0, 7)));
   const statuses = demo.events[2].activities.map((activity) => activity.status);
   assert.ok(statuses.includes('in-progress') && statuses.includes('completed') && statuses.includes('cancelled'));
   assert.deepEqual(new Set([...demo.incomes, ...demo.expenses].map((item) => item.paymentMethod)), new Set(['Cash', 'Online']));

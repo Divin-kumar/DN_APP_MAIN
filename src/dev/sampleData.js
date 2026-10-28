@@ -3,14 +3,14 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.28.1';
+export const GUEST_TOUR_VERSION = '2026.10.28.2';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
 ANCHOR_DATE.setHours(12, 0, 0, 0);
 
 const scenarioDefinitions = {
-  tour: { events: 3, activities: 12, memories: 2, attachments: 7, incomes: 2, expenses: 3, label: 'Explore DN · guided demo' },
+  tour: { events: 3, activities: 14, memories: 2, attachments: 16, incomes: 2, expenses: 3, label: 'Explore DN · guided demo' },
   empty: { events: 0, activities: 0, memories: 0, attachments: 0, incomes: 0, expenses: 0, label: 'Empty state' },
   new: { events: 3, activities: 6, memories: 3, attachments: 2, incomes: 3, expenses: 8, label: 'New user' },
   regular: { events: 60, activities: 360, memories: 240, attachments: 180, incomes: 72, expenses: 600, label: 'Regular · 5 years' },
@@ -278,6 +278,7 @@ export const getSampleScenarioLabel = (scenario) => scenarioDefinitions[scenario
 
 export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const date = (n) => dateString(dayOffset(reference, n));
+  const diaryDay = (day) => dateString(new Date(reference.getFullYear(), reference.getMonth(), day, 12));
   const activity = (id, eventId, title, offset, description, status = 'completed') => ({
     id: 'dn-tour-activity-' + id, eventId, title, date: date(offset), description,
     status, completed: status === 'completed', cancelled: status === 'cancelled',
@@ -293,9 +294,11 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
       activity('j1', j, 'The road to the hills', -24, 'We left early while the world was quiet. The first cup of tea and winding road became our favourite part of the trip.'),
       activity('j2', j, 'A walk before sunset', -23, 'The light shifted over the hills. Every turn revealed another view worth remembering.'),
       activity('j3', j, 'One last photograph', -22, 'A picture of the colours that made the weekend unforgettable.'),
+      activity('j4', j, 'The little village', -21, 'We walked between shops and discovered a calm street with small surprises.'),
+      activity('j5', j, 'The last afternoon', -20, 'Five favourite views from the last afternoon together, collected in a single photo spread.'),
     ],
   }, {
-    id: d, name: 'Explore DN · This month in words', type: 'Diary', date: date(-6),
+    id: d, name: 'Explore DN · This month in words', type: 'Diary', date: diaryDay(1),
     notes: 'One Moment per month. Write as much as you want: pictures are optional, and the Diary PDF is for reading.',
     attachments: [], memories: [], activities: [
       activity('d1', d, 'A quiet Monday', -6, 'Today I noticed how much better my mornings feel with a slower start. Three things I am grateful for, and one idea I want to follow.'),
@@ -315,6 +318,8 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
       activity('t6', t, 'Plan weekend clean-up', 7, 'Keep the afternoon free.', 'in-progress'),
     ],
   }];
+  // Monthly Diary uses days of the same month, never relative-day spillover.
+  for (const [index, item] of events[1].activities.entries()) item.date = diaryDay([5, 13, 21][index]);
   const incomes = [
     { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, paymentMethod: 'Online', date: date(-5) },
     { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, paymentMethod: 'Cash', date: date(-2) },
@@ -361,6 +366,15 @@ export async function hydrateGuestTourPhotos() {
     ['Blue sky', 'dn-tour-activity-j2', 540, 740, 205],
     ['Sunset colours', 'dn-tour-activity-j2', 870, 540, 18],
     ['Last view', 'dn-tour-activity-j3', 860, 515, 165],
+    ['Village window', 'dn-tour-activity-j4', 920, 550, 175],
+    ['Small street', 'dn-tour-activity-j4', 600, 770, 205],
+    ['A quiet shop', 'dn-tour-activity-j4', 800, 550, 35],
+    ['Evening lights', 'dn-tour-activity-j4', 690, 820, 20],
+    ['The mountain view', 'dn-tour-activity-j5', 850, 520, 190],
+    ['A little bridge', 'dn-tour-activity-j5', 580, 770, 175],
+    ['The late sun', 'dn-tour-activity-j5', 860, 510, 30],
+    ['The tea stop', 'dn-tour-activity-j5', 650, 800, 60],
+    ['Goodbye to the hills', 'dn-tour-activity-j5', 890, 530, 210],
   ];
   const photos = [];
   for (const [index, [name, activityId, width, height, hue]] of layouts.entries()) {

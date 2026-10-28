@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-138 | Public Guest demo covers photo counts 1 through 5
+- **Scope:** Updated curated tour version to 2026.10.28.2, adding Journal examples with 1, 2, 3, 4 and 5 original photos, plus a distinct cover photo (16 illustrations total). The Diary's sample dated entries now stay within the same calendar month. Three Moments carry 14 Activities and Cash/Online financial samples.
+- **Safety:** Existing user-edited demos remain intact until explicitly refreshed; private Guest records and account data remain isolated. Unit tests cover same-month Diary grouping. No production deployment.
+
 ## CHG-20261028-137 | Quick PDF customization, adaptive Journal photo grid and living Guest demo
 - **Owner feedback:** Place Customize PDF at the start, not after a lengthy summary. Prefer first eligible photograph as cover, then entry writing followed by grouped 1–5-photo pages, naturally sized without cropping. Provide built-in Guest data for all real users and keep it aligned with new DN features.
 - **Implementation:** Moved Customize PDF into the first summary action. Added a single-page Canvas photo-grid painter for groups of 1–5 originals, multi-page groups beyond five, and nonduplicated cover selection from Moment or Activity. Preserved PDF preview/export identity, Account/Guest file guards, and distinct Diary/Tasks templates.
