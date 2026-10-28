@@ -55,6 +55,15 @@ Runtime `firestoreId`/`firestoreCollection`/`firestoreSources` route account mut
 
 [Browser migration](../src/utils/storageMigration.js) copies old keys only to absent DN keys and keeps originals. Clear Local Data removes recognized keys of both generations, list-state memory and legacy transaction session filters, then reloads; it does not remove cloud/auth data, worker caches or IndexedDB originals. Removing attachment references likewise retains unreferenced originals in IndexedDB/Storage; automatic file deletion/garbage collection is not implemented. Old scoped transaction filters migrate to list memory. Unowned legacy global sort preferences are not assigned to an account; scoped sort starts at its default once on upgrade.
 
+## DN 2.0 Phase 1 internal Story foundation (unreleased)
+
+`src/utils/momentStory.js` builds a pure, read-only chronological projection of a scoped Moment. This internal helper is not yet mounted in the current UI, Summary, Dashboard, Gallery or PDF export. It adds no routes, writes, Code List migration, backup change, or version bump. The published release remains 1.0.35; DN 2.0.0 is the target only after later phases and authorization.
+
+- `buildMomentStory(moment, { momentTypes, now })` groups Activities by their **recorded Activity date** in ascending month/day order, retaining original order for ties. Invalid/missing dates remain in `undated` and never borrow Moment dates or creation timestamps. A future dated **in-progress** Activity appears separately in `upcoming`; completed/cancelled Activities retain their actual status and their recorded dates.
+- The Moment's own date and rich notes remain separate `momentDate` and `introduction` values. Legacy standalone Memories remain intact in an undated `reflections` collection and are not rewritten or given invented occurrence dates. Attachment ownership delegates to the existing summary association helper: linked photos stay with their Activity, while Moment-level and orphan-linked attachments appear under `keepsakes`; original-file availability must still be checked by the eventual consumer in the current browser scope.
+- `resolveMomentStoryPresentation` reads an optional `storyPresentation` on existing Moment Type Code List metadata (`journey`, `diary`, `chronicle`). Existing Code List serialization already preserves custom entry fields, including inactive entries, without a schema migration. Missing metadata uses conservative defaults: Diary/Journal => diary, Application and YouTube/Career/IQVIA/Project/Work => chronicle, other types => journey. Other/custom type labels resolve against existing configured entries. No Moment type, greeting or Dashboard visibility behavior changes.
+- Phase 1 is data foundation only. The current Overview/Memories/Attachments sections and old routes, PDF summaries, filters, transactions, Insights, Settings and backup format continue operating as before. Future UI, payment mode, PDF Studio, notification and backup changes remain separate authorized phases.
+
 ## Current Features
 
 | Area | Reachable behavior |
