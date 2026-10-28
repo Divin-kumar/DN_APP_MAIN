@@ -8,7 +8,7 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search, Sparkles, Trash2, XCircle } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -37,6 +37,10 @@ import { plainRichText } from '../utils/richText';
 import useScopedMoments from '../hooks/useScopedMoments';
 import { recordId } from '../utils/recordIdentity';
 import { getActiveSampleScenario } from '../dev/sampleData';
+import useAttachmentOriginal from '../hooks/useAttachmentOriginal';
+import { activityDateLabel } from '../utils/activityDetail';
+import { selectMomentListPreview } from '../utils/momentListPreview';
+import '../components/events/MomentList.css';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -61,47 +65,74 @@ const getTimelineDate = (event, referenceDate = new Date()) => {
     : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
 };
 
-function EventStoryCard({ event, expenseTotal, onOpen, onSummary, onEdit, onArchive, onDelete }) {
-  const date = parseMomentDate(event.date);
-  const validDate = Boolean(date);
-  const status = getEventStatus(event);
-  const statusLabel = status === 'archived' ? 'Archived' : status === 'in-progress' ? 'In Progress' : status === 'completed' ? 'Completed' : 'Cancelled';
-  const activities = event.activities || [];
-  const memories = event.memories || [];
-  const attachments = event.attachments || [];
+
+function MomentCardCover({ attachment, uid, isGuest, date }) {
+  const tileRef = useRef(null);
+  const [nearby, setNearby] = useState(typeof IntersectionObserver !== 'function');
+  const [failedSource, setFailedSource] = useState('');
+  useEffect(() => {
+    if (typeof IntersectionObserver !== 'function') { setNearby(true); return undefined; }
+    const observer = new IntersectionObserver((entries) => {
+      if (entries.some((entry) => entry.isIntersecting)) setNearby(true);
+    }, { rootMargin: '180px' });
+    if (tileRef.current) observer.observe(tileRef.current);
+    return () => observer.disconnect();
+  }, []);
+  const original = useAttachmentOriginal(attachment, { uid, isGuest, enabled: nearby && Boolean(attachment) });
+  const source = original.source && original.source !== failedSource && !original.error ? original.source : '';
   return (
-    <SwipeActionCard className="event-story-card"
+    <span ref={tileRef} className={'event-story-art dn-v2-moment-cover' + (source ? ' has-photo' : '')} aria-hidden="true">
+      {source ? <img src={source} alt="" loading="lazy" onError={() => setFailedSource(source)} /> : <Images size={32} strokeWidth={1.5} className="dn-v2-cover-symbol" />}
+      <span className="dn-v2-moment-cover-glow" />
+      <span className="dn-v2-moment-cover-date">
+        <strong>{date ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</strong>
+        <small>{date ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'Date'}</small>
+      </span>
+    </span>
+  );
+}
+
+function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onSummary, onEdit, onArchive, onDelete }) {
+  const date = parseMomentDate(event.date);
+  const preview = useMemo(() => selectMomentListPreview(event), [event]);
+  const status = preview.status;
+  const statusLabel = { archived: 'Archived', 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled' }[status] || 'In progress';
+  const activities = Array.isArray(event.activities) ? event.activities : [];
+  const memories = Array.isArray(event.memories) ? event.memories : [];
+  const attachments = Array.isArray(event.attachments) ? event.attachments : [];
+  const activity = preview.latest;
+  return (
+    <SwipeActionCard className="event-story-card dn-v2-moment-card"
       mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
+      onOpen={onOpen} menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
         ...(onSummary ? [{ label: 'Summary', icon: ClipboardList, onClick: onSummary }] : []),
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
-        <button type="button" className="event-story-main" onClick={onOpen}
-          aria-label={'Open ' + (event.name || 'event')}>
-          <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
-          <span className="event-story-art" aria-hidden="true">
-            <span>
-              {validDate ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}
-            </span>
-            <small>{validDate ? date.toLocaleDateString('en-GB', { month: 'short' }) : 'DATE'}</small>
-            <i>{String(event.type || 'Life').slice(0, 1).toUpperCase()}</i>
+      <button type="button" className="event-story-main dn-v2-moment-open" onClick={onOpen}
+        aria-label={'Open ' + (event.name || 'event')}>
+        <MomentCardCover attachment={preview.cover} uid={uid} isGuest={isGuest} date={date} />
+        <span className="event-story-copy dn-v2-moment-copy">
+          <span className="dn-v2-moment-heading">
+            <span className="event-story-meta">{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
+            <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
           </span>
-          <span className="event-story-copy">
-            <span className="event-story-meta">
-              <span>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
-            </span>
-            <strong>{event.name || 'A life moment'}</strong>
-            <span className="event-story-date">{validDate ? dateLabel(date) : 'Date to be decided'}</span>
-            {event.notes ? <RichText inline className="event-story-note free-text-preview is-truncated" value={event.notes} /> : null}
-            <span className="event-story-details">
-              <span><Clock3 size={13} /> {activities.length} activities</span>
-              <span><BookHeart size={13} /> {memories.length} memories</span>
-              <span><FileText size={13} /> {attachments.length} keepsakes</span>
-              {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
-            </span>
+          <strong>{event.name || 'A life moment'}</strong>
+          <span className="event-story-date"><CalendarDays size={13} aria-hidden="true" />{date ? dateLabel(date) : 'Date to be decided'}</span>
+          {activity ? <span className="dn-v2-moment-activity">
+            <span className="dn-v2-activity-kicker">{activity === preview.upcoming ? 'Coming up' : 'Latest activity'}</span>
+            <span className="dn-v2-activity-title">{activity.title || 'Untitled activity'}</span>
+            <span className="dn-v2-activity-date">{activity.date ? activityDateLabel(activity.date) : 'Date to be decided'}</span>
+          </span> : event.notes ? <RichText inline className="event-story-note free-text-preview is-truncated" value={event.notes} /> : <span className="dn-v2-activity-empty">No activities yet</span>}
+          <span className="event-story-details">
+            <span><Clock3 size={13} /> {activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
+            {memories.length ? <span><BookHeart size={13} /> {memories.length} reflections</span> : null}
+            {attachments.length ? <span><FileText size={13} /> {attachments.length} files</span> : null}
+            {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
           </span>
-        </button>
+        </span>
+      </button>
     </SwipeActionCard>
   );
 }
@@ -451,6 +482,8 @@ export default function Events() {
     <EventStoryCard
       key={event.id || event.firestoreId}
       event={event}
+      uid={user?.uid}
+      isGuest={isGuest}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
       onOpen={() => navigate(`/events/${event.id || event.firestoreId}`)}
       onSummary={() => setSummaryEvent({ id: recordId(event.id || event.firestoreId), scope: scopedMoments.scopeIdentity })}

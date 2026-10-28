@@ -1,0 +1,169 @@
+
+/* DN 2.0 Phase 2: premium read-only Moment discovery cards.
+   Scoped to the Moments listing so existing workspaces and list filters keep
+   their own layout and interaction contracts. */
+html[data-theme] .life-timeline-page .life-journey-section { min-width: 0; gap: 12px; }
+html[data-theme] .life-timeline-page .life-journey-items {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 15px; margin: 0 !important; padding: 0 !important; border: 0 !important;
+}
+html[data-theme] .life-timeline-page .life-journey-label {
+  display: flex; align-items: center; margin: 0 0 2px; padding: 0 2px;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card {
+  display: block; min-width: 0; padding: 0 !important;
+  border: 1px solid var(--color-border); border-radius: 20px !important;
+  background: var(--color-card); overflow: hidden;
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--color-bg) 65%, transparent);
+  transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card:hover {
+  transform: translateY(-2px);
+  border-color: color-mix(in srgb, var(--color-primary) 36%, var(--color-border));
+  background: var(--color-card);
+  box-shadow: 0 13px 30px color-mix(in srgb, var(--color-bg) 48%, transparent);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-swipe-main,
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewport {
+  width: 100%; min-width: 0; height: 100%;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewport { overflow: hidden; }
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
+  display: flex !important; width: 100%; min-width: 0; min-height: 174px !important;
+  align-items: stretch; gap: 0 !important; padding: 0 42px 0 0 !important;
+  border: 0; border-radius: 0; background: var(--color-card) !important;
+  text-align: left; color: var(--color-text);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover {
+  position: relative; display: grid; flex: 0 0 112px; width: 112px;
+  min-width: 0; min-height: 174px; height: auto; padding: 0 !important;
+  place-items: center; overflow: hidden; border: 0 !important; border-radius: 0 !important;
+  background: radial-gradient(circle at 72% 20%, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 55%),
+    linear-gradient(155deg, var(--color-card-raised), var(--color-surface)) !important;
+  color: var(--color-primary) !important;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-cover::after { display: none; }
+html[data-theme] .life-timeline-page .dn-v2-moment-cover img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+}
+html[data-theme] .life-timeline-page .dn-v2-cover-symbol { opacity: .66; }
+html[data-theme] .life-timeline-page .dn-v2-moment-cover-glow {
+  position: absolute; inset: 40% 0 0;
+  background: linear-gradient(to top, rgba(6, 23, 18, .24), transparent);
+  pointer-events: none;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-cover:not(.has-photo) .dn-v2-moment-cover-glow { opacity: .25; }
+html[data-theme] .life-timeline-page .dn-v2-moment-cover-date {
+  position: absolute; bottom: 10px; left: 10px; z-index: 1;
+  display: grid; justify-items: start; gap: 0;
+  min-width: 45px; padding: 6px 8px; border: 1px solid color-mix(in srgb,var(--color-border) 65%,transparent);
+  border-radius: 10px; background: color-mix(in srgb,var(--color-card) 86%,transparent);
+  color: var(--color-text) !important; backdrop-filter: blur(12px);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-cover-date strong {
+  font-size: 1.2rem; letter-spacing: -.06em; line-height: 1;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-cover-date small {
+  font-size: .64rem; text-transform: uppercase; letter-spacing: .05em; font-weight: 750;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-copy {
+  display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 6px;
+  padding: 14px 4px 13px 13px; overflow: hidden; overflow-wrap: anywhere;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-heading {
+  display: flex; flex-wrap: wrap; align-items: center; min-width: 0; gap: 6px;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-meta {
+  display: inline-flex; min-width: 0; max-width: 100%; width: auto;
+  padding: 0; color: var(--color-primary); font-size: .7rem; font-weight: 760;
+  text-transform: none; overflow-wrap: anywhere;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status {
+  position: static !important; inset: auto; width: auto !important; height: auto !important;
+  max-width: 100%; min-width: 0; min-height: 0; padding: 3px 6px !important;
+  border: 1px solid var(--color-border); border-radius: 99px;
+  background: var(--color-card-raised); color: var(--color-text-muted);
+  box-shadow: none; font-size: .6rem !important; font-weight: 700;
+  line-height: 1.2; letter-spacing: 0; text-transform: none; overflow: visible;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-completed {
+  background: color-mix(in srgb,var(--color-success) 13%,var(--color-card));
+  color: var(--color-success);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-in-progress {
+  background: color-mix(in srgb,var(--color-primary) 10%,var(--color-card));
+  color: var(--color-primary);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-cancelled {
+  background: color-mix(in srgb,var(--color-danger) 10%,var(--color-card));
+  color: var(--color-danger);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy > strong {
+  display: -webkit-box; min-width: 0; max-width: 100%;
+  overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
+  color: var(--color-text); font-size: clamp(.88rem,1.15vw,1.04rem);
+  font-weight: 780; line-height: 1.23; letter-spacing: -.025em;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-date {
+  display: inline-flex; align-items: center; gap: 5px; margin: 0;
+  color: var(--color-text-muted); font-size: .69rem;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-date svg { flex: 0 0 auto; }
+html[data-theme] .life-timeline-page .dn-v2-moment-activity {
+  display: grid; min-width: 0; gap: 3px; margin-top: auto;
+  padding: 8px 9px; border: 1px solid var(--color-border); border-radius: 10px;
+  background: var(--color-surface); overflow: hidden;
+}
+html[data-theme] .life-timeline-page .dn-v2-activity-kicker {
+  color: var(--color-primary); font-size: .6rem; font-weight: 750;
+  letter-spacing: .03em;
+}
+html[data-theme] .life-timeline-page .dn-v2-activity-title {
+  display: -webkit-box; min-width: 0; overflow: hidden;
+  -webkit-box-orient: vertical; -webkit-line-clamp: 2; line-height: 1.25;
+  color: var(--color-text); font-size: .73rem; font-weight: 680;
+}
+html[data-theme] .life-timeline-page .dn-v2-activity-date,
+html[data-theme] .life-timeline-page .dn-v2-activity-empty {
+  color: var(--color-text-muted); font-size: .65rem;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-note {
+  --free-text-lines: 2; color: var(--color-text-muted); font-size: .73rem;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-details {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px;
+  min-width: 0; margin-top: 4px; padding: 0;
+  color: var(--color-text-muted);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-details span {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: var(--color-text-muted); font-size: .63rem; white-space: nowrap;
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger {
+  position: absolute; z-index: 3; top: 10px; right: 9px; flex: 0 0 auto;
+  display: grid; place-items: center; width: 38px; height: 38px;
+  min-width: 38px; min-height: 38px; padding: 0;
+  border: 1px solid transparent; border-radius: 11px;
+  background: transparent; color: var(--color-text-muted);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:hover,
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:focus-visible {
+  background: var(--color-card-raised); border-color: var(--color-border);
+}
+html[data-theme] .life-timeline-page .dn-v2-moment-card :is(.dn-record-menu-trigger,.dn-v2-moment-open):focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: -3px;
+}
+@media (max-width: 850px) {
+  html[data-theme] .life-timeline-page .life-journey-items { grid-template-columns: minmax(0,1fr); gap: 11px; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { min-height: 156px !important; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { min-height: 156px; flex-basis: 106px; width: 106px; }
+}
+@media (max-width: 400px) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { padding-right: 35px !important; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { flex-basis: 80px; width: 80px; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-copy { padding: 10px 2px 10px 9px; gap: 5px; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger { width: 34px; height: 40px; min-width: 34px; right: 3px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card { transition: none; }
+}

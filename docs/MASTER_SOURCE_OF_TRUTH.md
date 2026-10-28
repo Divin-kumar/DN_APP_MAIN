@@ -64,6 +64,11 @@ Runtime `firestoreId`/`firestoreCollection`/`firestoreSources` route account mut
 - `resolveMomentStoryPresentation` reads an optional `storyPresentation` on existing Moment Type Code List metadata (`journey`, `diary`, `chronicle`). Existing Code List serialization already preserves custom entry fields, including inactive entries, without a schema migration. Missing metadata uses conservative defaults: Diary/Journal => diary, Application and YouTube/Career/IQVIA/Project/Work => chronicle, other types => journey. Other/custom type labels resolve against existing configured entries. No Moment type, greeting or Dashboard visibility behavior changes.
 - Phase 1 is data foundation only. The current Overview/Memories/Attachments sections and old routes, PDF summaries, filters, transactions, Insights, Settings and backup format continue operating as before. Future UI, payment mode, PDF Studio, notification and backup changes remain separate authorized phases.
 
+## DN 2.0 Phase 2 Moments listing (unreleased)
+
+`OldVersion` now renders the existing Moments listing as responsive, premium discovery cards. Each card shows the recorded Moment date, type, actual calculated status, title and a read-only preview of its latest recorded Activity (or upcoming/undated fallback). The preview is selected through the Phase 1 Story projection without changing Activity order, status or storage. A Moment-level image takes cover priority; otherwise a linked Activity image may decorate the card, without reassigning its ownership. Original image bytes load lazily through the same account/Guest/Sample-scoped integrity hook as the gallery; unavailable originals show a neutral visual fallback, not a fabricated photo.
+
+Cards keep explicit Open and keyboard-friendly action-menu controls, including Edit, Summary, Archive/Restore and confirmation-gated Delete; the existing swipe menu remains. The grid collapses from two columns to one for narrow viewports. Existing Moment searching, saved filters/sort, Code Lists synchronization, archive logic, counts, transaction-derived badges, navigation and all records remain unchanged. This is source-only, not a Firebase deployment or DN 2.0.0 release. Workspace Story and PDF Studio remain later phases.
 ## Current Features
 
 | Area | Reachable behavior |
