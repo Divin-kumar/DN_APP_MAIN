@@ -116,3 +116,76 @@ html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-sectio
 @media(prefers-reduced-motion:reduce) {
  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-entry { transition:none; }
 }
+
+
+/* Phase 4 visual acceptance repair: three different RECORDED layouts.
+   The common Activity card still preserves its link, original photo and status. */
+html[data-theme] .dn-v2-story-recorded {min-width:0;}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-recorded {padding:0 4px;}
+html[data-theme] .dn-journey-map {display:grid;gap:28px;position:relative;min-width:0;}
+html[data-theme] .dn-journey-season {display:grid;min-width:0;gap:0;position:relative;}
+html[data-theme] .dn-journey-season-heading {display:flex;align-items:center;gap:10px;margin:0;padding:13px 0 15px;color:var(--color-primary);font-size:clamp(.94rem,2vw,1.13rem);font-weight:840;letter-spacing:-.025em;}
+html[data-theme] .dn-journey-season-dot {width:14px;height:14px;border:3px solid var(--color-primary);border-radius:50%;background:var(--color-card);box-shadow:0 0 0 5px color-mix(in srgb,var(--color-primary) 8%,transparent);}
+html[data-theme] .dn-journey-stop {display:grid;grid-template-columns:105px minmax(0,1fr);gap:26px;position:relative;padding:8px 0 24px 0;min-width:0;}
+html[data-theme] .dn-journey-stop::before {position:absolute;content:"";top:0;bottom:0;left:107px;width:3px;background:linear-gradient(var(--color-primary),color-mix(in srgb,var(--color-primary) 20%,transparent));opacity:.33;}
+html[data-theme] .dn-journey-stop-date {display:flex;flex-direction:column;align-items:flex-end;gap:2px;position:relative;padding:5px 0 0;min-width:0;}
+html[data-theme] .dn-journey-stop-day {color:var(--color-text);font-size:clamp(1.45rem,3vw,2.1rem);font-weight:850;line-height:1.1;font-variant-numeric:tabular-nums;}
+html[data-theme] .dn-journey-stop-month {font-size:.67rem;color:var(--color-text-muted);text-transform:uppercase;letter-spacing:.05em;}
+html[data-theme] .dn-journey-stop-mark {position:absolute;right:-34px;top:15px;width:15px;height:15px;border:3px solid var(--color-primary);background:var(--color-card);border-radius:50%;z-index:1;}
+html[data-theme] .dn-journey-stop-chapters {display:grid;gap:14px;min-width:0;}
+html[data-theme] .dn-journey-stop-chapters[data-journey-side="inset"] {margin-right:clamp(0px,8vw,82px);}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journey-stop-chapters .dn-v2-story-entry {border-radius:22px;padding:20px;box-shadow:0 10px 30px color-mix(in srgb,var(--color-text) 6%,transparent);border-color:color-mix(in srgb,var(--color-primary) 17%,var(--color-border));}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journey-stop-chapters .dn-v2-story-entry h4 {font-size:clamp(1.08rem,2vw,1.34rem);letter-spacing:-.024em;}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journey-stop-chapters .dn-v2-story-media .dn-attachment-gallery {display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr));gap:9px;}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journey-stop-chapters .dn-attachment-tile {border-radius:16px;overflow:hidden;}
+
+/* Diary uses full editorial leaves with date mastheads and ruled-paper details. */
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-v2-story-recorded {max-width:840px;width:100%;margin-inline:auto;}
+html[data-theme] .dn-diary-book {display:grid;gap:35px;min-width:0;}
+html[data-theme] .dn-diary-volume {display:grid;gap:17px;min-width:0;}
+html[data-theme] .dn-diary-volume-title {display:flex;align-items:center;gap:9px;padding:5px 1px;color:var(--color-primary);}
+html[data-theme] .dn-diary-volume-title h4 {margin:0;font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:1.13rem;}
+html[data-theme] .dn-diary-sheet {display:grid;gap:14px;min-width:0;position:relative;padding:clamp(20px,4vw,43px);border:1px solid color-mix(in srgb,var(--color-primary) 14%,var(--color-border));border-radius:3px 18px 18px 3px;background:repeating-linear-gradient(to bottom,transparent 0px,transparent 36px,color-mix(in srgb,var(--color-primary) 4%,transparent) 37px,transparent 38px),var(--color-card);box-shadow:-7px 0 0 color-mix(in srgb,var(--color-primary) 8%,var(--color-card)),0 12px 30px color-mix(in srgb,var(--color-text) 5%,transparent);}
+html[data-theme] .dn-diary-sheet-date {display:grid;gap:4px;border-bottom:1px solid color-mix(in srgb,var(--color-primary) 20%,var(--color-border));padding-bottom:14px;margin-bottom:4px;}
+html[data-theme] .dn-diary-sheet-weekday {font-size:.69rem;color:var(--color-primary);font-weight:770;letter-spacing:.14em;text-transform:uppercase;}
+html[data-theme] .dn-diary-sheet-number {font-family:Georgia,"Times New Roman",serif;font-size:clamp(1.37rem,3vw,1.9rem);color:var(--color-text);line-height:1.26;}
+html[data-theme] .dn-diary-sheet-entries {display:grid;gap:22px;min-width:0;}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-entry {background:transparent;border:0;border-radius:0;padding:5px 0 18px;box-shadow:none;border-bottom:1px solid color-mix(in srgb,var(--color-primary) 14%,var(--color-border));}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-entry:last-child {border-bottom:0;}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-entry-meta {order:2;margin-top:5px;}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-entry h4 {font-size:clamp(1.18rem,2.4vw,1.55rem);line-height:1.4;}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-entry-description {font-size:1.04rem;line-height:1.95;}
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-sheet .dn-v2-story-media {margin-block:9px;}
+html[data-theme] .dn-diary-sheet-foot {display:block;text-align:center;font-size:.82rem;color:var(--color-primary);opacity:.6;}
+
+/* Chronicle is an operational ledger: one row per recorded date, numbered items. */
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-recorded {border:1px solid var(--color-border);border-radius:16px;background:var(--color-card);overflow:hidden;padding:0 0 5px;}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-v2-story-recorded>.dn-v2-story-section-head {padding:15px 18px;margin:0;background:var(--color-surface);border-bottom:1px solid var(--color-border);}
+html[data-theme] .dn-chronicle-ledger {display:grid;min-width:0;}
+html[data-theme] .dn-chronicle-column-head {display:grid;grid-template-columns:152px minmax(0,1fr);gap:12px;padding:11px 18px;color:var(--color-text-muted);font-size:.67rem;font-weight:850;text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--color-border);}
+html[data-theme] .dn-chronicle-period {display:grid;min-width:0;}
+html[data-theme] .dn-chronicle-period>h4 {display:flex;align-items:center;gap:9px;margin:0;padding:11px 18px;background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));border-bottom:1px solid var(--color-border);color:var(--color-primary);font-size:.78rem;letter-spacing:.04em;}
+html[data-theme] .dn-chronicle-record {display:grid;grid-template-columns:152px minmax(0,1fr);gap:12px;padding:0 18px;border-bottom:1px solid var(--color-border);min-width:0;}
+html[data-theme] .dn-chronicle-record:last-child {border-bottom:0;}
+html[data-theme] .dn-chronicle-record-date {padding:17px 0 0;min-width:0;}
+html[data-theme] .dn-chronicle-record-date time {font-size:.72rem;color:var(--color-text-muted);font-weight:680;font-variant-numeric:tabular-nums;}
+html[data-theme] .dn-chronicle-record-entries {display:grid;gap:0;min-width:0;}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-chronicle-record .dn-v2-story-entry {border:0;border-radius:0;padding:15px 0;background:transparent;box-shadow:none;}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-chronicle-record .dn-v2-story-entry + .dn-v2-story-entry {border-top:1px dashed var(--color-border);}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-chronicle-record .dn-v2-story-entry h4 {font-size:.92rem;}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-chronicle-record .dn-v2-story-entry-symbol {display:none;}
+html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-chronicle-record .dn-v2-story-entry-meta {font-size:.63rem;}
+@media(max-width:680px) {
+ html[data-theme] .dn-journey-stop {grid-template-columns:51px minmax(0,1fr);gap:19px;padding-bottom:14px;}
+ html[data-theme] .dn-journey-stop::before {left:57px;}
+ html[data-theme] .dn-journey-stop-day {font-size:1.35rem;}
+ html[data-theme] .dn-journey-stop-month {font-size:.58rem;max-width:44px;text-align:right;}
+ html[data-theme] .dn-journey-stop-mark {right:-21px;width:12px;height:12px;top:13px;}
+ html[data-theme] .dn-journey-stop-chapters[data-journey-side="inset"] {margin-right:0;}
+ html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journey-stop-chapters .dn-v2-story-entry {padding:12px;border-radius:14px;}
+ html[data-theme] .dn-diary-sheet {padding:16px 13px;box-shadow:-4px 0 0 color-mix(in srgb,var(--color-primary) 8%,var(--color-card)),0 5px 12px color-mix(in srgb,var(--color-text) 5%,transparent);}
+ html[data-theme] .dn-chronicle-column-head {display:none;}
+ html[data-theme] .dn-chronicle-record {grid-template-columns:minmax(0,1fr);gap:0;padding:10px 13px;}
+ html[data-theme] .dn-chronicle-record-date {padding:0;}
+ html[data-theme] .dn-chronicle-record .dn-v2-story-entry {padding:9px 0 6px;}
+}

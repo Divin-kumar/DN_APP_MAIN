@@ -60,6 +60,61 @@ function Chapter({ entry, momentId, uid, isGuest, presentation, ordinal = null }
     </div>
   </article>;
 }
+
+function RecordedJourney({ story, entries }) {
+  return <div className="dn-journey-map" data-story-layout="journey-trail">
+    {story.timeline.map((month) => <section key={month.key} className="dn-journey-season" aria-label={`Activities in ${month.key}`}>
+      <h4 className="dn-journey-season-heading"><span className="dn-journey-season-dot" aria-hidden="true" />{monthName(month.key)}</h4>
+      {month.days.map((day, index) => <div className="dn-journey-stop" key={day.date}>
+        <div className="dn-journey-stop-date">
+          <span className="dn-journey-stop-day">{day.date.slice(-2)}</span>
+          <span className="dn-journey-stop-month">{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', month: 'short' })}</span>
+          <span className="dn-journey-stop-mark" aria-hidden="true" />
+        </div>
+        <div className="dn-journey-stop-chapters" data-journey-side={index % 2 ? 'inset' : 'edge'}>
+          {entries(day.entries,day.date)}
+        </div>
+      </div>)}
+    </section>)}
+  </div>;
+}
+
+function RecordedDiary({ story, entries }) {
+  return <div className="dn-diary-book" data-story-layout="diary-pages">
+    {story.timeline.map((month) => <section className="dn-diary-volume" key={month.key} aria-label={`Activities in ${month.key}`}>
+      <div className="dn-diary-volume-title"><NotebookPen size={19} aria-hidden="true"/><h4>{monthName(month.key)}</h4></div>
+      {month.days.map((day) => <section key={day.date} className="dn-diary-sheet">
+        <header className="dn-diary-sheet-date">
+          <span className="dn-diary-sheet-weekday">{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'long' })}</span>
+          <span className="dn-diary-sheet-number">{new Date(`${day.date}T12:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}</span>
+        </header>
+        <div className="dn-diary-sheet-entries">{entries(day.entries, day.date)}</div>
+        <span className="dn-diary-sheet-foot" aria-hidden="true">✦</span>
+      </section>)}
+    </section>)}
+  </div>;
+}
+
+function RecordedChronicle({ story, entries }) {
+  return <div className="dn-chronicle-ledger" data-story-layout="chronicle-ledger">
+    <div className="dn-chronicle-column-head" aria-hidden="true"><span>Date</span><span>Milestone / record</span></div>
+    {story.timeline.map((month) => <section className="dn-chronicle-period" key={month.key} aria-label={`Activities in ${month.key}`}>
+      <h4><CalendarDays size={15} aria-hidden="true" />{monthName(month.key)}</h4>
+      {month.days.map((day) => <div className="dn-chronicle-record" key={day.date}>
+        <div className="dn-chronicle-record-date"><time dateTime={day.date}>{activityDateLabel(day.date)}</time></div>
+        <div className="dn-chronicle-record-entries">{entries(day.entries,day.date)}</div>
+      </div>)}
+    </section>)}
+  </div>;
+}
+const monthName = (key) => new Date(`${key}-01T12:00:00`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+
+function RecordedStory({ story, entries }) {
+  if (story.presentation === STORY_PRESENTATIONS.DIARY) return <RecordedDiary story={story} entries={entries} />;
+  if (story.presentation === STORY_PRESENTATIONS.CHRONICLE) return <RecordedChronicle story={story} entries={entries} />;
+  return <RecordedJourney story={story} entries={entries} />;
+}
+
 // Phase 1 Story projections are immutable views, not copied or rewritten records.
 export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditIntro }) {
   const story = buildMomentStory(moment, { momentTypes });
@@ -93,13 +148,7 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
     </section>
     {story.timeline.length ? <section aria-label="Recorded chapters" className="dn-v2-story-recorded">
       <div className="dn-v2-story-section-head"><h3><Compass size={18} /> {edition.recorded}</h3><small>{edition.label === 'Diary' ? 'In your recorded order' : 'Oldest to newest'}</small></div>
-      {story.timeline.map((month) => <section key={month.key} className="dn-v2-story-month" aria-label={`Activities in ${month.key}`}>
-        <h4>{new Date(`${month.key}-01T12:00:00`).toLocaleDateString('en-GB',{month:'long',year:'numeric'})}</h4>
-        {month.days.map((day) => <div key={day.date} className="dn-v2-story-day">
-          <div className="dn-v2-story-day-date"><CalendarDays size={14} /> <span>{activityDateLabel(day.date)}</span></div>
-          <div className="dn-v2-story-day-items">{entries(day.entries,day.date)}</div>
-        </div>)}
-      </section>)}
+      <RecordedStory story={story} entries={entries} />
     </section> : !hasActivities ? <div className="dn-v2-story-empty"><BookOpenText size={23} /><strong>{edition.empty}</strong>
       <p>Every story starts with an Activity.</p><Link to={`/events/${encodeURIComponent(story.momentId)}/activities`}>View Activities <ArrowUpRight size={15} /></Link></div> : null}
     {story.upcoming.length ? <section aria-label="Upcoming activities" className="dn-v2-story-aux">

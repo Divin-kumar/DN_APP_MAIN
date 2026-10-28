@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-129 | Phase 4 visual acceptance correction: three separate chapter compositions
+- **Reason:** Owner's Vercel review found Journey, Diary and Chronicle looking almost identical except for the opening. Feature selection was functional, but that did not satisfy the intended visual distinction; Phase 4 therefore remains open for renewed acceptance.
+- **Change:** Recorded Activities now render through separate Journey itinerary stops, Diary dated journal sheets and Chronicle structured date/milestone ledger, with intentionally distinct geometry, typography and image treatment across the whole recorded body. Shared source data, Activity Detail links, original attachment galleries, chronological order and status are unchanged; upcoming/undated/legacy reflections retain their Phase 3 boundaries.
+- **Tests:** Added Chromium structural/computed-style assertions that require each mode to have its own recorded markup, alongside existing persistence, data integrity and responsive coverage. **Validation:** pending OldVersion CI and renewed manual review. No main changes, migration, PR or Firebase release.
+
 ## CHG-20261028-128 | DN 2.0 Phase 4 Journey, Diary and Chronicle presentations on OldVersion
 - Implemented three distinctly presented Story treatments over the same Phase 1 read-only timeline and existing Phase 3 Moment Overview: Journey uses linked visual chapters, Diary uses dated journal pages and larger prose, Chronicle uses numbered milestone cards and compact status. No Activity, date, status, attachment ownership, finance, reflection, route, PDF or backup model changes.
 - Exposed a per-Moment-Type Story presentation setting in Code Lists (Automatic/Journey/Diary/Chronicle) using existing optional `storyPresentation` metadata. Auto inference and inactive/custom Other type resolution stay backward compatible; existing serializer preserves the field, no schema migration. Mobile and reduced-motion styles scoped to Story.

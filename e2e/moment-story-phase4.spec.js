@@ -95,3 +95,31 @@ test('all Story presentations avoid horizontal overflow at 320px through desktop
   }
   expect(errors).toEqual([]);
 });
+
+test('Phase 4 visual identity includes three structurally different recorded experiences', async ({ page }) => {
+  const moments = records();
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  const expected = [
+    ['journey','journey-trail','.dn-journey-stop','.dn-diary-sheet','.dn-chronicle-record'],
+    ['diary','diary-pages','.dn-diary-sheet','.dn-journey-stop','.dn-chronicle-record'],
+    ['chronicle','chronicle-ledger','.dn-chronicle-record','.dn-diary-sheet','.dn-journey-stop'],
+  ];
+  for (const [id, layout, present, absentA, absentB] of expected) {
+    await page.goto('/events/' + id + '/overview');
+    const story = page.locator('.dn-v2-story');
+    await expect(story.locator('[data-story-layout="' + layout + '"]')).toBeVisible();
+    await expect(story.locator(present)).toHaveCount(2);
+    await expect(story.locator(absentA)).toHaveCount(0);
+    await expect(story.locator(absentB)).toHaveCount(0);
+    await expect(story.locator('[data-story-activity]')).toHaveCount(4);
+    const styles = await story.locator(present).first().evaluate(node => {
+      const style = getComputedStyle(node);
+      return { display: style.display, background: style.backgroundImage, grid: style.gridTemplateColumns };
+    });
+    if (id === 'diary') expect(styles.background).toContain('repeating-linear-gradient');
+    if (id === 'chronicle') expect(styles.display).toBe('grid');
+    if (id === 'journey') expect(styles.display).toBe('grid');
+  }
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
+  expect(errors).toEqual([]);
+});
