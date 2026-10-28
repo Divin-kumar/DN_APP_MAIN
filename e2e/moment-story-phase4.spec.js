@@ -203,9 +203,11 @@ test('Journal album prioritizes one hero photo, preserves portraits, and stays l
 
 test('Tasks status controls persist, re-group, and confirm cancellation without changing other records', async ({ page }) => {
   const moments = records();
-  const originalDiary = structuredClone(moments[1]);
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await page.goto('/events/tasks/overview');
+  // The Guest loader may normalize historical records once at load time.
+  // Compare against the loaded storage baseline, not the raw test fixture.
+  const originalDiary = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[1]);
   const groups = page.locator('.dn-task-group');
   const open = groups.nth(0);
   const completed = groups.nth(1);
