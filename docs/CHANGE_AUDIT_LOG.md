@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-132 | DN 2.0 Phase 4 status polish and Phase 5 Cash/Online transactions (unreleased)
+- **Owner approval:** User found current Journal/Diary/Tasks layouts acceptable, asked only for a lightweight Task status switcher before moving to the previously agreed Phase 5. Task status changed to a subtle text-and-chevron chip without modifying underlying Activity mutations.
+- **Phase 5 behavior:** New Income/Expense transactions require Cash or Online. Existing historical transactions show Not specified and require an explicit choice only when edited. Added a compact two-choice transaction form control and display in transaction cards. Persist `paymentMethod` on existing canonical income/expense record shapes; include it when normalizing nested Activity expenses, using existing Guest/account saver and rollback/mirror paths. Optional field travels through v3 backups without a schema/version migration. No changes to totals, links, dates, budgeting, notifications or PDF logic.
+- **Validation:** Added data, payload, mirror, backup and real browser test cases for creation, editing, Guest persistence, legacy compatibility and mobile, plus existing suites. Automated CI verification recorded separately; source-derived until successful run. No main writes, PR, Firebase hosting deployment, version bump or 2.0.0 publication.
+
 ## CHG-20261028-131 | Phase 4 final Journal photo polish and editable Tasks status; owner-directed engineering closure
 - **Owner decision:** Diary approved unchanged; Journal okay with one final photo polish; Tasks good with direct status changing requested. Owner explicitly asked to review these two changes and close Phase 4. No additional Diary changes.
 - **Journal:** Original pictures now preserve image proportions without aggressive cropping; one image renders as a broad solo spread, two as a pair, and 3+ as a full-width lead image above supporting photos. Mobile simplifies to single-column and keeps original-file scope, previews and Activity ownership.

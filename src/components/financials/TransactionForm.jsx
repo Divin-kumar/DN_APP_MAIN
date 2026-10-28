@@ -125,12 +125,12 @@ export default function TransactionForm({
           {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </DropdownSelect>
       </div>
-      <fieldset className="dn-payment-method-field">
+      <fieldset className="dn-payment-method-field" aria-required="true">
         <legend>Payment method *</legend>
         <div className="dn-payment-method-options">
           {PAYMENT_METHODS.map((method) => <label key={method} className="dn-payment-method-choice">
             <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
-              onChange={() => change('paymentMethod', method)} disabled={busy} required />
+              onChange={() => change('paymentMethod', method)} disabled={busy} />
             <span>{method}</span>
           </label>)}
         </div>

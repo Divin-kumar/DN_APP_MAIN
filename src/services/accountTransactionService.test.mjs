@@ -226,7 +226,7 @@ test('account financial readers include unified transactions, retain source rout
   expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   incomeStore.getState().setIncomes(await incomeService.getIncomesForUser('A'));
   api.hook.eventState.events = [];
-  await useTransactionManager().saveTransaction({ transactionKind: 'income', title: 'Converted', amount: 15, date: '2026-10-22', category: 'Bonus', notes: '', eventId: '', activityId: '' },
+  await useTransactionManager().saveTransaction({ transactionKind: 'income', title: 'Converted', amount: 15, date: '2026-10-22', category: 'Bonus', paymentMethod: 'Online', notes: '', eventId: '', activityId: '' },
     { ...beforeConversion.find((item) => item.id === 'convert-source'), transactionKind: 'expense' });
   assert.equal((await expenseService.getExpensesForUser('A')).some((item) => item.id === 'convert-source'), false, 'type conversion removes every known old-kind source so it cannot reappear');
   assert.equal((await incomeService.getIncomesForUser('A')).some((item) => item.name === 'Converted' && item.amount === 15), true);

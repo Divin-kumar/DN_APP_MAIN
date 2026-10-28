@@ -330,3 +330,21 @@ test('original payload validation rejects malformed base64 and mismatched decode
   assert.throws(() => validateBackupDocument({ ...backup, attachmentFiles: [{ ...file, size: file.size + 1 }] }), /does not match/);
   assert.throws(() => validateBackupDocument({ ...backup, attachments: [{ ...backup.attachments[0], assetId: 'not-a-hash' }] }), /invalid original file reference/);
 });
+
+test('Phase 5 backup v3 round-trips Cash and Online without inventing historical methods', () => {
+  const document = createBackupDocument({
+    moments:[{ id:'m', name:'Project', activities:[{
+      id:'a', title:'Delivery', expenses:[{id:'linked',amount:40,paymentMethod:'Cash'}],
+    }] }],
+    expenses:[{id:'linked',amount:40,eventId:'m',activityId:'a',paymentMethod:'Cash'},
+      {id:'legacy',amount:60}],
+    incomes:[{id:'inc',amount:200,paymentMethod:'Online'}],
+    codeLists:DEFAULT_CODE_LISTS,
+  });
+  const restored=parseBackupDocument(JSON.parse(JSON.stringify(document)));
+  assert.equal(restored.expenses.find(x=>x.id==='linked').paymentMethod,'Cash');
+  assert.equal(restored.incomes[0].paymentMethod,'Online');
+  assert.equal(restored.expenses.find(x=>x.id==='legacy').paymentMethod,undefined);
+  const [moment]=buildEventGroupsFromBackup(restored);
+  assert.equal(moment.activities[0].expenses[0].paymentMethod,'Cash');
+});

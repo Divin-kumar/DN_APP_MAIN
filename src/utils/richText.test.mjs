@@ -80,7 +80,7 @@ test('financial note normalization keeps the original multiline string', () => {
   const record = normalizeFinancialRecord({ id: 'note-record', name: 'Test', notes, description: notes });
   assert.equal(record.notes, notes);
   assert.equal(record.description, notes);
-  const payload = transactionPayload({ title: 'Test', amount: 20, notes, transactionKind: 'expense' });
+  const payload = transactionPayload({ title: 'Test', amount: 20, notes, transactionKind: 'expense', paymentMethod: 'Cash' });
   assert.equal(payload.notes, notes);
   assert.equal(payload.description, notes);
   const mirror = normalizeActivityExpense({ ...payload, id: 'note-record' });

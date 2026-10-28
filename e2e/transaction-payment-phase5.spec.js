@@ -1,0 +1,78 @@
+import { test, expect } from '@playwright/test';
+import { fixtureMoments, seedGuest } from './fixtures.js';
+
+test('Phase 5 new Cash expense is required, persisted, edited to Online, and shown in list', async ({page}) => {
+  const errors = await seedGuest(page,{moments:fixtureMoments(), incomes:[], expenses:[]});
+  await page.goto('/financials/transactions?create=transaction');
+  const dialog=page.getByRole('dialog',{name:'Add Transaction'});
+  await expect(dialog).toBeVisible();
+  await dialog.getByRole('spinbutton').fill('89');
+  await dialog.getByRole('textbox',{name:'Title *',exact:true}).fill('Coffee from Phase 5');
+  await dialog.getByRole('button',{name:'Add Transaction'}).click();
+  await expect(dialog.getByRole('alert')).toContainText('Choose Cash or Online');
+  const methods=dialog.getByRole('radio');
+  await expect(methods).toHaveCount(2);
+  await expect(dialog.getByRole('radio',{name:'Cash'})).not.toBeChecked();
+  await dialog.getByRole('radio',{name:'Cash'}).check();
+  await dialog.getByRole('button',{name:'Add Transaction'}).click();
+  await expect(dialog).toHaveCount(0);
+  const card=page.locator('.dn-transaction-card').filter({hasText:'Coffee from Phase 5'}).first();
+  await expect(card).toContainText('Cash');
+  const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses')));
+  const item=saved.find(x=>x.name==='Coffee from Phase 5');
+  expect(item.paymentMethod).toBe('Cash');
+  await card.locator('.dn-transaction-copy > strong').click();
+  await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  const editor=page.getByRole('dialog',{name:'Edit Transaction'});
+  await expect(editor.getByRole('radio',{name:'Cash'})).toBeChecked();
+  await editor.getByRole('radio',{name:'Online'}).check();
+  await editor.getByRole('button',{name:'Save Changes'}).click();
+  await expect(editor).toHaveCount(0);
+  await expect(page.locator('.dn-transaction-card').filter({hasText:'Coffee from Phase 5'}).first()).toContainText('Online');
+  const edited=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses')));
+  expect(edited.find(x=>x.id===item.id).paymentMethod).toBe('Online');
+  expect(edited.find(x=>x.id===item.id).amount).toBe(89);
+  expect(errors).toEqual([]);
+});
+
+test('Phase 5 historical payments remain Not specified and Income also stores Online', async ({page}) => {
+  const legacy={id:'old-expense',name:'Historical',amount:50,date:'2026-10-21',category:'Other'};
+  const errors=await seedGuest(page,{moments:fixtureMoments(),expenses:[legacy],incomes:[]});
+  await page.goto('/financials');
+  const card=page.locator('.dn-transaction-card').filter({hasText:'Historical'}).first();
+  await expect(card).toContainText('Not specified');
+  await card.locator('.dn-transaction-copy > strong').click();
+  await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  const editor=page.getByRole('dialog',{name:'Edit Transaction'});
+  await expect(editor).toContainText('Previously not specified');
+  await expect(editor.getByRole('radio',{name:'Cash'})).not.toBeChecked();
+  await editor.getByRole('button',{name:'Save Changes'}).click();
+  await expect(editor.getByRole('alert')).toContainText('Choose Cash or Online');
+  await editor.getByRole('button',{name:'Cancel',exact:true}).click();
+  expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses'))))[0].paymentMethod).toBeUndefined();
+  await page.goto('/financials/transactions?create=income');
+  const incomeDialog=page.getByRole('dialog',{name:'Add Transaction'});
+  await expect(incomeDialog).toBeVisible();
+  await incomeDialog.getByRole('spinbutton').fill('3500');
+  await incomeDialog.getByRole('textbox',{name:'Title *',exact:true}).fill('October refund');
+  await incomeDialog.getByRole('radio',{name:'Online'}).check();
+  await incomeDialog.getByRole('button',{name:'Add Transaction'}).click();
+  await expect(incomeDialog).toHaveCount(0);
+  const income=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_incomes')).find(x=>x.name==='October refund'));
+  expect(income.paymentMethod).toBe('Online');
+  expect(income.amount).toBe(3500);
+  expect(errors).toEqual([]);
+});
+
+test('Phase 5 payment choice remains usable on a narrow iPhone viewport', async({page})=>{
+ const errors=await seedGuest(page);
+ await page.setViewportSize({width:320,height:740});
+ await page.goto('/financials/transactions?create=expense');
+ const dialog=page.getByRole('dialog',{name:'Add Transaction'});
+ await expect(dialog.getByRole('radio',{name:'Cash'})).toBeVisible();
+ await dialog.getByRole('radio',{name:'Online'}).check();
+ await expect(dialog.getByRole('radio',{name:'Online'})).toBeChecked();
+ const overflow=await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+1);
+ expect(overflow).toBe(false);
+ expect(errors).toEqual([]);
+});

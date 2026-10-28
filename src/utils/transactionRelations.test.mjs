@@ -154,3 +154,12 @@ test('editing an activity expense into a Moment-only expense removes stale mirro
   assert.deepEqual(patches[0].activities[0].expenses, []);
   assert.deepEqual(patches[0].activities[1].expenses, []);
 });
+
+test('Phase 5 mirrored expenses keep payment method across activity reconciliation', () => {
+  const moments=[{id:'m',activities:[{id:'a',expenses:[]}]}];
+  const current={id:'exp',name:'Ticket',transactionKind:'expense',eventId:'m',activityId:'a',amount:80,paymentMethod:'Online'};
+  const next=reconcileExpenseActivities(moments,null,current);
+  assert.equal(next[0].activities[0].expenses[0].paymentMethod,'Online');
+  const changed=reconcileExpenseActivities(next,current,{...current,paymentMethod:'Cash'});
+  assert.equal(changed[0].activities[0].expenses[0].paymentMethod,'Cash');
+});

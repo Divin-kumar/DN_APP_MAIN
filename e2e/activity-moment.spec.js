@@ -146,6 +146,7 @@ test('Moment Transactions has four reachable tabs, full-Moment totals, independe
   await page.keyboard.press('Escape');
   await dialog.getByRole('spinbutton').fill('50');
   await dialog.getByRole('textbox', { name: 'Title *', exact: true }).fill('Moment coffee');
+  await dialog.getByRole('radio', { name: 'Cash' }).check();
   await dialog.getByRole('button', { name: 'Add Transaction', exact: true }).click();
   await expect(dialog).toHaveCount(0); await expect(page).toHaveURL(/\/events\/moment-one\/transactions$/);
   await expect(totals).toContainText('₹170');

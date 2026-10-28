@@ -97,6 +97,7 @@ test('Universal + transaction presets both IDs and retains route/draft through f
   await expect(dialog.getByRole('combobox', { name: 'Linked Activity', exact: true })).toContainText('Book a lakeside stay');
   await dialog.getByRole('spinbutton').fill('30');
   await dialog.getByRole('textbox', { name: 'Title *', exact: true }).fill('Tea stop');
+  await dialog.getByRole('radio', { name: 'Cash' }).check();
   await page.evaluate(async () => {
     const store = (await import('/src/store/useExpenseStore.js')).default;
     const original = store.getState().addExpense;

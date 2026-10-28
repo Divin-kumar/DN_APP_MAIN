@@ -71,6 +71,7 @@ test('editing a linked transaction offers choices first; explicit Moment search 
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment' })).toContainText('Plan 017');
   await expect(dialog.getByRole('textbox', { name: 'Title' })).toHaveValue('Room deposit');
+  await dialog.getByRole('radio', { name: 'Online' }).check();
   await dialog.getByRole('button', { name: 'Save Changes' }).click();
   await expect(dialog).toHaveCount(0);
   const rows = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_expenses')));
