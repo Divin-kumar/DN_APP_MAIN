@@ -66,7 +66,7 @@ const openSettings = async (t, initialStorage) => {
         if (id === '\0guest-restore-react') return `export const useState = ${fixture}.state; export const useMemo = (fn) => fn(); export const useEffect = () => {};`;
         if (id === '\0guest-restore-jsx') return 'export const jsx = (type, props) => ({type, props}); export const jsxs = jsx; export const jsxDEV = jsx; export const Fragment = "fragment";';
         if (id === '\0guest-restore-router') return 'export const Link = "link"; export const useLocation = () => ({hash: ""});';
-        if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", RotateCcw="icon", Plus="icon";';
+        if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", RotateCcw="icon", Plus="icon", ArrowRight="icon", RefreshCw="icon";';
         if (id === '\0guest-restore-component') return 'export default "component";';
         if (id === '\0guest-restore-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0guest-restore-store') return 'const useStore = () => ({}); useStore.getState = useStore; export default useStore;';

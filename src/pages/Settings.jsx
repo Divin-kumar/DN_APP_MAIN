@@ -1,7 +1,7 @@
 import { clearDnLocalData } from '../utils/storageMigration';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Clock3, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -364,7 +364,11 @@ export default function Settings() {
     const { backup } = pendingBackup;
     const destinationUid = user?.uid || null;
     const destinationGuest = isGuest;
-    const destinationScenario = getActiveSampleScenario();
+    // Restoring a validated personal backup exits the isolated Guest tour
+    // only after the user confirms, not when browsing or parsing the file.
+    // Scoped original-file writes target real Guest storage, never demo data.
+    let destinationScenario = getActiveSampleScenario();
+    const restoreFromGuestTour = destinationScenario === GUEST_TOUR_SCENARIO && isGuest && !destinationUid;
     const assertDestinationScope = () => {
       const state = useAppStore.getState();
       if ((state.user?.uid || null) !== destinationUid || state.isGuest !== destinationGuest || getActiveSampleScenario() !== destinationScenario) {
@@ -373,11 +377,26 @@ export default function Settings() {
     };
 
     try {
+      assertDestinationScope();
       const sampleData = getActiveSampleData(user?.uid || null);
-      if (sampleData) {
-        throw new Error('Exit the isolated demo/sample session before restoring a personal backup.');
+      if (destinationScenario && !restoreFromGuestTour) {
+        throw new Error('Exit the development sample session before restoring a personal backup.');
       }
-
+      // Preflight personal Guest ledgers before leaving the demo, so malformed
+      // destination data never causes an unnecessary switch or partial import.
+      if (restoreFromGuestTour) {
+        getGuestEvents();
+        getGuestExpenseMasters();
+        getGuestExpenses();
+        getGuestIncomes();
+        assertDestinationScope();
+        markGuestTourDeclined();
+        clearActiveSampleScenario();
+        destinationScenario = null;
+        setActiveSampleScenario(null);
+      } else if (sampleData) {
+        throw new Error('Exit the isolated sample session before restoring a personal backup.');
+      }
       assertDestinationScope();
       setBackupMessage('Verifying and restoring original attachment files before records…');
       const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup), backup.attachmentFiles || [], { uid: destinationUid, isGuest: isGuest || !destinationUid, assertCurrent: assertDestinationScope });
@@ -794,9 +813,10 @@ export default function Settings() {
 
       <div className="settings-actions">
         <button type="button" className="settings-primary-button" onClick={exportBackup} disabled={exportingBackup || importingBackup}><Download size={15} /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}</button>
-        <label className="settings-secondary-button" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
-          <Upload size={15} /> Restore backup
-          <input type="file" accept="application/json" onChange={importBackup} disabled={exportingBackup || importingBackup} style={{ display: 'none' }} />
+        <label className="settings-secondary-button dn-backup-file-picker">
+          <Upload size={15} aria-hidden="true" /> Restore backup
+          <input type="file" accept=".json,application/json" aria-label="Choose a DN backup JSON file"
+            onChange={importBackup} disabled={exportingBackup || importingBackup} />
         </label>
         <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)}><Trash2 size={15} /> Clear local data</button>
       </div>
@@ -829,12 +849,13 @@ export default function Settings() {
             <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
               ? ' · Updated examples available' : ''}</small>
           </div>
-          <div className="dev-sample-actions">
-            <button type="button" className="settings-primary-button" onClick={startOrRefreshGuestTour}>
+          <div className="dev-sample-actions dn-guest-tour-actions">
+            <button type="button" className="dn-tour-refresh-button" onClick={startOrRefreshGuestTour}>
+              {activeSampleScenario === GUEST_TOUR_SCENARIO ? <RefreshCw size={15} aria-hidden="true" /> : <Database size={15} aria-hidden="true" />}
               {activeSampleScenario === GUEST_TOUR_SCENARIO ? 'Refresh demo' : 'Explore demo'}
             </button>
-            {activeSampleScenario === GUEST_TOUR_SCENARIO ? <button type="button" className="settings-secondary-button"
-              onClick={leaveGuestTour}>Use my Guest data</button> : null}
+            {activeSampleScenario === GUEST_TOUR_SCENARIO ? <button type="button" className="dn-tour-personal-switch"
+              onClick={leaveGuestTour}>Use my Guest data <ArrowRight size={15} aria-hidden="true" /></button> : null}
           </div>
         </section>
       ) : null}
@@ -930,7 +951,9 @@ export default function Settings() {
               </>
             ) : <p>This legacy file contains settings only; it cannot restore Moments or financial records.</p>}
             {pendingBackup.backup.metadata.sourceAccount?.uid ? <p>Backup source account: {pendingBackup.backup.metadata.sourceAccount.displayName || pendingBackup.backup.metadata.sourceAccount.uid}. Its authentication account is not recreated.</p> : null}
-            {user?.uid ? <p>The records will be merged into the currently signed-in account, not necessarily the account that created the backup.</p> : <p>Records will be merged into this browser's guest data.</p>}
+            {getActiveSampleScenario() === GUEST_TOUR_SCENARIO && isGuest && !user?.uid ? (
+              <p className="dn-restore-tour-note"><strong>Restore to your own Guest workspace:</strong> Confirming will leave the demo and merge this backup into your private Guest records, preserving existing IDs. Demo records will not be included. Cancel to keep exploring the demo.</p>
+            ) : user?.uid ? <p>The records will be merged into the currently signed-in account, not necessarily the account that created the backup.</p> : <p>Records will be merged into this browser's guest data.</p>}
           </div>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
