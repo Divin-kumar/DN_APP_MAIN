@@ -15,7 +15,7 @@ test('Moment Activities is read-only, still opens Detail, and the retired Timeli
   await swipe(page, card);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
   await page.goto('/events/moment-one/timeline');
-  await expect(page.locator('.event-workspace-nav a')).toHaveCount(5);
+  await expect(page.locator('.event-workspace-nav a')).toHaveCount(4);
   await expect(page.locator('.event-workspace-nav a').filter({ hasText: 'Timeline' })).toHaveCount(0);
   await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Overview');
   await page.getByRole('navigation', { name: 'Moment contents' }).getByRole('link', { name: /Activities/ }).click();
