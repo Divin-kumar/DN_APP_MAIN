@@ -252,7 +252,10 @@ export class MomentPdfPainter {
         });
         const desired = heights.reduce((a, b) => a + b, 0) + gap * (groups.length - 1);
         const remaining = () => BOTTOM - this.y - 10;
-        if (remaining() < Math.min(desired, 210)) {
+        // One picture deserves a nearly full page. Multi-image spreads
+        // should also stay large enough to read rather than become tiny tiles.
+        if (remaining() < (count === 1 ? Math.min(desired * .84, 530)
+          : Math.min(desired * .72, 360))) {
           await this.finishPage();
           this.begin();
         }
@@ -450,6 +453,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         // coordinated page, rather than making five isolated photo pages.
         const photos = (entry.attachments || []).filter((item) =>
           isAttachmentImage(item.type) && item !== drawnCoverHero);
+        const textEndPage = pdf.pageNumber;
         const grid = hasPhoto && photos.length ? await pdf.photoGrid(photos, scope) : [];
         const gridPage = grid.find((item) => item.kind === 'grid')?.page ?? null;
         // Original non-photo files remain recorded with their own Activity.
@@ -457,8 +461,9 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
           await pdf.text('Other file: ' + (item.name || 'Attachment'), { size: 10, color: palette.muted });
         }
         layout.push({ kind: 'journal-entry', date: day.date, id: entry.id,
-          datePage, titlePage, leadPhotoPage: gridPage, gridPages: grid.filter((item) =>
-            item.kind === 'grid').map((item) => item.page), photoCount: photos.length });
+          datePage, titlePage, textEndPage, leadPhotoPage: gridPage,
+          gridPages: grid.filter((item) => item.kind === 'grid').map((item) => item.page),
+          photoCount: photos.length });
       }
     }
   } else if (template === 'diary') {

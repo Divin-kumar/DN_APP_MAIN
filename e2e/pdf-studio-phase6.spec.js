@@ -107,10 +107,44 @@ test('Journal keeps dates, photo captions and lead photographs on one PDF page e
   expect(cover?.imagePage).toBe(1);
   const photoChapter = layout.layout.find((item) => item.id === 'shared');
   expect(photoChapter).toBeTruthy();
-  expect(photoChapter.leadPhotoPage).toBe(photoChapter.datePage);
+  // Writing may span pages, then one grouped photo spread follows it.
   expect(photoChapter.titlePage).toBe(photoChapter.datePage);
+  expect(photoChapter.leadPhotoPage).toBeGreaterThanOrEqual(photoChapter.textEndPage);
+  expect(photoChapter.gridPages).toHaveLength(1);
+  expect(photoChapter.photoCount).toBe(2);
   expect(layout.pages).toBeGreaterThan(1);
   expect(layout.size).toBeGreaterThan(2000);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(unchanged);
+  expect(errors).toEqual([]);
+});
+
+
+test('Journal keeps 1–5 photos together after the writing, with a cover photo first', async ({ page }) => {
+  const moments = fixtureMoments();
+  moments[0].activities.find((item) => item.id === 'shared').completed = true;
+  moments[0].activities.find((item) => item.id === 'shared').date = '2026-01-14';
+  const errors = await seedGuest(page, { moments });
+  await addOriginal(page, { width: 680, height: 940, count: 5 });
+  await page.goto('/events');
+  const cases = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const stored = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    return Promise.all([1, 2, 3, 4, 5].map(async (count) => {
+      const clone = structuredClone(stored);
+      clone.attachments = clone.attachments.filter((item) => item.activityId !== 'shared'
+        || Number(item.id.replace('photo-', '')) < count);
+      const result = await renderMomentStudioPdf(clone, { template: 'journey', includeCover: true, includeIntro: true });
+      const chapter = result.layout.find((entry) => entry.kind === 'journal-entry' && entry.id === 'shared');
+      return { count, cover: result.layout.find((entry) => entry.kind === 'cover')?.imagePage,
+        pages: result.pages.length, chapter };
+    }));
+  });
+  for (const entry of cases) {
+    expect(entry.cover).toBe(1);
+    expect(entry.chapter.photoCount).toBe(entry.count);
+    expect(entry.chapter.gridPages).toHaveLength(1);
+    expect(entry.chapter.gridPages[0]).toBeGreaterThanOrEqual(entry.chapter.textEndPage);
+    expect(entry.pages).toBeGreaterThanOrEqual(entry.chapter.gridPages[0]);
+  }
   expect(errors).toEqual([]);
 });
