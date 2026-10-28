@@ -1,6 +1,6 @@
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle } from 'lucide-react';
+import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -9,7 +9,7 @@ import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeG
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
-import { downloadMomentPdf } from '../../../utils/momentPdf';
+import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import RichText from '../../../components/common/RichText';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
@@ -217,24 +217,17 @@ function EventSummaryModal({ event, onClose }) {
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const greeting = event.greetingCard?.title ? event.greetingCard : getGreetingMessage(event, greetingTemplates, momentTypes);
 
-  const [exportBusy, setExportBusy] = useState(false);
-  const [exportError, setExportError] = useState('');
-  const handleDownload = async () => {
-    if (exportBusy) return;
-    setExportBusy(true);
-    setExportError('');
-    try {
-      await downloadMomentPdf(event, { greeting, status: statusText, date: formatDisplayDate(eventDate) });
-    } catch (error) {
-      setExportError(error?.message || 'Unable to create the PDF. Please try again.');
-    } finally {
-      setExportBusy(false);
-    }
-  };
+  const [studioOpen, setStudioOpen] = useState(false);
 
   return (
+    <>
     <ModalDialog title="Moment summary" onClose={onClose} className="dashboard-event-summary-modal">
       <div style={styles.cardWrap}>
+        <div className="dn-summary-export-top">
+          <button type="button" className="secondaryButton dn-summary-export-button" onClick={() => setStudioOpen(true)}
+            aria-label="Open PDF Studio"><SlidersHorizontal size={16} /> Customize PDF</button>
+          <span>Preview and arrange your pages before downloading.</span>
+        </div>
         <div className="moment-summary-story moment-summary-moment">
         <div style={styles.hero}>
           <div>
@@ -293,13 +286,11 @@ function EventSummaryModal({ event, onClose }) {
         ) : null}
 
         <MomentSummaryExtras event={event} />
-        {exportError ? <p role="alert" className="dn-summary-export-error">{exportError}</p> : null}
-        <button type="button" onClick={handleDownload} style={styles.downloadButton} disabled={exportBusy} aria-label="Download summary PDF">
-          <Download size={16} />
-          {exportBusy ? 'Preparing PDF…' : 'Download PDF'}
-        </button>
+
       </div>
     </ModalDialog>
+    {studioOpen ? <MomentPdfStudio event={event} onClose={() => setStudioOpen(false)} /> : null}
+    </>
   );
 }
 

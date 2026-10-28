@@ -148,9 +148,13 @@ test('Moment summaries show full text and every photo, and a nested preview clos
   await expect(summary.locator('.is-truncated')).toHaveCount(0);
   await expect(summary.locator('.dn-attachment-tile')).toHaveCount(4);
   await expect(summary.locator('.moment-summary-media .dn-attachment-open strong')).toHaveCount(0);
-  await summary.getByRole('button', { name: 'Download summary PDF', exact: true }).scrollIntoViewIfNeeded();
-  await expect(summary.getByRole('button', { name: 'Download summary PDF', exact: true })).toBeInViewport();
-  const downloaded = page.waitForEvent('download'); await summary.getByRole('button', { name: 'Download summary PDF', exact: true }).click();
+  const studioAction = summary.getByRole('button', { name: 'Open PDF Studio', exact: true });
+  await expect(studioAction).toBeInViewport();
+  await studioAction.click();
+  const studio = page.getByRole('dialog', { name: 'PDF Studio' });
+  await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  const downloaded = page.waitForEvent('download'); await studio.getByRole('button', { name: 'Download customized PDF' }).click();
   const pdfDownload = await downloaded;
   expect(pdfDownload.suggestedFilename()).toMatch(/-summary\.pdf$/i);
   const bytes = await readFile(await pdfDownload.path());
@@ -161,6 +165,7 @@ test('Moment summaries show full text and every photo, and a nested preview clos
   expect(structure).toContain('/Filter /DCTDecode');
   expect(structure).toMatch(/%%EOF/);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  await studio.getByRole('button', { name: 'Close dialog', exact: true }).click();
   await summary.getByRole('button', { name: 'Close dialog', exact: true }).click();
   await expect.poll(() => page.evaluate(() => window.__dnUrls.created.every((url) => window.__dnUrls.revoked.includes(url)))).toBe(true);
 });
