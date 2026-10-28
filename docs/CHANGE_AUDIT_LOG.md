@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261028-127 | Phase 3 owner acceptance complete on OldVersion
+- **Acceptance:** Owner manually tested all six Phase 3 Vercel/Guest review checks and reported every check passed: recorded-date chronological Story, separate upcoming plans, correct per-Activity photos, preserved read-only Earlier reflections without a standalone Memories tab, working Activity Detail/Transactions/Attachments navigation, and iPhone Safari responsiveness. No issues or additional observations reported.
+- **Automated evidence:** GitHub Actions run 40633617487 on OldVersion commit c4eb76b3059c14df538839c1ce4b346c3152b339 succeeded for Node unit tests, ESLint, Chromium browser regressions, production build and documentation governance. The run does not constitute a Firebase deployment.
+- **Disposition:** Phase 3 accepted and closed for the unreleased DN 2.0.0 development baseline. Phase 4 type-based Story presentations remains unstarted pending separate authorization. Existing data, records, legacy URLs, finance, attachments and backups retain their prior compatibility; no main writes, PR, Firebase production publish or version bump.
+
 ## CHG-20261028-126 | Phase 2 acceptance closed and Phase 3 documentation reconciled
 - Owner confirmed all Phase 2 Guest/manual acceptance checks passed, with no observations; Phase 2 is closed on OldVersion at f1561a7e (GitHub unit, lint, browser, build and governance CI all green). This is a development-baseline acceptance, **not** a Firebase deployment or DN 2.0.0 release.
 - The Phase 3 Story work continues after acceptance and is subject to its own CI and manual review. The master now distinguishes the mounted Phase 2/3 Story consumers from unchanged Dashboard/summary/PDF/backup consumers. No business-data migration, main changes or release publication.
