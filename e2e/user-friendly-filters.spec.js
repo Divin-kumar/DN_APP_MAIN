@@ -261,32 +261,52 @@ for (const width of [320, 390, 768, 1440]) {
   });
 }
 
-test('many active filter chips remain one horizontal line with keyboard-scroll access on a phone', async ({ page }) => {
-  await page.setViewportSize({ width: 320, height: 740 });
+for (const width of [320, 390, 1280]) {
+test(`applied filters stack vertically with independent text scrolling and removal at ${width}px`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 740 });
   const errors = await seedGuest(page);
   await page.addInitScript(() => {
+    if (localStorage.getItem('dn_e2e_applied_filter_seeded')) return;
     const group = { id: 'root', kind: 'group', join: 'AND', children: Array.from({ length: 8 }, (_, index) => ({
       id: `existing-${index}`, kind: 'rule', field: 'name', operator: 'contains',
-      value: `Detailed saved condition ${index}`,
+      value: `Detailed saved condition ${index} with a long name that must remain fully readable even in a narrow filter column. `.repeat(3),
     })) };
     localStorage.setItem('dn_list_state_guest_conditions%3Atransactions', JSON.stringify({ group, migrationVersion: 1 }));
+    localStorage.setItem('dn_e2e_applied_filter_seeded', 'true');
   });
   await page.goto('/financials');
   const chips = page.getByRole('region', { name: 'Active filters' });
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
   const measurements = await chips.evaluate((element) => ({
-    scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
-    heights: [...element.children].map((chip) => chip.getBoundingClientRect().top),
+    scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
+    rows: [...element.children].map((chip) => { const rect=chip.getBoundingClientRect(); return {x:rect.x,y:rect.y,height:rect.height}; }),
     height: element.getBoundingClientRect().height,
   }));
-  expect(measurements.scrollWidth).toBeGreaterThan(measurements.clientWidth);
-  expect(Math.max(...measurements.heights) - Math.min(...measurements.heights)).toBeLessThanOrEqual(2);
-  expect(measurements.height).toBeLessThanOrEqual(44);
-  await chips.focus();
+  expect(measurements.scrollHeight).toBeGreaterThan(measurements.clientHeight);
+  for(let i=1;i<measurements.rows.length;i++) {
+    expect(measurements.rows[i].x).toBe(measurements.rows[0].x);
+    expect(measurements.rows[i].y).toBeGreaterThanOrEqual(measurements.rows[i-1].y+measurements.rows[i-1].height);
+  }
+  expect(measurements.height).toBeLessThanOrEqual(221);
+  const label=chips.locator('.dn-condition-chip-label').first();
+  await label.focus();
   await page.keyboard.press('ArrowRight');
-  await expect.poll(() => chips.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
-  await chips.locator('.dn-condition-chip').last().click();
+  await expect.poll(() => label.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
+  await label.click();
+  await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
+  await chips.focus();
+  await page.keyboard.press('ArrowDown');
+  await expect.poll(() => chips.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  await chips.locator('.dn-condition-chip').last().getByRole('button', {name:/^Remove filter/}).click();
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(7);
+  const scrollbars=await page.evaluate(() => [document.documentElement,...document.querySelectorAll('*')].filter(element=>
+    element===document.documentElement || /auto|scroll/.test(`${getComputedStyle(element).overflowX} ${getComputedStyle(element).overflowY}`))
+    .map(element=>({standard:getComputedStyle(element).scrollbarWidth,webkit:getComputedStyle(element,'::-webkit-scrollbar').display})));
+  expect(scrollbars.length).toBeGreaterThan(3);
+  for(const bar of scrollbars){expect(bar.standard).toBe('none');expect(bar.webkit).toBe('none');}
+  await page.reload();
+  await expect(page.locator('.dn-condition-chip')).toHaveCount(7);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });
+}

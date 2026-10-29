@@ -97,8 +97,11 @@ function GroupEditor({ node, schema, update, remove, depth = 0, railRef, onRailS
 export function ConditionChips({ filter }) {
   const chips = conditionChipEntries(filter.state.group, filter.schema);
   return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{chips.map((chip) =>
-    <button type="button" className="dn-condition-chip" key={chip.id} aria-label={`Remove filter ${chip.label}`}
-      onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><span>{chip.label}</span><X size={12} /></button>)}</div> : null;
+    <div className="dn-condition-chip" key={chip.id}>
+      <span className="dn-condition-chip-label" tabIndex={0} title={chip.label}>{chip.label}</span>
+      <button type="button" className="dn-condition-chip-remove" aria-label={`Remove filter ${chip.label}`}
+        onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><X size={14} aria-hidden="true" /></button>
+    </div>)}</div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.
@@ -139,7 +142,6 @@ export default function ConditionBuilder({ filter, resultCount, resultLabel = 'r
   const remove = (id) => filter.setGroup((group) => removeCondition(group, id) || group);
   const addRule = () => filter.setGroup((group) => appendFilterRule(group, blankRule()));
   return <section className="dn-conditions" aria-label={title}>
-    {showChips ? <ConditionChips filter={filter} /> : null}
     {!filter.schema.length ? <p className="dn-condition-empty">Filter options will appear here when available.</p> : null}
     <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove}
       railRef={railRef} onRailScroll={updateRailEdges} railEdges={railEdges} />
@@ -151,5 +153,6 @@ export default function ConditionBuilder({ filter, resultCount, resultLabel = 'r
         <button type="button" aria-label="Next filter conditions" disabled={!railEdges.next} onClick={() => moveRail(1)}><ChevronRight size={17} /></button>
       </div> : null}
     </div>
+    {showChips ? <ConditionChips filter={filter} /> : null}
   </section>;
 }

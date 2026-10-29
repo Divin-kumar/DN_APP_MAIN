@@ -851,25 +851,8 @@ h3 {
   max-height: 360px;
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
-  scrollbar-color: #a8c9ba transparent;
   scroll-behavior: smooth;
   padding: 0.25rem 0.4rem 0.25rem 0.1rem;
-}
-
-.history-scroll::-webkit-scrollbar {
-  width: 8px;
-}
-
-.history-scroll::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.history-scroll::-webkit-scrollbar-thumb {
-  background: rgba(30, 134, 109, 0.32);
-  border-radius: 999px;
-  border: 2px solid transparent;
-  background-clip: padding-box;
 }
 
 .events-workspace,
@@ -2104,7 +2087,6 @@ body,
   overflow-y: auto;
   overflow-x: hidden;
   overscroll-behavior: contain;
-  scrollbar-width: thin;
 }
 
 .dn-content > .dn-banner {
@@ -2342,7 +2324,7 @@ html[data-theme="dark"] {
 [data-theme="dark"] .dn-nav-link:hover,
 [data-theme="dark"] .dn-nav-link[aria-current="page"] { border-color: rgba(79,140,255,.19) !important; background: rgba(79,140,255,.12) !important; color: #dce8ff !important; }
 [data-theme="dark"] .dn-nav-link[aria-current="page"] .dn-nav-icon { color: #75a7ff; }
-[data-theme="dark"] .dn-content { padding: 18px 22px 28px !important; color: var(--ink); scrollbar-color: #33415c transparent; }
+[data-theme="dark"] .dn-content { padding: 18px 22px 28px !important; color: var(--ink); }
 [data-theme="dark"] .dn-banner { width: fit-content; max-width: 100%; margin: 0 0 12px !important; padding: 5px 10px !important; border: 1px solid var(--border) !important; border-radius: 999px !important; background: rgba(22,32,51,.6) !important; color: #8f9db4 !important; font-size: .66rem; }
 [data-theme="dark"] .mobile-tabbar { border-color: rgba(151,171,205,.17) !important; background: rgba(13,19,35,.86) !important; box-shadow: 0 16px 45px rgba(0,0,0,.4) !important; backdrop-filter: blur(26px) saturate(1.35) !important; }
 [data-theme="dark"] .mobile-tab { color: #8795ad !important; }
@@ -2511,7 +2493,7 @@ html[data-theme="dark"] {
 [data-theme="dark"] .workspace-resource-row > div { min-width: 0; }
 [data-theme="dark"] .workspace-resource-row strong,
 [data-theme="dark"] .workspace-resource-row span { display: block; overflow-wrap: anywhere; }
-[data-theme="dark"] .event-section-timeline .timeline-list { display: flex; align-items: stretch; gap: 12px; overflow-x: auto; padding: 5px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+[data-theme="dark"] .event-section-timeline .timeline-list { display: flex; align-items: stretch; gap: 12px; overflow-x: auto; padding: 5px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 [data-theme="dark"] .event-section-timeline .timeline-item { display: flex; flex: 0 0 min(270px,78vw); flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; padding: 16px; border: 1px solid var(--border); border-radius: 18px; background: var(--glass-strong); color: var(--ink); scroll-snap-align: start; }
 [data-theme="dark"] .event-section-timeline .timeline-item p { margin: 0; color: var(--ink-soft); }
 [data-theme="dark"] .event-section-timeline .timeline-item span,
@@ -8752,7 +8734,7 @@ button {
 .workspace-attachment-meta i { padding: 2px 6px; border: 1px solid rgba(151,171,205,.18); border-radius: 6px; color: #a9c5fa; font-size: .58rem; font-style: normal; }
 .workspace-memory-kind { display: inline-flex !important; align-items: center; gap: 6px; color: #a9c5fa !important; font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .workspace-memory-card > div > small { color: #8493aa; font-size: .65rem; }
-html[data-theme="dark"] .event-section-timeline .timeline-list { display: flex !important; align-items: stretch; gap: 12px; overflow-x: auto; padding: 5px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: thin; }
+html[data-theme="dark"] .event-section-timeline .timeline-list { display: flex !important; align-items: stretch; gap: 12px; overflow-x: auto; padding: 5px 2px 14px; scroll-snap-type: x mandatory; scrollbar-width: none; }
 html[data-theme="dark"] .event-section-timeline .timeline-item { display: flex; flex: 0 0 min(270px,78vw); flex-direction: column; align-items: flex-start; gap: 10px; min-width: 0; padding: 16px; border: 1px solid rgba(151,171,205,.16); border-radius: 18px; background: rgba(17,24,39,.9); color: #edf3ff; scroll-snap-align: start; }
 html[data-theme="dark"] .event-moment-kicker,
 html[data-theme="dark"] .event-overview-eyebrow { color: #9abaff !important; }

@@ -93,10 +93,10 @@ html[data-theme] *,
 html[data-theme] *::before,
 html[data-theme] *::after { box-sizing: border-box; }
 /* Hide scrollbar chrome while preserving each surface's scrolling behavior. */
-html[data-theme],
-html[data-theme] * { scrollbar-width: none !important; -ms-overflow-style: none; }
-html[data-theme]::-webkit-scrollbar,
-html[data-theme] *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
+:root,
+:root * { scrollbar-width: none !important; -ms-overflow-style: none; }
+:root::-webkit-scrollbar,
+:root *::-webkit-scrollbar { display: none !important; width: 0 !important; height: 0 !important; }
 html[data-theme] body,
 html[data-theme] #root,
 html[data-theme] .dn-shell,
