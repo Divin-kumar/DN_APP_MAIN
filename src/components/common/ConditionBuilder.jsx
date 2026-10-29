@@ -1,25 +1,26 @@
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { ChevronDown, ChevronLeft, ChevronRight, Plus, X } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
-import { conditionChipEntries, mapConditions, noValueOperators, operatorsFor, removeCondition } from '../../utils/conditionEngine';
+import ModalDialog from './ModalDialog';
+import { conditionChipEntries, isActiveCondition, mapConditions, noValueOperators, operatorsFor, removeCondition } from '../../utils/conditionEngine';
 import { appendFilterRule, filterEditorOperators } from '../../utils/conditionEditor';
 import './ConditionBuilder.css';
 
 const newId = () => globalThis.crypto?.randomUUID?.() || `node-${Date.now()}-${Math.random()}`;
 const blankRule = () => ({ id: newId(), kind: 'rule', field: '', operator: 'contains', value: '' });
-function DebouncedValue({ value, onChange, ...props }) {
+function DebouncedValue({ value, onChange, immediate = false, ...props }) {
   const [draft, setDraft] = useState(value ?? '');
   const notify = useRef(onChange); notify.current = onChange;
   useEffect(() => setDraft(value ?? ''), [value]);
   useEffect(() => {
-    if (draft === (value ?? '')) return undefined;
+    if (immediate || draft === (value ?? '')) return undefined;
     const timer = setTimeout(() => notify.current(draft), 220);
     return () => clearTimeout(timer);
-  }, [draft, value]);
-  return <input {...props} value={draft} onChange={(event) => setDraft(event.target.value)}
+  }, [draft, value, immediate]);
+  return <input {...props} value={draft} onChange={(event) => { setDraft(event.target.value); if (immediate) onChange(event.target.value); }}
     onBlur={() => { if (draft !== (value ?? '')) notify.current(draft); }} />;
 }
-function ValueEditor({ field, node, onChange }) {
+function ValueEditor({ field, node, onChange, immediate = false }) {
   const label = `Value for ${field?.label || 'filter'}`;
   const options = field?.options || (field?.values || []).map((value) => ({ value: String(value), label: String(value) }));
   const allowCustom = field?.allowCustom ?? !field?.options;
@@ -28,7 +29,7 @@ function ValueEditor({ field, node, onChange }) {
   if (node.operator === 'between') {
     const range = Array.isArray(node.value) ? [node.value[0] ?? '', node.value[1] ?? ''] : ['', ''];
     return <div className="dn-condition-range">{['From', 'To'].map((part, index) => <label key={part}><span>{part}</span>
-      <DebouncedValue className="dn-condition-value" aria-label={`${part} ${field?.label || 'value'}`}
+      <DebouncedValue className="dn-condition-value" immediate={immediate} aria-label={`${part} ${field?.label || 'value'}`}
         type={field?.type === 'date' ? 'date' : 'number'} step={field?.type === 'number' ? 'any' : undefined} value={range[index] ?? ''}
         onChange={(value) => onChange((current) => [0, 1].map((at) => at === index ? value : Array.isArray(current) ? current[at] ?? '' : ''))} />
     </label>)}</div>;
@@ -52,7 +53,7 @@ function ValueEditor({ field, node, onChange }) {
     {!allowCustom && node.value !== '' && !options.some((option) => String(option.value) === String(node.value)) ? <option value={node.value}>{valueLabel(node.value)}</option> : null}
     {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
   </DropdownSelect>;
-  return <DebouncedValue className="dn-condition-value" aria-label={label} placeholder={field?.type === 'number' ? 'Enter a number' : 'Enter text'}
+  return <DebouncedValue className="dn-condition-value" immediate={immediate} aria-label={label} placeholder={field?.type === 'number' ? 'Enter a number' : 'Enter text'}
     type={field?.type === 'date' ? 'date' : field?.type === 'number' ? 'number' : 'text'} step={field?.type === 'number' ? 'any' : undefined}
     value={node.value} onChange={onChange} />;
 }
@@ -94,14 +95,75 @@ function GroupEditor({ node, schema, update, remove, depth = 0, railRef, onRailS
     </div>
   </div>;
 }
+function AppliedCondition({ filter, chip, node }) {
+  const field = filter.schema.find((item) => item.path === node.field);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(node);
+  const pan = useRef({ moved: false });
+  const sourceKey = JSON.stringify([node.field, node.operator, node.value]);
+  useEffect(() => setEditing(false), [sourceKey]);
+  const update = (patch) => filter.setGroup((group) => mapConditions(group, node.id, (current) =>
+    current.field === node.field ? { ...current, ...patch } : current));
+  const legacyText = field?.legacyTextComparisons && !operatorsFor('dropdown').some(([operator]) => operator === node.operator);
+  const choices = field?.options || (field?.type === 'boolean'
+    ? [{ value: 'true', label: 'Yes' }, { value: 'false', label: 'No' }]
+    : (field?.values || []).map((value) => ({ value: String(value), label: String(value) })));
+  const allowCustom = field?.type !== 'boolean' && (field?.allowCustom ?? !field?.options);
+  const singleChoice = field && ['dropdown', 'boolean'].includes(field.type) && !Array.isArray(node.value)
+    && !noValueOperators.has(node.operator) && (!legacyText || field.hideRawValues || field.type === 'boolean');
+  const panHandlers = {
+    onPointerDown: (event) => { pan.current = { x: event.clientX, y: event.clientY, moved: false }; },
+    onPointerMove: (event) => { if (Math.abs(event.clientX - pan.current.x) > 8 || Math.abs(event.clientY - pan.current.y) > 8) pan.current.moved = true; },
+    onPointerCancel: () => { pan.current.moved = true; },
+    onClickCapture: (event) => { if (pan.current.moved && event.detail) { event.preventDefault(); event.stopPropagation(); } },
+    onKeyDownCapture: (event) => {
+      if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || event.currentTarget.getAttribute('aria-expanded') === 'true') return;
+      event.preventDefault(); event.stopPropagation();
+      event.currentTarget.querySelector('.dn-condition-chip-label')?.scrollBy({ left: event.key === 'ArrowLeft' ? -80 : 80, behavior: 'instant' });
+    },
+  };
+  const label = <span className="dn-condition-chip-label" title={chip.label}>{chip.label}</span>;
+  return <div className="dn-condition-chip">
+    {singleChoice ? <DropdownSelect className="dn-condition-chip-picker" aria-label={`Change ${field.label} filter`}
+      value={node.value} triggerLabel={label} allowCustom={allowCustom} searchOnDemand {...panHandlers}
+      onChange={(event) => update({ value: event.target.value })}>
+      {!allowCustom && !choices.some((option) => String(option.value) === String(node.value))
+        ? <option value={node.value}>{field.labelValue?.(node.value) || 'Unavailable choice'}</option> : null}
+      {choices.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+    </DropdownSelect> : <button type="button" className="dn-condition-chip-edit" aria-label={`Change ${field?.label || 'unavailable'} filter`}
+      disabled={!field} aria-haspopup="dialog" aria-expanded={editing} {...panHandlers}
+      onClick={() => { setDraft({ ...node }); setEditing(true); }}>{label}<ChevronDown size={14} aria-hidden="true" /></button>}
+    <button type="button" className="dn-condition-chip-remove" aria-label={`Remove filter ${chip.label}`}
+      onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><X size={13} aria-hidden="true" /></button>
+    {editing && field ? <ModalDialog title={`Change ${field.label} filter`} className="dn-applied-filter-editor" onClose={() => setEditing(false)}>
+      <form className="form-surface" onSubmit={(event) => { event.preventDefault(); if (isActiveCondition(draft)) { update({ operator: draft.operator, value: draft.value }); setEditing(false); } }}>
+        <DropdownSelect aria-label={`Comparison for ${field.label}`} value={draft.operator}
+          onChange={(event) => setDraft((current) => {
+            const operator = event.target.value;
+            const structured = ['between', 'any_of', 'none_of'].includes(operator);
+            return { ...current, operator, value: noValueOperators.has(operator) ? ''
+              : structured ? (Array.isArray(current.value) ? current.value : [])
+                : Array.isArray(current.value) ? '' : current.value };
+          })}>
+          {filterEditorOperators(field, draft.operator).map(([value, text]) => <option key={value} value={value}>{text}</option>)}
+        </DropdownSelect>
+        {!noValueOperators.has(draft.operator) ? <ValueEditor field={field} node={draft} immediate
+          onChange={(value) => setDraft((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} /> : null}
+        <div className="form-actions"><button type="button" className="secondaryButton" onClick={() => setEditing(false)}>Cancel</button>
+          <button type="submit" className="primaryButton" disabled={!isActiveCondition(draft)}>Apply filter</button></div>
+      </form>
+    </ModalDialog> : null}
+  </div>;
+}
 export function ConditionChips({ filter }) {
   const chips = conditionChipEntries(filter.state.group, filter.schema);
+  const nodes = useMemo(() => {
+    const byId = new Map();
+    const visit = (node) => { if (node.kind === 'group') node.children.forEach(visit); else byId.set(node.id, node); };
+    visit(filter.state.group); return byId;
+  }, [filter.state.group]);
   return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{chips.map((chip) =>
-    <div className="dn-condition-chip" key={chip.id}>
-      <span className="dn-condition-chip-label" tabIndex={0} title={chip.label}>{chip.label}</span>
-      <button type="button" className="dn-condition-chip-remove" aria-label={`Remove filter ${chip.label}`}
-        onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><X size={14} aria-hidden="true" /></button>
-    </div>)}</div> : null;
+    <AppliedCondition key={`${filter.editorKey}:${chip.id}`} filter={filter} chip={chip} node={nodes.get(chip.id)} />)}</div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.

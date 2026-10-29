@@ -8,13 +8,23 @@ html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button:not(:dis
 html[data-theme] .dn-conditions-actions .dn-condition-rail-nav > button:disabled { opacity:.26; }
 html[data-theme] .dn-conditions-count { font-size:12px; color:var(--color-text-muted); }
 html[data-theme] .dn-conditions-actions > button { display:inline-flex; align-items:center; gap:4px; min-height:44px; padding:4px 8px; background:transparent; border:0; border-radius:8px; color:var(--color-primary); font-size:12px; cursor:pointer; }
-html[data-theme] .dn-condition-chips { display:flex; flex-direction:column; align-items:stretch; gap:6px; min-width:0; width:100%; max-height:min(220px,30svh); padding:2px 1px 4px; overflow-x:hidden; overflow-y:auto; overscroll-behavior-y:contain; scroll-snap-type:y proximity; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
+html[data-theme] .dn-condition-chips { display:flex; flex-direction:column; align-items:flex-start; gap:0; min-width:0; width:100%; max-height:min(220px,30svh); padding:2px 1px 4px; overflow-x:hidden; overflow-y:auto; overscroll-behavior-y:contain; scroll-snap-type:y proximity; scrollbar-width:none; -webkit-overflow-scrolling:touch; }
 html[data-theme] .dn-condition-chips::-webkit-scrollbar { display:none; }
 html[data-theme] .dn-condition-chips:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; border-radius:10px; }
-html[data-theme] .dn-condition-chip { display:flex; flex:0 0 auto; align-items:center; gap:6px; min-width:0; width:100%; min-height:44px; border-radius:12px; padding:0 2px 0 10px; color:var(--color-text); background:var(--color-surface); border:1px solid var(--color-border); font-size:12px; text-align:left; scroll-snap-align:start; }
-html[data-theme] .dn-condition-chip-label { display:block; flex:1 1 0; min-width:0; padding:10px 0; overflow-x:auto; overflow-y:hidden; white-space:nowrap; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; }
-html[data-theme] .dn-condition-chip-remove { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; padding:0; border:0; border-radius:10px; background:transparent; color:var(--color-text-muted); cursor:pointer; }
-html[data-theme] .dn-condition-chip-remove:hover { background:var(--action-fill); color:var(--action-ink); }
+html[data-theme] .dn-condition-chip { display:flex; flex:0 0 auto; align-items:center; gap:0; min-width:0; width:fit-content; max-width:100%; min-height:44px; padding:0; color:var(--color-text-muted); background:transparent; border:0; font-size:12px; font-weight:400; text-align:left; scroll-snap-align:start; }
+html[data-theme] .dn-condition-chip-picker { flex:0 1 auto; min-width:0; width:auto; }
+html[data-theme] .dn-condition-chip-label { display:block; flex:1 1 0; min-width:0; max-width:100%; overflow-x:auto; overflow-y:hidden; white-space:nowrap; overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch; }
+html[data-theme] .dn-condition-chips .dn-condition-chip .dropdown-field .dropdown-trigger,
+html[data-theme] .dn-condition-chips .dn-condition-chip .dn-condition-chip-edit { display:flex; align-items:center; justify-content:flex-start; gap:4px; min-width:0; min-height:44px; max-width:100%; padding:0 6px !important; border:0 !important; border-radius:8px !important; background:transparent !important; box-shadow:none !important; color:var(--color-text-muted) !important; font:inherit; font-size:12px !important; font-weight:400; text-align:left; cursor:pointer; }
+html[data-theme] .dn-condition-chip-edit { flex:0 1 auto; }
+html[data-theme] .dn-condition-chip-edit > svg { flex:0 0 auto; }
+html[data-theme] .dn-condition-chip .dropdown-trigger > span { display:block; flex:1 1 0; min-width:0; }
+html[data-theme] .dn-condition-chip .dropdown-trigger:hover,
+html[data-theme] .dn-condition-chip-edit:hover { color:var(--color-primary) !important; }
+html[data-theme] .dn-condition-chip-remove { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--color-text-muted); cursor:pointer; }
+html[data-theme] .dn-condition-chip-remove:hover { color:var(--color-danger); }
+html[data-theme] .dn-applied-filter-editor .form-surface { gap:12px; }
+html[data-theme] .dn-applied-filter-editor .form-actions { display:flex; justify-content:flex-end; gap:8px; }
 html[data-theme] .dn-condition-group { min-width:0; }
 html[data-theme] .dn-condition-group.is-nested { padding:4px; border:1px dashed var(--color-border); border-radius:12px; background:var(--color-surface); }
 html[data-theme] .dn-condition-group-note { display:flex; align-items:center; justify-content:space-between; gap:4px; font-size:11px; color:var(--color-text-muted); min-width:0; }
@@ -47,7 +57,7 @@ html[data-theme] .dn-condition-selected-values { display:flex; flex:1 1 0; gap:4
 html[data-theme] .dn-condition-selected-values::-webkit-scrollbar { display:none; }
 html[data-theme] .dn-condition-selected-values button { display:inline-flex; flex:0 0 auto; align-items:center; gap:4px; max-width:100%; min-height:32px; padding:4px 7px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-surface); color:var(--color-text); font-size:11px; cursor:pointer; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 html[data-theme] .dn-conditions button:focus-visible, html[data-theme] .dn-conditions input:focus-visible, html[data-theme] .dn-condition-chip-remove:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
-html[data-theme] .dn-condition-chip-label:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; border-radius:4px; }
+html[data-theme] .dn-condition-chip-edit:focus-visible, html[data-theme] .dn-condition-chip .dropdown-trigger:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
 @media (max-width:620px) {
  html[data-theme] .dn-condition-rule { grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr) minmax(0,1.2fr) 44px; gap:3px; padding-inline:3px; }
  html[data-theme] .dn-conditions-actions { gap:3px; }

@@ -289,11 +289,13 @@ test(`applied filters stack vertically with independent text scrolling and remov
   }
   expect(measurements.height).toBeLessThanOrEqual(221);
   const label=chips.locator('.dn-condition-chip-label').first();
-  await label.focus();
+  await chips.locator('.dn-condition-chip').first().getByRole('button',{name:'Change Title filter',exact:true}).focus();
   await page.keyboard.press('ArrowRight');
   await expect.poll(() => label.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
   await label.click();
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
+  await expect(page.getByRole('dialog',{name:'Change Title filter',exact:true})).toBeVisible();
+  await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
   await chips.focus();
   await page.keyboard.press('ArrowDown');
   await expect.poll(() => chips.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);

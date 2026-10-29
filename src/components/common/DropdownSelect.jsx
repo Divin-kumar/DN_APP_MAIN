@@ -14,7 +14,7 @@ const ROW_HEIGHT = 44;
 
 export default function DropdownSelect({
   id, name, value, onChange, children, disabled = false, required = false,
-  placeholder = 'Select an option', className = '', menuMinWidth = 220,
+  placeholder = 'Select an option', className = '', menuMinWidth = 220, triggerLabel,
   searchable: searchableProp, searchOnDemand = false, allowCustom = false, searchLabel = 'Search options', ...accessibilityProps
 }) {
   const generatedId = useId();
@@ -259,8 +259,8 @@ export default function DropdownSelect({
         }}
         onKeyDown={onKeyDown} {...accessibilityProps}>
         <span className={selectedOption ? '' : 'dropdown-placeholder'}>
-          <span className="dropdown-label-full">{selectedOption?.label || placeholder}</span>
-          <span className="dropdown-label-short">{selectedOption?.shortLabel || placeholder}</span>
+          {triggerLabel ?? <><span className="dropdown-label-full">{selectedOption?.label || placeholder}</span>
+            <span className="dropdown-label-short">{selectedOption?.shortLabel || placeholder}</span></>}
         </span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
