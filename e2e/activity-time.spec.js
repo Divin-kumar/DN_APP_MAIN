@@ -47,7 +47,7 @@ for (const width of [320,390,1280]) {
     await activityDetailAction(page,'Edit');await page.getByRole('button',{name:'Clear activity time',exact:true}).click();
     await page.getByRole('button',{name:'Save activity',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.goto('/events/moment-one/activities?create=activity');
-    await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue('');
+    await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue(/^[0-2]\d:[0-5]\d$/);
     await page.getByPlaceholder('Activity title',{exact:true}).fill('Midnight chapter');
     await page.getByLabel('Activity time',{exact:true}).fill('00:00');
     await page.locator('input[type="date"]').fill('2026-10-01');
@@ -73,7 +73,7 @@ for (const width of [320,390,1280]) {
   });
 }
 
-test('universal Activity creation saves its clock time and the next draft starts untimed', async ({page})=>{
+test('universal Activity creation saves its clock time and the next draft captures the current time', async ({page})=>{
   const errors=await seedGuest(page);
   await page.goto('/events/moment-one/story');
   const open=async()=>{
@@ -86,7 +86,7 @@ test('universal Activity creation saves its clock time and the next draft starts
   await page.getByRole('button',{name:'Save activity',exact:true}).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].activities.find(a=>a.title==='Lunch entry').time)).toBe('12:45');
-  await open();await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue('');
+  await open();await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue(/^[0-2]\d:[0-5]\d$/);
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
   expect(errors).toEqual([]);
 });

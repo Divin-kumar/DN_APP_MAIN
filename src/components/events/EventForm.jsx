@@ -1,8 +1,8 @@
 import ActivityTimeField from '../common/ActivityTimeField';
-import { activityTime, activityTimePatch } from '../../utils/activityTime';
+import { activityTime, activityTimePatch, currentEntryTime } from '../../utils/activityTime';
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import RichTextEditor from '../common/RichTextEditor';
@@ -15,6 +15,7 @@ const createDefaultState = (defaultEventType) => ({
   type: defaultEventType || 'Personal',
   customType: '',
   date: formatMomentDate(new Date()),
+  time: currentEntryTime(),
   recurrence: 'none',
   budget: '',
   notes: '',
@@ -24,9 +25,14 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   const adminValues = useAppStore((state) => state.adminValues);
   const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
-  const [form, setForm] = useState(() => createDefaultState(defaultEventType));
+  const [form, setForm] = useState(() => ({ ...createDefaultState(defaultEventType),
+    ...(initialValues ? { ...initialValues, time: activityTime(initialValues), customType: initialValues.customType || '' } : {}),
+  }));
 
+  const sourceRef = useRef(initialValues);
   useEffect(() => {
+    if (sourceRef.current === initialValues) return;
+    sourceRef.current = initialValues;
     if (initialValues) {
       setForm({
         ...createDefaultState(defaultEventType),

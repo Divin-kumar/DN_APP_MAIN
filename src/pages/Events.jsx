@@ -1,3 +1,4 @@
+import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
 import ActivityTimeField from '../components/common/ActivityTimeField';
@@ -171,7 +172,7 @@ export default function Events() {
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
   const [activityDate, setActivityDate] = useState(formatMomentDate(new Date()));
-  const [activityTime, setActivityTime] = useState('');
+  const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityPriority, setActivityPriority] = useState('medium');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
@@ -242,7 +243,7 @@ export default function Events() {
     setActivityChooserOpen(false);
     setActivityChooserEvent(event);
     setActivityTitle('');
-    setActivityTime('');
+    setActivityTime(currentEntryTime());
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
@@ -289,7 +290,7 @@ export default function Events() {
     setDrawer(null);
     setEditingEvent(null);
     setActivityTitle('');
-    setActivityTime('');
+    setActivityTime(currentEntryTime());
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');

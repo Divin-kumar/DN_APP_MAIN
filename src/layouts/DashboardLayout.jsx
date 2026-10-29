@@ -1,3 +1,4 @@
+import { currentEntryTime } from '../utils/activityTime.js';
 import ActivityTimeField from '../components/common/ActivityTimeField';
 /*
   Moment-first app shell for dashboard and workspace navigation.
@@ -82,7 +83,7 @@ export default function DashboardLayout() {
   const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
   const [quickActivityTitle, setQuickActivityTitle] = useState('');
   const [quickActivityDate, setQuickActivityDate] = useState(financialDate(new Date()));
-  const [quickActivityTime, setQuickActivityTime] = useState('');
+  const [quickActivityTime, setQuickActivityTime] = useState(currentEntryTime);
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
@@ -256,7 +257,7 @@ export default function DashboardLayout() {
       if (workspaceMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
-      setQuickActivityTime('');
+      setQuickActivityTime(currentEntryTime());
       setQuickActivityDate(financialDate(new Date()));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');

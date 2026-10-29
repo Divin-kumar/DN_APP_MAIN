@@ -1,3 +1,4 @@
+import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
 import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
@@ -83,7 +84,7 @@ export function EventWorkspaceContent() {
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(() => formatMomentDate(new Date()));
-  const [activityTime, setActivityTime] = useState('');
+  const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
@@ -153,7 +154,7 @@ export function EventWorkspaceContent() {
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
     setActivityTitle('');
-    setActivityTime('');
+    setActivityTime(currentEntryTime());
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
@@ -339,7 +340,7 @@ export function EventWorkspaceContent() {
     const values = { title: activityTitle.trim(), date: activityDate, time: activityTime, description: activityDescription, priority: activityPriority };
     return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
         ...values, id: crypto.randomUUID(), eventId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
-      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityTime(''); setActivityDialogOpen(false); }).catch(() => {});
+      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityTime(currentEntryTime()); setActivityDialogOpen(false); }).catch(() => {});
   };
 
   const saveNotes = async (submitEvent) => {

@@ -1,6 +1,6 @@
 import ActivityTimeField from '../common/ActivityTimeField';
-import { activityTime } from '../../utils/activityTime';
-import { useEffect, useMemo, useState } from 'react';
+import { activityTime, currentEntryTime } from '../../utils/activityTime';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
@@ -17,7 +17,7 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
   transactionKind: defaultKind,
   title: '',
   amount: '',
-  time: '',
+  time: currentEntryTime(),
   paymentMethod: '',
   category: defaultKind === 'income' ? preferences.defaultIncomeType || 'Other' : preferences.defaultExpenseCategory || 'Other',
   date: today(),
@@ -26,33 +26,42 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
   notes: '',
 });
 
+const createDraft = (preferences, initialTransaction, defaultKind, presetLink) => {
+  const kind = initialTransaction?.transactionKind || defaultKind;
+  return {
+    ...defaultValues(preferences, kind),
+    ...(!initialTransaction && presetLink ? { eventId: presetLink.eventId, activityId: presetLink.activityId, ...(presetLink.date ? { date: presetLink.date } : {}) } : {}),
+    ...(initialTransaction ? {
+      transactionKind: kind,
+      title: initialTransaction.name || initialTransaction.title || '',
+      amount: String(initialTransaction.amount ?? ''),
+      paymentMethod: normalizePaymentMethod(initialTransaction.paymentMethod) || '',
+      category: (kind === 'income' ? initialTransaction.type : initialTransaction.category) || 'Other',
+      date: initialTransaction.date || today(),
+      time: activityTime(initialTransaction),
+      eventId: initialTransaction.eventId || '',
+      activityId: initialTransaction.activityId || '',
+      notes: initialTransaction.notes || initialTransaction.description || '',
+    } : {}),
+  };
+};
+
 export default function TransactionForm({
   initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [],
   onSubmit, onCancel, busy = false,
 }) {
   const preferences = useAppStore((state) => state.preferences);
   const adminValues = useAppStore((state) => state.adminValues);
-  const [form, setForm] = useState(() => defaultValues(preferences, defaultKind));
+  const [form, setForm] = useState(() => createDraft(preferences, initialTransaction, defaultKind, presetLink));
   const [error, setError] = useState('');
 
+  const sourceRef = useRef([initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date]);
   useEffect(() => {
-    const kind = initialTransaction?.transactionKind || defaultKind;
-    setForm({
-      ...defaultValues(preferences, kind),
-      ...(!initialTransaction && presetLink ? { eventId: presetLink.eventId, activityId: presetLink.activityId, ...(presetLink.date ? { date: presetLink.date } : {}) } : {}),
-      ...(initialTransaction ? {
-        transactionKind: kind,
-        title: initialTransaction.name || initialTransaction.title || '',
-        amount: String(initialTransaction.amount ?? ''),
-        paymentMethod: normalizePaymentMethod(initialTransaction.paymentMethod) || '',
-        category: (kind === 'income' ? initialTransaction.type : initialTransaction.category) || 'Other',
-        date: initialTransaction.date || today(),
-        time: activityTime(initialTransaction),
-        eventId: initialTransaction.eventId || '',
-        activityId: initialTransaction.activityId || '',
-        notes: initialTransaction.notes || initialTransaction.description || '',
-      } : {}),
-    });
+    const next = [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date];
+    // Preferences arriving after form opening must not erase a draft or refill a cleared clock.
+    if (next.every((value, index) => value === sourceRef.current[index])) return;
+    sourceRef.current = next;
+    setForm(createDraft(preferences, initialTransaction, defaultKind, presetLink));
     setError('');
   }, [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);
 

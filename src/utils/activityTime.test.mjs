@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activityTime, normalizeActivityTime, compareActivityDateTime } from './activityTime.js';
+import { activityTime, normalizeActivityTime, compareActivityDateTime, currentEntryTime } from './activityTime.js';
 import { sortedSummaryActivities } from './summaryAttachments.js';
 import { projectActivities, selectActivityEntries } from './activityRecords.js';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory.js';
@@ -11,6 +11,11 @@ const fixture = () => [{ id:'late', title:'Late', date:'2026-10-01', time:'18:30
   { id:'unknown', title:'No time', date:'2026-10-01', createdAt:'2026-10-01T02:00:00Z', completed:true },
   { id:'early', title:'Early', date:'2026-10-01', time:'07:20', completed:true },
   { id:'equal', title:'Equal', date:'2026-10-01', time:'07:20', completed:true }];
+test('new-entry defaults format the local clock with minute precision, including midnight', () => {
+  assert.equal(currentEntryTime(new Date(2026,9,29,0,0,59)), '00:00');
+  assert.equal(currentEntryTime(new Date(2026,9,29,7,5)), '07:05');
+  assert.equal(currentEntryTime(new Date(2026,9,29,23,59)), '23:59');
+});
 test('clock parsing validates midnight, invalid historical values and explicit clearing of legacy aliases', () => {
   assert.equal(normalizeActivityTime('0:00'), '00:00');
   for (const value of ['24:00','12:60','1:2','10:10:99',null,{},'']) assert.equal(normalizeActivityTime(value), '');

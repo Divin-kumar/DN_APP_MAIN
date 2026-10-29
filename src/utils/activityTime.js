@@ -1,5 +1,8 @@
 import { parseMomentDate } from './momentDates.js';
 
+// Capture the browser’s local clock once when starting a new entry draft.
+export const currentEntryTime = (now = new Date()) => `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
 // Explicit local wall-clock time, never inferred from creation/completion metadata.
 export const normalizeActivityTime = (value) => {
   if (typeof value !== 'string') return '';
