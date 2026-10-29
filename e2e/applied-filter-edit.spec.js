@@ -82,7 +82,7 @@ test('applied text, date and range edits keep their identity and Cancel discards
   expect(await records(page)).toEqual(original);expect(errors).toEqual([]);
 });
 
-test('stacked applied filters retain OR logic, share Code Lists changes and close drafts on an account switch',async({page})=>{
+test('side-by-side applied filters retain OR logic, share Code Lists changes and close drafts on an account switch',async({page})=>{
   const errors=await seedGuest(page);await page.addInitScript(()=>{
     if(localStorage.getItem('dn_applied_or_seed'))return;
     const group={id:'root',kind:'group',join:'OR',children:[
@@ -93,8 +93,8 @@ test('stacked applied filters retain OR logic, share Code Lists changes and clos
   });
   await page.goto('/activities');const original=await records(page);const before=await saved(page,'activities');
   const chips=page.locator('.dn-condition-chip');await expect(chips).toHaveCount(2);
-  const boxes=await chips.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,h:r.height};}));
-  expect(boxes[1].x).toBe(boxes[0].x);expect(boxes[1].y).toBeGreaterThanOrEqual(boxes[0].y+boxes[0].h);
+  const boxes=await chips.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
+  expect(boxes[1].y).toBe(boxes[0].y);expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x+boxes[0].w);
   await chips.filter({hasText:'Completed'}).getByRole('combobox',{name:'Change Status filter'}).click();await page.getByRole('option',{name:'Cancelled',exact:true}).click();
   const changed=await saved(page,'activities');expect(changed).toEqual({...before,children:before.children.map(n=>n.id==='completed-filter'?{...n,value:'cancelled'}:n)});
   await page.goto('/settings/code-lists');const preferences=page.getByRole('region',{name:'List sorting and filters preferences'});

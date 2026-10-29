@@ -223,46 +223,40 @@ test('many phone filters stay inside a short scrollable panel with its final act
 });
 
 for (const width of [320, 390, 768, 1440]) {
-  test(`multiple conditions form one horizontally scrollable rail at ${width}px without growing the page`, async ({ page }) => {
+  test(`configuration conditions stack row by row at ${width}px with vertical scrolling`, async ({ page }) => {
     await page.setViewportSize({ width, height: 740 });
     const errors = await seedGuest(page);
     await page.goto('/financials');
     await page.getByRole('button', { name: /^Filters/ }).click();
-    const add = page.getByRole('button', { name: 'Add filter', exact: true });
-    for (let index = 0; index < 6; index += 1) await add.click();
-
-    const rail = page.locator('.dn-condition-children').first();
+    for (let index = 0; index < 6; index += 1) await page.getByRole('button', { name: 'Add filter', exact: true }).click();
+    const stack = page.locator('.dn-condition-children').first();
     await expect(page.locator('.dn-condition-rule')).toHaveCount(6);
-    const metrics = await rail.evaluate((element) => ({
-      scrollWidth: element.scrollWidth, clientWidth: element.clientWidth,
-      left: element.scrollLeft, tops: [...element.children].map((child) => child.getBoundingClientRect().top),
+    const metrics = await stack.evaluate(element => ({
+      scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,scrollHeight:element.scrollHeight,clientHeight:element.clientHeight,top:element.scrollTop,
+      rows:[...element.children].map(child=>{const r=child.getBoundingClientRect();return {x:r.x,y:r.y,height:r.height};}),
     }));
-    expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth + 10);
-    expect(Math.max(...metrics.tops) - Math.min(...metrics.tops)).toBeLessThanOrEqual(2);
-    expect(metrics.left).toBeGreaterThan(0); // Newest condition is brought into view.
-    const panel = page.locator('.dn-list-controls-panel');
-    if (width <= 390) expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740 * .42 + 1);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-
-    const back = page.getByRole('button', { name: 'Previous filter conditions' });
-    const forward = page.getByRole('button', { name: 'Next filter conditions' });
-    await expect(back).toBeEnabled();
-    await back.click();
-    await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeLessThan(metrics.left);
-    await expect(forward).toBeEnabled();
-    await forward.click();
-    await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
-    await page.locator('.dn-condition-rule').last().getByRole('button', { name: 'Remove filter' }).click();
+    expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth+1);
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+    for(let i=1;i<metrics.rows.length;i++){
+      expect(metrics.rows[i].x).toBe(metrics.rows[0].x);
+      expect(metrics.rows[i].y).toBeGreaterThanOrEqual(metrics.rows[i-1].y+metrics.rows[i-1].height);
+    }
+    expect(metrics.top).toBeGreaterThan(0);
+    await stack.focus();await page.keyboard.press('ArrowUp');
+    await expect.poll(()=>stack.evaluate(e=>e.scrollTop)).toBeLessThan(metrics.top);
+    await expect(page.getByRole('button',{name:'Previous filter conditions'})).toHaveCount(0);
+    await expect(page.getByRole('button',{name:'Next filter conditions'})).toHaveCount(0);
+    const panel=page.locator('.dn-list-controls-panel');
+    if(width<=390)expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740*.42+1);
+    await page.locator('.dn-condition-rule').last().getByRole('button',{name:'Remove filter',exact:true}).click();
     await expect(page.locator('.dn-condition-rule')).toHaveCount(5);
-    await page.getByRole('button', { name: 'Clear all' }).click();
-    await expect(page.locator('.dn-condition-children')).toHaveCount(0);
-    await expect(back).toHaveCount(0);
-    expect(errors).toEqual([]);
+    await page.getByRole('button',{name:'Clear all',exact:true}).click();await expect(stack).toHaveCount(0);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);expect(errors).toEqual([]);
   });
 }
 
 for (const width of [320, 390, 1280]) {
-test(`applied filters stack vertically with independent text scrolling and removal at ${width}px`, async ({ page }) => {
+test(`applied filters stay side by side with horizontal scrolling and independent removal at ${width}px`, async ({ page }) => {
   await page.setViewportSize({ width, height: 740 });
   const errors = await seedGuest(page);
   await page.addInitScript(() => {
@@ -277,34 +271,30 @@ test(`applied filters stack vertically with independent text scrolling and remov
   await page.goto('/financials');
   const chips = page.getByRole('region', { name: 'Active filters' });
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
-  const measurements = await chips.evaluate((element) => ({
-    scrollHeight: element.scrollHeight, clientHeight: element.clientHeight,
-    rows: [...element.children].map((chip) => { const rect=chip.getBoundingClientRect(); return {x:rect.x,y:rect.y,height:rect.height}; }),
-    height: element.getBoundingClientRect().height,
+  const measurements = await chips.evaluate(element => ({
+    scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,
+    tops:[...element.children].map(chip=>chip.getBoundingClientRect().top),height:element.getBoundingClientRect().height,
   }));
-  expect(measurements.scrollHeight).toBeGreaterThan(measurements.clientHeight);
-  for(let i=1;i<measurements.rows.length;i++) {
-    expect(measurements.rows[i].x).toBe(measurements.rows[0].x);
-    expect(measurements.rows[i].y).toBeGreaterThanOrEqual(measurements.rows[i-1].y+measurements.rows[i-1].height);
-  }
-  expect(measurements.height).toBeLessThanOrEqual(221);
-  const label=chips.locator('.dn-condition-chip-label').first();
-  await chips.locator('.dn-condition-chip').first().getByRole('button',{name:'Change Title filter',exact:true}).focus();
-  await page.keyboard.press('ArrowRight');
-  await expect.poll(() => label.evaluate((element) => element.scrollLeft)).toBeGreaterThan(0);
-  await label.click();
+  expect(measurements.scrollWidth).toBeGreaterThan(measurements.clientWidth);
+  expect(Math.max(...measurements.tops)-Math.min(...measurements.tops)).toBeLessThanOrEqual(1);
+  expect(measurements.height).toBeLessThanOrEqual(56);
+  await chips.focus();await page.keyboard.press('ArrowRight');
+  await expect.poll(()=>chips.evaluate(e=>e.scrollLeft)).toBeGreaterThan(0);
+  await chips.evaluate(e=>e.scrollLeft=0);
+  const first=chips.locator('.dn-condition-chip').first();
+  await first.getByRole('button',{name:'Change Title filter',exact:true}).focus();await page.keyboard.press('ArrowRight');
+  await expect.poll(()=>chips.evaluate(e=>e.scrollLeft)).toBeGreaterThan(0);
+  await first.getByRole('button',{name:'Change Title filter',exact:true}).click();
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
-  await expect(page.getByRole('dialog',{name:'Change Title filter',exact:true})).toBeVisible();
-  await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
-  await chips.focus();
-  await page.keyboard.press('ArrowDown');
-  await expect.poll(() => chips.evaluate((element) => element.scrollTop)).toBeGreaterThan(0);
+  const editor=page.getByRole('dialog',{name:'Change Title filter',exact:true});await expect(editor).toBeVisible();
+  await expect(editor.getByRole('textbox',{name:'Value for Title',exact:true})).toHaveValue(/Detailed saved condition 0/);
+  await editor.getByRole('button',{name:'Cancel',exact:true}).click();
   await chips.locator('.dn-condition-chip').last().getByRole('button', {name:/^Remove filter/}).click();
   await expect(chips.locator('.dn-condition-chip')).toHaveCount(7);
   const scrollbars=await page.evaluate(() => [document.documentElement,...document.querySelectorAll('*')].filter(element=>
     element===document.documentElement || /auto|scroll/.test(`${getComputedStyle(element).overflowX} ${getComputedStyle(element).overflowY}`))
     .map(element=>({standard:getComputedStyle(element).scrollbarWidth,webkit:getComputedStyle(element,'::-webkit-scrollbar').display})));
-  expect(scrollbars.length).toBeGreaterThan(3);
+  expect(scrollbars.length).toBeGreaterThan(1);
   for(const bar of scrollbars){expect(bar.standard).toBe('none');expect(bar.webkit).toBe('none');}
   await page.reload();
   await expect(page.locator('.dn-condition-chip')).toHaveCount(7);
