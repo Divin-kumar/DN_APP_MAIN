@@ -69,6 +69,7 @@ function Chapter({ entry, momentId, uid, isGuest, presentation }) {
       label={'Photos for ' + (entry.title || 'Activity')} album /> : null}
     <div className="dn-v2-story-entry-body">
       <ActivityTitle entry={entry} momentId={momentId} />
+      {entry.displayTime ? <time className="dn-story-entry-aside">{entry.displayTime}</time> : null}
       {entry.description ? <RichText value={entry.description} className="dn-v2-story-entry-description free-text-content" /> : null}
       {entry.status === 'cancelled' ? <small className="dn-story-entry-aside">Cancelled activity</small> : null}
       {!isJournal && files ? <Link className="dn-story-entry-files" to={activityLink(momentId, entry)}>

@@ -1,3 +1,4 @@
+import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import { useEffect, useRef, useState } from 'react';
 import useAppStore from '../store/useAppStore';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
@@ -46,13 +47,13 @@ export default function useActivityActions() {
       assertActivityEditable(activity);
       setError('');
       setDraft({ ...target, momentName: moment.name, title: activity.title || '',
-        date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
+        time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
     } catch (reason) { setError(reason.message); }
   };
   const save = (event) => {
     event.preventDefault();
     if (!draft?.title.trim() || !parseMomentDate(draft.date)) { setError('Enter an activity title and a valid date.'); return; }
-    return run(draft, () => ({ title: draft.title.trim(), date: draft.date, description: draft.description, priority: draft.priority }),
+    return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };
   const closeEditor = () => { if (!saving.current) { setDraft(null); setError(''); } };

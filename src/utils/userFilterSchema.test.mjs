@@ -28,8 +28,8 @@ test('all five user-facing lists offer only their product filter catalogue, even
   const parents = moments();
   const cases = [
     ['moments', parents, ['Moment name', 'Moment type', 'Event date', 'Status', 'Visibility']],
-    ['activities', projectActivities(parents), ['Activity name', 'Date', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility']],
-    ['moment-activities:private-moment-a', parents[0].activities, ['Activity name', 'Date', 'Status', 'Priority']],
+    ['activities', projectActivities(parents), ['Activity name', 'Date', 'Time', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility']],
+    ['moment-activities:private-moment-a', parents[0].activities, ['Activity name', 'Date', 'Time', 'Status', 'Priority']],
     ['transactions', transactions(), ['Title', 'Type', 'Category', 'Amount', 'Date', 'Moment', 'Activity']],
     ['moment-transactions:private-moment-a:all', transactions(), ['Title', 'Type', 'Category', 'Amount', 'Date', 'Activity']],
   ];

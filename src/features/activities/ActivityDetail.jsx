@@ -1,3 +1,4 @@
+import { activityTime } from '../../utils/activityTime.js';
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Archive, CalendarDays, Check, ChevronLeft, ChevronRight, Circle, Flag, ListChecks, Pencil, RotateCcw, XCircle } from 'lucide-react';
@@ -80,7 +81,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
           otherActions={menuActions}
           onDelete={() => actions.requestDelete(target)} />
       </div>
-      <p className="activity-detail-due"><CalendarDays size={13} aria-hidden="true" />{activityDateLabel(activity.date)}</p>
+      <p className="activity-detail-due"><CalendarDays size={13} aria-hidden="true" />{activityDateLabel(activity.date)}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</p>
       {actions.error && !actions.draft && !actions.deleteTarget ? <p className="quick-create-error" role="alert">{actions.error}</p> : null}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{actions.announcement}</p>
       {activity.description ? <section className="activity-detail-section" aria-labelledby="activity-description-heading">

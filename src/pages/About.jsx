@@ -49,6 +49,7 @@ const guideItems = [
 ];
 
 const whatsNew = [
+  'Add an optional Activity time. Same-day entries follow clock order in Story, PDFs and date-sorted lists; use Time filters to narrow the list.',
   'Read each Moment as a photo-rich Journal, a monthly Diary or a Tasks view, with its original Activity dates and writing.',
   'Move between Story, Activities, Transactions, Gallery and PDF Studio. Older Moment links still open their current destination.',
   'Customize your PDF format, spacing and included sections, review the actual pages, then download the same previewed PDF.',

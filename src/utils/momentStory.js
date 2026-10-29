@@ -1,3 +1,4 @@
+import { activityTime } from './activityTime.js';
 import { activityStatus } from './activityDetail.js';
 import { getCodeListMeta } from './codeLists.js';
 import { getEventStatus } from './eventStatus.js';
@@ -56,6 +57,7 @@ const makeActivityEntry = (moment, activity) => {
     title: activity.title || '',
     description: activity.description || '',
     date: calendarKey(activity.date),
+    displayTime: activityTime(activity),
     status: activityStatus(activity),
     // Keep the actual underlying record available for Activity Detail / PDF
     // consumers without manufacturing a second saved Activity.
@@ -134,17 +136,7 @@ const TASK_STATUS_ORDER = Object.freeze(['in-progress', 'completed', 'cancelled'
 
 // The Activity date is the secondary sort. Use a saved clock time only when
 // the record actually contains one. Never derive it from createdAt/completedAt.
-const taskTime = (entry) => {
-  const activity = entry.activity || {};
-  for (const raw of [activity.time, activity.dueTime, activity.startTime]) {
-    if (typeof raw !== 'string') continue;
-    const match = /^(\d{1,2}):(\d{2})(?::\d{2})?$/.exec(raw.trim());
-    if (!match) continue;
-    const hour = Number(match[1]), minute = Number(match[2]);
-    if (hour <= 23 && minute <= 59) return `${String(hour).padStart(2, '0')}:${match[2]}`;
-  }
-  return '';
-};
+const taskTime = (entry) => activityTime(entry.activity || {});
 
 // Task view uses status as the primary sort, followed by recorded date/time
 // ascending. All entries are taken from the original read-only Story projection

@@ -8997,3 +8997,7 @@ body,
     padding: 18px !important;
   }
 }
+
+.activity-time-field { display: grid; gap: 8px; min-width: 0; }
+.activity-time-field input { padding: 10px 12px; min-width: 0; width: 100%; min-height: 44px; box-sizing: border-box; }
+.activity-time-field button { justify-self: start; min-height: 44px; }

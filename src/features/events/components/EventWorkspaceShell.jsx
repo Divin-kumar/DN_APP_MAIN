@@ -1,3 +1,5 @@
+import { compareActivityDateTime } from '../../../utils/activityTime.js';
+import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
@@ -81,6 +83,7 @@ export function EventWorkspaceContent() {
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDate, setActivityDate] = useState(() => formatMomentDate(new Date()));
+  const [activityTime, setActivityTime] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
@@ -150,6 +153,7 @@ export function EventWorkspaceContent() {
   useEffect(() => {
     if (!location.search.includes('create=activity')) return;
     setActivityTitle('');
+    setActivityTime('');
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
@@ -221,8 +225,8 @@ export function EventWorkspaceContent() {
   const activeSection = sections.find((section) => section.key === sectionName) || sections[0];
   const birthdayAge = String(event.type || '').toLowerCase() === 'birthday' ? getNextBirthdayAge(event.date) : null;
   const activities = [...(event.activities || [])].sort((first, second) => {
-    const dateOrder = new Date(first.date || '9999-12-31').getTime() - new Date(second.date || '9999-12-31').getTime();
-    let result = dateOrder;
+    const dateOrder = compareActivityDateTime(first, second, activitySortDirection);
+    let result = 0;
     if (activitySort === 'title') result = String(first.title || '').localeCompare(String(second.title || ''), undefined, { sensitivity: 'base' });
     if (activitySort === 'priority') {
       const priorityRank = { high: 3, medium: 2, low: 1 };
@@ -237,8 +241,7 @@ export function EventWorkspaceContent() {
       };
       result = statusRank(first) - statusRank(second);
     }
-    if (!result && activitySort !== 'date') result = dateOrder;
-    return activitySortDirection === 'desc' ? -result : result;
+    return result ? (activitySortDirection === 'desc' ? -result : result) : dateOrder;
   });
   const filteredActivities = activities.filter((activity) => {
     const matchesSearch = [activity.title, activity.description].some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase()));
@@ -333,10 +336,10 @@ export function EventWorkspaceContent() {
   const addActivity = (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
-    const values = { title: activityTitle.trim(), date: activityDate, description: activityDescription, priority: activityPriority };
+    const values = { title: activityTitle.trim(), date: activityDate, time: activityTime, description: activityDescription, priority: activityPriority };
     return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
         ...values, id: crypto.randomUUID(), eventId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
-      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityDialogOpen(false); }).catch(() => {});
+      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityTime(''); setActivityDialogOpen(false); }).catch(() => {});
   };
 
   const saveNotes = async (submitEvent) => {
@@ -565,6 +568,7 @@ export function EventWorkspaceContent() {
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
+            <ActivityTimeField value={activityTime} onChange={setActivityTime} />
             <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>

@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.28.4';
+export const GUEST_TOUR_VERSION = '2026.10.29.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -320,7 +320,10 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }];
   // Monthly Diary uses days of the same month, never relative-day spillover.
-  for (const [index, item] of events[1].activities.entries()) item.date = diaryDay([5, 13, 21][index]);
+  for (const [index, item] of events[1].activities.entries()) item.date = diaryDay([5, 5, 21][index]);
+  events[1].activities[0].time = '18:30';
+  events[1].activities[1].time = '07:20';
+  events[1].notes += ' Optional Activity times put same-day entries in clock order in Story and PDF; entries without a time stay last.';
   const incomes = [
     { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, paymentMethod: 'Online', date: date(-5) },
     { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, paymentMethod: 'Cash', date: date(-2) },

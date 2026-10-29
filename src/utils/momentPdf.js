@@ -369,7 +369,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const renderJournalEntry = async (entry, { section = 'timeline', datePage = pdf.pageNumber,
     title = entry.title || 'A memory' } = {}) => {
     const titlePage = pdf.pageNumber;
-    await pdf.text(studioText(title), { size: 16, bold: true, after: 9 });
+    await pdf.text(studioText(title) + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 16, bold: true, after: 9 });
     if (entry.description) await pdf.text(studioText(entry.description), {
       size: 12, leading: 1.58, after: 18,
     });
@@ -423,7 +423,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       await pdf.ensure(74);
       await pdf.text(studioDate(day.date), { size: 10, bold: true, color: palette.accent, after: 12 });
       for (const entry of day.entries) {
-        await pdf.text(studioText(entry.title || 'Diary entry'), { size: 15, bold: true, after: 8 });
+        await pdf.text(studioText(entry.title || 'Diary entry') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 15, bold: true, after: 8 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 12, leading: 1.7, after: 20 });
       }
     }
@@ -434,7 +434,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       for (const entry of group.entries) {
         await pdf.ensure(43);
         await pdf.text(studioText(entry.title || 'Untitled task'), { size: 12, bold: true, after: 3 });
-        const when = entry.date ? studioDate(entry.date) + (entry.displayTime ? '  ' + entry.displayTime : '') : 'No date';
+        const when = (entry.date ? studioDate(entry.date) : 'No date') + (entry.displayTime ? '  ' + entry.displayTime : '');
         await pdf.text(when, { size: 9, color: palette.muted, after: 5 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 10.5, after: 12 });
       }
@@ -449,7 +449,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
           await renderJournalEntry(entry, { section: 'upcoming',
             title: studioDate(entry.date) + '  |  ' + (entry.title || 'Future plan') });
         } else {
-          await pdf.text(studioDate(entry.date) + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
+          await pdf.text(studioDate(entry.date) + (entry.displayTime ? ` ${entry.displayTime}` : '') + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
         }
       }
@@ -462,7 +462,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
           await renderJournalEntry(entry, { section: 'undated', datePage: null,
             title: entry.title || 'Untitled entry' });
         } else {
-          await pdf.text(studioText(entry.title || 'Untitled entry'), { size: 12, bold: true, after: 8 });
+          await pdf.text(studioText(entry.title || 'Untitled entry') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 12, bold: true, after: 8 });
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
         }
       }

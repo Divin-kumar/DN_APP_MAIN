@@ -1,3 +1,4 @@
+import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import ModalDialog from '../../../components/common/ModalDialog';
 import DateField from '../../../components/common/DateField';
 import DropdownSelect from '../../../components/common/DropdownSelect';
@@ -16,6 +17,7 @@ export default function DashboardActivityEditor({ draft, priorities, busy, error
         onChange={(event) => onChange({ title: event.target.value })} placeholder="Activity title" />
       <DateField label="Date" name="dashboard-activity-date" value={draft.date} required disabled={busy}
         onChange={(event) => onChange({ date: event.target.value })} />
+      <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => onChange({ time })} />
       <label htmlFor="dashboard-activity-priority">Priority</label>
       <DropdownSelect id="dashboard-activity-priority" aria-label="Activity priority" value={draft.priority} disabled={busy}
         onChange={(event) => onChange({ priority: event.target.value })}>

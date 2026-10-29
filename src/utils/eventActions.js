@@ -9,7 +9,7 @@ export const duplicateEventData = (event, makeId = () => crypto.randomUUID()) =>
   notes: event.notes || '',
   archived: false,
   activities: (event.activities || []).map((activity) => ({
-    id: makeId(), title: activity.title, date: activity.date,
+    id: makeId(), title: activity.title, date: activity.date, ...(Object.hasOwn(activity, 'time') ? { time: activity.time } : {}),
     description: activity.description || '', priority: activity.priority || 'medium',
     completed: false, cancelled: false, expenses: [],
   })),

@@ -1,3 +1,4 @@
+import { activityTime } from './activityTime.js';
 import { activityStatus } from './activityDetail.js';
 import { getActivityMomentType } from './activityRecords.js';
 import { getEventStatus } from './eventStatus.js';
@@ -76,6 +77,7 @@ export const getUserFilterFields = (scope, records = [], moments = []) => {
     const activity = (record) => domain === 'activities' ? record.activity : record;
     add(`${prefix}title`, 'Activity name', 'text');
     add(`${prefix}date`, 'Date', 'date');
+    add(`${prefix}time`, 'Time', 'dropdown', (record) => activityTime(activity(record)));
     add(`${prefix}status`, 'Status', 'dropdown', (record) => activityStatus(activity(record)));
     add(`${prefix}priority`, 'Priority', 'dropdown', (record) => activity(record)?.priority || 'medium');
     if (domain === 'activities') {

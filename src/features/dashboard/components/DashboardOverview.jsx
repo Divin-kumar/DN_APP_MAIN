@@ -1,3 +1,4 @@
+import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
@@ -349,7 +350,7 @@ export function DashboardOverviewContent() {
                       aria-label={`Open ${activity.title || activity.name || 'activity'}`}
                       onClick={() => navigate(activityDetailPath(target.momentId, target.activityId))}>
                       <span className="dashboard-upcoming-date"><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
-                      <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}</small></span>
+                      <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</small></span>
                       <span className="dashboard-upcoming-arrow" aria-hidden="true">{status === 'completed' ? <Check size={14} /> : <BookOpen size={14} />}</span>
                     </button>
                   </SwipeActionCard>;

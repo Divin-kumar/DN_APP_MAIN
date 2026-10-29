@@ -1,4 +1,4 @@
-import { parseMomentDate } from './momentDates.js';
+import { compareActivityDateTime } from './activityTime.js';
 import { recordId as identity } from './recordIdentity.js';
 
 const records = (value) => Array.isArray(value) ? value.filter((item) => item && typeof item === 'object' && !Array.isArray(item)) : [];
@@ -17,9 +17,5 @@ export const summaryAttachmentsFor = (moment, activityId = null) => {
 };
 
 // A story follows its recorded calendar date. Missing/invalid dates stay last;
-// equal dates keep their stable input order without borrowing creation times.
-export const sortedSummaryActivities = (activities) => records(activities).map((activity) => {
-  let date;
-  try { date = parseMomentDate(activity.date); } catch { /* Invalid legacy date. */ }
-  return { activity, time: date?.getTime() ?? Infinity };
-}).sort((left, right) => left.time - right.time).map(({ activity }) => activity);
+// same-day entries use explicit clock times, with unknown times last and stable ties.
+export const sortedSummaryActivities = (activities) => records(activities).slice().sort(compareActivityDateTime);

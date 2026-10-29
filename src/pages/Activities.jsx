@@ -1,3 +1,5 @@
+import ActivityTimeField from '../components/common/ActivityTimeField';
+import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -133,7 +135,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       const { activity } = resolve(target);
       assertActivityEditable(activity);
       setSaveError('');
-      setDraft({ ...target, title: activity.title || '', date: formatMomentDate(parseMomentDate(activity.date)) || today(),
+      setDraft({ ...target, title: activity.title || '', time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)) || today(),
         priority: activity.priority || 'medium', description: activity.description || '' });
     } catch (error) { setSaveError(error.message); }
   };
@@ -141,8 +143,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     event.preventDefault();
     if (!draft.title.trim() || !draft.momentId) { setSaveError('Choose a Moment and enter an activity title.'); return; }
     runAction(async () => {
-      const { moment } = resolve(draft);
-      const values = { title: draft.title.trim(), date: draft.date, description: draft.description, priority: draft.priority };
+      const { moment, activity } = resolve(draft);
+      const values = { title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity || {}, draft.time), description: draft.description, priority: draft.priority };
       if (draft.activityId) return updateActivity(draft, () => values, 'edit');
       return updateEventItem(uid, isGuest, { ...moment, activities: [...(moment.activities || []), {
         ...values, id: crypto.randomUUID(), eventId: draft.momentId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
@@ -197,6 +199,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           </DropdownSelect>
           <input autoFocus required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Activity title" aria-label="Activity title" disabled={busy} />
           <DateField label="Date" name="activity-date" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} disabled={busy} />
+          <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => setDraft({ ...draft, time })} />
           <DropdownSelect value={draft.priority} aria-label="Activity priority" disabled={busy} onChange={(event) => setDraft({ ...draft, priority: event.target.value })}>
             {!getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).some((option) => option.value === draft.priority) ? <option value={draft.priority}>{draft.priority}</option> : null}
             {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

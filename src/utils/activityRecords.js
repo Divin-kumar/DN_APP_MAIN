@@ -1,3 +1,4 @@
+import { compareActivityDateTime } from './activityTime.js';
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
 import { activityStatus } from './activityDetail.js';
@@ -48,13 +49,7 @@ export const selectActivityEntries = (entries = [], {
     if (!dates.has(entry)) dates.set(entry, safeDate(entry.activity.date));
     return dates.get(entry);
   };
-  const compareDates = (first, second) => {
-    const firstDate = entryDate(first);
-    const secondDate = entryDate(second);
-    // Invalid historical values must not break sorting or jump ahead of dated work.
-    if (!firstDate || !secondDate) return firstDate ? -1 : secondDate ? 1 : 0;
-    return (firstDate.getTime() - secondDate.getTime()) * sign;
-  };
+  const compareDates = (first, second) => compareActivityDateTime(first.activity, second.activity, direction);
   const statusRank = (entry) => {
     if (cancelled(entry.activity)) return 3;
     if (activityStatus(entry.activity) === 'completed') return 2;
@@ -81,6 +76,6 @@ export const selectActivityEntries = (entries = [], {
     if (field === 'title') order = String(first.activity.title || '').localeCompare(String(second.activity.title || ''), undefined, { sensitivity: 'base' });
     if (field === 'priority') order = priorityRank(first.activity) - priorityRank(second.activity);
     if (field === 'status') order = statusRank(first) - statusRank(second);
-    return order * sign || compareDates(first, second) || first.key.localeCompare(second.key) * sign;
+    return order * sign || compareDates(first, second) || (field === 'date' ? 0 : first.key.localeCompare(second.key) * sign);
   });
 };

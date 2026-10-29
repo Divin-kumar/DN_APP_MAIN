@@ -136,7 +136,7 @@ test('Activity filters use product fields, keep actual custom Moment types and c
   h.second.type = 'Other'; h.second.customType = 'Travel';
   const condition = h.find('ConditionBuilder').props.filter;
   assert.deepEqual(condition.schema.map((field) => field.label), [
-    'Activity name', 'Date', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility',
+    'Activity name', 'Date', 'Time', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility',
   ]);
   assert.equal(condition.schema.some((field) => /metadata|createdAt|expense|firestore/.test(field.path)), false);
   assert.ok(condition.schema.find((field) => field.path === 'momentType').values.includes('Travel'));

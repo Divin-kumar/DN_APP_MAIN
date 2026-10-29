@@ -1,3 +1,4 @@
+import ActivityTimeField from '../components/common/ActivityTimeField';
 /*
   Moment-first app shell for dashboard and workspace navigation.
 
@@ -81,6 +82,7 @@ export default function DashboardLayout() {
   const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
   const [quickActivityTitle, setQuickActivityTitle] = useState('');
   const [quickActivityDate, setQuickActivityDate] = useState(financialDate(new Date()));
+  const [quickActivityTime, setQuickActivityTime] = useState('');
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
@@ -254,6 +256,7 @@ export default function DashboardLayout() {
       if (workspaceMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
+      setQuickActivityTime('');
       setQuickActivityDate(financialDate(new Date()));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');
@@ -320,7 +323,7 @@ export default function DashboardLayout() {
         eventId: momentId(event),
         title: quickActivityTitle.trim(),
         description: quickActivityDescription,
-        date: quickActivityDate,
+        date: quickActivityDate, time: quickActivityTime,
         priority: quickActivityPriority,
         completed: false,
         completedAt: null,
@@ -503,6 +506,7 @@ export default function DashboardLayout() {
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
             <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
+            <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} />
             <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>

@@ -1,3 +1,5 @@
+import { activityTime } from '../utils/activityTime.js';
+import ActivityTimeField from '../components/common/ActivityTimeField';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
   Moments listing, saved filters and scoped create/edit actions.
@@ -118,7 +120,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
           {activity ? <span className="dn-v2-moment-activity">
             <span className="dn-v2-activity-kicker">{activity === preview.upcoming ? 'Coming up' : 'Latest activity'}</span>
             <span className="dn-v2-activity-title">{activity.title || 'Untitled activity'}</span>
-            <span className="dn-v2-activity-date">{activity.date ? activityDateLabel(activity.date) : 'Date to be decided'}</span>
+            <span className="dn-v2-activity-date">{activity.date ? activityDateLabel(activity.date) : 'Date to be decided'}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span>
           </span> : event.notes ? <RichText inline className="event-story-note free-text-preview is-truncated" value={event.notes} /> : <span className="dn-v2-activity-empty">No activities yet</span>}
           <span className="event-story-details">
             <span><Clock3 size={13} /> {activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
@@ -168,6 +170,7 @@ export default function Events() {
   const [activityTitle, setActivityTitle] = useState('');
   const [activityDescription, setActivityDescription] = useState('');
   const [activityDate, setActivityDate] = useState(formatMomentDate(new Date()));
+  const [activityTime, setActivityTime] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
@@ -238,6 +241,7 @@ export default function Events() {
     setActivityChooserOpen(false);
     setActivityChooserEvent(event);
     setActivityTitle('');
+    setActivityTime('');
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
@@ -252,7 +256,7 @@ export default function Events() {
       eventId,
       title: activityTitle.trim(),
       description: activityDescription,
-      date: activityDate,
+      date: activityDate, time: activityTime,
       priority: activityPriority,
       completed: false,
       completedAt: null,
@@ -284,6 +288,7 @@ export default function Events() {
     setDrawer(null);
     setEditingEvent(null);
     setActivityTitle('');
+    setActivityTime('');
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
@@ -429,6 +434,7 @@ export default function Events() {
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus required />
             <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
+            <ActivityTimeField value={activityTime} onChange={setActivityTime} />
             <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>

@@ -1,3 +1,4 @@
+import { compareActivityTimes } from './activityTime.js';
 import { getDashboardVisibleActivityEvents } from './dashboardVisibility.js';
 import { getStartOfDay, parseMomentDate } from './momentDates.js';
 
@@ -14,7 +15,7 @@ export const getUpcomingDashboardActivities = (events = [], referenceDate = new 
   return getVisibleActivities(events, momentTypes)
     .filter(({ activity, date }) => !activity.completed && String(activity.status || '').trim().toLowerCase() !== 'completed'
       && date >= today && date <= lastDay)
-    .sort((first, second) => first.date - second.date);
+    .sort((first, second) => first.date - second.date || compareActivityTimes(first.activity, second.activity));
 };
 
 // Memories use actual recorded activity dates, never a projected repeat.
@@ -22,5 +23,5 @@ export const getOnThisDayDashboardActivities = (events = [], referenceDate = new
   getVisibleActivities(events, momentTypes)
     .filter(({ date }) => date.getFullYear() < referenceDate.getFullYear()
       && date.getMonth() === referenceDate.getMonth() && date.getDate() === referenceDate.getDate())
-    .sort((first, second) => second.date - first.date)
+    .sort((first, second) => second.date - first.date || compareActivityTimes(first.activity, second.activity))
 );
