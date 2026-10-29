@@ -2,7 +2,7 @@
 
 The owner reports completing the DN 2.0 deployment. A live update-file check on **29 October 2026** shows **2.0.1** at [DN](https://dn-10.web.app). **2.0.2 is now being prepared for Vercel review**, adding optional times to Activities. This new update has not been published to Firebase.
 
-You can record several Activities on the same date with different times. Story, PDFs and date-sorted Activity lists use those times to put the entries in order. Entries without a time stay after the timed entries on that day. Tasks still group by status first. The Time filter narrows Activities by their saved clock time; date filters keep their existing meaning. Times do not send reminders or change transaction dates. Earlier untimed records stay safe, and backups retain both kinds of entries.
+You can record several Activities on the same date with different times. Date and optional Time sit side by side in the Activity form, including on phones. Story, PDFs and date-sorted Activity lists use those times to put the entries in order. Entries without a time stay after the timed entries on that day. Tasks still group by status first. The Time filter narrows Activities by their saved clock time; date filters keep their existing meaning. Times do not send reminders or change transaction dates. Earlier untimed records stay safe, and backups retain both kinds of entries.
 
 Guest examples demonstrate same-day entries with different times and update only through explicit Refresh demo. Phone-sized browser checks do not replace hands-on iPhone/Safari or real signed-in account checks. Earlier validation and publication attempts remain in the release history.
 

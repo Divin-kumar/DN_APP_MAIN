@@ -505,8 +505,10 @@ export default function DashboardLayout() {
             </DropdownSelect>
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus />
-            <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
-            <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} />
+            <div className="activity-date-time-row">
+              <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
+              <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} />
+            </div>
             <DropdownSelect value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>

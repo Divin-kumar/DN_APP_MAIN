@@ -2856,3 +2856,48 @@ html[data-theme] .dn-payment-method-field>small {font-size:.73rem;color:var(--co
 @media(prefers-reduced-motion:reduce) {
  html[data-theme] .dn-payment-method-choice span {transition:none;}
 }
+
+/* Activity date and optional time stay paired, including narrow phone sheets. */
+html[data-theme] .activity-date-time-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 8px;
+  min-width: 0;
+}
+html[data-theme] .activity-time-field { gap: 6px; }
+html[data-theme] .activity-time-field > label {
+  color: var(--color-text-muted) !important;
+  font-size: .76rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+html[data-theme] .activity-date-time-row :is(input[type="date"], input[type="time"]) {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  height: 44px;
+  padding: 10px 8px !important;
+  border: 1px solid var(--color-border) !important;
+  border-radius: var(--radius-sm) !important;
+  background: var(--color-surface) !important;
+  color: var(--color-text) !important;
+  font: inherit;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.2;
+  appearance: none;
+  -webkit-appearance: none;
+}
+html[data-theme] .activity-date-time-row input:focus-visible {
+  border-color: var(--color-primary) !important;
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 16%, transparent);
+  outline-offset: 1px;
+}
+html[data-theme] .activity-date-time-row input::-webkit-calendar-picker-indicator {
+  width: 16px;
+  height: 16px;
+  margin-left: 0;
+  opacity: .8;
+  cursor: pointer;
+}

@@ -15,9 +15,11 @@ export default function DashboardActivityEditor({ draft, priorities, busy, error
       <label htmlFor="dashboard-activity-title">Activity title</label>
       <input id="dashboard-activity-title" autoFocus required value={draft.title} disabled={busy}
         onChange={(event) => onChange({ title: event.target.value })} placeholder="Activity title" />
-      <DateField label="Date" name="dashboard-activity-date" value={draft.date} required disabled={busy}
-        onChange={(event) => onChange({ date: event.target.value })} />
-      <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => onChange({ time })} />
+      <div className="activity-date-time-row">
+        <DateField label="Date" name="dashboard-activity-date" value={draft.date} required disabled={busy}
+          onChange={(event) => onChange({ date: event.target.value })} />
+        <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => onChange({ time })} />
+      </div>
       <label htmlFor="dashboard-activity-priority">Priority</label>
       <DropdownSelect id="dashboard-activity-priority" aria-label="Activity priority" value={draft.priority} disabled={busy}
         onChange={(event) => onChange({ priority: event.target.value })}>

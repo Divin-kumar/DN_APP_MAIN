@@ -198,8 +198,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             <option value="">Choose a Moment</option>{events.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
           </DropdownSelect>
           <input autoFocus required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Activity title" aria-label="Activity title" disabled={busy} />
-          <DateField label="Date" name="activity-date" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} disabled={busy} />
-          <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => setDraft({ ...draft, time })} />
+          <div className="activity-date-time-row">
+            <DateField label="Date" name="activity-date" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} disabled={busy} />
+            <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => setDraft({ ...draft, time })} />
+          </div>
           <DropdownSelect value={draft.priority} aria-label="Activity priority" disabled={busy} onChange={(event) => setDraft({ ...draft, priority: event.target.value })}>
             {!getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).some((option) => option.value === draft.priority) ? <option value={draft.priority}>{draft.priority}</option> : null}
             {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}

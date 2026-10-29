@@ -433,8 +433,10 @@ export default function Events() {
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
             <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus required />
-            <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
-            <ActivityTimeField value={activityTime} onChange={setActivityTime} />
+            <div className="activity-date-time-row">
+              <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
+              <ActivityTimeField value={activityTime} onChange={setActivityTime} />
+            </div>
             <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>

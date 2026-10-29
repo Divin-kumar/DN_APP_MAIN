@@ -567,8 +567,10 @@ export function EventWorkspaceContent() {
           <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
-            <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
-            <ActivityTimeField value={activityTime} onChange={setActivityTime} />
+            <div className="activity-date-time-row">
+              <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
+              <ActivityTimeField value={activityTime} onChange={setActivityTime} />
+            </div>
             <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
