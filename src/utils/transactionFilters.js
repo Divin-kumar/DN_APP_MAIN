@@ -28,7 +28,7 @@ export const filterTransactions = (transactions, { type = 'all', month = 'all', 
     if (!query) return true;
     return [
       item.name, item.title, plainRichText(item.description), plainRichText(item.notes), item.category, item.type,
-      item.amount, item.date, item.activityTitle, item.eventTitle,
+      item.amount, item.date, item.paymentMethod, item.activityTitle, item.eventTitle,
     ].some((value) => String(value ?? '').toLowerCase().includes(query));
   });
 };
@@ -71,10 +71,10 @@ export const summarizeTransactions = (transactions) => {
 };
 
 // Normalizes the unified form to existing persisted record shapes. No data migration required.
-export const transactionPayload = (form) => {
+export const transactionPayload = (form, { paymentMethods, previousPaymentMethod } = {}) => {
   const common = {
     name: String(form.title || '').trim(),
-    paymentMethod: requirePaymentMethod(form.paymentMethod),
+    paymentMethod: requirePaymentMethod(form.paymentMethod, paymentMethods, previousPaymentMethod),
     amount: Number(form.amount),
     date: form.date,
     description: String(form.notes || ''),

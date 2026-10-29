@@ -11,7 +11,8 @@ const comparisons = Object.freeze({
 
 // Offer everyday comparisons without changing the engine's legacy semantics.
 export const filterEditorOperators = (field, currentOperator) => {
-  const choices = comparisons[field?.type] || comparisons.text;
+  const base = comparisons[field?.type] || comparisons.text;
+  const choices = field?.allowEmpty ? [...base, ['empty', 'Not specified'], ['not_empty', 'Specified']] : base;
   const previous = operatorsForField(field, currentOperator).find(([operator]) => operator === currentOperator);
   return previous && !choices.some(([operator]) => operator === currentOperator)
     ? [...choices, [previous[0], `${previous[1]} (previous filter)`]] : choices;

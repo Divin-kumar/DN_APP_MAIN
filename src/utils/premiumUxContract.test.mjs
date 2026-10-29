@@ -68,7 +68,7 @@ test('Finance card delegates Edit and Delete through the same surface', () => {
 test('Finance retains top income, expense and balance without restoring an Overview tab', () => {
   const page = read('../pages/Financials.jsx');
   assert.match(page, /summarizeTransactions\(/);
-  assert.match(page, /transactionDateConditions\(conditions\.state\.group\)/);
+  assert.match(page, /summarizeTransactions\(filtered\)/);
   for (const label of ['Income','Expense','Balance']) assert.match(page, new RegExp('> ' + label + '</span>'));
   assert.match(page, /className="dn-finance-summary-grid"/);
   assert.doesNotMatch(page, /<NavLink|dn-financial-tabs/);
@@ -129,7 +129,7 @@ test('finance density has one-row totals and a single compact transaction headin
   const page = read('../pages/Financials.jsx');
   const history = read('../components/financials/TransactionHistory.jsx');
   const css = read('../design-system.css');
-  assert.match(page, /aria-label=\{`Financial totals for/);
+  assert.match(page, /aria-label="Financial totals for matching transactions"/);
   assert.doesNotMatch(page, /className="dn-finance-summary-period"/);
   assert.match(history, /className="dn-transactions-heading-copy"/);
   assert.match(history, /<p title="All income and expenses in one place">All income and expenses<\/p>/);

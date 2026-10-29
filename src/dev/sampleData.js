@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.29.1';
+export const GUEST_TOUR_VERSION = '2026.10.29.2';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -308,7 +308,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: t, name: 'Explore DN · Home project', type: 'Project', date: date(-4),
-    notes: 'Try changing a task status. In progress comes first, then Completed, then Cancelled. Dates sort within each group.',
+    notes: 'Try changing a task status. In progress comes first, then Completed, then Cancelled. Dates sort within each group. In Transactions, filter by Cash or Online and watch Income, Expense and Balance follow the matching rows. Add your own payment choices in Settings → Code Lists → Payment Methods.',
     attachments: [], memories: [{ id: 'dn-tour-memory-2', title: 'The original plan', body: 'Older notes remain readable reflections.' }],
     activities: [
       activity('t1', t, 'Choose a paint colour', -4, 'Compare two options.', 'completed'),

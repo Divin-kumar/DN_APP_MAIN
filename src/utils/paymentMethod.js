@@ -1,11 +1,15 @@
-// One optional stored field for both existing income and expense collections.
-// Missing/legacy values remain unclassified until the owner explicitly edits.
-export const PAYMENT_METHODS = Object.freeze(['Cash', 'Online']);
+import { getCodeListItems } from './codeLists.js';
+
+// Reads preserve historical/custom names even after their Code List is edited.
+// Writes accept active configured choices or this transaction's retained value.
 export const normalizePaymentMethod = (value) =>
-  typeof value === 'string' && PAYMENT_METHODS.includes(value.trim()) ? value.trim() : null;
+  typeof value === 'string' && value.trim() ? value.trim() : null;
 export const paymentMethodLabel = (value) => normalizePaymentMethod(value) || 'Not specified';
-export const requirePaymentMethod = (value) => {
+export const requirePaymentMethod = (value, configuredValues, previousValue) => {
   const normalized = normalizePaymentMethod(value);
-  if (!normalized) throw new Error('Choose Cash or Online as the payment method.');
+  const choices = getCodeListItems('paymentMethods', configuredValues);
+  if (!normalized || (!choices.includes(normalized) && normalized !== normalizePaymentMethod(previousValue))) {
+    throw new Error('Choose an available payment method. Manage choices in Settings → Code Lists.');
+  }
   return normalized;
 };

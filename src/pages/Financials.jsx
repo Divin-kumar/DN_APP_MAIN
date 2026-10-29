@@ -9,8 +9,6 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useConditionFilters from '../hooks/useConditionFilters';
 import { transactionConditions } from '../utils/listConditionMigration';
-import { compileConditionGroup } from '../utils/conditionEngine';
-import { transactionDateConditions } from '../utils/listConditionMigration';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions } from '../utils/transactionFilters';
 import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
@@ -63,14 +61,8 @@ export default function Financials() {
   const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters), moments: events });
   const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
-  // Summary is tied to the selected month, not list search or the type selector.
-  // Selecting Expense must not artificially zero out the Income and Balance cards.
-  const dateGroup = useMemo(() => transactionDateConditions(conditions.state.group), [conditions.state.group]);
-  const matchesSummaryDate = useMemo(() => compileConditionGroup(dateGroup, conditions.schema), [dateGroup, conditions.schema, conditions.matches]);
-  const summary = useMemo(() => summarizeTransactions(
-    allTransactions.filter(matchesSummaryDate),
-  ), [allTransactions, matchesSummaryDate]);
-  const summaryPeriod = 'Event date conditions (all months when unrestricted)';
+  // Cards and rows always describe the same cohort, including search and OR groups.
+  const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
   const hasLoadError = Boolean(incomeError || expenseError);
 
   useEffect(() => {
@@ -124,7 +116,8 @@ export default function Financials() {
       {hasLoadError ? null : (!ready || loadingIncome || loadingExpense)
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
-          <section className="dn-finance-summary" aria-label={`Financial totals for ${summaryPeriod}`}>
+          <section className="dn-finance-summary" aria-label="Financial totals for matching transactions">
+            <span className="moment-finance-caption">Matching transactions</span>
             <div className="dn-finance-summary-grid">
               <div className="dn-finance-metric dn-finance-metric-income">
                 <span className="dn-finance-metric-heading"><ArrowDownLeft size={18} aria-hidden="true" /> Income</span>

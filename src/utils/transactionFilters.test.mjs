@@ -70,10 +70,12 @@ test('unified transaction payload keeps legacy income/expense keys and activity 
   assert.throws(() => transactionPayload({ ...common, transactionKind: 'other' }), /transaction type/);
 });
 
-test('Phase 5 requires only Cash or Online for saved transaction payloads', () => {
+test('transaction payloads use configured payment choices and retain a retired original method', () => {
   const form = { transactionKind:'expense', title:'Taxi', amount:125,date:'2026-10-28',category:'Travel' };
-  assert.throws(() => transactionPayload(form), /Cash or Online/);
-  assert.throws(() => transactionPayload({...form,paymentMethod:'Card'}), /Cash or Online/);
+  assert.throws(() => transactionPayload(form), /available payment method/);
+  assert.throws(() => transactionPayload({...form,paymentMethod:'Card'}), /available payment method/);
   assert.deepEqual(['Cash','Online'].map(method=>transactionPayload({...form,paymentMethod:method}).paymentMethod),['Cash','Online']);
   assert.equal(transactionPayload({...form,transactionKind:'income',paymentMethod:'Online'}).paymentMethod,'Online');
+  assert.equal(transactionPayload({...form,paymentMethod:'UPI'}, {paymentMethods:['UPI']}).paymentMethod,'UPI');
+  assert.equal(transactionPayload({...form,paymentMethod:'Cheque'}, {paymentMethods:[],previousPaymentMethod:'Cheque'}).paymentMethod,'Cheque');
 });

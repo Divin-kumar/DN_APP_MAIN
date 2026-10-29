@@ -4,6 +4,7 @@ export const DEFAULT_CODE_LISTS = Object.freeze({
   eventTypes: ['Birthday', 'Anniversary', 'Festival', 'Function', 'Personal'],
   incomeTypes: ['Salary', 'Freelance', 'Bonus'],
   expenseCategories: ['Food', 'Hospital', 'Shopping', 'Travel', 'Entertainment'],
+  paymentMethods: ['Cash', 'Online'],
   activityPriorities: [
     { value: 'low', label: 'Low priority', active: true },
     { value: 'medium', label: 'Medium priority', active: true },
@@ -19,9 +20,10 @@ export const DEFAULT_CODE_LISTS = Object.freeze({
 // Keep this version independent from the app/PWA build version. For future default additions,
 // increment the schema version and list only the new entries in that version's `additions` map.
 // Never copy or replace an existing entry during a migration.
-export const CODE_LIST_SCHEMA_VERSION = 1;
+export const CODE_LIST_SCHEMA_VERSION = 2;
 export const CODE_LIST_MIGRATIONS = Object.freeze({
   1: Object.freeze({ additions: Object.freeze({}) }),
+  2: Object.freeze({ missingLists: Object.freeze({ paymentMethods: DEFAULT_CODE_LISTS.paymentMethods }) }),
 });
 
 export const LEGACY_CODE_LISTS_STORAGE_KEY = 'dn_admin_values';
@@ -130,6 +132,15 @@ export const migrateStoredCodeLists = (
       const existingValues = new Set(currentEntries.map((entry) => entry.value));
       const newEntries = serializeCodeListEntries(additions).filter((entry) => !existingValues.has(entry.value));
       adminValues[listKey] = [...currentEntries, ...newEntries];
+    });
+
+    // New list domains seed only when absent. An intentionally empty, renamed
+    // or disabled payment list remains authoritative, including on first upgrade.
+    Object.entries(migration.missingLists || {}).forEach(([listKey, defaults]) => {
+      if (Object.prototype.hasOwnProperty.call(DEFAULT_CODE_LISTS, listKey)
+        && !Array.isArray(storedValues[listKey])) {
+        adminValues[listKey] = serializeCodeListEntries(defaults);
+      }
     });
 
     version = nextVersion;
@@ -287,8 +298,10 @@ export const collectReferencedCodeListValues = ({ events = [], expenses = [], in
     add('eventTypes', event.customType);
     (event.activities || []).forEach((activity) => add('activityPriorities', activity.priority));
   });
-  expenses.forEach((expense) => add('expenseCategories', expense.category));
-  incomes.forEach((income) => add('incomeTypes', income.type));
+  expenses.forEach((expense) => { add('expenseCategories', expense.category); add('paymentMethods', expense.paymentMethod); });
+  incomes.forEach((income) => { add('incomeTypes', income.type); add('paymentMethods', income.paymentMethod); });
+  events.forEach((event) => (event.activities || []).forEach((activity) =>
+    (activity.expenses || []).forEach((expense) => add('paymentMethods', expense.paymentMethod))));
 
   return Object.fromEntries(Object.entries(references).map(([listKey, values]) => [listKey, [...values]]));
 };

@@ -5,7 +5,7 @@ import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
-import { PAYMENT_METHODS, normalizePaymentMethod } from '../../utils/paymentMethod';
+import { normalizePaymentMethod, requirePaymentMethod } from '../../utils/paymentMethod';
 
 const today = () => {
   const date = new Date();
@@ -59,6 +59,11 @@ export default function TransactionForm({
     return [...new Set([...list, form.category, 'Other'].filter(Boolean))];
   }, [adminValues.incomeTypes, adminValues.expenseCategories, form.transactionKind, form.category]);
 
+  const previousMethod = normalizePaymentMethod(initialTransaction?.paymentMethod);
+  const paymentMethods = useMemo(() => [...new Set([
+    ...getCodeListItems('paymentMethods', adminValues.paymentMethods), previousMethod,
+  ].filter(Boolean))], [adminValues.paymentMethods, previousMethod]);
+
   const moments = useMemo(() => getTransactionMoments(events), [events]);
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
@@ -87,8 +92,9 @@ export default function TransactionForm({
       setError('Enter a title, category, valid positive amount and date.');
       return;
     }
-    if (!normalizePaymentMethod(form.paymentMethod)) {
-      setError('Choose Cash or Online as the payment method.');
+    try { requirePaymentMethod(form.paymentMethod, adminValues.paymentMethods, previousMethod); }
+    catch (paymentError) {
+      setError(paymentError.message);
       return;
     }
     setError('');
@@ -128,12 +134,15 @@ export default function TransactionForm({
       <fieldset className="dn-payment-method-field" aria-required="true">
         <legend>Payment method *</legend>
         <div className="dn-payment-method-options">
-          {PAYMENT_METHODS.map((method) => <label key={method} className="dn-payment-method-choice">
+          {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
             <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
               onChange={() => change('paymentMethod', method)} disabled={busy} />
             <span>{method}</span>
           </label>)}
         </div>
+        {!paymentMethods.length ? <small>Add a payment method in Settings → Code Lists before saving.</small> : null}
+        {previousMethod && !getCodeListItems('paymentMethods', adminValues.paymentMethods).includes(previousMethod)
+          ? <small>The saved method is no longer active. Keep it for this transaction or choose an active method.</small> : null}
         {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
           ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
       </fieldset>

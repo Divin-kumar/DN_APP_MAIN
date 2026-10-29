@@ -187,7 +187,10 @@ export const validateBackupDocument = (backup, options = {}) => {
   if (!Number.isInteger(backup.codeListSchemaVersion) || backup.codeListSchemaVersion < 1) {
     throw new Error('Backup Code List schema version is invalid.');
   }
-  REQUIRED_LIST_KEYS.forEach((key) => {
+  // Older v3 backups predate editable Payment Methods; validate the new list
+  // whenever supplied without making it mandatory in those existing backups.
+  const listKeys = [...REQUIRED_LIST_KEYS, ...(backup.codeLists.paymentMethods !== undefined ? ['paymentMethods'] : [])];
+  listKeys.forEach((key) => {
     if (!Array.isArray(backup.codeLists[key])) throw new Error(`Backup Code Lists are missing ${key}.`);
     backup.codeLists[key].forEach((entry) => {
       const value = typeof entry === 'string' ? entry.trim() : String(entry?.value ?? entry?.id ?? '').trim();

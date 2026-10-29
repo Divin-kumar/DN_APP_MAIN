@@ -3,6 +3,8 @@ import { activityStatus } from './activityDetail.js';
 import { getActivityMomentType } from './activityRecords.js';
 import { getEventStatus } from './eventStatus.js';
 import { recordId } from './recordIdentity.js';
+import { getActiveCodeListMeta, getCodeListMeta } from './codeLists.js';
+import { normalizePaymentMethod } from './paymentMethod.js';
 
 const labels = { 'in-progress': 'In progress', completed: 'Completed', cancelled: 'Cancelled', archived: 'Archived',
   income: 'Income', expense: 'Expense', high: 'High', medium: 'Medium', low: 'Low', true: 'Archived', false: 'Active' };
@@ -27,15 +29,15 @@ export const normalizeUserFilterGroup = (scope, group) => {
   return visit(group);
 };
 
-// These are product choices, not an inventory of stored objects. Values still
-// come from the currently scoped records; stable linked IDs remain internal.
-export const getUserFilterFields = (scope, records = [], moments = []) => {
+// Product fields combine active scoped Code Lists with recorded historical
+// values. Derived/link choices stay record-driven; linked IDs remain internal.
+export const getUserFilterFields = (scope, records = [], moments = [], adminValues = null) => {
   const domain = domainFor(scope);
   if (!domain) return null;
   const definitions = [];
-  const add = (path, label, type, readValue = (record) => at(record, path), labelValue = readable) => {
+  const add = (path, label, type, readValue = (record) => at(record, path), labelValue = readable, codeListKeys = []) => {
     definitions.push({ path, label, type, readValue, labelValue, allowCustom: type !== 'dropdown',
-      legacyTextComparisons: type === 'dropdown' && path !== 'archived', hideRawValues: ['momentId', 'eventId', 'activityId'].includes(path) });
+      codeListKeys, allowEmpty: path === 'paymentMethod', legacyTextComparisons: type === 'dropdown' && path !== 'archived', hideRawValues: ['momentId', 'eventId', 'activityId'].includes(path) });
   };
   const momentMap = new Map(moments.map((moment) => [recordId(moment.id || moment.firestoreId), moment]));
   const momentNames = new Map();
@@ -68,7 +70,7 @@ export const getUserFilterFields = (scope, records = [], moments = []) => {
       const values = Array.isArray(rule?.value) ? rule.value : [rule?.value];
       if (['contains', 'not_contains', 'starts', 'ends'].includes(rule?.operator)) return record.type || 'Personal';
       return record.type === 'Other' && values.includes('Other') ? 'Other' : getActivityMomentType(record);
-    });
+    }, readable, ['eventTypes']);
     add('date', 'Event date', 'date');
     add('status', 'Status', 'dropdown', getEventStatus);
     add('archived', 'Visibility', 'dropdown', (record) => Boolean(record.archived));
@@ -79,17 +81,18 @@ export const getUserFilterFields = (scope, records = [], moments = []) => {
     add(`${prefix}date`, 'Date', 'date');
     add(`${prefix}time`, 'Time', 'dropdown', (record) => activityTime(activity(record)));
     add(`${prefix}status`, 'Status', 'dropdown', (record) => activityStatus(activity(record)));
-    add(`${prefix}priority`, 'Priority', 'dropdown', (record) => activity(record)?.priority || 'medium');
+    add(`${prefix}priority`, 'Priority', 'dropdown', (record) => activity(record)?.priority || 'medium', readable, ['activityPriorities']);
     if (domain === 'activities') {
       add('momentId', 'Moment', 'dropdown', (record) => record.momentId, (value) =>
         momentNames.get(String(value)) || 'Unavailable Moment');
-      add('momentType', 'Moment type', 'dropdown');
+      add('momentType', 'Moment type', 'dropdown', undefined, readable, ['eventTypes']);
       add('archived', 'Moment visibility', 'dropdown', (record) => Boolean(record.archived));
     }
   } else {
     add('name', 'Title', 'text', (record) => record.name || record.title || '');
     add('transactionKind', 'Type', 'dropdown');
-    add('category', 'Category', 'dropdown', (record) => record.transactionKind === 'income' ? record.type || record.category || '' : record.category || '');
+    add('category', 'Category', 'dropdown', (record) => record.transactionKind === 'income' ? record.type || record.category || '' : record.category || '', readable, ['incomeTypes', 'expenseCategories']);
+    add('paymentMethod', 'Payment method', 'dropdown', (record) => normalizePaymentMethod(record.paymentMethod), readable, ['paymentMethods']);
     add('amount', 'Amount', 'number');
     add('date', 'Date', 'date');
     if (domain === 'transactions') add('eventId', 'Moment', 'dropdown', (record) => recordId(record.eventId), (value) =>
@@ -105,10 +108,14 @@ export const getUserFilterFields = (scope, records = [], moments = []) => {
     }, (value) => activityNames.get(String(value)) || legacyActivityNames.get(String(value)) || 'Unavailable Activity');
   }
   return definitions.map((field) => {
-    const values = [...new Set(records.map((record) => field.readValue(record))
+    const configured = adminValues ? field.codeListKeys.flatMap((key) => getActiveCodeListMeta(key, adminValues[key])) : [];
+    const configuredLabels = new Map((adminValues ? field.codeListKeys.flatMap((key) => getCodeListMeta(key, adminValues[key])) : [])
+      .map((entry) => [entry.value, entry.label]));
+    const labelValue = (value) => configuredLabels.get(String(value)) || field.labelValue(value);
+    const values = [...new Set([...configured.map((entry) => entry.value), ...records.map((record) => field.readValue(record))]
       .filter((value) => value !== undefined && value !== null && value !== '').map(String))];
-    const options = values.map((value) => ({ value, label: field.labelValue(value) }))
+    const options = values.map((value) => ({ value, label: labelValue(value) }))
       .sort((first, second) => first.label.localeCompare(second.label, undefined, { numeric: true }));
-    return { ...field, options, values: options.map((option) => option.value) };
+    return { ...field, labelValue, options, values: options.map((option) => option.value) };
   });
 };

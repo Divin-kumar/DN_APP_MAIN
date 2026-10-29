@@ -79,6 +79,7 @@ const openActivities = async (t) => {
         const file = importer?.replaceAll('\\', '/') || '';
         if (source === 'react') return '\0activities-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0activities-jsx';
+        if (file.endsWith('/src/hooks/useConditionFilters.js') && source.endsWith('/store/useAppStore')) return '\0activities-app';
         if (!file.endsWith('/src/pages/Activities.jsx')) return null;
         if (source.endsWith('/services/scopedRecordActions')) return '\0activities-writer';
         if (source === 'react-router-dom') return '\0activities-router';

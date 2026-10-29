@@ -94,7 +94,7 @@ test('account financial readers include unified transactions, retain source rout
         if (id === '\0financial-test-firestore') return `export const { ${Object.keys(api).join(', ')} } = globalThis[${JSON.stringify(fixtureKey)}];`;
         if (id === '\0financial-hook-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; const api=()=>globalThis[${JSON.stringify(fixtureKey)}].hook; export const scopedRecordActions=createScopedRecordActions({getSession:()=>api().appState,getEvents:()=>api().eventState});`;
         if (id === '\0financial-hook-react') return 'export const useCallback = (callback) => callback;';
-        if (id === '\0financial-hook-app') return `export default (selector) => selector(globalThis[${JSON.stringify(fixtureKey)}].hook.appState);`;
+        if (id === '\0financial-hook-app') return `const useStore=(selector)=>selector(globalThis[${JSON.stringify(fixtureKey)}].hook.appState); useStore.getState=()=>globalThis[${JSON.stringify(fixtureKey)}].hook.appState; export default useStore;`;
         if (id === '\0financial-hook-event') return `const useStore = () => globalThis[${JSON.stringify(fixtureKey)}].hook.eventState; useStore.getState = useStore; export default useStore;`;
         if (['\0financial-hook-income', '\0financial-hook-expense'].includes(id)) {
           const store = id.endsWith('income') ? 'incomeStore' : 'expenseStore';
@@ -208,7 +208,7 @@ test('account financial readers include unified transactions, retain source rout
   api.hook.appState = { user: null, isGuest: true };
   expenseStore.setState({loadedFor:'guest:anonymous',activeLoadKey:'guest:anonymous'});
   await assert.rejects(() => useTransactionManager().removeTransaction({ ...recovered, transactionKind: 'expense', eventId: 'missing-moment', activityId: 'missing-activity' }), /moment is unavailable/, 'guest mirror safety remains unchanged');
-  api.hook.appState = { user: { uid: 'A' }, isGuest: false };
+  api.hook.appState = { user: { uid: 'A' }, isGuest: false, adminValuesOwner: 'A', adminValues: { paymentMethods: ['Cash', 'Online'] } };
   expenseStore.setState({loadedFor:'user:A',activeLoadKey:'user:A'});
   api.hook.eventState.events = [{ id: 'moment', activities: [{ id: 'activity', expenses: [recovered] }] }];
   expenseStore.getState().setExpenses([recovered]);

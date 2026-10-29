@@ -127,7 +127,7 @@ test('the last active Guest and synthetic Account filters persist separately whe
   await expect(page.locator('.event-story-main')).toContainText('Weekend in Ooty');
 });
 
-test('Finance totals follow only date conditions and retain full totals when an OR branch permits every date', async ({ page }) => {
+test('Finance totals follow the same AND and OR conditions as the transaction rows', async ({ page }) => {
   await seedGuest(page, { moments: [], incomes: [
     { id: 'oct-income', name: 'October income', amount: 1000, date: '2026-10-01', type: 'Other' },
     { id: 'sep-income', name: 'September income', amount: 500, date: '2026-09-01', type: 'Other' },
@@ -149,9 +149,9 @@ test('Finance totals follow only date conditions and retain full totals when an 
   await selectOption(page, 'Value for Type', 'Expense');
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(1);
   await expect(page.locator('.dn-transaction-copy strong')).toHaveText('October expense');
-  await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,000');
+  await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹0');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹230');
-  await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹770');
+  await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('-₹230');
 
   await page.evaluate((key) => {
     const state = JSON.parse(localStorage.getItem(key));
@@ -163,9 +163,9 @@ test('Finance totals follow only date conditions and retain full totals when an 
   await expect(page.getByRole('combobox', { name: 'Match filters', exact: true })).toHaveCount(0);
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(3);
   await expect(page.locator('.dn-transaction-copy strong').filter({ hasText: 'September income' })).toHaveCount(0);
-  await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,500');
+  await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,000');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹300');
-  await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹1,200');
+  await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹700');
 });
 
 test('Archive and Restore from a filtered Moment list preserve the original cancelled status', async ({ page }) => {

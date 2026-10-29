@@ -50,6 +50,8 @@ const getRecordUsageCount = (listKey, value, state) => {
       return expenses.filter((expense) => expense.category === value).length;
     case 'incomeTypes':
       return incomes.filter((income) => income.type === value).length;
+    case 'paymentMethods':
+      return [...incomes, ...expenses].filter((record) => record.paymentMethod === value).length;
     case 'activityPriorities':
       return events.reduce((count, event) => count + (event.activities || []).filter((activity) => activity.priority === value).length, 0);
     case 'reminderPresets':
@@ -397,7 +399,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       {warningValue ? (
         <ModalDialog title="Value is currently in use" onClose={() => setWarningValue(null)}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>
-            {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : listKey === 'activityPriorities' ? 'activity record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
+            {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : listKey === 'paymentMethods' ? 'transaction' : listKey === 'activityPriorities' ? 'activity record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
             Deleting this value may affect existing records and reporting.
           </div>
           <div className="settings-actions">
@@ -408,6 +410,29 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       ) : null}
     </section>
   );
+}
+
+function PaymentMethodsSection() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const uid = user?.uid;
+  const scope = `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
+  const incomes = useIncomeStore();
+  const expenses = useExpenseStore();
+  useEffect(() => {
+    if (!uid && !isGuest) return;
+    incomes.loadIncomes(uid, isGuest);
+    expenses.loadExpenses(uid, isGuest);
+  }, [uid, isGuest, incomes.loadIncomes, expenses.loadExpenses]);
+  if (incomes.error || expenses.error) return <section className="settings-section" role="alert">
+    <h3>Payment Methods</h3>
+    <p>Transactions could not be loaded to check which methods are in use.</p>
+    <button type="button" className="settings-secondary-button" onClick={() => {
+      incomes.loadIncomes(uid, isGuest); expenses.loadExpenses(uid, isGuest);
+    }}>Retry loading payment methods</button>
+  </section>;
+  if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section className="settings-section" role="status">Loading payment methods…</section>;
+  return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" />;
 }
 
 
@@ -583,6 +608,7 @@ export default function CodeLists() {
         <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Choose each type’s Story presentation, greeting generation, and separate Dashboard visibility for Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
+        <PaymentMethodsSection />
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
         <CodeListSection title="Reminder Presets" description="Saved presets for the future Notifications feature." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
       </> : null}
@@ -593,7 +619,7 @@ export default function CodeLists() {
           <span className="settings-accordion-icon"><BellRing size={18} /></span>
           <div>
             <h3>Notes</h3>
-            <p>Only supported code lists are managed here. Derived statuses and attachment/memory taxonomies stay out of scope for now.</p>
+            <p>Add your own choices to the lists above. Active choices appear in their forms and filters; saved records keep their original values. Status and visibility follow the app’s actions, while Moment, Activity and time choices come from your records. Adding a new field requires an app update; its choices can be managed here once supported.</p>
           </div>
         </div>
       </section>

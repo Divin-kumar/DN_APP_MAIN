@@ -115,7 +115,7 @@ test('Activity Detail owns Cancel/Restore/Delete actions; overview cards stay me
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Room deposit');
 });
 
-test('Moment Transactions has five reachable tabs, full-Moment totals, independent filters and in-place forms', async ({ page }) => {
+test('Moment Transactions has five reachable tabs, matching totals, independent filters and in-place forms', async ({ page }) => {
   const errors = await seedGuest(page); await page.goto('/events/moment-one/transactions');
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
   await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Moments');
@@ -137,7 +137,7 @@ test('Moment Transactions has five reachable tabs, full-Moment totals, independe
   await page.getByRole('searchbox', { name: 'Search Moment transactions' }).fill('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).not.toContainText('Trip fund');
-  await expect(totals).toContainText('₹1,000');
+  await expect(totals.locator('dd')).toHaveText(['₹0', '₹20', '-₹20']);
   await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment', exact: true })).toContainText('Weekend in Ooty');
@@ -149,8 +149,11 @@ test('Moment Transactions has five reachable tabs, full-Moment totals, independe
   await dialog.getByRole('radio', { name: 'Cash' }).check();
   await dialog.getByRole('button', { name: 'Add Transaction', exact: true }).click();
   await expect(dialog).toHaveCount(0); await expect(page).toHaveURL(/\/events\/moment-one\/transactions$/);
-  await expect(totals).toContainText('₹170');
-  await page.reload(); await expect(totals).toContainText('₹170');
+  await expect(totals.locator('dd')).toHaveText(['₹0', '₹20', '-₹20']);
+  await page.reload(); await expect(totals.locator('dd')).toHaveText(['₹0', '₹20', '-₹20']);
+  await page.getByRole('button', { name: /^Filters and sort/ }).click();
+  await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(totals.locator('dd')).toHaveText(['₹1,000', '₹170', '₹830']);
   await page.getByRole('link', { name: 'Story', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Moment contents' })).toContainText('Transactions');
   await page.goBack(); await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();

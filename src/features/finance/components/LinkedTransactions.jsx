@@ -10,14 +10,14 @@ import ListControls from '../../../components/common/ListControls';
 import SortControl from '../../../components/common/SortControl';
 import { TRANSACTION_SORT_OPTIONS, TRANSACTION_SORT_VALUES, transactionSortForField, transactionSortSummary } from '../../../utils/userListSort';
 import { TransactionCard, formatTransactionMoney as momentMoney } from '../../../components/financials/TransactionHistory';
-import { filterTransactions, sortTransactions } from '../../../utils/transactionFilters';
+import { filterTransactions, sortTransactions, summarizeTransactions } from '../../../utils/transactionFilters';
 
 const DEFAULTS = Object.freeze({ search: '', type: 'all', activityId: '', month: 'all', sort: 'date-desc' });
 const RULES = Object.freeze({ type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES });
 
-export function MomentFinanceSummary({ summary, label = 'Totals for this Moment', showCaption = true }) {
+export function MomentFinanceSummary({ summary, label = 'Totals for this Moment', caption = label, showCaption = true }) {
   return <div className="moment-finance-summary" role="group" aria-label={label}>
-    {showCaption ? <span className="moment-finance-caption">{label}</span> : null}
+    {showCaption ? <span className="moment-finance-caption">{caption}</span> : null}
     <dl><div><dt>Income</dt><dd>{momentMoney(summary.income)}</dd></div>
       <div><dt>Expense</dt><dd>{momentMoney(summary.expense)}</dd></div>
       <div><dt>Balance</dt><dd>{momentMoney(summary.balance)}</dd></div></dl>
@@ -33,7 +33,8 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
     { initialGroup: transactionConditions(filters), contextKey: finance.sample, moments: finance.events });
   const [sortField, sortDirection] = filters.sort.split('-');
   const filtered = activityId ? finance.transactions : sortTransactions(filterTransactions(finance.transactions, { search: filters.search }).filter(conditions.matches), filters.sort);
-  const totals = <MomentFinanceSummary summary={finance.summary} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'} showCaption={!minimal} />;
+  const totals = <MomentFinanceSummary summary={summarizeTransactions(filtered)} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'}
+    caption={activityId ? 'Totals for this Activity' : 'Matching transactions'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
   if (activityId && minimal && finance.ready && !finance.error && finance.transactions.length === 0) return null;
   return <div className={`moment-transactions${minimal ? ' is-minimal' : ''}${minimal && finance.ready && !finance.error && finance.transactions.length ? ' has-linked-transactions' : ''}`}>

@@ -58,7 +58,7 @@ test('Phase 5 payment method is optional for historical data and normalized for 
       const record = normalizeFinancialRecord({ id: method, paymentMethod: method }, kind);
       assert.equal(record.paymentMethod, method);
     }
-    assert.equal(normalizeFinancialRecord({ paymentMethod: 'Bank' }, kind).paymentMethod, null);
+    assert.equal(normalizeFinancialRecord({ paymentMethod: 'Bank' }, kind).paymentMethod, 'Bank');
   }
   const entries = toTransactions([normalizeFinancialRecord({id:'income',amount:250,paymentMethod:'Online'},'income')],
     [normalizeFinancialRecord({id:'expense',amount:100,paymentMethod:'Cash'})]);

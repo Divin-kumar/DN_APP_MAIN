@@ -58,7 +58,15 @@ export default function useTransactionManager() {
   const saveTransaction = useCallback(async (form, original = null) => {
     const context = records.capture();
     assertContext(context);
-    const payload = transactionPayload(form);
+    const settings = useAppStore.getState();
+    if (settings.adminValuesLoading || settings.adminValuesError
+      || settings.adminValuesOwner !== (isGuest ? 'guest' : uid)) {
+      throw new Error('Payment methods are still loading. Reload Code Lists before saving.');
+    }
+    const payload = transactionPayload(form, {
+      paymentMethods: settings.adminValues.paymentMethods,
+      previousPaymentMethod: original?.paymentMethod,
+    });
     if (payload.eventId && !isRecordScopeLoaded(useEventStore.getState(), context.scope, context.sample)) {
       throw new Error('Moments are still loading. Please retry.');
     }

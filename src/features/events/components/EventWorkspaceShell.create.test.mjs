@@ -94,6 +94,7 @@ const openWorkspace = async (t) => {
         const file = importer?.replaceAll('\\', '/') || '';
         if (source === 'react') return '\0workspace-create-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0workspace-create-jsx';
+        if (file.endsWith('/src/hooks/useConditionFilters.js') && source.endsWith('/store/useAppStore')) return '\0workspace-create-app';
         if (!file.endsWith('/src/features/events/components/EventWorkspaceShell.jsx')) return null;
         if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
         if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';

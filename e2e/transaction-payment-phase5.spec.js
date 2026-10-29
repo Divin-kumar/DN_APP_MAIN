@@ -9,7 +9,7 @@ test('Phase 5 new Cash expense is required, persisted, edited to Online, and sho
   await dialog.getByRole('spinbutton').fill('89');
   await dialog.getByRole('textbox',{name:'Title *',exact:true}).fill('Coffee from Phase 5');
   await dialog.getByRole('button',{name:'Add Transaction'}).click();
-  await expect(dialog.getByRole('alert')).toContainText('Choose Cash or Online');
+  await expect(dialog.getByRole('alert')).toContainText('Choose an available payment method');
   const methods=dialog.getByRole('radio');
   await expect(methods).toHaveCount(2);
   await expect(dialog.getByRole('radio',{name:'Cash'})).not.toBeChecked();
@@ -47,7 +47,7 @@ test('Phase 5 historical payments remain Not specified and Income also stores On
   await expect(editor).toContainText('Previously not specified');
   await expect(editor.getByRole('radio',{name:'Cash'})).not.toBeChecked();
   await editor.getByRole('button',{name:'Save Changes'}).click();
-  await expect(editor.getByRole('alert')).toContainText('Choose Cash or Online');
+  await expect(editor.getByRole('alert')).toContainText('Choose an available payment method');
   await editor.getByRole('button',{name:'Cancel',exact:true}).click();
   expect((await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses'))))[0].paymentMethod).toBeUndefined();
   await page.goto('/financials/transactions?create=income');

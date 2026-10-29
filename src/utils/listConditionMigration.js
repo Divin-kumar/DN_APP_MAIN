@@ -37,14 +37,3 @@ export const activityConditionRecord = (activity) => ({
   completed: activityStatus(activity) === 'completed', cancelled: activityStatus(activity) === 'cancelled',
 });
 export const activityEntryConditionRecord = (entry) => ({ ...entry, activity: activityConditionRecord(entry.activity) });
-
-// Finance summary totals follow only recorded transaction-date restrictions.
-// Type, category, text and amount conditions narrow history without changing totals.
-export const transactionDateConditions = (node) => {
-  if (node?.kind !== 'group') return node?.field === 'date' ? node : null;
-  const projected = node.children.map(transactionDateConditions);
-  // An unrestricted OR branch permits every date. Removing it would narrow totals.
-  if (node.join === 'OR' && projected.some((child) => !child)) return null;
-  const children = projected.filter(Boolean);
-  return children.length ? { ...node, children } : null;
-};

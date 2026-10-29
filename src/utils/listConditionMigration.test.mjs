@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activityConditions, activityEntryConditionRecord, momentConditions, momentConditionRecord, transactionConditions, transactionDateConditions } from './listConditionMigration.js';
+import { activityConditions, activityEntryConditionRecord, momentConditions, momentConditionRecord, transactionConditions } from './listConditionMigration.js';
 import { discoverConditionFields, matchesConditionGroup } from './conditionEngine.js';
 
 test('legacy Moment category and archive choices become removable conditions', () => {
@@ -17,15 +17,14 @@ test('Activity migration preserves parent, custom type and normalized legacy com
   assert.equal(matchesConditionGroup(record, activityConditions({ momentId: 'missing' }), discoverConditionFields([record])), false);
 });
 
-test('legacy transaction month uses inclusive local-calendar month bounds and totals keep date conditions alone', () => {
+test('legacy transaction month and type migrate together with inclusive local-calendar month bounds', () => {
   const group = transactionConditions({ type: 'expense', month: '2024-02' });
   assert.deepEqual(group.children.find((item) => item.field === 'date').value, ['2024-02-01', '2024-02-29']);
-  const records = [{ date: '2024-02-29', transactionKind: 'income', amount: 100 }, { date: '2024-03-01', transactionKind: 'expense', amount: 10 }];
+  const records = [{ date: '2024-02-29', transactionKind: 'income', amount: 100 },
+    { date: '2024-03-01', transactionKind: 'expense', amount: 10 },
+    { date: '2024-02-29', transactionKind: 'expense', amount: 40 }];
   const schema = discoverConditionFields(records);
-  const dates = transactionDateConditions(group);
   assert.equal(matchesConditionGroup(records[0], group, schema), false);
-  assert.equal(matchesConditionGroup(records[0], dates, schema), true);
-  assert.equal(matchesConditionGroup(records[1], dates, schema), false);
-  assert.equal(transactionDateConditions({ kind: 'group', join: 'OR', children: [{ kind: 'group', children: [{ field: 'amount' }] }] }), null);
-  assert.equal(transactionDateConditions({ ...group, join: 'OR' }), null, 'An OR type branch places no restriction on summary dates');
+  assert.equal(matchesConditionGroup(records[1], group, schema), false);
+  assert.equal(matchesConditionGroup(records[2], group, schema), true);
 });

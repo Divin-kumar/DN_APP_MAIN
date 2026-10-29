@@ -2820,7 +2820,7 @@ html[data-theme] .code-lists-page .dn-code-list-filter-editor > .code-list-descr
   html[data-theme] .code-lists-page .dn-list-filter-expanded { padding:9px; }
 }
 
-/* DN 2.0 Phase 5: accessible, low-noise Cash / Online choice. */
+/* Configured transaction payment choices retain compact, accessible targets. */
 html[data-theme] .dn-payment-method-field {
   border:0;margin:0;padding:0;min-width:0;display:grid;gap:8px;
 }
@@ -2841,6 +2841,7 @@ html[data-theme] .dn-payment-method-choice span {
   display:flex;align-items:center;justify-content:center;min-height:42px;
   border:1px solid var(--color-border);border-radius:11px;
   background:var(--color-card);color:var(--color-text-muted);
+  padding:8px;overflow-wrap:anywhere;text-align:center;
   font-size:.82rem;font-weight:650;transition:background .15s ease,border-color .15s ease;
 }
 html[data-theme] .dn-payment-method-choice input:checked+span {

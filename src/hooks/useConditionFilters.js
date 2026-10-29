@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import usePersistentListState from './usePersistentListState';
 import { compileConditionGroup, conditionCount, discoverConditionFields, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine';
 import { getUserFilterFields, normalizeUserFilterGroup } from '../utils/userFilterSchema';
+import useAppStore from '../store/useAppStore';
 
 const DEFAULT = Object.freeze({ group: emptyGroup(), migrationVersion: 0 });
 const RULES = Object.freeze({
@@ -37,7 +38,11 @@ export default function useConditionFilters(scope, records = [], useListState = 
   const state = useMemo(() => ({ group, migrationVersion: stored.migrationVersion }), [stored.migrationVersion, group]);
   const schemaHints = configuration.schema || NO_SCHEMA;
   const moments = configuration.moments || NO_SCHEMA;
-  const schema = useMemo(() => getUserFilterFields(scope, records, moments) || discoverConditionFields(records, schemaHints), [scope, records, moments, schemaHints]);
+  const adminValues = useAppStore((current) => current.adminValues);
+  const adminOwner = useAppStore((current) => current.adminValuesOwner);
+  const owner = useAppStore((current) => current.user?.uid || (current.isGuest ? 'guest' : null));
+  const scopedValues = owner && adminOwner === owner ? adminValues : NO_OPTIONS;
+  const schema = useMemo(() => getUserFilterFields(scope, records, moments, scopedValues) || discoverConditionFields(records, schemaHints), [scope, records, moments, scopedValues, schemaHints]);
   const matches = useMemo(() => compileConditionGroup(group, schema), [group, schema, calendarDay]);
   const activeCount = useMemo(() => conditionCount(group), [group]);
 
