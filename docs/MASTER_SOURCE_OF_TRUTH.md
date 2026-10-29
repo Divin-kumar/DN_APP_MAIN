@@ -18,6 +18,8 @@ Valid times are visible in Activity Detail, list cards, the Moments preview, Das
 
 Guest edition **2026.10.29.1** demonstrates reverse-entered same-day Diary entries at 18:30 and 07:20, plus an untimed entry. Existing edited demos wait for explicit Refresh demo; private Guest/account records are never reset. Physical Safari/iPhone picker behavior, real-account cloud authorization and publication of this candidate remain unverified. Validation is recorded in the newest audit entry.
 
+The 2.0.2 CI dependency follow-up pins Firestore's transitive RE2JS to **2.8.7** through the existing scoped npm override. It addresses [GHSA-gg6h-894w-4m9c](https://github.com/advisories/GHSA-gg6h-894w-4m9c), detected by the fresh audit on the first timing-feature push. Firebase SDK 12.19.0 and all other package selections remain unchanged; the application already uses Node 22, satisfying the patched package's Node 20 minimum. The audit gate stays enabled. Clock field ownership checks use the portable hasOwnProperty form; canonical/legacy/cleared-time behavior is unchanged.
+
 ## Product Overview
 
 React/Vite, Router, Zustand, Firebase Auth/Firestore/Storage, Lucide and Framer Motion run without a separate API server. Formatted editing lazily loads the same Tiptap visual editor at every viewport width. Versions: [package.json](../package.json). Development samples and the public Guest tour use isolated fixtures without an account UID; only the guided tour is available in production Guest mode.

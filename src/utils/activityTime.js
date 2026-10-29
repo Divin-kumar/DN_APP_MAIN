@@ -7,7 +7,7 @@ export const normalizeActivityTime = (value) => {
   return match && Number(match[1]) < 24 && Number(match[2]) < 60
     ? `${match[1].padStart(2, '0')}:${match[2]}` : '';
 };
-export const activityTime = (activity = {}) => Object.hasOwn(activity, 'time')
+export const activityTime = (activity = {}) => Object.prototype.hasOwnProperty.call(activity, 'time')
   ? normalizeActivityTime(activity.time)
   : normalizeActivityTime(activity.dueTime) || normalizeActivityTime(activity.startTime);
 export const compareActivityTimes = (a, b, direction = 'asc') => {
@@ -22,6 +22,6 @@ export const compareActivityDateTime = (a, b, direction = 'asc') => {
   return (first - second) * (direction === 'desc' ? -1 : 1) || compareActivityTimes(a, b, direction);
 };
 
-export const activityTimePatch = (activity, value) => !Object.hasOwn(activity, 'time')
-  && !Object.hasOwn(activity, 'dueTime') && !Object.hasOwn(activity, 'startTime') && !value
+export const activityTimePatch = (activity, value) => !Object.prototype.hasOwnProperty.call(activity, 'time')
+  && !Object.prototype.hasOwnProperty.call(activity, 'dueTime') && !Object.prototype.hasOwnProperty.call(activity, 'startTime') && !value
   ? {} : { time: normalizeActivityTime(value) };

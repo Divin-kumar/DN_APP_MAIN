@@ -47,6 +47,8 @@ DN 2.0 Phase 8 on OldVersion completes the Story / Activities / Transactions / G
 
 The Phase 8 dependency follow-up uses React Router 7.18.5, Vite 7.3.7 and React plugin 5.2.0. Firebase stays on SDK 12.19.0; a scoped npm override selects patched gRPC 1.14.6 for its Firestore Node dependency. The previous JavaScript compilation targets are explicit in vite.config.js. CI checks dependency advisories and the built offline shell before any opt-in Firebase upload. That maintenance did not publish Firebase; Phase 9 version preparation is described below.
 
+The 2.0.2 CI follow-up additionally pins Firestore's transitive RE2JS to patched 2.8.7 through a scoped override. Firebase stays at 12.19.0, Node stays at 22, and dependency auditing remains enabled.
+
 ## DN 2.0 release history
 
 The owner reports manual publication after the earlier credential-blocked 2.0.0 workflow. The live worker was observed at 2.0.1 on 29 October 2026; no complete source/build comparison for that manual release is claimed. Current source 2.0.2 adds optional Activity times and prepares a separate Vercel review candidate. Create/edit/clear, clock-aware Story/PDF/list order, Activity Time filters and backup-v3 preservation are documented in the master. Firebase publication of this update remains a later owner-approved step.
