@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.29.2';
+export const GUEST_TOUR_VERSION = '2026.10.29.3';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -324,13 +324,16 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   events[1].activities[0].time = '18:30';
   events[1].activities[1].time = '07:20';
   events[1].notes += ' Optional Activity times put same-day entries in clock order in Story and PDF; entries without a time stay last.';
+  events[0].time = '09:30';
+  events[2].time = '14:00';
+  events[2].notes += ' Moments and Transactions also accept optional times with Clear time. Date filters include the whole day, with saved times ordering same-day entries; choose a Time filter to narrow the results.';
   const incomes = [
-    { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, paymentMethod: 'Online', date: date(-5) },
-    { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, paymentMethod: 'Cash', date: date(-2) },
+    { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, time: '08:45', paymentMethod: 'Online', date: date(-5) },
+    { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, time: '18:30', paymentMethod: 'Cash', date: date(-2) },
   ];
   const expenses = [
-    { id: 'dn-tour-expense-1', name: 'Weekend stay', category: 'Travel', amount: 2600, paymentMethod: 'Online', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },
-    { id: 'dn-tour-expense-2', name: 'Coffee on the road', category: 'Food', amount: 190, paymentMethod: 'Cash', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },
+    { id: 'dn-tour-expense-1', name: 'Weekend stay', category: 'Travel', amount: 2600, time: '09:00', paymentMethod: 'Online', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },
+    { id: 'dn-tour-expense-2', name: 'Coffee on the road', category: 'Food', amount: 190, time: '10:15', paymentMethod: 'Cash', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },
     { id: 'dn-tour-expense-3', name: 'Paint samples', category: 'Home', amount: 340, paymentMethod: 'Online', eventId: t, activityId: 'dn-tour-activity-t1', date: date(-4) },
   ];
   return { scenario: GUEST_TOUR_SCENARIO, demoVersion: GUEST_TOUR_VERSION,

@@ -109,6 +109,7 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
     name: source.name || '',
     type: source.type || '',
     momentDate: calendarKey(source.date),
+    momentTime: activityTime(source),
     status: getEventStatus(source),
     presentation: resolveMomentStoryPresentation(source, momentTypes),
     introduction: source.notes || '',

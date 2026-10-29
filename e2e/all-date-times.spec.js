@@ -1,0 +1,76 @@
+import { test, expect } from '@playwright/test';
+import { seedGuest, fixtureMoments } from './fixtures.js';
+
+async function choose(page,name,value) {
+  await page.getByRole('combobox',{name,exact:true}).last().click();
+  const search=page.locator('.dropdown-menu-portal input[type="search"]');
+  if(await search.count()) await search.fill(value);
+  await page.getByRole('option',{name:value,exact:true}).click();
+}
+async function paired(dialog, subject) {
+  const date=await dialog.locator('.activity-date-time-row input[type="date"]').boundingBox();
+  const time=await dialog.getByLabel(`${subject} time`,{exact:true}).boundingBox();
+  expect(Math.abs(date.y-time.y)).toBeLessThan(2);
+  expect(date.width).toBeGreaterThan(90); expect(time.width).toBeGreaterThan(85);
+}
+for(const width of [320,390,1280]) test(`Moment and transaction clocks save, clear, filter and order at ${width}px`,async({page})=>{
+  test.setTimeout(60000);
+  await page.setViewportSize({width,height:900});
+  const moments=fixtureMoments();
+  moments[0].date='2026-10-01';moments[0].time='18:30';moments[0].activities=[];
+  moments[1].date='2026-10-01';moments[1].time='07:20';
+  const errors=await seedGuest(page,{moments,incomes:[],expenses:[],theme:width===1280?'light':'dark'});
+  await page.goto('/events?create=event');
+  const dialog=page.getByRole('dialog');
+  await dialog.getByRole('textbox',{name:'Moment name',exact:true}).fill('A timed Moment');
+  await dialog.locator('input[name="date"]').fill('2026-10-01');
+  await dialog.getByLabel('Moment time',{exact:true}).fill('12:15');
+  await paired(dialog,'Moment');
+  await page.screenshot({path:`.verification/moment-time-form-${width}.png`});
+  await dialog.getByRole('button',{name:'Save Event',exact:true}).click();
+  await expect(dialog).toHaveCount(0);await page.reload();
+  await expect(page.locator('.event-moment-date-value')).toContainText('12:15');
+  await page.goto('/events');
+  await expect(page.locator('.event-story-main').filter({hasText:'A timed Moment'})).toContainText('12:15');
+  const names=await page.locator('.event-story-copy > strong').allTextContents();
+  expect(names.indexOf('A separate Moment')).toBeLessThan(names.indexOf('A timed Moment'));
+  expect(names.indexOf('A timed Moment')).toBeLessThan(names.indexOf(moments[0].name));
+  await page.getByRole('button',{name:/^Filters and sort/}).click();
+  await page.getByRole('button',{name:'Clear all',exact:true}).click();
+  await page.getByRole('button',{name:'Add filter',exact:true}).click();
+  await choose(page,'Filter by','Event date');
+  await page.getByLabel('Value for Event date',{exact:true}).fill('2026-10-01');
+  await expect(page.locator('.event-story-main')).toHaveCount(3);
+  await page.getByRole('button',{name:'Add filter',exact:true}).click();
+  await choose(page,'Filter by','Time');await choose(page,'Value for Time','12:15');
+  await expect(page.locator('.event-story-main')).toHaveCount(1);
+  await page.getByRole('button',{name:'Actions for A timed Moment',exact:true}).click();
+  await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  await dialog.getByRole('button',{name:'Clear moment time',exact:true}).click();
+  await dialog.getByRole('button',{name:'Update Event',exact:true}).click();
+  await expect(dialog).toHaveCount(0);
+  const savedMoment=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find(x=>x.name==='A timed Moment'));
+  expect(savedMoment.time).toBe('');
+  await page.goto('/financials/transactions?create=expense');
+  await dialog.getByRole('textbox',{name:'Title *',exact:true}).fill('Timed purchase');
+  await dialog.getByRole('spinbutton').fill('50');
+  await dialog.getByRole('radio',{name:'Cash',exact:true}).check();
+  await dialog.locator('input[name="date"]').fill('2026-10-01');
+  await dialog.getByLabel('Transaction time',{exact:true}).fill('00:00');
+  await paired(dialog,'Transaction');
+  await page.screenshot({path:`.verification/transaction-time-form-${width}.png`});
+  await dialog.getByRole('button',{name:'Add Transaction',exact:true}).click();
+  await expect(dialog).toHaveCount(0);await page.reload();
+  const transaction=page.locator('.dn-transaction-card').filter({hasText:'Timed purchase'});
+  await expect(transaction).toContainText('00:00');
+  await transaction.locator('.dn-transaction-copy > strong').click();
+  await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  await expect(dialog.getByLabel('Transaction time',{exact:true})).toHaveValue('00:00');
+  await dialog.getByRole('button',{name:'Clear transaction time',exact:true}).click();
+  await dialog.getByRole('button',{name:'Save Changes',exact:true}).click();
+  await expect(dialog).toHaveCount(0);await page.reload();
+  await expect(transaction).not.toContainText('00:00');
+  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses'))[0].time)).toBe('');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  expect(errors).toEqual([]);
+});

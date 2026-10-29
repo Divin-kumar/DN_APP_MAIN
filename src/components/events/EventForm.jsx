@@ -1,3 +1,5 @@
+import ActivityTimeField from '../common/ActivityTimeField';
+import { activityTime, activityTimePatch } from '../../utils/activityTime';
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useState } from 'react';
@@ -30,6 +32,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         ...createDefaultState(defaultEventType),
         ...initialValues,
         customType: initialValues.customType || '',
+        time: activityTime(initialValues),
       });
     } else {
       setForm(createDefaultState(defaultEventType));
@@ -54,12 +57,14 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       return;
     }
 
+    const { time, ...values } = form;
     onSubmit({
-      ...form,
+      ...values,
       name: form.name.trim(),
       type: form.type,
       customType: form.type === 'Other' ? form.customType.trim() : '',
       notes: form.notes,
+      ...activityTimePatch(initialValues || {}, time),
     });
   };
 
@@ -81,7 +86,10 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
           </DropdownSelect>
         </label>
 
-        <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
+        <div className="activity-date-time-row">
+          <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
+          <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
+        </div>
       </div>
 
       {form.type === 'Other' ? (

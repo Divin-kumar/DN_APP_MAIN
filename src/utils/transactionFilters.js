@@ -1,3 +1,4 @@
+import { compareActivityDateTime, activityTimePatch, activityTime } from './activityTime.js';
 // The transaction UI is unified; Firestore collections and guest backups remain backward-compatible.
 import { plainRichText } from './richText.js';
 import { requirePaymentMethod } from './paymentMethod.js';
@@ -54,7 +55,7 @@ export const sortTransactions = (transactions, sort = 'date-desc') => {
     let comparison;
     if (field === 'amount') comparison = (Number(a.amount) || 0) - (Number(b.amount) || 0);
     else if (field === 'title') comparison = String(a.name || a.title || '').localeCompare(String(b.name || b.title || ''), undefined, { sensitivity: 'base' });
-    else comparison = String(a.date || '').localeCompare(String(b.date || ''));
+    else return compareActivityDateTime(a, b, direction) || a.stableTransactionKey.localeCompare(b.stableTransactionKey);
     return sign * comparison || a.stableTransactionKey.localeCompare(b.stableTransactionKey);
   });
 };
@@ -71,12 +72,13 @@ export const summarizeTransactions = (transactions) => {
 };
 
 // Normalizes the unified form to existing persisted record shapes. No data migration required.
-export const transactionPayload = (form, { paymentMethods, previousPaymentMethod } = {}) => {
+export const transactionPayload = (form, { paymentMethods, previousPaymentMethod, original = {} } = {}) => {
   const common = {
     name: String(form.title || '').trim(),
     paymentMethod: requirePaymentMethod(form.paymentMethod, paymentMethods, previousPaymentMethod),
     amount: Number(form.amount),
     date: form.date,
+    ...activityTimePatch(original, Object.prototype.hasOwnProperty.call(form, 'time') ? form.time : activityTime(original)),
     description: String(form.notes || ''),
     notes: String(form.notes || ''),
     eventId: form.eventId || null,

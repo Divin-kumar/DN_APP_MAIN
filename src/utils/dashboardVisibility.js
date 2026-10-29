@@ -1,3 +1,4 @@
+import { compareActivityTimes } from './activityTime.js';
 import { getCodeListMeta } from './codeLists.js';
 import { getEventDate, getNextOccurrenceDate, getStartOfDay } from './momentDates.js';
 
@@ -64,7 +65,7 @@ export const getUpcomingDashboardEvents = (events = [], referenceDate = new Date
   return getDashboardVisibleEvents(events, customValues)
     .map((event) => ({ event, date: getNextOccurrenceDate(event, today) }))
     .filter(({ date }) => date && date >= today && date <= lastDay)
-    .sort((first, second) => first.date - second.date)
+    .sort((first, second) => first.date - second.date || compareActivityTimes(first.event, second.event))
     .map(({ event }) => event);
 };
 
@@ -74,7 +75,7 @@ export const getOnThisDayDashboardEvents = (events = [], referenceDate = new Dat
     .map((event) => ({ event, date: getEventDate(event) }))
     .filter(({ date }) => date && date.getFullYear() < today.getFullYear()
       && date.getMonth() === today.getMonth() && date.getDate() === today.getDate())
-    .sort((first, second) => second.date - first.date)
+    .sort((first, second) => second.date - first.date || compareActivityTimes(first.event, second.event))
     .map(({ event }) => event);
 };
 

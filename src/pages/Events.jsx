@@ -1,3 +1,4 @@
+import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
 import ActivityTimeField from '../components/common/ActivityTimeField';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
@@ -116,7 +117,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
             <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
           </span>
           <strong>{event.name || 'A life moment'}</strong>
-          <span className="event-story-date"><CalendarDays size={13} aria-hidden="true" />{date ? dateLabel(date) : 'Date to be decided'}</span>
+          <span className="event-story-date"><CalendarDays size={13} aria-hidden="true" />{date ? dateLabel(date) : 'Date to be decided'}{savedRecordTime(event) ? ` · ${savedRecordTime(event)}` : ''}</span>
           {activity ? <span className="dn-v2-moment-activity">
             <span className="dn-v2-activity-kicker">{activity === preview.upcoming ? 'Coming up' : 'Latest activity'}</span>
             <span className="dn-v2-activity-title">{activity.title || 'Untitled activity'}</span>

@@ -1,4 +1,4 @@
-import { parseMomentDate } from './momentDates.js';
+import { compareActivityDateTime } from './activityTime.js';
 import { getEventStatus } from './eventStatus.js';
 
 export const MOMENT_SORT_OPTIONS = Object.freeze([
@@ -15,9 +15,6 @@ export const TRANSACTION_SORT_VALUES = Object.freeze(TRANSACTION_SORT_OPTIONS.fl
 export const transactionSortForField = (field) => `${field}-${field === 'title' ? 'asc' : 'desc'}`;
 
 const momentStatusRank = { 'in-progress': 0, completed: 1, cancelled: 2, archived: 3 };
-const recordedDate = (value) => {
-  try { return parseMomentDate(value)?.getTime() ?? null; } catch { return null; }
-};
 
 // Sort only a copy of the visible cohort. Equal values retain their input order;
 // missing recorded dates remain last in either direction, without date fallbacks.
@@ -26,10 +23,7 @@ export const sortMoments = (moments, field = 'date', direction = 'asc') => {
   return [...moments].sort((first, second) => {
     if (field === 'name') return sign * String(first.name || '').localeCompare(String(second.name || ''), undefined, { sensitivity: 'base' });
     if (field === 'status') return sign * (momentStatusRank[getEventStatus(first)] - momentStatusRank[getEventStatus(second)]);
-    const firstDate = recordedDate(first.date);
-    const secondDate = recordedDate(second.date);
-    if (firstDate === null || secondDate === null) return firstDate === null ? (secondDate === null ? 0 : 1) : -1;
-    return sign * (firstDate - secondDate);
+    return compareActivityDateTime(first, second, direction);
   });
 };
 

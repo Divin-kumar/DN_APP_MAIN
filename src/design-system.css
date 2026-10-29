@@ -592,7 +592,7 @@ html[data-theme] .event-form { display: grid; gap: var(--space-md); }
 html[data-theme] .event-form-intro { margin: 0 0 var(--space-xs); color: var(--color-text-muted); font-size: var(--font-caption); line-height: 1.5; }
 html[data-theme] .event-form > label,
 html[data-theme] .event-form-fields > label { display: grid; min-width: 0; gap: var(--space-xs); color: var(--color-text-muted); font-size: var(--font-caption); font-weight: 650; }
-html[data-theme] .event-form-fields { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: var(--space-md); }
+html[data-theme] .event-form-fields { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-md); }
 html[data-theme] .event-form .event-form-optional { margin-left: var(--space-xs); color: var(--color-text-muted); font-size: .9em; font-weight: 500; }
 html[data-theme] .event-form input,
 html[data-theme] .event-form textarea { width: 100%; min-width: 0; min-height: 44px; padding: 0 var(--space-md) !important; border: 1px solid var(--color-border) !important; border-radius: var(--radius-sm) !important; background: var(--color-surface) !important; color: var(--color-text) !important; box-shadow: inset 0 1px 2px rgba(0,0,0,.04); }

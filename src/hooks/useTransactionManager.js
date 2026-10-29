@@ -66,6 +66,7 @@ export default function useTransactionManager() {
     const payload = transactionPayload(form, {
       paymentMethods: settings.adminValues.paymentMethods,
       previousPaymentMethod: original?.paymentMethod,
+      original: original || {},
     });
     if (payload.eventId && !isRecordScopeLoaded(useEventStore.getState(), context.scope, context.sample)) {
       throw new Error('Moments are still loading. Please retry.');

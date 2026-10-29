@@ -1,3 +1,5 @@
+import ActivityTimeField from '../common/ActivityTimeField';
+import { activityTime } from '../../utils/activityTime';
 import { useEffect, useMemo, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
 import DateField from '../common/DateField';
@@ -15,6 +17,7 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
   transactionKind: defaultKind,
   title: '',
   amount: '',
+  time: '',
   paymentMethod: '',
   category: defaultKind === 'income' ? preferences.defaultIncomeType || 'Other' : preferences.defaultExpenseCategory || 'Other',
   date: today(),
@@ -44,6 +47,7 @@ export default function TransactionForm({
         paymentMethod: normalizePaymentMethod(initialTransaction.paymentMethod) || '',
         category: (kind === 'income' ? initialTransaction.type : initialTransaction.category) || 'Other',
         date: initialTransaction.date || today(),
+        time: activityTime(initialTransaction),
         eventId: initialTransaction.eventId || '',
         activityId: initialTransaction.activityId || '',
         notes: initialTransaction.notes || initialTransaction.description || '',
@@ -176,8 +180,11 @@ export default function TransactionForm({
             ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
             : null}
       </div>
-      <DateField label="Date *" name="date" required value={form.date}
-        onChange={(event) => change('date', event.target.value)} disabled={busy} />
+      <div className="activity-date-time-row">
+        <DateField label="Date *" name="date" required value={form.date}
+          onChange={(event) => change('date', event.target.value)} disabled={busy} />
+        <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
+      </div>
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}

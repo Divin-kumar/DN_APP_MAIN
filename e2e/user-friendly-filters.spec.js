@@ -2,11 +2,11 @@ import { test, expect } from '@playwright/test';
 import { fixtureMoments, seedGuest } from './fixtures.js';
 
 const consumers = [
-  { route: '/events', fields: ['Moment name', 'Moment type', 'Event date', 'Status', 'Visibility'], text: 'Moment name', date: 'Event date' },
+  { route: '/events', fields: ['Moment name', 'Moment type', 'Event date', 'Time', 'Status', 'Visibility'], text: 'Moment name', date: 'Event date' },
   { route: '/activities', fields: ['Activity name', 'Date', 'Time', 'Status', 'Priority', 'Moment', 'Moment type', 'Moment visibility'], text: 'Activity name', date: 'Date', linked: 'Moment' },
   { route: '/events/moment-one/activities', fields: ['Activity name', 'Date', 'Time', 'Status', 'Priority'], text: 'Activity name', date: 'Date' },
-  { route: '/financials', fields: ['Title', 'Type', 'Category', 'Payment method', 'Amount', 'Date', 'Moment', 'Activity'], text: 'Title', date: 'Date', linked: 'Moment' },
-  { route: '/events/moment-one/transactions', fields: ['Title', 'Type', 'Category', 'Payment method', 'Amount', 'Date', 'Activity'], text: 'Title', date: 'Date', linked: 'Activity' },
+  { route: '/financials', fields: ['Title', 'Type', 'Category', 'Payment method', 'Amount', 'Date', 'Time', 'Moment', 'Activity'], text: 'Title', date: 'Date', linked: 'Moment' },
+  { route: '/events/moment-one/transactions', fields: ['Title', 'Type', 'Category', 'Payment method', 'Amount', 'Date', 'Time', 'Activity'], text: 'Title', date: 'Date', linked: 'Activity' },
 ];
 
 async function select(page, name, label) {

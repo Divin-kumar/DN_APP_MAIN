@@ -355,7 +355,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     pdf.begin();
   }
   await pdf.text(event.name || 'Untitled Moment', { size: template === 'chronicle' ? 21 : 24, bold: true, after: 10 });
-  await pdf.text(`${PDF_TEMPLATE_NAMES[template]}  |  ${story.momentDate ? studioDate(story.momentDate) : 'No Moment date'}`,
+  await pdf.text(`${PDF_TEMPLATE_NAMES[template]}  |  ${story.momentDate ? studioDate(story.momentDate) : 'No Moment date'}${story.momentTime ? ' · ' + story.momentTime : ''}`,
     { size: 10, color: palette.muted, after: 18 });
   if (options.includeIntro && story.introduction) {
     await pdf.heading(template === 'journey' ? 'The opening page' : template === 'diary' ? 'This month' : 'About these tasks');

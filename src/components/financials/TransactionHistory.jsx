@@ -1,3 +1,4 @@
+import { activityTime } from '../../utils/activityTime';
 import DebouncedFilterInput from '../common/DebouncedFilterInput';
 import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
@@ -39,7 +40,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
           </span>
           <span className="dn-transaction-copy">
             <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
-            <small>{dateLabel(transaction.date)} · {category || 'Other'} · {paymentMethodLabel(transaction.paymentMethod)}</small>
+            <small>{dateLabel(transaction.date)}{activityTime(transaction) ? ` · ${activityTime(transaction)}` : ''} · {category || 'Other'} · {paymentMethodLabel(transaction.paymentMethod)}</small>
           </span>
           <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
             {isIncome ? '+' : '−'} {money(transaction.amount)}
@@ -65,7 +66,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
         </span>
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
-          <span><CalendarDays size={13} /> {dateLabel(transaction.date)} <span aria-hidden="true">·</span> {category || 'Other'} <span aria-hidden="true">·</span> {paymentMethodLabel(transaction.paymentMethod)}</span>
+          <span><CalendarDays size={13} /> {dateLabel(transaction.date)}{activityTime(transaction) ? ` · ${activityTime(transaction)}` : ''} <span aria-hidden="true">·</span> {category || 'Other'} <span aria-hidden="true">·</span> {paymentMethodLabel(transaction.paymentMethod)}</span>
           {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}
           {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
             <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>

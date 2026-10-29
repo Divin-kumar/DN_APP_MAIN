@@ -72,6 +72,7 @@ export const getUserFilterFields = (scope, records = [], moments = [], adminValu
       return record.type === 'Other' && values.includes('Other') ? 'Other' : getActivityMomentType(record);
     }, readable, ['eventTypes']);
     add('date', 'Event date', 'date');
+    add('time', 'Time', 'dropdown', (record) => activityTime(record));
     add('status', 'Status', 'dropdown', getEventStatus);
     add('archived', 'Visibility', 'dropdown', (record) => Boolean(record.archived));
   } else if (domain === 'activities' || domain === 'momentActivities') {
@@ -95,6 +96,7 @@ export const getUserFilterFields = (scope, records = [], moments = [], adminValu
     add('paymentMethod', 'Payment method', 'dropdown', (record) => normalizePaymentMethod(record.paymentMethod), readable, ['paymentMethods']);
     add('amount', 'Amount', 'number');
     add('date', 'Date', 'date');
+    add('time', 'Time', 'dropdown', (record) => activityTime(record));
     if (domain === 'transactions') add('eventId', 'Moment', 'dropdown', (record) => recordId(record.eventId), (value) =>
       momentNames.get(String(value)) || 'Unavailable Moment');
     add('activityId', 'Activity', 'dropdown', (record, rule) => {

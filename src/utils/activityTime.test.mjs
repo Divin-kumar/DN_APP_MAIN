@@ -29,11 +29,11 @@ test('shared Story and global list chronology keeps unknowns last, stable equal 
   assert.deepEqual(groupMomentStoryTasks(story).find(x=>x.status==='completed').entries.map(x=>x.id), ['early','equal','late','unknown']);
   assert.deepEqual(activities,before);
 });
-test('Time catalogue is scoped to activities and keeps existing Date conditions separate', () => {
+test('Time catalogue covers every editable date and keeps whole-day Date conditions separate', () => {
   const activities=fixture();
   const field=getUserFilterFields('moment-activities:m',activities,[]).find(x=>x.path==='time');
   assert.equal(field.type,'dropdown');assert.equal(field.readValue(activities[0]),'18:30');
-  assert.equal(getUserFilterFields('moments',[],[]).some(x=>x.path==='time'),false);
+  for (const scope of ['moments', 'transactions', 'moment-transactions:m:all']) assert.equal(getUserFilterFields(scope,[],[]).some(x=>x.path==='time'),true);
 });
 test('backup v3 retains explicit times and old untimed activities without inventing a time', () => {
   const activities=fixture();

@@ -1,3 +1,4 @@
+import { activityTimePatch, activityTime } from './activityTime.js';
 import { recordId } from './recordIdentity.js';
 import { financialDate } from './financialRecords.js';
 import { normalizePaymentMethod } from './paymentMethod.js';
@@ -28,6 +29,7 @@ export const normalizeActivityExpense = (entry = {}, eventId = null, activityId 
   notes: String(entry.notes ?? entry.description ?? ''),
   amount: Number(entry.amount || 0),
   paymentMethod: normalizePaymentMethod(entry.paymentMethod),
+  ...activityTimePatch(entry, activityTime(entry)),
   date: financialDate(entry.date, financialDate(new Date())),
   createdAt: entry.createdAt || new Date().toISOString(),
   eventId: recordId(entry.eventId) || recordId(eventId) || null,

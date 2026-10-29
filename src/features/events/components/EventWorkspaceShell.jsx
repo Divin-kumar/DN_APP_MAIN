@@ -1,4 +1,4 @@
-import { compareActivityDateTime } from '../../../utils/activityTime.js';
+import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
 import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
@@ -498,7 +498,7 @@ export function EventWorkspaceContent() {
         <div className="event-moment-content">
           <h1>{event.name}</h1>
           <div className="event-moment-date">
-            <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}</span>
+            <span className="event-moment-date-value"><CalendarDays size={15} /> {formatDate(event.date)}{savedMomentTime(event) ? ` · ${savedMomentTime(event)}` : ''}</span>
             {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge}</span> : null}
             <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
           </div>
