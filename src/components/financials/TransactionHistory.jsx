@@ -106,9 +106,9 @@ export default function TransactionHistory({
           <h2 id="dn-transactions-heading">Transactions</h2>
         </div>
       </header>
-      <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
+      <ListControls title="Transaction filters" builder inlineActions activeCount={conditions.activeCount} resultCount={transactions.length}
         resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}
-        sort={<SortControl field={sortField} direction={sortDirection} options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
+        sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
           onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
         canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={() => { onFilters({ type: 'all', month: 'all', search: '', sort: 'date-desc' }); conditions.clear(); }}
