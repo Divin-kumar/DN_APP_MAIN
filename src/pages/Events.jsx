@@ -12,7 +12,7 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search, Sparkles } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -359,7 +359,6 @@ export default function Events() {
     <div className="events-page life-timeline-page">
       <header className="life-timeline-heading">
         <div>
-          <span className="life-timeline-eyebrow"><Sparkles size={13} /> Your story, over time</span>
           <h2>Life moments</h2>
           <p>A place for the days, people, and little details you want to keep close.</p>
         </div>
@@ -395,7 +394,6 @@ export default function Events() {
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
         <div className="life-journey">
           <section className="life-journey-section" aria-label={`Moments ordered by ${sortSummary}`}>
-            <div className="life-journey-label"><CalendarDays size={16} /><div><span>Life timeline</span><small>{sortSummary}</small></div><b>{visibleEvents.length}</b></div>
             <div className="life-journey-items">{visibleEvents.map(renderEventCard)}</div>
           </section>
         </div>

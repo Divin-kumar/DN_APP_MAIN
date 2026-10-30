@@ -2,6 +2,36 @@
 /* DN 2.0 Phase 2: premium read-only Moment discovery cards.
    Scoped to the Moments listing so existing workspaces and list filters keep
    their own layout and interaction contracts. */
+/* DN 2.1 Moments first-fold hierarchy: one page heading, a quiet inline
+   count rail, then the existing search/filter controls and collection cards.
+   Avoid decorative labels, duplicate sort counters, and extra card containers. */
+@media (max-width: 760px) {
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading {
+    gap: 7px; align-items: flex-start;
+  }
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading h2 {
+    margin: 0; font-size: clamp(23px, 6.4vw, 27px) !important;
+    line-height: 1.12; letter-spacing: -.045em;
+  }
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading p {
+    margin: 4px 0 0; max-width: 48ch;
+    color: var(--color-text-muted); font-size: 12px !important;
+    line-height: 1.45;
+  }
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-stats {
+    display: flex; flex-wrap: wrap; gap: 5px 14px;
+    align-items: center; padding: 0; margin: 0;
+  }
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-stats span {
+    display: inline-flex; align-items: baseline; gap: 4px;
+    font-size: 11px !important; line-height: 1.2;
+    color: var(--color-text-muted);
+  }
+  html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-stats strong {
+    font-size: 12px !important; font-weight: 730;
+    color: var(--color-text);
+  }
+}
 html[data-theme] .life-timeline-page .life-journey-section { min-width: 0; gap: 12px; }
 html[data-theme] .life-timeline-page .life-journey-items {
   display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));

@@ -136,3 +136,54 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(errors).toEqual([]);
   });
 }
+
+
+// The Moments list should open on the actual cards, without two decorative
+// labels or a repeated count/sort row consuming scarce iPhone screen height.
+for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
+  test('Moments first-fold hierarchy stays calm at ' + width + 'px ' + theme, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/events');
+    const title = page.getByRole('heading', { name: 'Life moments', exact: true });
+    await expect(title).toBeVisible();
+    await expect(page.locator('.events-page .life-timeline-eyebrow')).toHaveCount(0);
+    await expect(page.locator('.events-page .life-journey-label')).toHaveCount(0);
+    await expect(page.locator('.events-page .life-timeline-heading p')).toBeVisible();
+    const counts = page.locator('.events-page .life-timeline-stats');
+    await expect(counts).toContainText('moments');
+    await expect(counts).toContainText('ahead');
+    await expect(counts).toContainText('stories');
+    await expect(page.locator('.dn-list-controls-topline')).toContainText('2 moments');
+    const cards = page.locator('.life-journey-items .dn-v2-moment-card');
+    await expect(cards).toHaveCount(2);
+    const geometry = await page.evaluate(() => {
+      const header = document.querySelector('.events-page .life-timeline-heading').getBoundingClientRect();
+      const stats = document.querySelector('.events-page .life-timeline-stats').getBoundingClientRect();
+      const controls = document.querySelector('.events-page .event-discovery-bar').getBoundingClientRect();
+      const cards = document.querySelector('.events-page .life-journey-items').getBoundingClientRect();
+      return {
+        headerHeight: header.height, countsRight: stats.right,
+        listGap: cards.top - controls.bottom,
+        pageWidth: document.documentElement.scrollWidth,
+      };
+    });
+    expect(geometry.headerHeight).toBeLessThanOrEqual(125);
+    expect(geometry.countsRight).toBeLessThanOrEqual(width + 1);
+    expect(geometry.listGap).toBeGreaterThanOrEqual(0);
+    expect(geometry.listGap).toBeLessThanOrEqual(30);
+    expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
+    const before = await page.evaluate(() => [
+      'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
+    ].map((key) => localStorage.getItem(key)));
+    await page.getByRole('button', { name: /^Filters/ }).click();
+    await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toHaveCount(0);
+    const after = await page.evaluate(() => [
+      'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
+    ].map((key) => localStorage.getItem(key)));
+    expect(after).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}
