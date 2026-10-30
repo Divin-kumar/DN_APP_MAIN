@@ -18,33 +18,33 @@ html[data-theme] .event-activity-content .event-activity-card .dn-record-menu-tr
 html[data-theme] .event-activity-content .event-activity-card .dn-swipe-main { min-height:76px; }
 html[data-theme] .event-activity-content .event-activity-filter-empty { grid-column:1 / -1; }
 @media(min-width:768px) {
-  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media(min-width:1440px) {
-  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media(max-width:480px) {
   html[data-theme] .event-activity-content .event-activity-progress { grid-template-columns:minmax(0,1fr) 56px; gap:8px; }
   html[data-theme] .event-activity-content .event-activity-progress > div { flex-wrap:wrap; white-space:normal; gap:2px 5px; }
 }
 
-/* Overall Activities: readable titles and a quiet status on the SAME first row.
+/* Shared photo-led cards: readable titles and quiet status on the SAME first row.
    Status is descriptive metadata, not a separate 44px action. */
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-main { padding-right:12px !important; }
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-main { padding-right:12px !important; }
 /* Prevent native text-selection drag from cancelling mouse swipes on this menu-free card. */
-html[data-theme] .activities-page .event-activity-content .event-activity-card { -webkit-user-select:none; user-select:none; }
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card { -webkit-user-select:none; user-select:none; }
 
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-title-row {
   position:static; display:grid; grid-template-columns:minmax(0,1fr) max-content;
   align-items:start; column-gap:8px; row-gap:0; justify-items:stretch; min-width:0;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row > strong {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-title-row > strong {
   display:-webkit-box; width:100%; max-width:100%; min-width:0; min-height:0; padding-right:0;
   overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; line-clamp:3;
   white-space:normal; text-overflow:clip; overflow-wrap:anywhere;
   font-size:15px !important; font-weight:690; line-height:1.4;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status {
   position:static; inset:auto; z-index:auto; justify-self:end; align-self:start; display:inline-flex;
   max-width:100%; min-height:22px; padding:3px 8px !important;
   border:1px solid var(--color-border); border-radius:999px;
@@ -52,29 +52,29 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
   font-size:11px !important; line-height:1.2; font-weight:650; letter-spacing:0;
   text-transform:none; white-space:nowrap;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status.complete {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status.complete {
   border-color:color-mix(in srgb,var(--color-success) 28%,var(--color-border));
   background:color-mix(in srgb,var(--color-success) 9%,var(--color-card));
   /* Muted success hue with readable text weight in both light and dark palettes. */
   color:color-mix(in srgb,var(--color-success) 70%,var(--color-text) 30%) !important;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status.cancelled {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status.cancelled {
   color:var(--color-text-muted) !important; background:var(--color-surface);
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > span:first-child {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-context > span:first-child {
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--color-text-muted);
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .dn-record-menu-trigger,
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-priority { display:none; }
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .dn-record-menu-trigger,
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-priority { display:none; }
 
-/* Keep the parent Moment visible on its own unclipped, noninteractive metadata line. */
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context {
+/* Keep activity context readable, even when Moment and due-date labels are long. */
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-context {
   display:grid;
   grid-template-columns:minmax(0,1fr);
   gap:3px;
   align-items:start;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > span.event-activity-moment-name:first-child {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-context > span.event-activity-moment-name:first-child {
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:2;
@@ -89,87 +89,87 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
   font-weight:550;
   line-height:1.4;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > span:last-child {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-context > span:last-child {
   justify-self:start;
   text-align:left;
   color:var(--color-text-muted);
   font-size:11px;
 }
 
-/* Only overall Activities adopt the premium photo-left Moment card layout. */
-html[data-theme] .activities-page .event-activity-content .event-activity-card.dn-v2-activity-card {
+/* Reuse the exact premium photo-left card in overall Activities and inside a Moment. */
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card {
   display:block; padding:0 !important; overflow:hidden;
   border:1px solid var(--color-border); border-radius:20px !important;
   background:var(--color-card);
   box-shadow:0 6px 22px color-mix(in srgb,var(--color-bg) 65%,transparent);
   transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card:hover {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card:hover {
   border-color:color-mix(in srgb,var(--color-primary) 36%,var(--color-border));
   box-shadow:0 13px 30px color-mix(in srgb,var(--color-bg) 48%,transparent);
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .dn-swipe-main {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .dn-swipe-main {
   display:block; width:100%; min-height:0; height:100%;
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-main {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-main {
   display:flex !important; align-items:stretch; width:100%; min-height:138px;
   padding:0 !important; gap:0 !important;
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover {
   position:relative; display:grid; place-items:center; flex:0 0 94px; width:94px;
   min-width:0; min-height:138px; align-self:stretch; overflow:hidden;
   background:radial-gradient(circle at 72% 20%,color-mix(in srgb,var(--color-primary) 24%,transparent),transparent 55%),
     linear-gradient(155deg,var(--color-card-raised),var(--color-surface));
   color:var(--color-primary);
 }
-html[data-theme] .activities-page .dn-v2-activity-cover img {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover img {
   position:absolute; inset:0; width:100%; height:100%; object-fit:cover;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-symbol { opacity:.65; }
-html[data-theme] .activities-page .dn-v2-activity-cover-glow {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-symbol { opacity:.65; }
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-glow {
   position:absolute; inset:40% 0 0; pointer-events:none;
   background:linear-gradient(to top,rgba(6,23,18,.24),transparent);
 }
-html[data-theme] .activities-page .dn-v2-activity-cover:not(.has-photo) .dn-v2-activity-cover-glow { opacity:.2; }
-html[data-theme] .activities-page .dn-v2-activity-cover-date {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover:not(.has-photo) .dn-v2-activity-cover-glow { opacity:.2; }
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-date {
   position:absolute; bottom:9px; left:8px; z-index:1; display:grid;
   min-width:40px; padding:5px 7px; border:1px solid color-mix(in srgb,var(--color-border) 65%,transparent);
   border-radius:10px; background:color-mix(in srgb,var(--color-card) 86%,transparent);
   color:var(--color-text); backdrop-filter:blur(12px);
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-date strong {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-date strong {
   font-size:1.12rem; line-height:1; letter-spacing:-.05em;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-date small {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-date small {
   font-size:.61rem; text-transform:uppercase; letter-spacing:.05em; font-weight:750;
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-copy {
   display:flex; flex:1 1 auto; flex-direction:column; justify-content:center;
   min-width:0; gap:6px; padding:10px 12px !important;
 }
-html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-context { gap:5px; }
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-context { gap:5px; }
 @media(max-width:400px) {
-  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover {
     flex-basis:80px; width:80px;
   }
-  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-copy {
     padding:10px 9px !important;
   }
 }
 @media(max-width:360px) {
   /* Preserve readable title width beside status without shrinking the photo. */
-  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-copy {
     padding:9px 5px 9px 7px !important;
   }
-  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-title-row {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-title-row {
     column-gap:5px;
   }
-  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-status {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-status {
     padding:3px 5px !important;
   }
 }
 @media(prefers-reduced-motion:reduce) {
-  html[data-theme] .activities-page .dn-v2-activity-card { transition:none !important; }
+  html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card { transition:none !important; }
 }
 
 /* DN 2.1: let Activity photos and their content own the first fold. */
@@ -179,24 +179,24 @@ html[data-theme] .activities-page .life-timeline-heading {
 html[data-theme] .activities-page .life-timeline-heading h2 {
   margin:0; font-size:clamp(22px,3vw,28px) !important; line-height:1.2; letter-spacing:-.045em;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-progress {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress {
   border:0; border-radius:0; box-shadow:none;
   background:transparent !important; padding:1px 2px 5px; margin-bottom:7px;
   gap:10px;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-progress > div {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress > div {
   flex-wrap:nowrap; white-space:nowrap; gap:5px;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-progress strong {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress strong {
   font-size:12px !important; font-weight:760; letter-spacing:-.01em;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-progress > div span {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress > div span {
   font-size:11px !important;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-progress-track {
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress-track {
   height:4px; border-radius:99px;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-action {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-action {
   position:absolute; z-index:2; top:2px; right:2px;
   display:grid; place-items:center; width:44px; height:44px;
   min-width:44px; min-height:44px; padding:0;
@@ -204,24 +204,24 @@ html[data-theme] .activities-page .dn-v2-activity-cover-action {
   color:var(--color-text); cursor:pointer; touch-action:manipulation;
   isolation:isolate;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-action::before {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-action::before {
   content:''; position:absolute; inset:6px;
   border:1px solid color-mix(in srgb,var(--color-border) 55%,transparent);
   border-radius:11px; background:color-mix(in srgb,var(--color-card) 86%,transparent);
   box-shadow:0 2px 8px rgb(0 0 0 / 9%); backdrop-filter:blur(10px);
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-action svg {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-action svg {
   position:relative; z-index:1;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-action:focus-visible {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-action:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:-2px;
 }
-html[data-theme] .activities-page .dn-v2-activity-cover-action:disabled { cursor:default; opacity:.55; }
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-cover-action:disabled { cursor:default; opacity:.55; }
 @media (max-width:480px) {
-  html[data-theme] .activities-page .event-activity-content .event-activity-progress {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress {
     grid-template-columns:auto minmax(48px,1fr); align-items:center;
   }
-  html[data-theme] .activities-page .event-activity-content .event-activity-progress > div {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-progress > div {
     flex-wrap:nowrap; white-space:nowrap;
   }
 }
