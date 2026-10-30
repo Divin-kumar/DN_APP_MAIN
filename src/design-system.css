@@ -3249,3 +3249,178 @@ html[data-theme] .insights-page .insight-metric > small {
     overscroll-behavior-y: none;
   }
 }
+
+/* DN 2.1 Settings: quiet navigation rows.
+   Match the editorial Home / Transactions visual language without moving any
+   account, backup, demo or preference actions. The entire row remains the
+   activation target and its chevron is only a visual state indicator. */
+html[data-theme] .settings-page.dn-settings-home {
+  width: 100%;
+  max-width: 860px;
+  min-width: 0;
+  margin-inline: auto;
+  gap: 10px !important;
+}
+html[data-theme] .dn-settings-home .settings-heading {
+  display: grid;
+  align-items: start;
+  justify-content: stretch;
+  gap: 4px;
+  margin: 0 0 5px;
+}
+html[data-theme] .dn-settings-home .settings-heading h2 {
+  margin: 0;
+  font-size: clamp(23px, 3.6vw, 29px) !important;
+  line-height: 1.18;
+  letter-spacing: -.045em;
+}
+html[data-theme] .dn-settings-home .settings-heading p {
+  margin: 0;
+  max-width: 48ch;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+html[data-theme] .dn-settings-home .settings-section,
+html[data-theme] .dn-settings-home .settings-hub-card {
+  min-width: 0;
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent) !important;
+  border-radius: 16px !important;
+  background: color-mix(in srgb, var(--color-card) 92%, var(--color-surface)) !important;
+  box-shadow: 0 4px 17px rgb(0 0 0 / 3%) !important;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+html[data-theme] .dn-settings-home .settings-section {
+  display: block;
+  padding: 0 !important;
+  overflow: hidden;
+}
+html[data-theme] .dn-settings-home .settings-accordion-toggle {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  align-items: center;
+  width: 100%;
+  min-height: 72px;
+  gap: 7px;
+  padding: 11px 10px 11px 14px !important;
+  border: 0 !important;
+  border-radius: 15px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+  text-align: left;
+}
+html[data-theme] .dn-settings-home .settings-accordion-toggle:is(:hover,[aria-expanded="true"]) {
+  background: color-mix(in srgb, var(--color-primary) 4%, transparent) !important;
+}
+html[data-theme] .dn-settings-home .settings-accordion-header-main {
+  min-width: 0;
+  gap: 11px;
+}
+html[data-theme] .dn-settings-home .settings-accordion-icon,
+html[data-theme] .dn-settings-home .settings-hub-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-card)) !important;
+  color: var(--color-primary) !important;
+}
+html[data-theme] .dn-settings-home .settings-accordion-text {
+  min-width: 0;
+  gap: 3px;
+}
+html[data-theme] .dn-settings-home .settings-accordion-text strong,
+html[data-theme] .dn-settings-home .settings-hub-copy strong {
+  color: var(--color-text) !important;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+html[data-theme] .dn-settings-home .settings-accordion-text small,
+html[data-theme] .dn-settings-home .settings-hub-copy small {
+  min-width: 0;
+  color: var(--color-text-muted) !important;
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+html[data-theme] .dn-settings-home .settings-accordion-indicator {
+  display: grid;
+  place-items: center;
+  justify-self: end;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: transparent !important;
+  color: var(--color-text-muted) !important;
+  box-shadow: none;
+}
+html[data-theme] .dn-settings-home .settings-accordion-indicator svg {
+  transform: rotate(-90deg);
+  transition: transform 180ms ease, color 180ms ease;
+}
+html[data-theme] .dn-settings-home .settings-accordion-toggle[aria-expanded="true"] .settings-accordion-indicator svg {
+  transform: rotate(0deg);
+  color: var(--color-primary);
+}
+html[data-theme] .dn-settings-home .settings-accordion-body {
+  margin: 0 !important;
+  padding: 13px 14px 15px !important;
+  border: 0 !important;
+  border-top: 1px solid color-mix(in srgb, var(--color-border) 67%, transparent) !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+}
+html[data-theme] .dn-settings-home .settings-navigation-hub {
+  gap: 9px;
+  margin: 2px 0;
+}
+html[data-theme] .dn-settings-home .settings-hub-card {
+  min-height: 68px;
+  gap: 11px;
+  padding: 10px 13px !important;
+  text-decoration: none;
+}
+html[data-theme] .dn-settings-home .settings-hub-card:is(:hover,:focus-visible) {
+  border-color: color-mix(in srgb, var(--color-primary) 30%, var(--color-border)) !important;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-card)) !important;
+  box-shadow: 0 4px 17px rgb(0 0 0 / 3%) !important;
+  transform: none;
+}
+html[data-theme] .dn-settings-home .settings-hub-copy { min-width: 0; }
+html[data-theme] .dn-settings-home .settings-hub-arrow {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--color-text-muted);
+}
+html[data-theme] .dn-settings-home :is(.settings-accordion-toggle,.settings-hub-card):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
+}
+@media (max-width: 480px) {
+  html[data-theme] .dn-settings-home .settings-accordion-toggle {
+    min-height: 68px;
+    padding-inline: 11px 7px !important;
+  }
+  html[data-theme] .dn-settings-home .settings-accordion-header-main { gap: 9px; }
+  html[data-theme] .dn-settings-home .settings-accordion-icon,
+  html[data-theme] .dn-settings-home .settings-hub-icon {
+    flex-basis: 36px;
+    width: 36px;
+    height: 36px;
+  }
+  html[data-theme] .dn-settings-home .settings-accordion-body {
+    padding: 11px 11px 13px !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-settings-home .settings-accordion-indicator svg { transition: none; }
+}
