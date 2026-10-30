@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-162 | Prevent forced iPhone keyboard on universal Quick Activity open
+- **Authority:** Approved DN 2.1 iPhone-first UI/UX direction. The owner's installed-PWA screenshots show universal Add an activity with the iPhone keyboard occupying much of the dialog. Existing universal Quick Activity title input uses `autoFocus`, unlike a user-initiated title tap.
+- **Change:** Limit the existing title autoFocus to viewport widths 761px and wider. On phone widths 320/390/430, opening universal + → Activity leaves the title unfocused; the user may select a Moment first and focus the title manually. No change to the shared ModalDialog focus trap, accessible names, Save/Cancel buttons, date/time defaults, validation or any other editor.
+- **Direct/downstream:** The shared shell's universal Quick Activity creation on Dashboard, Moments, Activities, Transactions and workspace routes. Phone focus, scrolling and keyboard handling; desktop initial-entry behavior preserved. Existing linked records, finance, Story, Gallery, PDF, backup v3 and Guest/account storage are untouched.
+- **Tests:** A new synthetic Chromium check at 320/390/430px, dark/light, verifies no implicit text-input focus, deliberate keyboard-intent focus by tap, Cancel and exact Guest data preservation. The full regression suite, build, offline shell and upgrade checks must pass independently. Physical installed-iPhone keyboard behavior is not established by Chromium.
+- **Demo:** Reviewed `src/dev/sampleData.js`; samples, tutorial wording and fixture content remain applicable, with no sample-data version bump or reset needed for this focus-only form behavior.
+- **Safety:** `OldVersion` only, no `[deploy-live]` marker, no version bump and no Firebase publication. Production v2.0.5 parity and physical PWA checks remain outstanding.
+
 ## CHG-20261030-161 | Stabilize animated Date/Time alignment measurement without changing UI
 - **Cause:** The first DN 2.1 safe-area CI run on `OldVersion` c13d23b passed all three synthetic safe-area cases and 175/176 Chromium journeys, but existing `e2e/all-date-times.spec.js` at 1280px sampled a date/time vertical difference of 3.363px during modal opening against its existing <2px requirement. The 1280px layout is outside the mobile-only safe-area rules, so this is not evidence of a new iPhone geometry defect.
 - **Fix:** Poll for the same <2px alignment within 3 seconds to allow modal entrance animation to settle. Keep Date/Time width thresholds and all save/edit/clear/filter/order assertions unchanged; do not modify UI, styles, records, product behavior, Guest fixtures or document contract. If a steady-state misalignment exists, the test still fails.
