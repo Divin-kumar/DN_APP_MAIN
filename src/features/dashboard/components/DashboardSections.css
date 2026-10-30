@@ -147,6 +147,14 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-copy {
   gap: 3px;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-copy strong {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  min-width: 0;
+  overflow: hidden;
+  white-space: normal;
+  overflow-wrap: anywhere;
   font-size: 13px;
   font-weight: 670;
   line-height: 1.35;
