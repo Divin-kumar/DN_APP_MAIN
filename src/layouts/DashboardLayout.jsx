@@ -33,6 +33,7 @@ import { financialDate } from '../utils/financialRecords';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
+import './ProfileMenuPremium.css';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -67,6 +68,8 @@ export default function DashboardLayout() {
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
+  const profileTriggerRef = useRef(null);
+  const profileKeyboardOpenRef = useRef(null);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const quickCreateDesktopRef = useRef(null);
   const quickCreateMobileRef = useRef(null);
@@ -128,18 +131,50 @@ export default function DashboardLayout() {
   useEffect(() => {
     if (!profileMenuOpen) return undefined;
 
+    const menu = profileMenuRef.current?.querySelector('[role="menu"]');
+    const items = () => [...(menu?.querySelectorAll('[role="menuitem"]:not([disabled])') || [])];
+    // Only keyboard-opened menus move focus automatically. Pointer users retain
+    // their current position, and the original click-outside semantics remain.
+    if (profileKeyboardOpenRef.current) {
+      const choices = items();
+      const index = profileKeyboardOpenRef.current === 'last' ? choices.length - 1 : 0;
+      choices[index]?.focus({ preventScroll: true });
+      profileKeyboardOpenRef.current = null;
+    }
+
     const closeProfileMenuOutside = (event) => {
       if (!profileMenuRef.current?.contains(event.target)) setProfileMenuOpen(false);
     };
-    const closeProfileMenuOnEscape = (event) => {
-      if (event.key === 'Escape') setProfileMenuOpen(false);
+    const handleProfileMenuKeys = (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        setProfileMenuOpen(false);
+        profileTriggerRef.current?.focus({ preventScroll: true });
+        return;
+      }
+      if (event.key === 'Tab') {
+        setProfileMenuOpen(false);
+        return;
+      }
+      if (!menu?.contains(event.target)) return;
+      const choices = items();
+      const current = choices.indexOf(document.activeElement);
+      let next;
+      if (event.key === 'ArrowDown') next = (current + 1) % choices.length;
+      else if (event.key === 'ArrowUp') next = (current - 1 + choices.length) % choices.length;
+      else if (event.key === 'Home') next = 0;
+      else if (event.key === 'End') next = choices.length - 1;
+      else return;
+      if (!choices.length) return;
+      event.preventDefault();
+      choices[next]?.focus({ preventScroll: true });
     };
 
     document.addEventListener('pointerdown', closeProfileMenuOutside);
-    document.addEventListener('keydown', closeProfileMenuOnEscape);
+    document.addEventListener('keydown', handleProfileMenuKeys);
     return () => {
       document.removeEventListener('pointerdown', closeProfileMenuOutside);
-      document.removeEventListener('keydown', closeProfileMenuOnEscape);
+      document.removeEventListener('keydown', handleProfileMenuKeys);
     };
   }, [profileMenuOpen]);
 
@@ -371,16 +406,24 @@ export default function DashboardLayout() {
             {theme === 'dark' ? <Sun size={17} /> : <Moon size={17} />}
           </button>
           <div ref={profileMenuRef} className="profile-menu-wrap">
-            <button className="profile-trigger" type="button" onClick={() => setProfileMenuOpen((open) => !open)} aria-label="Open profile and account menu" aria-expanded={profileMenuOpen} aria-haspopup="menu">
+            <button ref={profileTriggerRef} className="profile-trigger" type="button"
+              onClick={() => { profileKeyboardOpenRef.current = null; setProfileMenuOpen((open) => !open); }}
+              onKeyDown={(event) => {
+                if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+                event.preventDefault();
+                profileKeyboardOpenRef.current = event.key === 'ArrowUp' ? 'last' : 'first';
+                setProfileMenuOpen(true);
+              }}
+              aria-label="Open profile and account menu" aria-expanded={profileMenuOpen} aria-haspopup="menu" aria-controls="dn-profile-menu">
               {user?.photoURL && !avatarError ? (
                 <img className="avatar" src={user.photoURL} alt="" style={styles.avatar} onError={() => setAvatarError(true)} />
               ) : <span className="avatar avatar-fallback" aria-hidden="true">{initials}</span>}
               <span className="user-name" style={styles.userName}>{profileName}</span>
-              <ChevronDown size={15} />
+              <ChevronDown className="profile-trigger-chevron" size={15} aria-hidden="true" />
             </button>
             {profileMenuOpen ? (
-              <div className="profile-menu" role="menu">
-                <div className="profile-menu-account"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
+              <div id="dn-profile-menu" className="profile-menu" role="menu" aria-label="Profile and account">
+                <div className="profile-menu-account" role="presentation"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
                 <NavLink to="/financials/transactions" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Receipt size={16} /> Transactions</NavLink>
                 <NavLink to="/insights" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Activity size={16} /> Insights</NavLink>

@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-207 | Make profile menu a compact, touch-and-keyboard-ready account sheet
+- **Observed:** The global header's old profile menu inherited several contradictory legacy CSS widths, opaque palettes and 38px menuitem targets. Its role=menu controls lacked Arrow/Home/End navigation and Escape focus restoration.
+- **Implementation:** Scope a slim theme-aware profile popover to the authenticated shell, with a compact 44px trigger, 46px actions, comfortable 274px maximum width, quiet identity header and subtle Logout hierarchy. Add keyboard-open first/last focus, Arrow/Home/End movement and Escape focus return while preserving outside clicks, Tab, menu links and original Logout handler.
+- **Downstream:** All authenticated/Guest routes share this shell. Profile route and the four existing destinations are unchanged, as are user/Guest identity boundaries, code lists, existing finance/storage/backup, Moment photos, return navigation and PDF. Current Guest sample already exercises the menu; do not bump tour version or reset personal records.
+- **Verification:** Source-reviewed original handlers and style overrides; new 320/390/430px light/dark synthetic geometry/navigation and keyboard tests added. Exact-SHA GitHub CI, fresh current Vercel visual, native iPhone Safari/VoiceOver and owner acceptance **Unverified** until run. Append to the cumulative open register, preserving CHG-198 through CHG-206.
+- **Boundary:** `OldVersion` commit only. No Firebase publication, `main`, release version bump or paid hosting.
+
 ## CHG-20261030-206 | Lighten global status feedback without weakening safety cues
 - **Reason:** Shared save and error toasts still used opaque saturated tones, very small 5px-padded action buttons and 2.6-second action lifetimes, inconsistent with the DN 2.1 mobile typography and touch system.
 - **Change:** Consolidate existing toast CSS in its original stylesheet into one theme-aware, thin-tone, blurred surface; keep position and current message/action callbacks. Give action buttons 44px targets, visible keyboard focus and 6.2-second default when actionable, preserving any explicit duration. Error/danger messages announce as alerts; other statuses stay polite and atomic.
