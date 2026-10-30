@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-197 | Finance stylesheet contract follows the consolidated three-cell design
+- **Observed CI:** On Finance commit `851ef5f`, 479/480 Node checks passed; one legacy source contract expected the retired, one-line `.dn-finance-summary-grid` override text and therefore failed before lint/browser tests could run. The present stylesheet intentionally consolidates that override into the scoped, centered Finance summary block.
+- **Repair:** Update both source-contract assertions to check the actual three-column scoped grid, and assert that headings and amounts are centered. This enforces the new premium geometry instead of a historical CSS formatting artifact. No product code, records, visual calculations or Guest fixtures changed in this test-only commit.
+- **Validation:** Exact SHA CI, browser geometry and installed iPhone remain pending at authoring. `OldVersion` only, no Firebase/main changes.
+
 ## CHG-20261030-196 | Align Insights JSON export test with reconciled nested expenses
 - **Observed CI:** OldVersion `0bd0cff` completed 285/286 Chromium browser cases successfully; its lone failure was an overly restrictive new Insights export test expecting only two expenses, while the complete Guest ledger legitimately includes the third, nested-only Parking expense. The export itself correctly produced all three and left stored Guest data intact.
 - **Repair:** Assert the three stable IDs (duplicate, nested-only and other), and use the direct existing Node `readFile` API instead of an unnecessary dynamic-import conditional. Application code, exported JSON contents, user records and visual design are unchanged.

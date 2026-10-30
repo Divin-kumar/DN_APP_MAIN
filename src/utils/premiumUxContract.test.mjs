@@ -108,7 +108,9 @@ test('gesture completion is shared across Moment and Transaction button targets'
 });
 test('Finance totals stay in one row and Code Lists keep the label in place', () => {
   const css = read('../design-system.css');
-  assert.match(css, /\.dn-finance-summary-grid \{ grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \.dn-finance-metric \{[^}]*align-items:center !important/);
+  assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \.dn-finance-metric > strong \{[^}]*text-align:center/);
   assert.match(css, /\.code-list-item \.code-list-row,[\s\S]*?transform:none !important/);
 });
 
@@ -143,7 +145,7 @@ test('finance density has one-row totals and universal-only transaction creation
   const layout = read('../layouts/DashboardLayout.jsx');
   assert.match(layout, /onClick=\{\(\) => beginQuickCreate\('transaction'\)\}/);
   assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{activityMoments\} onSubmit=\{saveQuickTransaction\}/);
-  assert.match(css, /\.dn-finance-summary-grid \{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
+  assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
   assert.match(css, /\.dn-transactions-page \.transactions-heading \{\s*display:block !important/);
   assert.doesNotMatch(css, /\.dn-transactions-page \.dn-transaction-add/);
 });
