@@ -125,21 +125,22 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(read('../components/financials/TransactionHistory.jsx'), /All income and expenses/);
 });
 
-test('finance density has one-row totals and a single compact transaction heading', () => {
+test('finance density has one-row totals, readable description and direct unified transaction entry', () => {
   const page = read('../pages/Financials.jsx');
   const history = read('../components/financials/TransactionHistory.jsx');
   const css = read('../design-system.css');
   assert.match(page, /aria-label="Financial totals for matching transactions"/);
   assert.doesNotMatch(page, /className="dn-finance-summary-period"/);
   assert.match(history, /className="dn-transactions-heading-copy"/);
-  assert.match(history, /<p title="All income and expenses in one place">All income and expenses<\/p>/);
+  assert.match(history, /<p className="dn-transactions-heading-description" title="All income and expenses in one place">All income and expenses<\/p>/);
   const layout = read('../layouts/DashboardLayout.jsx');
-  assert.doesNotMatch(history, /dn-transaction-add/);
+  assert.match(history, /className="dn-transaction-add primaryButton" onClick=\{onAdd\}/);
+  assert.match(history, /onAdd, onEdit, onDelete/);
   assert.match(layout, /onClick=\{\(\) => beginQuickCreate\('transaction'\)\}/);
   assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{activityMoments\} onSubmit=\{saveQuickTransaction\}/);
   assert.match(css, /\.dn-finance-summary-grid \{[\s\S]*?grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
   assert.match(css, /\.dn-transactions-page \.transactions-heading \{[\s\S]*?grid-template-columns:minmax\(0,1fr\) auto/);
-  assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-copy p \{[\s\S]*?white-space:nowrap/);
+  assert.match(css, /\.dn-transactions-page \.dn-transactions-heading-description \{[\s\S]*?white-space: nowrap/);
 });
 test('Moment hero retains Greeting and attachment quick create while retiring Memory creation', () => {
   const hero = read('../features/events/components/EventWorkspaceShell.jsx');
