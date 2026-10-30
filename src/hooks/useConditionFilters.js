@@ -33,8 +33,13 @@ export default function useConditionFilters(scope, records = [], useListState = 
   const migrationVersion = configuration.migrationVersion ?? (configuration.initialGroup ? 1 : 0);
   const needsMigration = stored.migrationVersion < migrationVersion;
   const legacyKey = JSON.stringify(legacyGroup);
-  const group = useMemo(() => needsMigration ? combineGroups(storedGroup, JSON.parse(legacyKey)) : storedGroup,
-    [storedGroup, needsMigration, legacyKey]);
+  // A never-configured page starts from Settings. Existing working groups keep
+  // their earlier migration path rather than being silently overwritten.
+  const startingKey = configuration.startingGroup ? JSON.stringify(normalizeGroup(scope, configuration.startingGroup)) : '';
+  const freshGroup = stored.migrationVersion === 0 && !storedGroup.children.length && Boolean(startingKey);
+  const group = useMemo(() => needsMigration
+    ? (freshGroup ? JSON.parse(startingKey) : combineGroups(storedGroup, JSON.parse(legacyKey)))
+    : storedGroup, [storedGroup, needsMigration, legacyKey, startingKey, freshGroup]);
   const state = useMemo(() => ({ group, migrationVersion: stored.migrationVersion }), [stored.migrationVersion, group]);
   const schemaHints = configuration.schema || NO_SCHEMA;
   const moments = configuration.moments || NO_SCHEMA;
