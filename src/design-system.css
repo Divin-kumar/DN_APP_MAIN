@@ -2494,6 +2494,36 @@ html[data-theme] .dn-transactions-page .dn-transaction-add {
 html[data-theme] .dn-transactions-page .dn-transaction-add svg {
   flex:0 0 auto; width:16px; height:16px;
 }
+/* DN 2.1 Phase 1: clear two-line Finance heading with a direct transaction CTA. */
+html[data-theme] .dn-transactions-page .transactions-heading {
+  display: grid !important;
+  grid-template-columns: minmax(0,1fr) auto !important;
+  grid-template-rows: auto auto;
+  column-gap: 8px !important;
+  row-gap: 3px !important;
+  align-items: center;
+}
+html[data-theme] .dn-transactions-page .dn-transactions-heading-copy {
+  grid-column: 1; grid-row: 1; align-self: center;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-add {
+  grid-column: 2; grid-row: 1; justify-self: end;
+  min-width: 0; min-height: 44px !important;
+  padding: 0 10px !important;
+  gap: 5px !important;
+  font-size: clamp(.73rem, 2.8vw, .85rem) !important;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-add:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+html[data-theme] .dn-transactions-page .dn-transactions-heading-description {
+  grid-column: 1 / -1; grid-row: 2;
+  margin: 0 !important; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--color-text-muted);
+  font-size: 12px !important; line-height: 1.35;
+}
 html[data-theme] .transactions-panel.dn-transactions-page { padding:12px !important; }
 /* Moment type and both actions share ONE top row, then title/date/stats follow.
    Visual pills are compact; 44px minimum touch targets remain accessible. */
