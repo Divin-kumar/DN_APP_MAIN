@@ -1,0 +1,191 @@
+/* DN 2.1 Code Lists: a calm index for a long configuration page.
+   Scoped to this subpage; no change to persisted list values or swipe mechanics. */
+html[data-theme] .dn-premium-code-lists {
+  min-width:0;
+  width:min(100%,960px);
+  max-width:960px;
+  margin-inline:auto;
+  gap:14px !important;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index {
+  display:flex;
+  align-items:stretch;
+  gap:14px;
+  min-width:0;
+  max-width:100%;
+  padding:0 1px;
+  border-bottom:1px solid var(--color-border);
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index-label {
+  display:inline-flex;
+  flex:0 0 auto;
+  align-items:center;
+  min-height:46px;
+  color:var(--color-text-muted);
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.085em;
+  text-transform:uppercase;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll {
+  display:flex;
+  align-items:stretch;
+  flex:1 1 auto;
+  gap:3px;
+  min-width:0;
+  max-width:100%;
+  overflow-x:auto;
+  overflow-y:hidden;
+  overscroll-behavior-x:contain;
+  -webkit-overflow-scrolling:touch;
+  scrollbar-width:none;
+  scroll-padding-inline:12px;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-premium-code-lists .dn-code-list-index a {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  min-height:46px;
+  padding:0 11px;
+  border-radius:9px 9px 0 0;
+  background:transparent;
+  color:var(--color-text-muted);
+  font-size:12px;
+  font-weight:630;
+  line-height:1.25;
+  text-decoration:none;
+  white-space:nowrap;
+  transition:color .16s ease,background-color .16s ease;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index a:hover {
+  background:color-mix(in srgb,var(--color-primary) 6%,transparent);
+  color:var(--color-text);
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-index a:focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:-3px;
+  color:var(--color-text);
+}
+/* Keep anchor destinations clear of the fixed app chrome. */
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section,
+html[data-theme] .dn-premium-code-lists #list-order,
+html[data-theme] .dn-premium-code-lists #code-list-paymentMethods {
+  scroll-margin-top:80px;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section {
+  gap:13px !important;
+  padding:18px !important;
+  border:1px solid var(--color-border) !important;
+  border-radius:18px !important;
+  background:var(--color-card) !important;
+  box-shadow:none !important;
+  transition:border-color .16s ease;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section:target {
+  border-color:color-mix(in srgb,var(--color-primary) 38%,var(--color-border)) !important;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading {
+  align-items:center;
+  gap:10px;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3 {
+  font-size:clamp(16px,2.4vw,18px);
+  font-weight:720;
+  letter-spacing:-.02em;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section > .code-list-description {
+  margin:0;
+  font-size:12px;
+  line-height:1.55;
+  color:var(--color-text-muted);
+}
+html[data-theme] .dn-premium-code-lists .code-list-groups { gap:15px; }
+html[data-theme] .dn-premium-code-lists .code-list-group { gap:8px; }
+html[data-theme] .dn-premium-code-lists .code-list-rows { gap:6px; }
+html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-item {
+  border-color:color-mix(in srgb,var(--color-border) 75%,transparent) !important;
+  border-radius:12px !important;
+  box-shadow:none !important;
+}
+html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row {
+  display:flex;
+  align-items:center;
+  gap:10px;
+  min-width:0;
+  min-height:52px;
+  padding:10px 12px !important;
+}
+html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-main {
+  flex:1 1 auto;
+  min-width:0;
+  width:auto;
+}
+html[data-theme] .dn-premium-code-lists .code-list-rows .dn-code-list-row-more {
+  display:block;
+  flex:0 0 auto;
+  width:18px;
+  height:18px;
+  color:var(--color-text-muted);
+  opacity:.68;
+}
+html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row:hover .dn-code-list-row-more,
+html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row:focus-visible .dn-code-list-row-more { opacity:1; }
+html[data-theme] .dn-premium-code-lists .code-list-add-row {
+  align-items:center;
+  gap:8px;
+}
+html[data-theme] .dn-premium-code-lists .code-list-add-row input {
+  min-width:0;
+  min-height:44px;
+  font-size:16px !important;
+}
+html[data-theme] .dn-premium-code-lists .code-list-add-row .settings-tag-add {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:68px;
+  min-height:44px;
+  height:44px;
+  padding-inline:12px;
+  border-radius:11px;
+  font-size:13px;
+  white-space:nowrap;
+}
+html[data-theme] .dn-premium-code-lists .code-list-add-row :is(input,button):focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:2px;
+}
+@media(max-width:760px) {
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index { gap:0; }
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index-label { display:none; }
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index a { min-height:44px; padding-inline:12px; font-size:11.5px; }
+  html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section { padding:14px !important; }
+  /* Two inputs never turn Add into an 88px-tall control. */
+  html[data-theme] .dn-premium-code-lists .code-list-add-row.has-labels {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    grid-template-rows:44px 44px;
+    gap:8px;
+  }
+  html[data-theme] .dn-premium-code-lists .code-list-add-row.has-labels input:first-child {
+    grid-column:1 / -1;
+    grid-row:1;
+  }
+  html[data-theme] .dn-premium-code-lists .code-list-add-row.has-labels input:nth-child(2) {
+    grid-column:1;
+    grid-row:2;
+  }
+  html[data-theme] .dn-premium-code-lists .code-list-add-row.has-labels .settings-tag-add {
+    grid-column:2;
+    grid-row:2;
+    align-self:center;
+    min-height:44px;
+    height:44px !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index a,
+  html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section { transition:none; }
+}
