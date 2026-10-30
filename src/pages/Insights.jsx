@@ -130,18 +130,17 @@ export default function Insights() {
   return (
     <div className="insights-page">
       <header className="insights-heading">
-        <div><span className="insights-eyebrow"><Sparkles size={14} /> Your life, in perspective</span>
-          <h2>Insights</h2>
-          <p>A thoughtful view of the moments, progress, and resources shaping your journey.</p></div>
-        <div className="insights-tools">
-          <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
-            resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
-            summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
-            search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search milestones" aria-label="Search Insights" />} />
-          <button type="button" onClick={exportInsights}><Download size={15} /> Export</button>
-        </div>
+        <h2>Insights</h2>
+        <button className="insights-export" type="button" onClick={exportInsights}
+          aria-label="Export Insights data"><Download size={16} aria-hidden="true" /><span>Export</span></button>
       </header>
+      <div className="insights-discovery">
+        <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
+          resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
+          summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
+          search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
+            placeholder="Search milestones" aria-label="Search Insights" />} />
+      </div>
 
       {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on.</span></div> : null}
 

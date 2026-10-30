@@ -3072,3 +3072,78 @@ html[data-theme] .dn-transactions-page .dn-transaction-card .dn-transaction-deta
     transition:none !important;
   }
 }
+
+/* DN 2.1 Insights first fold: one quiet title/export row and the same
+   editorial search line used by Moments and Transactions. Metrics get a
+   readable value hierarchy, without trimming large amounts or repeating
+   decorative header copy. Contextual charts and report data are unchanged. */
+html[data-theme] .insights-page { gap:12px !important; }
+html[data-theme] .insights-page > .insights-heading {
+  display:flex !important; flex-direction:row !important; align-items:center !important;
+  justify-content:space-between; min-width:0; min-height:44px; gap:12px; padding:0;
+}
+html[data-theme] .insights-page > .insights-heading > h2 {
+  margin:0 !important; min-width:0; font-size:clamp(1.45rem,4vw,1.85rem) !important;
+  line-height:1.15; letter-spacing:-.045em; font-weight:750;
+}
+html[data-theme] .insights-page .insights-export {
+  display:inline-flex; align-items:center; justify-content:center; gap:7px; flex:0 0 auto;
+  min-width:82px; min-height:44px; padding:0 11px;
+  border:1px solid color-mix(in srgb,var(--color-border) 77%,transparent);
+  border-radius:12px; background:color-mix(in srgb,var(--color-card) 78%,transparent);
+  color:var(--color-text-muted); box-shadow:none; font:inherit; font-size:12px;
+  font-weight:650; cursor:pointer;
+}
+html[data-theme] .insights-page .insights-export:is(:hover,:focus-visible) {
+  border-color:color-mix(in srgb,var(--color-primary) 36%,var(--color-border));
+  color:var(--color-primary); background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
+}
+html[data-theme] .insights-page .insights-export:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px;
+}
+html[data-theme] .insights-page .insights-discovery { width:100%; min-width:0; }
+html[data-theme] .insights-page .insights-discovery > .dn-list-controls { width:100%; min-width:0; }
+html[data-theme] .insights-page .insights-metric-grid { gap:9px; min-width:0; }
+html[data-theme] .insights-page .insight-metric {
+  display:grid; grid-template-columns:28px minmax(0,1fr);
+  grid-template-rows:auto auto auto; align-content:start; align-items:center;
+  gap:6px 8px; padding:13px 14px !important; min-width:0; min-height:110px;
+  border:1px solid var(--color-border) !important; border-radius:17px !important;
+  background:var(--color-card) !important; box-shadow:none !important;
+}
+html[data-theme] .insights-page .insight-metric-icon {
+  grid-column:1; grid-row:1; width:28px; height:28px;
+  border-radius:9px; background:color-mix(in srgb,var(--color-primary) 9%,var(--color-card));
+  color:var(--color-primary);
+}
+html[data-theme] .insights-page .insight-metric-label {
+  grid-column:2; grid-row:1; min-width:0; overflow:visible; text-overflow:clip;
+  font-size:11px; line-height:1.3; white-space:normal;
+  font-weight:650; color:var(--color-text-muted);
+}
+html[data-theme] .insights-page .insight-metric > strong {
+  grid-column:1 / -1; grid-row:2; min-width:0; max-width:100%;
+  margin-top:1px; overflow:visible; white-space:normal; text-overflow:clip;
+  overflow-wrap:anywhere; font-size:clamp(1.05rem,2.6vw,1.35rem) !important;
+  font-variant-numeric:tabular-nums; line-height:1.25;
+  font-weight:760; letter-spacing:-.035em;
+}
+html[data-theme] .insights-page .insight-metric > small {
+  grid-column:1 / -1; grid-row:3; min-width:0; max-width:100%;
+  color:var(--color-text-muted); font-size:11px; line-height:1.4;
+  white-space:normal; overflow-wrap:anywhere; text-overflow:visible;
+}
+@media(max-width:620px) {
+  html[data-theme] .insights-page .insights-metric-grid {
+    grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px;
+  }
+  html[data-theme] .insights-page .insight-metric {
+    padding:11px 12px !important; min-height:112px; gap:5px 6px;
+  }
+  html[data-theme] .insights-page .insight-metric > strong {
+    font-size:clamp(1rem,4.2vw,1.22rem) !important;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .insights-page .insights-export { transition:none !important; }
+}

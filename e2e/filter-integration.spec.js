@@ -148,7 +148,7 @@ test('Finance totals follow the same AND and OR conditions as the transaction ro
   await selectOption(page, 'Comparison', 'Is');
   await selectOption(page, 'Value for Type', 'Expense');
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(1);
-  await expect(page.locator('.dn-transaction-copy strong')).toHaveText('October expense');
+  await expect(page.locator('.dn-transaction-copy > strong')).toHaveText('October expense');
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹0');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹230');
   await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('-₹230');
@@ -162,7 +162,7 @@ test('Finance totals follow the same AND and OR conditions as the transaction ro
   await openFilters(page);
   await expect(page.getByRole('combobox', { name: 'Match filters', exact: true })).toHaveCount(0);
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(3);
-  await expect(page.locator('.dn-transaction-copy strong').filter({ hasText: 'September income' })).toHaveCount(0);
+  await expect(page.locator('.dn-transaction-copy > strong').filter({ hasText: 'September income' })).toHaveCount(0);
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹1,000');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹300');
   await expect(page.locator('.dn-finance-metric-balance strong')).toHaveText('₹700');
