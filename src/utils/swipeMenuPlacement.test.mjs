@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { computeSwipeMenuPlacement } from './swipeMenuPlacement.js';
+import { computeSwipeMenuPlacement, getSwipeDockReserve } from './swipeMenuPlacement.js';
 
 test('compact popup stays near a card instead of covering the whole card', () => {
   const pos = computeSwipeMenuPlacement({
@@ -34,4 +34,32 @@ test('safe positioning on tiny shifted mobile visual viewport with keyboard', ()
   assert.ok(pos.left + pos.width <= 288);
   assert.ok(pos.top >= 152);
   assert.ok(pos.top + pos.maxHeight <= 393 - 40);
+});
+
+
+test('measured iPhone dock clearance accounts for Home Indicator insets', () => {
+  const viewport = { left: 0, top: 0, width: 390, height: 844 };
+  const dock = { left: 10, top: 745, right: 380, bottom: 810, width: 370, height: 65 };
+  const reserve = getSwipeDockReserve({ viewport, dockRect: dock });
+  assert.equal(reserve, 107);
+  const pos = computeSwipeMenuPlacement({
+    anchor: { left: 14, right: 376, top: 650, bottom: 735 },
+    viewport, count: 5, bottomReserve: reserve,
+  });
+  assert.ok(pos.top + pos.maxHeight <= dock.top - 12 - 8);
+  assert.equal(pos.direction, 'above');
+});
+
+test('keyboard and desktop without a visible dock reserve no phantom bottom space', () => {
+  const viewport = { left: 0, top: 80, width: 390, height: 340 };
+  const dock = { top: 745, bottom: 810, width: 370, height: 65 };
+  assert.equal(getSwipeDockReserve({ viewport, dockRect: dock }), 0);
+  assert.equal(getSwipeDockReserve({ viewport, dockRect: dock, dockVisible: false }), 0);
+  assert.equal(getSwipeDockReserve({ viewport, dockRect: null }), 0);
+});
+
+test('dock clearance follows visual viewport offsets during browser panning', () => {
+  const viewport = { left: 12, top: 60, width: 300, height: 520 };
+  const dock = { top: 505, bottom: 565, width: 280, height: 60 };
+  assert.equal(getSwipeDockReserve({ viewport, dockRect: dock }), 83);
 });
