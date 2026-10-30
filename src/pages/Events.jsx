@@ -24,6 +24,8 @@ import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useListViewDefaults from '../hooks/useListViewDefaults';
+import { matchesListDefaults } from '../utils/listViewDefaults';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import { momentConditions, momentConditionRecord } from '../utils/listConditionMigration';
@@ -194,11 +196,13 @@ export default function Events() {
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityPriority, setActivityPriority] = useState('medium');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
-  const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', defaultMomentFilters, momentFilterRules);
+  const settingsDefaults = useListViewDefaults('moments');
+  const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', settingsDefaults.filters, momentFilterRules);
   const { search, field: sortField, direction: sortDirection } = momentFilters;
   const sortSummary = momentSortSummary(sortField, sortDirection);
   const setSearch = (value) => changeMomentFilters({ search: value });
-  const resetMomentDiscovery = () => { resetMomentFilters(); conditions.clear(); };
+  const resetMomentDiscovery = () => { resetMomentFilters(); conditions.restore(settingsDefaults.group); };
+  const canResetMoment = !matchesListDefaults(momentFilters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const conditionRecords = useMemo(() => events.map(momentConditionRecord), [events]);
   const conditions = useConditionFilters('moments', conditionRecords, usePersistentListState, { initialGroup: momentConditions(momentFilters), contextKey: getActiveSampleScenario(user?.uid) });
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
@@ -388,7 +392,7 @@ export default function Events() {
           sort={<SortControl field={sortField} direction={sortDirection} options={MOMENT_SORT_OPTIONS} label="Sort moments"
             onFieldChange={(field) => changeMomentFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeMomentFilters({ direction: sortDirection === 'asc' ? 'desc' : 'asc' })} />}
-          canReset={Boolean(conditions.activeCount || search || sortField !== 'date' || sortDirection !== 'asc')} onReset={resetMomentDiscovery}
+          canReset={canResetMoment} onReset={resetMomentDiscovery}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <ConditionBuilder filter={conditions} title="Moment conditions" />
         </ListControls>
@@ -403,7 +407,7 @@ export default function Events() {
         </div>
       ) : (
         <QuietEmptyState kind="moments" filtered={events.length > 0}
-          onClear={events.length && (search.trim() || conditions.activeCount) ? resetMomentDiscovery : undefined} />
+          onClear={events.length && canResetMoment ? resetMomentDiscovery : undefined} />
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
