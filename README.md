@@ -15,6 +15,12 @@ The permanent Firebase app is **owner-reported v2.0.5**; the checked-in `OldVers
 
 The read-only comparison script `node scripts/audit-live-builds.mjs` inspects public `index.html` and `sw.js` for Firebase and the `OldVersion` Vercel preview and prints versions, shell build IDs and entry asset identity. The OldVersion CI workflow also reports those findings without deploying or accessing Guest/account data. A mismatch (or failed fetch) is an **unverified source parity gate**, not permission to overwrite live. See [master](docs/MASTER_SOURCE_OF_TRUTH.md) and [CHG-20261030-163](docs/CHANGE_AUDIT_LOG.md).
 
+## Pending Firebase batch (30 October 2026)
+
+The owner finished an initial Firebase iPhone visual pass, found no major issues and requested **one later combined deployment**, not incremental publication. Track CHG-213 (discovery empty states) and CHG-214 (Settings-owned filter/sort defaults), plus subsequent approved OldVersion work, in the master source of truth and change log. Those updates are source-only pending release; do not bump the app version, upload to Firebase, alter `main`, or assume a Vercel build exists. Confirm the actual last-live source and version, run full CI against the candidate SHA, and obtain separate owner release authorization before the batch upload.
+
+Settings → Code Lists → Sorting & filters configures saved browser-local default values rather than the live list. Moments, Activities and Transactions use those defaults on a new list and restore them when their Refine Reset is selected. Existing working filters remain until Reset. Nested Moment list filters are not overridden.
+
 ## Run locally
 
 Use the current Node.js 22 release (22.12 or newer) and npm. The package, Vercel runtime selection and all CI workflows use Node 22; the dependency follow-up was verified locally on 22.23.4. Install locked dependencies:
