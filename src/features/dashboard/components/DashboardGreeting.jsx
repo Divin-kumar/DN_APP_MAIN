@@ -25,9 +25,5 @@ export default function DashboardGreeting({ now = new Date() }) {
       dateTime={`${dashboardMonthKey(now)}-${String(now.getDate()).padStart(2, '0')}`}>
       {displayDate}
     </time>
-    <div className="dashboard-greeting-copy">
-      <p>A fresh day, a few good moments ahead.</p>
-      <p>Your plans and memories are right here.</p>
-    </div>
   </header>;
 }

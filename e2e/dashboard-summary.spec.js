@@ -31,12 +31,11 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(greeting.getByRole('heading', { name: 'Good morning, Guest' })).toBeVisible();
     await expect(greeting.locator('time')).toHaveText('Monday, 26 October 2026');
     await expect(greeting.locator('.dashboard-greeting-emoji')).toHaveText('☀️');
-    await expect(greeting).toContainText('A fresh day, a few good moments ahead.');
-    await expect(greeting).toContainText('Your plans and memories are right here.');
+    await expect(greeting.locator('.dashboard-greeting-copy')).toHaveCount(0);
     await expect(page.locator('.dashboard-summary-metric, .dashboard-summary-footer, .dashboard-summary-status')).toHaveCount(0);
     await expect(greeting).not.toContainText(/Spent|Balance|Pending|Past 7 days|Preparing|completed/);
-    expect((await greeting.boundingBox()).height).toBeGreaterThanOrEqual(170);
-    expect((await greeting.boundingBox()).height).toBeLessThan(260);
+    expect((await greeting.boundingBox()).height).toBeGreaterThanOrEqual(94);
+    expect((await greeting.boundingBox()).height).toBeLessThan(150);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const [section, dates] of [['Moments', 'Moment dates'], ['Activities', 'Activity dates']]) {
       const panel = page.getByRole('region', { name: section, exact: true });
@@ -115,7 +114,7 @@ test('Dashboard welcome refreshes its greeting and emoji when local time changes
     await expect(emoji).toHaveText(symbol);
   }
   await expect(greeting.locator('time')).toHaveText('Tuesday, 27 October 2026');
-  await expect(greeting).toContainText('Your plans and memories are right here.');
+  await expect(greeting.locator('.dashboard-greeting-copy')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   expect(errors).toEqual([]);
 });

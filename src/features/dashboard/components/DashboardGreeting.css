@@ -1,4 +1,4 @@
-/* A larger, four-line welcome rather than a dashboard metrics summary. */
+/* A quiet, compact first-fold welcome; keep the actual calendar date visible. */
 html[data-theme] .dashboard-compact .dashboard-greeting.dashboard-greeting-compact {
   display:flex;
   grid-column:1 / -1;
@@ -8,12 +8,12 @@ html[data-theme] .dashboard-compact .dashboard-greeting.dashboard-greeting-compa
   width:100%;
   min-width:0;
   height:auto;
-  min-height:186px;
+  min-height:108px;
   max-height:none;
   gap:0;
-  padding:19px 22px !important;
+  padding:13px 18px !important;
   border:1px solid color-mix(in srgb,var(--color-primary) 12%,var(--color-border));
-  border-radius:18px !important;
+  border-radius:16px !important;
   background:linear-gradient(135deg,
     color-mix(in srgb,var(--color-primary) 5%,var(--color-card)),
     var(--color-card) 65%) !important;
@@ -26,7 +26,7 @@ html[data-theme] .dashboard-greeting-topline {
   justify-content:space-between;
   min-width:0;
   gap:12px;
-  margin-bottom:9px;
+  margin-bottom:4px;
 }
 html[data-theme] .dashboard-greeting-eyebrow {
   color:var(--color-text-muted);
@@ -38,14 +38,14 @@ html[data-theme] .dashboard-greeting-eyebrow {
 }
 html[data-theme] .dashboard-greeting-emoji {
   flex:0 0 auto;
-  font-size:24px;
+  font-size:19px;
   line-height:1.2;
 }
 html[data-theme] .dashboard-greeting-title {
   margin:0;
   min-width:0;
   color:var(--color-text);
-  font-size:clamp(23px,3.2vw,31px);
+  font-size:clamp(22px,2.5vw,27px);
   font-weight:750;
   line-height:1.2;
   letter-spacing:-.035em;
@@ -54,36 +54,18 @@ html[data-theme] .dashboard-greeting-title {
 html[data-theme] .dashboard-greeting-compact .dashboard-greeting-date {
   display:block;
   align-self:flex-start;
-  margin-top:6px;
+  margin-top:4px;
   color:var(--color-text-muted);
   font-size:12px;
   line-height:1.4;
   white-space:normal;
 }
-html[data-theme] .dashboard-greeting-copy {
-  display:grid;
-  min-width:0;
-  gap:3px;
-  margin-top:15px;
-}
-html[data-theme] .dashboard-compact .dashboard-greeting .dashboard-greeting-copy p {
-  margin:0 !important;
-  color:var(--color-text-muted) !important;
-  font-size:13px !important;
-  line-height:1.45;
-  overflow-wrap:anywhere;
-}
-html[data-theme] .dashboard-compact .dashboard-greeting .dashboard-greeting-copy p:first-child {
-  color:var(--color-text) !important;
-  font-weight:600;
-}
 @media(max-width:480px) {
   html[data-theme] .dashboard-compact .dashboard-greeting.dashboard-greeting-compact {
-    min-height:176px;
-    padding:17px 16px !important;
+    min-height:104px;
+    padding:12px 15px !important;
     border-radius:16px !important;
   }
-  html[data-theme] .dashboard-greeting-title { font-size:clamp(22px,6vw,26px); }
-  html[data-theme] .dashboard-greeting-topline { margin-bottom:7px; }
-  html[data-theme] .dashboard-greeting-copy { margin-top:12px; }
+  html[data-theme] .dashboard-greeting-title { font-size:clamp(21px,5.5vw,24px); }
+  html[data-theme] .dashboard-greeting-topline { margin-bottom:3px; }
 }

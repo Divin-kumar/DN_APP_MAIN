@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-170 | Make the iPhone Home screen visibly lighter and more useful above the fold
+- **Reason:** The prior DN 2.1 keyboard improvements were intentionally invisible, and the Home greeting still consumed at least 176px on phones for two nonfunctional sentences, pushing useful Moment and Activity lists farther down.
+- **Change:** Retain personalized clock-aware greeting, dynamic emoji and semantic full date in a compact three-part card; remove two filler paragraphs. Reduce responsive minimum height to 104px on phones and 108px on larger viewports, with auto height and wrapping for long names; retain theme contrast and existing list controls.
+- **Impact:** Dashboard/Home visual geometry only. Existing date views, moment/Activity handlers, navigation and scoped reads remain untouched. No financial fetches, record writes, schema, date/time changes, guest/account mixing, filters, originals, Story, PDF, backup v3 or release/version changes.
+- **Guest demo:** Reviewed the current tour in `src/dev/sampleData.js`. Its existing three Moments and mixed Activities already exercise the first-screen density; no new feature story/data or tutorial revision is needed. Existing edited Guest records remain untouched.
+- **Verification:** Update the prior Dashboard browser contract for the compact design; add isolated 320/390/430px light/dark visual-geometry and unchanged-Guest-data checks. Full exact-commit lint, Node, Chromium, build, offline/PDF, upgrade and documentation CI, plus Vercel status, are required after push. Native installed iPhone, real account cloud and production parity remain unverified.
+- **Safety:** OldVersion-only review, no `main` change, Firebase publish, version bump or migration.
+
 ## CHG-20261030-169 | Prevent premature phone keyboard in Moments-list Activity chooser
 - **Finding:** The approved universal + Activity flow already avoids forced phone title focus, but the reachable Moments-list Activity chooser at /events?create=activity retained unconditional autoFocus after a Moment was selected.
 - **Change:** Limit this chooser's title autofocus to desktop widths above 760px. On phones the user deliberately taps the title, after viewing Moment context, Date/Time and Priority. Desktop autofocus, field defaults, validation, accessible names and Save/Cancel remain intact.
