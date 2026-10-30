@@ -12,7 +12,7 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
+import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -249,6 +249,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
             <span className="code-list-text">{entry.label}</span>
             {isInactive ? <span className="code-list-status">Inactive</span> : null}
           </span>
+          <MoreHorizontal size={18} strokeWidth={1.9} className="dn-code-list-row-more" aria-hidden="true" />
         </button>
       </SwipeActionCard>
     );
