@@ -184,9 +184,12 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
               state: { activityOrigin: '/activities',
                 activitySequence: { scope: JSON.stringify([scope, getActiveSampleScenario(uid)]), ids: selected.map((entry) => [entry.momentId, recordId(entry.activity.id)]) } },
             }); }}
-            onEdit={edit}
+            onEdit={edit} disabled={busy}
             onToggleComplete={(_id, view) => runAction(() => updateActivity(reference(view), (activity, moment) => activityCompletionPatch(activity, moment, activityStatus(view) !== 'completed')), () => setAnnouncement(activityStatus(view) === 'completed' ? 'Activity reopened' : 'Activity completed'))}
-            onToggleCancelled={(_id, view) => runAction(() => updateActivity(reference(view), (activity) => activityCancellationPatch(activity, activityStatus(activity) !== 'cancelled')))}
+            onToggleCancelled={(_id, view) => runAction(
+              () => updateActivity(reference(view), (activity) => activityCancellationPatch(activity, activityStatus(activity) !== 'cancelled')),
+              () => setAnnouncement(activityStatus(view) === 'cancelled' ? 'Activity restored' : 'Activity cancelled'),
+            )}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
       {ready && !events.length ? <p className="dn-list-controls-note">Use + to create a Moment, then add its activities.</p> : null}
@@ -197,7 +200,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           <DropdownSelect id="activity-editor-moment" value={draft.momentId} disabled={Boolean(draft.activityId) || busy} onChange={(event) => setDraft({ ...draft, momentId: event.target.value })}>
             <option value="">Choose a Moment</option>{events.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
           </DropdownSelect>
-          <input autoFocus required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Activity title" aria-label="Activity title" disabled={busy} />
+          <input autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Activity title" aria-label="Activity title" disabled={busy} />
           <div className="activity-date-time-row">
             <DateField label="Date" name="activity-date" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} disabled={busy} />
             <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => setDraft({ ...draft, time })} />

@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-171 | Unify iPhone Activity swipes into explicit, direction-neutral popup actions
+- **Reason:** Activity overview and Home still completed/reopened a record on a left drag, contrary to the owner's desired same lightweight action popup for both swipe directions across DN. Accidental completion was possible.
+- **Change:** Replace completion-on-drag wrappers on overall Activities and Home with the existing SwipeActionCard action popup in either direction. Offer Edit only for editable records, Complete/Reopen, Cancel/Restore and confirmation-gated Delete; retain ordinary tap-to-Detail, menu-free overall Activity card visuals, Home's keyboard-accessible options button and Left/Right Arrow menu access on overall cards. Make the otherwise dormant overall editor reachable and remove title autofocus on phone widths.
+- **Downstream:** All actions use existing scoped record handlers and retention rules, including date/time, status metadata, backup v3, account/Guest separation, finance mirrors, original attachments, Story/PDF exports, filters/sort and detail routes. The old Home Ctrl/Command+Enter direct mutation is intentionally replaced by explicit menu selection. The unused SwipeToComplete primitive and its unit coverage are retained; other screens are not altered.
+- **Guest demo:** Existing pending/completed/cancelled tour records illustrate the popup without new fixture data; no GUEST_TOUR_VERSION bump or silent user reset.
+- **Verification:** Update browser contracts for click, keyboard/menu, synthetic swipes/touch and explicit status mutations; add 320/390/430px light/dark popup, cancel/restore, edit and Delete-confirmation checks. Full exact-SHA lint, unit, Chromium, build, offline/PDF, upgrade and documentation CI plus Vercel status are required before acceptance. Native Safari/VoiceOver and actual signed-in cloud remain unverified.
+- **Safety:** Only OldVersion review, no version bump, Firebase deployment or main writes.
+
 ## CHG-20261030-170 | Make the iPhone Home screen visibly lighter and more useful above the fold
 - **Reason:** The prior DN 2.1 keyboard improvements were intentionally invisible, and the Home greeting still consumed at least 176px on phones for two nonfunctional sentences, pushing useful Moment and Activity lists farther down.
 - **Change:** Retain personalized clock-aware greeting, dynamic emoji and semantic full date in a compact three-part card; remove two filler paragraphs. Reduce responsive minimum height to 104px on phones and 108px on larger viewports, with auto height and wrapping for long names; retain theme contrast and existing list controls.

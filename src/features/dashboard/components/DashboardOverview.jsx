@@ -12,7 +12,6 @@ import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurr
 import { downloadBlob } from '../../../utils/download';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
-import SwipeToComplete from '../../../components/common/SwipeToComplete';
 import ActivityActionDialogs from '../../../components/events/ActivityActionDialogs';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import useActivityActions from '../../../hooks/useActivityActions';
@@ -333,18 +332,21 @@ export function DashboardOverviewContent() {
           ) : dashboardActivities.length ? (
             <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container" key={activityView} tabIndex={0} role="region" aria-label={activityView === 'upcoming' ? 'Activities in the next 30 days' : 'Activities on this day in previous years'}>
               <div className="dashboard-upcoming-list" style={styles.upcomingList}>
-                {dashboardActivities.map(({ event, activity, date }, index) => {
+                {dashboardActivities.map(({ event, activity, date }) => {
                   const yearsAgo = today.getFullYear() - date.getFullYear();
                   const days = getDaysRemaining(date);
                   const target = { momentId: recordId(event.id) || recordId(event.firestoreId), activityId: recordId(activity.id) };
                   const status = activityStatus(activity);
-                  const row = <SwipeActionCard className="dashboard-activity-card" label={activity.title || 'Activity'}
-                    menuButton menuLabel="Activity options" swipeEnabled={false} disabled={activityActions.busy}
+                  return <SwipeActionCard key={JSON.stringify([target.momentId, target.activityId])}
+                    className="dashboard-activity-card" label={activity.title || 'Activity'}
+                    menuButton menuLabel="Activity options" swipeEnabled disabled={activityActions.busy}
                     otherActions={[
                       ...(isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => activityActions.edit(target) }] : []),
-                      { label: status === 'completed' ? 'Reopen' : 'Complete', icon: status === 'completed' ? RotateCcw : Check,
-                        onClick: () => activityActions.setCompleted(target, status !== 'completed') },
-                      { label: 'Cancel', icon: XCircle, onClick: () => activityActions.setCancelled(target, true) },
+                      status === 'cancelled'
+                        ? { label: 'Restore', icon: RotateCcw, onClick: () => activityActions.setCancelled(target, false) }
+                        : { label: status === 'completed' ? 'Reopen' : 'Complete', icon: status === 'completed' ? RotateCcw : Check,
+                          onClick: () => activityActions.setCompleted(target, status !== 'completed') },
+                      ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => activityActions.setCancelled(target, true) }] : []),
                     ]} onDelete={() => activityActions.requestDelete(target)}>
                     <button type="button" className="dashboard-upcoming-row" disabled={activityActions.busy}
                       aria-label={`Open ${activity.title || activity.name || 'activity'}`}
@@ -354,10 +356,6 @@ export function DashboardOverviewContent() {
                       <span className="dashboard-upcoming-arrow" aria-hidden="true">{status === 'completed' ? <Check size={14} /> : <BookOpen size={14} />}</span>
                     </button>
                   </SwipeActionCard>;
-                  const key = JSON.stringify([target.momentId, target.activityId || index]);
-                  return <SwipeToComplete key={key} label={activity.title || activity.name || 'activity'} direction="left"
-                    disabled={activityActions.busy} actionLabel={status === 'completed' ? 'Reopen' : 'Complete'} actionIcon={status === 'completed' ? RotateCcw : Check}
-                    onComplete={() => activityActions.setCompleted(target, status !== 'completed')}>{row}</SwipeToComplete>;
                 })}
               </div>
             </div>

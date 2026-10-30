@@ -149,6 +149,7 @@ export default function SwipeActionCard({
   return (
     <>
       <Root ref={rootRef} tabIndex={menuButton && !onOpen ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
+        aria-description={swipeEnabled && actions.length ? 'Swipe left or right to open actions. Use the left or right arrow key for keyboard access.' : undefined}
         aria-expanded={!menuButton && actions.length ? open : undefined} aria-controls={!menuButton && actions.length && open ? menuId : undefined}
         className={`dn-swipe-surface ${className}`}
         onKeyDown={handleCardKey}

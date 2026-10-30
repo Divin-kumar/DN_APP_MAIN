@@ -71,16 +71,28 @@ test('edit stays on detail, cancel restores focus/scroll, failed save retains dr
   expect(source[1].activities[0].title).toBe('A different activity with the same ID');
 });
 
-test('deliberate left swipe completes/reopens, while short/vertical/right motion does not commit', async ({ page }) => {
+test('either Activity swipe direction opens explicit actions without mutating records', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
-  const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  const state = () => card.locator('.event-activity-status');
-  await swipe(page, card, { distance: 25 }); await expect(state()).toHaveText('In progress');
-  await swipe(page, card, { distance: 10, vertical: 75 }); await expect(state()).toHaveText('In progress');
-  await swipe(page, card, { distance: -120 }); await expect(state()).toHaveText('In progress');
-  await swipe(page, card); await expect(state()).toHaveText('Completed');
+  const row = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+  const state = () => row.locator('.event-activity-status');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await swipe(page, row, { distance: 25 }); await expect(state()).toHaveText('In progress');
+  await swipe(page, row, { distance: 10, vertical: 75 }); await expect(state()).toHaveText('In progress');
+  await swipe(page, row, { distance: -150 });
+  const menu = page.getByRole('menu', { name: /Actions for Book a lakeside stay/ });
+  await expect(menu).toBeVisible();
+  await expect(menu.getByRole('menuitem')).toHaveText(['Edit', 'Complete', 'Cancel', 'Delete']);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  await page.keyboard.press('Escape');
+  await swipe(page, row, { distance: 150 });
+  await expect(menu).toBeVisible();
+  await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
+  await expect(state()).toHaveText('Completed');
   await expect(page).toHaveURL(/\/activities$/);
-  await swipe(page, card); await expect(state()).toHaveText('In progress');
+  await swipe(page, row);
+  await expect(menu.getByRole('menuitem', { name: 'Reopen', exact: true })).toBeVisible();
+  await menu.getByRole('menuitem', { name: 'Reopen', exact: true }).click();
+  await expect(state()).toHaveText('In progress');
   await expect(page.getByRole('status').filter({ hasText: 'Activity reopened' })).toBeAttached();
   const values = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')));
   expect(values[0].activities[1].completed).toBe(true);
@@ -219,13 +231,18 @@ test('many attachment references share one original; preview/download preserve i
   expect(count).toBe(1);
 });
 
-test('Dashboard tap opens detail and Ctrl+Enter deliberately completes without navigating or opening Edit', async ({ page }) => {
+test('Dashboard tap opens Detail and explicit status choice keeps Dashboard', async ({ page }) => {
   await seedGuest(page); await page.goto('/dashboard');
   const row = page.getByRole('button', { name: 'Open Book a lakeside stay', exact: true });
   await row.click(); await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   await page.goBack(); await expect(row).toBeVisible();
-  await row.focus(); await page.keyboard.press('Control+Enter');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await row.locator('..').getByRole('button', { name: 'Activity options', exact: true }).click();
+  const menu = page.getByRole('menu', { name: /Actions for Book a lakeside stay/ });
+  await expect(menu.getByRole('menuitem', { name: 'Complete', exact: true })).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
   await expect(row).toHaveCount(0); await expect(page).toHaveURL(/\/dashboard$/);
   await expect(page.getByRole('status').filter({ hasText: 'Activity completed' })).toBeAttached();
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].activities[0].completed)).toBe(true);
@@ -233,7 +250,7 @@ test('Dashboard tap opens detail and Ctrl+Enter deliberately completes without n
 
 test.describe('Chromium touch emulation', () => {
   test.use({ hasTouch: true, isMobile: true });
-  test('vertical touch scroll and short movement do not complete; a deliberate left touch swipe completes once', async ({ page }) => {
+  test('short and vertical touch drags do not act; left swipe opens explicit status choice', async ({ page }) => {
     await seedGuest(page); await page.goto('/activities');
     const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
     const client = await page.context().newCDPSession(page);
@@ -248,7 +265,12 @@ test.describe('Chromium touch emulation', () => {
     };
     await touch(-24, 0); await expect(card.locator('.event-activity-status')).toHaveText('In progress');
     await touch(4, -110); await expect(card.locator('.event-activity-status')).toHaveText('In progress');
-    await touch(-160, 0); await expect(card.locator('.event-activity-status')).toHaveText('Completed');
+    await touch(-160, 0);
+    const menu = page.getByRole('menu', { name: /Actions for Book a lakeside stay/ });
+    await expect(menu.getByRole('menuitem', { name: 'Complete', exact: true })).toBeVisible();
+    await expect(card.locator('.event-activity-status')).toHaveText('In progress');
+    await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
+    await expect(card.locator('.event-activity-status')).toHaveText('Completed');
     await expect(page).toHaveURL(/\/activities$/);
     await client.detach();
   });
