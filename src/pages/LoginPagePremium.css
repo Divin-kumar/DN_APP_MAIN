@@ -2,6 +2,7 @@
 html[data-theme] .dn-login {
   --dn-login-line: color-mix(in srgb, var(--color-text) 12%, transparent);
   --dn-login-haze: color-mix(in srgb, var(--color-primary) 12%, transparent);
+  --dn-login-accent-ink: color-mix(in srgb, var(--color-primary) 70%, var(--color-text));
   position: relative;
   display: flex;
   flex-direction: column;
@@ -31,13 +32,13 @@ html[data-theme] .dn-login-brand-mark {
   width: 44px; height: 44px; border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
   border-radius: 14px;
   background: linear-gradient(140deg, color-mix(in srgb, var(--color-primary) 17%, var(--color-card)), var(--color-card));
-  color: var(--color-primary); box-shadow: inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
+  color: var(--dn-login-accent-ink); box-shadow: inset 0 1px 0 color-mix(in srgb, white 14%, transparent);
   font-size: 15px; font-weight: 900; letter-spacing: -.15em;
 }
 html[data-theme] .dn-login-brand-mark span { transform: translateY(2px); }
 html[data-theme] .dn-login-eyebrow,
 html[data-theme] .dn-login-card-kicker {
-  margin: 0; color: var(--color-primary); font-size: 11px; font-weight: 800;
+  margin: 0; color: var(--dn-login-accent-ink); font-size: 11px; font-weight: 800;
   line-height: 1.5; letter-spacing: .13em; text-transform: uppercase;
 }
 html[data-theme] .dn-login-story h1 {
@@ -45,7 +46,7 @@ html[data-theme] .dn-login-story h1 {
   color: var(--color-text); font-size: clamp(36px, 4.3vw, 58px);
   font-weight: 750; line-height: 1.08; letter-spacing: -.065em;
 }
-html[data-theme] .dn-login-story h1 span { color: var(--color-primary); }
+html[data-theme] .dn-login-story h1 span { color: var(--dn-login-accent-ink); }
 html[data-theme] .dn-login-description {
   max-width: 430px; margin: 0; color: var(--color-text-muted);
   font-size: clamp(14px, 1.35vw, 16px); line-height: 1.65;
@@ -78,8 +79,8 @@ html[data-theme] .dn-login-actions button {
 }
 html[data-theme] .dn-login-actions button > span:nth-child(2) { flex: 1; text-align: center; }
 html[data-theme] .dn-login-actions button svg { flex: 0 0 auto; }
-html[data-theme] .dn-login-google { color: #fff; border: 1px solid var(--color-primary); background: var(--color-primary); }
-html[data-theme] .dn-login-google:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary) 85%, #10213e); }
+html[data-theme] .dn-login-google { color: #fff; border: 1px solid color-mix(in srgb, var(--color-primary) 50%, #12366d); background: color-mix(in srgb, var(--color-primary) 50%, #12366d); }
+html[data-theme] .dn-login-google:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary) 42%, #0e2d59); }
 html[data-theme] .dn-login-google-mark {
   display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px;
   border-radius: 50%; background: #fff; color: #2457a5; font-size: 14px; font-weight: 800;
