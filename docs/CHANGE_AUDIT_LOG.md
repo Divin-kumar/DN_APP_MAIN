@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-206 | Lighten global status feedback without weakening safety cues
+- **Reason:** Shared save and error toasts still used opaque saturated tones, very small 5px-padded action buttons and 2.6-second action lifetimes, inconsistent with the DN 2.1 mobile typography and touch system.
+- **Change:** Consolidate existing toast CSS in its original stylesheet into one theme-aware, thin-tone, blurred surface; keep position and current message/action callbacks. Give action buttons 44px targets, visible keyboard focus and 6.2-second default when actionable, preserving any explicit duration. Error/danger messages announce as alerts; other statuses stay polite and atomic.
+- **Downstream:** Affects the app-global notice rendered across all routes, including Guest CRUD and PWA Refresh action. No business data mutation, Guest fixture reset, auth/finance/storage/backup shape, filter behavior or release impact. All existing notification callers retain the same API. Guest sample tour remains valid without version bump.
+- **Validation:** Source-reviewed contracts and seven synthetic browser cases for light/dark phone geometry, View navigation, Guest data preservation and failure semantics. Exact-SHA CI, physical iPhone Safari/VoiceOver and latest preview **Unverified** at writing. CHG-198–205 stay deferred; append CHG-206 to the register.
+- **Boundary:** Commit only to `OldVersion`; no `main`, Firebase production, Vercel plan upgrade or app version change.
+
 ## CHG-20261030-205 | Premium DN entry screen without changing authentication or Guest data
 - **Scope:** Replace the legacy hard-coded pale-green Login inline styles with a two-part, theme-aware editorial entry and a focused 320/390/430px responsive treatment. Preserve exactly the existing Google and Guest access choices and redirect destination.
 - **Accessibility and safety:** 52px actions, visible focus, pending duplicate-Google guard, accessible inline failure status and explicit browser-only Guest-data notice. No new identity provider, user-data migration, Guest-tour reset, backup mutation, storage write by the landing UI or custom profile information.

@@ -125,7 +125,7 @@ function GlobalToast() {
   };
 
   return (
-    <div className="app-toast" data-tone={toast.type || 'success'} role="status" aria-live="polite">
+    <div className="app-toast" data-tone={toast.type || 'success'} role={toast.type === 'danger' || toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'danger' || toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true">
       <span className="app-toast-icon" aria-hidden="true">{toast.type === 'danger' || toast.type === 'error' ? <CircleAlert size={17} /> : <Check size={17} />}</span>
       <span className="app-toast-message">{toast.message}</span>
       {toast.action?.label ? <button className="app-toast-action" type="button" onClick={handleAction}>{toast.action.label}</button> : null}
