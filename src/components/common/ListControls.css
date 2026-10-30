@@ -388,7 +388,7 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-
   justify-content: flex-end;
   min-width: 0;
   min-height: 44px;
-  margin-left: 0;
+  margin-left: auto;
 }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset {
   display: inline-flex;
