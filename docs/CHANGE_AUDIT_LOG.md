@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-211 | Context-sensitive, compact offline status for Guests and cloud users
+- **Observed:** The shared offline warning used the same two-line cloud-synchronization warning for browser-local Guests and Firebase accounts. This consumes precious first-fold height and can incorrectly imply Guest local editing requires network access.
+- **Implementation:** Keep original offline/online event lifecycle, but read current `isGuest` to show a small, 28–30px scoped offline notice. Guests see `Offline · Guest data stays here`; accounts see `Offline · Cloud unavailable`; screen-reader status names retain full, truthful local-only versus cloud dependency context. The display only mounts when offline. Scope premium CSS to this banner to avoid changing unrelated status messages.
+- **Downstream:** Every authenticated/Guest route shares this shell, but no storage backend or Firebase handling is modified; preserving all Guest originals, finance and sample data, actions, filters, photos, sync semantics and status notices. Existing Guest tour fixture already covers local-only storage without changing its version.
+- **Verification:** Six synthetic light/dark phone cases for offline events, aria labels, geometry, return-online cleanup and Guest data immutability. Exact-SHA CI, native iPhone installed PWA in actual Airplane Mode, signed-in Firebase behavior, VoiceOver and owner visual acceptance **Unverified** until executed. Add CHG-211 to the owner register; CHG-210 is a correction within CHG-207.
+- **Boundary:** `OldVersion` only; no `main`, Firebase release, version bump or paid Vercel subscription.
+
 ## CHG-20261030-210 | Correct real header hit targets after CI exposed global override
 - **Executed evidence:** Browser run `41079025595` on `a599d01b` completed with six failures in `e2e/iphone-profile-menu-premium.spec.js` at `triggerHeight >= 44`, with observed rendered height **42px** on all light/dark 320/390/430 widths. Existing `src/design-system.css` still applies an important 42px profile minimum after the non-important 44px premium rule; its `theme-toggle` height is also 42px.
 - **Fix:** In `ProfileMenuPremium.css` give only the header profile trigger important 44px width/height safeguards, important mobile 5px padding with border-box to keep the avatar compact, and important 44px dimensions for the theme toggle. Add strict width/height checks for both buttons to all six responsive synthetic cases. Preserve header and dropdown geometry, Guest/session handlers, logout routes and keyboard semantics.

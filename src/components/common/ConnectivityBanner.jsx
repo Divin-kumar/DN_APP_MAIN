@@ -1,7 +1,10 @@
 import { useEffect, useState } from 'react';
 import { WifiOff } from 'lucide-react';
+import useAppStore from '../../store/useAppStore';
+import './ConnectivityBannerPremium.css';
 
 export default function ConnectivityBanner() {
+  const isGuest = useAppStore((state) => state.isGuest);
   const [isOffline, setIsOffline] = useState(() => typeof navigator !== 'undefined' && !navigator.onLine);
 
   useEffect(() => {
@@ -21,11 +24,18 @@ export default function ConnectivityBanner() {
   if (!isOffline) return null;
 
   return (
-    <aside className="connectivity-banner" role="status" aria-live="polite">
-      <WifiOff size={16} aria-hidden="true" />
+    <aside
+      className={`connectivity-banner dn-offline-indicator${isGuest ? ' is-guest' : ' is-account'}`}
+      role="status"
+      aria-live="polite"
+      aria-atomic="true"
+      aria-label={isGuest
+        ? 'Offline. Guest data is stored on this device and does not automatically transfer to another account.'
+        : 'Offline. Cloud saves and synchronization may be unavailable until you reconnect.'}
+    >
+      <WifiOff size={15} aria-hidden="true" />
       <span className="connectivity-banner-copy">
-        <strong>Offline Mode</strong>
-        <span>Changes requiring cloud synchronization are unavailable.</span>
+        <strong>{isGuest ? 'Offline · Guest data stays here' : 'Offline · Cloud unavailable'}</strong>
       </span>
     </aside>
   );

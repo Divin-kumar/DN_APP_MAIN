@@ -1,0 +1,50 @@
+/* Offline status is a single honest, contextual cue rather than a full notice.
+   Guest local records still work; cloud-backed updates must not imply offline sync. */
+html[data-theme] .dn-content > .connectivity-banner.dn-offline-indicator {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 7px;
+  width: fit-content !important;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 30px;
+  position: sticky;
+  top: 0;
+  z-index: 15;
+  margin: 0 0 8px !important;
+  padding: 5px 10px !important;
+  border: 1px solid color-mix(in srgb, var(--color-warning) 24%, var(--color-border)) !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--color-warning) 7%, var(--color-card)) !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
+  box-sizing: border-box;
+}
+html[data-theme] .dn-offline-indicator > svg {
+  display: block;
+  flex: 0 0 15px;
+  width: 15px;
+  height: 15px;
+  color: var(--color-warning) !important;
+}
+html[data-theme] .dn-offline-indicator .connectivity-banner-copy {
+  display: block;
+  min-width: 0;
+}
+html[data-theme] .dn-offline-indicator .connectivity-banner-copy strong {
+  display: block;
+  overflow: hidden;
+  color: var(--color-text) !important;
+  font-size: 11px;
+  font-weight: 680;
+  line-height: 1.35;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+@media (max-width: 760px) {
+  html[data-theme] .dn-content > .connectivity-banner.dn-offline-indicator {
+    min-height: 28px;
+    margin-bottom: 7px !important;
+    padding: 4px 9px !important;
+  }
+}
