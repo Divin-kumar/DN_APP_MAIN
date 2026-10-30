@@ -82,7 +82,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     return { entries, context, views };
   }, [events]);
   const conditionRecords = useMemo(() => projection.entries.map(activityEntryConditionRecord), [projection]);
-  const conditions = useConditionFilters('activities', conditionRecords, usePersistentListState, { initialGroup: migrateActivityConditions(filters), contextKey: getActiveSampleScenario(uid) });
+  const conditions = useConditionFilters('activities', conditionRecords, usePersistentListState, {
+    initialGroup: migrateActivityConditions(filters), contextKey: getActiveSampleScenario(uid),
+    startingGroup: Object.keys(settingsDefaults.filters).every((key) => filters[key] === settingsDefaults.filters[key]) ? settingsDefaults.group : undefined,
+  });
   const selected = useMemo(() => selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
     direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches),
   [conditionRecords, filters.search, filters.field, filters.direction, conditions.matches]);
