@@ -441,3 +441,37 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-builder {
     transition: none;
   }
 }
+
+/* Fixed right-side action rail: selected sort labels may grow or shrink,
+   but direction and Reset do not move. No new card/chrome is introduced. */
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 4px;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-sort-row {
+  display: block;
+  width: 100%;
+  min-width: 0;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .sort-control.dn-user-sort {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 100% !important;
+  max-width: none;
+  min-width: 0;
+  align-items: center;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort > .dropdown-field {
+  justify-self: start;
+  min-width: 0;
+  max-width: 100%;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-sort-direction {
+  justify-self: end;
+  margin-left: 0;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset-row {
+  margin-left: 0;
+}
