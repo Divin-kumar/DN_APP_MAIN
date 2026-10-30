@@ -437,9 +437,7 @@ export function EventWorkspaceContent() {
             chips={<ConditionChips filter={activityConditions} />}
             summary={activitySort + (activitySortDirection === 'asc' ? ' ↑' : ' ↓')}
             canReset={Boolean(activityConditions.activeCount || activitySearch || activitySort !== 'date' || activitySortDirection !== 'asc')} onReset={() => { resetActivityList(); activityConditions.clear(); }}
-            sort={<div className="dn-list-controls-field"><span>Sort by</span>
-              <SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />
-            </div>}
+            sort={<SortControl className="activity-sort-select" field={activitySort} direction={activitySortDirection} onFieldChange={setActivitySort} onToggleDirection={toggleActivitySortDirection} options={[{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' }, { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }]} label="Sort activities" />}
             search={<DebouncedFilterInput scopeKey={activityConditions.editorKey} id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}>
             <ConditionBuilder filter={activityConditions} title="Moment Activity conditions" />
           </ListControls>
