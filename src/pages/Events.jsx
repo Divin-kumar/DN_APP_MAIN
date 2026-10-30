@@ -201,9 +201,9 @@ export default function Events() {
   const sortSummary = momentSortSummary(sortField, sortDirection);
   const setSearch = (value) => changeMomentFilters({ search: value });
   const resetMomentDiscovery = () => { resetMomentFilters(); conditions.restore(settingsDefaults.group); };
-  const canResetMoment = !matchesListDefaults(momentFilters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const conditionRecords = useMemo(() => events.map(momentConditionRecord), [events]);
   const conditions = useConditionFilters('moments', conditionRecords, usePersistentListState, { initialGroup: momentConditions(momentFilters), contextKey: getActiveSampleScenario(user?.uid) });
+  const canResetMoment = !matchesListDefaults(momentFilters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
