@@ -11,7 +11,7 @@ import ActivityTimeField from '../components/common/ActivityTimeField';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Activity, BookHeart, CalendarDays, ChevronDown, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
+import { Activity, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -34,6 +34,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import './ProfileMenuPremium.css';
+import './SessionBannerPremium.css';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -459,10 +460,15 @@ export default function DashboardLayout() {
 
         <section ref={contentRef} className="dn-content" style={styles.contentPane}>
           <ConnectivityBanner />
-          <div className="dn-banner" style={styles.banner}>
-            {isGuest
-              ? 'Guest mode active. Your data is stored locally on this device.'
-              : 'Authenticated mode active. Your data is synced with Firebase.'}
+          <div
+            className={`dn-banner dn-session-banner${isGuest ? ' is-guest' : ' is-account'}`}
+            role="note"
+            aria-label={isGuest
+              ? 'Guest mode: your data is stored locally on this device and is not automatically transferred to Google.'
+              : 'Signed-in mode: account records use Firebase storage. Cloud availability depends on your connection.'}
+          >
+            {isGuest ? <HardDrive size={14} strokeWidth={1.8} aria-hidden="true" /> : <Cloud size={14} strokeWidth={1.8} aria-hidden="true" />}
+            <span>{isGuest ? 'Guest · On this device' : 'Account · Cloud storage'}</span>
           </div>
 
           <motion.div
@@ -667,14 +673,5 @@ const styles = {
   contentPane: {
     flex: 1,
     padding: '22px',
-  },
-  banner: {
-    background: '#dff2e5',
-    border: '1px solid #badbc1',
-    color: '#1d3f2c',
-    borderRadius: '12px',
-    padding: '14px 16px',
-    marginBottom: '18px',
-    fontWeight: 500,
   },
 };

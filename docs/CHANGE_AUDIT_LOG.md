@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-209 | Quiet, honest session data indicator above the first fold
+- **Why:** The shell repeated a long Guest/Firebase status sentence above every page. At small iPhone widths it competed with Moment and Activity cards and made first-fold navigation feel technical.
+- **Implementation:** Keep storage scope visible but compact: device/cloud icon and a 22–24px status cue. An accessible named note preserves the complete Guest local-only warning and describes Firebase account storage without promising live sync. Drop obsolete fixed green inline banner styles; use theme-safe restrained colors scoped to the shell.
+- **Downstream:** The cue appears on every authenticated/Guest route; it does not alter Guest mode logic, Cloud sync, connectivity banner, data/backup, navigation, card layout, filters, finance, original attachments or PWA service worker. Existing Guest tour already demonstrates the distinction, so no sample/version reset.
+- **Validation:** Source/read-back review; add six Chromium 320/390/430px light/dark tests for title/accessible scope, geometry and data nonmutation across Dashboard and Transactions. Exact-SHA CI, signed-in scope, VoiceOver, physical iPhone Safari and current preview **Unverified**. Add this to the preserved CHG-198–207 owner register (CHG-208 is test-only).
+- **Boundary:** `OldVersion` only, without `main` edits, version changes, Firebase release or paid Vercel tier.
+
 ## CHG-20261030-208 | Reconcile Activity completion failure with accessible global toast
 - **Executed evidence:** Exact `OldVersion` browser run on a3e291e (GitHub Actions 41078393520) finished with one failure at `e2e/scope-recovery.spec.js:169`. The locator `getByRole('alert').filter(...)` now matches two intentionally visible errors: `.quick-create-error[role="alert"]` inside Activity recovery and `.app-toast[role="alert"]` from the shared error toast. All other 370+ cases in that run passed; do not infer the UI save retry failed from a strict multi-match.
 - **Change:** Strengthen the synthetic test to assert both alert surfaces independently, then retain the existing in-progress status, retry, completion and route expectations unchanged. No product component/style or business logic is changed.
