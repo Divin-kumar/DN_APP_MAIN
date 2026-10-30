@@ -18,9 +18,13 @@ export default function SwipeActionCard({
   const triggerRef = useRef(null);
   const popupRef = useRef(null);
   const gesture = useRef(null);
+  const removePointerListeners = useRef(null);
   const suppressClick = useRef(0);
   const focusOnOpen = useRef(false);
   const menuId = useId();
+  // A non-touch swipe can end on a neighboring card or outside the viewport.
+  // Track only the active pointer on window capture; no listeners remain at rest.
+  useEffect(() => () => { removePointerListeners.current?.(); }, []);
   const actions = [
     ...otherActions.filter((action) => typeof action?.onClick === 'function'),
     ...(onDelete ? [{ label: 'Delete', icon: Trash2, onClick: onDelete, danger: true }] : []),
@@ -168,22 +172,28 @@ export default function SwipeActionCard({
           if (!swipeEnabled || disabled || event.pointerType === 'touch' || event.target.closest?.('[data-swipe-ignore]')) return;
           // A new intentional press must not inherit the previous swipe's click guard.
           suppressClick.current = 0;
+          removePointerListeners.current?.();
+          const pointerId = event.pointerId;
           gesture.current = { x: event.clientX, y: event.clientY };
+          const finish = (end) => {
+            if (end.pointerId !== pointerId) return;
+            removePointerListeners.current?.();
+            removePointerListeners.current = null;
+            if (end.type === 'pointerup') finishGesture(end.clientX, end.clientY, false);
+            else gesture.current = null;
+          };
+          window.addEventListener('pointerup', finish, true);
+          window.addEventListener('pointercancel', finish, true);
+          removePointerListeners.current = () => {
+            window.removeEventListener('pointerup', finish, true);
+            window.removeEventListener('pointercancel', finish, true);
+          };
         }}
-        onPointerMoveCapture={(event) => {
-          if (!gesture.current || !swipeEnabled || disabled || event.pointerType === 'touch') return;
-          // Capture only after a drag begins, so releasing beyond the card edge
-          // still delivers pointerup without taking over ordinary taps.
-          if (Math.hypot(event.clientX - gesture.current.x, event.clientY - gesture.current.y) > 12) {
-            try {
-              if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
-            } catch { /* Pointer capture is optional. */ }
-          }
+        onPointerCancelCapture={() => {
+          removePointerListeners.current?.();
+          removePointerListeners.current = null;
+          gesture.current = null;
         }}
-        onPointerUpCapture={(event) => {
-          if (swipeEnabled && !disabled && event.pointerType !== 'touch') finishGesture(event.clientX, event.clientY, false);
-        }}
-        onPointerCancelCapture={() => { gesture.current = null; }}
         onTouchStartCapture={(event) => {
           if (!swipeEnabled || disabled || event.target.closest?.('[data-swipe-ignore]') || event.touches.length !== 1) { gesture.current = null; return; }
           suppressClick.current = 0;

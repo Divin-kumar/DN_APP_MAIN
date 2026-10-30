@@ -53,7 +53,9 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
     await page.goto('/activities');
     const card = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
     await expect(card).toBeVisible();
-    expect((await card.boundingBox()).height).toBeLessThan(115);
+    // The approved status-below-title design is taller than the 9px corner badge.
+    expect((await card.boundingBox()).height).toBeLessThan(150);
+    await expect(card.locator('.event-activity-status')).toHaveCSS('font-size', '11px');
     await expect(card.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     const columns = await page.locator('.event-activity-list').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
