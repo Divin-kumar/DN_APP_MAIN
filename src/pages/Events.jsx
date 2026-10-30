@@ -33,6 +33,8 @@ import SortControl from '../components/common/SortControl';
 import { MOMENT_SORT_OPTIONS, momentSortSummary, sortMoments } from '../utils/userListSort';
 import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
+import AttachmentGallery from '../components/common/AttachmentGallery';
+import { isAttachmentImage, coverImageKey, legacyAttachmentImage } from '../utils/activityDetail';
 import { plainRichText } from '../utils/richText';
 import useScopedMoments from '../hooks/useScopedMoments';
 import { getActiveSampleScenario } from '../dev/sampleData';
@@ -100,18 +102,26 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
   const memories = Array.isArray(event.memories) ? event.memories : [];
   const attachments = Array.isArray(event.attachments) ? event.attachments : [];
   const activity = preview.latest;
+  const coverOptions = attachments.filter((item) => isAttachmentImage(item?.type)
+    && (/^[a-f0-9]{64}$/.test(item.assetId || '') || legacyAttachmentImage(item)));
+  const [coverChoice, saveCoverChoice] = usePersistentListState(
+    'moment-card-cover:' + (event.id || event.firestoreId), { imageKey: '' });
+  const [choosingCover, setChoosingCover] = useState(false);
+  const cover = coverOptions.find((item) => coverImageKey(item) === coverChoice.imageKey) || preview.cover;
   return (
+    <>
     <SwipeActionCard className="event-story-card dn-v2-moment-card"
       mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
       menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
         ...(onPdf ? [{ label: 'PDF Studio', icon: ClipboardList, onClick: onPdf }] : []),
+        ...(coverOptions.length ? [{ label: 'Cover photo', icon: Images, onClick: () => setChoosingCover(true) }] : []),
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
       <button type="button" className="event-story-main dn-v2-moment-open" onClick={onOpen}
         aria-label={'Open ' + (event.name || 'event')}>
-        <MomentCardCover attachment={preview.cover} uid={uid} isGuest={isGuest} date={date} />
+        <MomentCardCover attachment={cover} uid={uid} isGuest={isGuest} date={date} />
         <span className="event-story-copy dn-v2-moment-copy">
           <span className="dn-v2-moment-heading">
             <span className="event-story-meta">{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
@@ -133,6 +143,14 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
         </span>
       </button>
     </SwipeActionCard>
+    {choosingCover ? <ModalDialog title="Choose Moment cover" className="activity-cover-picker" onClose={() => setChoosingCover(false)}>
+      <AttachmentGallery attachments={coverOptions} uid={uid} isGuest={isGuest}
+        selectedKey={coverImageKey(cover)} onSelect={(photo) => {
+          saveCoverChoice({ imageKey: coverImageKey(photo) });
+          setChoosingCover(false);
+        }} />
+    </ModalDialog> : null}
+    </>
   );
 }
 
@@ -216,12 +234,6 @@ export default function Events() {
         return matchesSearch && conditions.matches(momentConditionRecord(event));
       }), sortField, sortDirection);
   }, [events, search, sortField, sortDirection, conditions.matches]);
-  const upcomingCount = events.filter((event) => {
-    if (event.archived) return false;
-    const date = getTimelineDate(event);
-    return date && date >= new Date(new Date().setHours(0, 0, 0, 0));
-  }).length;
-  const memoryCount = events.reduce((count, event) => count + (event.memories?.length || 0) + (event.activities?.length || 0), 0);
   const pickerQuery = activityEventSearch.trim().toLowerCase();
   const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery))));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
@@ -357,17 +369,7 @@ export default function Events() {
 
   return (
     <div className="events-page life-timeline-page">
-      <header className="life-timeline-heading">
-        <div>
-          <h2>Life moments</h2>
-          <p>A place for the days, people, and little details you want to keep close.</p>
-        </div>
-        <div className="life-timeline-stats" aria-label="Life moments overview">
-          <span><strong>{events.length}</strong> moments</span>
-          <span><strong>{upcomingCount}</strong> ahead</span>
-          <span><strong>{memoryCount}</strong> stories</span>
-        </div>
-      </header>
+      <header className="life-timeline-heading"><h2>Life moments</h2></header>
 
       {isGuest && getActiveSampleScenario(user?.uid) === 'tour' ? (
         <section className="dn-guest-tour-notice" aria-label="Explore DN sample data">

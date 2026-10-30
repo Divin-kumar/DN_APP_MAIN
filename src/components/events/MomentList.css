@@ -203,3 +203,15 @@ html[data-theme] .dn-guest-tour-notice strong{font-size:.87rem;color:var(--color
 html[data-theme] .dn-guest-tour-notice p{font-size:.76rem;color:var(--color-text-muted);line-height:1.55;margin:5px 0 0;max-width:700px;}
 html[data-theme] .dn-guest-tour-notice button{min-height:40px;flex-shrink:0;font-size:.75rem;}
 @media(max-width:550px){html[data-theme] .dn-guest-tour-notice button{width:100%;}}
+
+/* Cards own the visual hierarchy; one lean title, then search and photos. */
+html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading {
+  display:flex; align-items:center; min-height:0; gap:0; padding:0;
+}
+html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading h2 {
+  margin:0; font-size:clamp(22px,3vw,28px) !important; line-height:1.2; letter-spacing:-.045em;
+}
+@media(max-width:550px) {
+  html[data-theme] .events-page .dn-guest-tour-notice { padding:10px 12px; margin:0; gap:7px 10px; }
+  html[data-theme] .events-page .dn-guest-tour-notice button { width:auto; min-height:40px; padding:0 11px; }
+}

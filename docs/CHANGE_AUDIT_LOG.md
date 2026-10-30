@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-184 | Minimal Moments heading and selectable card cover
+- **Owner preference:** Keep the premium Moment cards prominent instead of repeating header information. Remove the top description and three summary counters; the existing filter-result count remains. Slightly reduce mobile Guest demo notice size.
+- **Cover control:** When a Moment contains an image backed by a validated local original or supported legacy image, its existing actions popup gains Cover photo. Selection uses AttachmentGallery and the same scope-isolated list preference architecture as Activity Detail covers, without changing records or uploading originals. Old Story-derived cover selection remains the fallback.
+- **Verification:** Add browser regression for selecting an owned attachment, remembering preference across reload, and preserving the raw Guest record. Update 320/390/430px dark/light first-fold checks. Full Node, lint, browser, build, offline/PDF, upgrade and documentation gates still apply; no Firebase/main changes. Native installed iPhone and signed-in cloud unverified.
+
 ## CHG-20261030-183 | Put real Moments earlier in the first iPhone screen
 - **Design reason:** The Moments page repeated several presentation labels: “Your story, over time” above the title, a second “Life timeline” section label and an extra numeric result badge/sort summary immediately after the filters already displayed count and sort. This created empty vertical ceremony before the actual cards, contrary to the owner's premium, uncluttered direction.
 - **Scoped change:** Retain the “Life moments” title, one useful descriptive sentence and all three header totals, but remove the redundant eyebrow and collection-label row. On phone widths refine only the Moments listing title size, paragraph rhythm and quiet one-line counts; do not add another panel, decorative container or CTA. Existing search, filters, sort summary, sort order, accessible section name, Moment cover, card actions, guest tour banner and detail navigation are unchanged.

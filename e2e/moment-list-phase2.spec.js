@@ -149,27 +149,22 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await expect(title).toBeVisible();
     await expect(page.locator('.events-page .life-timeline-eyebrow')).toHaveCount(0);
     await expect(page.locator('.events-page .life-journey-label')).toHaveCount(0);
-    await expect(page.locator('.events-page .life-timeline-heading p')).toBeVisible();
-    const counts = page.locator('.events-page .life-timeline-stats');
-    await expect(counts).toContainText('moments');
-    await expect(counts).toContainText('ahead');
-    await expect(counts).toContainText('stories');
+    await expect(page.locator('.events-page .life-timeline-heading p')).toHaveCount(0);
+    await expect(page.locator('.events-page .life-timeline-stats')).toHaveCount(0);
     await expect(page.locator('.dn-list-controls-topline')).toContainText('2 moments');
     const cards = page.locator('.life-journey-items .dn-v2-moment-card');
     await expect(cards).toHaveCount(2);
     const geometry = await page.evaluate(() => {
       const header = document.querySelector('.events-page .life-timeline-heading').getBoundingClientRect();
-      const stats = document.querySelector('.events-page .life-timeline-stats').getBoundingClientRect();
       const controls = document.querySelector('.events-page .event-discovery-bar').getBoundingClientRect();
       const cards = document.querySelector('.events-page .life-journey-items').getBoundingClientRect();
       return {
-        headerHeight: header.height, countsRight: stats.right,
+        headerHeight: header.height,
         listGap: cards.top - controls.bottom,
         pageWidth: document.documentElement.scrollWidth,
       };
     });
-    expect(geometry.headerHeight).toBeLessThanOrEqual(125);
-    expect(geometry.countsRight).toBeLessThanOrEqual(width + 1);
+    expect(geometry.headerHeight).toBeLessThanOrEqual(48);
     expect(geometry.listGap).toBeGreaterThanOrEqual(0);
     expect(geometry.listGap).toBeLessThanOrEqual(30);
     expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
@@ -187,3 +182,26 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(errors).toEqual([]);
   });
 }
+
+
+test('Moment card cover selection uses an existing original and leaves records unchanged', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await addOriginal(page, { count: 2 });
+  await page.goto('/events');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const card = page.getByRole('group', { name: /Weekend in Ooty/ });
+  await card.getByRole('button', { name: /Actions for Weekend in Ooty/ }).click();
+  await page.getByRole('menuitem', { name: 'Cover photo', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Choose Moment cover' });
+  const option = picker.getByRole('button', { name: 'Use as cover: Activity photo 0.png' });
+  await expect(option).toBeEnabled();
+  await option.click();
+  await expect(picker).toHaveCount(0);
+  await expect(card.locator('.dn-v2-moment-cover img')).toBeVisible();
+  const prefs = await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes('moment-card-cover%3A')));
+  expect(prefs.length).toBe(1);
+  await page.reload();
+  await expect(page.getByRole('group', { name: /Weekend in Ooty/ }).locator('.dn-v2-moment-cover img')).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
+  expect(errors).toEqual([]);
+});
