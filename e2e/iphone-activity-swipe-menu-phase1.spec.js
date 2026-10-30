@@ -49,11 +49,16 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
 
     await swipe(page, row, { distance: 140 });
     await menu.getByRole('menuitem', { name: 'Cancel', exact: true }).click();
-    await expect(row.locator('.event-activity-status')).toHaveText('Cancelled');
-    await swipeRight(page, row);
-    await expect(menu.getByRole('menuitem', { name: 'Restore', exact: true })).toBeVisible();
-    await expect(menu.getByRole('menuitem', { name: 'Complete', exact: true })).toHaveCount(0);
-    await menu.getByRole('menuitem', { name: 'Restore', exact: true }).click();
+    // Existing saved Status != Cancelled filter intentionally hides the row.
+    await expect(row).toHaveCount(0);
+    const cancelledRecord = JSON.parse((await stored())[0])[0].activities[0];
+    expect(cancelledRecord.status).toBe('cancelled');
+    await page.goto('/events/moment-one/activities/shared');
+    await expect(page.locator('.activity-status-pill')).toHaveText('Cancelled');
+    await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+    await page.getByRole('menuitem', { name: 'Restore', exact: true }).click();
+    await expect(page.locator('.activity-status-pill')).toHaveText('In progress');
+    await page.goto('/activities');
     await expect(row.locator('.event-activity-status')).toHaveText('In progress');
 
     const after = await stored();
