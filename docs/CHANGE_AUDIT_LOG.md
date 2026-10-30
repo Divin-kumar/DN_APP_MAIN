@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-176 | Keep overview Activity mouse drags from becoming browser text selection
+- **Finding:** CHG-175 CI (41022963973) passed Node, lint, docs and 206 Chromium journeys but failed seven cases when reopening the action popup using rightward mouse drags after earlier dismissal. Browser native text selection can cancel a pointer gesture before its pointerup is delivered.
+- **Scoped mitigation:** Disable native text selection on overview Activity cards only (not editable fields, Moment workspace, Dashboard, Detail or shared swipe surfaces). Keep the existing explicit left/right action popup, pointer listener lifecycle and keyboard path.
+- **Safety/downstream:** Pure CSS; no callbacks, mutations, status, navigation, account/Guest scope, transactions, original files, Story/PDF, backup v3 or version changes. Existing Guest activity data exercises the case without a sample tour revision.
+- **Verification:** Exact-SHA Chromium right/left swipe journeys, complete CI and Vercel review are required after push. Actual iPhone touch behavior, real account cloud and production parity remain unverified; if failures persist investigate event-level cancellation rather than masking test outcomes. No Firebase or main changes.
+
 ## CHG-20261030-175 | Align swipe unit contract with bounded window pointer tracking
 - **Evidence:** The CHG-174 exact-SHA Vercel build and docs passed, but GitHub CI run 41022751875 stopped with 479/480 Node tests passing. One source-inspection test wrongly required `onPointerUpCapture=`, which the previous fix intentionally replaced by scoped window pointerup/pointercancel listeners.
 - **Correction:** Update `src/utils/premiumUxContract.test.mjs` to require capture-phase window listener registration and removal for both pointerup and pointercancel, while retaining down-capture, touch, menu accessibility and Delete-confirmation contracts. No application logic or visual assets change in this correction.

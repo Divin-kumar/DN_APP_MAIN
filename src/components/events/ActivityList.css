@@ -31,6 +31,9 @@ html[data-theme] .event-activity-content .event-activity-filter-empty { grid-col
 /* Overall Activities: full-width titles with a naturally flowing, readable status.
    Status is descriptive metadata, not a separate 44px action. */
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-main { padding-right:12px !important; }
+/* Prevent native text-selection drag from cancelling mouse swipes on this menu-free card. */
+html[data-theme] .activities-page .event-activity-content .event-activity-card { -webkit-user-select:none; user-select:none; }
+
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row {
   position:static; display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; gap:4px; min-width:0;
 }
