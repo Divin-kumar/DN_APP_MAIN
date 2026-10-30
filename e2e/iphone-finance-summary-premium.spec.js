@@ -5,7 +5,7 @@ import { seedGuest } from './fixtures.js';
 for (const [width,height] of [[320,640],[390,844],[430,932]]) for (const theme of ['light','dark']) {
   test('premium Finance totals are centered in one quiet strip at '+width+'px '+theme, async({page})=>{
     await page.setViewportSize({width,height});
-    const errors=await seedGuest(page,{theme,
+    const errors=await seedGuest(page,{theme,moments:[],
       incomes:[{id:'salary',name:'Salary',amount:12000,date:'2026-10-24',type:'Other'}],
       expenses:[{id:'subscription',name:'Subscription',amount:2450,date:'2026-10-25',category:'Other'}]});
     await page.goto('/financials/transactions');
@@ -71,7 +71,7 @@ for (const [width,height] of [[320,640],[390,844],[430,932]]) for (const theme o
 
 test('large finance amounts remain inside all three columns on the narrowest phone',async({page})=>{
   await page.setViewportSize({width:320,height:640});
-  const errors=await seedGuest(page,{
+  const errors=await seedGuest(page,{moments:[],
     incomes:[{id:'large-in',name:'Income',amount:987654321,date:'2026-10-20',type:'Other'}],
     expenses:[{id:'large-out',name:'Expense',amount:123456789,date:'2026-10-21',category:'Other'}],
   });
