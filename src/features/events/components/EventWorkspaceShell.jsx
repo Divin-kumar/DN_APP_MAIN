@@ -43,6 +43,7 @@ import MomentStory from './MomentStory';
 import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
+import './MomentWorkspaceNav.css';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
@@ -476,7 +477,7 @@ export function EventWorkspaceContent() {
   };
 
   return (
-    <div className="event-workspace-shell">
+    <div className="event-workspace-shell dn-moment-workspace">
       <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
         otherActions={[
           { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
