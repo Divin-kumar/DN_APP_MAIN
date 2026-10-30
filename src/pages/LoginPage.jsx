@@ -1,14 +1,14 @@
 /*
-  Entry screen for Google authentication and local guest sessions.
-
-  This is the first screen users see when they are not already signed in.
-  It gives them two options: continue with Google or continue as a guest.
+  Entry screen for Google authentication and browser-local Guest sessions.
+  Keep both existing session handlers and navigation destinations intact.
 */
-import { useEffect } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { ArrowRight, CircleAlert } from 'lucide-react';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 import useAppStore from '../store/useAppStore';
+import './LoginPagePremium.css';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -16,100 +16,96 @@ export default function LoginPage() {
   const { continueAsGuest } = useGuest();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-
+  const [busy, setBusy] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const pendingRef = useRef(false);
+  const mountedRef = useRef(true);
   const from = location.state?.from?.pathname || '/dashboard';
 
   useEffect(() => {
-    if (user || isGuest) {
-      navigate(from, { replace: true });
-    }
+    mountedRef.current = true;
+    return () => { mountedRef.current = false; };
+  }, []);
+
+  useEffect(() => {
+    if (user || isGuest) navigate(from, { replace: true });
   }, [user, isGuest, from, navigate]);
 
   const handleGoogleSignIn = async () => {
+    if (pendingRef.current) return;
+    pendingRef.current = true;
+    setBusy(true);
+    setErrorMessage('');
     try {
       await authService.signInWithGoogle();
       navigate(from, { replace: true });
     } catch (error) {
       console.error('Google sign-in failed:', error);
+      if (mountedRef.current) setErrorMessage(
+        error?.code === 'auth/popup-closed-by-user'
+          ? 'Sign-in was closed. You can try again.'
+          : 'Google sign-in is unavailable right now. Try again or continue as Guest.',
+      );
+    } finally {
+      pendingRef.current = false;
+      if (mountedRef.current) setBusy(false);
     }
   };
 
   const handleGuestLogin = () => {
-    continueAsGuest();
-    navigate(from, { replace: true });
+    if (pendingRef.current) return;
+    setErrorMessage('');
+    try {
+      continueAsGuest();
+      navigate(from, { replace: true });
+    } catch (error) {
+      console.error('Guest session could not start:', error);
+      setErrorMessage('Guest mode needs browser storage. Check your browser settings and try again.');
+    }
   };
 
   return (
-    <div style={styles.page}>
-      <div style={styles.card}>
-        <h1 style={styles.title}>DN</h1>
-        <p style={styles.subtitle}>Sign in to continue</p>
+    <main className="dn-login">
+      <div className="dn-login-layout">
+        <section className="dn-login-story" aria-labelledby="dn-login-headline">
+          <div className="dn-login-brand" aria-label="DN">
+            <span className="dn-login-brand-mark" aria-hidden="true">D<span>N</span></span>
+            <span className="dn-login-brand-name">DN</span>
+          </div>
+          <div className="dn-login-story-copy">
+            <p className="dn-login-eyebrow">Your personal life space</p>
+            <h1 id="dn-login-headline">Life happens.<br /><span>Keep the moments.</span></h1>
+            <p className="dn-login-description">Bring your moments, plans, memories and finances together in one thoughtful place.</p>
+            <div className="dn-login-topics" aria-label="What you can organize">
+              <span>Moments</span><span>Activities</span><span>Finances</span><span>Memories</span>
+            </div>
+          </div>
+        </section>
 
-        <button style={styles.primaryButton} onClick={handleGoogleSignIn}>
-          Continue with Google
-        </button>
-
-        <button style={styles.secondaryButton} onClick={handleGuestLogin}>
-          Continue as Guest
-        </button>
+        <section className="dn-login-card" aria-labelledby="dn-login-welcome">
+          <div className="dn-login-card-top">
+            <p className="dn-login-card-kicker">WELCOME TO DN</p>
+            <h2 id="dn-login-welcome">Your space starts here.</h2>
+            <p>Choose how you’d like to continue.</p>
+          </div>
+          <div className="dn-login-actions">
+            <button type="button" className="dn-login-google" onClick={handleGoogleSignIn} disabled={busy} aria-busy={busy}>
+              <span className="dn-login-google-mark" aria-hidden="true">G</span>
+              <span>{busy ? 'Connecting to Google…' : 'Continue with Google'}</span>
+              <ArrowRight size={18} aria-hidden="true" />
+            </button>
+            <button type="button" className="dn-login-guest" onClick={handleGuestLogin} disabled={busy}>
+              <span>Continue as Guest</span>
+              <ArrowRight size={18} aria-hidden="true" />
+            </button>
+          </div>
+          {errorMessage ? (
+            <p className="dn-login-error" role="alert"><CircleAlert size={17} aria-hidden="true" />{errorMessage}</p>
+          ) : null}
+          <p className="dn-login-privacy">Guest records stay in this browser. They aren’t automatically transferred to your Google account.</p>
+        </section>
       </div>
-    </div>
+      <p className="dn-login-footer">A quieter home for everything that matters.</p>
+    </main>
   );
 }
-
-const styles = {
-  page: {
-    minHeight: '100vh',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    background: 'radial-gradient(circle at top, rgba(30,134,109,0.12), transparent 30%), linear-gradient(135deg, #edf7f2 0%, #f8fbf8 100%)',
-    padding: '20px',
-  },
-  card: {
-    width: '100%',
-    maxWidth: '420px',
-    background: 'rgba(255,255,255,0.84)',
-    border: '1px solid rgba(16, 51, 42, 0.08)',
-    backdropFilter: 'blur(10px)',
-    borderRadius: '24px',
-    boxShadow: '0 20px 55px rgba(25, 48, 35, 0.12)',
-    padding: '28px 22px',
-    textAlign: 'center',
-  },
-  title: {
-    margin: '0 0 8px',
-    fontSize: 'clamp(2rem, 5vw, 2.5rem)',
-    color: '#1d3f2c',
-    letterSpacing: '-0.04em',
-  },
-  subtitle: {
-    margin: '0 0 24px',
-    color: '#4b6357',
-    fontSize: '0.96rem',
-  },
-  primaryButton: {
-    width: '100%',
-    border: 'none',
-    borderRadius: '14px',
-    padding: '14px 18px',
-    background: 'linear-gradient(135deg, #2d6a4f 0%, #1e866d 100%)',
-    color: '#fff',
-    fontSize: '0.98rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-    marginBottom: '12px',
-    boxShadow: '0 12px 26px rgba(30, 134, 109, 0.2)',
-  },
-  secondaryButton: {
-    width: '100%',
-    border: '1px solid #d4e4d9',
-    borderRadius: '14px',
-    padding: '14px 18px',
-    background: '#f6faf7',
-    color: '#1d3f2c',
-    fontSize: '0.98rem',
-    fontWeight: 700,
-    cursor: 'pointer',
-  },
-};

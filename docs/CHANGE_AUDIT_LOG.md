@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-205 | Premium DN entry screen without changing authentication or Guest data
+- **Scope:** Replace the legacy hard-coded pale-green Login inline styles with a two-part, theme-aware editorial entry and a focused 320/390/430px responsive treatment. Preserve exactly the existing Google and Guest access choices and redirect destination.
+- **Accessibility and safety:** 52px actions, visible focus, pending duplicate-Google guard, accessible inline failure status and explicit browser-only Guest-data notice. No new identity provider, user-data migration, Guest-tour reset, backup mutation, storage write by the landing UI or custom profile information.
+- **Tour:** First-entry Guest tour remains governed by `continueAsGuest` and the preexisting fixtures. This visual entry does not change actual tour data, so `GUEST_TOUR_VERSION` stays unchanged.
+- **Downstream verification:** Add six synthetic light/dark viewport geometry tests plus a Guest-preservation journey. Real Google popup, auth-error behavior, Safari/VoiceOver and latest preview remain **Unverified**; a successful browser test must not be mistaken for device or account validation. Preserve all CHG-198–204 deferred review steps and append CHG-205.
+- **Boundary:** OldVersion-only single-batch push, no `main`, Firebase production, version bump or Vercel upgrade. Run exact-commit CI rather than claiming source-only checks pass.
+
 ## CHG-20261030-204 | Resolve last blocked-preview CI geometry checks without diluting premium UI
 - **Evidence:** Verified latest completed `OldVersion` GitHub browser run on `d73d4ac`: **358 passed, 2 failed** (improved from 333/21). Remaining failures: a genuine **28px** horizontal shift in the Refine direction/Reset rail after changing Moment sort labels; and a Code Lists input measured `43.999755859375px` against an exact 44px assertion at 430px dark.
 - **Root cause:** Refine's panel is flex-column with an inherited `align-items: start` from its earlier grid styling. The action-line therefore shrink-wraps to the selected dropdown label despite its internally fixed grid columns. Stretching that action-line to the containing panel fixes the cross-page right edge while preserving intrinsic dropdown length, 44px touch targets, compact Asc/Desc and Reset and the one-line layout.
