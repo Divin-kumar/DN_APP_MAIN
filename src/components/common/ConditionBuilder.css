@@ -187,8 +187,8 @@ html[data-theme] .dn-conditions .dn-condition-rule .dn-condition-no-value {
     min-height: 50px;
     padding: 3px;
   }
-  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger,
-  html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule .dropdown-trigger {
+  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger,
+  html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger {
     padding: 0 4px !important;
     font-size: 12px !important;
   }
@@ -201,5 +201,5 @@ html[data-theme] .dn-conditions .dn-condition-rule .dn-condition-no-value {
     gap: 2px;
     padding-inline: 2px;
   }
-  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger { padding-inline: 3px !important; }
+  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger { padding-inline: 3px !important; }
 }
