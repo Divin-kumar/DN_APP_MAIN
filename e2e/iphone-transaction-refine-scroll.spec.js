@@ -2,9 +2,9 @@ import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
 // Chromium geometry regression coverage. Native iPhone Safari still needs a
-// device pass; these checks protect the Refine footer and dock clearance.
+// device pass; these checks protect the shared Refine top row and dock clearance.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
-  test('Transactions Refine actions stay in one row above the dock at ' + width + 'px', async ({ page }) => {
+  test('Transactions Refine actions stay at top in one row above the dock at ' + width + 'px', async ({ page }) => {
     await page.setViewportSize({ width, height });
     const expenses = Array.from({ length: 24 }, (_, index) => ({
       id: 'refine-expense-' + index,
@@ -48,6 +48,12 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     const reset = actions.getByRole('button', { name: 'Reset' });
 
     await expect(actions).toBeVisible();
+    const actionAboveConditions = await panel.evaluate((node) => {
+      const actions = node.querySelector('.dn-list-controls-action-line').getBoundingClientRect();
+      const conditions = node.querySelector('.dn-list-controls-builder').getBoundingClientRect();
+      return actions.bottom <= conditions.top + 1;
+    });
+    expect(actionAboveConditions).toBe(true);
     await expect(field).toBeVisible();
     await expect(direction).toContainText('Desc');
     await expect(reset).toBeVisible();
