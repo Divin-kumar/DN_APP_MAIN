@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-208 | Reconcile Activity completion failure with accessible global toast
+- **Executed evidence:** Exact `OldVersion` browser run on a3e291e (GitHub Actions 41078393520) finished with one failure at `e2e/scope-recovery.spec.js:169`. The locator `getByRole('alert').filter(...)` now matches two intentionally visible errors: `.quick-create-error[role="alert"]` inside Activity recovery and `.app-toast[role="alert"]` from the shared error toast. All other 370+ cases in that run passed; do not infer the UI save retry failed from a strict multi-match.
+- **Change:** Strengthen the synthetic test to assert both alert surfaces independently, then retain the existing in-progress status, retry, completion and route expectations unchanged. No product component/style or business logic is changed.
+- **Downstream:** The two-message failure cue stays accessible; all record data, Guest/account scope, finance, original photos, backups, filters and navigation remain unchanged. No Guest fixture reset or tour version bump.
+- **Validation:** The previous failed CI log and source markup were reviewed. New exact-SHA full browser/build/offline/upgrade CI, physical iPhone Safari, live preview and owner acceptance are **Unverified** until actual results. Keep all ten CHG-198–207 entries in the deferred manual verification register.
+- **Boundary:** `OldVersion` only; no `main`, Firebase production, app version or paid Vercel change.
+
 ## CHG-20261030-207 | Make profile menu a compact, touch-and-keyboard-ready account sheet
 - **Observed:** The global header's old profile menu inherited several contradictory legacy CSS widths, opaque palettes and 38px menuitem targets. Its role=menu controls lacked Arrow/Home/End navigation and Escape focus restoration.
 - **Implementation:** Scope a slim theme-aware profile popover to the authenticated shell, with a compact 44px trigger, 46px actions, comfortable 274px maximum width, quiet identity header and subtle Logout hierarchy. Add keyboard-open first/last focus, Arrow/Home/End movement and Escape focus return while preserving outside clicks, Tab, menu links and original Logout handler.

@@ -166,7 +166,10 @@ test('pending popup completion ignores duplicates and a failed save leaves the A
   expect(await page.evaluate(() => window.__dnCompletionCalls)).toBe(1);
   await page.evaluate(() => window.__dnFailCompletion());
   await expect(page.getByRole('status').filter({ hasText: 'Saving…' })).toHaveCount(0);
-  await expect(page.getByRole('alert').filter({ hasText: 'Synthetic completion failure' })).toBeVisible();
+  // A failed save deliberately exposes both the inline retry error and the
+  // global accessible error toast. Select each surface, not an ambiguous role.
+  await expect(page.locator('.quick-create-error[role="alert"]').filter({ hasText: 'Synthetic completion failure' })).toBeVisible();
+  await expect(page.locator('.app-toast[role="alert"]').filter({ hasText: 'Synthetic completion failure' })).toBeVisible();
   await expect(card.locator('.event-activity-status')).toHaveText('In progress');
   await page.evaluate(() => window.__dnRestoreCompletion());
   // Retest the failed operation using the keyboard menu entry. Initial swipe
