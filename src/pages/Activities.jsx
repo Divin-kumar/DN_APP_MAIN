@@ -13,6 +13,8 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import RichTextEditor from '../components/common/RichTextEditor';
 import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useListViewDefaults from '../hooks/useListViewDefaults';
+import { matchesListDefaults } from '../utils/listViewDefaults';
 import useConditionFilters from '../hooks/useConditionFilters';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import { activityConditions as migrateActivityConditions, activityEntryConditionRecord } from '../utils/listConditionMigration';
@@ -48,7 +50,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const showToast = useAppStore((state) => state.showToast);
   const adminValues = useAppStore((state) => state.adminValues);
   const eventStore = useEventStore();
-  const [filters, changeFilters, resetFilters] = usePersistentListState('activities', DEFAULTS, RULES);
+  const settingsDefaults = useListViewDefaults('activities');
+  const [filters, changeFilters, resetFilters] = usePersistentListState('activities', settingsDefaults.filters, RULES);
   const [draft, setDraft] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [saveError, setSaveError] = useState('');
@@ -154,7 +157,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   };
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
   const activeCount = conditions.activeCount;
-  const resetActivityDiscovery = () => { resetFilters(); conditions.clear(); };
+  const resetActivityDiscovery = () => { resetFilters(); conditions.restore(settingsDefaults.group); };
+  const canResetActivity = !matchesListDefaults(filters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const summary = `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`;
 
   return (
@@ -164,7 +168,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       </header>
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
-          summary={summary} chips={<ConditionChips filter={conditions} />} canReset={Boolean(conditions.activeCount || filters.search || filters.field !== 'date' || filters.direction !== 'asc')} onReset={resetActivityDiscovery}
+          summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
@@ -177,7 +181,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
-              onClear={allInScope.length && (filters.search.trim() || activeCount) ? resetActivityDiscovery : undefined} />
+              onClear={allInScope.length && canResetActivity ? resetActivityDiscovery : undefined} />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
