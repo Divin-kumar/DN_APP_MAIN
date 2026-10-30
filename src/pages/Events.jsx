@@ -48,7 +48,6 @@ import '../components/events/MomentList.css';
 
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-const defaultMomentFilters = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
 const momentFilterRules = Object.freeze({ field: MOMENT_SORT_OPTIONS.map(({ value }) => value), direction: ['asc', 'desc'] });
 
 const getTimelineDate = (event, referenceDate = new Date()) => {
