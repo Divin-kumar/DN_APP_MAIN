@@ -36,7 +36,7 @@ async function openGreeting(t) {
   return { state, props, render, salutation };
 }
 
-test('Dashboard greeting shows a four-line welcome, local date and personal name without business metrics', async (t) => {
+test('Dashboard greeting keeps a compact salutation and full date without business metrics', async (t) => {
   const h = await openGreeting(t), tree = h.render();
   assert.equal(tree.props['aria-label'], 'Dashboard greeting');
   assert.equal(h.salutation(), 'Good morning, Kumar');
@@ -45,8 +45,8 @@ test('Dashboard greeting shows a four-line welcome, local date and personal name
   assert.equal(textOf(time), 'Monday, 26 October 2026');
   assert.equal(textOf(nodes(tree).find((node) => node.props?.className === 'dashboard-greeting-eyebrow')), 'Your day');
   assert.equal(textOf(nodes(tree).find((node) => node.props?.className === 'dashboard-greeting-emoji')), '☀️');
-  assert.deepEqual(nodes(tree).filter((node) => node.type === 'p').map(textOf),
-    ['A fresh day, a few good moments ahead.', 'Your plans and memories are right here.']);
+  assert.deepEqual(nodes(tree).filter((node) => node.type === 'p').map(textOf), []);
+  assert.equal(nodes(tree).some((node) => node.props?.className === 'dashboard-greeting-copy'), false);
   assert.doesNotMatch(textOf(tree), /activit|spent|balance|pending|completed|summary|retry/i);
   assert.equal(nodes(tree).filter((node) => ['button', 'section'].includes(node.type)).length, 0);
 });
