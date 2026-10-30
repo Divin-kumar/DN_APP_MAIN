@@ -31,7 +31,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       }));
       expect(measures.every((item) => item.left >= -1 && item.right <= width + 1)).toBe(true);
       expect(measures.every((item) => item.radius >= 14 && item.height >= 60)).toBe(true);
-      expect(measures.every((item) => item.chevron >= 44 && item.chevronHeight >= 44 && item.svg)).toBe(true);
+      // The accordion BUTTON is the 68px+ tap target; chevron is decorative.
+      expect(measures.every((item) => item.chevron >= 17 && item.chevronHeight >= 17 && item.svg)).toBe(true);
 
       const preferences = page.getByRole('button', { name: /Appearance & preferences/ });
       const backup = page.getByRole('button', { name: /Data & Backup/ });

@@ -173,3 +173,8 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   .activity-detail-page .activity-detail-content { padding:10px 2px 0; }
   .activity-detail-page .activity-parent-context-type { max-width:30%; }
 }
+
+/* DN 2.1 parent trail containment: avoid implicit min-content width on 320px iPhones. */
+.activity-detail-page .activity-detail-heading { display:grid; grid-template-columns:minmax(0,1fr); width:100%; min-width:0; max-width:100%; }
+.activity-detail-page .activity-parent-context { box-sizing:border-box; width:100%; max-width:100%; min-width:0; overflow:hidden; }
+.activity-detail-page .activity-parent-context-link { flex:1 1 0%; min-width:0; max-width:100%; overflow:hidden; }

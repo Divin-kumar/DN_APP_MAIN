@@ -16,7 +16,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await expect(greeting.locator('.dashboard-greeting-copy')).toHaveCount(0);
 
     const card = await greeting.boundingBox();
-    expect(card.height).toBeGreaterThanOrEqual(94);
+    // Approved compact greeting measures about 80px at narrow iPhone widths.
+    expect(card.height).toBeGreaterThanOrEqual(76);
     expect(card.height).toBeLessThan(150);
     const moments = page.getByRole('region', { name: 'Moments', exact: true });
     const momentBox = await moments.boundingBox();

@@ -185,8 +185,14 @@ for (const [label, width, height] of [['portrait', 300, 800], ['square', 600, 60
     await expect(page.getByRole('button', { name: 'Preview Activity photo 0.png' })).toBeAttached();
     const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].attachments[1]);
     expect(stored.assetId).toBe(reference.assetId); expect(stored.size).toBe(reference.size);
+    // Snapshot URLs actually used by Activity Detail; new Home photos legitimately
+    // create additional live URLs after route navigation.
+    const detailUrls = await page.locator('.activity-detail-page img').evaluateAll((images) =>
+      images.map((image) => image.src).filter((src) => src.startsWith('blob:')));
+    expect(detailUrls.length).toBeGreaterThan(0);
     await page.locator('.mobile-tab').filter({ hasText: 'Home' }).click();
-    await expect.poll(() => page.evaluate(() => window.__dnUrls.created.every((url) => window.__dnUrls.revoked.includes(url)))).toBe(true);
+    await expect.poll(() => page.evaluate((urls) =>
+      urls.every((url) => window.__dnUrls.revoked.includes(url)), detailUrls)).toBe(true);
   });
 }
 

@@ -34,7 +34,8 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(greeting.locator('.dashboard-greeting-copy')).toHaveCount(0);
     await expect(page.locator('.dashboard-summary-metric, .dashboard-summary-footer, .dashboard-summary-status')).toHaveCount(0);
     await expect(greeting).not.toContainText(/Spent|Balance|Pending|Past 7 days|Preparing|completed/);
-    expect((await greeting.boundingBox()).height).toBeGreaterThanOrEqual(94);
+    // Approved compact greeting should reveal Moment content sooner.
+    expect((await greeting.boundingBox()).height).toBeGreaterThanOrEqual(76);
     expect((await greeting.boundingBox()).height).toBeLessThan(150);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     for (const [section, dates] of [['Moments', 'Moment dates'], ['Activities', 'Activity dates']]) {

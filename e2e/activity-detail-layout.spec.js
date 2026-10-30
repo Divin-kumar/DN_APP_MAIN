@@ -9,7 +9,7 @@ test('detail shows actual content in reading order, compact file previews and re
     eventId: 'moment-one', activityId: 'shared', type: 'Other' }] });
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
-  await expect(page.locator('.activity-parent-context')).toContainText('Vacation / Weekend in Ooty');
+  await expect(page.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await expect(page.getByRole('button', { name: /^(Edit|Complete|Close|Reopen|Delete activity)$/ })).toHaveCount(0);
   await expect(page.getByText(/^(Parent Moment|Finance|Transaction history|All Moment transactions|Manage transactions|No description added\.|No attachments added\.)$/)).toHaveCount(0);

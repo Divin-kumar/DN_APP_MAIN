@@ -38,14 +38,14 @@ test('Moment-opening detail pages retain that Moment only, in its own filtered l
   await momentCard.focus();
   await page.keyboard.press('Enter');
   await expect(page.getByRole('link', { name: 'Back to Moment activities' })).toHaveAttribute('href', '/events/moment-one/activities');
-  await expect(page.getByLabel('Activity parent')).toContainText('Vacation / Weekend in Ooty');
+  await expect(page.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
   const paging = page.getByRole('navigation', { name: 'Activity navigation' });
   await expect(paging).toBeVisible();
   for (let index = 0; index < 2; index += 1) {
     const next = paging.getByRole('button', { name: 'Next activity' });
     if (await next.isEnabled()) {
       await next.click();
-      await expect(page.getByLabel('Activity parent')).toContainText('Vacation / Weekend in Ooty');
+      await expect(page.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
       await expect(page.getByRole('link', { name: 'Back to Moment activities' })).toHaveAttribute('href', '/events/moment-one/activities');
     }
   }
@@ -64,7 +64,7 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 1440, height: 900 
     const box = await cover.boundingBox();
     expect(Math.abs(box.height - Math.min(viewport.height * .2, 220))).toBeLessThanOrEqual(2);
     const heading = page.locator('.activity-detail-heading');
-    await expect(heading.locator('.activity-parent-context')).toContainText('Moment Type / Moment:');
+    await expect(heading.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
     await expect(heading.locator('h1')).toHaveText('Book a lakeside stay');
     const metadata = page.locator('.activity-detail-metadata');
     await expect(metadata.locator('.activity-status-pill')).toHaveText('In progress');
