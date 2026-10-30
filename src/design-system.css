@@ -3169,3 +3169,69 @@ html[data-theme] .insights-page .insight-metric > small {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .insights-page .insights-export { transition:none !important; }
 }
+
+
+/* Transactions workspace: one primary scroll surface on compact iPhone viewports.
+   Reserve the floating tab bar and safe area inside the actual available viewport,
+   rather than capping a list at 65dvh while the entire page continues to scroll. */
+@media (max-width: 760px) {
+  html[data-theme] .dn-content:has(.dn-financial-workspace) {
+    box-sizing: border-box;
+    height: calc(100dvh - 60px) !important;
+    min-height: 0 !important;
+    padding-bottom: calc(106px + var(--dn-safe-area-bottom, 0px)) !important;
+    overflow: hidden !important;
+  }
+  html[data-theme] .dn-content:has(.dn-financial-workspace) > .dn-route-transition {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+  html[data-theme] .dn-financial-workspace {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    height: 100%;
+    overflow: hidden;
+  }
+  html[data-theme] .dn-financial-workspace .financials-content-panel {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary {
+    flex: 0 0 auto;
+  }
+  html[data-theme] .dn-financial-workspace .dn-transactions-page {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    gap: 10px;
+    overflow: hidden;
+  }
+  html[data-theme] .dn-financial-workspace .transactions-heading,
+  html[data-theme] .dn-financial-workspace .dn-transactions-page > .list-controls {
+    flex: 0 0 auto;
+  }
+  html[data-theme] .dn-financial-workspace .dn-transactions-page .dn-transactions-results {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-y: auto;
+    overflow-x: hidden;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;
+    padding-bottom: max(16px, var(--dn-safe-area-bottom, 0px));
+  }
+  /* Small rubber-band movement remains native to iOS. No JS snap-back that
+     would compete with list flicks, transaction swipe actions or the keyboard. */
+  html[data-theme] .dn-content:has(.dn-financial-workspace) {
+    overscroll-behavior-y: none;
+  }
+}
