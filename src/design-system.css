@@ -1821,7 +1821,6 @@ html[data-theme] .dn-transactions-page .transactions-heading p {
 }
 html[data-theme] .dn-overview-recent-heading h3 { margin: 0; color: var(--color-text); font-size: 1rem; }
 html[data-theme] .dn-overview-recent-heading a { color: var(--color-primary); font-weight: 650; font-size: .85rem; }
-html[data-theme] .dn-transaction-add { min-height: 46px !important; display: inline-flex; align-items: center; gap: 8px; white-space: nowrap; border-radius: var(--radius-md) !important; }
 html[data-theme] .dn-financial-overview .dn-transactions-results { display: grid; gap: 11px; }
 html[data-theme] .dn-transactions-page .transactions-filter-pair {
   grid-template-columns: repeat(2,minmax(0,1fr)); gap: 8px;
@@ -1946,7 +1945,6 @@ html[data-theme] .dn-transaction-form-error { color: var(--color-danger); font-w
   html[data-theme] .dn-transaction-value { font-size: 13px; }
   html[data-theme] .dn-transaction-icon { width: 32px; height: 32px; flex-basis: 32px; }
   html[data-theme] .dn-transactions-page .transactions-filter-pair .dropdown-trigger { font-size: .75rem !important; padding-inline: 8px !important; }
-  html[data-theme] .dn-transaction-add { width: 100%; justify-content: center; }
 }
 @media (max-width: 380px) {
   html[data-theme] .dn-transactions-page .transactions-filter-pair { grid-template-columns: repeat(2,minmax(0,1fr)); }
@@ -2497,64 +2495,16 @@ html[data-theme] .dn-finance-summary-grid .dn-finance-metric > strong {
   font-variant-numeric:tabular-nums;
   overflow-wrap:anywhere; min-width:0;
 }
+/* Finance list header: one clean title, no redundant add CTA or subtitle. */
 html[data-theme] .dn-transactions-page { gap:10px !important; }
 html[data-theme] .dn-transactions-page .transactions-heading {
-  display:grid !important; grid-template-columns:minmax(0,1fr) auto;
-  align-items:center; gap:8px !important;
-  min-width:0; flex-wrap:nowrap !important;
+  display:block !important; min-width:0; min-height:0;
+  padding:0; margin:0; line-height:1.2;
 }
-html[data-theme] .dn-transactions-page .dn-transactions-heading-copy {
-  display:grid; align-content:center; gap:2px; min-width:0;
-}
+html[data-theme] .dn-transactions-page .dn-transactions-heading-copy { display:block; min-width:0; }
 html[data-theme] .dn-transactions-page .dn-transactions-heading-copy h2 {
-  margin:0; font-size:clamp(1.02rem,2.5vw,1.23rem) !important;
-  line-height:1.1;
-}
-html[data-theme] .dn-transactions-page .dn-transactions-heading-copy p {
-  margin:0 !important; display:block; max-width:100%;
-  overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-  font-size:clamp(.67rem,1.5vw,.78rem) !important;
-  line-height:1.3;
-}
-html[data-theme] .dn-transactions-page .dn-transaction-add {
-  display:inline-flex; justify-content:center; align-items:center; gap:5px !important;
-  width:auto !important; min-height:44px !important;
-  padding:0 clamp(8px,1.6vw,14px) !important;
-  border-radius:12px !important; white-space:nowrap;
-  font-size:clamp(.72rem,1.65vw,.86rem) !important;
-}
-html[data-theme] .dn-transactions-page .dn-transaction-add svg {
-  flex:0 0 auto; width:16px; height:16px;
-}
-/* DN 2.1 Phase 1: clear two-line Finance heading with a direct transaction CTA. */
-html[data-theme] .dn-transactions-page .transactions-heading {
-  display: grid !important;
-  grid-template-columns: minmax(0,1fr) auto !important;
-  grid-template-rows: auto auto;
-  column-gap: 8px !important;
-  row-gap: 3px !important;
-  align-items: center;
-}
-html[data-theme] .dn-transactions-page .dn-transactions-heading-copy {
-  grid-column: 1; grid-row: 1; align-self: center;
-}
-html[data-theme] .dn-transactions-page .dn-transaction-add {
-  grid-column: 2; grid-row: 1; justify-self: end;
-  min-width: 0; min-height: 44px !important;
-  padding: 0 10px !important;
-  gap: 5px !important;
-  font-size: clamp(.73rem, 2.8vw, .85rem) !important;
-}
-html[data-theme] .dn-transactions-page .dn-transaction-add:focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 2px;
-}
-html[data-theme] .dn-transactions-page .dn-transactions-heading-description {
-  grid-column: 1 / -1; grid-row: 2;
-  margin: 0 !important; min-width: 0;
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-  color: var(--color-text-muted);
-  font-size: 12px !important; line-height: 1.35;
+  margin:0; font-size:clamp(1.12rem,2.5vw,1.3rem) !important;
+  font-weight:760; line-height:1.18; letter-spacing:-.035em;
 }
 html[data-theme] .transactions-panel.dn-transactions-page { padding:12px !important; }
 /* Moment type and both actions share ONE top row, then title/date/stats follow.
@@ -2626,10 +2576,6 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
   }
   html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading {
     font-size:.62rem !important;
-  }
-  html[data-theme] .dn-transactions-page .dn-transaction-add {
-    padding:0 7px !important;
-    font-size:.69rem !important;
   }
 }
 

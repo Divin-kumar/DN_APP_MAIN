@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-190 | Remove duplicate Transaction CTA and give Refine rules room
+- **Owner feedback:** Search is now visually approved; remove the oversized Add Transaction button from the Transactions list, then continue reducing visual congestion in Refine without redesigning search.
+- **Presentation:** Transactions now has a single compact heading with neither the redundant direct Add Transaction action nor repeated descriptive subtitle. On phone widths Refine arranges each condition into a field-first row with a separate 44px remove target, and a second row for comparison and value. Sort has a quiet separator; Reset sits at the panel edge. The panel permits a little more vertical scrolling when rules are long.
+- **Functional boundary:** The universal + Transaction flow, direct create routes, edit/Delete controls, scope/Guest safety, existing condition builder logic, sorting, matching Income/Expense/Balance, original attachments, PDFs and backup remain unchanged. Neither source schema nor app version changes. The approved editorial search appearance is untouched.
+- **Guest and validation:** Existing demo finance examples and filters sufficiently illustrate this UI; GUEST_TOUR_VERSION stays unchanged, and Guest user data is not refreshed automatically. Add six dark/light 320/390/430px Chromium journeys to check no duplicate page CTA, accessible universal creation, readable rule geometry, no overflow and Guest-data nonmutation. At authorship: **Source-derived**, pending exact-commit Node/lint/Chromium/build/docs and physical iPhone review.
+- **Safety:** OldVersion review only; no main changes, Firebase production publish or merges.
+
 ## CHG-20261030-189 | Replace the joined search/filter pill with an editorial discovery strip
 - **Owner review:** The shared bordered search + Filters pill felt stylistically disconnected from the photo-led page. The target is a calm, useful search line that supports the Moment-inspired card design, not a louder toolbar or full-screen filter sheet.
 - **Presentation:** Across Moments, overall and per-Moment Activities, Transactions and search-only Insights, search now has an inline magnifier and thin bottom rule on a transparent page surface; “Refine” is a separate, understated 44px button. Small count/sort text and existing chips remain below, and the existing filter/sort panel stays available.

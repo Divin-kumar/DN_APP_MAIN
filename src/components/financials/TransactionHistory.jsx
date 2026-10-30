@@ -1,6 +1,6 @@
 import { activityTime } from '../../utils/activityTime';
 import DebouncedFilterInput from '../common/DebouncedFilterInput';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil, Plus } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import SortControl from '../common/SortControl';
@@ -90,7 +90,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 }
 
 export default function TransactionHistory({
-  transactions, filters, onFilters, conditions, events, onAdd, onEdit, onDelete,
+  transactions, filters, onFilters, conditions, events, onEdit, onDelete,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
   return (
@@ -99,13 +99,6 @@ export default function TransactionHistory({
         <div className="dn-transactions-heading-copy">
           <h2 id="dn-transactions-heading">Transactions</h2>
         </div>
-        {onAdd ? (
-          <button type="button" className="dn-transaction-add primaryButton" onClick={onAdd}>
-            <Plus size={16} aria-hidden="true" />
-            <span>Add Transaction</span>
-          </button>
-        ) : null}
-        <p className="dn-transactions-heading-description" title="All income and expenses in one place">All income and expenses</p>
       </header>
       <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
         resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}

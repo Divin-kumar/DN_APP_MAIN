@@ -78,9 +78,6 @@ export default function Financials() {
     navigate('/financials/transactions', { replace: true });
   }, [location.search, navigate]);
 
-  const openAdd = (kind = 'expense') => {
-    setEditing(null); setActivityPreset(null); setDefaultKind(kind); setSavingError(''); setDialogOpen(true);
-  };
   const openEdit = (transaction) => {
     setEditing(transaction); setActivityPreset(null); setDefaultKind(transaction.transactionKind);
     setSavingError(''); setDialogOpen(true);
@@ -134,8 +131,7 @@ export default function Financials() {
             </div>
           </section>
           <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters} conditions={conditions}
-            events={events} onAdd={() => openAdd()} onEdit={openEdit}
-            onDelete={setDeleteTarget} />
+            events={events} onEdit={openEdit} onDelete={setDeleteTarget} />
         </section>}
       {dialogOpen ? (
         <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"

@@ -284,3 +284,23 @@ html[data-theme] .dn-list-controls-panel {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) :is(.dn-list-controls-search,.dn-list-controls-trigger) { transition:none; }
 }
+
+/* Clear separation inside Refine, without changing the search line. */
+html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row {
+  margin-top:8px; padding:9px 0 4px;
+  border-top:1px solid color-mix(in srgb,var(--color-border) 67%,transparent);
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-reset-row {
+  justify-content:flex-end; min-height:40px;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-reset {
+  min-height:40px; padding:0 10px;
+  font-size:12px; font-weight:600;
+}
+@media(max-width:640px) {
+  html[data-theme] .dn-list-controls-panel {
+    max-height:min(460px,56svh);
+    overflow-y:auto;
+    overscroll-behavior-y:contain;
+  }
+}

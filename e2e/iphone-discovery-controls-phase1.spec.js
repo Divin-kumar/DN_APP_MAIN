@@ -68,3 +68,49 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     expect(errors).toEqual([]);
   });
 }
+
+for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme of ['dark','light']) {
+  test('Transactions uses universal create and a readable Refine editor '+width+'px '+theme, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/financials/transactions');
+    const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)));
+    const heading = page.locator('.dn-transactions-page .transactions-heading');
+    await expect(heading).toHaveText('Transactions');
+    await expect(heading.getByRole('button')).toHaveCount(0);
+    await expect(page.locator('.dn-transactions-page .dn-transaction-add, .dn-transactions-heading-description')).toHaveCount(0);
+    const refine = page.locator('.dn-transactions-page').getByRole('button', { name:/Filters and sort/ });
+    await refine.click();
+    await page.getByRole('button', { name:'Add filter', exact:true }).click();
+    const rule = page.locator('.dn-transactions-page .dn-condition-rule').last();
+    await expect(rule).toBeVisible();
+    const geometry = await rule.evaluate((node) => {
+      const parts = [...node.children].map((child) => child.getBoundingClientRect());
+      const box = node.getBoundingClientRect();
+      return { fieldTop: parts[0].top, comparisonTop: parts[1].top,
+        valueTop: parts[2].top, removeTop: parts[3].top,
+        removeWidth: parts[3].width, removeHeight: parts[3].height,
+        inside:parts.every((part) => part.left >= box.left-1 && part.right <= box.right+1),
+        pageWidth:document.documentElement.scrollWidth };
+    });
+    expect(geometry.comparisonTop).toBeGreaterThan(geometry.fieldTop + 22);
+    expect(Math.abs(geometry.valueTop-geometry.comparisonTop)).toBeLessThanOrEqual(4);
+    expect(Math.abs(geometry.removeTop-geometry.fieldTop)).toBeLessThanOrEqual(4);
+    expect(geometry.removeWidth).toBeGreaterThanOrEqual(43.9);
+    expect(geometry.removeHeight).toBeGreaterThanOrEqual(43.9);
+    expect(geometry.inside).toBe(true);
+    expect(geometry.pageWidth).toBeLessThanOrEqual(width+1);
+    await page.getByRole('button', { name:'Remove filter', exact:true }).click();
+    await refine.click();
+    const quickCreate = page.getByRole('button', { name:'Open quick create menu' });
+    await expect(quickCreate).toBeVisible();
+    await quickCreate.click();
+    await page.getByRole('button', { name:'Transaction', exact:true }).click();
+    await expect(page.getByRole('dialog', { name:'Add Transaction' })).toBeVisible();
+    await page.getByRole('button', { name:'Cancel', exact:true }).click();
+    expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)))).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}
