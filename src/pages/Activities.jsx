@@ -163,10 +163,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={Boolean(conditions.activeCount || filters.search || filters.field !== 'date' || filters.direction !== 'asc')} onReset={() => { resetFilters(); conditions.clear(); }}
-          sort={<div className="dn-list-controls-field"><span>Sort by</span>
-            <SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
-              onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />
-          </div>}
+          sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
+            onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
           <ConditionBuilder filter={conditions} title="Activity conditions" />
         </ListControls>
