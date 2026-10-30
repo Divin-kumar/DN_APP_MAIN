@@ -2,7 +2,7 @@ import { clearDnLocalData } from '../utils/storageMigration';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -757,7 +757,7 @@ export default function Settings() {
   ];
 
   return (
-    <div className="settings-page feature-page">
+    <div className="settings-page feature-page dn-settings-home">
       <div className="settings-heading">
         <h2>Settings</h2>
         <p>Keep DN comfortable for the way you plan and remember.</p>
@@ -813,7 +813,7 @@ export default function Settings() {
                   <small>{description}</small>
                 </span>
               </span>
-              <span className="settings-accordion-indicator">{isOpen ? '−' : '+'}</span>
+              <span className="settings-accordion-indicator" aria-hidden="true"><ChevronDown size={17} strokeWidth={2.1} /></span>
             </button>
             {isOpen ? body : null}
           </section>
