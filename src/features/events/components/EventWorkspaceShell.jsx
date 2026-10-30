@@ -509,7 +509,7 @@ export function EventWorkspaceContent() {
       </header>
       </SwipeActionCard>
 
-      <nav ref={workspaceNavRef} className="event-workspace-nav" aria-label={`${event.name} sections`}>
+      <nav ref={workspaceNavRef} className="event-workspace-nav dn-moment-nav" aria-label={`${event.name} sections`}>
         {sections.map((section) => (
           <Link
             key={section.label}
@@ -517,7 +517,7 @@ export function EventWorkspaceContent() {
             className={`event-workspace-nav-item${activeSection.label === section.label ? ' is-active' : ''}`}
             aria-current={activeSection.label === section.label ? 'page' : undefined}
           >
-            <section.icon size={16} />
+            <section.icon size={16} aria-hidden="true" />
             <span>{section.label}</span>
             {section.label === 'Activities' && activities.length ? <small>{activities.length}</small> : null}
           </Link>
@@ -527,9 +527,8 @@ export function EventWorkspaceContent() {
       {activityBusy ? <p role="status">Saving activity…</p> : null}
       {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
-      <main className={`event-workspace-section-panel event-section-${activeSection.key}`}>
-        <div className="event-section-heading">
-          <span>{activeSection.key === 'story' ? 'The story' : activeSection.label === 'Activities' ? 'The little things that make it happen' : activeSection.detail}</span>
+      <main className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel`}>
+        <div className="event-section-heading dn-workspace-section-heading">
           <h2>{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
