@@ -85,7 +85,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await page.goto('/events/moment-one/activities');
     const momentCard = page.getByRole('group', { name: 'Open ' + title, exact: true });
     await expect(momentCard).toBeVisible();
-    await expect(momentCard.locator('.event-activity-title-row > strong')).toHaveCSS('font-size', '14px');
+    await expect(momentCard.locator('.event-activity-title-row > strong')).toHaveCSS('font-size', '15px');
     await page.goto('/dashboard');
     await expect(page.getByRole('button', { name: 'Open ' + title, exact: true })).toBeVisible();
     await page.goto('/activities');
