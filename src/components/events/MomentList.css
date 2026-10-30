@@ -30,7 +30,7 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewpo
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewport { overflow: hidden; }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   display: flex !important; width: 100%; min-width: 0; min-height: 174px !important;
-  align-items: stretch; gap: 0 !important; padding: 0 42px 0 0 !important;
+  align-items: stretch; gap: 0 !important; padding: 0 52px 0 0 !important;
   border: 0; border-radius: 0; background: var(--color-card) !important;
   text-align: left; color: var(--color-text);
 }
@@ -140,9 +140,9 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-details spa
   color: var(--color-text-muted); font-size: .63rem; white-space: nowrap;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger {
-  position: absolute; z-index: 3; top: 10px; right: 9px; flex: 0 0 auto;
-  display: grid; place-items: center; width: 38px; height: 38px;
-  min-width: 38px; min-height: 38px; padding: 0;
+  position: absolute; z-index: 3; top: 8px; right: 6px; flex: 0 0 auto;
+  display: grid; place-items: center; width: 44px; height: 44px;
+  min-width: 44px; min-height: 44px; padding: 0;
   border: 1px solid transparent; border-radius: 11px;
   background: transparent; color: var(--color-text-muted);
 }
@@ -159,10 +159,10 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card :is(.dn-record-menu-trig
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { min-height: 156px; flex-basis: 106px; width: 106px; }
 }
 @media (max-width: 400px) {
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { padding-right: 35px !important; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { padding-right: 49px !important; }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { flex-basis: 80px; width: 80px; }
   html[data-theme] .life-timeline-page .dn-v2-moment-copy { padding: 10px 2px 10px 9px; gap: 5px; }
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger { width: 34px; height: 40px; min-width: 34px; right: 3px; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger { width: 44px; height: 44px; min-width: 44px; min-height: 44px; right: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .life-timeline-page .dn-v2-moment-card { transition: none; }
