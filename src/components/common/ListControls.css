@@ -305,7 +305,9 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line {
   border-bottom: 1px solid color-mix(in srgb, var(--color-border) 66%, transparent);
 }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row {
-  flex: 1 1 auto;
+  /* Fill remaining space regardless of selected label length; direction and
+     Reset retain stable right-edge positions. */
+  flex: 1 1 0%;
   min-width: 0;
   margin: 0;
   padding: 0;
@@ -388,7 +390,7 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-
   justify-content: flex-end;
   min-width: 0;
   min-height: 44px;
-  margin-left: auto;
+  margin-left: 0;
 }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset {
   display: inline-flex;
