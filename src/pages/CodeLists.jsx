@@ -458,7 +458,7 @@ function ListFilterPreferences({ domain }) {
     : domain === 'activities' ? ACTIVITY_LIST_DEFAULTS : TRANSACTION_LIST_DEFAULTS;
   const rules = domain === 'moments' ? MOMENT_LIST_RULES
     : domain === 'activities' ? ACTIVITY_LIST_RULES : TRANSACTION_LIST_RULES;
-  const [filters, , resetSavedSort] = usePersistentListState(`defaults:${domain}`, settings, rules);
+  const [, , resetSavedSort] = usePersistentListState(`defaults:${domain}`, settings, rules);
   const isFinance = domain === 'transactions';
   useEffect(() => {
     if (!isFinance || (!uid && !isGuest)) return;
@@ -497,7 +497,7 @@ function ListFilterPreferences({ domain }) {
             </div>
             <ConditionBuilder filter={conditions} title={`${domain} default filters`} showChips />
             <div className="dn-defaults-filter-footer">
-              <p>Reset on ${domain === 'moments' ? 'Moments' : domain === 'activities' ? 'Activities' : 'Transactions'} restores these conditions and the saved sort order. Changes on the list do not change this baseline.</p>
+              <p>Reset on {domain === 'moments' ? 'Moments' : domain === 'activities' ? 'Activities' : 'Transactions'} restores these conditions and the saved sort order. Changes on the list do not change this baseline.</p>
               <button type="button" className="dn-defaults-factory" onClick={() => {
                 resetSavedSort();
                 conditions.restore(systemConditionGroup(domain));
