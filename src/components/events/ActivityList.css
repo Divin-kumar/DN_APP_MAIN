@@ -18,10 +18,10 @@ html[data-theme] .event-activity-content .event-activity-card .dn-record-menu-tr
 html[data-theme] .event-activity-content .event-activity-card .dn-swipe-main { min-height:76px; }
 html[data-theme] .event-activity-content .event-activity-filter-empty { grid-column:1 / -1; }
 @media(min-width:768px) {
-  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
 }
 @media(min-width:1440px) {
-  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  html[data-theme] .activities-page .event-activity-content .event-activity-list { grid-template-columns:repeat(3,minmax(0,1fr)); }
 }
 @media(max-width:480px) {
   html[data-theme] .event-activity-content .event-activity-progress { grid-template-columns:minmax(0,1fr) 56px; gap:8px; }
