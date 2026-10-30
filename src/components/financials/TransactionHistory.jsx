@@ -98,13 +98,11 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 
 export default function TransactionHistory({
   transactions, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
+  onResetDefaults, canResetDefaults = false,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
   const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
-  const resetAllFilters = () => {
-    onFilters({ type: 'all', month: 'all', search: '', sort: 'date-desc' });
-    conditions.clear();
-  };
+  const resetAllFilters = () => onResetDefaults?.();
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
@@ -117,7 +115,7 @@ export default function TransactionHistory({
         sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
           onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
-        canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={resetAllFilters}
+        canReset={canResetDefaults} onReset={resetAllFilters}
         search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />
@@ -133,10 +131,10 @@ export default function TransactionHistory({
             <p>{totalCount
               ? 'Nothing matches your current search or filters.'
               : 'Transactions you record will appear here.'}</p>
-            {hasActiveFilter && totalCount ? (
+            {hasActiveFilter && totalCount && canResetDefaults ? (
               <button type="button" className="dn-transactions-empty-reset" onClick={resetAllFilters}>
                 <RotateCcw size={15} aria-hidden="true" />
-                Clear search and filters
+                Restore saved defaults
               </button>
             ) : null}
           </div>
