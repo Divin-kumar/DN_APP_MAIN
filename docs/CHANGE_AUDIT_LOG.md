@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-200 | Moment workspace gains an editorial secondary-navigation rail
+- **Direction:** Continue the approved premium DN 2.1 iPhone pass in the Moment workspace. The existing bordered glass tab pill and repetitive section eyebrow competed with the accepted compact hero and photo-led cards.
+- **Implementation:** Keep exactly five existing routes/labels and the origin-aware Moment hero. Scope a lightweight, sticky, horizontally scrollable tab underline to the Moment workspace; show quiet tab icons at phone widths, retain all 44px targets, keyboard outlines and active-tab auto-reveal, and remove redundant explanatory eyebrow text from the section header without altering accessible H2s.
+- **Compatibility:** Existing Story/Journal/Diary/Tasks, Activity creation/refine, linked Transactions, original Gallery, PDF Studio, menus/gestures, mobile dock, local Guest and cloud records, dates, totals, backup and settings unaffected. Existing Guest sample Moments cover this navigation; changing only presentation needs no `GUEST_TOUR_VERSION` bump or silent sample reset.
+- **Validation:** Source inspection of reachability, navigation CSS and existing route/E2E expectations; six added synthetic Chromium journeys at 320/390/430px with both themes for no page overflow, single-row tab rail, visible icons, 44px targets, same route labels, Gallery navigation/active reveal and unchanged Guest records. **Not executed:** browser/Node/lint/build/CI on final SHA, real iPhone Safari and deployed review; tests added are not results.
+- **Boundary:** Direct commits to `OldVersion` only under standing authorization. `main`, Firebase 2.0.x production, app version and Vercel plan remain untouched. Vercel build-rate limit may leave previous preview stale.
+
 ## CHG-20261030-199 | Activity Detail gains premium parent Moment navigation
 - **Direction:** Follow the Settings pass with one contained Activity Detail first-fold improvement; preserve the approved photo-led cards and existing header/cover gestures.
 - **Implementation:** Replace the technical “Moment Type / Moment:” label with a quiet type/chevron/linked parent Moment trail. Link directly to the parent Moment's Activities tab without changing the origin-aware hero Back control. Give the heading clearer typography and condensed spacing, with long names constrained inside the screen, a keyboard-visible outline and a 44px parent link target. Restrict overrides to Activity Detail.
