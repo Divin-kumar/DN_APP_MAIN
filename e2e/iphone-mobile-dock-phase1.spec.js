@@ -42,10 +42,10 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     await create.click();
     await expect(nav.getByRole('button', { name: 'Life moment', exact: true })).toBeVisible();
     await expect(nav.getByRole('button', { name: 'Transaction', exact: true })).toBeVisible();
-    await expect(create).toHaveAttribute('aria-expanded', 'true');
+    await expect(nav.getByRole('button', { name: 'Close quick create menu', exact: true })).toHaveAttribute('aria-expanded', 'true');
     await page.keyboard.press('Escape');
     await expect(nav.getByRole('button', { name: 'Life moment', exact: true })).toHaveCount(0);
-    await expect(create).toHaveAttribute('aria-expanded', 'false');
+    await expect(nav.getByRole('button', { name: 'Open quick create menu', exact: true })).toHaveAttribute('aria-expanded', 'false');
 
     const geometry = await page.evaluate(() => {
       const dock = document.querySelector('.mobile-tabbar');
