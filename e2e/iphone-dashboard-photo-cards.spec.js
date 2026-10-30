@@ -9,7 +9,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
       await page.goto('/dashboard');
-      const greeting = page.getByRole('banner', { name: 'Dashboard greeting' });
+      const greeting = page.locator('.dashboard-greeting-compact');
       await expect(greeting).toBeVisible();
       const moment = page.locator('.dashboard-moment-row').filter({ hasText: 'Weekend in Ooty' }).first();
       const activity = page.locator('.dashboard-activity-card').filter({ hasText: 'Book a lakeside stay' }).first();
