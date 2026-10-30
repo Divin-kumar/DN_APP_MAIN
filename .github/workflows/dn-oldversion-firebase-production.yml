@@ -41,6 +41,8 @@ jobs:
         run: npm run build
       - name: Verify built shell, offline originals and PDF export
         run: npm run test:production
+      - name: Block duplicate or downgraded live version
+        run: node scripts/check-hosting-release-version.mjs
       - name: Require configured Firebase service account
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
