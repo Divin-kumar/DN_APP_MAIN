@@ -135,15 +135,18 @@ const openControls = async (t, overrides = {}) => {
     createElement: (props = {}) => new Element('button', props), get: (id) => elementsById.get(id), stateWrites: () => stateWrites };
 };
 
-test('filters, explicit sort slot and Reset occupy separate ordered rows without moving search/results', async (t) => {
+test('shared Refine actions lead in one row before filters without moving search/results', async (t) => {
   const harness = await openControls(t);
   assert.equal(harness.find('dn-list-controls-panel'), undefined);
   harness.open();
   const panel = harness.find('dn-list-controls-panel');
-  assert.deepEqual(panel.children.map((node) => node.props.className), ['dn-list-controls-filters-row', 'dn-list-controls-sort-row', 'dn-list-controls-reset-row']);
+  assert.deepEqual(panel.children.map((node) => node.props.className), ['dn-list-controls-action-line', 'dn-list-controls-filters-row']);
   assert.equal(harness.find('dn-list-controls-body').contains(harness.get('owned-dropdown')), true);
   assert.equal(harness.find('dn-list-controls-body').contains(harness.get('sort-choice')), false);
-  assert.equal(harness.find('dn-list-controls-sort-row').contains(harness.get('sort-choice')), true);
+  assert.equal(harness.find('dn-list-controls-action-line').contains(harness.get('sort-choice')), true);
+  assert.equal(harness.find('dn-list-controls-action-line').contains(harness.find('dn-list-controls-reset')), true);
+  assert.equal(harness.find('dn-list-controls-action-line').children[0].props.className, 'dn-list-controls-sort-row');
+  assert.equal(harness.find('dn-list-controls-action-line').children[1].props.className, 'dn-list-controls-reset-row');
   assert.equal(panel.contains(harness.get('search')), false);
   assert.equal(harness.find('dn-list-controls-trigger').props['aria-expanded'], true);
   assert.equal(harness.find('dn-list-controls-trigger').props['aria-label'], 'Filters and sort, 1 active');
