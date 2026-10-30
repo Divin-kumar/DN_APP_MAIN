@@ -5,7 +5,7 @@ import './ListControls.css';
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
   title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
-  summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, inlineActions = false, chips, search, sort, children,
+  summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, children,
 }) {
   const [open, setOpen] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
@@ -74,6 +74,13 @@ export default function ListControls({
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
       </div>
       {hasPanel && open ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
+        {(sort || onReset) ? (
+          <div className="dn-list-controls-action-line" role="group" aria-label="Sort and reset">
+            {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}
+            {onReset ? <div className="dn-list-controls-reset-row"><button type="button" className="dn-list-controls-reset" onClick={onReset}
+              disabled={!(canReset ?? activeCount)}>Reset</button></div> : null}
+          </div>
+        ) : null}
         {builder ? <div className="dn-list-controls-builder">{children}</div> : <div className="dn-list-controls-filters-row">
           <div ref={railRef} className="dn-list-controls-body" onScroll={updateEdges}>{children}</div>
           {edges.previous || edges.next ? <div className="dn-list-controls-scroll" role="group" aria-label="More filter controls">
@@ -81,19 +88,6 @@ export default function ListControls({
             <button type="button" aria-label="More filter controls" disabled={!edges.next} onClick={() => moveRail(1)}><ChevronRight size={16} aria-hidden="true" /></button>
           </div> : null}
         </div>}
-        {inlineActions && (sort || onReset) ? (
-          <div className="dn-list-controls-action-line">
-            {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}
-            {onReset ? <div className="dn-list-controls-reset-row"><button type="button" className="dn-list-controls-reset" onClick={onReset}
-              disabled={!(canReset ?? activeCount)}>Reset</button></div> : null}
-          </div>
-        ) : (
-          <>
-            {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}
-            {onReset ? <div className="dn-list-controls-reset-row"><button type="button" className="dn-list-controls-reset" onClick={onReset}
-              disabled={!(canReset ?? activeCount)}>Reset</button></div> : null}
-          </>
-        )}
       </section> : null}
       {chips}
       <div className="dn-list-controls-topline">
