@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-// Three-column amounts and the direct Add Transaction action share the same
-// no-write Guest fixture across narrow iPhone layouts and both app themes.
+// Finance keeps three one-row totals and a quiet Transactions heading.
+// Creation is deliberately available only through the universal + menu.
 for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [430, 932, 'dark']]) {
-  test('iPhone Finance totals and direct transaction entry fit at ' + width + 'px ' + theme, async ({ page }) => {
+  test('iPhone Finance totals and universal transaction entry fit at ' + width + 'px ' + theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto('/financials/transactions');
@@ -26,21 +26,17 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     expect(positions[1].right).toBeLessThanOrEqual(positions[2].left + 1);
 
     const heading = page.locator('.dn-transactions-page .transactions-heading');
-    await expect(heading.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
-    const caption = heading.locator('.dn-transactions-heading-description');
-    await expect(caption).toHaveText('All income and expenses');
-    const textMetrics = await caption.evaluate((node) => ({
-      nowrap: getComputedStyle(node).whiteSpace === 'nowrap',
-      full: node.scrollWidth <= node.clientWidth + 1,
-    }));
-    expect(textMetrics.nowrap).toBe(true);
-    expect(textMetrics.full).toBe(true);
+    await expect(heading).toHaveText('Transactions');
+    await expect(heading.getByRole('button')).toHaveCount(0);
+    await expect(heading.locator('.dn-transactions-heading-description, .dn-transaction-add')).toHaveCount(0);
 
-    const add = heading.getByRole('button', { name: 'Add Transaction', exact: true });
-    const size = await add.boundingBox();
+    const quickCreate = page.getByRole('button', { name: 'Open quick create menu' });
+    await expect(quickCreate).toBeVisible();
+    const size = await quickCreate.boundingBox();
     expect(size.height).toBeGreaterThanOrEqual(43.95);
     expect(size.width).toBeGreaterThanOrEqual(44);
-    await add.click();
+    await quickCreate.click();
+    await page.getByRole('button', { name: 'Transaction', exact: true }).click();
 
     const dialog = page.getByRole('dialog', { name: 'Add Transaction', exact: true });
     await expect(dialog.getByRole('combobox', { name: 'Transaction Type', exact: true })).toBeVisible();

@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-192 | Restore meaningful browser QA contracts for the approved iPhone design
+- **Observed exact-SHA failure:** OldVersion `e9d6fad` passed 447 Node tests, lint and documentation checks, but Chromium reported 14 E2E failures. Six Refine checks measured an empty Value slot before a field was selected; three Finance tests still required the intentionally removed Transactions caption and Add button; five old mobile-filter tests still required a compressed single-row layout or its former panel height.
+- **Test correction:** Check Refine row alignment after choosing a valid field; assert field/remove on the first row and comparison/value on the second, with 44px remove targets, bounded scrolling and no overflow. Finance now tests the one-line title and the universal + Transaction entry, including an unsaved Cancel and unchanged Guest ledgers. No assertions or styling reinstate the deprecated UI.
+- **Scope and compatibility:** Regression tests only. App behavior, searches, transaction calculations, attached originals, cover choices, swipes, conditions, Guest tour fixtures, backup, PDF, releases, `main` and Firebase publication are unchanged. The approved Guest tour needs no data/version update for a test-only change.
+- **Validation:** Failure classification is **Executed** from the prior GitHub Actions log; the replacements are **Source-derived** pending exact-SHA CI. Native iPhone Safari, signed-in flows and Vercel visual review remain **Unverified**.
+
 ## CHG-20261030-191 | Align finance contracts and swipe setup with the current UI
 - **Exact-SHA evidence:** The first CHG-190 CI completed its documentation checks but failed two source-contract assertions from the superseded Finance heading: they still demanded the removed Add Transaction button and redundant description. The preceding CHG-189 Chromium run also failed one Activity swipe journey where the synthetic drag originated over the newly added photo button, navigating away before the next gesture.
 - **Correction:** Replace stale Finance assertions with explicit checks for the one-title heading, absence of duplicate CTA and retained universal + Transaction pathway. In the shared synthetic mouse-swipe helper, select a neutral card surface below the 44px cover action only for photo-led Activity cards; leave all other test gestures and actual swipe implementation unchanged.

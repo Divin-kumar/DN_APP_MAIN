@@ -16,26 +16,33 @@ async function select(page, name, label) {
   await page.getByRole('option', { name: label, exact: true }).click();
 }
 
-async function assertSingleRow(page, row) {
+async function assertReadableRule(page, row) {
   await row.scrollIntoViewIfNeeded();
   const controls = [row.getByRole('combobox', { name: 'Filter by', exact: true }),
     row.getByRole('combobox', { name: 'Comparison', exact: true }), row.locator('.dn-condition-value-slot'),
     row.getByRole('button', { name: 'Remove filter', exact: true })];
   const bounds = await Promise.all(controls.map((control) => control.boundingBox()));
-  const center = bounds[0].y + bounds[0].height / 2;
+  const centers = bounds.map((bound) => bound.y + bound.height / 2);
   for (const bound of bounds) {
     expect(bound.width).toBeGreaterThan(0);
-    expect(Math.abs(bound.y + bound.height / 2 - center)).toBeLessThanOrEqual(2);
     expect(bound.x).toBeGreaterThanOrEqual(-1);
     expect(bound.x + bound.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
   }
-  expect((await row.boundingBox()).height).toBeLessThanOrEqual(48);
-  expect((await page.locator('.dn-list-controls-panel').boundingBox()).height).toBeLessThanOrEqual(280);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  // The approved phone editor has a readable field-first row with a separate
+  // 44px remove target, then a comparison and value row.
+  expect(Math.abs(centers[0] - centers[3])).toBeLessThanOrEqual(3);
+  expect(centers[1]).toBeGreaterThan(centers[0] + 28);
+  expect(Math.abs(centers[1] - centers[2])).toBeLessThanOrEqual(4);
+  expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
+  expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
+  expect((await row.boundingBox()).height).toBeLessThanOrEqual(128);
+  const panel = await page.locator('.dn-list-controls-panel').boundingBox();
+  expect(panel.height).toBeLessThanOrEqual(Math.min(480, page.viewportSize().height * .62));
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 }
 
 for (const width of [320, 390]) {
-  test(`all five lists offer friendly filters and keep each mobile rule on one row at ${width}px`, async ({ page }) => {
+  test(`all five lists offer friendly filters and readable two-row mobile rules at ${width}px`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 844 });
     const moments = fixtureMoments();
@@ -64,7 +71,7 @@ for (const width of [320, 390]) {
         await page.getByRole('option', { name: 'Contains', exact: true }).click();
         await page.getByRole('textbox', { name: `Value for ${consumer.text}`, exact: true }).fill('plan');
         const row = page.locator('.dn-condition-rule').first();
-        await assertSingleRow(page, row);
+        await assertReadableRule(page, row);
 
         if (consumer.linked) {
           await select(page, 'Filter by', consumer.linked);
@@ -74,7 +81,7 @@ for (const width of [320, 390]) {
           const label = consumer.linked === 'Moment' ? moments[0].name : moments[0].activities[0].title;
           await page.getByRole('option', { name: label, exact: true }).click();
           await expect(page.getByRole('combobox', { name: `Value for ${consumer.linked}`, exact: true })).toContainText(label);
-          await assertSingleRow(page, row);
+          await assertReadableRule(page, row);
           await expect(page.locator('.dn-condition-chip')).toContainText(label);
         }
 
@@ -85,7 +92,7 @@ for (const width of [320, 390]) {
         await select(page, 'Comparison', 'Custom range');
         await page.getByLabel(`From ${consumer.date}`, { exact: true }).fill('2026-10-01');
         await page.getByLabel(`To ${consumer.date}`, { exact: true }).fill('2026-10-31');
-        await assertSingleRow(page, row);
+        await assertReadableRule(page, row);
         const from = await row.getByLabel(`From ${consumer.date}`, { exact: true }).boundingBox();
         const to = await row.getByLabel(`To ${consumer.date}`, { exact: true }).boundingBox();
         expect(Math.abs(from.y - to.y)).toBeLessThanOrEqual(1);
@@ -213,7 +220,7 @@ test('many phone filters stay inside a short scrollable panel with its final act
   const add = page.getByRole('button', { name: 'Add filter', exact: true });
   for (let index = 0; index < 12; index += 1) await add.click();
   const panel = page.locator('.dn-list-controls-panel');
-  expect((await panel.boundingBox()).height).toBeLessThanOrEqual(640 * .42 + 1);
+  expect((await panel.boundingBox()).height).toBeLessThanOrEqual(640 * .62);
   await expect(page.locator('.dn-condition-rule')).toHaveCount(12);
   await page.locator('.dn-condition-rule').last().getByRole('button', { name: 'Remove filter', exact: true }).click();
   await expect(page.locator('.dn-condition-rule')).toHaveCount(11);
@@ -247,7 +254,7 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole('button',{name:'Previous filter conditions'})).toHaveCount(0);
     await expect(page.getByRole('button',{name:'Next filter conditions'})).toHaveCount(0);
     const panel=page.locator('.dn-list-controls-panel');
-    if(width<=390)expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740*.42+1);
+    if(width<=390)expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740*.62);
     await page.locator('.dn-condition-rule').last().getByRole('button',{name:'Remove filter',exact:true}).click();
     await expect(page.locator('.dn-condition-rule')).toHaveCount(5);
     await page.getByRole('button',{name:'Clear all',exact:true}).click();await expect(stack).toHaveCount(0);

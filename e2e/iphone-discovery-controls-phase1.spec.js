@@ -85,6 +85,11 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await page.getByRole('button', { name:'Add filter', exact:true }).click();
     const rule = page.locator('.dn-transactions-page .dn-condition-rule').last();
     await expect(rule).toBeVisible();
+    // A brand-new rule has no value control yet. Choose a real field before
+    // checking the second-row alignment of Comparison and Value.
+    await rule.getByRole('combobox', { name:'Filter by', exact:true }).click();
+    await page.getByRole('option', { name:'Title', exact:true }).click();
+    await expect(rule.getByRole('textbox', { name:'Value for Title' })).toBeVisible();
     const geometry = await rule.evaluate((node) => {
       const parts = [...node.children].map((child) => child.getBoundingClientRect());
       const box = node.getBoundingClientRect();
