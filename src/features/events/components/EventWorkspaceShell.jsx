@@ -441,7 +441,9 @@ export function EventWorkspaceContent() {
             search={<DebouncedFilterInput scopeKey={activityConditions.editorKey} id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}>
             <ConditionBuilder filter={activityConditions} title="Moment Activity conditions" />
           </ListControls>
-          <ActivityList readOnly
+          <ActivityList readOnly visualCards
+            uid={user?.uid} isGuest={isGuest} sample={sample}
+            getMoment={() => event}
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
             allActivities={activities} progressActivities={filteredActivities}
