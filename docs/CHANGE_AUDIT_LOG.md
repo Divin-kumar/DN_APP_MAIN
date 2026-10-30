@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-202 | About DN gains a calm release summary and progressive guide
+- **Direction:** Complete the next Settings subpage quality pass without adding decorative cards or burying data-safety disclosures. The former ten long Application Guide cards made About visually dense.
+- **Implementation:** Scope a compact responsive metadata grid, restrained headings/section surfaces and an inline 44px Refresh app control to `.dn-premium-about`. Replace only the ten static guide cards with native accessible `details`/ `summary` rows, retaining every guide paragraph and keyboard behavior. Release notes and Your Data remain visible at rest.
+- **Compatibility:** Version, build date, environment, service-worker refresh logic, route Back action, saved preferences, record/attachment ownership, backup, and Guest/account scope unchanged. Current Guest tour already covers About; this reference-layout change does not justify sample reset or `GUEST_TOUR_VERSION` bump.
+- **Validation:** Source-derived JSX/style review and six new synthetic iPhone-width dark/light Chromium test journeys for content retention, disclosure toggle, geometry, no body overflow, Back route and no Guest ledger writes. **Unverified:** actual browser/Node/lint/build execution on this SHA, deployed Vercel visuals and native iPhone/VoiceOver. Test creation alone is not a passing result.
+- **Boundary:** Single atomic `OldVersion` update using a freshness lease, to minimize Hobby preview builds. Never touch `main`, the user's stable Firebase 2.0.x or app version.
+
 ## CHG-20261030-201 | Code Lists receives accessible section index and premium mobile controls
 - **Direction:** Finish the Settings polish with Code Lists, a dense long-form page whose six category editors and shared sort/filter settings were awkward to navigate. The existing two-input Add layout stretched the Add button across both field rows on narrow iPhones.
 - **Implementation:** Add a lightweight, horizontally scrollable, seven-destination Browse index without mounting/unmounting any editor or changing route semantics. Anchor all six category sections (including Payment Methods loading/error states) and the existing sorting/preferences section. Scope quieter category surfaces, typographic hierarchy and subtle row-action ellipses to the Code Lists page. Maintain the shared tap/swipe action popup; do not add a second menu button. Enforce 44px+ Add/input touch targets and 16px mobile input font. On narrow screens place value input above the label-plus-44px-Add row, avoiding a giant two-row Add control.

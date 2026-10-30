@@ -12,9 +12,10 @@
  * - guide users through the app experience
  * - support quick refresh and update checks for the PWA shell
  */
-import { ArrowLeft, BookOpen, Info, RefreshCw, Sparkles } from 'lucide-react';
+import { ArrowLeft, BookOpen, ChevronDown, Info, RefreshCw, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import './AboutPremium.css';
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
 const deployedAt = new Date(import.meta.env.VITE_DEPLOYED_AT);
@@ -127,7 +128,7 @@ export default function About() {
   };
 
   return (
-    <div className="feature-page settings-page about-page">
+    <div className="feature-page settings-page about-page dn-premium-about">
       <header className="settings-subpage-header">
         <button type="button" className="settings-back-button" onClick={() => navigate('/settings')} aria-label="Back to Settings">
           <ArrowLeft size={16} />
@@ -210,12 +211,15 @@ export default function About() {
           </div>
         </div>
 
-        <div className="about-guide-grid compact-grid">
+        <div className="about-guide-grid compact-grid dn-about-guide-accordion">
           {guideItems.map(({ title, description }) => (
-            <article key={title} className="about-guide-item compact-item">
-              <h4>{title}</h4>
+            <details key={title} className="about-guide-item compact-item dn-about-guide-entry">
+              <summary>
+                <h4>{title}</h4>
+                <ChevronDown size={17} strokeWidth={1.9} aria-hidden="true" />
+              </summary>
               <p>{description}</p>
-            </article>
+            </details>
           ))}
         </div>
       </section>
