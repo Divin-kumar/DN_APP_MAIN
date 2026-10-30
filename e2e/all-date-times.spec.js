@@ -8,10 +8,16 @@ async function choose(page,name,value) {
   await page.getByRole('option',{name:value,exact:true}).click();
 }
 async function paired(dialog, subject) {
-  const date=await dialog.locator('.activity-date-time-row input[type="date"]').boundingBox();
-  const time=await dialog.getByLabel(`${subject} time`,{exact:true}).boundingBox();
-  expect(Math.abs(date.y-time.y)).toBeLessThan(2);
-  expect(date.width).toBeGreaterThan(90); expect(time.width).toBeGreaterThan(85);
+  // The form is inside an animated modal. Sample the same strict 2px
+  // alignment target after its opening transform settles, not mid-frame.
+  const bounds = async () => {
+    const date=await dialog.locator('.activity-date-time-row input[type="date"]').boundingBox();
+    const time=await dialog.getByLabel(`${subject} time`,{exact:true}).boundingBox();
+    return { offset:Math.abs(date.y-time.y), dateWidth:date.width, timeWidth:time.width };
+  };
+  await expect.poll(async () => (await bounds()).offset, { timeout:3000 }).toBeLessThan(2);
+  const { dateWidth, timeWidth } = await bounds();
+  expect(dateWidth).toBeGreaterThan(90); expect(timeWidth).toBeGreaterThan(85);
 }
 for(const width of [320,390,1280]) test(`Moment and transaction clocks save, clear, filter and order at ${width}px`,async({page})=>{
   test.setTimeout(60000);

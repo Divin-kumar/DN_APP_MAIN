@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-161 | Stabilize animated Date/Time alignment measurement without changing UI
+- **Cause:** The first DN 2.1 safe-area CI run on `OldVersion` c13d23b passed all three synthetic safe-area cases and 175/176 Chromium journeys, but existing `e2e/all-date-times.spec.js` at 1280px sampled a date/time vertical difference of 3.363px during modal opening against its existing <2px requirement. The 1280px layout is outside the mobile-only safe-area rules, so this is not evidence of a new iPhone geometry defect.
+- **Fix:** Poll for the same <2px alignment within 3 seconds to allow modal entrance animation to settle. Keep Date/Time width thresholds and all save/edit/clear/filter/order assertions unchanged; do not modify UI, styles, records, product behavior, Guest fixtures or document contract. If a steady-state misalignment exists, the test still fails.
+- **Downstream:** Moment and Transaction editors, iPhone keyboard/visual viewport behavior, common dialogs, all-date-time flows and desktop layouts remain protected by the full suite. Real-device behavior remains unverified.
+- **Verification:** Source-derived review and follow-up full GitHub CI required; no passing result is claimed before completion. No Firebase, main or release change.
+
 ## CHG-20261030-160 | Honor iPhone bottom safe areas without changing navigation or data
 - **Authority:** Owner approved DN 2.1 iPhone-first UX direction and requested P1-0 baseline plus P1-1 implementation, with mandatory downstream impact verification. Base is `OldVersion` e9c0f84bc6cdb4f5e62b155989f9e7f2b8082842; main is frozen.
 - **Change:** Declare `--dn-safe-area-bottom` using `env(safe-area-inset-bottom, 0px)`; retain the 17px mobile-dock floor and 94px main-content bottom-padding floor, increasing both together for larger insets. No viewport-fit change, navigation change or autoFocus change. Add a Chromium regression at 320/390/430px and both themes, injecting a 34px inset to check computed dock position, scroll clearance, horizontal overflow and unchanged synthetic Guest records.
