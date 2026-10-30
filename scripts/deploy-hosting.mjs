@@ -16,6 +16,12 @@ if (parts.length !== 3 || parts.some((part) => !Number.isInteger(part) || part <
 
 parts[2] += 1;
 const nextVersion = parts.join('.');
+// Check the live worker before changing package/lock files or invoking Firebase.
+// A stale checkout must never silently downgrade an already published release.
+const guard = spawnSync(process.execPath, ['scripts/check-hosting-release-version.mjs', nextVersion], {
+  cwd: root, env: process.env, stdio: 'inherit', shell: false,
+});
+if (guard.status !== 0) process.exit(guard.status ?? 1);
 packageJson.version = nextVersion;
 lockJson.version = nextVersion;
 if (lockJson.packages?.['']) lockJson.packages[''].version = nextVersion;
