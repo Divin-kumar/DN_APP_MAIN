@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-169 | Prevent premature phone keyboard in Moments-list Activity chooser
+- **Finding:** The approved universal + Activity flow already avoids forced phone title focus, but the reachable Moments-list Activity chooser at /events?create=activity retained unconditional autoFocus after a Moment was selected.
+- **Change:** Limit this chooser's title autofocus to desktop widths above 760px. On phones the user deliberately taps the title, after viewing Moment context, Date/Time and Priority. Desktop autofocus, field defaults, validation, accessible names and Save/Cancel remain intact.
+- **Direct and downstream:** This is title-focus behavior only for one chooser. Universal quick-create, Moment workspaces, overall Activity cards/detail, finance calculations/filters/forms, originals, Story/Gallery/PDF, backup v3, account/Guest storage and timestamps remain unchanged. Overall Activities' dormant editor is not entered from its menu-free cards and was not altered.
+- **Guest demo:** Existing Moment and Activity examples remain sufficient. No new feature scenario, sample values or guidance change; no sample revision or automatic Guest reset. Regression cancels the draft and checks saved Guest record values unchanged.
+- **Verification:** New synthetic Chromium checks at 320/390/430px, dark/light, cover no implicit title focus, explicit tap focus, 16px input typography, Date visibility, cancel, no overflow and byte-for-byte unchanged Guest data. Full exact-SHA Node, lint, browser, build, offline/PDF, upgrade and documentation checks are required after push. Native installed-iPhone Safari keyboard and zoom remain unverified.
+- **Safety:** OldVersion only, no version bump, Firebase publication, main changes or data migration.
+
 ## CHG-20261030-168 | Restore direct Add Transaction CTA under compact three-column Finance totals
 - **Authority:** DN 2.1 approved iPhone-first overhaul and owner requirement for Income / Expense / Balance together on one line, with a lightweight, directly reachable + Add Transaction action and its subtitle on one line.
 - **Finding:** `Financials.jsx` already passed `onAdd={() => openAdd()}` to `TransactionHistory`, but `TransactionHistory` did not accept/render the prop. The previous v2.15.1 unit contract also explicitly prohibited `dn-transaction-add`, so the missing CTA had become encoded as a test requirement.
