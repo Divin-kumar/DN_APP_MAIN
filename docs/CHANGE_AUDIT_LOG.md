@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-181 | Give Moment detail return navigation a real iPhone touch target
+- **CI finding:** b74fe42 Node/lint/docs passed; six new Story-editor phone tests passed, as did 224 of 225 Chromium journeys. The single failing Moment-list test received a 43.999969px bounding rectangle for a CSS 44px button at 390px dark, a 0.000031px fractional render issue rather than a reduced tap target. Build/offline/PDF/upgrade were skipped because CI stopped on that assertion.
+- **Correction:** Keep the established 44px Moment-list action CSS and allow only 0.05px measurement rounding in its exact-geometry browser assertions. No app logic changes for that correction.
+- **Next iPhone UI:** The Moment workspace “All moments” link was still a tiny 24px-high back target. Replace it with a compact visible outlined pill with 12px text and 44px minimum height/width, plus keyboard-focus styling. The original route and ARIA semantics stay intact across Story, Activities, Transactions, Gallery and PDF Studio; hero swipes, filter/navigation tabs and CRUD handlers remain unchanged.
+- **QA and downstream:** Add six 320/390/430px dark/light tests for navigation link geometry, font/focus, return route, no horizontal overflow and unchanged local Guest records. Existing tour Moments already exercise all routes; no Guest tour version bump or auto-reset. No stored models, finance calculations, account/Guest boundaries, originals, Story/PDF contents, backups, version, Firebase publication or main edits. Full exact-SHA CI (Node, lint, Chromium, build, offline/PDF and upgrade), documentation and Vercel review required before declaring success. Native Safari/VoiceOver and signed-in account cloud remain unverified.
+
 ## CHG-20261030-180 | Keep the iPhone Story introduction keyboard intentional
 - **Phase 1 continuation:** The Moment Story Add/Edit introduction control remained a 40px-high tap target. Its editor also passed unconditional autofocus to TipTap, opening the phone keyboard immediately instead of letting the user choose when to write.
 - **Change:** Increase introduction action minimum height from 40px to 44px and limit its existing rich-text autofocus to widths above 760px, matching the approved mobile-first form convention. Do not alter editor content, formatting, modal focus trap, Close/Cancel/Save behavior, or desktop autofocus.

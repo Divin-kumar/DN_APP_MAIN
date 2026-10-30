@@ -320,8 +320,22 @@ html[data-theme] .event-activity-empty > p { max-width: 48ch; margin: 0 0 var(--
 html[data-theme] .event-empty-state-cta { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: var(--space-sm); padding: 0 var(--space-lg) !important; border-radius: var(--radius-sm) !important; box-shadow: 0 6px 16px color-mix(in srgb,var(--color-primary) 20%,transparent) !important; font-size: var(--font-caption); font-weight: 650; }
 html[data-theme] .event-empty-state-cta:hover { transform: translateY(-1px); box-shadow: 0 9px 20px color-mix(in srgb,var(--color-primary) 26%,transparent) !important; }
 html[data-theme] .event-empty-state-cta:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
-html[data-theme] .event-workspace-back-row { display: flex; min-height: 22px; align-items: center; }
-html[data-theme] .event-workspace-back-row .event-moment-back { min-height: 24px; padding: 0 var(--space-xs); }
+/* iPhone-first: make the return route a legible, lightweight 44px target.
+   The adjacent Moment hero and its swipe actions keep their existing layout. */
+html[data-theme] .event-workspace-back-row { display: flex; min-height: 44px; align-items: center; }
+html[data-theme] .event-workspace-back-row .event-moment-back {
+  display: inline-flex; min-width: 44px; min-height: 44px; box-sizing: border-box;
+  align-items: center; justify-content: center; gap:7px; padding: 0 12px;
+  border: 1px solid var(--color-border); border-radius: 12px;
+  background: color-mix(in srgb,var(--color-card) 80%,transparent);
+  color: var(--color-text-muted); font-size: 12px; font-weight: 700; line-height: 1.2;
+}
+html[data-theme] .event-workspace-back-row .event-moment-back:hover {
+  background: var(--color-card-raised); color: var(--color-text);
+}
+html[data-theme] .event-workspace-back-row .event-moment-back:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 2px;
+}
 html[data-theme] .event-moment-topline { justify-content: flex-end; }
 html[data-theme] .event-moment-content { padding-top: 0; }
 html[data-theme] .event-moment-content h1 { font-size: var(--font-hero) !important; line-height: 1.05; }
