@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-189 | Replace the joined search/filter pill with an editorial discovery strip
+- **Owner review:** The shared bordered search + Filters pill felt stylistically disconnected from the photo-led page. The target is a calm, useful search line that supports the Moment-inspired card design, not a louder toolbar or full-screen filter sheet.
+- **Presentation:** Across Moments, overall and per-Moment Activities, Transactions and search-only Insights, search now has an inline magnifier and thin bottom rule on a transparent page surface; “Refine” is a separate, understated 44px button. Small count/sort text and existing chips remain below, and the existing filter/sort panel stays available.
+- **Compatibility:** The visual Refine label retains its accessible “Filters and sort” name and active-count announcement. 16px search input prevents native iOS input zoom; focus affordances and dropdown ownership/Escape/outside handling stay as before. Filter definitions, persistence, record queries, transactions, attachments, swipes, PDF and backups are unchanged.
+- **Guest and QA:** Bump and clarify the optional Guest tour text to demonstrate search/Refine without automatic reset. Reuse 18 light/dark Chromium journey variants at 320/390/430px across Activities/Moments/Transactions, now checking the open strip, underline, touch target, actual search, portal/outside dismissal and Guest nonmutation; extend shared-component contract for the visible versus accessible label. At authorship: **Source-derived**, not executed. Exact-SHA CI/browser, live visual review, native iPhone and signed-in account QA are still required.
+- **Safety:** OldVersion review only, no change to main, Firebase production, schemas or app version.
+
 ## CHG-20261030-188 | Repair narrow Activity card geometry and stale review tests
 - **Regression evidence:** Previous OldVersion exact-SHA browser suite (bdcdbd7) passed 244 of 249 cases, but failed on two 320px title-width assertions, an 820px Activity card 153px height against its compact threshold, an obsolete hardcoded Guest demo version and a transient detached card during the second swipe setup.
 - **Visual correction:** Keep the 80px Activity photo column and same-line status. Trim copy top/bottom padding and gaps across widths; at 320px, reclaim horizontal pixels from copy insets, title/status gap and status-pill padding to protect a readable title without moving status to another row or shrinking text.

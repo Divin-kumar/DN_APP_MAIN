@@ -192,87 +192,95 @@ html[data-theme] .insights-tools > .dn-list-controls { flex: 1 1 200px; }
 }
 
 /*
- * DN 2.1 discovery rail. One connected search/filter surface replaces two
- * competing outlined buttons across Moments, Activities, Transactions and
- * the per-Moment list. The input remains visible and 16px on iPhone.
+ * DN 2.1 editorial discovery strip.
+ * No enclosing pill or toolbar card: the search sits directly on the page,
+ * with a hairline affordance and a separate lightweight 44px Refine target.
+ * This is shared by Moments, Activities, Transactions and Insights.
  */
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) {
-  gap:0;
-  padding:2px 3px;
-  border:1px solid color-mix(in srgb,var(--color-border) 84%,transparent);
-  border-radius:16px;
-  background:color-mix(in srgb,var(--color-card) 90%,var(--color-surface));
-  box-shadow:0 3px 14px rgb(0 0 0 / 4%);
-  transition:border-color .18s ease,box-shadow .18s ease;
+  display:flex; align-items:center; gap:9px; width:100%; min-width:0;
+  min-height:46px; padding:0;
+  border:0; border-radius:0;
+  background:transparent; box-shadow:none;
 }
-html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search):focus-within {
-  border-color:color-mix(in srgb,var(--color-primary) 46%,var(--color-border));
-  box-shadow:0 0 0 3px color-mix(in srgb,var(--color-primary) 10%,transparent);
+html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-search {
+  position:relative; display:flex; flex:1 1 0; align-items:center; min-width:0;
+  min-height:44px; margin:0; padding:0;
+  border:0; border-bottom:1px solid color-mix(in srgb,var(--color-border) 83%,var(--color-text-muted));
+  border-radius:0; background:transparent;
+  transition:border-color .16s ease;
 }
-html[data-theme] .dn-list-controls-search { position:relative; display:flex; align-items:center; min-width:0; }
+html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-search:focus-within {
+  border-bottom-color:var(--color-primary);
+}
 html[data-theme] .dn-list-controls-search-icon {
-  position:absolute; z-index:1; left:13px; top:50%; transform:translateY(-50%);
-  pointer-events:none; color:var(--color-text-muted); opacity:.8;
+  position:absolute; z-index:1; left:5px; top:50%; transform:translateY(-50%);
+  pointer-events:none; color:var(--color-text-muted); opacity:.75;
 }
 html[data-theme] .dn-list-controls .dn-list-controls-search input {
-  width:100% !important;
-  min-height:44px !important;
-  margin:0 !important;
-  padding:10px 12px 10px 43px !important;
-  border:0 !important;
-  border-radius:12px !important;
-  outline:0;
-  background:transparent !important;
-  box-shadow:none !important;
-  font-size:16px !important;
-  -webkit-appearance:none;
-  appearance:none;
+  display:block; width:100% !important; min-width:0 !important;
+  min-height:44px !important; margin:0 !important;
+  padding:10px 9px 10px 34px !important;
+  border:0 !important; border-radius:0 !important;
+  background:transparent !important; box-shadow:none !important;
+  color:var(--color-text) !important; font-size:16px !important;
+  font-weight:450; line-height:1.4;
+  -webkit-appearance:none; appearance:none;
+}
+html[data-theme] .dn-list-controls .dn-list-controls-search input::placeholder {
+  color:var(--color-text-muted); opacity:.86;
 }
 html[data-theme] .dn-list-controls .dn-list-controls-search input::-webkit-search-decoration { display:none; }
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger {
-  min-width:82px; min-height:44px !important;
-  margin:0;
-  padding:0 11px;
-  border:0; border-left:1px solid color-mix(in srgb,var(--color-border) 86%,transparent);
-  border-radius:12px;
-  background:transparent;
-  color:var(--color-text);
-  font-weight:630;
+  position:relative; display:inline-flex; flex:0 0 auto; align-items:center;
+  min-width:81px; min-height:44px !important; height:44px; gap:6px;
+  margin:0; padding:0 11px;
+  border:1px solid color-mix(in srgb,var(--color-border) 63%,transparent);
+  border-radius:13px;
+  background:color-mix(in srgb,var(--color-card) 78%,var(--color-surface));
+  box-shadow:none;
+  color:var(--color-text-muted); font-size:12px; font-weight:660;
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
 }
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:is(:hover,[aria-expanded="true"],.is-active) {
-  background:color-mix(in srgb,var(--color-primary) 9%,var(--color-card));
-  border-left-color:transparent;
+  border-color:color-mix(in srgb,var(--color-primary) 29%,var(--color-border));
+  background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
   color:var(--color-primary);
 }
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger .dn-list-controls-badge {
-  border-radius:99px; min-width:18px; height:18px; padding:0 4px;
-  background:color-mix(in srgb,var(--color-primary) 16%,var(--color-card));
-  color:var(--color-primary);
+  position:absolute; top:-4px; right:-3px;
+  min-width:17px; height:17px; padding:0 4px;
+  border:1px solid var(--color-card); border-radius:999px;
+  background:var(--color-primary); color:var(--color-card);
+  font-size:10px; font-weight:760; box-shadow:none;
 }
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:focus-visible,
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-search input:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:-3px;
 }
 html[data-theme] .dn-list-controls-topline {
-  min-height:18px;
-  padding-inline:5px;
-  gap:8px;
+  min-height:15px; padding-inline:3px; gap:8px;
+  align-items:center; justify-content:space-between;
 }
+html[data-theme] .dn-list-controls-context,
+html[data-theme] .dn-list-controls-summary {
+  color:var(--color-text-muted); font-size:11px; font-weight:450;
+  line-height:1.4; letter-spacing:.01em;
+}
+html[data-theme] .dn-list-controls-summary { opacity:.84; }
 html[data-theme] .dn-list-controls-panel {
-  margin-top:4px;
-  padding:10px 12px;
-  border:1px solid color-mix(in srgb,var(--color-border) 78%,transparent);
-  border-radius:16px;
-  background:var(--color-card);
-  box-shadow:0 8px 25px rgb(0 0 0 / 5%);
+  margin-top:5px; padding:11px 12px;
+  border:1px solid color-mix(in srgb,var(--color-border) 72%,transparent);
+  border-radius:15px;
+  background:color-mix(in srgb,var(--color-card) 95%,var(--color-surface));
+  box-shadow:0 9px 26px rgb(0 0 0 / 4%);
 }
 @media(max-width:390px) {
+  html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) { gap:6px; }
   html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger {
-    min-width:76px; padding-inline:9px; gap:5px;
+    min-width:75px; padding-inline:9px; gap:5px;
   }
-  html[data-theme] .dn-list-controls-search-icon { left:11px; }
-  html[data-theme] .dn-list-controls .dn-list-controls-search input { padding-left:39px !important; }
 }
 @media(prefers-reduced-motion:reduce) {
-  html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) { transition:none; }
+  html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) :is(.dn-list-controls-search,.dn-list-controls-trigger) { transition:none; }
 }

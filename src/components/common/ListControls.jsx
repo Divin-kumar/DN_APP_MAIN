@@ -68,7 +68,7 @@ export default function ListControls({
         {hasPanel ? <button type="button" className={`dn-list-controls-trigger${activeCount ? ' is-active' : ''}`}
           aria-label={`${label}${activeCount ? `, ${activeCount} active` : ''}`}
           ref={triggerRef} aria-controls={panelId} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
-          <SlidersHorizontal size={16} aria-hidden="true" /><span>Filters</span>
+          <SlidersHorizontal size={17} strokeWidth={1.8} aria-hidden="true" /><span>Refine</span>
           {activeCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeCount}</span> : null}
         </button> : activeCount && onReset ? <button type="button" className="dn-list-controls-trigger"
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}

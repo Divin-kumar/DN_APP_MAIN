@@ -146,6 +146,10 @@ test('filters, explicit sort slot and Reset occupy separate ordered rows without
   assert.equal(harness.find('dn-list-controls-sort-row').contains(harness.get('sort-choice')), true);
   assert.equal(panel.contains(harness.get('search')), false);
   assert.equal(harness.find('dn-list-controls-trigger').props['aria-expanded'], true);
+  assert.equal(harness.find('dn-list-controls-trigger').props['aria-label'], 'Filters and sort, 1 active');
+  const triggerContent = harness.find('dn-list-controls-trigger').children;
+  assert.equal(triggerContent.some((child) => child.props.children === 'Refine'), true,
+    'visual label says Refine while Filters and sort remains the accessible name');
   assert.equal(harness.find('dn-list-controls-context').props['aria-live'], 'polite');
 });
 

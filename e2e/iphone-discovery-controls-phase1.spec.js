@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-// Connected search/filters affordance is shared, not a one-off Activities fix.
+// The editorial search line and Refine affordance are shared across all lists.
 // Synthetic Chromium geometry cannot prove installed iPhone Safari behavior.
 const pages = [
   { path:'/activities', search:'Search activities and Moments', sample:'Book a lakeside stay' },
@@ -9,7 +9,7 @@ const pages = [
   { path:'/financials/transactions', search:'Search transactions', sample:'Room deposit' },
 ];
 for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme of ['dark','light']) {
-  for (const item of pages) test('Connected discovery rail '+item.path+' '+width+'px '+theme, async ({ page }) => {
+  for (const item of pages) test('Editorial discovery strip '+item.path+' '+width+'px '+theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto(item.path);
@@ -28,7 +28,10 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         b = filter.getBoundingClientRect();
       return {
         railBorder: getComputedStyle(rail).borderTopWidth,
+        railBackground: getComputedStyle(rail).backgroundColor,
+        searchUnderline: getComputedStyle(search).borderBottomWidth,
         innerBorder: getComputedStyle(input).borderTopWidth,
+        refineLabel:filter.querySelector('span:not(.dn-list-controls-badge)').textContent,
         inputSize: parseFloat(getComputedStyle(input).fontSize),
         iconVisible: getComputedStyle(icon).display !== 'none',
         buttonWidth:b.width, buttonHeight:b.height,
@@ -37,8 +40,11 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         pageWidth:document.documentElement.scrollWidth,
       };
     });
-    expect(measures.railBorder).toBe('1px');
+    expect(measures.railBorder).toBe('0px');
+    expect(measures.railBackground).toBe('rgba(0, 0, 0, 0)');
+    expect(measures.searchUnderline).toBe('1px');
     expect(measures.innerBorder).toBe('0px');
+    expect(measures.refineLabel).toBe('Refine');
     expect(measures.iconVisible).toBe(true);
     expect(measures.inputSize).toBeGreaterThanOrEqual(16);
     expect(measures.buttonWidth).toBeGreaterThanOrEqual(43.9);
