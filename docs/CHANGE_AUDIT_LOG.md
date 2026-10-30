@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-199 | Activity Detail gains premium parent Moment navigation
+- **Direction:** Follow the Settings pass with one contained Activity Detail first-fold improvement; preserve the approved photo-led cards and existing header/cover gestures.
+- **Implementation:** Replace the technical “Moment Type / Moment:” label with a quiet type/chevron/linked parent Moment trail. Link directly to the parent Moment's Activities tab without changing the origin-aware hero Back control. Give the heading clearer typography and condensed spacing, with long names constrained inside the screen, a keyboard-visible outline and a 44px parent link target. Restrict overrides to Activity Detail.
+- **Preservation:** Status/priority/date, original photos, cover position, options, swipe pagination, transactions, attachments, Guest and account ownership, session handling, backup and release metadata unchanged. No change to current Guest samples/tour required.
+- **Validation:** Six added synthetic Chromium cases at 320/390/430px in both themes for trail geometry, route, title/metadata visibility, horizontal overflow and no Guest-storage writes. **Unverified:** browser test execution, full CI, real iPhone Safari, signed-in state and current Vercel preview (previously build-limited). Tests added are not claimed to have passed.
+- **Boundary:** `OldVersion` only. No production Firebase publication, `main` edits, release/version bump, paid Vercel change or deployment request.
+
 ## CHG-20261030-198 | Settings overview gains quiet premium navigation
 - **Direction:** Continue DN 2.1 iPhone-first UI polish without reworking the accepted Moment/photo cards, editorial search, shared Refine, finance calculations or Dashboard cards. Settings was a clear dated-navigation surface with plus/minus text indicators and heavier floating rows.
 - **Implementation:** Scope a cohesive, low-noise Settings treatment to `dn-settings-home`: centered readable content width, lighter Profile/Preferences/Notifications/Backup accordion surfaces, restrained icons, clear typography, 44px chevron rail and genuine full-row activation. Replace the decorative plus/minus with an SVG chevron that rotates only with the existing `aria-expanded` state. Align Code Lists/About links with the same row rhythm and focus treatment. Respect reduced-motion preferences and both color themes.
