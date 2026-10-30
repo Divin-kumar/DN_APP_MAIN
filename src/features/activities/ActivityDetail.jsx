@@ -65,10 +65,12 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       preferenceKey={`activity-cover:${JSON.stringify([scoped.sample, eventId, activityId])}`} onEditingChange={setCoverEditing} />
     <div className="activity-detail-content">
       <header className="activity-detail-heading">
-        <div className="activity-parent-context" aria-label="Activity parent">
-          <span className="activity-parent-context-label">Moment Type / Moment:</span>
-          <span>{getActivityMomentType(moment)} / {moment.name || 'Untitled Moment'}</span>
-        </div>
+        <nav className="activity-parent-context" aria-label="Parent Moment">
+          <span className="activity-parent-context-type">{getActivityMomentType(moment)}</span>
+          <ChevronRight size={14} aria-hidden="true" />
+          <Link className="activity-parent-context-link" to={`/events/${encodeURIComponent(eventId)}/activities`}
+            title={moment.name || 'Untitled Moment'}><span>{moment.name || 'Untitled Moment'}</span></Link>
+        </nav>
         <h1 ref={heading} tabIndex={-1}>{activity.title || 'Untitled activity'}</h1>
       </header>
       {moment.archived ? <p className="activity-archived"><Archive size={14} aria-hidden="true" /> Archived Moment</p> : null}
