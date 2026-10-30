@@ -22,3 +22,17 @@ export const computeSwipeMenuPlacement = ({
   const left = Math.max(leftEdge, Math.min(anchor.right - menuWidth, rightEdge - menuWidth));
   return { top, left, width: menuWidth, maxHeight: preferredHeight, direction };
 };
+
+
+// Measure obstruction from the visible dock rather than assuming an 80px
+// bottom gap. When a keyboard moves the visual viewport above the dock,
+// or the desktop layout hides it, no artificial mobile reserve is needed.
+export const getSwipeDockReserve = ({ viewport, dockRect, dockVisible = true, gap = 8 }) => {
+  if (!dockVisible || !dockRect || !viewport) return 0;
+  const top = viewport.top ?? 0;
+  const bottom = top + (viewport.height ?? 0);
+  if (!Number.isFinite(dockRect.top) || !Number.isFinite(dockRect.bottom)
+    || dockRect.bottom <= top || dockRect.top >= bottom
+    || dockRect.width <= 0 || dockRect.height <= 0) return 0;
+  return Math.max(0, bottom - Math.max(top, dockRect.top) + gap);
+};
