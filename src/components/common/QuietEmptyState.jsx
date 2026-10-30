@@ -23,7 +23,7 @@ export default function QuietEmptyState({ kind, filtered = false, hasMoments = f
       <p>{description}</p>
       {filtered && onClear ? (
         <button type="button" className="dn-discovery-empty-reset" onClick={onClear}>
-          Clear search and filters
+          Restore saved defaults
         </button>
       ) : null}
     </section>
