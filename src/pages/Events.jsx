@@ -29,6 +29,7 @@ import ConditionBuilder, { ConditionChips } from '../components/common/Condition
 import { momentConditions, momentConditionRecord } from '../utils/listConditionMigration';
 import useConditionFilters from '../hooks/useConditionFilters';
 import ListControls from '../components/common/ListControls';
+import QuietEmptyState from '../components/common/QuietEmptyState';
 import SortControl from '../components/common/SortControl';
 import { MOMENT_SORT_OPTIONS, momentSortSummary, sortMoments } from '../utils/userListSort';
 import RichTextEditor from '../components/common/RichTextEditor';
@@ -197,6 +198,7 @@ export default function Events() {
   const { search, field: sortField, direction: sortDirection } = momentFilters;
   const sortSummary = momentSortSummary(sortField, sortDirection);
   const setSearch = (value) => changeMomentFilters({ search: value });
+  const resetMomentDiscovery = () => { resetMomentFilters(); conditions.clear(); };
   const conditionRecords = useMemo(() => events.map(momentConditionRecord), [events]);
   const conditions = useConditionFilters('moments', conditionRecords, usePersistentListState, { initialGroup: momentConditions(momentFilters), contextKey: getActiveSampleScenario(user?.uid) });
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
@@ -386,7 +388,7 @@ export default function Events() {
           sort={<SortControl field={sortField} direction={sortDirection} options={MOMENT_SORT_OPTIONS} label="Sort moments"
             onFieldChange={(field) => changeMomentFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeMomentFilters({ direction: sortDirection === 'asc' ? 'desc' : 'asc' })} />}
-          canReset={Boolean(conditions.activeCount || search || sortField !== 'date' || sortDirection !== 'asc')} onReset={() => { resetMomentFilters(); conditions.clear(); }}
+          canReset={Boolean(conditions.activeCount || search || sortField !== 'date' || sortDirection !== 'asc')} onReset={resetMomentDiscovery}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
           <ConditionBuilder filter={conditions} title="Moment conditions" />
         </ListControls>
@@ -400,12 +402,8 @@ export default function Events() {
           </section>
         </div>
       ) : (
-        <div className="life-journey-empty">
-          <span className="life-journey-empty-icon"><BookHeart size={25} /></span>
-          <span className="life-timeline-eyebrow">A fresh page</span>
-          <h3>{events.length ? 'No moments found' : 'Your story starts with one moment'}</h3>
-          <p>{events.length ? 'Try another search or clear a condition.' : 'Save the dates and people that make life feel like yours. Add the first moment whenever you are ready.'}</p>
-        </div>
+        <QuietEmptyState kind="moments" filtered={events.length > 0}
+          onClear={events.length && (search.trim() || conditions.activeCount) ? resetMomentDiscovery : undefined} />
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
