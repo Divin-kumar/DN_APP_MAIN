@@ -1,5 +1,7 @@
 /* DN design system: geometry and behavior are theme-independent; theme blocks below only define colors. */
 :root {
+  /* iPhone Home Indicator clearance; override in isolated layout tests. */
+  --dn-safe-area-bottom: env(safe-area-inset-bottom, 0px);
   --space-xs: 4px;
   --space-sm: 8px;
   --space-md: 12px;
@@ -690,7 +692,7 @@ html[data-theme] .dn-quick-create-trigger { border-color: var(--color-border); b
   html[data-theme] .dn-header .menu-button { display: none !important; }
   html[data-theme] .dn-sidebar { display: none !important; }
   html[data-theme] .dn-main { height: calc(100dvh - 60px) !important; }
-  html[data-theme] .dn-content { padding: var(--space-md) var(--space-md) 94px !important; }
+  html[data-theme] .dn-content { padding: var(--space-md) var(--space-md) max(94px, calc(77px + var(--dn-safe-area-bottom))) !important; }
   html[data-theme] .dn-banner { min-height: 22px; margin-bottom: var(--space-sm) !important; font-size: var(--font-caption) !important; }
   html[data-theme] .dashboard-overview { gap: var(--space-lg) !important; }
   html[data-theme] .dashboard-greeting { padding: var(--space-lg) !important; }
@@ -877,7 +879,7 @@ html[data-theme] .event-activity-card.is-open { cursor: default; }
   html[data-theme] .brand-mark { width: 31px; height: 31px; flex-basis: 31px; border-radius: 10px; font-size: .84rem; }
   html[data-theme] .brand-lockup-title { margin-left: 10px !important; font-size: .76rem; letter-spacing: -.045em; line-height: 1.1; white-space: nowrap; }
   html[data-theme] .mobile-tabbar {
-    bottom: 17px !important;
+    bottom: max(17px, var(--dn-safe-area-bottom)) !important;
     min-height: 60px !important;
     padding: 8px !important;
     isolation: isolate;
