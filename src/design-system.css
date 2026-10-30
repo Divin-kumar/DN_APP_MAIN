@@ -320,21 +320,39 @@ html[data-theme] .event-activity-empty > p { max-width: 48ch; margin: 0 0 var(--
 html[data-theme] .event-empty-state-cta { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: var(--space-sm); padding: 0 var(--space-lg) !important; border-radius: var(--radius-sm) !important; box-shadow: 0 6px 16px color-mix(in srgb,var(--color-primary) 20%,transparent) !important; font-size: var(--font-caption); font-weight: 650; }
 html[data-theme] .event-empty-state-cta:hover { transform: translateY(-1px); box-shadow: 0 9px 20px color-mix(in srgb,var(--color-primary) 26%,transparent) !important; }
 html[data-theme] .event-empty-state-cta:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; }
-/* iPhone-first: make the return route a legible, lightweight 44px target.
-   The adjacent Moment hero and its swipe actions keep their existing layout. */
-html[data-theme] .event-workspace-back-row { display: flex; min-height: 44px; align-items: center; }
-html[data-theme] .event-workspace-back-row .event-moment-back {
-  display: inline-flex; min-width: 44px; min-height: 44px; box-sizing: border-box;
-  align-items: center; justify-content: center; gap:7px; padding: 0 12px;
-  border: 1px solid var(--color-border); border-radius: 12px;
-  background: color-mix(in srgb,var(--color-card) 80%,transparent);
-  color: var(--color-text-muted); font-size: 12px; font-weight: 700; line-height: 1.2;
+/* DN 2.1 premium Moment hero: use the EXISTING topline, never a
+   second breadcrumb row. The arrow looks 34px wide but keeps a 44px
+   accessible tap target. Scoped to the hero, not unrelated back links. */
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back {
+  position: relative; display: inline-grid; flex: 0 0 44px;
+  width: 44px; min-width: 44px; max-width: 44px;
+  height: 44px; min-height: 44px; max-height: 44px;
+  box-sizing: border-box; place-items: center; padding: 0 !important;
+  border: 0 !important; border-radius: 13px;
+  background: transparent !important; color: var(--color-text) !important;
+  text-decoration: none; box-shadow: none !important; isolation: isolate;
+  -webkit-tap-highlight-color: transparent;
 }
-html[data-theme] .event-workspace-back-row .event-moment-back:hover {
-  background: var(--color-card-raised); color: var(--color-text);
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back::before {
+  content: ''; position: absolute; inset: 5px; border-radius: 11px;
+  border: 1px solid color-mix(in srgb,var(--color-border) 65%,transparent);
+  background: color-mix(in srgb,var(--color-card-raised) 72%,transparent);
+  transition: background .16s ease, border-color .16s ease;
 }
-html[data-theme] .event-workspace-back-row .event-moment-back:focus-visible {
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back svg {
+  position: relative; z-index: 1; width: 18px; height: 18px;
+  color: var(--color-text); stroke-width: 2;
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back:hover::before,
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back:focus-visible::before {
+  border-color: color-mix(in srgb,var(--color-primary) 30%,var(--color-border));
+  background: color-mix(in srgb,var(--color-primary) 9%,var(--color-card));
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back:focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-moment-hero-swipe .event-moment-topline .event-moment-back::before { transition: none; }
 }
 html[data-theme] .event-moment-topline { justify-content: flex-end; }
 html[data-theme] .event-moment-content { padding-top: 0; }

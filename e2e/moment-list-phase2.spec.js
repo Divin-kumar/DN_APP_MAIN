@@ -76,25 +76,46 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
 }
 
 
-// DN 2.1: the single-Moment back link is a real navigation control, not
-// decorative microtext. Verify touch geometry without changing Guest records.
+// DN 2.1: the back arrow lives inside the Moment hero's existing top line.
+// The 34px visual surface retains a 44px tap target, with no extra header row.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
-  test('Moment detail All moments link is readable and tappable at ' + width + 'px ' + theme, async ({ page }) => {
+  test('Moment detail back arrow is compact and inline at ' + width + 'px ' + theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto('/events/moment-one/overview');
     const back = page.getByRole('link', { name: 'All moments', exact: true });
     await expect(back).toBeVisible();
+    await expect(page.locator('.event-workspace-back-row')).toHaveCount(0);
+    await expect(page.locator('.dn-moment-hero-swipe .event-moment-topline > a.event-moment-back')).toHaveCount(1);
     const metrics = await back.evaluate((node) => {
       const bounds = node.getBoundingClientRect();
-      const text = getComputedStyle(node);
-      return { width: bounds.width, height: bounds.height, right: bounds.right,
-        fontSize: parseFloat(text.fontSize), outlineStyle: text.outlineStyle,
-        pageWidth: document.documentElement.scrollWidth };
+      const hero = node.closest('.event-moment-hero').getBoundingClientRect();
+      const kicker = node.parentElement.querySelector('.event-moment-kicker').getBoundingClientRect();
+      const greeting = node.parentElement.querySelector('.event-moment-top-actions').getBoundingClientRect();
+      const topLine = node.parentElement.getBoundingClientRect();
+      const visual = getComputedStyle(node, '::before');
+      return {
+        width: bounds.width, height: bounds.height, right: bounds.right,
+        arrowTop: bounds.top, visualInset: parseFloat(visual.top),
+        visualWidth: bounds.width - 2 * parseFloat(visual.left),
+        heroTop: hero.top, heroBottom: hero.bottom,
+        kickerLeft: kicker.left, kickerTop: kicker.top, greetingLeft: greeting.left,
+        topLineHeight: topLine.height,
+        pageWidth: document.documentElement.scrollWidth,
+      };
     });
     expect(metrics.width).toBeGreaterThanOrEqual(43.95);
+    expect(metrics.width).toBeLessThanOrEqual(44.05);
     expect(metrics.height).toBeGreaterThanOrEqual(43.95);
-    expect(metrics.fontSize).toBeGreaterThanOrEqual(12);
+    expect(metrics.height).toBeLessThanOrEqual(44.05);
+    expect(metrics.visualWidth).toBeGreaterThanOrEqual(33.9);
+    expect(metrics.visualWidth).toBeLessThanOrEqual(34.1);
+    expect(metrics.arrowTop).toBeGreaterThanOrEqual(metrics.heroTop - 1);
+    expect(metrics.arrowTop).toBeLessThanOrEqual(metrics.heroTop + 24);
+    expect(metrics.kickerLeft).toBeGreaterThanOrEqual(metrics.right);
+    expect(metrics.greetingLeft).toBeGreaterThanOrEqual(metrics.kickerLeft);
+    expect(metrics.topLineHeight).toBeLessThanOrEqual(45);
+    expect(metrics.heroBottom).toBeGreaterThan(metrics.arrowTop + 43);
     expect(metrics.right).toBeLessThanOrEqual(width + 1);
     expect(metrics.pageWidth).toBeLessThanOrEqual(width + 1);
     const before = await page.evaluate(() => [

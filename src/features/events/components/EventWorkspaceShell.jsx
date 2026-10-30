@@ -477,9 +477,6 @@ export function EventWorkspaceContent() {
 
   return (
     <div className="event-workspace-shell">
-      <div className="event-workspace-back-row">
-        <Link to="/events" className="event-moment-back"><ArrowLeft size={15} /> All moments</Link>
-      </div>
       <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
         otherActions={[
           { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
@@ -488,6 +485,10 @@ export function EventWorkspaceContent() {
       <header className={`event-moment-hero mood-${eventMood}`}>
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
+          <Link to="/events" className="event-moment-back" data-swipe-ignore
+            aria-label="All moments" title="All moments">
+            <ArrowLeft size={18} aria-hidden="true" />
+          </Link>
           <span className="event-moment-kicker" title={event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}>
             <Sparkles size={13} aria-hidden="true" /> {event.type === 'Other' ? event.customType || 'Life moment' : event.type || 'Life moment'}
           </span>
