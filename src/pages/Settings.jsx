@@ -1,4 +1,6 @@
 import { clearDnLocalData } from '../utils/storageMigration';
+import { listStateScope } from '../utils/listStateMemory';
+import { resetSavedListDefaultsForScope } from '../utils/listViewDefaults';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
@@ -553,6 +555,7 @@ export default function Settings() {
         incomes: incomeState.incomes,
       });
       await resetAllSettings(referencedValues);
+      resetSavedListDefaultsForScope(listStateScope(useAppStore.getState()));
       setTheme('dark');
       document.documentElement.dataset.theme = 'dark';
       setPrefForm({
@@ -843,7 +846,7 @@ export default function Settings() {
       <section className="settings-reset-card">
         <div>
           <strong>Restore default settings</strong>
-          <p>Reset appearance, preferences, reminders, greeting settings, and Code Lists without deleting your records.</p>
+          <p>Reset appearance, preferences, reminders, greeting settings, Code Lists and saved list defaults without deleting your records.</p>
         </div>
         <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
           <RotateCcw size={15} /> Reset all settings
