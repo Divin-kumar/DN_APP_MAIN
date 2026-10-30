@@ -1,6 +1,6 @@
 import { activityTime } from '../../utils/activityTime';
 import DebouncedFilterInput from '../common/DebouncedFilterInput';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, Pencil } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Pencil } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import SortControl from '../common/SortControl';
@@ -66,7 +66,18 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
         </span>
         <div className="dn-transaction-copy">
           <strong>{transaction.name || transaction.title || (isIncome ? 'Income' : 'Expense')}</strong>
-          <span><CalendarDays size={13} /> {dateLabel(transaction.date)}{activityTime(transaction) ? ` · ${activityTime(transaction)}` : ''} <span aria-hidden="true">·</span> {category || 'Other'} <span aria-hidden="true">·</span> {paymentMethodLabel(transaction.paymentMethod)}</span>
+          <div className="dn-transaction-card-side">
+            <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
+              {isIncome ? '+' : '−'} {money(transaction.amount)}
+            </strong>
+          </div>
+          <span className="dn-transaction-meta">
+            <span>{dateLabel(transaction.date)}{activityTime(transaction) ? ` · ${activityTime(transaction)}` : ''}</span>
+            <span aria-hidden="true" className="dn-transaction-meta-separator">·</span>
+            <span>{category || 'Other'}</span>
+            <span aria-hidden="true" className="dn-transaction-meta-separator">·</span>
+            <span>{paymentMethodLabel(transaction.paymentMethod)}</span>
+          </span>
           {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}
           {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
             <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>
@@ -78,11 +89,6 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
               </div>
             </details>
           ) : null}
-        </div>
-        <div className="dn-transaction-card-side">
-          <strong className={isIncome ? 'dn-transaction-value is-income' : 'dn-transaction-value is-expense'}>
-            {isIncome ? '+' : '−'} {money(transaction.amount)}
-          </strong>
         </div>
       </div>
     </Card>
