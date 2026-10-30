@@ -2,7 +2,7 @@ import { ArrowDown, ArrowUp } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
 import './SortControl.css';
 
-export default function SortControl({ field, direction, onFieldChange, onToggleDirection, options, label = 'Sort by', className = '', compactDirection = false }) {
+export default function SortControl({ field, direction, onFieldChange, onToggleDirection, options, label = 'Sort by', className = '', compactDirection = true }) {
   const selected = options.find((option) => option.value === field);
   const date = field === 'date', name = ['name', 'title'].includes(field), amount = field === 'amount';
   const directionLabel = direction === 'asc' ? (date ? 'Oldest first' : name ? 'A–Z' : amount ? 'Lowest first' : 'Ascending')
