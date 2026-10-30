@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-188 | Repair narrow Activity card geometry and stale review tests
+- **Regression evidence:** Previous OldVersion exact-SHA browser suite (bdcdbd7) passed 244 of 249 cases, but failed on two 320px title-width assertions, an 820px Activity card 153px height against its compact threshold, an obsolete hardcoded Guest demo version and a transient detached card during the second swipe setup.
+- **Visual correction:** Keep the 80px Activity photo column and same-line status. Trim copy top/bottom padding and gaps across widths; at 320px, reclaim horizontal pixels from copy insets, title/status gap and status-pill padding to protect a readable title without moving status to another row or shrinking text.
+- **QA corrections:** Read the current Guest tour version exported by the running app in the backup E2E; the sample data remains untouched. The reusable synthetic swipe helper retries a temporarily detached DOM snapshot during Guest scope hydration; the real product swipe implementation is unchanged. Browser checks at exact new SHA remain required to confirm both improvements.
+- **Safety:** All changes are OldVersion-only, with no main/Firebase production, data/backup, PDF, linked finances, account/Guest writes or version bump.
+
 ## CHG-20261030-187 | Calm, shared search and filter discovery rail
 - **Design problem and direction:** Search and Filters looked like unrelated controls floating above the content, creating visual noise next to the premium photo cards. Apply one restrained inline search bar with an integral Filter control instead of removing search discovery or inventing another modal. This is a cross-module treatment, not an Activities-only exception.
 - **Implementation:** ListControls now draws an inline magnifier; the search input and existing 44px Filters button form one subtly bordered 48–50px connected surface. The panel opens as a softly raised inline sheet; count/sort metadata and removable active condition chips stay visible below it. Native search field stays 16px and accessible; the actual filter/query/sort handlers and outside/portal/Escape behavior are unchanged. Applies to Moments, overall Activities, per-Moment Activities, Transactions and Insights (search-only).

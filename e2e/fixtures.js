@@ -57,8 +57,19 @@ export async function addOriginal(page, { width = 600, height = 900, count = 1 }
 }
 
 export async function swipe(page, locator, { distance = 150, vertical = 0 } = {}) {
-  await locator.scrollIntoViewIfNeeded();
-  const rect = await locator.boundingBox();
+  // Activity lists can remount between initial paint and Guest scope hydration.
+  // A detached first snapshot is not a gesture failure; retry the live locator.
+  let rect;
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    try {
+      await locator.scrollIntoViewIfNeeded({ timeout: 3000 });
+      rect = await locator.boundingBox();
+      if (rect) break;
+    } catch (error) {
+      if (attempt === 2 || !/not attached to the DOM|Element is not attached/i.test(String(error?.message))) throw error;
+    }
+  }
+  if (!rect) throw new Error('Activity card disappeared during swipe setup.');
   // Keep both ends inside the card. The old helper started rightward drags
   // near the right edge, accidentally releasing on a sibling/offscreen.
   const span = Math.min(Math.abs(distance), Math.max(12, rect.width - 64));

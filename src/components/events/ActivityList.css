@@ -145,7 +145,7 @@ html[data-theme] .activities-page .dn-v2-activity-cover-date small {
 }
 html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
   display:flex; flex:1 1 auto; flex-direction:column; justify-content:center;
-  min-width:0; gap:8px; padding:13px 12px !important;
+  min-width:0; gap:6px; padding:10px 12px !important;
 }
 html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-context { gap:5px; }
 @media(max-width:400px) {
@@ -154,6 +154,18 @@ html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .
   }
   html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
     padding:10px 9px !important;
+  }
+}
+@media(max-width:360px) {
+  /* Preserve readable title width beside status without shrinking the photo. */
+  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-copy {
+    padding:9px 5px 9px 7px !important;
+  }
+  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-title-row {
+    column-gap:5px;
+  }
+  html[data-theme] .activities-page .event-activity-content .dn-v2-activity-card .event-activity-status {
+    padding:3px 5px !important;
   }
 }
 @media(prefers-reduced-motion:reduce) {
