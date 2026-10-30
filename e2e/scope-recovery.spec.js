@@ -143,7 +143,7 @@ test('a missing Sample fixture fails closed and cannot write to the real Guest l
   await expect(page.getByRole('heading', { name: 'Activity not found' })).toHaveCount(0);
 });
 
-test('pending swipe ignores duplicates and a failed completion leaves the Activity available for retry', async ({ page }) => {
+test('pending popup completion ignores duplicates and a failed save leaves the Activity available for retry', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
@@ -158,16 +158,19 @@ test('pending swipe ignores duplicates and a failed completion leaves the Activi
     window.__dnRestoreCompletion = () => store.setState({ updateEventItem: original });
   });
   await swipe(page, card);
-  const surface = page.locator('.dn-swipe-complete').filter({ has: card });
-  await expect(surface).toHaveAttribute('aria-busy', 'true');
-  await card.focus(); await page.keyboard.press('Control+Enter');
+  const menu = page.getByRole('menu', { name: /Actions for Book a lakeside stay/ });
+  await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Saving…' })).toBeAttached();
+  await swipe(page, card);
+  await expect(menu).toHaveCount(0);
   expect(await page.evaluate(() => window.__dnCompletionCalls)).toBe(1);
   await page.evaluate(() => window.__dnFailCompletion());
-  await expect(surface).toHaveAttribute('aria-busy', 'false');
+  await expect(page.getByRole('status').filter({ hasText: 'Saving…' })).toHaveCount(0);
   await expect(page.getByRole('alert').filter({ hasText: 'Synthetic completion failure' })).toBeVisible();
   await expect(card.locator('.event-activity-status')).toHaveText('In progress');
   await page.evaluate(() => window.__dnRestoreCompletion());
   await swipe(page, card);
+  await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
   await expect(card.locator('.event-activity-status')).toHaveText('Completed');
   await expect(page).toHaveURL(/\/activities$/);
 });

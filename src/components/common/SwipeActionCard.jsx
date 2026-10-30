@@ -64,7 +64,9 @@ export default function SwipeActionCard({
     const start = gesture.current;
     gesture.current = null;
     if (!start) return;
-    // The axis-dominant threshold rejects vertical scrolls and small taps.
+    // Suppress a ghost click after any real drag, even when too short or
+    // vertical to open actions. Ordinary taps remain navigational.
+    if (Math.hypot(x - start.x, y - start.y) > 12) suppressClick.current = Date.now();
     if (!resolveSwipeGesture(start, { x, y }).action) return;
     suppressClick.current = Date.now();
     showMenu(isTouch);
@@ -155,6 +157,8 @@ export default function SwipeActionCard({
         onKeyDown={handleCardKey}
         onPointerDownCapture={(event) => {
           if (!swipeEnabled || disabled || event.pointerType === 'touch' || event.target.closest?.('[data-swipe-ignore]')) return;
+          // A new intentional press must not inherit the previous swipe's click guard.
+          suppressClick.current = 0;
           gesture.current = { x: event.clientX, y: event.clientY };
         }}
         onPointerUpCapture={(event) => {
@@ -163,6 +167,7 @@ export default function SwipeActionCard({
         onPointerCancelCapture={() => { gesture.current = null; }}
         onTouchStartCapture={(event) => {
           if (!swipeEnabled || disabled || event.target.closest?.('[data-swipe-ignore]') || event.touches.length !== 1) { gesture.current = null; return; }
+          suppressClick.current = 0;
           gesture.current = { x: event.touches[0].clientX, y: event.touches[0].clientY };
         }}
         onTouchEndCapture={(event) => {
