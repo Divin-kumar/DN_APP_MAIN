@@ -7,6 +7,8 @@ import useExpenseStore from '../store/useExpenseStore';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useTransactionManager from '../hooks/useTransactionManager';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useListViewDefaults from '../hooks/useListViewDefaults';
+import { matchesListDefaults } from '../utils/listViewDefaults';
 import useConditionFilters from '../hooks/useConditionFilters';
 import { transactionConditions } from '../utils/listConditionMigration';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions } from '../utils/transactionFilters';
@@ -35,7 +37,8 @@ export default function Financials() {
   const { expenses, loading: loadingExpense, error: expenseError, loadedFor: expenseScope, loadExpenses } = useExpenseStore();
   const { events } = useScopedMoments();
   const { saveTransaction, removeTransaction } = useTransactionManager();
-  const [filters, changeFilters] = usePersistentListState('transactions', defaultFilters, filterRules);
+  const settingsDefaults = useListViewDefaults('transactions');
+  const [filters, changeFilters, resetFilters] = usePersistentListState('transactions', settingsDefaults.filters, filterRules);
   const [editing, setEditing] = useState(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [defaultKind, setDefaultKind] = useState('expense');
@@ -59,6 +62,8 @@ export default function Financials() {
     [ready, incomes, expenses],
   );
   const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters), moments: events });
+  const canResetFilters = !matchesListDefaults(filters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
+  const restoreSavedFilters = () => { resetFilters(); conditions.restore(settingsDefaults.group); };
   const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
   // Cards and rows always describe the same cohort, including search and OR groups.
@@ -131,6 +136,7 @@ export default function Financials() {
             </div>
           </section>
           <TransactionHistory transactions={sorted} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
+            onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} />
         </section>}
       {dialogOpen ? (
