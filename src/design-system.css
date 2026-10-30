@@ -2215,13 +2215,6 @@ html[data-theme] .dn-transaction-field-hint {
   display: block; color: var(--color-text-muted);
   font-size: var(--font-caption); font-weight: 450; line-height: 1.45;
 }
-@media (max-width: 560px) {
-  html[data-theme] .dn-finance-summary-grid { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 9px; }
-  html[data-theme] .dn-finance-metric { padding: 13px; min-height: 99px; gap: 9px; border-radius: var(--radius-sm); }
-  html[data-theme] .dn-finance-metric > strong { font-size: clamp(1.02rem,4.3vw,1.3rem); }
-  html[data-theme] .dn-finance-metric-balance { grid-column: 1 / -1; min-height: 88px; }
-}
-
 /* v2.13 swipe surfaces; flat Moment list, Grid columns/galleries retained. */
 html[data-theme] .life-journey:not(.life-journey-cards) .life-journey-items { margin-left:0 !important; padding-left:0 !important; border-left:0 !important; }
 html[data-theme] .life-journey .event-story-card::before { display:none !important; content:none !important; }
@@ -2253,12 +2246,7 @@ html[data-theme] .code-list-item.is-open-delete .code-list-actions-delete { inse
 html[data-theme] .code-list-item.is-open-delete .code-list-row { transform:translateX(76px) !important; }
 @media (prefers-reduced-motion:reduce) { html[data-theme] .dn-swipe-main { transition:none !important; } }
 
-/* v2.13.1 visual corrections: all totals share one row on narrow devices. */
-html[data-theme] .dn-finance-summary-grid { grid-template-columns:repeat(3,minmax(0,1fr)) !important; gap:clamp(4px,1.3vw,12px) !important; }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric { grid-column:auto !important; min-width:0; min-height:86px; padding:clamp(7px,1.4vw,16px) !important; gap:7px; }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading { gap:4px; font-size:clamp(.61rem,1.8vw,.8rem) !important; }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading svg { width:clamp(12px,2.3vw,18px); height:clamp(12px,2.3vw,18px); }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric strong { font-size:clamp(.81rem,2.9vw,1.58rem) !important; letter-spacing:-.03em; overflow-wrap:anywhere; }
+/* Finance metric overrides are consolidated in the premium summary strip below. */
 /* Code Lists: reveal glass overlay without sliding the text card horizontally. */
 html[data-theme] .code-list-item.is-open-other .code-list-row,
 html[data-theme] .code-list-item.is-open-delete .code-list-row,
@@ -2459,41 +2447,84 @@ html[data-theme] .dn-swipe-popup-item.is-danger svg { color:var(--color-danger);
   html[data-theme] .dn-swipe-popup { animation:none !important; transition:none !important; }
 }
 
-/* v2.15.1 density pass: Finance remains a three-column one-line overview,
-   without a redundant period row or oversized empty metric-card space. */
+/* DN 2.1 Finance summary: one composed, centered three-part instrument.
+   Consolidated from successive overrides. Retain 3 columns at 320px, never
+   shrink currency to illegible text, and let exceptionally long amounts wrap
+   within their own column instead of growing the page's scroll width. */
 html[data-theme] .dn-financial-workspace .financials-content-panel {
-  gap: 10px !important;
+  gap:10px !important;
 }
-html[data-theme] .dn-finance-summary { display:block; margin:0; padding:0; }
-html[data-theme] .dn-finance-summary-grid {
-  display:grid !important;
-  grid-template-columns:repeat(3,minmax(0,1fr)) !important;
-  gap:clamp(5px,1.5vw,10px) !important;
-  min-width:0;
+html[data-theme] .dn-financial-workspace .dn-finance-summary {
+  display:block; min-width:0; margin:0; padding:0;
 }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric {
-  display:flex !important; flex-direction:column; justify-content:center;
-  align-content:center; gap:3px !important;
-  grid-column:auto !important; min-height:0 !important;
-  margin:0; padding:9px clamp(7px,1.25vw,12px) !important;
-  border-radius:12px !important;
-  background:color-mix(in srgb,var(--color-card) 94%,var(--color-primary) 6%) !important;
-  border:1px solid var(--color-border);
+html[data-theme] .dn-financial-workspace .dn-finance-summary > .moment-finance-caption {
+  display:block; margin:0 0 7px; text-align:center;
+  color:var(--color-text-muted); font-size:10px; font-weight:650;
+  letter-spacing:.075em; line-height:1.3;
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid {
+  display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
+  gap:0 !important; min-width:0; overflow:hidden;
+  border:1px solid color-mix(in srgb,var(--color-primary) 12%,var(--color-border));
+  border-radius:17px;
+  background:linear-gradient(150deg,
+    color-mix(in srgb,var(--color-primary) 3%,var(--color-card)),
+    var(--color-card) 60%,
+    color-mix(in srgb,var(--color-primary) 2%,var(--color-card)));
+  box-shadow:0 5px 19px color-mix(in srgb,var(--color-text) 6%,transparent);
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric {
+  position:relative; display:flex !important; flex-direction:column;
+  align-items:center !important; justify-content:center;
+  gap:7px !important; box-sizing:border-box; grid-column:auto !important;
+  min-width:0; min-height:81px !important; margin:0;
+  padding:12px 5px !important; text-align:center;
+  border:0 !important; border-radius:0 !important; background:transparent !important;
   box-shadow:none !important;
 }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading {
-  display:flex; align-items:center; gap:4px !important; min-width:0;
-  font-size:clamp(.64rem,1.6vw,.79rem) !important;
-  line-height:1.1; white-space:nowrap;
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric + .dn-finance-metric::before {
+  content:""; position:absolute; top:18px; bottom:18px; left:0;
+  width:1px; background:color-mix(in srgb,var(--color-text-muted) 13%,transparent);
 }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading svg {
-  width:14px !important; height:14px !important;
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-balance {
+  background:linear-gradient(140deg,
+    color-mix(in srgb,var(--color-primary) 7%,transparent),
+    color-mix(in srgb,var(--color-primary) 2%,transparent)) !important;
 }
-html[data-theme] .dn-finance-summary-grid .dn-finance-metric > strong {
-  font-size:clamp(.78rem,2.7vw,1.3rem) !important;
-  font-weight:740; line-height:1.25; letter-spacing:-.02em;
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-heading {
+  display:inline-flex; justify-content:center; align-items:center;
+  align-self:center; gap:4px !important; max-width:100%; min-width:0;
+  font-size:clamp(10px,2.4vw,12px) !important; font-weight:640;
+  line-height:1.3; text-align:center; white-space:nowrap;
+  color:var(--color-text-muted);
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-heading svg {
+  width:13px !important; height:13px !important; flex:0 0 13px;
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric > strong {
+  display:block; width:100%; max-width:100%; min-width:0;
+  margin:0; padding:0; text-align:center; white-space:normal;
+  font-size:clamp(14px,3.5vw,19px) !important; font-weight:760;
+  line-height:1.24; letter-spacing:-.035em;
   font-variant-numeric:tabular-nums;
-  overflow-wrap:anywhere; min-width:0;
+  overflow:visible; overflow-wrap:anywhere; word-break:normal;
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-balance > strong {
+  font-weight:810; color:var(--color-text);
+}
+html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-balance.is-negative > strong {
+  color:var(--color-danger);
+}
+@media(max-width:360px) {
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric {
+    padding:11px 3px !important; gap:6px !important;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-heading {
+    gap:3px !important; font-size:10px !important;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric-heading svg {
+    width:12px !important; height:12px !important; flex-basis:12px;
+  }
 }
 /* Finance list header: one clean title, no redundant add CTA or subtitle. */
 html[data-theme] .dn-transactions-page { gap:10px !important; }
@@ -2570,15 +2601,6 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line {
     width:44px !important; padding:0 !important;
   }
 }
-@media (max-width:360px) {
-  html[data-theme] .dn-finance-summary-grid .dn-finance-metric {
-    padding:8px 5px !important;
-  }
-  html[data-theme] .dn-finance-summary-grid .dn-finance-metric-heading {
-    font-size:.62rem !important;
-  }
-}
-
 /* DN shared rich notes: string-compatible Markdown, growing editors and safe previews. */
 html[data-theme] .dn-rich-editor { display:grid; min-width:0; width:100%; gap:7px; }
 html[data-theme] .dn-rich-editor-label { display:block; color:var(--color-text); font-size:var(--font-body); font-weight:600; }
