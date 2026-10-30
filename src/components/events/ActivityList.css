@@ -28,20 +28,24 @@ html[data-theme] .event-activity-content .event-activity-filter-empty { grid-col
   html[data-theme] .event-activity-content .event-activity-progress > div { flex-wrap:wrap; white-space:normal; gap:2px 5px; }
 }
 
-/* Compact Activities overview: status uses the same restrained corner treatment as Moments.
-   Priority and menus are intentionally exclusive to Detail, keeping the card a single clear tap target. */
+/* Overall Activities: full-width titles with a naturally flowing, readable status.
+   Status is descriptive metadata, not a separate 44px action. */
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-main { padding-right:12px !important; }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row { position:static; display:block; }
+html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row {
+  position:static; display:grid; grid-template-columns:minmax(0,1fr); justify-items:start; gap:4px; min-width:0;
+}
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-title-row > strong {
-  display:block; max-width:100%; padding-right:94px; min-height:22px;
-  font-size:14px !important; font-weight:650; line-height:1.45;
+  display:-webkit-box; width:100%; max-width:100%; min-width:0; min-height:0; padding-right:0;
+  overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:3; line-clamp:3;
+  white-space:normal; text-overflow:clip; overflow-wrap:anywhere;
+  font-size:15px !important; font-weight:690; line-height:1.4;
 }
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status {
-  position:absolute; top:10px; right:10px; z-index:1; display:inline-flex;
-  max-width:94px; min-height:0; padding:4px 7px !important;
+  position:static; inset:auto; z-index:auto; justify-self:start; display:inline-flex;
+  max-width:100%; min-height:22px; padding:3px 8px !important;
   border:1px solid var(--color-border); border-radius:999px;
   background:var(--color-card-raised); color:var(--color-text-muted) !important;
-  font-size:9px !important; line-height:1.15; font-weight:650; letter-spacing:.015em;
+  font-size:11px !important; line-height:1.2; font-weight:650; letter-spacing:0;
   text-transform:none; white-space:nowrap;
 }
 html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-status.complete {
@@ -77,7 +81,7 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
   text-overflow:clip;
   overflow-wrap:anywhere;
   color:var(--color-text) !important;
-  font-size:11px;
+  font-size:12px;
   font-weight:550;
   line-height:1.4;
 }
@@ -85,4 +89,5 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
   justify-self:start;
   text-align:left;
   color:var(--color-text-muted);
+  font-size:11px;
 }

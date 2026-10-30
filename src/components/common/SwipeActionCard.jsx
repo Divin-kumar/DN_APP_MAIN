@@ -170,6 +170,16 @@ export default function SwipeActionCard({
           suppressClick.current = 0;
           gesture.current = { x: event.clientX, y: event.clientY };
         }}
+        onPointerMoveCapture={(event) => {
+          if (!gesture.current || !swipeEnabled || disabled || event.pointerType === 'touch') return;
+          // Capture only after a drag begins, so releasing beyond the card edge
+          // still delivers pointerup without taking over ordinary taps.
+          if (Math.hypot(event.clientX - gesture.current.x, event.clientY - gesture.current.y) > 12) {
+            try {
+              if (!event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.setPointerCapture(event.pointerId);
+            } catch { /* Pointer capture is optional. */ }
+          }
+        }}
         onPointerUpCapture={(event) => {
           if (swipeEnabled && !disabled && event.pointerType !== 'touch') finishGesture(event.clientX, event.clientY, false);
         }}

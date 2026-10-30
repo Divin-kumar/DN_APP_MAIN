@@ -17,7 +17,8 @@ test('compact Activities list shows status but no priority, menu or Moment hyper
   expect((await momentName.boundingBox()).height).toBeGreaterThan(10);
   expect(await momentName.evaluate((node) => getComputedStyle(node).pointerEvents)).not.toBe('none');
   await expect(page).toHaveURL(/\/activities$/);
-  await expect(page.locator('.event-activity-status').first()).toHaveCSS('font-size', '9px');
+  await expect(page.locator('.event-activity-status').first()).toHaveCSS('font-size', '11px');
+  await expect(card.locator('.event-activity-title-row > strong')).toHaveCSS('white-space', 'normal');
   await card.click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await expect(page.getByRole('link', { name: 'Back to Activities' })).toHaveAttribute('href', '/activities');

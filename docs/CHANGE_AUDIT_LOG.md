@@ -4,6 +4,15 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-172 | Make Activity cards readable without shrinking titles; harden pointer swipes
+- **Finding:** /activities sacrificed 94px to a 9px floating status, truncating Activity titles. The newest CHG-171 branch CI also had eight browser swipe or legacy object-shape assertion failures.
+- **UI:** Scope full-width, up-to-three-line 15px titles, a natural-flow 11px status pill, 12px parent Moment and 11px date/time to overall Activities. No priority/menu badges or new click actions. Home, Moment workspace and Detail visual styles stay unchanged.
+- **Interaction:** Shared swipe cards capture mouse/pen drag pointers only after the 12px threshold, so release outside the card still reaches the popup gesture handler. Ordinary tap and touch paths, keyboard, both-direction action choices and Delete confirmation remain intact.
+- **Downstream:** No modified status handlers, filters/sort, records, account/Guest boundaries, finance, originals, Story/PDF or backup v3. Existing owner-Moment mutations normalize missing legacy fields on sibling Activities; browser assertions compare sibling semantic identity/status/values/expenses without hiding data changes.
+- **Guest demo:** Existing Tour Moments and mixed Activity statuses suffice; no demo edition change or automatic reset.
+- **Verification:** Updated previous 9px browser contract and added six 320/390/430px dark/light layout, navigation, shared-view isolation, gesture and unchanged-source checks. Re-run exact-SHA unit, lint, Chromium, build, offline/PDF, upgrade, documentation and Vercel gate after push; physical Safari/VoiceOver and real account cloud unverified.
+- **Safety:** OldVersion only; no main, Firebase, version or data migration changes.
+
 ## CHG-20261030-171 | Unify iPhone Activity swipes into explicit, direction-neutral popup actions
 - **Reason:** Activity overview and Home still completed/reopened a record on a left drag, contrary to the owner's desired same lightweight action popup for both swipe directions across DN. Accidental completion was possible.
 - **Change:** Replace completion-on-drag wrappers on overall Activities and Home with the existing SwipeActionCard action popup in either direction. Offer Edit only for editable records, Complete/Reopen, Cancel/Restore and confirmation-gated Delete; retain ordinary tap-to-Detail, menu-free overall Activity card visuals, Home's keyboard-accessible options button and Left/Right Arrow menu access on overall cards. Make the otherwise dormant overall editor reachable and remove title autofocus on phone widths.

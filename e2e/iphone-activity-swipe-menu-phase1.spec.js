@@ -64,7 +64,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const after = await stored();
     expect(after.slice(1)).toEqual(original.slice(1));
     const beforeMoments = JSON.parse(original[0]), afterMoments = JSON.parse(after[0]);
-    expect(afterMoments[0].activities.slice(1)).toEqual(beforeMoments[0].activities.slice(1));
+    // Existing owner-Moment saves fill absent legacy defaults, but must retain sibling records' business meaning.
+    const business = (a) => ({
+      id: a.id, title: a.title, date: a.date, priority: a.priority,
+      completed: Boolean(a.completed), cancelled: Boolean(a.cancelled), expenses: a.expenses || [],
+    });
+    expect(afterMoments[0].activities.slice(1).map(business))
+      .toEqual(beforeMoments[0].activities.slice(1).map(business));
     expect(afterMoments.slice(1)).toEqual(beforeMoments.slice(1));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     expect(errors).toEqual([]);
