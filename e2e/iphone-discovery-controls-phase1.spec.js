@@ -86,7 +86,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const rule = page.locator('.dn-transactions-page .dn-condition-rule').last();
     await expect(rule).toBeVisible();
     // A brand-new rule has no value control yet. Choose a real field before
-    // checking the second-row alignment of Comparison and Value.
+    // checking the shared single-line alignment of all four controls.
     await rule.getByRole('combobox', { name:'Filter by', exact:true }).click();
     await page.getByRole('option', { name:'Title', exact:true }).click();
     await expect(rule.getByRole('textbox', { name:'Value for Title' })).toBeVisible();
@@ -99,9 +99,8 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         inside:parts.every((part) => part.left >= box.left-1 && part.right <= box.right+1),
         pageWidth:document.documentElement.scrollWidth };
     });
-    expect(geometry.comparisonTop).toBeGreaterThan(geometry.fieldTop + 22);
-    expect(Math.abs(geometry.valueTop-geometry.comparisonTop)).toBeLessThanOrEqual(4);
-    expect(Math.abs(geometry.removeTop-geometry.fieldTop)).toBeLessThanOrEqual(4);
+    expect(Math.max(geometry.fieldTop, geometry.comparisonTop, geometry.valueTop, geometry.removeTop) -
+      Math.min(geometry.fieldTop, geometry.comparisonTop, geometry.valueTop, geometry.removeTop)).toBeLessThanOrEqual(4);
     expect(geometry.removeWidth).toBeGreaterThanOrEqual(43.9);
     expect(geometry.removeHeight).toBeGreaterThanOrEqual(43.9);
     expect(geometry.inside).toBe(true);
