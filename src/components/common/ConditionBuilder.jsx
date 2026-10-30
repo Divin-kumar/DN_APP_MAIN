@@ -8,6 +8,15 @@ import './ConditionBuilder.css';
 
 const newId = () => globalThis.crypto?.randomUUID?.() || `node-${Date.now()}-${Math.random()}`;
 const blankRule = () => ({ id: newId(), kind: 'rule', field: '', operator: 'contains', value: '' });
+// The selected comparison is deliberately concise on phones; dropdown choices
+// retain their full descriptive labels, and the saved operator never changes.
+const conciseOperatorLabels = Object.freeze({
+  eq: 'Is', ne: 'Not', contains: 'Has', not_contains: 'Excludes',
+  gt: '>', gte: '≥', lt: '<', lte: '≤', between: 'Range',
+  starts: 'Starts', ends: 'Ends', any_of: 'Any', none_of: 'None',
+  empty: 'Blank', not_empty: 'Set', today: 'Today',
+  this_week: 'Week', this_month: 'Month', this_year: 'Year',
+});
 function DebouncedValue({ value, onChange, immediate = false, ...props }) {
   const [draft, setDraft] = useState(value ?? '');
   const notify = useRef(onChange); notify.current = onChange;
@@ -72,7 +81,7 @@ function RuleEditor({ node, schema, onEdit, onRemove }) {
     <DropdownSelect aria-label="Comparison" value={node.operator} disabled={!field} placeholder="Choose a comparison"
       onChange={(event) => onEdit({ ...node, operator: event.target.value, value: ['between', 'any_of', 'none_of'].includes(event.target.value) ? [] : '' })}>
       {!operators.some(([operator]) => operator === node.operator) ? <option value={node.operator}>Unavailable comparison</option> : null}
-      {operators.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+      {operators.map(([value, label]) => <option key={value} value={value} data-short-label={conciseOperatorLabels[value] || label}>{label}</option>)}
     </DropdownSelect>
     <div className="dn-condition-value-slot">{field ? <ValueEditor key={`${node.field}:${node.operator}`} node={node} field={field}
       onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} />
