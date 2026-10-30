@@ -284,23 +284,158 @@ html[data-theme] .dn-list-controls-panel {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) :is(.dn-list-controls-search,.dn-list-controls-trigger) { transition:none; }
 }
-
-/* Clear separation inside Refine, without changing the search line. */
+/* Shared Refine composition for Moments, Activities, workspace Activities,
+   Transactions and any other ListControls consumer. Sorting is the first row:
+   an intrinsic-width field at left, lightweight direction and Reset at right.
+   44px hit targets are retained without oversized visual buttons. */
+html[data-theme] .dn-list-controls-panel:has(.dn-list-controls-builder) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 4px;
+  min-width: 0;
+  margin: 0 0 8px;
+  padding: 0 0 7px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 66%, transparent);
+}
 html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row {
-  margin-top:8px; padding:9px 0 4px;
-  border-top:1px solid color-mix(in srgb,var(--color-border) 67%,transparent);
+  flex: 1 1 auto;
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: visible;
 }
-html[data-theme] .dn-list-controls-panel .dn-list-controls-reset-row {
-  justify-content:flex-end; min-height:40px;
+html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row > .dn-list-controls-field {
+  display: flex;
+  flex: 1 1 auto;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  padding: 0;
 }
-html[data-theme] .dn-list-controls-panel .dn-list-controls-reset {
-  min-height:40px; padding:0 10px;
-  font-size:12px; font-weight:600;
+html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row .sort-control.dn-user-sort {
+  display: flex !important;
+  align-items: center;
+  width: 100% !important;
+  max-width: none;
+  min-width: 0;
+  gap: 4px;
 }
-@media(max-width:640px) {
-  html[data-theme] .dn-list-controls-panel {
-    max-height:min(460px,56svh);
-    overflow-y:auto;
-    overscroll-behavior-y:contain;
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort > .dropdown-field {
+  display: inline-flex;
+  flex: 0 1 auto;
+  width: max-content;
+  max-width: 100%;
+  min-width: 0;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort .dropdown-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  gap: 5px;
+  padding: 0 9px !important;
+  border: 1px solid color-mix(in srgb, var(--color-border) 72%, transparent) !important;
+  border-radius: 11px !important;
+  background: color-mix(in srgb, var(--color-card) 84%, var(--color-surface)) !important;
+  box-shadow: none !important;
+  color: var(--color-text);
+  font-size: 12px !important;
+  font-weight: 650;
+  white-space: nowrap;
+  overflow: hidden;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort .dropdown-trigger > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-sort-direction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  margin-left: auto;
+  min-width: 53px;
+  min-height: 44px;
+  gap: 3px;
+  padding: 0 5px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 650;
+  box-shadow: none;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-sort-direction > svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset-row {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+  min-width: 0;
+  min-height: 44px;
+  margin-left: 0;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 46px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 600;
+  box-shadow: none;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):not(:disabled):is(:hover,:focus-visible) {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset:disabled {
+  opacity: .4;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-builder {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+@media (max-width: 640px) {
+  html[data-theme] .dn-list-controls-panel:has(.dn-list-controls-builder) {
+    max-height: min(460px, 56svh);
+  }
+}
+@media (max-width: 360px) {
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line { gap: 2px; }
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort .dropdown-trigger { padding-inline: 7px !important; }
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-sort-direction { min-width: 50px; padding-inline: 3px; }
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset { min-width: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dropdown-trigger,.dn-sort-direction,.dn-list-controls-reset) {
+    transition: none;
   }
 }
