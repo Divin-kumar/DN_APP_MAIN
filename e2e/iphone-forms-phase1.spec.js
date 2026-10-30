@@ -60,3 +60,41 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     expect(errors).toEqual([]);
   });
 }
+
+
+for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
+  test('Story introduction opens without an unwanted phone keyboard at ' + width + 'px ' + theme, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/events/moment-one/overview');
+    const introduction = page.getByRole('region', { name: 'Moment introduction' });
+    const action = introduction.getByRole('button', { name: 'Add introduction' });
+    await expect(action).toBeVisible();
+    const target = await action.boundingBox();
+    expect(target.height).toBeGreaterThanOrEqual(44);
+    expect(target.width).toBeGreaterThanOrEqual(44);
+    expect(target.x + target.width).toBeLessThanOrEqual(width + 1);
+    const before = await page.evaluate(() => [
+      'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
+    ].map((key) => localStorage.getItem(key)));
+
+    await action.click();
+    const dialog = page.getByRole('dialog', { name: 'Edit event notes' });
+    const editor = dialog.getByRole('textbox', { name: 'Moment notes' });
+    await expect(editor).toBeVisible();
+    await expect(editor).not.toBeFocused();
+    const size = await editor.evaluate((node) => parseFloat(getComputedStyle(node).fontSize));
+    expect(size).toBeGreaterThanOrEqual(16);
+    await editor.click();
+    await expect(editor).toBeFocused();
+    await editor.fill('Unsaved phone introduction draft');
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    const after = await page.evaluate(() => [
+      'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
+    ].map((key) => localStorage.getItem(key)));
+    expect(after).toEqual(before);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}

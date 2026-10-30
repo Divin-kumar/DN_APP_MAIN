@@ -16,7 +16,7 @@ html[data-theme] .dn-v2-story-intro {display:grid;gap:13px;min-width:0;padding:c
 html[data-theme] .dn-v2-story-intro-head {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;}
 html[data-theme] .dn-v2-story-intro-head h4 {display:flex;align-items:center;gap:8px;margin:0;color:var(--color-text);font-size:.89rem;}
 html[data-theme] .dn-v2-story-intro-head svg {color:var(--color-primary);}
-html[data-theme] .dn-v2-story-intro-head button {display:inline-flex;align-items:center;gap:6px;min-height:40px;padding:7px 10px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-card-raised);color:var(--color-primary);font-size:.75rem;font-weight:730;cursor:pointer;}
+html[data-theme] .dn-v2-story-intro-head button {display:inline-flex;align-items:center;gap:6px;min-height:44px;padding:9px 10px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-card-raised);color:var(--color-primary);font-size:.75rem;font-weight:730;cursor:pointer;}
 html[data-theme] .dn-v2-story-intro-head button:focus-visible,
 html[data-theme] .dn-v2-story a:focus-visible {outline:2px solid var(--color-primary);outline-offset:3px;}
 html[data-theme] .dn-v2-story-intro>p {margin:0;color:var(--color-text-muted);line-height:1.6;font-size:.81rem;}

@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-180 | Keep the iPhone Story introduction keyboard intentional
+- **Phase 1 continuation:** The Moment Story Add/Edit introduction control remained a 40px-high tap target. Its editor also passed unconditional autofocus to TipTap, opening the phone keyboard immediately instead of letting the user choose when to write.
+- **Change:** Increase introduction action minimum height from 40px to 44px and limit its existing rich-text autofocus to widths above 760px, matching the approved mobile-first form convention. Do not alter editor content, formatting, modal focus trap, Close/Cancel/Save behavior, or desktop autofocus.
+- **Regression coverage:** Add six synthetic 320/390/430px light/dark cases verifying action geometry, no unintended writing focus, accessible explicit editor focus with >=16px font, Cancel without mutations, no overflow and no browser errors. Test data uses the existing Guest fixture; no new demo scenario, Guest tour version change or automatic reset.
+- **Safety/downstream:** Only Story introduction CSS, one autofocus prop and regression tests. No change to status/swipes, dates, record persistence, account/Guest isolation, transactions, originals, PDF, backup v3, release version or main/Firebase. Full exact-SHA Node, lint, browser, build/offline/PDF, upgrade and documentation CI plus Vercel review remain required; installed iPhone and cloud-account QA remain unverified.
+
 ## CHG-20261030-179 | Make the Moments card actions a full iPhone tap target
 - **Next Phase 1 audit finding:** The narrow-phone Moments discovery card's existing top-right actions trigger measured only 34px wide and 40px tall in the source CSS at <=400px; wider screens used 38x38. This falls short of the app's 44px target guidance and echoes the owner's earlier concern about undersized Moment controls.
 - **Change:** Increase the control to 44x44px at all widths and reserve 49px on narrow cards (52px otherwise) for the action, retaining the existing cover, title, status, date and latest Activity layout. No new icons, gesture paths or backend/data behavior. The existing menu keeps its action choices and explicit confirmation safeguards.
