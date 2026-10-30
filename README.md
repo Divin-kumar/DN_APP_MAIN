@@ -9,6 +9,12 @@ Approved changes are committed and pushed to `OldVersion` for owner review throu
 - [Agent rules](AGENTS.md) — authorization, development and documentation workflow.
 - [Change log](docs/CHANGE_AUDIT_LOG.md) — latest changes first; verification and release history.
 
+## DN 2.1 version reconciliation (30 October 2026)
+
+The permanent Firebase app is **owner-reported v2.0.5**; the checked-in `OldVersion` review source is **v2.0.3**. The current Vercel review represents newer, as-yet-unreleased changes on that branch, not an assertion of production code parity. The legacy `npm run deploy:hosting` increments the source patch version before each manual Firebase deployment: from committed v2.0.3 it would produce v2.0.4, **older than the reported live version**. Do not run that path until a separately authorized release version and production source comparison are established. Do not change `main` or publish Firebase to resolve the label mismatch.
+
+The read-only comparison script `node scripts/audit-live-builds.mjs` inspects public `index.html` and `sw.js` for Firebase and the `OldVersion` Vercel preview and prints versions, shell build IDs and entry asset identity. The OldVersion CI workflow also reports those findings without deploying or accessing Guest/account data. A mismatch (or failed fetch) is an **unverified source parity gate**, not permission to overwrite live. See [master](docs/MASTER_SOURCE_OF_TRUTH.md) and [CHG-20261030-163](docs/CHANGE_AUDIT_LOG.md).
+
 ## Run locally
 
 Use the current Node.js 22 release (22.12 or newer) and npm. The package, Vercel runtime selection and all CI workflows use Node 22; the dependency follow-up was verified locally on 22.23.4. Install locked dependencies:
