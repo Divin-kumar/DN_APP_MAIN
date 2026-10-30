@@ -28,7 +28,7 @@ import { activityCancellationPatch, activityCompletionPatch, activityDetailPath,
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { assertActivityEditable, isRecordScopeLoaded } from '../utils/scopedRecordActions';
-import { ACTIVITY_FILTERS as FILTERS, ACTIVITY_SORTS as SORTS, ACTIVITY_LIST_RULES as RULES } from '../utils/activityListState';
+import { ACTIVITY_SORTS as SORTS, ACTIVITY_LIST_RULES as RULES } from '../utils/activityListState';
 
 const EMPTY = Object.freeze([]);
 const scopeKey = ({ user, isGuest }) => `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
