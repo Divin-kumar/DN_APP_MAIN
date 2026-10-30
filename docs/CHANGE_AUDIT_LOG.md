@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-196 | Align Insights JSON export test with reconciled nested expenses
+- **Observed CI:** OldVersion `0bd0cff` completed 285/286 Chromium browser cases successfully; its lone failure was an overly restrictive new Insights export test expecting only two expenses, while the complete Guest ledger legitimately includes the third, nested-only Parking expense. The export itself correctly produced all three and left stored Guest data intact.
+- **Repair:** Assert the three stable IDs (duplicate, nested-only and other), and use the direct existing Node `readFile` API instead of an unnecessary dynamic-import conditional. Application code, exported JSON contents, user records and visual design are unchanged.
+- **Verification boundary:** This expectation repair is based on exact CI failure output. A new exact-SHA CI run is needed to validate the fix alongside the preceding Finance summary redesign. OldVersion only; no production/main changes.
+
 ## CHG-20261030-195 | Premium centered Finance summary, self-directed visual ownership
 - **Owner direction:** Prioritize the Transactions Income/Expense/Balance trio, not further Insights work. Take proactive responsibility for identifying dated UI across the product rather than requiring item-by-item visual defect reports from the owner.
 - **Source audit:** Earlier finance rules still contained a now-obsolete two-column narrow-phone rule, multiple later three-column patches and a stale 360px override. Consolidated the hierarchy into a single, main-Finance-scoped summary strip with three centered segments, very subtle dividers, softened glass-like surface and an accented Balance segment. The label and value are truly center-aligned rather than merely three cards positioned side by side. Compact density and all three cells in one row remain mandatory.

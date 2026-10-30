@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
 import { seedGuest } from './fixtures.js';
 
 // Chromium geometry catches regressions but does not prove installed iPhone Safari.
@@ -76,11 +77,12 @@ test('Insights Export is still a complete JSON report and does not alter Guest r
   await page.getByRole('button', { name:'Export Insights data' }).click();
   const report = await download;
   expect(report.suggestedFilename()).toMatch(/^dn-insights-\d{4}-\d{2}-\d{2}\.json$/);
-  const content = JSON.parse((await import('node:fs/promises')).readFile
-    ? await (await import('node:fs/promises')).readFile(await report.path(), 'utf8') : '{}');
+  const content = JSON.parse(await readFile(await report.path(), 'utf8'));
   expect(content.overview).toHaveProperty('events',2);
   expect(content.incomes).toHaveLength(1);
-  expect(content.expenses).toHaveLength(2);
+  // Export includes the nested-only expense in the reconciled Guest ledger.
+  expect(content.expenses).toHaveLength(3);
+  expect(content.expenses.map((item) => item.id).sort()).toEqual(['duplicate','nested-only','other']);
   expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
     .map((key) => localStorage.getItem(key)))).toEqual(before);
   expect(errors).toEqual([]);
