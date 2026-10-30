@@ -13,7 +13,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       category: 'Other',
       date: '2026-10-' + String(1 + (index % 28)).padStart(2, '0'),
     }));
-    const errors = await seedGuest(page, { moments: [], expenses });
+    const errors = await seedGuest(page, { moments: [], incomes: [], expenses });
     await page.goto('/financials/transactions');
 
     const results = page.locator('.dn-financial-workspace .dn-transactions-results');
