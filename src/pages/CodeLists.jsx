@@ -13,6 +13,7 @@
  * - keep the app aligned with each user's terminology and personal setup
  */
 import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
+import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -254,7 +255,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   };
 
   return (
-    <section className={`settings-section code-list-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
+    <section id={`code-list-${listKey}`} className={`settings-section code-list-section dn-code-list-editor-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
       <div className="settings-section-heading">
         <span className="settings-accordion-icon"><Hash size={18} /></span>
         <div>
@@ -424,14 +425,14 @@ function PaymentMethodsSection() {
     incomes.loadIncomes(uid, isGuest);
     expenses.loadExpenses(uid, isGuest);
   }, [uid, isGuest, incomes.loadIncomes, expenses.loadExpenses]);
-  if (incomes.error || expenses.error) return <section className="settings-section" role="alert">
+  if (incomes.error || expenses.error) return <section id="code-list-paymentMethods" className="settings-section" role="alert">
     <h3>Payment Methods</h3>
     <p>Transactions could not be loaded to check which methods are in use.</p>
     <button type="button" className="settings-secondary-button" onClick={() => {
       incomes.loadIncomes(uid, isGuest); expenses.loadExpenses(uid, isGuest);
     }}>Retry loading payment methods</button>
   </section>;
-  if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section className="settings-section" role="status">Loading payment methods…</section>;
+  if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section id="code-list-paymentMethods" className="settings-section" role="status">Loading payment methods…</section>;
   return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" />;
 }
 
@@ -583,7 +584,7 @@ export default function CodeLists() {
   };
 
   return (
-    <div className="feature-page settings-page about-page code-lists-page">
+    <div className="feature-page settings-page about-page code-lists-page dn-premium-code-lists">
       <header className="settings-subpage-header">
         <button type="button" className="settings-back-button" onClick={() => navigate('/settings')} aria-label="Back to Settings">
           <ArrowLeft size={16} />
@@ -605,6 +606,20 @@ export default function CodeLists() {
         </section>
       ) : null}
       {!adminValuesLoading && !adminValuesError ? <>
+        <nav className="dn-code-list-index" aria-label="Code List sections">
+          <span className="dn-code-list-index-label">Browse</span>
+          <div className="dn-code-list-index-scroll">
+            {[
+              { id: "code-list-eventTypes", title: "Moment Types" },
+              { id: "code-list-expenseCategories", title: "Expense Categories" },
+              { id: "code-list-incomeTypes", title: "Income Types" },
+              { id: "code-list-paymentMethods", title: "Payment Methods" },
+              { id: "code-list-activityPriorities", title: "Activity Priorities" },
+              { id: "code-list-reminderPresets", title: "Reminder Presets" },
+              { id: "list-order", title: "Sorting & filters" },
+            ].map(({ id, title }) => <a key={id} href={`#${id}`}>{title}</a>)}
+          </div>
+        </nav>
         <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Choose each type’s Story presentation, greeting generation, and separate Dashboard visibility for Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
