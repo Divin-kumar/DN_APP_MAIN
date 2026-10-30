@@ -2,6 +2,14 @@ import { test, expect } from '@playwright/test';
 import { seedGuest, swipe } from './fixtures.js';
 
 // Synthetic Chromium drag QA is not native installed-iPhone gesture evidence.
+
+async function swipeRight(page, row) {
+  await row.scrollIntoViewIfNeeded();
+  const box = await row.boundingBox();
+  const x = box.x + 32, y = box.y + 24;
+  await page.mouse.move(x, y); await page.mouse.down();
+  await page.mouse.move(x + 125, y, { steps: 8 }); await page.mouse.up();
+}
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
   test('Activities explicit swipe popup ' + width + 'px ' + theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
@@ -30,7 +38,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await confirmation.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(await stored()).toEqual(original);
 
-    await swipe(page, row, { distance: -140 });
+    await swipeRight(page, row);
     await expect(menu).toBeVisible();
     await menu.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Edit activity' });
@@ -42,7 +50,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await swipe(page, row, { distance: 140 });
     await menu.getByRole('menuitem', { name: 'Cancel', exact: true }).click();
     await expect(row.locator('.event-activity-status')).toHaveText('Cancelled');
-    await swipe(page, row, { distance: -140 });
+    await swipeRight(page, row);
     await expect(menu.getByRole('menuitem', { name: 'Restore', exact: true })).toBeVisible();
     await expect(menu.getByRole('menuitem', { name: 'Complete', exact: true })).toHaveCount(0);
     await menu.getByRole('menuitem', { name: 'Restore', exact: true }).click();
