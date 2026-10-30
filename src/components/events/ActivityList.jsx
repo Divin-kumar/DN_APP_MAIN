@@ -10,7 +10,7 @@ import './ActivityList.css';
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
   showCancelled = false, includeCancelled = false, hasActiveFilters = false, getActivityKey = (activity) => activity.id,
-  getEventName, getMoment, visualCards = false, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
+  getEventName, getMoment, visualCards = false, showMomentName = true, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
     : <div className="event-activity-empty"><span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
@@ -54,7 +54,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
               <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}`}>{activityStatusLabel(activity)}</span>
             </div>
-            <div className="event-activity-context"><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i><span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
+            <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
           </div></div>
         </SwipeActionCard>;
         return card;
