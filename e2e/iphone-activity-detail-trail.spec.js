@@ -40,7 +40,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
       await link.click();
-      await expect(page).toHaveURL(/\\/events\\/moment-one\\/activities$/);
+      await expect(page).toHaveURL(/moment-one.*activities$/);
+      expect(new URL(page.url()).pathname).toBe('/events/moment-one/activities');
       expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)))).toEqual(before);
       expect(errors).toEqual([]);
