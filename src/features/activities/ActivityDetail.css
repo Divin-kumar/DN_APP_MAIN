@@ -132,3 +132,44 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   margin-top:19px; padding-top:17px;
   border-top:1px solid var(--color-border);
 }
+
+/* DN 2.1: Activity Detail parent trail, readable hero heading and quiet metadata.
+   Scoped to the detail page so photo-led list cards and Moment headers remain untouched. */
+.activity-detail-page .activity-parent-context {
+  display:flex; align-items:center; flex-wrap:nowrap; gap:7px;
+  width:100%; max-width:100%; min-height:44px; margin:-6px 0 -6px;
+  color:var(--color-text-muted); overflow:visible;
+}
+.activity-detail-page .activity-parent-context-type {
+  flex:0 1 auto; max-width:35%; min-width:0; overflow:hidden;
+  text-overflow:ellipsis; white-space:nowrap; font-size:10px;
+  font-weight:750; letter-spacing:.065em; line-height:1.25; text-transform:uppercase;
+}
+.activity-detail-page .activity-parent-context > svg {
+  flex:0 0 auto; opacity:.58;
+}
+.activity-detail-page .activity-parent-context-link {
+  display:inline-flex; align-items:center; flex:0 1 auto; min-width:0;
+  min-height:44px; padding:0 2px; color:var(--color-text-muted);
+  text-decoration:none; font-size:12px; font-weight:600; line-height:1.4;
+}
+.activity-detail-page .activity-parent-context-link span {
+  display:block; min-width:0; overflow:hidden; white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.activity-detail-page .activity-parent-context-link:hover { color:var(--color-text); }
+.activity-detail-page .activity-parent-context-link:focus-visible {
+  color:var(--color-text); outline:2px solid var(--color-primary);
+  outline-offset:2px; border-radius:5px;
+}
+.activity-detail-page .activity-detail-heading { gap:4px; }
+.activity-detail-page .activity-detail-content h1 {
+  font-size:clamp(23px,3.4vw,34px); line-height:1.18;
+  font-weight:720; letter-spacing:-.035em; text-wrap:pretty;
+}
+.activity-detail-page .activity-detail-metadata { margin-top:10px; }
+.activity-detail-page .activity-detail-due { font-size:12px; line-height:1.5; }
+@media(max-width:767px) {
+  .activity-detail-page .activity-detail-content { padding:10px 2px 0; }
+  .activity-detail-page .activity-parent-context-type { max-width:30%; }
+}
