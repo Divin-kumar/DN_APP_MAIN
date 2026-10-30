@@ -3,7 +3,7 @@ import { fixtureMoments, seedGuest, swipe } from './fixtures.js';
 
 // Browser geometry checks do not establish native installed-iPhone behavior.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
-  test('full-width Activity titles and readable status at ' + width + 'px ' + theme, async ({ page }) => {
+  test('Activity titles and inline status at ' + width + 'px ' + theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const moments = fixtureMoments();
     const title = 'Book a lakeside weekend with family and thoughtful plans '.repeat(2).trim();
@@ -28,8 +28,15 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
         titleSize: parseFloat(getComputedStyle(title).fontSize),
         titleWidth: title.getBoundingClientRect().width,
         textWidth: copy.getBoundingClientRect().width,
+        titleTop: title.getBoundingClientRect().top,
         titleBottom: title.getBoundingClientRect().bottom,
+        titleRight: title.getBoundingClientRect().right,
         statusTop: status.getBoundingClientRect().top,
+        statusLeft: status.getBoundingClientRect().left,
+        statusRight: status.getBoundingClientRect().right,
+        statusBottom: status.getBoundingClientRect().bottom,
+        copyRight: copy.getBoundingClientRect().right,
+        contextTop: node.querySelector('.event-activity-context').getBoundingClientRect().top,
         statusSize: parseFloat(getComputedStyle(status).fontSize),
         momentSize: parseFloat(getComputedStyle(moment).fontSize),
         dueSize: parseFloat(getComputedStyle(due).fontSize),
@@ -40,15 +47,35 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
       };
     });
     expect(metrics.titleSize).toBeGreaterThanOrEqual(15);
-    expect(metrics.titleWidth).toBeGreaterThanOrEqual(metrics.textWidth * .9);
+    // A compact status shares the title's FIRST line, rather than consuming
+    // a separate second row or overlaying the 15px readable title.
+    expect(metrics.titleWidth).toBeGreaterThanOrEqual(metrics.textWidth * .5);
     expect(metrics.titleWrap).toBe('normal');
     expect(metrics.clamp).toBe('3');
-    expect(metrics.statusTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1);
+    expect(metrics.statusTop).toBeGreaterThanOrEqual(metrics.titleTop - 2);
+    expect(metrics.statusTop).toBeLessThanOrEqual(metrics.titleTop + 8);
+    expect(metrics.statusLeft).toBeGreaterThanOrEqual(metrics.titleRight + 4);
+    expect(metrics.statusRight).toBeLessThanOrEqual(metrics.copyRight + 1);
+    expect(metrics.statusBottom).toBeLessThanOrEqual(metrics.titleTop + 30);
+    expect(metrics.contextTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1);
     expect(metrics.statusSize).toBeGreaterThanOrEqual(11);
     expect(metrics.momentSize).toBeGreaterThanOrEqual(12);
     expect(metrics.dueSize).toBeGreaterThanOrEqual(11);
     expect(metrics.momentWrap).toBe('normal');
     expect(metrics.pageWidth).toBeLessThanOrEqual(width + 1);
+    // Every visible status, including completed/cancelled where listed,
+    // must stay beside its own title at phone widths in both themes.
+    const statuses = await page.locator('.activities-page .event-activity-card .event-activity-title-row').evaluateAll((rows) => rows.map((row) => {
+      const title = row.querySelector('strong').getBoundingClientRect();
+      const status = row.querySelector('.event-activity-status').getBoundingClientRect();
+      return { titleTop: title.top, titleRight: title.right, statusTop: status.top, statusLeft: status.left };
+    }));
+    expect(statuses.length).toBeGreaterThanOrEqual(2);
+    for (const row of statuses) {
+      expect(row.statusTop).toBeGreaterThanOrEqual(row.titleTop - 2);
+      expect(row.statusTop).toBeLessThanOrEqual(row.titleTop + 8);
+      expect(row.statusLeft).toBeGreaterThanOrEqual(row.titleRight + 4);
+    }
 
     const source = () => page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
