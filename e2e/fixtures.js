@@ -74,7 +74,13 @@ export async function swipe(page, locator, { distance = 150, vertical = 0 } = {}
   // near the right edge, accidentally releasing on a sibling/offscreen.
   const span = Math.min(Math.abs(distance), Math.max(12, rect.width - 64));
   const x = rect.x + (distance >= 0 ? Math.min(rect.width - 24, span + 24) : 24);
-  const y = rect.y + Math.min(24, rect.height / 2);
+  // Photo-led Activity cards have a real cover-picker button in the upper left
+  // region. A synthetic gesture must start on the card surface, not tap that
+  // nested action (which legitimately opens Activity Detail or the picker).
+  const hasCoverAction = await locator.locator('.dn-v2-activity-cover-action').count() > 0;
+  const y = rect.y + (hasCoverAction
+    ? Math.min(rect.height - 14, Math.max(58, rect.height * .55))
+    : Math.min(24, rect.height / 2));
   const endX = x - Math.sign(distance) * span;
   await page.mouse.move(x, y); await page.mouse.down();
   await page.mouse.move(endX, y + vertical, { steps: 8 }); await page.mouse.up();

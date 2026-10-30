@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-191 | Align finance contracts and swipe setup with the current UI
+- **Exact-SHA evidence:** The first CHG-190 CI completed its documentation checks but failed two source-contract assertions from the superseded Finance heading: they still demanded the removed Add Transaction button and redundant description. The preceding CHG-189 Chromium run also failed one Activity swipe journey where the synthetic drag originated over the newly added photo button, navigating away before the next gesture.
+- **Correction:** Replace stale Finance assertions with explicit checks for the one-title heading, absence of duplicate CTA and retained universal + Transaction pathway. In the shared synthetic mouse-swipe helper, select a neutral card surface below the 44px cover action only for photo-led Activity cards; leave all other test gestures and actual swipe implementation unchanged.
+- **Integrity:** No new user-facing behavior, data/backup/Guest/financial calculations or production changes. Guest tour version stays unchanged. Recheck full exact-SHA Node/lint/Chromium/build/offline/upgrade/docs; installed iPhone Safari and signed-in account flows still unverified.
+- **Safety:** OldVersion review only; `main` and Firebase production remain untouched.
+
 ## CHG-20261030-190 | Remove duplicate Transaction CTA and give Refine rules room
 - **Owner feedback:** Search is now visually approved; remove the oversized Add Transaction button from the Transactions list, then continue reducing visual congestion in Refine without redesigning search.
 - **Presentation:** Transactions now has a single compact heading with neither the redundant direct Add Transaction action nor repeated descriptive subtitle. On phone widths Refine arranges each condition into a field-first row with a separate 44px remove target, and a second row for comparison and value. Sort has a quiet separator; Reset sits at the panel edge. The panel permits a little more vertical scrolling when rules are long.
