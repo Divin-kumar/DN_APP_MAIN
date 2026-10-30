@@ -78,11 +78,12 @@ const openDashboard = async (t) => {
   const actions=()=>nodes(render()).find((node)=>node.type==='ActivityActionDialogs').props.actions;
   const editor=()=>{const a=actions(); return a.draft ? {props:{draft:a.draft,onChange:a.changeDraft,onSubmit:a.save,onClose:a.closeEditor,busy:a.busy,error:a.error}}:undefined;};
   const row = (title = 'First task') => nodes(render()).find((node) => node.type === 'button' && node.props['aria-label'] === `Open ${title}`);
-  const swipe = (title = 'First task') => nodes(render()).find((node) => node.type === 'SwipeToComplete' && node.props.label === title);
+  const card = (title = 'First task') => nodes(render()).find((node) => node.type === 'SwipeActionCard' && node.props.label === title);
+  const menuAction = (title, label) => card(title)?.props.otherActions.find((action) => action.label === label);
   const openEditor=(title='First task')=>{nodes(render()).find((node)=>node.type==='SwipeActionCard' && node.props.label===title).props.otherActions.find((action)=>action.label==='Edit').onClick();return editor();};
   const save = () => editor().props.onSubmit({ preventDefault() {} });
   render();
-  return { api, first, second, activity, writes, toasts, navigations, render, editor, row, swipe, openEditor, save, unmount, actions };
+  return { api, first, second, activity, writes, toasts, navigations, render, editor, row, card, menuAction, openEditor, save, unmount, actions };
 };
 
 test('normal Dashboard tap opens the exact nested Activity page; Edit remains explicit', async (t) => {
@@ -129,8 +130,8 @@ test('failed edit retains the draft and duplicate submit/close are blocked until
   assert.equal(h.writes.length,2); assert.equal(h.editor(),undefined);
 });
 
-test('deliberate completion uses the latest record and rejects duplicate in-flight requests', async(t)=>{
-  const h=await openDashboard(t); const complete=h.swipe('Second task').props.onComplete;
+test('explicit menu completion uses the latest record and rejects duplicate in-flight requests', async(t)=>{
+  const h=await openDashboard(t); const complete=h.menuAction('Second task', 'Complete').onClick;
   const pending=deferred(); h.api.persist=()=>pending.promise;
   const saving=complete(); await new Promise(resolve=>setImmediate(resolve)); await complete();
   assert.equal(h.writes.length,1); assert.equal(h.writes[0][2].id,'moment-two');
@@ -142,7 +143,7 @@ test('deliberate completion uses the latest record and rejects duplicate in-flig
 });
 
 test('stale scope, Sample change and unmounted Activity actions cannot write', async(t)=>{
-  const h=await openDashboard(t); const complete=h.swipe().props.onComplete;
+  const h=await openDashboard(t); const complete=h.menuAction('First task', 'Complete').onClick;
   h.api.app.user={uid:'other'}; await assert.rejects(complete(),/session changed/);
   h.api.app.user={uid:'owner'}; h.api.sample='new'; await assert.rejects(complete(),/session changed/);
   assert.equal(h.writes.length,0);
@@ -156,8 +157,9 @@ test('On This Day opens Activity Detail and exposes deliberate reopening and men
   const row=nodes(h.render()).find(node=>node.type==='button'&&node.props['aria-label']==='Open Historical task');
   row.props.onClick();
   assert.deepEqual(h.navigations,[['/events/historical/activities/history']]);
-  const swipe=h.swipe('Historical task'); assert.equal(swipe.props.direction,'left');
-  assert.equal(swipe.props.actionLabel,'Reopen');
+  const card=h.card('Historical task'); assert.equal(card.props.swipeEnabled,true);
+  assert.equal(h.menuAction('Historical task', 'Reopen').label,'Reopen');
+  assert.equal(typeof card.props.onDelete,'function');
   assert.equal(h.writes.length,0);
 });
 
