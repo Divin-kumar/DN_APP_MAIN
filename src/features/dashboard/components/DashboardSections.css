@@ -27,3 +27,181 @@ html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px s
 @media(min-width:820px) {
   html[data-theme] .dashboard-overview.dashboard-compact { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1120px; }
 }
+
+
+/* DN 2.1 Home: photo-led Moments and Activities without oversized dashboard
+   panels. The record's original image decorates its date, never replaces text. */
+html[data-theme] .dashboard-overview.dashboard-compact {
+  gap: 11px !important;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-card {
+  gap: 9px;
+  padding: 12px;
+  border-color: color-mix(in srgb, var(--color-border) 74%, transparent);
+  border-radius: 18px;
+  box-shadow: 0 4px 20px rgb(0 0 0 / 3%);
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
+  min-height: 42px;
+  padding-inline: 2px;
+}
+html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-section-title {
+  font-size: 15px;
+  font-weight: 740;
+  letter-spacing: -.02em;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-list {
+  gap: 7px !important;
+}
+html[data-theme] .dashboard-compact .dashboard-moment-row,
+html[data-theme] .dashboard-compact .dashboard-activity-card {
+  display: flex;
+  align-items: stretch;
+  min-width: 0;
+  min-height: 62px;
+  gap: 1px;
+  padding: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 63%, transparent);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-surface) 74%, var(--color-card));
+  box-shadow: none;
+}
+html[data-theme] .dashboard-compact .dashboard-activity-card .dn-swipe-main {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
+html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
+  display: grid;
+  grid-template-columns: 49px minmax(0,1fr) 12px;
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  min-height: 56px;
+  gap: 9px;
+  padding: 2px 4px;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  text-align: left;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-date {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  width: 49px;
+  min-width: 49px;
+  min-height: 50px;
+  gap: 1px;
+  padding: 3px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
+  border-radius: 11px;
+  background: var(--color-card);
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-date :is(strong,small) {
+  position: relative;
+  z-index: 2;
+  line-height: 1.15;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-date strong {
+  font-size: 17px;
+  font-weight: 730;
+  letter-spacing: -.045em;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-date small {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+html[data-theme] .dashboard-compact .dashboard-cover-photo {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+html[data-theme] .dashboard-compact .dashboard-cover-photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+html[data-theme] .dashboard-compact .dashboard-cover-photo.has-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgb(8 20 26 / 40%), rgb(6 16 22 / 68%));
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-date:has(.dashboard-cover-photo.has-photo) :is(strong,small) {
+  color: #fff;
+  text-shadow: 0 1px 3px rgb(0 0 0 / 35%);
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-copy {
+  min-width: 0;
+  gap: 3px;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-copy strong {
+  font-size: 13px;
+  font-weight: 670;
+  line-height: 1.35;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-copy small {
+  font-size: 11px;
+  line-height: 1.4;
+}
+html[data-theme] .dashboard-compact .dashboard-moment-greeting-button,
+html[data-theme] .dashboard-compact .dashboard-activity-card .dn-record-menu-trigger {
+  flex: 0 0 44px;
+  width: 44px;
+  min-width: 44px;
+  min-height: 44px;
+  align-self: center;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 11px;
+  background: transparent;
+  color: var(--color-text-muted);
+  box-shadow: none;
+}
+html[data-theme] .dashboard-compact :is(.dashboard-moment-greeting-button, .dn-record-menu-trigger):is(:hover,:focus-visible) {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  color: var(--color-primary);
+}
+html[data-theme] .dashboard-compact .dashboard-moment-row :is(button, .dashboard-upcoming-row):focus-visible,
+html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashboard-upcoming-row):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+@media (max-width: 380px) {
+  html[data-theme] .dashboard-compact .dashboard-upcoming-card {
+    padding: 10px;
+  }
+  html[data-theme] .dashboard-compact .dashboard-moment-row,
+  html[data-theme] .dashboard-compact .dashboard-activity-card {
+    gap: 0;
+    padding: 2px;
+  }
+  html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
+  html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
+    grid-template-columns: 45px minmax(0,1fr) 10px;
+    gap: 6px;
+    padding-inline: 2px;
+  }
+  html[data-theme] .dashboard-compact .dashboard-upcoming-date {
+    width: 45px;
+    min-width: 45px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dashboard-compact :is(.dashboard-moment-row,.dashboard-activity-card) {
+    transition: none;
+  }
+}
