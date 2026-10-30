@@ -47,7 +47,11 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
   assert.match(surface, /onTouchStartCapture=/);
   assert.match(surface, /onTouchEndCapture=/);
   assert.match(surface, /onPointerDownCapture=/);
-  assert.match(surface, /onPointerUpCapture=/);
+  // Window capture retains active mouse/pen swipes even if the release is outside the card.
+  assert.match(surface, /window\.addEventListener\('pointerup', finish, true\)/);
+  assert.match(surface, /window\.removeEventListener\('pointerup', finish, true\)/);
+  assert.match(surface, /window\.addEventListener\('pointercancel', finish, true\)/);
+  assert.match(surface, /window\.removeEventListener\('pointercancel', finish, true\)/);
   assert.match(surface, /onClickCapture=/);
   assert.match(surface, /!resolveSwipeGesture\(start, \{ x, y \}\)\.action/);
   assert.match(surface, /\.\.\.\(onDelete \? \[\{ label: 'Delete'/);
