@@ -24,7 +24,7 @@ const todayKey = () => { const now = new Date(); return `${now.getFullYear()}-${
 // React tree. Legacy choices migrate once; the last active group persists.
 export default function useConditionFilters(scope, records = [], useListState = usePersistentListState, options = NO_OPTIONS) {
   const configuration = Array.isArray(options) ? { schema: options } : options;
-  const listKey = `conditions:${scope}${configuration.contextKey ? `:${configuration.contextKey}` : ''}`;
+  const listKey = `conditions:${configuration.storageScope || scope}${configuration.contextKey ? `:${configuration.contextKey}` : ''}`;
   const [stored, change, , storageKey] = useListState(listKey, DEFAULT, RULES);
   const [editorRevision, setEditorRevision] = useState(0);
   const [calendarDay, setCalendarDay] = useState(todayKey);
@@ -61,11 +61,13 @@ export default function useConditionFilters(scope, records = [], useListState = 
   }, [calendarDay]);
 
   const setGroup = (transform) => change((current) => ({ group: normalizeGroup(scope, typeof transform === 'function'
-    ? transform(normalizeGroup(scope, current.group)) : transform) }));
-  const clear = () => {
-    change({ group: emptyGroup(), migrationVersion: Math.max(migrationVersion, stored.migrationVersion) });
+    ? transform(normalizeGroup(scope, current.group)) : transform),
+    migrationVersion: Math.max(migrationVersion, current.migrationVersion) }));
+  const restore = (target) => {
+    change({ group: normalizeGroup(scope, target), migrationVersion: Math.max(migrationVersion, stored.migrationVersion) });
     setEditorRevision((current) => current + 1);
   };
-  return { state, schema, matches, setGroup, clear, activeCount,
+  const clear = () => restore(emptyGroup());
+  return { state, schema, matches, setGroup, clear, restore, activeCount,
     scopeKey: storageKey || listKey, editorKey: `${storageKey || listKey}:${editorRevision}` };
 }
