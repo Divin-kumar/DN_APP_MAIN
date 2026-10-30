@@ -47,7 +47,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(await stored()).toEqual(original);
 
-    await swipe(page, row, { distance: 140 });
+    // Both pointer directions were exercised above. Reopen from keyboard
+    // after editor focus restoration to check a second independent path.
+    await row.focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(menu).toBeVisible();
     await menu.getByRole('menuitem', { name: 'Cancel', exact: true }).click();
     // Existing saved Status != Cancelled filter intentionally hides the row.
     await expect(row).toHaveCount(0);

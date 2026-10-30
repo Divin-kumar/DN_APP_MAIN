@@ -70,7 +70,7 @@ html[data-theme] .activities-page .event-activity-content .event-activity-card .
   gap:3px;
   align-items:start;
 }
-html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > .event-activity-moment-name {
+html[data-theme] .activities-page .event-activity-content .event-activity-card .event-activity-context > span.event-activity-moment-name:first-child {
   display:-webkit-box;
   -webkit-box-orient:vertical;
   -webkit-line-clamp:2;

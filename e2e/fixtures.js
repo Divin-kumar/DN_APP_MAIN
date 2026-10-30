@@ -59,9 +59,14 @@ export async function addOriginal(page, { width = 600, height = 900, count = 1 }
 export async function swipe(page, locator, { distance = 150, vertical = 0 } = {}) {
   await locator.scrollIntoViewIfNeeded();
   const rect = await locator.boundingBox();
-  const x = rect.x + Math.min(rect.width - 56, 220), y = rect.y + 24;
+  // Keep both ends inside the card. The old helper started rightward drags
+  // near the right edge, accidentally releasing on a sibling/offscreen.
+  const span = Math.min(Math.abs(distance), Math.max(12, rect.width - 64));
+  const x = rect.x + (distance >= 0 ? Math.min(rect.width - 24, span + 24) : 24);
+  const y = rect.y + Math.min(24, rect.height / 2);
+  const endX = x - Math.sign(distance) * span;
   await page.mouse.move(x, y); await page.mouse.down();
-  await page.mouse.move(x - distance, y + vertical, { steps: 8 }); await page.mouse.up();
+  await page.mouse.move(endX, y + vertical, { steps: 8 }); await page.mouse.up();
 }
 
 export async function openUniversalTransaction(page) {

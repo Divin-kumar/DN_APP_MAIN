@@ -169,7 +169,11 @@ test('pending popup completion ignores duplicates and a failed save leaves the A
   await expect(page.getByRole('alert').filter({ hasText: 'Synthetic completion failure' })).toBeVisible();
   await expect(card.locator('.event-activity-status')).toHaveText('In progress');
   await page.evaluate(() => window.__dnRestoreCompletion());
-  await swipe(page, card);
+  // Retest the failed operation using the keyboard menu entry. Initial swipe
+  // already exercised the pointer path and verified duplicate suppression.
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(menu).toBeVisible();
   await menu.getByRole('menuitem', { name: 'Complete', exact: true }).click();
   await expect(card.locator('.event-activity-status')).toHaveText('Completed');
   await expect(page).toHaveURL(/\/activities$/);

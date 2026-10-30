@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-173 | Reconcile Activity first-line CSS and repeated swipe browser journeys
+- **Finding:** First CHG-172 browser CI run (c5dae1c) passed Node tests, lint and docs but failed 14 Chromium checks: six new readability cases because the shared `span:first-child` selector beat the parent Moment's intended two-line rule, and eight inherited CHG-171 gesture cases when scripted drags finished outside their cards or repeat popup actions were not reliably reopened.
+- **Correction:** Make the overall Activities parent Moment's scoped `span.event-activity-moment-name:first-child` selector more specific, retaining its two-line wrap. Update the synthetic drag helper so both start and end stay on the tested card at all sizes. After pointer gestures establish left/right behavior, use the app's existing ArrowLeft/ArrowRight keyboard popup control to verify repeat entry following edit or failure; do not bypass action handlers.
+- **Safety / downstream:** No new record handlers, account/Guest writes, finance, backup, Story/PDF, filter or navigation changes; previous 15px title/11px status design and threshold-based pointer capture remain. Tests continue to enforce unchanged records for nonmutating navigation and gestures. Retain native touch and physical Safari as unverified.
+- **Verification:** Exact-commit GitHub Node/lint/Chromium/build/offline/PDF/upgrade and Vercel review gates must pass before completion. The previous failed run was 41020939090. No Firebase, main or version changes.
+
 ## CHG-20261030-172 | Make Activity cards readable without shrinking titles; harden pointer swipes
 - **Finding:** /activities sacrificed 94px to a 9px floating status, truncating Activity titles. The newest CHG-171 branch CI also had eight browser swipe or legacy object-shape assertion failures.
 - **UI:** Scope full-width, up-to-three-line 15px titles, a natural-flow 11px status pill, 12px parent Moment and 11px date/time to overall Activities. No priority/menu badges or new click actions. Home, Moment workspace and Detail visual styles stay unchanged.
