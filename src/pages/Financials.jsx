@@ -130,7 +130,7 @@ export default function Financials() {
               </div>
             </div>
           </section>
-          <TransactionHistory transactions={sorted} filters={filters} onFilters={changeFilters} conditions={conditions}
+          <TransactionHistory transactions={sorted} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} />
         </section>}
       {dialogOpen ? (

@@ -1,6 +1,6 @@
 import { activityTime } from '../../utils/activityTime';
 import DebouncedFilterInput from '../common/DebouncedFilterInput';
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Pencil } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Pencil, ReceiptText, RotateCcw } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import SortControl from '../common/SortControl';
@@ -10,6 +10,7 @@ import ConditionBuilder, { ConditionChips } from '../common/ConditionBuilder';
 import { Link } from 'react-router-dom';
 import { activityDetailPath } from '../../utils/activityDetail';
 import { paymentMethodLabel } from '../../utils/paymentMethod';
+import './TransactionEmptyPremium.css';
 
 export const formatTransactionMoney = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -96,9 +97,14 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 }
 
 export default function TransactionHistory({
-  transactions, filters, onFilters, conditions, events, onEdit, onDelete,
+  transactions, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
+  const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
+  const resetAllFilters = () => {
+    onFilters({ type: 'all', month: 'all', search: '', sort: 'date-desc' });
+    conditions.clear();
+  };
   return (
     <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
       <header className="transactions-heading">
@@ -111,7 +117,7 @@ export default function TransactionHistory({
         sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
           onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
-        canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={() => { onFilters({ type: 'all', month: 'all', search: '', sort: 'date-desc' }); conditions.clear(); }}
+        canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={resetAllFilters}
         search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />
@@ -121,9 +127,18 @@ export default function TransactionHistory({
           <TransactionCard key={item.stableTransactionKey} transaction={item}
             events={events} onEdit={onEdit} onDelete={onDelete} />
         )) : (
-          <div className="transactions-empty" role="status">
-            <strong>No matching transactions</strong>
-            <p>Try clearing a filter or search. Newly added transactions will appear here.</p>
+          <div className="transactions-empty dn-transactions-empty-premium" role="status">
+            <span className="dn-transactions-empty-symbol" aria-hidden="true"><ReceiptText size={23} strokeWidth={1.6} /></span>
+            <strong>{totalCount ? 'No matching transactions' : 'No transactions yet'}</strong>
+            <p>{totalCount
+              ? 'Nothing matches your current search or filters.'
+              : 'Transactions you record will appear here.'}</p>
+            {hasActiveFilter && totalCount ? (
+              <button type="button" className="dn-transactions-empty-reset" onClick={resetAllFilters}>
+                <RotateCcw size={15} aria-hidden="true" />
+                Clear search and filters
+              </button>
+            ) : null}
           </div>
         )}
       </div>

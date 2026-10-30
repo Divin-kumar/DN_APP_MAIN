@@ -1,0 +1,78 @@
+/* DN 2.1 Transactions: calm, recovery-first empty state inside the list scrollpane. */
+html[data-theme] .dn-transactions-page .dn-transactions-results .transactions-empty.dn-transactions-empty-premium {
+  display: grid;
+  justify-items: center;
+  align-content: center;
+  gap: 7px;
+  width: 100%;
+  min-width: 0;
+  min-height: 172px;
+  max-width: 100%;
+  margin: 0;
+  padding: 20px 14px;
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--color-border) 83%, transparent);
+  border-radius: 17px;
+  background: color-mix(in srgb, var(--color-card) 92%, var(--color-card-raised));
+  box-shadow: none;
+  color: var(--color-text-muted);
+  text-align: center;
+}
+html[data-theme] .dn-transactions-empty-symbol {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  margin-bottom: 3px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 18%, var(--color-border));
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card));
+  color: var(--color-primary);
+}
+html[data-theme] .dn-transactions-page .dn-transactions-empty-premium > strong {
+  color: var(--color-text);
+  font-size: 14px;
+  font-weight: 735;
+  letter-spacing: -.02em;
+  line-height: 1.35;
+}
+html[data-theme] .dn-transactions-page .dn-transactions-empty-premium > p {
+  max-width: 31ch;
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+html[data-theme] .dn-transactions-page .dn-transactions-empty-reset {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  max-width: 100%;
+  margin-top: 5px;
+  padding: 8px 13px;
+  box-sizing: border-box;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-card-raised);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 665;
+  line-height: 1.35;
+  cursor: pointer;
+}
+html[data-theme] .dn-transactions-page .dn-transactions-empty-reset:hover {
+  background: var(--action-fill-hover);
+}
+html[data-theme] .dn-transactions-page .dn-transactions-empty-reset:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 360px) {
+  html[data-theme] .dn-transactions-page .dn-transactions-results .transactions-empty.dn-transactions-empty-premium {
+    min-height: 155px;
+    padding: 14px 10px;
+  }
+}

@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-212 | Premium Transactions empty state with shared Refine recovery
+- **Observed:** The unified Transactions list showed the same dashed “No matching transactions” message when there were no records at all and when a search/filter temporarily hid existing ones. It offered no direct recovery action near the empty list. The owner explicitly requested no Add Transaction CTA on Transactions and a stable nested-scroll page.
+- **Implementation:** Pass the unfiltered ledger count from Financials into TransactionHistory; distinguish first-use from filtered-empty copy with a subtle themed receipt illustration. Offer an optional 44px “Clear search and filters” button only when an active search/condition hides existing transactions. Reuse the exact existing shared Refine reset callback for both controls; leave all sorting and search semantics intact. Keep the empty presentation within the original list pane and provide no new Add Transaction CTA.
+- **Downstream:** No change to incomes, expenses, sums, transaction kind, date, payment method, linked activity, saved filters, swipe action handlers, modal forms, original photos or Guest fixture. No data reset, migration, screen-shell change or new scroll owner.
+- **Validation:** Source-reviewed the TransactionHistory consumer and shared filter contract. Add six synthetic light/dark 320/390/430px filtered-empty recovery tests and one true-empty Guest test. Exact-SHA full GitHub CI, live current preview, physical Safari/VoiceOver and owner visual approval **Unverified** until executed. Append to owner register, retaining CHG-198–211 open items.
+- **Boundary:** `OldVersion` only, no `main`, Firebase publication, version bump or paid hosting.
+
 ## CHG-20261030-211 | Context-sensitive, compact offline status for Guests and cloud users
 - **Observed:** The shared offline warning used the same two-line cloud-synchronization warning for browser-local Guests and Firebase accounts. This consumes precious first-fold height and can incorrectly imply Guest local editing requires network access.
 - **Implementation:** Keep original offline/online event lifecycle, but read current `isGuest` to show a small, 28–30px scoped offline notice. Guests see `Offline · Guest data stays here`; accounts see `Offline · Cloud unavailable`; screen-reader status names retain full, truthful local-only versus cloud dependency context. The display only mounts when offline. Scope premium CSS to this banner to avoid changing unrelated status messages.
