@@ -66,6 +66,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
 
   const ready = isRecordScopeLoaded(eventStore, scope, getActiveSampleScenario(uid));
   const events = ready ? eventStore.events : EMPTY;
+  const momentsById = useMemo(() => new Map(events.map((event) => [momentId(event), event])), [events]);
   const projection = useMemo(() => {
     const entries = projectActivities(events);
     const context = new WeakMap();
@@ -179,6 +180,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
+            getMoment={(view) => momentsById.get(projection.context.get(view).momentId)}
+            visualCards uid={uid} isGuest={isGuest} sample={getActiveSampleScenario(uid)}
             includeCancelled hasActiveFilters={Boolean(activeCount || conditions.activeCount)}
             onOpen={(view) => { const target = reference(view); resolve(target); navigate(activityDetailPath(target.momentId, target.activityId), {
               state: { activityOrigin: '/activities',

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, swipe } from './fixtures.js';
+import { addOriginal, fixtureMoments, seedGuest, swipe } from './fixtures.js';
 
 // Browser geometry checks do not establish native installed-iPhone behavior.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
@@ -96,6 +96,56 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await page.keyboard.press('Escape');
     await expect(menu).toHaveCount(0);
     expect(await source()).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('Activity cover stays with its owner and reflects the chosen Detail photo', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await addOriginal(page, { count: 2 });
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await page.goto('/activities');
+  const own = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+  const unrelated = page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true });
+  await expect(own.locator('.dn-v2-activity-cover img')).toBeVisible();
+  await expect(unrelated.locator('.dn-v2-activity-cover img')).toHaveCount(0);
+  await expect(unrelated.locator('.dn-v2-activity-cover-symbol')).toBeVisible();
+  await page.goto('/events/moment-one/activities/shared');
+  await page.getByRole('button', { name: 'Choose cover photo', exact: true }).click();
+  const picker = page.getByRole('dialog', { name: 'Choose cover photo' });
+  const option = picker.getByRole('button', { name: 'Use as cover: Activity photo 1.png' });
+  await expect(option).toBeEnabled();
+  await option.click();
+  await page.goto('/activities');
+  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).locator('.dn-v2-activity-cover img')).toBeVisible();
+  const prefs = await page.evaluate(() => Object.entries(localStorage).filter(([key]) => key.includes('activity-cover%3A'))
+    .map(([,raw]) => JSON.parse(raw).imageKey).filter(Boolean));
+  expect(prefs.some((value) => value.includes('photo-1'))).toBe(true);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
+  expect(errors).toEqual([]);
+});
+for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
+  test('Activity photo cards stay readable at ' + width + 'px ' + theme, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/activities');
+    const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+    await expect(card.locator('.dn-v2-activity-cover')).toBeVisible();
+    const m = await card.evaluate((node) => {
+      const photo = node.querySelector('.dn-v2-activity-cover').getBoundingClientRect();
+      const copy = node.querySelector('.event-activity-copy').getBoundingClientRect();
+      const title = node.querySelector('.event-activity-title-row strong').getBoundingClientRect();
+      const status = node.querySelector('.event-activity-status').getBoundingClientRect();
+      return { photoWidth:photo.width, photoRight:photo.right, copyLeft:copy.left,
+        titleTop:title.top, titleRight:title.right, statusTop:status.top, statusLeft:status.left,
+        pageWidth:document.documentElement.scrollWidth };
+    });
+    expect(m.photoWidth).toBeGreaterThanOrEqual(79.9);
+    expect(m.photoWidth).toBeLessThanOrEqual(94.1);
+    expect(m.copyLeft).toBeGreaterThanOrEqual(m.photoRight - 1);
+    expect(m.statusTop).toBeLessThanOrEqual(m.titleTop + 8);
+    expect(m.statusLeft).toBeGreaterThanOrEqual(m.titleRight + 4);
+    expect(m.pageWidth).toBeLessThanOrEqual(width + 1);
     expect(errors).toEqual([]);
   });
 }

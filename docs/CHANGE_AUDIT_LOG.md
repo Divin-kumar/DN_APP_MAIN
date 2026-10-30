@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-185 | Premium Activity photo-left discovery cards
+- **Scope:** Overall Activities adopt the existing Moment card's calm photo-left visual language; the title/status first-line geometry, parent Moment and due date remain. Per-Moment Activity lists preserve compact styling.
+- **Integrity:** Reuse activityCoverImages and the exact scoped Activity Detail cover key to avoid leaking photos between Activities that share IDs in different Moments. Do not duplicate, replace or upload the original. A missing attachment displays a restrained placeholder.
+- **QA and dependencies:** Extend six phone dark/light cases plus one true original-file and cross-Moment preference/ownership journey. Full Node/lint/Chromium/build/offline/PDF/upgrade/docs exact-SHA gates remain required, and installed Safari/VoiceOver and signed-in cloud remain unverified. Existing Guest tour already illustrates this and will not be automatically reset.
+- **Safety:** No record data, schema, finance, PDF, backup, app version, Firebase production, or main branch changes.
+
 ## CHG-20261030-184 | Minimal Moments heading and selectable card cover
 - **Owner preference:** Keep the premium Moment cards prominent instead of repeating header information. Remove the top description and three summary counters; the existing filter-result count remains. Slightly reduce mobile Guest demo notice size.
 - **Cover control:** When a Moment contains an image backed by a validated local original or supported legacy image, its existing actions popup gains Cover photo. Selection uses AttachmentGallery and the same scope-isolated list preference architecture as Activity Detail covers, without changing records or uploading originals. Old Story-derived cover selection remains the fallback.
