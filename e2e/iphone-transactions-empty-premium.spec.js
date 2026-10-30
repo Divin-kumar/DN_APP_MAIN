@@ -16,7 +16,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const empty = page.locator('.dn-financial-workspace .dn-transactions-empty-premium');
       await expect(empty).toBeVisible();
       await expect(empty.getByText('No matching transactions')).toBeVisible();
-      const reset = empty.getByRole('button', { name: 'Clear search and filters' });
+      const reset = empty.getByRole('button', { name: 'Restore saved defaults' });
       await expect(reset).toBeVisible();
       const geometry = await empty.evaluate((node) => {
         const outer = node.getBoundingClientRect();
