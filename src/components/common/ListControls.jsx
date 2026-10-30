@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import './ListControls.css';
 
 // Filtering stays in the caller; controls expand within the page, without a modal.
@@ -64,7 +64,7 @@ export default function ListControls({
   return (
     <div className="dn-list-controls">
       <div className="dn-list-controls-row">
-        {search ? <div className="dn-list-controls-search">{search}</div> : null}
+        {search ? <div className="dn-list-controls-search"><Search className="dn-list-controls-search-icon" size={18} strokeWidth={1.8} aria-hidden="true" />{search}</div> : null}
         {hasPanel ? <button type="button" className={`dn-list-controls-trigger${activeCount ? ' is-active' : ''}`}
           aria-label={`${label}${activeCount ? `, ${activeCount} active` : ''}`}
           ref={triggerRef} aria-controls={panelId} aria-expanded={open} onClick={() => setOpen((current) => !current)}>

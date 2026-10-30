@@ -8,6 +8,8 @@ You can record several Activities on the same date with different times. Date an
 
 Guest examples demonstrate same-day entries with different times and update only through explicit Refresh demo. Phone-sized browser checks do not replace hands-on iPhone/Safari or real signed-in account checks. Earlier validation and publication attempts remain in the release history.
 
+Search and filters now look like one calm control above Moments, Activities and Transactions, with the search symbol on the left and Filters on the right. Type to see matching results, or tap Filters for saved conditions and sort choices. Active filters remain visible so you can remove them without opening the panel. The same visual style also appears on each Moment's Activities and on Insights search. This is a presentation change only; it does not change or erase your data.
+
 ## 1. What DN helps you do
 
 DN brings your important life moments, plans, memories and money records into one place. It helps you answer:
