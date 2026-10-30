@@ -2644,6 +2644,76 @@ html[data-theme] .event-activity-copy > .dn-rich-text { margin-top:4px; color:va
   }
 }
 
+/* DN 2.1 P1-2: readable, lightweight iPhone dock without changing its routes.
+   Earlier mobile declarations are intentionally superseded here in one place. */
+@media (max-width: 760px) {
+  html[data-theme] .mobile-tabbar {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 3px !important;
+    min-height: 66px !important;
+    padding: 6px !important;
+    border-radius: 20px !important;
+    background: color-mix(in srgb, var(--color-glass) 92%, var(--color-card)) !important;
+    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-text) 10%, transparent) !important;
+  }
+  html[data-theme] .mobile-tabbar::before {
+    inset: -6px -5px;
+    border-radius: 24px;
+    opacity: .25;
+    filter: blur(10px);
+  }
+  html[data-theme] .mobile-tab {
+    min-width: 0;
+    min-height: 52px !important;
+    gap: 4px !important;
+    padding: 5px 2px !important;
+    border-radius: 13px !important;
+    font-size: 11px !important;
+    font-weight: 650;
+    line-height: 1.15;
+    letter-spacing: 0;
+    text-align: center;
+  }
+  html[data-theme] .mobile-tab > svg {
+    width: 20px !important;
+    height: 20px !important;
+    flex: 0 0 20px;
+  }
+  html[data-theme] .mobile-tab-active {
+    background: color-mix(in srgb, var(--color-primary) 11%, var(--color-card)) !important;
+    color: var(--color-primary) !important;
+  }
+  html[data-theme] .mobile-dock-create {
+    min-height: 52px;
+    align-self: stretch;
+  }
+  html[data-theme] .mobile-dock-create-menu {
+    right: 0;
+    width: min(206px, calc(100vw - 32px));
+    min-width: 0;
+    gap: 2px;
+    padding: 5px !important;
+    border-radius: 15px !important;
+    background: var(--color-card) !important;
+    box-shadow: 0 8px 22px color-mix(in srgb, var(--color-text) 13%, transparent) !important;
+  }
+  html[data-theme] .mobile-dock-create-menu button {
+    min-height: 44px !important;
+    font-size: 13px !important;
+    border-radius: 10px !important;
+  }
+  html[data-theme] .mobile-tab:focus-visible,
+  html[data-theme] .mobile-dock-create-trigger:focus-visible,
+  html[data-theme] .mobile-dock-create-menu button:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .mobile-dock-create-menu { animation: none !important; }
+  html[data-theme] .mobile-tabbar::before { filter: none; }
+}
+
 /* v2.15.4: iPhone Safari Greeting Template anti-zoom specificity repair.
    Moment type editors override the generic 16px floor with their own
    14px !important body token. Match those selectors at equal specificity
@@ -2903,75 +2973,4 @@ html[data-theme] .activity-date-time-row input::-webkit-calendar-picker-indicato
   margin-left: 0;
   opacity: .8;
   cursor: pointer;
-}
-
-
-/* DN 2.1 P1-2: readable, lightweight iPhone dock without changing its routes.
-   Earlier mobile declarations are intentionally superseded here in one place. */
-@media (max-width: 760px) {
-  html[data-theme] .mobile-tabbar {
-    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
-    gap: 3px !important;
-    min-height: 66px !important;
-    padding: 6px !important;
-    border-radius: 20px !important;
-    background: color-mix(in srgb, var(--color-glass) 92%, var(--color-card)) !important;
-    box-shadow: 0 6px 20px color-mix(in srgb, var(--color-text) 10%, transparent) !important;
-  }
-  html[data-theme] .mobile-tabbar::before {
-    inset: -6px -5px;
-    border-radius: 24px;
-    opacity: .25;
-    filter: blur(10px);
-  }
-  html[data-theme] .mobile-tab {
-    min-width: 0;
-    min-height: 52px !important;
-    gap: 4px !important;
-    padding: 5px 2px !important;
-    border-radius: 13px !important;
-    font-size: 11px !important;
-    font-weight: 650;
-    line-height: 1.15;
-    letter-spacing: 0;
-    text-align: center;
-  }
-  html[data-theme] .mobile-tab > svg {
-    width: 20px !important;
-    height: 20px !important;
-    flex: 0 0 20px;
-  }
-  html[data-theme] .mobile-tab-active {
-    background: color-mix(in srgb, var(--color-primary) 11%, var(--color-card)) !important;
-    color: var(--color-primary) !important;
-  }
-  html[data-theme] .mobile-dock-create {
-    min-height: 52px;
-    align-self: stretch;
-  }
-  html[data-theme] .mobile-dock-create-menu {
-    right: 0;
-    width: min(206px, calc(100vw - 32px));
-    min-width: 0;
-    gap: 2px;
-    padding: 5px !important;
-    border-radius: 15px !important;
-    background: var(--color-card) !important;
-    box-shadow: 0 8px 22px color-mix(in srgb, var(--color-text) 13%, transparent) !important;
-  }
-  html[data-theme] .mobile-dock-create-menu button {
-    min-height: 44px !important;
-    font-size: 13px !important;
-    border-radius: 10px !important;
-  }
-  html[data-theme] .mobile-tab:focus-visible,
-  html[data-theme] .mobile-dock-create-trigger:focus-visible,
-  html[data-theme] .mobile-dock-create-menu button:focus-visible {
-    outline: 2px solid var(--color-primary);
-    outline-offset: 2px;
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  html[data-theme] .mobile-dock-create-menu { animation: none !important; }
-  html[data-theme] .mobile-tabbar::before { filter: none; }
 }
