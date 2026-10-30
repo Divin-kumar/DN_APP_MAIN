@@ -87,7 +87,15 @@ export default function SwipeActionCard({
     };
     const onResize = () => onScroll();
     const onOtherMenu = (event) => { if (event.detail !== menuId) close(); };
+    // A pointer-swipe popup may not take focus, but Escape must still close it.
+    const onEscape = (event) => {
+      if (event.key === 'Escape' && !popupRef.current?.contains(event.target)) {
+        event.preventDefault();
+        close(true);
+      }
+    };
     document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', onEscape);
     window.addEventListener('scroll', onScroll, true);
     window.addEventListener('resize', onResize);
     window.addEventListener('dn:record-menu', onOtherMenu);
@@ -100,6 +108,7 @@ export default function SwipeActionCard({
     return () => {
       if (frame) cancelAnimationFrame(frame);
       document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', onEscape);
       window.removeEventListener('scroll', onScroll, true);
       window.removeEventListener('resize', onResize);
       window.removeEventListener('dn:record-menu', onOtherMenu);
