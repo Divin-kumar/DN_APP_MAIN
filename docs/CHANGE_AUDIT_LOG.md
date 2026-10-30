@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-186 | Direct Activity cover selection with a lighter first fold
+- **Owner direction:** Push DN towards a world-class, restrained photo-first iPhone presentation by keeping the liked Moment-style cards and reducing decoration above them.
+- **What changed:** The overall Activities header is now one plain title, with no eyebrow/subtitle. The existing completed-count progress becomes an unobtrusive inline meter. Each photo-left overview card gains an accessible 44px photo control with a subtle glass appearance. On Activities with multiple valid linked images, it opens the existing original-file Attachment Gallery to change that exact Activity's cover directly from the list; with zero/one image it opens Activity Detail for photo management. Per-Moment Activity rows remain unchanged.
+- **Integrity:** Reuse the existing scoped cover key, image ownership check, original-photo loader and picker. Selection changes browser display preference only, not records, attachments, account/Guest boundaries, backup, PDF or finance. The card's existing swipe menus are not replaced and the photo button explicitly ignores swipe starts.
+- **Guest and QA:** Bump the optional Guest tour version with an instruction for trying photo selection; the existing multi-photo Journal activities already cover the new behavior and no tour is silently reset. Extend Chromium E2E for list selection, account-local preference, duplicate activity IDs across Moments, untouched Guest records, a 44px target and 320/390/430px compact layouts. Verification at authoring: **Source-derived only**. Node/lint/browser/build/offline/upgrade/docs and real iPhone Safari/VoiceOver still require exact-commit checks; no premature pass claim.
+- **Release boundary:** OldVersion review only, no app version bump, no Firebase production publication and no main change.
+
 ## CHG-20261030-185 | Premium Activity photo-left discovery cards
 - **Scope:** Overall Activities adopt the existing Moment card's calm photo-left visual language; the title/status first-line geometry, parent Moment and due date remain. Per-Moment Activity lists preserve compact styling.
 - **Integrity:** Reuse activityCoverImages and the exact scoped Activity Detail cover key to avoid leaking photos between Activities that share IDs in different Moments. Do not duplicate, replace or upload the original. A missing attachment displays a restrained placeholder.

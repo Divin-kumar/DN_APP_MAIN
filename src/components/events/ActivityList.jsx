@@ -48,7 +48,8 @@ export default function ActivityList({ eventName = 'This event', activities, all
           disabled={disabled} otherActions={actions} onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
           <div className="event-activity-main">
             {visualCards && parentMoment ? <ActivityCardCover moment={parentMoment} activity={activity}
-              uid={uid} isGuest={isGuest} sample={sample} date={date} /> : null}
+              uid={uid} isGuest={isGuest} sample={sample} date={date}
+              onOpen={onOpen ? () => onOpen(activity) : undefined} disabled={disabled} /> : null}
             <div className="event-activity-copy">
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
               <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}`}>{activityStatusLabel(activity)}</span>

@@ -149,3 +149,60 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(errors).toEqual([]);
   });
 }
+
+test('Activity photo choice is available on the list without changing originals', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await addOriginal(page, { count: 2 });
+  await page.goto('/activities');
+  const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await card.getByRole('button', { name: 'Choose cover photo for Book a lakeside stay' }).click();
+  const picker = page.getByRole('dialog', { name: 'Choose activity cover photo' });
+  await expect(picker).toBeVisible();
+  await picker.getByRole('button', { name: 'Use as cover: Activity photo 1.png' }).click();
+  await expect(picker).toHaveCount(0);
+  await expect(card.locator('.dn-v2-activity-cover img')).toBeVisible();
+  const prefs = await page.evaluate(() => Object.entries(localStorage)
+    .filter(([key]) => key.includes('activity-cover%3A'))
+    .map(([, raw]) => JSON.parse(raw).imageKey).filter(Boolean));
+  expect(prefs.some((value) => value.includes('photo-1'))).toBe(true);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  const other = page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true });
+  await expect(other.locator('.dn-v2-activity-cover img')).toHaveCount(0);
+  await other.getByRole('button', { name: 'Manage photos for A different activity with the same ID' }).click();
+  await expect(page).toHaveURL(/\/events\/moment-two\/activities\/shared$/);
+  expect(errors).toEqual([]);
+});
+for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
+  test('Activity photo action is touch-safe and the first fold stays compact at ' + width, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page);
+    await page.goto('/activities');
+    const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
+    const action = card.getByRole('button', { name: 'Manage photos for Book a lakeside stay' });
+    await expect(action).toBeVisible();
+    const metrics = await page.evaluate(() => {
+      const heading = document.querySelector('.activities-page .life-timeline-heading');
+      const title = heading.querySelector('h2');
+      const progress = document.querySelector('.activities-page .event-activity-progress');
+      const button = document.querySelector('.activities-page .dn-v2-activity-cover-action');
+      const cover = button.closest('.dn-v2-activity-cover');
+      const b = button.getBoundingClientRect(), c = cover.getBoundingClientRect();
+      return { titleCount:heading.children.length, title: title.textContent,
+        progressBorder:getComputedStyle(progress).borderTopWidth,
+        buttonWidth:b.width, buttonHeight:b.height,
+        inside:b.left >= c.left - 1 && b.right <= c.right + 1,
+        pageWidth:document.documentElement.scrollWidth };
+    });
+    expect(metrics.titleCount).toBe(1);
+    expect(metrics.title).toBe('Activities');
+    expect(metrics.progressBorder).toBe('0px');
+    expect(metrics.buttonWidth).toBeGreaterThanOrEqual(43.9);
+    expect(metrics.buttonHeight).toBeGreaterThanOrEqual(43.9);
+    expect(metrics.inside).toBe(true);
+    expect(metrics.pageWidth).toBeLessThanOrEqual(width + 1);
+    await action.click();
+    await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
+    expect(errors).toEqual([]);
+  });
+}

@@ -3,7 +3,6 @@ import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ListChecks, Plus } from 'lucide-react';
 import ActivityList from '../components/events/ActivityList';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
@@ -159,7 +158,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   return (
     <div className="events-page life-timeline-page activities-page">
       <header className="life-timeline-heading">
-        <div><span className="life-timeline-eyebrow"><ListChecks size={13} /> Across your Moments</span><h2>Activities</h2><p>Find and manage your activities in one place.</p></div>
+        <h2>Activities</h2>
       </header>
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"

@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.29.4';
+export const GUEST_TOUR_VERSION = '2026.10.30.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Save photographs, stories and moments together. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. Save photographs, stories and moments together. In Activities, tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
