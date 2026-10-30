@@ -24,14 +24,20 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         const items = [...element.querySelectorAll('[role="menuitem"]')]
           .map((item) => item.getBoundingClientRect().height);
         const button = document.querySelector('.profile-trigger').getBoundingClientRect();
+        const themeButton = document.querySelector('.theme-toggle').getBoundingClientRect();
         return { menuLeft: rect.left, menuRight: rect.right, menuBottom: rect.bottom,
-          bodyWidth: document.documentElement.scrollWidth, triggerHeight: button.height, items };
+          bodyWidth: document.documentElement.scrollWidth,
+          triggerHeight: button.height, triggerWidth: button.width,
+          themeButtonHeight: themeButton.height, themeButtonWidth: themeButton.width, items };
       });
       expect(sizes.menuLeft).toBeGreaterThanOrEqual(-1);
       expect(sizes.menuRight).toBeLessThanOrEqual(width + 1);
       expect(sizes.menuBottom).toBeLessThanOrEqual(height + 1);
       expect(sizes.bodyWidth).toBeLessThanOrEqual(width + 1);
       expect(sizes.triggerHeight).toBeGreaterThanOrEqual(44);
+      expect(sizes.triggerWidth).toBeGreaterThanOrEqual(44);
+      expect(sizes.themeButtonHeight).toBeGreaterThanOrEqual(44);
+      expect(sizes.themeButtonWidth).toBeGreaterThanOrEqual(44);
       expect(sizes.items.every((item) => item >= 44)).toBe(true);
       await menu.getByRole('menuitem', { name: 'Settings' }).click();
       await expect(page).toHaveURL(/\/settings$/);

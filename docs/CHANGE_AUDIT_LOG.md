@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261030-210 | Correct real header hit targets after CI exposed global override
+- **Executed evidence:** Browser run `41079025595` on `a599d01b` completed with six failures in `e2e/iphone-profile-menu-premium.spec.js` at `triggerHeight >= 44`, with observed rendered height **42px** on all light/dark 320/390/430 widths. Existing `src/design-system.css` still applies an important 42px profile minimum after the non-important 44px premium rule; its `theme-toggle` height is also 42px.
+- **Fix:** In `ProfileMenuPremium.css` give only the header profile trigger important 44px width/height safeguards, important mobile 5px padding with border-box to keep the avatar compact, and important 44px dimensions for the theme toggle. Add strict width/height checks for both buttons to all six responsive synthetic cases. Preserve header and dropdown geometry, Guest/session handlers, logout routes and keyboard semantics.
+- **Downstream:** Shared authenticated/Guest header across routes only; no menu item or data changes, no photo layout, filter, code list, record, finance, backup or login impact. This is a correction of CHG-207, not a new owner acceptance row. Original Guest fixture stays untouched.
+- **Validation:** Failing CI log and old/new CSS read; full exact-SHA CI, native iPhone Safari/VoiceOver and owner visual review **Unverified** until their actual results. All 11 existing visual owner items remain deferred.
+- **Boundary:** `OldVersion` only; no `main`, Firebase publication, version bump or paid hosting.
+
 ## CHG-20261030-209 | Quiet, honest session data indicator above the first fold
 - **Why:** The shell repeated a long Guest/Firebase status sentence above every page. At small iPhone widths it competed with Moment and Activity cards and made first-fold navigation feel technical.
 - **Implementation:** Keep storage scope visible but compact: device/cloud icon and a 22–24px status cue. An accessible named note preserves the complete Guest local-only warning and describes Firebase account storage without promising live sync. Drop obsolete fixed green inline banner styles; use theme-safe restrained colors scoped to the shell.

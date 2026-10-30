@@ -1,13 +1,26 @@
 /* DN 2.1 shared account menu: compact editorial popover, real touch targets. */
 html[data-theme] .dn-header .profile-menu-wrap { position: relative; min-width: 0; }
+/* Older design-system selectors use !important at 42px. Override within
+   the header only, preserving the compact visuals and 44px real hit areas. */
+html[data-theme] .dn-header .theme-toggle {
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
+  flex: 0 0 44px;
+  box-sizing: border-box;
+}
+
 html[data-theme] .dn-header .profile-trigger {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
+  min-width: 44px !important;
+  min-height: 44px !important;
+  height: 44px !important;
+  box-sizing: border-box;
   gap: 7px;
-  padding: 4px 9px 4px 5px;
+  padding: 4px 9px 4px 5px !important;
   border: 1px solid var(--color-border) !important;
   border-radius: 14px !important;
   background: color-mix(in srgb, var(--color-card) 88%, transparent) !important;
@@ -147,9 +160,9 @@ html[data-theme] .dn-header .profile-menu-danger:focus-visible {
 }
 @media (max-width: 760px) {
   html[data-theme] .dn-header .profile-trigger {
-    width: 44px;
-    min-width: 44px;
-    padding: 5px;
+    width: 44px !important;
+    min-width: 44px !important;
+    padding: 5px !important;
   }
   html[data-theme] .dn-header .profile-trigger .user-name,
   html[data-theme] .dn-header .profile-trigger-chevron { display: none; }
