@@ -23,7 +23,6 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
 }).format(Number(value) || 0);
 
-const defaultFilters = Object.freeze({ type: 'all', month: 'all', search: '', sort: 'date-desc' });
 const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES };
 
 export default function Financials() {
