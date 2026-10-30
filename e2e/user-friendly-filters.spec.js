@@ -28,21 +28,22 @@ async function assertReadableRule(page, row) {
     expect(bound.x).toBeGreaterThanOrEqual(-1);
     expect(bound.x + bound.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
   }
-  // The approved phone editor has a readable field-first row with a separate
-  // 44px remove target, then a comparison and value row.
-  expect(Math.abs(centers[0] - centers[3])).toBeLessThanOrEqual(3);
-  expect(centers[1]).toBeGreaterThan(centers[0] + 28);
-  expect(Math.abs(centers[1] - centers[2])).toBeLessThanOrEqual(4);
+  // Field, comparison, value and 44px removal remain on the SAME line,
+  // without sacrificing tap size or creating horizontal page overflow.
+  expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(4);
+  expect(bounds[0].x + bounds[0].width).toBeLessThanOrEqual(bounds[1].x + 2);
+  expect(bounds[1].x + bounds[1].width).toBeLessThanOrEqual(bounds[2].x + 2);
+  expect(bounds[2].x + bounds[2].width).toBeLessThanOrEqual(bounds[3].x + 2);
   expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
   expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
-  expect((await row.boundingBox()).height).toBeLessThanOrEqual(128);
+  expect((await row.boundingBox()).height).toBeLessThanOrEqual(62);
   const panel = await page.locator('.dn-list-controls-panel').boundingBox();
   expect(panel.height).toBeLessThanOrEqual(Math.min(480, page.viewportSize().height * .62));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 }
 
 for (const width of [320, 390]) {
-  test(`all five lists offer friendly filters and readable two-row mobile rules at ${width}px`, async ({ page }) => {
+  test(`all five lists offer friendly filters and readable single-row mobile rules at ${width}px`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 844 });
     const moments = fixtureMoments();
