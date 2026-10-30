@@ -77,10 +77,14 @@ test('selected sort value adjusts field width without moving right-side actions'
   const reset = actions.getByRole('button', { name: 'Reset' });
   const first = await field.boundingBox();
   const rightBefore = await Promise.all([direction, reset].map((element) => element.boundingBox()));
+  const stripBefore = await actions.boundingBox();
   await field.click();
   await page.getByRole('option', { name: 'Name', exact: true }).click();
   const second = await field.boundingBox();
   const rightAfter = await Promise.all([direction, reset].map((element) => element.boundingBox()));
+  const stripAfter = await actions.boundingBox();
+  expect(Math.abs(stripBefore.width - stripAfter.width)).toBeLessThanOrEqual(1);
+  expect(Math.abs(stripBefore.x - stripAfter.x)).toBeLessThanOrEqual(1);
   expect(first.width).toBeGreaterThan(second.width + 6);
   for (let i = 0; i < 2; i += 1) {
     expect(Math.abs(rightBefore[i].x - rightAfter[i].x)).toBeLessThanOrEqual(2);

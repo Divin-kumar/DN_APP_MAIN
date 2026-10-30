@@ -483,3 +483,15 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .sort-con
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort > .dropdown-field { grid-column:1; justify-self:start; min-width:0; max-width:100%; }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-user-sort > .dn-sort-direction { grid-column:2; justify-self:end; width:53px; min-width:53px; margin:0; }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-controls-reset-row { grid-column:2; justify-self:end; width:46px; min-width:46px; margin:0; }
+
+/* CHG-204: The panel is a column flexbox that inherited align-items:start
+   from its earlier grid styles. Without an explicit stretch, the sort strip
+   shrink-wraps its selected label and shifts Asc/Desc + Reset by 28px.
+   Stretch only the action row, keeping the controls lightweight. */
+html[data-theme] .dn-list-controls-panel:has(.dn-list-controls-builder) .dn-list-controls-action-line {
+  align-self: stretch;
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}

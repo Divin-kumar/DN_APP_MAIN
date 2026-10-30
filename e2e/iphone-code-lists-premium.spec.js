@@ -49,8 +49,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       for (const row of layout.editors) {
         expect(row.button.height).toBeGreaterThanOrEqual(44);
         expect(row.button.height).toBeLessThanOrEqual(52);
-        expect(row.value.height).toBeGreaterThanOrEqual(44);
-        expect(row.label.height).toBeGreaterThanOrEqual(44);
+        // Chromium fractional layout can report 43.99976px for a CSS 44px input.
+        // Preserve the actual CSS minimum; allow only sub-pixel rounding.
+        expect(row.value.height).toBeGreaterThanOrEqual(43.9);
+        expect(row.label.height).toBeGreaterThanOrEqual(43.9);
         expect(row.inputSize).toBeGreaterThanOrEqual(16);
         expect(row.labelSize).toBeGreaterThanOrEqual(16);
         expect(row.value.y + row.value.height).toBeLessThanOrEqual(row.label.y + 1);
