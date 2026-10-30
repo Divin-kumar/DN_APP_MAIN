@@ -4,6 +4,7 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityList from '../components/events/ActivityList';
+import QuietEmptyState from '../components/common/QuietEmptyState';
 import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import ListControls from '../components/common/ListControls';
@@ -153,6 +154,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   };
   const close = (setter) => { if (!saving.current) { setter(null); setSaveError(''); } };
   const activeCount = conditions.activeCount;
+  const resetActivityDiscovery = () => { resetFilters(); conditions.clear(); };
   const summary = `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`;
 
   return (
@@ -162,7 +164,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       </header>
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
-          summary={summary} chips={<ConditionChips filter={conditions} />} canReset={Boolean(conditions.activeCount || filters.search || filters.field !== 'date' || filters.direction !== 'asc')} onReset={() => { resetFilters(); conditions.clear(); }}
+          summary={summary} chips={<ConditionChips filter={conditions} />} canReset={Boolean(conditions.activeCount || filters.search || filters.field !== 'date' || filters.direction !== 'asc')} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}
           search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
@@ -174,6 +176,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
+          : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
+              onClear={allInScope.length && (filters.search.trim() || activeCount) ? resetActivityDiscovery : undefined} />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
@@ -192,7 +196,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             )}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
-      {ready && !events.length ? <p className="dn-list-controls-note">Use + to create a Moment, then add its activities.</p> : null}
       {draft ? <ModalDialog title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
         <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
           {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
