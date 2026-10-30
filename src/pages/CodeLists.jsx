@@ -31,14 +31,13 @@ import SortControl from '../components/common/SortControl';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import useConditionFilters from '../hooks/useConditionFilters';
 import useScopedMoments from '../hooks/useScopedMoments';
-import { momentConditions, momentConditionRecord, activityConditions, activityEntryConditionRecord, transactionConditions } from '../utils/listConditionMigration';
+import { momentConditionRecord, activityEntryConditionRecord } from '../utils/listConditionMigration';
 import { projectActivities } from '../utils/activityRecords';
-import { getActiveSampleScenario } from '../dev/sampleData';
 import { toTransactions } from '../utils/transactionFilters';
 import usePersistentListState from '../hooks/usePersistentListState';
 import { MOMENT_LIST_DEFAULTS, MOMENT_LIST_RULES, TRANSACTION_LIST_DEFAULTS, TRANSACTION_LIST_RULES, systemConditionGroup } from '../utils/listViewDefaults';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
-import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, TRANSACTION_SORT_VALUES, transactionSortForField } from '../utils/userListSort';
+import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, transactionSortForField } from '../utils/userListSort';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -525,19 +524,19 @@ function ListOrderingPreferences() {
       <span className="dn-defaults-saved">Saved automatically · This device</span>
     </div>
     <div className="settings-admin-grid dn-list-sort-settings">
-      <div className="settings-input-block">
+      <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Moments</strong><small>Default order</small></div>
         <SortControl label="Sort Moments in settings" field={moments.field} direction={moments.direction}
           options={MOMENT_SORT_OPTIONS} onFieldChange={(field) => setMoments({ field, direction: 'asc' })}
           onToggleDirection={() => setMoments({ direction: moments.direction === 'asc' ? 'desc' : 'asc' })} />
       </div>
-      <div className="settings-input-block">
+      <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Activities</strong><small>Default order</small></div>
         <SortControl label="Sort Activities in settings" field={activities.field} direction={activities.direction}
           options={ACTIVITY_SORTS} onFieldChange={(field) => setActivities({ field, direction: 'asc' })}
           onToggleDirection={() => setActivities({ direction: activities.direction === 'asc' ? 'desc' : 'asc' })} />
       </div>
-      <div className="settings-input-block">
+      <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Transactions</strong><small>Default order</small></div>
         <SortControl label="Sort Transactions in settings" field={financeField} direction={financeDirection}
           options={TRANSACTION_SORT_OPTIONS}
