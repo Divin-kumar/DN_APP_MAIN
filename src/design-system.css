@@ -3215,8 +3215,13 @@ html[data-theme] .insights-page .insight-metric > small {
     overflow: hidden;
   }
   html[data-theme] .dn-financial-workspace .transactions-heading,
-  html[data-theme] .dn-financial-workspace .dn-transactions-page > .list-controls {
+  html[data-theme] .dn-financial-workspace .dn-transactions-page > .dn-list-controls {
     flex: 0 0 auto;
+  }
+  html[data-theme] .dn-financial-workspace .dn-list-controls-panel {
+    max-height: min(45dvh, 350px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   html[data-theme] .dn-financial-workspace .dn-transactions-page .dn-transactions-results {
     flex: 1 1 auto;
