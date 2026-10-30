@@ -21,6 +21,7 @@ import { recordId } from '../../../utils/recordIdentity';
 import { getActiveSampleScenario } from '../../../dev/sampleData';
 import './DashboardSections.css';
 import DashboardGreeting from './DashboardGreeting';
+import DashboardCoverThumb from './DashboardCoverThumb';
 import useDashboardClock from '../useDashboardClock';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
@@ -295,7 +296,7 @@ export function DashboardOverviewContent() {
                   return (
                     <div className="dashboard-moment-row" key={event.id || event.firestoreId}>
                       <button type="button" className="dashboard-upcoming-row" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}>
-                        <span className="dashboard-upcoming-date"><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
+                        <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
                         <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {momentView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}{activityTime(event) ? ` · ${activityTime(event)}` : ''}</small></span>
                         <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
                       </button>
@@ -351,7 +352,7 @@ export function DashboardOverviewContent() {
                     <button type="button" className="dashboard-upcoming-row" disabled={activityActions.busy}
                       aria-label={`Open ${activity.title || activity.name || 'activity'}`}
                       onClick={() => navigate(activityDetailPath(target.momentId, target.activityId))}>
-                      <span className="dashboard-upcoming-date"><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
+                      <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} activity={activity} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
                       <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</small></span>
                       <span className="dashboard-upcoming-arrow" aria-hidden="true">{status === 'completed' ? <Check size={14} /> : <BookOpen size={14} />}</span>
                     </button>
