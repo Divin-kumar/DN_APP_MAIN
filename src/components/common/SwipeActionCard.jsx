@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { Ellipsis, Trash2 } from 'lucide-react';
 import { resolveSwipeGesture } from '../../utils/swipeGestures';
 import { getVisibleViewport } from '../../utils/overlayPosition';
-import { computeSwipeMenuPlacement } from '../../utils/swipeMenuPlacement';
+import { computeSwipeMenuPlacement, getSwipeDockReserve } from '../../utils/swipeMenuPlacement';
 
 // A swipe in EITHER direction opens the same compact glass action menu.
 // The card never slides, and Delete is only an explicit, confirmation-gated item.
@@ -35,9 +35,15 @@ export default function SwipeActionCard({
     if (!anchor) return;
     const viewport = getVisibleViewport(window);
     if (anchor.bottom <= viewport.top || anchor.top >= viewport.top + viewport.height) { close(); return; }
+    const dock = document.querySelector('.mobile-tabbar');
+    const visibleDock = dock && getComputedStyle(dock).display !== 'none';
+    const bottomReserve = getSwipeDockReserve({
+      viewport,
+      dockRect: visibleDock ? dock.getBoundingClientRect() : null,
+      dockVisible: Boolean(visibleDock),
+    });
     setPosition(computeSwipeMenuPlacement({
-      anchor, viewport, count: actions.length,
-      bottomReserve: viewport.width < 768 ? 80 : 12,
+      anchor, viewport, count: actions.length, bottomReserve,
     }));
   };
   const showMenu = (isTouch = false, fromKeyboard = false) => {
