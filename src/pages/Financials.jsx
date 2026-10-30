@@ -60,7 +60,10 @@ export default function Financials() {
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
   );
-  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, { initialGroup: transactionConditions(filters), moments: events });
+  const conditions = useConditionFilters('transactions', allTransactions, usePersistentListState, {
+    initialGroup: transactionConditions(filters), moments: events,
+    startingGroup: Object.keys(settingsDefaults.filters).every((key) => filters[key] === settingsDefaults.filters[key]) ? settingsDefaults.group : undefined,
+  });
   const canResetFilters = !matchesListDefaults(filters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const restoreSavedFilters = () => { resetFilters(); conditions.restore(settingsDefaults.group); };
   const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
