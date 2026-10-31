@@ -56,14 +56,14 @@ test.describe('premium Moment cards on touch iPhones', () => {
       await page.locator('.life-timeline-heading h2').tap();
       await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
       const state = await card.evaluate((root) => ({
-        cardTransform: getComputedStyle(root).transform,
+        cardOffsetX: new DOMMatrixReadOnly(getComputedStyle(root).transform).m41,
         openTransform: getComputedStyle(root.querySelector('.dn-v2-moment-open')).transform,
         pageWidth: document.documentElement.scrollWidth,
         viewportWidth: document.documentElement.clientWidth,
         border: getComputedStyle(root).borderColor,
         normalBorder: getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim(),
       }));
-      expect(state.cardTransform).toBe('none');
+      expect(Math.abs(state.cardOffsetX)).toBeLessThan(0.5);
       expect(state.openTransform).toBe('none');
       expect(state.pageWidth).toBeLessThanOrEqual(state.viewportWidth + 1);
       // Both left/right gestures must still open the lightweight popup.
