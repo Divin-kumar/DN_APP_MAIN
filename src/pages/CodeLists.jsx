@@ -578,7 +578,7 @@ export default function CodeLists() {
     if (location.hash !== '#list-order') return undefined;
     const frame = window.requestAnimationFrame(() => {
       document.getElementById('list-order')?.scrollIntoView({
-        block: 'start', inline: 'nearest', behavior: 'instant',
+        block: 'start', inline: 'nearest', behavior: 'auto',
       });
     });
     return () => window.cancelAnimationFrame(frame);
