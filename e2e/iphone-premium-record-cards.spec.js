@@ -59,7 +59,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     await expect(income).toHaveCount(1);
     await expect(expense).toHaveCount(3);
     await expect(income.locator('.dn-transaction-value')).toContainText('₹');
-    await expect(expense.locator('.dn-transaction-value')).toContainText('₹');
+    await expect(expense.locator('.dn-transaction-value')).toHaveText([/₹/, /₹/, /₹/]);
     const layout = await rows.evaluate((container) => ({
       cardTypes: [...container.querySelectorAll('.dn-v2-transaction-card')].map((card) => {
         const style = getComputedStyle(card);

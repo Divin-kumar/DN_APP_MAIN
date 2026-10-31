@@ -102,7 +102,16 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
       Math.min(geometry.fieldTop, geometry.comparisonTop, geometry.valueTop, geometry.removeTop)).toBeLessThanOrEqual(4);
     expect(geometry.removeWidth).toBeGreaterThanOrEqual(43.9);
     expect(geometry.removeHeight).toBeGreaterThanOrEqual(43.9);
-    expect(geometry.inside).toBe(true);
+    // A horizontally scrolling value cell may extend under the pinned
+    // remove action. Only the page and remove target must stay in view.
+    const removePin = await rule.evaluate((node) => {
+      node.scrollLeft = node.scrollWidth;
+      const bounds = node.getBoundingClientRect();
+      const button = node.querySelector('.dn-condition-icon').getBoundingClientRect();
+      return { left: bounds.left, right: bounds.right, pinLeft: button.left, pinRight: button.right };
+    });
+    expect(removePin.pinLeft).toBeGreaterThanOrEqual(removePin.left - 1);
+    expect(removePin.pinRight).toBeLessThanOrEqual(removePin.right + 1);
     expect(geometry.pageWidth).toBeLessThanOrEqual(width+1);
     await page.getByRole('button', { name:'Remove filter', exact:true }).click();
     await refine.click();

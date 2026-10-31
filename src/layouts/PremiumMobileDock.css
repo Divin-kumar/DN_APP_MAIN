@@ -275,7 +275,7 @@
     padding-inline: 4px !important;
   }
   html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab {
-    font-size: 10.5px !important;
+    font-size: 11px !important;
     letter-spacing: -.025em !important;
   }
   html[data-theme] .dn-premium-dock .dn-dock-icon { width: 31px; }
