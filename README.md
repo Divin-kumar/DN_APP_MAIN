@@ -2,7 +2,7 @@
 
 **Current development policy (31 October 2026):** All DN 2.1 source changes, test fixes and documentation updates happen on **`OldVersion` only**. Never write to `main`, `DN-2.1-batch2`, or the pre-Apple recovery checkpoint. No new branch, PR, merge, Firebase/Vercel deployment or version bump without specific owner authorization. The earlier Batch 1/Batched 2 development restrictions below are historical and superseded by [agent rules](AGENTS.md).
 
-**Current QA/release state:** CHG-240 is the first focused recovery pass after an executed browser regression run reported 387 passed/191 failed; the remaining E2E, build and dependency advisory gates are **not green**. Firebase-only owner acceptance remains the release plan, not evidence that newer `OldVersion` source is already live. Read the [change log](docs/CHANGE_AUDIT_LOG.md) and [master](docs/MASTER_SOURCE_OF_TRUTH.md) before further work.
+**Current QA/release state:** CHG-243 records the latest completed regression baseline at `8541858d` (566 Chromium passed/12 failed), with additional targeted OldVersion test repairs committed but **not yet proven green**. Build, offline/PDF, upgrade and the minimatch/ESLint dependency advisory gate remain unresolved. Firebase-only owner acceptance remains the release plan, not evidence that newer `OldVersion` source is already live. Read the [change log](docs/CHANGE_AUDIT_LOG.md) and [master](docs/MASTER_SOURCE_OF_TRUTH.md) before further work.
 
 - [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
