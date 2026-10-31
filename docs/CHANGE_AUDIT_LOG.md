@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-216 | Keep every iPhone filter condition on one readable row
+- **Reason:** At 320px, the shared Refine builder technically rendered Field, Comparison and Value on one line but allowed their grid columns to compress so far that selected field and value labels became unreadable.
+- **Implementation:** In the single shared `ConditionBuilder.css`, enforce modest field/comparison/value minimum widths on phones up to 390px; give each individual condition row its own horizontal touch scroll when the four controls cannot all fit; pin the 44px Remove action to the row's trailing edge. The surrounding document, page and vertical filter stack do not scroll sideways. Preserve all original dropdown portals, focus visibility, search, sorting, nested conditions and actual filter semantics.
+- **Affected views:** Moments, Activities, nested Moment Activities, Transactions and the independently configured Settings default-filter editor. No page-specific CSS override, new control, record change or filter-state migration was added. Existing built-in Guest scenarios remain sufficient; no tour/sample data change or forced refresh.
+- **QA added:** New 27-case Playwright matrix at 320/390/430px, dark/light for main and nested lists plus Settings. Covers field/value selection, one-row geometry, narrow-width legibility, internal horizontal scroll, pinned Remove, no document overflow and unchanged Guest records. This is **authored regression coverage only**, not executed proof; synthetic viewport, actual Safari touch and signed-in verification remain unverified.
+- **Release:** Add CHG-216 to the owner-held Firebase batch following CHG-213/214/215. `main` frozen, no Firebase deployment, app-version bump or Vercel paid-tier change.
+
 ## CHG-20261031-215 | Make saved List defaults directly accessible from Settings
 - **Problem:** After separating saved filter defaults from working list state, those important preferences were still located beneath six long Code List sections; users had to traverse the configuration taxonomy to reach them.
 - **Change:** Give Settings a distinct premium, 44px+ direct `List defaults` navigation card linked to `/settings/code-lists#list-order`. Code Lists now scrolls its real `.dn-content` ancestor to the existing saved-default section after route layout, using standard `scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'auto' })`; no new route or duplicate form. Clarify the Code Lists card copy to focus on reusable record categories.
