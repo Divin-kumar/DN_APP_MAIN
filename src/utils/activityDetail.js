@@ -1,11 +1,12 @@
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
 import { momentRecordId } from './scopedRecordActions.js';
+import { activityOwnsLinkedId } from './activityEntries.js';
 
 export const activityDetailPath = (eventId, activityId) => `/events/${encodeURIComponent(recordId(eventId))}/activities/${encodeURIComponent(recordId(activityId))}`;
 export const resolveActivityDetail = (events, eventId, activityId) => {
   const moment = events.find((item) => momentRecordId(item) === recordId(eventId));
-  const activity = moment?.activities?.find((item) => recordId(item.id) === recordId(activityId));
+  const activity = moment?.activities?.find((item) => activityOwnsLinkedId(item, activityId));
   return moment && activity ? { moment, activity } : null;
 };
 export const activityStatus = (activity) => activity.cancelled || activity.status === 'cancelled' ? 'cancelled'
