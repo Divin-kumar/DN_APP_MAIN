@@ -37,6 +37,7 @@ test('only fully loaded records in all three stores can back a settings reset', 
   assert.doesNotThrow(() => assertSettingsResetRecords(ctx, a,
     { ...a, events: undefined, expenses: [] }, { ...a, events: undefined, incomes: [] }));
   assert.throws(() => assertSettingsResetRecords(ctx, a, a), /could not verify/);
+  assert.throws(() => assertSettingsResetRecords(ctx, a, a, a), /could not verify/);
   assert.throws(() => assertSettingsResetRecords(ctx, a, { ...a, loadedFor: 'user:bob' }, a), /could not verify/);
   assert.throws(() => assertSettingsResetRecords(ctx, a, { ...a, loading: true }, a), /could not verify/);
   assert.throws(() => assertSettingsResetRecords(ctx, a, { ...a, error: 'network' }, a), /could not verify/);
