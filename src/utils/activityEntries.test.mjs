@@ -36,7 +36,8 @@ test('three mandatory type modes resolve both configured values and legacy names
 test('Diary consolidates same-day legacy records with stable ID and owner-specific originals', () => {
   const input = {
     id: 'moment', type: 'Diary', activities: [
-      { ...make('early', 'Morning', '07:30'), expenses: [{ id: 'legacy-cost', amount: 30, eventId: 'moment', activityId: 'early' }] },
+      { ...make('early', 'Morning', '07:30'), extra: { legacy: 'keep' },
+        expenses: [{ id: 'legacy-cost', amount: 30, eventId: 'moment', activityId: 'early' }] },
       make('late', 'Evening', '20:30'),
       make('tomorrow', 'Next day', '10:00', '2026-11-01'),
     ],
@@ -48,6 +49,9 @@ test('Diary consolidates same-day legacy records with stable ID and owner-specif
   assert.equal(merged.activities.length, 2);
   assert.equal(merged.activities[0].id, 'early');
   assert.deepEqual(merged.activities[0].entries.map((item) => item.title), ['Morning', 'Evening']);
+  assert.equal(merged.activities[0].entries[0].legacyActivityFields.extra.legacy, 'keep');
+  assert.equal(merged.activities[0].entries[1].legacyActivityFields.id, 'late');
+  assert.equal(merged.activities[0].entries[0].legacyActivityFields.expenses, undefined);
   assert.deepEqual(merged.activities[0].mergedActivityIds, ['late']);
   assert.equal(merged.activities[0].expenses[0].id, 'legacy-cost');
   assert.equal(merged.attachments[0].assetId, 'original-ref');
