@@ -53,6 +53,7 @@ test('legacy migration preserves custom values, edits, metadata, inactive values
     greetingTemplate: 'Keep this',
     showInDashboardUpcoming: true,
     showActivitiesOnDashboard: true,
+    storyPresentation: 'journey',
     customFlag: 'preserve me',
   });
   assert.equal(result.adminValues.eventTypes.some((entry) => entry.value === 'Custom Moment'), true);
