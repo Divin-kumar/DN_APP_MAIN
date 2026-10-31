@@ -632,7 +632,7 @@ export function EventWorkspaceContent() {
               onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} disabled={activityBusy} />
             <label className="dn-activity-create-title" htmlFor="dn-workspace-entry-title">{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
               <input id="dn-workspace-entry-title" value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)}
-                placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'What needs doing?' : 'What would you like to remember?'}
+                placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
                 style={styles.input} required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
             </label>
             <div className="activity-date-time-row">
