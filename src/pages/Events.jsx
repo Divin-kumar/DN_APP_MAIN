@@ -26,7 +26,7 @@ import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
 import { matchesListDefaults } from '../utils/listViewDefaults';
-import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
+import { formatMomentDate, getNextOccurrenceDate, parseMomentDate } from '../utils/momentDates';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import { momentConditions, momentConditionRecord } from '../utils/listConditionMigration';
 import useConditionFilters from '../hooks/useConditionFilters';
@@ -49,25 +49,6 @@ import '../components/events/MomentList.css';
 const dateLabel = (value) => new Date(value).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
 const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
 const momentFilterRules = Object.freeze({ field: MOMENT_SORT_OPTIONS.map(({ value }) => value), direction: ['asc', 'desc'] });
-
-const getTimelineDate = (event, referenceDate = new Date()) => {
-  const baseDate = new Date(event.date || event.startDate || event.createdAt);
-  if (Number.isNaN(baseDate.getTime())) return null;
-  const recurrence = String(event.recurrence || '').toLowerCase();
-  const recurring = event.isRecurring === true || (recurrence && recurrence !== 'none');
-  if (!recurring) return baseDate;
-
-  const today = new Date(referenceDate);
-  today.setHours(0, 0, 0, 0);
-  const candidate = recurrence === 'monthly'
-    ? new Date(today.getFullYear(), today.getMonth(), baseDate.getDate())
-    : new Date(today.getFullYear(), baseDate.getMonth(), baseDate.getDate());
-  if (candidate >= today) return candidate;
-  return recurrence === 'monthly'
-    ? new Date(today.getFullYear(), today.getMonth() + 1, baseDate.getDate())
-    : new Date(today.getFullYear() + 1, baseDate.getMonth(), baseDate.getDate());
-};
-
 
 function MomentCardCover({ attachment, uid, isGuest, date }) {
   const tileRef = useRef(null);
@@ -157,7 +138,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
 }
 
 function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorite }) {
-  const nextDate = getTimelineDate(event);
+  const nextDate = getNextOccurrenceDate(event);
   return (
     <div className="activity-event-option">
       <button type="button" className="activity-event-option-main" onClick={onChoose}>
@@ -250,7 +231,7 @@ export default function Events() {
     try { return JSON.parse(localStorage.getItem(recentKey) || '[]'); } catch { return []; }
   })();
   const pickerRecent = pickerRecentIds.map((id) => pickerById.get(id)).filter((event) => event && !favoriteEventIds.includes(event.id || event.firestoreId)).slice(0, 3);
-  const pickerSuggested = [...pickerEvents].filter((event) => getTimelineDate(event) >= new Date(new Date().setHours(0, 0, 0, 0))).sort((first, second) => getTimelineDate(first) - getTimelineDate(second))[0];
+  const pickerSuggested = [...pickerEvents].filter((event) => getNextOccurrenceDate(event) >= new Date(new Date().setHours(0, 0, 0, 0))).sort((first, second) => getNextOccurrenceDate(first) - getNextOccurrenceDate(second))[0];
   const pickerFeaturedIds = new Set([...pickerFavorites, ...pickerRecent].map((event) => event.id || event.firestoreId));
   const pickerAll = pickerEvents.filter((event) => !pickerFeaturedIds.has(event.id || event.firestoreId) && event !== pickerSuggested);
 
