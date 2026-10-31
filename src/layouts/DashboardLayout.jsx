@@ -35,6 +35,7 @@ import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import './ProfileMenuPremium.css';
 import './SessionBannerPremium.css';
+import './PremiumMobileDock.css';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -42,6 +43,16 @@ const navItems = [
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Activities', path: '/activities', icon: ListChecks },
   { label: 'Moments', path: '/events', icon: CalendarDays },
+];
+// Two balanced destinations on either side of the universal create action.
+// The desktop sidebar is intentionally not reshuffled by this iPhone change.
+const mobileDockStart = [
+  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
+  { label: 'Activities', path: '/activities', icon: ListChecks },
+];
+const mobileDockEnd = [
+  { label: 'Moments', path: '/events', icon: BookHeart },
+  { label: 'Transactions', path: '/financials/transactions', icon: Receipt },
 ];
 const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
@@ -233,7 +244,12 @@ export default function DashboardLayout() {
       if (!clickedInsideDesktop && !clickedInsideMobile) setQuickCreateOpen(false);
     };
     const closeQuickCreateOnEscape = (event) => {
-      if (event.key === 'Escape') setQuickCreateOpen(false);
+      if (event.key !== 'Escape') return;
+      event.preventDefault();
+      setQuickCreateOpen(false);
+      [quickCreateMobileRef.current, quickCreateDesktopRef.current]
+        .map((node) => node?.querySelector('.mobile-dock-create-trigger, .dn-quick-create-trigger'))
+        .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
     };
 
     document.addEventListener('pointerdown', closeQuickCreateOutside);
@@ -483,28 +499,40 @@ export default function DashboardLayout() {
         </section>
       </main>
 
-      <nav className="mobile-tabbar" aria-label="Main navigation">
-        {navItems.map((item) => (
+      <nav className="mobile-tabbar dn-premium-dock" aria-label="Main navigation">
+        {mobileDockStart.map((item) => (
           <Link key={item.path} to={item.path}
-            className={`mobile-tab${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
+            className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
             aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
-            <item.icon size={19} strokeWidth={2} aria-hidden="true" />
-            <span>{item.label}</span>
+            <span className="dn-dock-icon"><item.icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="dn-dock-label">{item.label}</span>
           </Link>
         ))}
-        <div ref={quickCreateMobileRef} className={`mobile-dock-create${quickCreateOpen ? ' is-open' : ''}`}>
+        <div ref={quickCreateMobileRef} className={`mobile-dock-create dn-dock-center${quickCreateOpen ? ' is-open' : ''}`}>
+          <button type="button" className="mobile-dock-create-trigger"
+            onClick={() => setQuickCreateOpen((open) => !open)}
+            aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
+            aria-expanded={quickCreateOpen} aria-controls="dn-mobile-quick-create">
+            {quickCreateOpen ? <X size={24} aria-hidden="true" /> : <Plus size={24} aria-hidden="true" />}
+          </button>
           {quickCreateOpen ? (
-            <div className="mobile-dock-create-menu" aria-label="Quick create actions">
-              <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
-              <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
-              <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
-              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
+            <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
+              <span className="dn-dock-menu-title">Create new</span>
+              <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
+              <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} aria-hidden="true" /><span>Activity</span></button>
+              <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
+              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
           ) : null}
-          <button type="button" className="mobile-dock-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
-            {quickCreateOpen ? <X size={20} /> : <Plus size={21} />}
-          </button>
         </div>
+        {mobileDockEnd.map((item) => (
+          <Link key={item.path} to={item.path}
+            className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
+            aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
+            <span className="dn-dock-icon"><item.icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="dn-dock-label">{item.label}</span>
+          </Link>
+        ))}
       </nav>
 
       <div ref={quickCreateDesktopRef} className={`dn-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
