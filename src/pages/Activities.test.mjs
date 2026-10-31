@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { ENTRY_MODES } from '../utils/activityEntries.js';
 import { createServer as createHttpServer } from 'node:http';
 import { createServer } from 'vite';
 
@@ -192,7 +193,7 @@ test('editing an unfinished duplicate retains expenses, cancellation and unrelat
   // duplicated input JSX in this page's synthetic render tree.
   const fields = nodes(harness.render()).find((node) => node.type === 'ActivityFormFields');
   assert.ok(fields, 'Activities editor uses the canonical field composition');
-  assert.equal(fields.props.mode, 'journal', 'Moment intent controls edit-field emphasis');
+  assert.equal(fields.props.mode, ENTRY_MODES.JOURNAL, 'Moment intent controls edit-field emphasis');
   assert.equal(fields.props.titleLabel, 'Activity title', 'existing accessibility name is retained');
   fields.props.onChange({ title: 'Updated synthetic title' });
   const editor = nodes(harness.render()).find((node) => node.type === 'form');
@@ -203,6 +204,17 @@ test('editing an unfinished duplicate retains expenses, cancellation and unrelat
   assert.deepEqual(harness.writes[0].moment, { ...originalSecond,
     activities: [{ ...originalSecond.activities[0], title: 'Updated synthetic title' }, originalSecond.activities[1]] });
   assert.equal(harness.find('ModalDialog'), undefined, 'successful save closes the editor');
+});
+
+test('Activity editor keeps Tasks notes secondary for legacy Project Moments', async (t) => {
+  const harness = await openActivities(t);
+  harness.second.type = 'Project';
+  harness.list().props.onEdit(harness.view());
+  const fields = nodes(harness.render()).find((node) => node.type === 'ActivityFormFields');
+  assert.ok(fields);
+  assert.equal(fields.props.mode, ENTRY_MODES.TASKS);
+  assert.equal(fields.props.titleLabel, 'Activity title');
+  assert.equal(harness.writes.length, 0, 'opening an editor does not save anything');
 });
 
 test('confirmed deletion removes only the chosen duplicate and leaves other Moment content intact', async (t) => {
