@@ -88,7 +88,9 @@ try {
       expect(await snapshot(page)).toEqual(before);
       await page.goto('/events');
       await page.getByRole('button', { name:/^Filters/ }).click();
-      await expect(page.getByRole('searchbox', { name:'Search events', exact:true })).toHaveValue('Ooty');
+      // The upgraded premium Moments search has a new accessible name;
+      // the user's persisted query must remain unchanged after the update.
+      await expect(page.getByRole('searchbox', { name:'Search moments', exact:true })).toHaveValue('Ooty');
       await page.goto('/events/moment-one/gallery');
       await page.getByRole('button', { name:'Preview Upgrade original.png', exact:true }).click();
       const preview = page.getByRole('dialog', { name:'Upgrade original.png', exact:true });
