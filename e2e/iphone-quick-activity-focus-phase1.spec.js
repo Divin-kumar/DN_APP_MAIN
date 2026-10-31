@@ -11,7 +11,7 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'dark'],[430,932
     await page.getByRole('button',{name:'Open quick create menu',exact:true}).click();
     await page.getByRole('button',{name:'Activity',exact:true}).click();
     const dialog=page.getByRole('dialog',{name:'Add an activity',exact:true});
-    const title=dialog.getByRole('textbox',{name:'Activity title',exact:true});
+    const title=dialog.getByRole('textbox',{name:/^(Activity|Entry) title$/});
     await expect(title).toBeVisible();
     await expect(title).not.toBeFocused();
     expect(await dialog.evaluate(node=>Boolean(node.querySelector('input:focus,textarea:focus,[contenteditable=true]:focus')))).toBe(false);

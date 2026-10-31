@@ -57,7 +57,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     const income = rows.locator('.dn-v2-transaction-card.is-income');
     const expense = rows.locator('.dn-v2-transaction-card.is-expense');
     await expect(income).toHaveCount(1);
-    await expect(expense).toHaveCount(1);
+    await expect(expense).toHaveCount(3);
     await expect(income.locator('.dn-transaction-value')).toContainText('₹');
     await expect(expense.locator('.dn-transaction-value')).toContainText('₹');
     const layout = await rows.evaluate((container) => ({
@@ -72,15 +72,18 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
       scrollWidth: document.documentElement.scrollWidth,
       viewportWidth: document.documentElement.clientWidth,
     }));
-    expect(layout.cardTypes).toHaveLength(2);
-    expect(layout.cardTypes[0].accent).not.toBe(layout.cardTypes[1].accent);
+    expect(layout.cardTypes).toHaveLength(4);
+    expect(new Set(layout.cardTypes.filter((item) => item.className.includes('is-income')).map((item) => item.accent)).size).toBe(1);
+    expect(new Set(layout.cardTypes.filter((item) => item.className.includes('is-expense')).map((item) => item.accent)).size).toBe(1);
+    expect(layout.cardTypes.find((item) => item.className.includes('is-income')).accent)
+      .not.toBe(layout.cardTypes.find((item) => item.className.includes('is-expense')).accent);
     for (const item of layout.cardTypes) {
       expect(item.iconWidth).toBeGreaterThanOrEqual(31);
       expect(item.amountRight).toBeLessThanOrEqual(item.cardRight + 1);
     }
     expect(layout.scrollWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
 
-    const details = expense.locator('details.dn-transaction-details');
+    const details = rows.locator('.dn-v2-transaction-card.is-expense').filter({ hasText: 'Family grocery purchase' }).locator('details.dn-transaction-details');
     await expect(details).not.toHaveAttribute('open', '');
     await details.locator('summary').click();
     await expect(details).toHaveAttribute('open', '');
@@ -89,7 +92,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
 
     const before = await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
-    await swipe(page, expense, { distance: 100 });
+    await swipe(page, rows.locator('.dn-v2-transaction-card.is-expense').filter({ hasText: 'Family grocery purchase' }), { distance: 100 });
     await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);

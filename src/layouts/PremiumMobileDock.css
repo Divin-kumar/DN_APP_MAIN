@@ -7,7 +7,7 @@
     position: fixed !important;
     left: max(10px, env(safe-area-inset-left, 0px) + 8px) !important;
     right: max(10px, env(safe-area-inset-right, 0px) + 8px) !important;
-    bottom: max(10px, var(--dn-safe-area-bottom, 0px)) !important;
+    bottom: max(17px, var(--dn-safe-area-bottom, 0px)) !important;
     z-index: 90 !important;
     display: grid !important;
     grid-template-columns: repeat(5, minmax(0, 1fr)) !important;

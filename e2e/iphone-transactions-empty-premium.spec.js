@@ -11,7 +11,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const original = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
       const rows = page.locator('.dn-financial-workspace .dn-transactions-results .dn-transaction-card');
-      await expect(rows).toHaveCount(3);
+      await expect(rows).toHaveCount(4);
       await page.getByRole('searchbox', { name: 'Search transactions' }).fill('unique-unmatched-text-999');
       const empty = page.locator('.dn-financial-workspace .dn-transactions-empty-premium');
       await expect(empty).toBeVisible();
@@ -33,7 +33,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geometry.buttonHeight).toBeGreaterThanOrEqual(44);
       expect(geometry.listBottom).toBeLessThanOrEqual(geometry.dockTop - 4);
       await reset.click();
-      await expect(rows).toHaveCount(3);
+      await expect(rows).toHaveCount(4);
       await expect(empty).toHaveCount(0);
       await expect(page.getByRole('searchbox', { name: 'Search transactions' })).toHaveValue('');
       const refine = page.getByRole('button', { name: /^Filters and sort/ });

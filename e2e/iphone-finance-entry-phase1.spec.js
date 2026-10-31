@@ -25,10 +25,10 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     expect(positions[0].right).toBeLessThanOrEqual(positions[1].left + 1);
     expect(positions[1].right).toBeLessThanOrEqual(positions[2].left + 1);
 
-    const heading = page.locator('.dn-transactions-page .transactions-heading');
+    const heading = page.locator('.dn-header .dn-shell-page-title');
     await expect(heading).toHaveText('Transactions');
-    await expect(heading.getByRole('button')).toHaveCount(0);
-    await expect(heading.locator('.dn-transactions-heading-description, .dn-transaction-add')).toHaveCount(0);
+    await expect(page.locator('.dn-transactions-page .transactions-heading')).toHaveCount(0);
+    await expect(page.locator('.dn-transactions-heading-description, .dn-transaction-add')).toHaveCount(0);
 
     const quickCreate = page.getByRole('button', { name: 'Open quick create menu' });
     await expect(quickCreate).toBeVisible();

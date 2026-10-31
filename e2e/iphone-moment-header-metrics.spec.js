@@ -27,7 +27,7 @@ test.describe('Moment hero premium three-metric strip', () => {
         await expect(metrics.nth(1).locator('strong')).toHaveText('1');
         const expectedMoney = new Intl.NumberFormat('en-IN', {
           style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-        }).format(amount);
+        }).format(amount + 999 + 20);
         await expect(metrics.nth(2).locator('strong')).toHaveText(expectedMoney);
 
         const geometry = await hero.evaluate((root) => {

@@ -12,9 +12,9 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     const nav = page.getByRole('navigation', { name: 'Main navigation' });
     const tabs = nav.locator('.mobile-tab');
     await expect(nav).toBeVisible();
-    await expect(tabs).toHaveCount(3);
+    await expect(tabs).toHaveCount(4);
 
-    for (const name of ['Home', 'Activities', 'Moments']) {
+    for (const name of ['Dashboard', 'Activities', 'Moments', 'Transactions']) {
       const link = nav.getByRole('link', { name, exact: true });
       const metrics = await link.evaluate((node) => ({
         width: node.getBoundingClientRect().width,

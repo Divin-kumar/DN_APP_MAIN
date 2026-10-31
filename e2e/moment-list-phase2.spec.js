@@ -145,8 +145,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto('/events');
-    const title = page.getByRole('heading', { name: 'Life moments', exact: true });
+    const title = page.locator('.dn-header .dn-shell-page-title');
+    await expect(title).toHaveText('Moments');
     await expect(title).toBeVisible();
+    await expect(page.locator('.events-page .life-timeline-heading')).toHaveCount(0);
     await expect(page.locator('.events-page .life-timeline-eyebrow')).toHaveCount(0);
     await expect(page.locator('.events-page .life-journey-label')).toHaveCount(0);
     await expect(page.locator('.events-page .life-timeline-heading p')).toHaveCount(0);
@@ -155,7 +157,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const cards = page.locator('.life-journey-items .dn-v2-moment-card');
     await expect(cards).toHaveCount(2);
     const geometry = await page.evaluate(() => {
-      const header = document.querySelector('.events-page .life-timeline-heading').getBoundingClientRect();
+      const header = document.querySelector('.dn-header').getBoundingClientRect();
       const controls = document.querySelector('.events-page .event-discovery-bar').getBoundingClientRect();
       const cards = document.querySelector('.events-page .life-journey-items').getBoundingClientRect();
       return {
@@ -164,7 +166,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
         pageWidth: document.documentElement.scrollWidth,
       };
     });
-    expect(geometry.headerHeight).toBeLessThanOrEqual(48);
+    expect(geometry.headerHeight).toBeGreaterThanOrEqual(44);
     expect(geometry.listGap).toBeGreaterThanOrEqual(0);
     expect(geometry.listGap).toBeLessThanOrEqual(30);
     expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);

@@ -13,7 +13,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     const summary = page.locator('.dn-finance-summary');
     const cards = page.locator('.dn-transactions-results .dn-transaction-card');
     await expect(summary).toBeVisible();
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4);
     const guestRecords = await page.evaluate(() =>
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)));
     const before = await summary.innerText();
@@ -48,7 +48,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
       ]);
     });
     await expect(summary).toBeVisible();
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4);
     await expect(summary).toContainText('Income');
     await expect(summary).toContainText('Balance');
     expect(await summary.innerText()).toBe(before);
