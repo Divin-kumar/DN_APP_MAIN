@@ -9,7 +9,7 @@ import './ActivityList.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
-  showCancelled = false, includeCancelled = false, hasActiveFilters = false, getActivityKey = (activity) => activity.id,
+  showCancelled = false, includeCancelled = false, hasActiveFilters = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id,
   getEventName, getMoment, visualCards = false, showMomentName = true, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
@@ -21,7 +21,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
   const progress = activeActivities.length ? Math.round(completedCount / activeActivities.length * 100) : 0;
   return <div className="event-activity-content">
     <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} active activities complete`}>
-      <div><strong>{completedCount} of {activeActivities.length}</strong><span>active steps complete</span></div>
+      <div><strong>{completedCount} of {activeActivities.length}</strong><span>{progressLabel}</span></div>
       <span className="event-activity-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></span>
     </div>
     <div className="event-activity-list">
