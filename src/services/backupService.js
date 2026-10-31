@@ -4,6 +4,7 @@ import { recordId } from '../utils/recordIdentity.js';
 import { financialDate } from '../utils/financialRecords.js';
 import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
 import { validateSavedListDefaultsDocument } from '../utils/listViewDefaults.js';
+import { validateBackupDashboardConfiguration } from '../utils/backupDashboardConfiguration.js';
 
 export const CURRENT_BACKUP_VERSION = 3;
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
@@ -186,6 +187,7 @@ export const validateBackupDocument = (backup, options = {}) => {
     if (!isRecord(backup[key])) throw new Error(`Backup ${key} must be an object.`);
   });
   if (backup.settings.listViewDefaults !== undefined) validateSavedListDefaultsDocument(backup.settings.listViewDefaults);
+  validateBackupDashboardConfiguration(backup.dashboardConfiguration);
   if (!Number.isInteger(backup.codeListSchemaVersion) || backup.codeListSchemaVersion < 1) {
     throw new Error('Backup Code List schema version is invalid.');
   }
