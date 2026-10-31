@@ -62,19 +62,24 @@ try {
       await page.getByRole('searchbox', { name:'Search events', exact:true }).fill('Ooty');
       await expect(page.locator('.life-journey-items .event-story-main')).toHaveCount(1);
       await page.goto('/settings/about');
-      await expect(page.locator('.about-version-badge')).toHaveText(`v${previousVersion}`);
+      // The compact premium About header no longer renders a version badge.
+      // Use the labeled Version value that exists in both release shells.
+      const aboutVersion = page.locator('.about-summary-item')
+        .filter({ has: page.locator('.about-summary-label', { hasText: /^Version$/ }) })
+        .locator('strong');
+      await expect(aboutVersion).toHaveText(`v${previousVersion}`);
       const before = await snapshot(page);
       current = true;
       if (mode === 'fresh-navigation') {
         await page.reload();
-        await expect(page.locator('.about-version-badge')).toHaveText(`v${version}`);
+        await expect(aboutVersion).toHaveText(`v${version}`);
         await page.getByRole('button', { name:'Refresh', exact:true }).click({ timeout:20000 });
       } else {
         await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
         await page.waitForFunction(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting));
         await page.getByRole('button', { name:'Refresh app', exact:true }).click();
       }
-      await expect(page.locator('.about-version-badge')).toHaveText(`v${version}`);
+      await expect(aboutVersion).toHaveText(`v${version}`);
       await page.waitForFunction(async (version) => {
         const reg = await navigator.serviceWorker.getRegistration();
         return [reg?.waiting, reg?.active].some((worker) => worker && new URL(worker.scriptURL).searchParams.get('v') === version);
