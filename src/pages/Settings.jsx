@@ -10,6 +10,8 @@ import './SettingsDataPremium.css';
 import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebase/config';
 import ModalDialog from '../components/common/ModalDialog';
 import DropdownSelect from '../components/common/DropdownSelect';
 import useEventStore from '../store/useEventStore';
@@ -578,9 +580,17 @@ export default function Settings() {
         setCloudDeleteProgress(progress);
       });
       setConfirmCloudDeleteUid(null);
-      setBackupMessage(`Online Firestore records cleared: ${result.deleted} documents deleted. Google sign-in, local originals and legacy Firebase Storage files were not deleted. Reloading DN…`);
-      showToast('Online records cleared', 'success');
-      window.location.reload();
+      setBackupMessage(`Online Firestore records cleared: ${result.deleted} documents deleted. Google identity, local originals and legacy Firebase Storage files remain. Signing out…`);
+      try {
+        // Staying authenticated on this device can immediately create a new
+        // default Code List document. End this session before app bootstrap.
+        await signOut(auth);
+        window.location.reload();
+      } catch (signOutError) {
+        console.error('Online records were cleared but Firebase sign-out failed:', signOutError);
+        setBackupMessage(`Online Firestore records were cleared (${result.deleted} documents), but sign-out failed. Sign out manually before refreshing to avoid recreating online defaults.`);
+        showToast('Online data cleared. Please sign out manually.', 'danger');
+      }
     } catch (error) {
       console.error('Online account data deletion did not complete:', error);
       setBackupMessage(`Online deletion incomplete: ${error.message || 'Unable to verify the cloud records.'} ${committed ? `${committed} records were already deleted and cannot be restored without a backup.` : 'Deletion may not have started; check Firebase before retrying.'}`);
@@ -1016,7 +1026,7 @@ export default function Settings() {
               <p>Moments, Activities, linked files' metadata, income, expenses, transactions, Code Lists and legacy Firestore records in this account will be removed.</p></div>
           </div>
           <p className="dn-cloud-delete-account"><strong>Signed-in account</strong><span>{user?.uid === confirmCloudDeleteUid ? (user?.email || user?.displayName || 'Current account') : 'Account changed'}</span></p>
-          <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. DN may create default Code Lists again when you sign back in. Other signed-in DN tabs can also recreate cloud records, so close them first.</p>
+          <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. DN signs out after successful deletion to prevent immediate cloud re-creation. You can sign in again to start fresh; DN may create default Code Lists then. Close other signed-in DN tabs first.</p>
           <label className="dn-cloud-confirm-check">
             <input type="checkbox" checked={cloudDeleteAcknowledged} onChange={(event) => setCloudDeleteAcknowledged(event.target.checked)} disabled={deletingCloudRecords} />
             <span>I understand this is permanent and have saved a backup if needed.</span>
