@@ -103,3 +103,49 @@ test('Transactions retains its own nested scroll area above the new dock', async
   expect(placement.documentWidth).toBeLessThanOrEqual(placement.viewportWidth + 1);
   expect(errors).toEqual([]);
 });
+
+test.describe('short touch-enabled iPhone landscape dock', () => {
+  test.use({ hasTouch: true });
+  for (const [width, height] of [[844, 390], [932, 430]]) {
+    test(`keeps the centered five-slot dock after rotating to ${width}x${height}`, async ({ page }) => {
+      const errors = await seedGuest(page, { theme: 'dark' });
+      await page.setViewportSize({ width: 390, height: 844 });
+      await page.goto('/activities');
+      await page.setViewportSize({ width, height });
+      const dock = page.getByRole('navigation', { name: 'Main navigation' });
+      await expect(dock).toBeVisible();
+      await expect(dock.locator(':scope > *')).toHaveCount(5);
+      await expect(dock.getByRole('link', { name: 'Activities' })).toHaveAttribute('aria-current', 'page');
+      await expect(page.locator('.dn-sidebar')).toBeHidden();
+      const layout = await dock.evaluate((nav) => {
+        const rect = nav.getBoundingClientRect();
+        const plus = nav.querySelector('.mobile-dock-create-trigger').getBoundingClientRect();
+        return {
+          left: rect.left, right: rect.right, bottom: rect.bottom,
+          center: rect.left + rect.width / 2,
+          plusCenter: plus.left + plus.width / 2,
+          documentWidth: document.documentElement.scrollWidth,
+          viewportWidth: document.documentElement.clientWidth,
+        };
+      });
+      expect(layout.left).toBeGreaterThanOrEqual(0);
+      expect(layout.right).toBeLessThanOrEqual(width + 1);
+      expect(layout.bottom).toBeLessThanOrEqual(height + 1);
+      expect(Math.abs(layout.center - layout.plusCenter)).toBeLessThan(2);
+      expect(layout.documentWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
+      await dock.getByRole('button', { name: 'Open quick create menu' }).click();
+      await expect(dock.getByRole('group', { name: 'Quick create actions' })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await dock.getByRole('link', { name: 'Transactions' }).click();
+      await expect(dock.getByRole('link', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page');
+      const results = page.locator('.dn-transactions-results');
+      await expect(results).toBeVisible();
+      const bounds = await page.evaluate(() => ({
+        listBottom: document.querySelector('.dn-transactions-results').getBoundingClientRect().bottom,
+        navTop: document.querySelector('.dn-premium-dock').getBoundingClientRect().top,
+      }));
+      expect(bounds.listBottom).toBeLessThanOrEqual(bounds.navTop + 2);
+      expect(errors).toEqual([]);
+    });
+  }
+});
