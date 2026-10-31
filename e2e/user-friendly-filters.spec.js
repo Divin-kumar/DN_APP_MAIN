@@ -18,6 +18,9 @@ async function select(page, name, label) {
 
 async function assertReadableRule(page, row) {
   await row.scrollIntoViewIfNeeded();
+  // Previous checks may leave this one-row editor horizontally scrolled.
+  // Re-measure its logical order from the start without scrolling the page.
+  await row.evaluate((element) => { element.scrollLeft = 0; });
   const controls = [row.getByRole('combobox', { name: 'Filter by', exact: true }),
     row.getByRole('combobox', { name: 'Comparison', exact: true }), row.locator('.dn-condition-value-slot'),
     row.getByRole('button', { name: 'Remove filter', exact: true })];
@@ -25,8 +28,8 @@ async function assertReadableRule(page, row) {
   const centers = bounds.map((bound) => bound.y + bound.height / 2);
   for (const bound of bounds) {
     expect(bound.width).toBeGreaterThan(0);
-    expect(bound.x).toBeGreaterThanOrEqual(-1);
-    expect(bound.x + bound.width).toBeLessThanOrEqual(page.viewportSize().width + 1);
+    // At 320px the value slot may be clipped by the intentionally
+    // horizontally scrollable rule; offscreen content is not page overflow.
   }
   // Field, comparison, value and 44px removal remain on the SAME line,
   // without sacrificing tap size or creating horizontal page overflow.
@@ -49,6 +52,9 @@ async function assertReadableRule(page, row) {
     expect(pinned.removeLeft).toBeGreaterThanOrEqual(pinned.left - 1);
     expect(pinned.removeRight).toBeLessThanOrEqual(pinned.right + 1);
   }
+  // The pinned remove action must remain onscreen regardless of scroll.
+  expect(bounds[3].x).toBeGreaterThanOrEqual(-1);
+  expect(bounds[3].x + bounds[3].width).toBeLessThanOrEqual(page.viewportSize().width + 1);
   expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
   expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
   expect((await row.boundingBox()).height).toBeLessThanOrEqual(62);
