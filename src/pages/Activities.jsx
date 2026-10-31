@@ -167,9 +167,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
 
   return (
     <div className="events-page life-timeline-page activities-page">
-      <header className="life-timeline-heading">
-        <h2>Activities</h2>
-      </header>
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
