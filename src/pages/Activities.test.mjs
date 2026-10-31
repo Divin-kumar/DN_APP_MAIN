@@ -80,6 +80,9 @@ const openActivities = async (t) => {
         if (source === 'react') return '\0activities-react';
         if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0activities-jsx';
         if (file.endsWith('/src/hooks/useConditionFilters.js') && source.endsWith('/store/useAppStore')) return '\0activities-app';
+        // Every nested list-default/condition hook must use this inert in-memory
+        // state, not the real React dispatcher outside a mounted tree.
+        if (source.endsWith('/usePersistentListState')) return '\0activities-filters';
         if (!file.endsWith('/src/pages/Activities.jsx')) return null;
         if (source.endsWith('/services/scopedRecordActions')) return '\0activities-writer';
         if (source === 'react-router-dom') return '\0activities-router';
@@ -89,7 +92,6 @@ const openActivities = async (t) => {
         if (source.endsWith('/store/useEventStore')) return '\0activities-events';
         if (source.endsWith('/store/useExpenseStore')) return '\0activities-expenses';
         if (source.endsWith('/hooks/useTransactionManager')) return '\0activities-manager';
-        if (source.endsWith('/hooks/usePersistentListState')) return '\0activities-filters';
         return null;
       },
       load(id) {
