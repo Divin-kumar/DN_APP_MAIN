@@ -62,7 +62,7 @@ export const selectActivityEntries = (entries = [], {
     if (selectedMoment && entry.momentId !== selectedMoment) return false;
     if (momentType && entry.momentType !== momentType) return false;
     const activity = entry.activity;
-    const matchesSearch = !query || [activity.title, activity.description, entry.momentName]
+    const matchesSearch = !query || [activity.title, activity.description, entry.momentName, ...(activity.entries || []).flatMap((part) => [part.title, part.description])]
       .some((value) => String(value || '').toLowerCase().includes(query));
     if (!matchesSearch) return false;
     if (filter === 'cancelled') return cancelled(activity);
