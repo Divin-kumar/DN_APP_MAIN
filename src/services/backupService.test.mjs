@@ -11,6 +11,7 @@ import {
   validateBackupDocument,
 } from './backupService.js';
 import { DEFAULT_CODE_LISTS } from '../utils/codeLists.js';
+import { exportSavedListDefaultsForScope } from '../utils/listViewDefaults.js';
 
 const fixture = () => createBackupDocument({
   createdDate: '2026-10-19T12:00:00.000Z',
@@ -383,4 +384,31 @@ test('legacy expenses infer an Activity owner only when that owner is unambiguou
   assert.deepEqual(groups[0].activities[0].expenses.map((item) => item.id), ['unique-link']);
   assert.equal(backup.expenses.length, 2, 'unmatched expense remains available to the standalone restore');
   assert.match(collectBackupReferenceWarnings(backup).join(' '), /wrong-parent.*mismatched/i);
+});
+
+test('v3 backup optionally preserves portable saved List defaults without a version bump', () => {
+  const document = fixture();
+  const listViewDefaults = exportSavedListDefaultsForScope('test:backup-document');
+  document.settings.listViewDefaults = listViewDefaults;
+  validateBackupDocument(document);
+  const parsed = parseBackupDocument(JSON.parse(JSON.stringify(document)));
+  assert.equal(parsed.backupVersion, 3);
+  assert.deepEqual(parsed.settings.listViewDefaults, listViewDefaults);
+  assert.equal(parsed.settings.listViewDefaults.activities.filters.field, 'date');
+});
+
+test('legacy v3 backup with no List defaults is still accepted as-is', () => {
+  const oldDocument = fixture();
+  assert.equal(oldDocument.settings.listViewDefaults, undefined);
+  validateBackupDocument(oldDocument);
+  assert.equal(parseBackupDocument(JSON.parse(JSON.stringify(oldDocument))).settings.listViewDefaults, undefined);
+});
+
+test('malformed optional List defaults fail backup preflight instead of partially restoring records', () => {
+  const document = fixture();
+  const invalid = exportSavedListDefaultsForScope('test:backup-validation');
+  invalid.activities.filters.direction = 'sideways';
+  document.settings.listViewDefaults = invalid;
+  assert.throws(() => validateBackupDocument(document), /saved activities sorting or search has an invalid value/);
+  assert.throws(() => parseBackupDocument(JSON.parse(JSON.stringify(document))), /saved activities sorting or search has an invalid value/);
 });
