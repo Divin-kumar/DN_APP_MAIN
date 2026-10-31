@@ -50,12 +50,17 @@ export const getNextOccurrenceDate = (event, referenceDate = new Date()) => {
   if (!isRecurringEvent(event) || baseDate >= today) return baseDate;
 
   const recurrence = String(event.recurrence || 'yearly').trim().toLowerCase();
-  const month = recurrence === 'monthly' ? today.getMonth() : baseDate.getMonth();
-  const candidate = new Date(today.getFullYear(), month, baseDate.getDate());
-  if (candidate >= today) return candidate;
-  return recurrence === 'monthly'
-    ? new Date(today.getFullYear(), today.getMonth() + 1, baseDate.getDate())
-    : new Date(today.getFullYear() + 1, month, baseDate.getDate());
+  // JS date constructors overflow February 29/30/31 and leap-day birthdays
+  // into a different month. Keep the original day as the recurrence anchor,
+  // but cap each occurrence to the target month's final calendar day.
+  const occurrenceIn = (year, month) => new Date(year, month,
+    Math.min(baseDate.getDate(), new Date(year, month + 1, 0).getDate()));
+  if (recurrence === 'monthly') {
+    const candidate = occurrenceIn(today.getFullYear(), today.getMonth());
+    return candidate >= today ? candidate : occurrenceIn(today.getFullYear(), today.getMonth() + 1);
+  }
+  const candidate = occurrenceIn(today.getFullYear(), baseDate.getMonth());
+  return candidate >= today ? candidate : occurrenceIn(today.getFullYear() + 1, baseDate.getMonth());
 };
 
 export const getCalendarDaysRemaining = (date, referenceDate = new Date()) => {
