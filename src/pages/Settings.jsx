@@ -1,6 +1,6 @@
 import { clearDnLocalData } from '../utils/storageMigration';
 import { listStateScope } from '../utils/listStateMemory';
-import { resetSavedListDefaultsForScope } from '../utils/listViewDefaults';
+import { exportSavedListDefaultsForScope, resetSavedListDefaultsForScope, restoreSavedListDefaultsForScope } from '../utils/listViewDefaults';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
@@ -266,7 +266,10 @@ export default function Settings() {
         codeLists: adminValues,
         codeListSchemaVersion: CODE_LIST_SCHEMA_VERSION,
         preferences,
-        settings: { themeChoiceEnabled: Boolean(localStorage.getItem('dn_theme_choice')) },
+        settings: {
+          themeChoiceEnabled: Boolean(localStorage.getItem('dn_theme_choice')),
+          listViewDefaults: exportSavedListDefaultsForScope(listStateScope(useAppStore.getState())),
+        },
         dashboardConfiguration: {
           favorites: readIdList(`dn_favorite_event_ids_${pickerStorageId}`),
           recent: readIdList(`dn_recent_event_ids_${pickerStorageId}`),
@@ -492,6 +495,11 @@ export default function Settings() {
         );
       }
 
+      // An older v3 backup has no saved List defaults: keep this device's
+      // current baseline rather than silently replace it with built-ins.
+      assertDestinationScope();
+      restoreSavedListDefaultsForScope(listStateScope(useAppStore.getState()), backup.settings.listViewDefaults);
+
       const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
       const validMomentIds = new Set(restoredGroups.map((moment) => moment.id));
       const favorites = [...new Set((backup.dashboardConfiguration.favorites || []).filter((id) => validMomentIds.has(id)))];
@@ -499,7 +507,7 @@ export default function Settings() {
       localStorage.setItem(`dn_favorite_event_ids_${pickerStorageId}`, JSON.stringify(favorites));
       localStorage.setItem(`dn_recent_event_ids_${pickerStorageId}`, JSON.stringify(recent));
 
-      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, and Code Lists were restored where present.`;
+      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, Code Lists and saved List defaults were restored where present.`;
 
       if (restoreFromGuestTour) {
         // Only conclude the demo after all verified originals, records,
@@ -878,7 +886,7 @@ export default function Settings() {
                   <li>{pendingBackup.backup.attachments.length} attachment records · {(pendingBackup.backup.attachmentFiles || []).length} original files</li>
                   <li>{pendingBackup.backup.expenses.length} Expenses</li>
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
-                  <li>Code Lists, preferences, and dashboard configuration</li>
+                  <li>Code Lists, preferences, dashboard configuration, and saved List defaults (when present)</li>
                 </ul>
                 <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration from the backup replaces the destination configuration. An interrupted restore can be retried; completed records are recognized by ID.</p>
                 <p>Original files in this backup are integrity-checked and stored before record writes. Older attachment records without a stored original remain metadata only.</p>
