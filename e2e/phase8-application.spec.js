@@ -16,10 +16,11 @@ test('encoded Moment and Activity IDs retain their exact identity through Story 
   await page.goto(`${base}/story`);
   const before = await savedRecords(page);
   await page.locator('.dn-v2-story').getByRole('link', { name:'Keep the exact booking', exact:true }).click();
-  await expect(page.locator('h1')).toHaveText('Keep the exact booking');
+  await expect.poll(() => new URL(page.url()).pathname).toBe(detail);
+  await expect(page.locator('.activity-detail-content h1')).toHaveText('Keep the exact booking');
   expect(new URL(page.url()).pathname).toBe(detail);
   await page.reload();
-  await expect(page.locator('h1')).toHaveText('Keep the exact booking');
+  await expect(page.locator('.activity-detail-content h1')).toHaveText('Keep the exact booking');
   await page.goto(`${base}/gallery`);
   await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Gallery');
   expect(await savedRecords(page)).toEqual(before);
