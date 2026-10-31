@@ -68,8 +68,8 @@
     border-radius: 16px !important;
     background: transparent !important;
     color: var(--color-text-muted) !important;
-    font-size: 10px !important;
-    font-weight: 600 !important;
+    font-size: 11.5px !important;
+    font-weight: 630 !important;
     letter-spacing: -.015em !important;
     line-height: 1.2 !important;
     text-decoration: none;
@@ -101,7 +101,7 @@
     overflow: hidden;
     white-space: nowrap;
     text-align: center;
-    text-overflow: clip;
+    text-overflow: ellipsis;
     font-size: inherit;
   }
   html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab-active {
@@ -276,8 +276,8 @@
     padding-inline: 4px !important;
   }
   html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab {
-    font-size: 9px !important;
-    letter-spacing: -.035em !important;
+    font-size: 10.5px !important;
+    letter-spacing: -.025em !important;
   }
   html[data-theme] .dn-premium-dock .dn-dock-icon { width: 31px; }
 }
@@ -359,4 +359,31 @@
 @keyframes dn-dock-menu-in {
   from { opacity: 0; transform: translate(-50%, 9px) scale(.97); }
   to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
+
+/* CHG-232: the dock remains five slots; legibility and touch state improve.
+   Never use persistent hover for touchscreen selection. */
+@media (max-width:760px), (orientation: landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-destination {
+    -webkit-text-size-adjust:100%;
+  }
+  html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-label {
+    overflow:hidden;
+    min-width:0;
+    line-height:1.26;
+    text-overflow:ellipsis;
+  }
+  html[data-theme] .mobile-tabbar.dn-premium-dock .mobile-dock-create-trigger[aria-expanded="true"] {
+    outline-offset:4px;
+  }
+}
+@media (prefers-contrast:more) {
+  html[data-theme] .mobile-tabbar.dn-premium-dock {
+    border-width:2px !important;
+    backdrop-filter:none !important;
+    -webkit-backdrop-filter:none !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab-active .dn-dock-icon {
+    box-shadow:inset 0 0 0 2px currentColor !important;
+  }
 }
