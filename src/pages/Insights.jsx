@@ -129,17 +129,14 @@ export default function Insights() {
 
   return (
     <div className="insights-page">
-      <header className="insights-heading">
-        <h2>Insights</h2>
-        <button className="insights-export" type="button" onClick={exportInsights}
-          aria-label="Export Insights data"><Download size={16} aria-hidden="true" /><span>Export</span></button>
-      </header>
-      <div className="insights-discovery">
+      <div className="insights-discovery dn-insights-compact-search">
         <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
           resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
           summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
           search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
             placeholder="Search milestones" aria-label="Search milestones in Insights" />} />
+        <button className="insights-export" type="button" onClick={exportInsights}
+          aria-label="Export Insights data"><Download size={16} aria-hidden="true" /><span>Export</span></button>
       </div>
 
       {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on.</span></div> : null}
