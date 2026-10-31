@@ -447,7 +447,7 @@ export function EventWorkspaceContent() {
             getMoment={() => event}
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
-            allActivities={activities} progressActivities={filteredActivities}
+            allActivities={activities} progressActivities={activities}
             includeCancelled
             hasActiveFilters={Boolean(activitySearch.trim()) || Boolean(activityConditions.activeCount)}
             onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id), { state: {
