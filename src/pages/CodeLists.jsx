@@ -27,6 +27,7 @@ import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import DropdownSelect from '../components/common/DropdownSelect';
 import { resolveMomentStoryPresentation, STORY_PRESENTATIONS } from '../utils/momentStory';
+import { ENTRY_MODE_LABELS } from '../utils/activityEntries';
 import SortControl from '../components/common/SortControl';
 import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
 import useConditionFilters from '../hooks/useConditionFilters';
@@ -137,13 +138,17 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       greetingTemplate: typeof baseEntry.greetingTemplate === 'string' ? baseEntry.greetingTemplate : '',
       showInDashboardUpcoming: baseEntry.showInDashboardUpcoming ?? true,
       showActivitiesOnDashboard: baseEntry.showActivitiesOnDashboard ?? true,
-      storyPresentation: Object.values(STORY_PRESENTATIONS).includes(baseEntry.storyPresentation) ? baseEntry.storyPresentation : '',
+      storyPresentation: entry ? resolveMomentStoryPresentation({ type: entry.value || entry.label }, [entry]) : '',
     });
   };
 
   const saveMomentTypeEditor = async () => {
     const title = momentTypeEditor?.title?.trim();
     if (!title) return;
+    if (!Object.values(STORY_PRESENTATIONS).includes(momentTypeEditor.storyPresentation)) {
+      showToast('Choose Daily, Journal, or Tasks before saving this Moment type.', 'danger');
+      return;
+    }
 
     const nextEntry = {
       value: title,
@@ -154,7 +159,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       greetingTemplate: momentTypeEditor.canGenerateGreetingCards ? momentTypeEditor.greetingTemplate : '',
       showInDashboardUpcoming: momentTypeEditor.showInDashboardUpcoming !== false,
       showActivitiesOnDashboard: momentTypeEditor.showActivitiesOnDashboard !== false,
-      storyPresentation: momentTypeEditor.storyPresentation || null,
+      storyPresentation: momentTypeEditor.storyPresentation,
     };
 
     const nextEntries = entries.some((entry) => entry.value === (momentTypeEditor.existingValue || title))
@@ -338,18 +343,16 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
             </label>
 
             <div className="settings-input-block moment-type-story-setting">
-              <label htmlFor="moment-type-story-presentation">Story presentation</label>
+              <label htmlFor="moment-type-story-presentation">Activity mode (required)</label>
               <DropdownSelect id="moment-type-story-presentation" value={momentTypeEditor.storyPresentation}
                 onChange={(changeEvent) => setMomentTypeEditor((current) => ({ ...current, storyPresentation: changeEvent.target.value }))}>
-                <option value="">Automatic (based on type)</option>
-                <option value="journey">Journal · Photo memory book</option>
-                <option value="diary">Diary · Monthly writing</option>
-                <option value="chronicle">Tasks · Status-first list</option>
+                <option value="" disabled>Choose one of three modes</option>
+                {ENTRY_MODE_LABELS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
               </DropdownSelect>
               <small className="settings-helper" aria-live="polite">
                 {momentTypeEditor.storyPresentation
-                  ? `This Moment Type displays its Story as ${momentTypeEditor.storyPresentation === 'journey' ? 'a photo-focused memory book' : momentTypeEditor.storyPresentation === 'diary' ? 'a monthly writing journal' : 'a status-first task list'}.`
-                  : `Automatic selects ${resolveMomentStoryPresentation({ type: momentTypeEditor.title || 'Personal' }, [])} for this type. Changes affect presentation only, not Activities or dates.`}
+                  ? `Daily appends entries to one Activity per date. Journal offers New or Append. Tasks always creates a separate Activity. This mode also controls the Story presentation.`
+                  : 'Select one mode to enable this Moment type. No unconfigured creation mode is allowed.'}
               </small>
             </div>
 
@@ -392,7 +395,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
             <div className="settings-actions">
               <button type="button" className="settings-secondary-button" onClick={() => setMomentTypeEditor(null)}>Cancel</button>
-              <button type="button" className="settings-primary-button" onClick={saveMomentTypeEditor}>Save moment type</button>
+              <button type="button" className="settings-primary-button" disabled={!momentTypeEditor.title.trim() || !momentTypeEditor.storyPresentation} onClick={saveMomentTypeEditor}>Save moment type</button>
             </div>
           </div>
         </ModalDialog>
@@ -623,7 +626,7 @@ export default function CodeLists() {
             ].map(({ id, title }) => <a key={id} href={`#${id}`}>{title}</a>)}
           </div>
         </nav>
-        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Choose each type’s Story presentation, greeting generation, and separate Dashboard visibility for Moments and Activities." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type must use Daily, Journal, or Tasks creation mode. Configure greeting generation and Dashboard visibility separately." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <PaymentMethodsSection />
