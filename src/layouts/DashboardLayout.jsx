@@ -680,7 +680,7 @@ export default function DashboardLayout() {
               choice={quickActivityChoice} targetId={quickActivityTargetId} onChoiceChange={setQuickActivityChoice} onTargetChange={setQuickActivityTargetId} />
             <label className="dn-activity-create-title" htmlFor="dn-quick-activity-title">{quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
               <input id="dn-quick-activity-title" value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)}
-                placeholder={quickMode === ENTRY_MODES.TASKS ? 'What needs doing?' : 'What would you like to remember?'}
+                placeholder={quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
                 required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
             </label>
             <div className="activity-date-time-row">
