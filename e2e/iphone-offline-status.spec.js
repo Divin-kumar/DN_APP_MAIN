@@ -13,7 +13,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         .map((key) => localStorage.getItem(key)));
       const banner = page.getByRole('status', { name: /Offline. Guest data is stored on this device/ });
       await expect(banner).toHaveCount(0);
-      await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+      // Navigation may finish before React attaches its offline event listener.
+      // Retry the synthetic signal until the mounted app acknowledges it, rather
+      // than racing the first effect on a busy CI runner.
+      await expect.poll(async () => {
+        await page.evaluate(() => window.dispatchEvent(new Event('offline')));
+        return banner.count();
+      }).toBe(1);
       await expect(banner).toBeVisible();
       await expect(banner).toHaveText('Offline · Guest data stays here');
       await expect(banner).toHaveAttribute('aria-atomic', 'true');
