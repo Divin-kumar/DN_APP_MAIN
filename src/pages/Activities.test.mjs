@@ -190,7 +190,7 @@ test('editing an unfinished duplicate retains expenses, cancellation and unrelat
   harness.list().props.onEdit(harness.view());
   // Activity fields are now composed by one shared component instead of
   // duplicated input JSX in this page's synthetic render tree.
-  const fields = nodes(harness.render()).find((node) => node.type?.name === 'ActivityFormFields');
+  const fields = nodes(harness.render()).find((node) => node.type === 'ActivityFormFields');
   assert.ok(fields, 'Activities editor uses the canonical field composition');
   fields.props.onChange({ title: 'Updated synthetic title' });
   const editor = nodes(harness.render()).find((node) => node.type === 'form');
