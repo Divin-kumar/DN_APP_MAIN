@@ -76,9 +76,8 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await page.goto('/financials/transactions');
     const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
-    const heading = page.locator('.dn-transactions-page .transactions-heading');
-    await expect(heading).toHaveText('Transactions');
-    await expect(heading.getByRole('button')).toHaveCount(0);
+    await expect(page.locator('.dn-header').getByRole('heading', { name: 'Transactions' })).toBeVisible();
+    await expect(page.locator('.dn-transactions-page .transactions-heading')).toHaveCount(0);
     await expect(page.locator('.dn-transactions-page .dn-transaction-add, .dn-transactions-heading-description')).toHaveCount(0);
     const refine = page.locator('.dn-transactions-page').getByRole('button', { name:/Filters and sort/ });
     await refine.click();
