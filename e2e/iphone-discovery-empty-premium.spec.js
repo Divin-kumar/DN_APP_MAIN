@@ -4,7 +4,7 @@ import { seedGuest, fixtureMoments } from './fixtures.js';
 // Synthetic Guest checks; physical installed Safari, signed-in account and
 // actual Firebase release acceptance remain separate gates.
 const sections = [
-  { route: '/events', title: 'No matching moments', input: 'Search events', cards: '.dn-v2-moment-card', count: 2 },
+  { route: '/events', title: 'No matching moments', input: 'Search moments', cards: '.dn-v2-moment-card', count: 2 },
   { route: '/activities', title: 'No matching activities', input: 'Search activities and Moments', cards: '.dn-v2-activity-card', count: 3 },
 ];
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
