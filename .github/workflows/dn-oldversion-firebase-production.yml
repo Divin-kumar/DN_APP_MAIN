@@ -41,6 +41,17 @@ jobs:
         run: npm run build
       - name: Verify built shell, offline originals and PDF export
         run: npm run test:production
+      - name: Build the reviewed previous-release upgrade fixture
+        env:
+          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+        run: |
+          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
+          mkdir -p .verification/phase9/previous
+          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
+          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
+          npm --prefix .verification/phase9/previous run build
+      - name: Verify release upgrade preserves records, settings and original attachments
+        run: npm run test:upgrade
       - name: Block duplicate or downgraded live version
         run: node scripts/check-hosting-release-version.mjs
       - name: Require configured Firebase service account
@@ -81,6 +92,6 @@ jobs:
             echo "- Site: https://dn-10.web.app"
             echo "- Firebase project: expense-tracker-divin"
             echo "- Source commit: $GITHUB_SHA"
-            echo "- Build: unit, lint, browser and production Vite checks passed"
+            echo "- Build: unit, lint, browser, production Vite, offline PDF/originals, and upgrade-preservation checks passed"
             echo "- Verification: live index bytes match dist/index.html"
           } >> "$GITHUB_STEP_SUMMARY"
