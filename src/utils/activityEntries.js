@@ -94,3 +94,88 @@ export const removeActivityEntry = (activity, entryId) => {
   if (result.length === entries.length) throw new Error('Entry no longer exists.');
   return { entries: result };
 };
+
+const aliasesFor = (activity) => (Array.isArray(activity?.mergedActivityIds) ? activity.mergedActivityIds : [])
+  .map(recordId).filter(Boolean);
+const legacyAsEntry = (activity) => ({
+  id: recordId(activity.id),
+  sourceActivityId: recordId(activity.id),
+  title: String(activity.title || '').trim(),
+  description: activity.description || '',
+  date: dateKey(activity.date),
+  time: activityTime(activity),
+  createdAt: activity.createdAt || null,
+  status: activity.status || (activity.completed ? 'completed' : 'in-progress'),
+});
+// Merge ownership into the original target ID. References to old Activity IDs
+// are kept as aliases for finance, and existing photo originals are relinked
+// to the target with their source entry IDs for precise historical ownership.
+const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
+  const sourceIds = new Set(sources.map((activity) => recordId(activity.id)));
+  const entries = [
+    ...(daily
+      ? (target.entryMode === ENTRY_MODES.DAILY ? activityEntries(target) : [legacyAsEntry(target)])
+      : activityEntries(target)),
+    ...sources.flatMap((source) => source.entryMode === ENTRY_MODES.DAILY
+      ? activityEntries(source) : [legacyAsEntry(source), ...activityEntries(source)]),
+  ];
+  const targetId = recordId(target.id);
+  const aliases = [...new Set([
+    ...aliasesFor(target), ...sources.flatMap((source) => [recordId(source.id), ...aliasesFor(source)]),
+  ])].filter((id) => id !== targetId);
+  const storedExpenses = [...(target.expenses || []), ...sources.flatMap((source) => source.expenses || [])];
+  const distinctExpenses = [...new Map(storedExpenses.map((expense) =>
+    [recordId(expense.id) || JSON.stringify(expense), expense])).values()];
+  const merged = {
+    ...target, ...(daily ? {
+      title: `Diary · ${dateKey(target.date)}`, description: '', time: '',
+      status: 'in-progress', completed: false, completedAt: null, cancelled: false,
+      entryMode: ENTRY_MODES.DAILY,
+    } : {}),
+    entries: orderedActivityEntries({ entries }),
+    mergedActivityIds: aliases, expenses: distinctExpenses,
+  };
+  const ownerById = new Map(sources.map((activity) => [recordId(activity.id), recordId(activity.id)]));
+  const attachments = (moment.attachments || []).map((file) => {
+    const originalId = recordId(file.activityId);
+    if (!sourceIds.has(originalId)) return file;
+    return { ...file, activityId: targetId, entryId: file.entryId || ownerById.get(originalId) };
+  });
+  return { ...moment,
+    activities: (moment.activities || []).filter((activity) => !sourceIds.has(recordId(activity.id)))
+      .map((activity) => activity === target ? merged : activity),
+    attachments,
+  };
+};
+
+// Idempotent per-Moment migration. Do not touch undated legacy records; never
+// create a second record with a new ID or overwrite independent Journal/Tasks.
+export const mergeLegacyDiaryActivities = (moment) => {
+  const activities = Array.isArray(moment?.activities) ? moment.activities : [];
+  const dates = new Map();
+  for (const activity of activities) {
+    const date = dateKey(activity.date);
+    if (!date) continue;
+    if (!dates.has(date)) dates.set(date, []);
+    dates.get(date).push(activity);
+  }
+  let next = moment;
+  for (const [date, group] of dates) {
+    const pending = (next.activities || []).filter((activity) => dateKey(activity.date) === date);
+    if (!pending.length || (pending.length === 1 && pending[0].entryMode === ENTRY_MODES.DAILY)) continue;
+    const target = pending.find((activity) => activity.entryMode === ENTRY_MODES.DAILY) || pending[0];
+    next = mergeRecords(next, target, pending.filter((activity) => activity !== target), { daily: true });
+  }
+  return next;
+};
+
+// Journal consolidation is ALWAYS deliberate, never automatic.
+export const mergeJournalActivities = (moment, targetId, sourceId) => {
+  const valid = journalAppendCandidates(moment);
+  const target = valid.find((activity) => recordId(activity.id) === recordId(targetId));
+  const source = valid.find((activity) => recordId(activity.id) === recordId(sourceId));
+  if (!target || !source || target === source) throw new Error('Choose two different available Journal entries.');
+  return mergeRecords(moment, target, [source]);
+};
+export const activityOwnsLinkedId = (activity, id) => recordId(activity?.id) === recordId(id)
+  || aliasesFor(activity).includes(recordId(id));
