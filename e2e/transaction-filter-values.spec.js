@@ -118,6 +118,7 @@ for (const width of [320, 1280]) test(`Settings payment choices reach forms, fil
   await dialog.getByRole('textbox', { name: 'Title *', exact: true }).fill('UPI supplies');
   await dialog.getByRole('spinbutton').fill('120');
   await dialog.getByRole('radio', { name: 'UPI', exact: true }).check();
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await select(page, 'Linked Moment', 'Payment review');
   await select(page, 'Linked Activity', 'Supplies');
   await dialog.getByRole('button', { name: 'Add Transaction', exact: true }).click();

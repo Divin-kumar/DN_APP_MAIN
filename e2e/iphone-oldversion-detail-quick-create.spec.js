@@ -36,8 +36,13 @@ for (const [width, height, theme] of [[390, 844, 'light'], [430, 932, 'dark']]) 
         .getByRole('button', { name: 'Activity', exact: true }).click();
       const editor = page.getByRole('dialog', { name: 'Add an activity' });
       const moment = original.find((record) => record.id === scenario.momentId);
-      await expect(editor.getByRole('combobox', { name: 'Life moment' })).toContainText(moment.name);
+      // The inherited destination is visible in the disclosure summary.
+      // The stored picker remains available but is intentionally collapsed.
+      await expect(editor.locator('.dn-activity-moment-disclosure > summary')).toContainText(moment.name);
       await expect(editor.locator('.dn-quick-activity-context')).toContainText(moment.name);
+      await editor.locator('.dn-activity-moment-disclosure > summary').click();
+      await expect(editor.getByRole('combobox', { name: 'Life moment' })).toContainText(moment.name);
+      await editor.locator('.dn-activity-moment-disclosure > summary').click();
 
       if (scenario.mode === 'journey') {
         await expect(editor.locator('#dn-journal-entry-choice')).toContainText('Append to existing entry');

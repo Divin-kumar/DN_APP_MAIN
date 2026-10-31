@@ -104,6 +104,7 @@ test('universal + is the only transaction creation entry and blocks repeated sub
   await expect(page.getByRole('button', { name: 'Add transaction', exact: true })).toHaveCount(0);
   await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment', exact: true })).toContainText('Weekend in Ooty');
   await dialog.getByRole('textbox', { name: 'Title *', exact: true }).fill('Universal coffee');
   await dialog.getByRole('spinbutton').fill('30');

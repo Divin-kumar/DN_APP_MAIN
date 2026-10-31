@@ -94,6 +94,7 @@ test('Universal + transaction presets both IDs and retains route/draft through f
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
   await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await expect(dialog.getByRole('combobox', { name: 'Linked Activity', exact: true })).toContainText('Book a lakeside stay');
   await dialog.getByRole('spinbutton').fill('30');
   await dialog.getByRole('textbox', { name: 'Title *', exact: true }).fill('Tea stop');
