@@ -14,8 +14,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(items).toHaveCount(5);
       expect(await items.allTextContents()).toEqual(['Story', 'Activities3', 'Transactions', 'Gallery', 'PDF Studio']);
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/events/moment-one/story');
-      await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading h2')).toHaveText('Your Moment Story');
-      await expect(page.locator('.dn-workspace-section-heading > span')).toHaveCount(0);
+      await expect(page.locator('.dn-moment-panel #dn-moment-panel-title')).toHaveText('Your Moment Story');
+      await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading')).toHaveCount(0);
 
       const initial = await nav.evaluate((element) => {
         const links = [...element.querySelectorAll('a')];
@@ -44,7 +44,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
       await nav.locator('a[href="/events/moment-one/gallery"]').click();
-      await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading h2')).toHaveText('Gallery');
+      await expect(page.locator('.dn-moment-panel #dn-moment-panel-title')).toHaveText('Gallery');
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/events/moment-one/gallery');
       await expect.poll(() => nav.evaluate((element) => {
         const outer = element.getBoundingClientRect();
@@ -52,7 +52,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         return active.left >= outer.left - 1 && active.right <= outer.right + 1;
       })).toBe(true);
       await nav.locator('a[href="/events/moment-one/story"]').click();
-      await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading h2')).toHaveText('Your Moment Story');
+      await expect(page.locator('.dn-moment-panel #dn-moment-panel-title')).toHaveText('Your Moment Story');
       expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)))).toEqual(before);
       expect(errors).toEqual([]);
