@@ -358,8 +358,6 @@ export default function Events() {
 
   return (
     <div className="events-page life-timeline-page">
-      <header className="life-timeline-heading"><h2>Life moments</h2></header>
-
       {isGuest && getActiveSampleScenario(user?.uid) === 'tour' ? (
         <section className="dn-guest-tour-notice" aria-label="Explore DN sample data">
           <div><strong>You're exploring DN with example data</strong>
