@@ -37,7 +37,7 @@ test('DN is the only official brand in app metadata and the About screen', () =>
   // CHG-234 moved the current page title into the common shell; About no longer
   // duplicates it inside its own content. Check the actual route title instead.
   assert.match(read('src/utils/momentWorkspaceRoutes.js'), /return 'About DN'/);
-  assert.match(about, /<strong>DN<\\/strong>/);
+  assert.ok(about.includes('<strong>DN</strong>'), 'The About page displays the DN brand.');
   assert.doesNotMatch(about, retiredBrand);
 });
 
