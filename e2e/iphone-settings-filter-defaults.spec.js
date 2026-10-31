@@ -13,8 +13,8 @@ for (const config of lists) {
     test(config.label + ' restores independent Settings sort defaults at ' + width + 'px ' + theme, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
+      await page.goto('/settings/code-lists'); // Seed runs on navigation, not about:blank.
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)));
-      await page.goto('/settings/code-lists');
       const settingsOrder = page.getByRole('group', { name: 'Sort ' + config.label + ' in settings' });
       await settingsOrder.getByRole('combobox').click();
       await page.getByRole('option', { name: config.option, exact: true }).click();
@@ -48,8 +48,8 @@ for (const config of lists) {
 test('Activity filter defaults stay in Settings and Reset restores their condition', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
-  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.goto('/settings/code-lists');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.getByRole('button', { name: /Activities filters/ }).click();
   const editor = page.locator('.dn-code-list-filter-editor .dn-conditions');
   await expect(editor).toBeVisible();
