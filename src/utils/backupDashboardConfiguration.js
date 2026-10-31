@@ -21,10 +21,13 @@ export const validateBackupDashboardConfiguration = (configuration) => {
 
 export const dashboardConfigurationRestorePatch = (configuration, validMomentIds) => {
   validateBackupDashboardConfiguration(configuration);
+  // Restored Moments may still use pre-v3 numeric IDs; compare their
+  // normalized identities with portable dashboard shortcut IDs.
+  const knownIds = new Set(Array.from(validMomentIds, recordId).filter(Boolean));
   const result = {};
   for (const key of FIELDS) {
     if (!owns(configuration, key)) continue;
-    const ids = configuration[key].map(recordId).filter((id) => validMomentIds.has(id));
+    const ids = configuration[key].map(recordId).filter((id) => knownIds.has(id));
     const distinct = [...new Set(ids)];
     result[key] = key === 'recent' ? distinct.slice(0, 8) : distinct;
   }
