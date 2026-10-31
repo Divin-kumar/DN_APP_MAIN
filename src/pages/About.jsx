@@ -12,9 +12,8 @@
  * - guide users through the app experience
  * - support quick refresh and update checks for the PWA shell
  */
-import { ArrowLeft, BookOpen, ChevronDown, Info, RefreshCw, Sparkles } from 'lucide-react';
+import { BookOpen, ChevronDown, Info, RefreshCw, Sparkles } from 'lucide-react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './AboutPremium.css';
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
@@ -70,7 +69,6 @@ const dataInfo = [
 ];
 
 export default function About() {
-  const navigate = useNavigate();
   const [refreshing, setRefreshing] = useState(false);
 
   const refreshApp = async () => {
