@@ -44,7 +44,7 @@ test.describe('iPhone universal + tap-state regression', () => {
 
       // Outside tap closes the menu and never changes the resting fill.
       await plus.tap();
-      await page.getByRole('heading', { name: /Good (morning|afternoon|evening)/i }).first().tap();
+      await page.locator('.brand-lockup').tap();
       await expect(dock.getByRole('group', { name: 'Quick create actions' })).toHaveCount(0);
       expect(await color()).toEqual(resting);
       expect(errors).toEqual([]);
