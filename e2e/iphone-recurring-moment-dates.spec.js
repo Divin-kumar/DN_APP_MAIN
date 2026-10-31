@@ -12,8 +12,8 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
       { id: 'jan31', name: 'Monthly family supper', type: 'Personal', date: '2020-01-31', recurrence: 'monthly', activities: [], memories: [], attachments: [] },
       { id: 'feb29', name: 'Leap day anniversary', type: 'Anniversary', date: '2000-02-29', recurrence: 'yearly', activities: [], memories: [], attachments: [] },
     ] });
-    const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     await page.goto('/events?create=activity');
+    const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     const picker = page.getByRole('dialog', { name: 'Choose a life moment' });
     await expect(picker).toBeVisible();
     const monthly = picker.locator('.activity-event-option-main').filter({ hasText: 'Monthly family supper' });
