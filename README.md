@@ -9,6 +9,12 @@
 - [Agent rules](AGENTS.md) — authorization, development and documentation workflow.
 - [Change log](docs/CHANGE_AUDIT_LOG.md) — latest changes first; verification and release history.
 
+## Batch 2 | Premium Activity and Transaction card finish (CHG-226)
+
+CHG-226 maintains the existing photo-left Activity cards and compact Transaction cards, while strengthening their presentation without adding controls. Activities get a restrained layered illustration **only when no original cover photo exists**, plus clearer overdue due-date cues; real photos, cover preferences and Status-on-title-row remain intact. Transactions receive a 3px semantic income/expense edge, lightly bordered icon tile, calm flat surface and more legible amount hierarchy. Touch-simulated hover no longer leaves a stale raised-card appearance; keyboard focus-visible outlines still work. This applies to the main Transactions list and top-level/nested Activity cards, without changing compact Dashboard history, swipe actions, details, nested scrolling, data or guest sample fixtures. Six 320/390/430px light/dark browser checks for layout, semantic styles, swipe and detail disclosure are authored but **not executed**.
+
+This is **Batch 2 only** on `DN-2.1-batch2` after CHG-225. The Firebase Batch 1 `OldVersion` SHA `57a497e7` remains untouched.
+
 ## Batch 2 | iPhone universal + returns to its original color (CHG-225)
 
 **Owner-observed on the Batch 1 iPhone Firebase build:** The center + remains visually highlighted/changes shade after tapping and does not return to its normal fill until tapping elsewhere. The latest screenshot showed the five-position dock and the visually sticky +. Root causes in source include persistent touch `:hover` styling inherited from the design-system and unconditional programmatic focus restoration to + after choosing a create action.
