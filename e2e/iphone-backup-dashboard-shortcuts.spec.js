@@ -16,7 +16,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     const before = await page.evaluate(() =>
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
-    await page.getByRole('button', { name: 'Data & Backup' }).click();
+    await page.getByRole('button', { name: /Data & Backup/ }).click();
     const legacy = { exportedAt: '2026-10-19T12:00:00.000Z', data: { dn_preferences: { theme: 'dark' } } };
     await page.getByLabel('Choose a DN backup JSON file').setInputFiles({
       name: 'older-settings-only.json',
@@ -27,6 +27,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await expect(dialog).toBeVisible();
     await expect(dialog).toContainText('Legacy settings-only backup');
     await dialog.getByRole('button', { name: 'Confirm restore' }).click();
+    await expect(dialog).toHaveCount(0);
     await expect.poll(async () => page.evaluate(() => localStorage.getItem('dn_favorite_event_ids_guest')))
       .toBe(JSON.stringify([expected[0]]));
     await expect.poll(async () => page.evaluate(() => localStorage.getItem('dn_recent_event_ids_guest')))
@@ -51,7 +52,7 @@ test('explicitly empty v3 Dashboard shortcuts clear them only after confirmed re
     return createBackupDocument({ codeLists: DEFAULT_CODE_LISTS,
       dashboardConfiguration: { favorites: [], recent: [] } });
   });
-  await page.getByRole('button', { name: 'Data & Backup' }).click();
+  await page.getByRole('button', { name: /Data & Backup/ }).click();
   await page.getByLabel('Choose a DN backup JSON file').setInputFiles({
     name: 'clear-dashboard-shortcuts.json', mimeType: 'application/json',
     buffer: Buffer.from(JSON.stringify(backup), 'utf8'),
@@ -61,6 +62,7 @@ test('explicitly empty v3 Dashboard shortcuts clear them only after confirmed re
   // Reading the backup is non-destructive.
   expect(await page.evaluate(() => localStorage.getItem('dn_favorite_event_ids_guest'))).toBe('["moment-one"]');
   await dialog.getByRole('button', { name: 'Confirm restore' }).click();
+    await expect(dialog).toHaveCount(0);
   await expect.poll(async () => page.evaluate(() => localStorage.getItem('dn_favorite_event_ids_guest'))).toBe('[]');
   await expect.poll(async () => page.evaluate(() => localStorage.getItem('dn_recent_event_ids_guest'))).toBe('[]');
   expect(errors).toEqual([]);
