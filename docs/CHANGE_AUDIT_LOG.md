@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-227 | Keep premium Moment cards stable on touch and hover
+- **Finding:** Moment cards now use the fixed swipe action popup, but old shared CSS could still shift their main button 246px horizontally on desktop hover. Unconditional card/menu hover could also stick after an iPhone tap. Keep the preferred photo-led card rather than redesign it.
+- **Fix:** `src/components/events/MomentList.css` scopes a no-horizontal-transform override to modern Moments, reserves card lift and menu hover styling for true fine-pointer hover, and restores neutral touch/coarse pointer surfaces. Keep keyboard focus-visible behavior, activity/status information, photos, navigation and current popup gestures unchanged.
+- **QA authored:** Five new browser tests in `e2e/iphone-moment-card-hover-stability.spec.js`: 2 desktop theme variants plus 3 320/390/430px touch variants for layout, popup, tap, swipe, navigation and Guest data. **Not executed.** Actual iPhone Safari, complete build/CI and signed-in QA remain unverified.
+- **Downstream:** CSS-only behavior plus tests and docs. No record handlers, original photos, financial totals, PDFs, Settings defaults, backups, Guest tour fixture/version, nested Transactions scroll or five-slot dock changes. No Add Transaction CTA. Existing Guest sample exercises the shared cards.
+- **Release:** Only `DN-2.1-batch2`, following CHG-226; `OldVersion` Batch 1 at `57a497e7`, `main`, app version, Firebase hosting and production data unchanged. Explicit Batch 2 release authorization still required.
+
 ## CHG-20261031-226 | Activity cover and Transaction record premium visual pass
 - **Design audit:** Activities' owner-preferred photo-left cover, status first-row and shared swipe menu already work; Transactions' compact three numbers already look intentional. Avoid a fresh redesign or needless whitespace. Introduce only clearer empty-photo illustration, overdue cue, semantic transaction identity and stable touch feedback.
 - **Source:** New `src/components/common/RecordCardPremium.css` imported into ActivityList and TransactionHistory. Style placeholder covers (never real photos), overdue due line, focus-visible card border; assign full Transaction cards semantic `dn-v2-transaction-card is-income|is-expense` and show a slender colored edge, bordered income/expense icon, balanced amount/metadata text, light/dark shadow and fine-pointer hover only. Leave active-card action menus and all handlers unchanged.
