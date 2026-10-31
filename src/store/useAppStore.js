@@ -168,9 +168,13 @@ const useAppStore = create((set, get) => ({
   // Reset admin-defined values through the same persistence path as normal edits.
   resetAdminValues: () => get().setAdminValues(createDefaultAdminValues()),
 
-  resetAllSettings: async (referencedValues) => {
+  resetAllSettings: async (referencedValues, assertCurrent = () => {}) => {
+    assertCurrent();
     const adminValues = resetCodeListsPreservingReferences(get().adminValues, referencedValues);
     await get().setAdminValues(adminValues);
+    // An account can change while its Code List write is awaiting Firebase.
+    // Never apply global browser preferences to a newly active session.
+    assertCurrent();
     const preferences = createDefaultPreferences();
     localStorage.setItem('dn_preferences', JSON.stringify(preferences));
     localStorage.setItem('dn_theme_choice', '1');
