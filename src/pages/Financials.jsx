@@ -118,7 +118,7 @@ function FinancialsContent() {
   };
 
   return (
-    <main className="financials-page feature-page dn-financial-workspace">
+    <div className="financials-page feature-page dn-financial-workspace">
       {hasLoadError ? <div role="alert" className="financial-load-error">
         Unable to load all transactions. <button type="button" onClick={() => { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }}>Retry</button>
       </div> : null}
@@ -158,7 +158,7 @@ function FinancialsContent() {
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
         onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}
         confirmLabel={busy ? 'Deleting…' : 'Delete'} /> : null}
-    </main>
+    </div>
   );
 }
 
