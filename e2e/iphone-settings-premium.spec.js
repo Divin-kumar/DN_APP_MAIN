@@ -46,6 +46,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(preferences).toHaveAttribute('aria-expanded', 'false');
       await expect(page.getByRole('button', { name: 'Export backup' })).toBeVisible();
       await expect(home.getByRole('link', { name: 'Open Code Lists page' })).toHaveAttribute('href', '/settings/code-lists');
+      await expect(home.getByRole('link', { name: 'Open List defaults' })).toHaveAttribute('href', '/settings/code-lists#list-order');
       await expect(home.getByRole('link', { name: 'Open About page' })).toHaveAttribute('href', '/settings/about');
 
       const geometry = await page.evaluate(() => ({
