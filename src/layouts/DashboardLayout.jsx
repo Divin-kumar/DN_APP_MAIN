@@ -417,7 +417,19 @@ export default function DashboardLayout() {
             {shellBackPath ? <Link className="dn-shell-back" to={shellBackPath} aria-label="Back to Settings" title="Back to Settings">
               <ArrowLeft size={19} strokeWidth={1.9} aria-hidden="true" />
             </Link> : <span className="brand-mark" aria-hidden="true">DN</span>}
-            <h1 className="brand-lockup-title dn-shell-page-title" title={shellTitle}>{shellTitle}</h1>
+            <section className="dn-shell-page-context">
+              <h1 className="brand-lockup-title dn-shell-page-title" title={shellTitle}>{shellTitle}</h1>
+              <small
+                className={`dn-shell-scope${isGuest ? ' is-guest' : ' is-account'}`}
+                role="note"
+                aria-label={isGuest
+                  ? 'Guest mode: your data is stored locally on this device and is not automatically transferred to Google.'
+                  : 'Signed-in mode: account records use Firebase storage. Cloud availability depends on your connection.'}
+              >
+                {isGuest ? <HardDrive size={13} strokeWidth={1.9} aria-hidden="true" /> : <Cloud size={13} strokeWidth={1.9} aria-hidden="true" />}
+                <span>{isGuest ? 'Guest · On this device' : 'Account · Cloud storage'}</span>
+              </small>
+            </section>
           </div>
         </div>
 
@@ -486,17 +498,6 @@ export default function DashboardLayout() {
 
         <section ref={contentRef} className="dn-content" style={styles.contentPane}>
           <ConnectivityBanner />
-          <div
-            className={`dn-banner dn-session-banner${isGuest ? ' is-guest' : ' is-account'}`}
-            role="note"
-            aria-label={isGuest
-              ? 'Guest mode: your data is stored locally on this device and is not automatically transferred to Google.'
-              : 'Signed-in mode: account records use Firebase storage. Cloud availability depends on your connection.'}
-          >
-            {isGuest ? <HardDrive size={14} strokeWidth={1.8} aria-hidden="true" /> : <Cloud size={14} strokeWidth={1.8} aria-hidden="true" />}
-            <span>{isGuest ? 'Guest · On this device' : 'Account · Cloud storage'}</span>
-          </div>
-
           <motion.div
             key={getRouteTransitionKey(location.pathname)}
             className="dn-route-transition"
