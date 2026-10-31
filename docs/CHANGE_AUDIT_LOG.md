@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-253 | Align existing Journal editors with the canonical Moment-purpose form (OldVersion only)
+- **Review finding:** Creating a Journal entry showed writing directly, but editing the owning Activity via Dashboard, Activity Detail or global Activities still displayed a Tasks-style editor, concealing the primary Journal notes behind `More options`.
+- **Correction:** The shared Activity field component accepts an unchanged Activity-title override. Global Activities resolves the owning Moment mode, while the existing scoped Activity action draft carries the resolved mode to the Dashboard/Detail editor. This changes only field emphasis, not save payload, activity identity, record relationships or account ownership.
+- **Regression and boundary:** Added synthetic Activity-mode assertions and a 390px Journal Detail cancel/no-data-write journey. The existing Guest scenario is already sufficient; no demo change is required. All new tests are **unverified** until exact-SHA CI runs, and no other branch, version, Firebase/Vercel or user records were changed.
+
 ## CHG-20261031-252 | Correct eleven shared-form Chromium test failures before 2.1 (OldVersion only)
 - **Executed baseline:** GitHub Actions run `41225330762` for `808d2865`: 569 Chromium passes and 11 failures, while Node tests, lint, documentation, production Vite build, offline original/photo/PDF smoke, two prior-release upgrade paths and mandatory `npm audit --audit-level=moderate` passed with **0 vulnerabilities**.
 - **Root cause and changes:** Ten failures used previously visible selectors for the now-collapsed Moment destination and Transaction links or attempted to open a missing hidden picker. One additional failure used a nonunique `More options` selector across the two disclosures in universal Activity creation. Updated five existing Playwright files to expand the correct disclosure before checking data or selecting a field. Kept the end-to-end save, account ownership, payment mirror, double-submit and original-record expectations unchanged. No app/runtime code changed in this test reconciliation.

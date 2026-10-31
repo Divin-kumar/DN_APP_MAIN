@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityList from '../components/events/ActivityList';
 import ActivityFormFields from '../components/events/ActivityFormFields';
+import { getMomentEntryMode } from '../utils/activityEntries';
 import QuietEmptyState from '../components/common/QuietEmptyState';
 import ListControls from '../components/common/ListControls';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
@@ -203,6 +204,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
           <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
           <ActivityFormFields namePrefix="activity-editor" value={draft}
+            titleLabel="Activity title"
+            mode={getMomentEntryMode(momentsById.get(draft.momentId), adminValues.eventTypes)}
             priorities={adminValues.activityPriorities} disabled={busy}
             onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
           <div className="form-actions"><button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button><button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button></div>

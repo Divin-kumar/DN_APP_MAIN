@@ -11,10 +11,10 @@ import { ENTRY_MODES } from '../../utils/activityEntries';
 export default function ActivityFormFields({
   value, onChange, priorities = [], mode = ENTRY_MODES.TASKS, disabled = false,
   namePrefix = 'dn-activity', showDate = true, showPriority = true,
-  notesLabel, autoFocus = false,
+  notesLabel, titleLabel: labelOverride, autoFocus = false,
 }) {
   const isWriting = mode !== ENTRY_MODES.TASKS;
-  const titleLabel = isWriting ? 'Entry title' : 'Activity title';
+  const titleLabel = labelOverride || (isWriting ? 'Entry title' : 'Activity title');
   const options = getActiveCodeListMeta('activityPriorities', priorities);
   const priority = value.priority || 'medium';
   const metadata = [showDate && 'date', 'time', showPriority && 'priority', !isWriting && 'notes']

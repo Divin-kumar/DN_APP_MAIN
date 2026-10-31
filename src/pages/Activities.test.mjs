@@ -192,6 +192,8 @@ test('editing an unfinished duplicate retains expenses, cancellation and unrelat
   // duplicated input JSX in this page's synthetic render tree.
   const fields = nodes(harness.render()).find((node) => node.type === 'ActivityFormFields');
   assert.ok(fields, 'Activities editor uses the canonical field composition');
+  assert.equal(fields.props.mode, 'journal', 'Moment intent controls edit-field emphasis');
+  assert.equal(fields.props.titleLabel, 'Activity title', 'existing accessibility name is retained');
   fields.props.onChange({ title: 'Updated synthetic title' });
   const editor = nodes(harness.render()).find((node) => node.type === 'form');
   editor.props.onSubmit({ preventDefault() {} });

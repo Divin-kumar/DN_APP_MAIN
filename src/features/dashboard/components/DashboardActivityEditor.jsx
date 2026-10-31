@@ -9,7 +9,7 @@ export default function DashboardActivityEditor({ draft, priorities, busy, error
       <p className="dashboard-activity-context">{draft.momentName || 'Moment'}</p>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
       <ActivityFormFields value={draft} priorities={priorities} disabled={busy} onChange={onChange}
-        namePrefix="dashboard-activity" />
+        mode={draft.entryMode} titleLabel="Activity title" namePrefix="dashboard-activity" />
       <div className="form-actions">
         <button type="submit" className="primaryButton" disabled={busy}>{busy ? 'Saving…' : 'Save activity'}</button>
         <button type="button" className="secondaryButton" disabled={busy} onClick={onClose}>Cancel</button>

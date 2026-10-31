@@ -5,7 +5,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { activityCancellationPatch, activityCompletionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
-import { updateActivityEntry, removeActivityEntry } from '../utils/activityEntries';
+import { updateActivityEntry, removeActivityEntry, getMomentEntryMode } from '../utils/activityEntries';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
 // scoped writer, so every entry point serializes changes to a parent Moment.
@@ -47,7 +47,9 @@ export default function useActivityActions() {
       const { moment, activity } = records.resolveActivity(context, target.momentId, target.activityId);
       assertActivityEditable(activity);
       setError('');
-      setDraft({ ...target, momentName: moment.name, title: activity.title || '',
+      setDraft({ ...target, momentName: moment.name,
+        entryMode: getMomentEntryMode(moment, useAppStore.getState().adminValues?.eventTypes || []),
+        title: activity.title || '',
         time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
     } catch (reason) { setError(reason.message); }
   };

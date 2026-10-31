@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedGuest } from './fixtures.js';
+import { seedGuest, activityDetailAction } from './fixtures.js';
 
 // Chromium can verify editor font size and user-intent focus, but cannot prove
 // the exact Safari virtual keyboard position or installed-PWA zoom behavior.
@@ -156,5 +156,20 @@ test('invalid required metadata automatically opens its disclosure before save',
   await expect(dialog).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
   await dialog.getByRole('button', { name: 'Cancel' }).click();
+  expect(errors).toEqual([]);
+});
+
+test('Journal Activity Detail edit prioritizes writing without changing its stored record', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page);
+  await page.goto('/events/moment-one/activities/shared');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await activityDetailAction(page, 'Edit');
+  const editor = page.getByRole('dialog', { name: 'Edit activity' });
+  await expect(editor.getByRole('textbox', { name: 'Activity title' })).toBeVisible();
+  await expect(editor.getByText('Entry notes (optional)')).toBeVisible();
+  await expect(editor.locator('.dn-form-disclosure > summary')).toContainText('More options');
+  await editor.getByRole('button', { name: 'Cancel' }).click();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
   expect(errors).toEqual([]);
 });
