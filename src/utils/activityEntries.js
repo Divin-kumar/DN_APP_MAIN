@@ -17,6 +17,10 @@ export const getMomentEntryMode = (moment, momentTypes = []) =>
 const dateKey = (date) => {
   try { return formatMomentDate(parseMomentDate(date)); } catch { return ''; }
 };
+const dailyActivityTitle = (date) => {
+  const parsed = parseMomentDate(date);
+  return `Diary · ${parsed ? parsed.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }) : date}`;
+};
 export const activityEntries = (activity) => Array.isArray(activity?.entries)
   ? activity.entries.filter((item) => item && typeof item === 'object')
   : [];
@@ -64,14 +68,16 @@ export const createOrAppendActivity = (moment, { title, description = '', date, 
   if (mode === ENTRY_MODES.TASKS && targetId) throw new Error('Tasks must be created independently.');
   if (selected) {
     const entries = [...activityEntries(selected), item];
-    const updated = { ...selected, entries };
+    const updated = { ...selected, entries, ...(mode === ENTRY_MODES.DAILY ? {
+      completed: false, cancelled: false, completedAt: null, status: 'in-progress',
+    } : {}) };
     return { moment: { ...moment, activities: current.map((a) => a === selected ? updated : a) },
       activityId: recordId(selected.id), entryId: item.id, appended: true };
   }
   const isDaily = mode === ENTRY_MODES.DAILY;
   const activity = {
     id: makeId(), eventId: recordId(moment.id) || recordId(moment.firestoreId),
-    title: isDaily ? `Diary · ${day}` : item.title,
+    title: isDaily ? dailyActivityTitle(day) : item.title,
     description: isDaily ? '' : item.description,
     date: day, time: isDaily ? '' : item.time, priority,
     completed: false, completedAt: null, createdAt: now,
@@ -128,7 +134,7 @@ const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
     [recordId(expense.id) || JSON.stringify(expense), expense])).values()];
   const merged = {
     ...target, ...(daily ? {
-      title: `Diary · ${dateKey(target.date)}`, description: '', time: '',
+      title: dailyActivityTitle(dateKey(target.date)), description: '', time: '',
       status: 'in-progress', completed: false, completedAt: null, cancelled: false,
       entryMode: ENTRY_MODES.DAILY,
     } : {}),
