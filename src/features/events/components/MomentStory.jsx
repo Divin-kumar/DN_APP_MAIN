@@ -37,7 +37,7 @@ const taskLabels = {
 };
 const monthLabel = (key) => new Date(key + '-01T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
 const fullDate = (date) => new Date(date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
-const activityLink = (momentId, entry) => entry.id ? activityDetailPath(momentId, entry.id) : null;
+const activityLink = (momentId, entry) => (entry.activityId || entry.id) ? activityDetailPath(momentId, entry.activityId || entry.id) : null;
 
 function Media({ items, uid, isGuest, label, album = false }) {
   if (!items?.length) return null;
@@ -71,6 +71,13 @@ function Chapter({ entry, momentId, uid, isGuest, presentation }) {
       <ActivityTitle entry={entry} momentId={momentId} />
       {entry.displayTime ? <time className="dn-story-entry-aside">{entry.displayTime}</time> : null}
       {entry.description ? <RichText value={entry.description} className="dn-v2-story-entry-description free-text-content" /> : null}
+      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label="Appended entries">
+        {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
+          <small>{item.date || entry.date}{item.time ? ` · ${item.time}` : ''}</small>
+          <strong>{item.title || 'Untitled entry'}</strong>
+          {item.description ? <RichText value={item.description} className="free-text-content" /> : null}
+        </section>)}
+      </div> : null}
       {entry.status === 'cancelled' ? <small className="dn-story-entry-aside">Cancelled activity</small> : null}
       {!isJournal && files ? <Link className="dn-story-entry-files" to={activityLink(momentId, entry)}>
         {files} original {files === 1 ? 'file' : 'files'} saved with this entry <ArrowUpRight size={13} aria-hidden="true" />
