@@ -54,8 +54,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
 test('selected card photo is shared by Moment Activities and All Activities without modifying originals', async ({ page }) => {
   const errors = await seedGuest(page);
   await addOriginal(page, { count: 2 });
-  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  // addOriginal deliberately patches isolated Guest storage. Force a fresh
+  // store hydration before inspecting the nested Moment view.
   await page.goto('/events/moment-one/activities');
+  await page.reload();
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card.locator('.dn-v2-activity-cover img')).toBeVisible();
   await card.getByRole('button', { name: 'Choose cover photo for Book a lakeside stay' }).click();
