@@ -5,6 +5,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { activityCancellationPatch, activityCompletionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
+import { updateActivityEntry, removeActivityEntry } from '../utils/activityEntries';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
 // scoped writer, so every entry point serializes changes to a parent Moment.
@@ -56,12 +57,19 @@ export default function useActivityActions() {
     return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };
+  const saveEntry = (target, entryId, patch) => run(target,
+    (activity) => updateActivityEntry(activity, entryId, patch),
+    'entry-edit:' + entryId, 'Entry updated');
+  const deleteEntry = (target, entryId) => run(target,
+    (activity) => removeActivityEntry(activity, entryId),
+    'entry-delete:' + entryId, 'Entry removed');
   const closeEditor = () => { if (!saving.current) { setDraft(null); setError(''); } };
   const requestDelete = (target) => { if (!saving.current) { setError(''); setDeleteTarget(target); } };
   const remove = (after) => run(deleteTarget, () => null, 'delete', 'Activity deleted', (changed) => {
     setDeleteTarget(null); if (changed) after?.();
   }).catch(() => {});
   return { busy, error, announcement, draft, deleteTarget, edit, save, closeEditor, requestDelete, remove,
+    saveEntry, deleteEntry,
     changeDraft: (patch) => { if (!saving.current) setDraft((value) => ({ ...value, ...patch })); },
     closeDelete: () => { if (!saving.current) setDeleteTarget(null); }, setCompleted, setCancelled };
 }
