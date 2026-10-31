@@ -15,7 +15,7 @@
 import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -571,6 +571,18 @@ function ListOrderingPreferences() {
 
 export default function CodeLists() {
   const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    // The app uses a nested scroll owner (.dn-content), not document scroll.
+    // Let the route's scroll reset finish before revealing deep-linked settings.
+    if (location.hash !== '#list-order') return undefined;
+    const frame = window.requestAnimationFrame(() => {
+      document.getElementById('list-order')?.scrollIntoView({
+        block: 'start', inline: 'nearest', behavior: 'instant',
+      });
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [location.hash, location.pathname]);
   const user = useAppStore((state) => state.user);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
