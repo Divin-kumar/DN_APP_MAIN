@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-218 | Correct priority-label selectors and distinguish READY review builds
+- **Finding:** The cross-page iPhone filter tests introduced after CHG-214 searched for option text `High`, but DN's built-in Activity Priority Code List exposes `High priority`. These tests could report a false interaction failure while the UI and saved data were correct.
+- **Change:** Correct the priority-value selectors in `e2e/iphone-settings-filter-defaults.spec.js`, `e2e/iphone-condition-rule-single-row.spec.js`, and `e2e/iphone-backup-saved-list-defaults.spec.js` to target the Code List's real label. No runtime filter logic, record schema or layout changed.
+- **Vercel verification:** Authenticated Vercel deployment history shows READY review builds of both `life-hub` and `dn-app-main` for OldVersion commit `a769030cecceb66e6214d3aa30c4755576a13fea` (through CHG-216). GitHub statuses on later `db289ffee26253a0d8cc7759928658b485ecf2e3` still report a build-rate limit; a Vercel SHA query found no deployment at that latest commit. Do not treat the READY build as covering CHG-217 or this test fix.
+- **Owner QA:** A targeted iPhone manual checklist was provided for the READY CHG-216 Vercel preview; receipt of owner observations, exact-SHA automated tests, full CHG-217 build and physical signed-in backup restore are still pending.
+- **Release:** Record source-only CHG-218 in the pending Firebase batch; no Firebase release, app-version bump, edit to `main`, Vercel paid upgrade or deploy override.
+
 ## CHG-20261031-217 | Saved Settings sort and filter defaults are now included in full backups
 - **Finding:** CHG-214 made Settings the source of List defaults, but the existing application JSON backup exported records, Code Lists and other preferences without those defaults. A restore to another browser would silently lose the chosen Reset baseline.
 - **Change:** New version-3 backups embed the optional `settings.listViewDefaults` with scoped saved configurations and condition trees for Moments, Activities and Transactions. Export never copies the working page sort/search/Refine state. Restore validates all three domains and bounded filter trees at parsing time, then reapplies saved defaults to the destination account/Guest browser scope only after record import and original-file restoration succeed. The existing live page view remains unchanged.
