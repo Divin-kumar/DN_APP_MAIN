@@ -17,9 +17,10 @@ jobs:
           node-version: '22'
           cache: 'npm'
       - name: Install locked dependencies
+        id: install
         run: npm ci
-      - name: Check dependency advisories
-        run: npm audit --audit-level=moderate
+      # Test and build should still run even if the existing advisory baseline
+      # is unresolved. Audit remains an independent, failing release gate below.
       - name: Run Node unit tests
         run: npm test
       - name: Lint application and tests
@@ -43,6 +44,9 @@ jobs:
           npm --prefix .verification/phase9/previous run build
       - name: Verify the release update preserves records, preferences and originals
         run: npm run test:upgrade
+      - name: Check dependency advisories (blocking)
+        if: ${{ always() && steps.install.outcome == 'success' }}
+        run: npm audit --audit-level=moderate
   documentation-contract:
     runs-on: ubuntu-latest
     steps:
