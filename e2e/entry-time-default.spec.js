@@ -34,8 +34,8 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   await page.goto('/events/moment-one/activities?create=activity');
   await expect(dialog.getByLabel('Activity time',{exact:true})).toHaveValue('10:20');
   await dialog.getByRole('button',{name:'Clear activity time',exact:true}).click();
-  await dialog.getByPlaceholder('Activity title',{exact:true}).fill('Manually untimed activity');
-  await dialog.getByRole('button',{name:'Add activity',exact:true}).click();
+  await dialog.getByPlaceholder('Entry title',{exact:true}).fill('Manually untimed activity');
+  await dialog.getByRole('button',{name:'Add entry',exact:true}).click();
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].activities.find(x=>x.title==='Manually untimed activity').time)).toBe('');
   const open=async()=>{
