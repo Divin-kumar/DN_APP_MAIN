@@ -8,12 +8,12 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     test(`dedicated Data & Backup keeps every option and guidance readable at ${width}px ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
+      await page.goto('/settings'); // Establish the app origin before reading storage.
       const before = await page.evaluate(() => [
         localStorage.getItem('dn_guest_eventGroups'),
         localStorage.getItem('dn_guest_incomes'),
         localStorage.getItem('dn_guest_expenses'),
       ]);
-      await page.goto('/settings');
       const home = page.locator('.dn-settings-home');
       await expect(home.locator('.settings-section')).toHaveCount(3);
       await expect(home.getByRole('button', { name: /Data & Backup/ })).toHaveCount(0);
