@@ -23,7 +23,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(page).toHaveURL(new RegExp('/settings/data-backup$'));
 
       const subpage = page.locator('.dn-data-page');
-      await expect(subpage.getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
+      await expect(page.locator('.dn-header').getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
       await expect(subpage.getByText('Guest · this device')).toBeVisible();
       await expect(subpage.getByRole('button', { name: 'Export backup' })).toBeVisible();
       await expect(subpage.getByText('Restore backup', { exact: true })).toBeVisible();
@@ -65,7 +65,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const dialog = page.getByRole('dialog', { name: 'Clear local DN data?' });
       await dialog.getByRole('button', { name: 'Keep my data' }).click();
       await expect(dialog).toHaveCount(0);
-      await subpage.getByRole('link', { name: 'Back to Settings' }).click();
+      await page.locator('.dn-header').getByRole('link', { name: 'Back to Settings' }).click();
       await expect(page).toHaveURL(new RegExp('/settings$'));
       await expect(page.locator('.settings-section')).toHaveCount(3);
       expect(await page.evaluate(() => [
