@@ -91,7 +91,9 @@ test('Journal retains separate Activities until user selects Append or Merge', (
     { mode: ENTRY_MODES.JOURNAL, date, time: '12:00', title: 'Note', targetId: 'memory-one' }, fixed).moment;
   assert.equal(append.activities.length, 2);
   assert.equal(append.activities[0].entries[0].title, 'Note');
-  assert.deepEqual(storyEntries(append).map((item) => item.title), ['Travel', 'Note', 'Dinner']);
+  assert.deepEqual(storyEntries(append).map((item) => item.title), ['Travel', 'Dinner']);
+  assert.equal(storyEntries(append)[0].subEntries[0].title, 'Note',
+    'Journal append continues the original memory instead of another chapter');
   const merged = mergeJournalActivities(original, 'memory-one', 'memory-two');
   assert.equal(original.activities.length, 2, 'merge never modifies old source');
   assert.equal(merged.activities.length, 1);
@@ -169,6 +171,7 @@ test('Appending linked Journal Activity retains old aliases and updates relation
   assert.equal(merged.activities.length, 2);
   assert.deepEqual(merged.activities[0].linkedJournalActivityIds, []);
   assert.deepEqual(merged.activities[1].linkedJournalActivityIds, ['a']);
-  assert.deepEqual(storyEntries(merged).map((item) => item.title), ['Main', 'Related', 'Other']);
+  assert.deepEqual(storyEntries(merged).map((item) => item.title), ['Main', 'Other']);
+  assert.equal(storyEntries(merged)[0].subEntries[0].title, 'Related');
   assert.equal(activityOwnsLinkedId(merged.activities[0], 'b'), true);
 });
