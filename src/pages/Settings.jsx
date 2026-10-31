@@ -2,6 +2,7 @@ import { clearDnLocalData } from '../utils/storageMigration';
 import { listStateScope } from '../utils/listStateMemory';
 import { exportSavedListDefaultsForScope, resetSavedListDefaultsForScope, restoreSavedListDefaultsForScope } from '../utils/listViewDefaults';
 import { settingsResetContext, assertSettingsResetContext, assertSettingsResetRecords } from '../utils/settingsResetSafety';
+import { dashboardConfigurationRestorePatch } from '../utils/backupDashboardConfiguration';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
@@ -503,14 +504,19 @@ export default function Settings() {
       assertDestinationScope();
       restoreSavedListDefaultsForScope(listStateScope(useAppStore.getState()), backup.settings.listViewDefaults);
 
-      const pickerStorageId = user?.uid || (isGuest ? 'guest' : 'local');
+      // Historical backups may omit Dashboard shortcuts entirely. Never
+      // interpret an omitted field as an instruction to erase this device's
+      // favorites or recent Moments; an explicit [] remains a valid clear.
+      const pickerStorageId = destinationUid || (destinationGuest ? 'guest' : 'local');
       const validMomentIds = new Set(restoredGroups.map((moment) => moment.id));
-      const favorites = [...new Set((backup.dashboardConfiguration.favorites || []).filter((id) => validMomentIds.has(id)))];
-      const recent = [...new Set((backup.dashboardConfiguration.recent || []).filter((id) => validMomentIds.has(id)))].slice(0, 8);
-      localStorage.setItem(`dn_favorite_event_ids_${pickerStorageId}`, JSON.stringify(favorites));
-      localStorage.setItem(`dn_recent_event_ids_${pickerStorageId}`, JSON.stringify(recent));
+      const dashboardPatch = dashboardConfigurationRestorePatch(backup.dashboardConfiguration, validMomentIds);
+      for (const [key, ids] of Object.entries(dashboardPatch)) {
+        assertDestinationScope();
+        const storageKey = key === 'favorites' ? 'favorite_event_ids' : 'recent_event_ids';
+        localStorage.setItem(`dn_${storageKey}_${pickerStorageId}`, JSON.stringify(ids));
+      }
 
-      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, dashboard configuration, Code Lists and saved List defaults were restored where present.`;
+      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, Dashboard shortcuts, Code Lists and saved List defaults were restored where present.`;
 
       if (restoreFromGuestTour) {
         // Only conclude the demo after all verified originals, records,
@@ -896,7 +902,7 @@ export default function Settings() {
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
                   <li>Code Lists, preferences, dashboard configuration, and saved List defaults (when present)</li>
                 </ul>
-                <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration in the backup replaces its matching destination settings. Older backups without saved List defaults leave your current List defaults unchanged. An interrupted restore can be retried; completed records are recognized by ID.</p>
+                <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration in the backup replaces its matching destination settings. Older backups without saved List defaults or Dashboard shortcuts leave those existing preferences unchanged. Explicit empty Dashboard shortcut lists still clear them. An interrupted restore can be retried; completed records are recognized by ID.</p>
                 <p>Original files in this backup are integrity-checked and stored before record writes. Older attachment records without a stored original remain metadata only.</p>
                 {pendingBackup.referenceWarnings.length ? (
                   <div role="alert"><strong>Relationship warnings</strong><ul>{pendingBackup.referenceWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>
