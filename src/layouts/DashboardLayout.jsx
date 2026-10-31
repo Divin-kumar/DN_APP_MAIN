@@ -351,7 +351,7 @@ export default function DashboardLayout() {
       // the existing Moment-workspace and global + defaults.
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
       const currentMomentId = momentId(parent);
-      quickActivitySessionRef.current = records.capture();
+      quickActivitySessionRef.current = { context: records.capture(), ready: isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) };
       if (parent && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
@@ -424,8 +424,13 @@ export default function DashboardLayout() {
       setQuickCreateError('Choose the Journal entry you want to append to.');
       return;
     }
-    const context = quickActivitySessionRef.current;
-    if (!records.isCurrent(context)) {
+    const opening = quickActivitySessionRef.current;
+    // Global + can open before Moments finish loading. Capture the final
+    // revision only in that case, while requiring the original account scope.
+    const context = opening?.ready ? opening.context : records.capture();
+    if (!opening || opening.context.scope !== context.scope
+      || opening.context.uid !== context.uid || opening.context.isGuest !== context.isGuest
+      || opening.context.sample !== context.sample || !records.isCurrent(context)) {
       setQuickCreateError('Your session changed. Reopen + to add this entry.');
       return;
     }
