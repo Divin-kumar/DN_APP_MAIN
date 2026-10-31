@@ -4,7 +4,7 @@ import { resetSavedListDefaultsForScope } from '../utils/listViewDefaults';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -824,11 +824,21 @@ export default function Settings() {
       })}
 
       <div className="settings-navigation-hub settings-about-footer">
+        <Link to="/settings/code-lists#list-order" className="settings-hub-card dn-settings-list-defaults-link"
+          aria-label="Open List defaults">
+          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>List defaults</strong>
+            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
         <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
           <span className="settings-hub-icon"><Settings2 size={18} /></span>
           <span className="settings-hub-copy">
             <strong>Code Lists</strong>
-            <small>Manage types, categories, priorities, saved presets, sorting and filters</small>
+            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
           </span>
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>
