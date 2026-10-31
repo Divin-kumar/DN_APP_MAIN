@@ -14,7 +14,8 @@ import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
 import ActivityEntryTimeline from './components/ActivityEntryTimeline';
 import { entryCount, ENTRY_MODES } from '../../utils/activityEntries';
-import { activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
+import { activityDateLabel, activityDetailPath, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
+import { recordId } from '../../utils/recordIdentity';
 import { getActivityMomentType } from '../../utils/activityRecords';
 import { isActivityEditable } from '../../utils/scopedRecordActions';
 import './ActivityDetail.css';
@@ -34,6 +35,12 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const navigation = useActivityNavigation({ scoped, eventId, activityId, disabled: actions.busy || Boolean(actions.draft || actions.deleteTarget) || coverEditing });
   useEffect(() => { if (navigation.isPaging) heading.current?.focus({ preventScroll: true }); }, [navigation.isPaging]);
   const found = resolveActivityDetail(scoped.events, eventId, activityId);
+  // An old saved link to a merged Diary or Journal Activity remains usable.
+  useEffect(() => {
+    if (found && recordId(found.activity.id) !== recordId(activityId)) {
+      navigate(activityDetailPath(eventId, found.activity.id), { replace: true });
+    }
+  }, [found?.activity?.id, activityId, eventId, navigate]);
   if (scoped.loadError) return <div className="activity-detail-page" role="alert"><h1>Activity couldn’t be loaded</h1>
     <p>Your Moments couldn’t be loaded. Please try again.</p><button type="button" className="secondaryButton" onClick={scoped.retry}>Try again</button></div>;
   if (scoped.pending) return <div className="activity-detail-page activity-detail-skeleton" aria-busy="true">
