@@ -53,7 +53,7 @@ test.describe('premium Moment cards on touch iPhones', () => {
       // touch-sticky hover elevation from older card styles.
       await card.locator('.dn-record-menu-trigger').tap();
       await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
-      await page.locator('.life-timeline-heading h2').tap();
+      await page.locator('.dn-header .dn-shell-page-title').tap();
       await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
       const state = await card.evaluate((root) => ({
         cardOffsetX: getComputedStyle(root).transform === 'none' ? 0
@@ -69,7 +69,7 @@ test.describe('premium Moment cards on touch iPhones', () => {
       for (const distance of [-100, 100]) {
         await swipe(page, card, { distance });
         await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
-        await page.locator('.life-timeline-heading h2').tap();
+        await page.locator('.dn-header .dn-shell-page-title').tap();
         await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
       }
       expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
