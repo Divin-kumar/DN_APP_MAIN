@@ -26,8 +26,23 @@ async function assertOneRow(page) {
     Math.min(field.top, comparison.top, value.top, remove.top)).toBeLessThanOrEqual(3);
   expect(field.right).toBeLessThanOrEqual(comparison.left + 2);
   expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
-  expect(value.right).toBeLessThanOrEqual(remove.left + 2);
+  // On small iPhones the value may scroll beneath a pinned remove control.
+  // Measure reachable geometry after scrolling, not the offscreen scroll area.
   expect(remove.right).toBeLessThanOrEqual(measurement.rowRight + 1);
+  const pin = await page.locator('.dn-list-controls-panel .dn-condition-rule').first().evaluate((rule) => {
+    const overflow = getComputedStyle(rule).overflowX;
+    const scrollable = rule.scrollWidth > rule.clientWidth + 1;
+    rule.scrollLeft = rule.scrollWidth;
+    const box = rule.getBoundingClientRect();
+    const icon = rule.querySelector('.dn-condition-icon').getBoundingClientRect();
+    return { overflow, scrollable, left: box.left, right: box.right,
+      iconLeft: icon.left, iconRight: icon.right };
+  });
+  if (pin.scrollable) {
+    expect(pin.overflow).toBe('auto');
+    expect(pin.iconLeft).toBeGreaterThanOrEqual(pin.left - 1);
+    expect(pin.iconRight).toBeLessThanOrEqual(pin.right + 1);
+  }
   expect(remove.height).toBeGreaterThanOrEqual(44);
   expect(measurement.rowHeight).toBeLessThanOrEqual(62);
   expect(measurement.pageWidth).toBeLessThanOrEqual(page.viewportSize().width + 1);
