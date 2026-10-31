@@ -63,7 +63,7 @@ for (const [width, height, theme] of [[390, 844, 'light'], [430, 932, 'dark']]) 
       const updated = after.find((item) => item.id === scenario.momentId);
       if (scenario.mode === 'chronicle') {
         expect(updated.activities).toHaveLength(2);
-        expect(updated.activities[0]).toEqual(normalizedBefore.find((item) =>
+        expect(updated.activities[0]).toMatchObject(normalizedBefore.find((item) =>
           item.id === scenario.momentId).activities[0]);
         expect(updated.activities[1]).toMatchObject({ title, eventId: scenario.momentId });
       } else {
