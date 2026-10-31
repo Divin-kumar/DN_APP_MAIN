@@ -92,7 +92,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     const errors = await seedGuest(page);
     await page.goto('/settings/code-lists#list-order');
     await page.getByRole('button', { name: 'Activities filters Set defaults' }).click();
-    await exerciseRule(page, 'Priority', 'High', width);
+    await exerciseRule(page, 'Priority', 'High priority', width);
     expect(errors).toEqual([]);
   });
 }
