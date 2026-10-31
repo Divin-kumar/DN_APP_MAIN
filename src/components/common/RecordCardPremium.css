@@ -1,0 +1,135 @@
+/* CHG-226 | One restrained visual finish for photo-led Activities and unified
+   Transactions. No swipe transform, menu hit-area, data or scroll overrides. */
+
+/* Activity photo placeholders deserve the same editorial depth as a real
+   cover, without inventing an image or obscuring the date/photo control. */
+html[data-theme] :is(.activities-page, .workspace-activities)
+  .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover:not(.has-photo)::before {
+  position: absolute;
+  inset: 14px 8px 28px;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-radius: 999px 999px 28px 28px;
+  background:
+    radial-gradient(ellipse at 50% 37%,
+      color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 70%),
+    linear-gradient(155deg,
+      color-mix(in srgb, var(--color-card) 45%, transparent),
+      transparent 72%);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-card) 85%, transparent);
+  pointer-events: none;
+  content: '';
+}
+html[data-theme] :is(.activities-page, .workspace-activities)
+  .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover-symbol {
+  position: relative;
+  z-index: 1;
+  opacity: .76;
+}
+
+/* Overdue is a real record state. Give the due line quiet urgency while
+   retaining Moment title visibility and the inline status chip. */
+html[data-theme] :is(.activities-page, .workspace-activities)
+  .event-activity-content .dn-v2-activity-card.is-overdue
+  .event-activity-context > span:last-child {
+  color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text) 20%) !important;
+  font-weight: 680;
+}
+html[data-theme] :is(.activities-page, .workspace-activities)
+  .event-activity-content .dn-v2-activity-card.is-complete
+  .event-activity-context > span:last-child {
+  color: var(--color-text-muted) !important;
+}
+html[data-theme] :is(.activities-page, .workspace-activities)
+  .event-activity-content .dn-v2-activity-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Income and Expense cards receive the same quiet structure: a hairline
+   semantic edge, a refined icon tile, and an easy-to-read amount. Nothing
+   changes the approved title/amount lead row or metadata/detail order. */
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card {
+  --dn-record-accent: var(--color-danger);
+  position: relative;
+  isolation: isolate;
+  border: 1px solid color-mix(in srgb, var(--color-border) 86%, var(--color-card)) !important;
+  border-radius: 18px !important;
+  background: var(--color-card) !important;
+  box-shadow:
+    0 4px 15px color-mix(in srgb, var(--color-text) 5%, transparent),
+    inset 0 1px 0 color-mix(in srgb, var(--color-card) 90%, transparent) !important;
+  transition: border-color 180ms ease, box-shadow 180ms ease;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card.is-income {
+  --dn-record-accent: var(--color-success);
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card::before {
+  position: absolute;
+  top: 16px;
+  bottom: 16px;
+  left: 0;
+  z-index: 2;
+  width: 3px;
+  border-radius: 0 4px 4px 0;
+  background: color-mix(in srgb, var(--dn-record-accent) 78%, var(--color-card));
+  pointer-events: none;
+  content: '';
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
+  .dn-transaction-icon {
+  border: 1px solid color-mix(in srgb, var(--dn-record-accent) 16%, var(--color-border));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-card) 75%, transparent);
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
+  .dn-transaction-card-core {
+  /* The surface remains flat and calm: the semantic icon/edge provide
+     distinction instead of another heavy gradient panel. */
+  background: transparent !important;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
+  .dn-transaction-copy > strong {
+  font-weight: 740 !important;
+  letter-spacing: -.018em;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
+  .dn-transaction-value {
+  font-weight: 800 !important;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -.03em;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
+  .dn-transaction-meta {
+  gap: 2px 6px;
+  color: var(--color-text-muted) !important;
+}
+html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* iOS keeps :hover alive after taps. The polished elevation is only for
+   actual hovering pointers; touch cards stay visually settled on release. */
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card:hover,
+  html[data-theme] :is(.activities-page, .workspace-activities)
+    .event-activity-content .dn-v2-activity-card:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 27%, var(--color-border)) !important;
+    box-shadow: 0 10px 26px color-mix(in srgb, var(--color-text) 8%, transparent) !important;
+  }
+}
+@media (hover: none) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card:is(:hover, :focus-within) {
+    border-color: color-mix(in srgb, var(--color-border) 86%, var(--color-card)) !important;
+    box-shadow: 0 4px 15px color-mix(in srgb, var(--color-text) 5%, transparent) !important;
+  }
+  html[data-theme] :is(.activities-page, .workspace-activities)
+    .event-activity-content .dn-v2-activity-card:hover {
+    border-color: var(--color-border) !important;
+    box-shadow: 0 6px 22px color-mix(in srgb, var(--color-bg) 65%, transparent) !important;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card {
+    transition: none !important;
+  }
+}
