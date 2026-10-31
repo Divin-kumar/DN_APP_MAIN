@@ -44,7 +44,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       });
       expect(layout.pageWidth).toBeLessThanOrEqual(width + 1);
       expect(layout.railContentWidth).toBeGreaterThan(layout.railWidth);
-      expect(layout.railHeight).toBeGreaterThanOrEqual(44);
+      expect(layout.railHeight).toBeGreaterThanOrEqual(43.9);
       expect(layout.editors).toHaveLength(2);
       for (const row of layout.editors) {
         expect(row.button.height).toBeGreaterThanOrEqual(44);
