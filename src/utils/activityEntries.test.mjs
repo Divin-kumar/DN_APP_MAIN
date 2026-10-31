@@ -6,6 +6,9 @@ import {
 } from './activityEntries.js';
 import { buildMomentStory } from './momentStory.js';
 import { projectMomentTransactions } from './momentTransactions.js';
+import { createBackupDocument, buildEventGroupsFromBackup } from '../services/backupService.js';
+import { DEFAULT_CODE_LISTS } from './codeLists.js';
+import { reconcileExpenseActivities, requireLinkedActivity } from './transactionRelations.js';
 
 let index = 0;
 const makeId = () => 'test-' + ++index;
@@ -111,4 +114,24 @@ test('alias transactions stay associated and per-entry edits cannot overwrite si
   assert.equal(changed.entries[0].title, 'New text');
   assert.equal(activity.entries[0].title, 'Linked');
   assert.equal(removeActivityEntry(activity, 'linked').entries.length, 0);
+});
+
+test('backup restore and transaction updates retain merged Activity aliases', () => {
+  const merged = mergeJournalActivities({ id: 'moment', type: 'Journal',
+    activities: [make('main', 'Parent'), make('old', 'Before merge')],
+    attachments: [],
+  }, 'main', 'old');
+  const expense = { id: 'expense', eventId: 'moment', activityId: 'old', amount: 75, category: 'Food', date };
+  const backup = createBackupDocument({
+    moments: [merged], expenses: [expense], codeLists: DEFAULT_CODE_LISTS,
+  });
+  const [restored] = buildEventGroupsFromBackup(backup);
+  assert.equal(restored.activities.length, 1);
+  assert.equal(restored.activities[0].expenses.length, 1);
+  assert.equal(restored.activities[0].expenses[0].id, 'expense');
+  assert.equal(restored.activities[0].expenses[0].activityId, 'old', 'historical ledger ID remains');
+  assert.doesNotThrow(() => requireLinkedActivity([restored], expense));
+  const updated = reconcileExpenseActivities([restored], null, { ...expense, amount: 90, transactionKind: 'expense' });
+  assert.equal(updated.length, 1);
+  assert.equal(updated[0].activities[0].expenses[0].amount, 90);
 });
