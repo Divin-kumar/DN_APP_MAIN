@@ -291,7 +291,7 @@ export default function DashboardLayout() {
 
   // Quick create opens a lightweight modal for common tasks without leaving the page.
   // Shared quick-create for moments, activities, or any transaction.
-  const beginQuickCreate = (type) => {
+  const beginQuickCreate = (type, activationEvent) => {
     if (transactionSaving.current) return;
     if (type === 'transaction') {
       const parent = activityDetailMatch ? activityMoments.find((moment) => momentId(moment) === activityDetailMatch.params.eventId) : workspaceMoment;
@@ -300,10 +300,14 @@ export default function DashboardLayout() {
       setTransactionBusy(false);
     }
     setQuickCreateOpen(false);
-    // Restore dialogs to the persistent + control, rather than a disappearing menu item.
-    [quickCreateMobileRef.current, quickCreateDesktopRef.current]
-      .map((node) => node?.querySelector('.mobile-dock-create-trigger, .dn-quick-create-trigger'))
-      .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
+    // A touch-selected menu item must not refocus the +: iOS can retain its
+    // pressed/hover appearance until another element is tapped. Keep focus
+    // recovery for keyboard actions only; dialog focus is handled separately.
+    if (activationEvent?.detail === 0) {
+      [quickCreateMobileRef.current, quickCreateDesktopRef.current]
+        .map((node) => node?.querySelector('.mobile-dock-create-trigger, .dn-quick-create-trigger'))
+        .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
+    }
     setQuickCreateError('');
     setQuickCreateType(type);
     if (type === 'activity') {
@@ -512,7 +516,14 @@ export default function DashboardLayout() {
         ))}
         <div ref={quickCreateMobileRef} className={`mobile-dock-create dn-dock-center${quickCreateOpen ? ' is-open' : ''}`}>
           <button type="button" className="mobile-dock-create-trigger"
-            onClick={() => setQuickCreateOpen((open) => !open)}
+            onClick={(event) => {
+              setQuickCreateOpen((open) => !open);
+              // Blur only touch/pointer activation. Keyboard users retain
+              // visible focus, and Escape still restores keyboard focus.
+              if (event.detail > 0 && window.matchMedia('(hover: none)').matches) {
+                event.currentTarget.blur();
+              }
+            }}
             aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
             aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-mobile-quick-create' : undefined}>
             {quickCreateOpen ? <X size={24} aria-hidden="true" /> : <Plus size={24} aria-hidden="true" />}
@@ -520,9 +531,9 @@ export default function DashboardLayout() {
           {quickCreateOpen ? (
             <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
               <span className="dn-dock-menu-title">Create new</span>
-              <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
-              <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} aria-hidden="true" /><span>Activity</span></button>
-              <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>Activity</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
               {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
           ) : null}
@@ -540,9 +551,9 @@ export default function DashboardLayout() {
       <div ref={quickCreateDesktopRef} className={`dn-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
         {quickCreateOpen ? (
           <div className="dn-quick-create-menu" aria-label="Quick create actions">
-            <button type="button" onClick={() => beginQuickCreate('event')}><CalendarDays size={17} /><span>Life moment</span></button>
-            <button type="button" onClick={() => beginQuickCreate('activity')}><ListChecks size={17} /><span>Activity</span></button>
-            <button type="button" onClick={() => beginQuickCreate('transaction')}><Receipt size={17} /><span>Transaction</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} /><span>Life moment</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>Activity</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} /><span>Transaction</span></button>
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
         ) : null}
