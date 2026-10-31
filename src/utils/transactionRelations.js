@@ -1,5 +1,6 @@
 import { activityTimePatch, activityTime } from './activityTime.js';
 import { recordId } from './recordIdentity.js';
+import { activityOwnsLinkedId } from './activityEntries.js';
 import { financialDate } from './financialRecords.js';
 import { normalizePaymentMethod } from './paymentMethod.js';
 
@@ -46,8 +47,8 @@ export const reconcileExpenseActivities = (events, previous = null, current = nu
     if (!removes && !adds) continue;
     let changed = false;
     const activities = (event.activities || []).map((activity) => {
-      const removeHere = removes && previous.activityId === activity.id;
-      const addHere = adds && current.activityId === activity.id;
+      const removeHere = removes && activityOwnsLinkedId(activity, previous.activityId);
+      const addHere = adds && activityOwnsLinkedId(activity, current.activityId);
       if (!removeHere && !addHere) return activity;
       let expenses = activity.expenses || [];
       if (removeHere) {
@@ -105,6 +106,6 @@ export const requireLinkedActivity = (events, record) => {
   if (!event) throw new Error('This moment is unavailable. Reload Moments, or clear the moment link.');
   // A transaction can belong to a Moment without belonging to an activity.
   if (!activityId) return;
-  const activity = event.activities?.find((entry) => String(entry.id) === String(activityId));
+  const activity = event.activities?.find((entry) => activityOwnsLinkedId(entry, activityId));
   if (!activity) throw new Error('This activity is unavailable in the chosen moment. Choose another activity or clear the link.');
 };
