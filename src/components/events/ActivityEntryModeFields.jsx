@@ -17,14 +17,14 @@ export default function ActivityEntryModeFields({ moment, momentTypes = [], date
   const candidates = journalAppendCandidates(moment);
   return <div className="dn-entry-mode-picker">
     <label htmlFor="dn-journal-entry-choice">Journal entry</label>
-    <DropdownSelect id="dn-journal-entry-choice" value={choice} disabled={disabled}
+    <DropdownSelect id="dn-journal-entry-choice" value={choice} disabled={disabled} aria-label="Journal entry action"
       onChange={(event) => { onChoiceChange(event.target.value); onTargetChange(''); }}>
       <option value="new">New entry · Separate memory</option>
       <option value="append" disabled={!candidates.length}>Append to existing entry</option>
     </DropdownSelect>
     {choice === 'append' ? <>
       <label htmlFor="dn-journal-append-target">Append to</label>
-      <DropdownSelect id="dn-journal-append-target" value={targetId} disabled={disabled}
+      <DropdownSelect id="dn-journal-append-target" value={targetId} disabled={disabled} aria-label="Journal append destination"
         onChange={(event) => onTargetChange(event.target.value)}>
         <option value="">Choose an existing memory</option>
         {[...candidates].sort((a, b) => (a.date === date ? -1 : 0) - (b.date === date ? -1 : 0))
