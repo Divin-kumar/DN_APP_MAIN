@@ -3,7 +3,9 @@ const activityDetailRoute = /^\/events\/[^/]+\/activities\/[^/]+\/?$/;
 
 export const isActivityDetailRoute = (pathname) => activityDetailRoute.test(pathname || '');
 export const primaryNavigationPath = (pathname) => isActivityDetailRoute(pathname) || /^\/activities\/?$/.test(pathname)
-  ? '/activities' : /^\/events(?:\/|$)/.test(pathname) ? '/events' : pathname === '/' || /^\/dashboard\/?$/.test(pathname) ? '/dashboard' : null;
+  ? '/activities' : /^\/events(?:\/|$)/.test(pathname) ? '/events'
+    : /^\/financials(?:\/|$)/.test(pathname) ? '/financials/transactions'
+      : pathname === '/' || /^\/dashboard\/?$/.test(pathname) ? '/dashboard' : null;
 
 const matchWorkspaceRoute = (pathname) => typeof pathname === 'string' ? pathname.match(workspaceRoute) : null;
 
