@@ -1,7 +1,7 @@
 import { currentEntryTime } from '../utils/activityTime.js';
 import ActivityTimeField from '../components/common/ActivityTimeField';
 import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
-import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES } from '../utils/activityEntries';
+import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeLegacyDiaryActivities } from '../utils/activityEntries';
 /*
   Moment-first app shell for dashboard and workspace navigation.
 
@@ -118,6 +118,28 @@ export default function DashboardLayout() {
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
   const quickSelectedMoment = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
   const quickMode = quickSelectedMoment ? getMomentEntryMode(quickSelectedMoment, adminValues.eventTypes) : null;
+  const diaryMigrationAttempts = useRef(new Set());
+  // Automatic, idempotent legacy Diary consolidation. Only after this scoped
+  // account/Guest dataset is loaded. A failed write is not marked complete.
+  useEffect(() => {
+    if (!activityMoments.length) return;
+    const moment = activityMoments.find((item) => {
+      if (getMomentEntryMode(item, adminValues.eventTypes) !== ENTRY_MODES.DAILY) return false;
+      const key = JSON.stringify([eventScope, getActiveSampleScenario(user?.uid), momentId(item)]);
+      return !diaryMigrationAttempts.current.has(key) && mergeLegacyDiaryActivities(item) !== item;
+    });
+    if (!moment) return;
+    const key = JSON.stringify([eventScope, getActiveSampleScenario(user?.uid), momentId(moment)]);
+    const context = records.capture();
+    diaryMigrationAttempts.current.add(key);
+    records.mutateMoment(context, momentId(moment), (latest) =>
+      getMomentEntryMode(latest, adminValues.eventTypes) === ENTRY_MODES.DAILY
+        ? mergeLegacyDiaryActivities(latest) : latest, 'diary-legacy-consolidation')
+      .catch((error) => {
+        diaryMigrationAttempts.current.delete(key);
+        if (records.isCurrent(context)) showToast(error?.message || 'Diary entries could not be consolidated.', 'danger');
+      });
+  }, [activityMoments, adminValues.eventTypes, eventScope, user?.uid, showToast]);
 
   // Apply the saved theme to the page root so colors change across the whole app.
   useLayoutEffect(() => {
