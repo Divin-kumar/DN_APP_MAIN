@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.31.2';
+export const GUEST_TOUR_VERSION = '2026.10.31.3';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Save photographs, stories and moments together. From an Activity Detail, + → Activity now prepares an append to the opened Journal memory. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. Each memory is a regular dated Story entry. From Moment Activities, Link or append existing lets you connect independent memories, unlink them, or deliberately combine them later. Save photographs, stories and moments together. From an Activity Detail, + → Activity now prepares an append to the opened Journal memory. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [

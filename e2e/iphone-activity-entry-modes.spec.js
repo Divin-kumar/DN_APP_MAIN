@@ -49,7 +49,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
   });
 }
 
-test('Diary appends new entries, Journal offers explicit manual merge, and Tasks stay independent', async ({ page }) => {
+test('Diary appends new entries, Journal offers optional link then deliberate append, and Tasks stay independent', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page, { moments: moments(), incomes: [], expenses: [] });
   await page.goto('/events/diary/activities');
@@ -67,17 +67,33 @@ test('Diary appends new entries, Journal offers explicit manual merge, and Tasks
   expect(diary.activities[0].entries).toHaveLength(3);
 
   await page.goto('/events/journal/activities');
-  await expect(page.getByRole('button', { name: 'Merge Journal entries' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Link or append existing' })).toBeVisible();
   let journal = (await read(page)).find((item) => item.id === 'journal');
   expect(journal.activities).toHaveLength(2);
-  await page.getByRole('button', { name: 'Merge Journal entries' }).click();
-  const merge = page.getByRole('dialog', { name: 'Merge Journal entries' });
+  await page.getByRole('button', { name: 'Link or append existing' }).click();
+  const merge = page.getByRole('dialog', { name: 'Organize Journal memories' });
   await merge.locator('#journal-merge-destination').click();
   await page.getByRole('option', { name: /Morning photo/ }).click();
   await merge.locator('#journal-merge-source').click();
   await page.getByRole('option', { name: /Evening photo/ }).click();
-  await merge.getByRole('button', { name: 'Merge entries' }).click();
+  await merge.getByRole('button', { name: 'Link memories' }).click();
   await expect(merge).toHaveCount(0);
+  journal = (await read(page)).find((item) => item.id === 'journal');
+  expect(journal.activities).toHaveLength(2);
+  expect(journal.activities[0].linkedJournalActivityIds).toEqual(['journal-b']);
+  await page.goto('/events/journal/activities/journal-a');
+  await expect(page.getByRole('region', { name: 'Linked Journal memories' })).toContainText('Evening photo');
+  await page.goto('/events/journal/activities');
+  await page.getByRole('button', { name: 'Link or append existing' }).click();
+  const appendDialog = page.getByRole('dialog', { name: 'Organize Journal memories' });
+  await appendDialog.locator('#journal-arrange-action').click();
+  await page.getByRole('option', { name: 'Append · combine memories' }).click();
+  await appendDialog.locator('#journal-merge-destination').click();
+  await page.getByRole('option', { name: /Morning photo/ }).click();
+  await appendDialog.locator('#journal-merge-source').click();
+  await page.getByRole('option', { name: /Evening photo/ }).click();
+  await appendDialog.getByRole('button', { name: 'Append existing memory' }).click();
+  await expect(appendDialog).toHaveCount(0);
   journal = (await read(page)).find((item) => item.id === 'journal');
   expect(journal.activities).toHaveLength(1);
   expect(journal.activities[0].mergedActivityIds).toContain('journal-b');
