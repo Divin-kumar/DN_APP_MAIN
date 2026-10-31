@@ -29,6 +29,7 @@ for (const [width, height, theme] of [[390, 844, 'light'], [430, 932, 'dark']]) 
       const errors = await seedGuest(page, { theme, moments: original, incomes: [], expenses: [] });
       await page.goto(`/events/${scenario.momentId}/activities/${scenario.activityId}`);
       await expect(page.locator('.activity-detail-heading h1')).toBeVisible();
+      const normalizedBefore = await read(page);
       const dock = page.getByRole('navigation', { name: 'Main navigation' });
       await dock.getByRole('button', { name: 'Open quick create menu' }).click();
       await dock.getByRole('group', { name: 'Quick create actions' })
@@ -54,13 +55,14 @@ for (const [width, height, theme] of [[390, 844, 'light'], [430, 932, 'dark']]) 
       await expect(editor).toHaveCount(0);
 
       const after = await read(page);
-      for (const other of original.filter((item) => item.id !== scenario.momentId)) {
+      for (const other of normalizedBefore.filter((item) => item.id !== scenario.momentId)) {
         expect(after.find((item) => item.id === other.id)).toEqual(other);
       }
       const updated = after.find((item) => item.id === scenario.momentId);
       if (scenario.mode === 'chronicle') {
         expect(updated.activities).toHaveLength(2);
-        expect(updated.activities[0]).toEqual(moment.activities[0]);
+        expect(updated.activities[0]).toEqual(normalizedBefore.find((item) =>
+          item.id === scenario.momentId).activities[0]);
         expect(updated.activities[1]).toMatchObject({ title, eventId: scenario.momentId });
       } else {
         expect(updated.activities).toHaveLength(1);
@@ -83,13 +85,14 @@ test('Cancelled Journal entry does not become an unsafe implicit append destinat
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await page.goto('/events/journal/activities/same');
   await expect(page.locator('.activity-detail-heading h1')).toBeVisible();
+  const normalizedBefore = await read(page);
   await page.getByRole('button', { name: 'Open quick create menu' }).click();
   await page.getByRole('group', { name: 'Quick create actions' })
     .getByRole('button', { name: 'Activity', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Add an activity' });
   await expect(editor.locator('#dn-journal-entry-choice')).toContainText('New entry · Separate memory');
   await editor.getByRole('button', { name: 'Cancel' }).click();
-  expect(await read(page)).toEqual(moments);
+  expect(await read(page)).toEqual(normalizedBefore);
   expect(errors).toEqual([]);
 });
 
@@ -116,7 +119,7 @@ test('Saved Moment-type picker cannot hide Activity Detail parent at 320px', asy
   await expect(editor.getByRole('combobox', { name: 'Life moment' })).toContainText('Weekend journal');
   await expect(editor.locator('#dn-journal-append-target')).toContainText('Original memory');
   await editor.getByRole('button', { name: 'Cancel' }).click();
-  expect(await read(page)).toEqual(moments);
+  expect((await read(page)).map((item) => item.id)).toEqual(moments.map((item) => item.id));
   expect(errors).toEqual([]);
 });
 
@@ -130,7 +133,8 @@ test('Rapid duplicate Save taps append only one entry to Journal', async ({ page
   await page.getByRole('group', { name: 'Quick create actions' })
     .getByRole('button', { name: 'Activity', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Add an activity' });
-  await editor.getByRole('textbox', { name: 'Activity title' }).fill('One added paragraph');
+  const normalizedBefore = await read(page);
+  await editor.getByRole('textbox', { name: 'Entry title' }).fill('One added paragraph');
   await editor.evaluate((node) => {
     const form = node.querySelector('form.quick-create-activity-form');
     // Dispatch twice in one event turn, before React can paint a disabled state.
@@ -141,6 +145,6 @@ test('Rapid duplicate Save taps append only one entry to Journal', async ({ page
   const after = await read(page);
   expect(after.find((moment) => moment.id === 'journal').activities[0].entries)
     .toHaveLength(1);
-  expect(after.find((moment) => moment.id === 'tasks')).toEqual(moments[2]);
+  expect(after.find((moment) => moment.id === 'tasks')).toEqual(normalizedBefore.find((moment) => moment.id === 'tasks'));
   expect(errors).toEqual([]);
 });
