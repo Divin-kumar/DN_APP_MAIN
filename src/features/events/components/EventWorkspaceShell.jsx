@@ -1,6 +1,8 @@
 import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
 import ActivityTimeField from '../../../components/common/ActivityTimeField';
+import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
+import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES } from '../../../utils/activityEntries';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
@@ -88,6 +90,8 @@ export function EventWorkspaceContent() {
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
+  const [activityCreationChoice, setActivityCreationChoice] = useState('new');
+  const [activityAppendTarget, setActivityAppendTarget] = useState('');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
   const { search: activitySearch, filter: activityFilter, field: activitySort, direction: activitySortDirection } = activityList;
   const setActivitySearch = (search) => changeActivityList({ search });
@@ -338,10 +342,18 @@ export function EventWorkspaceContent() {
   const addActivity = (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
-    const values = { title: activityTitle.trim(), date: activityDate, time: activityTime, description: activityDescription, priority: activityPriority };
-    return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) => ({ ...latest, activities: [...(latest.activities || []), {
-        ...values, id: crypto.randomUUID(), eventId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
-      }] })), () => { setActivityTitle(''); setActivityDescription(''); setActivityTime(currentEntryTime()); setActivityDialogOpen(false); }).catch(() => {});
+    const mode = getMomentEntryMode(event, momentTypes);
+    if (mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' && !activityAppendTarget) {
+      setActivityError('Choose a Journal entry to append to.'); return;
+    }
+    return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) =>
+      createOrAppendActivity(latest, { title: activityTitle, date: activityDate,
+        time: activityTime, description: activityDescription, priority: activityPriority,
+        mode, targetId: mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' ? activityAppendTarget : '',
+      }).moment), () => {
+        setActivityTitle(''); setActivityDescription(''); setActivityTime(currentEntryTime());
+        setActivityCreationChoice('new'); setActivityAppendTarget(''); setActivityDialogOpen(false);
+      }).catch(() => {});
   };
 
   const saveNotes = async (submitEvent) => {
@@ -567,10 +579,13 @@ export function EventWorkspaceContent() {
         </form>
       </ModalDialog> : null}
       {activityDialogOpen ? (
-        <ModalDialog title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
+        <ModalDialog title={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
           <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
-            <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder="Activity title" style={styles.input} autoFocus />
+            <ActivityEntryModeFields moment={event} momentTypes={momentTypes} date={activityDate}
+              choice={activityCreationChoice} targetId={activityAppendTarget}
+              onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} disabled={activityBusy} />
+            <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'} style={styles.input} autoFocus />
             <div className="activity-date-time-row">
               <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
               <ActivityTimeField value={activityTime} onChange={setActivityTime} />
@@ -583,7 +598,7 @@ export function EventWorkspaceContent() {
             <RichTextEditor label="Activity notes" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
+              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'}</button>
             </div>
           </form>
         </ModalDialog>
