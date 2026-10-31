@@ -129,19 +129,6 @@ export default function About() {
 
   return (
     <div className="feature-page settings-page about-page dn-premium-about">
-      <header className="settings-subpage-header">
-        <button type="button" className="settings-back-button" onClick={() => navigate('/settings')} aria-label="Back to Settings">
-          <ArrowLeft size={16} />
-        </button>
-        <div className="settings-subpage-title-wrap">
-          <span className="settings-subpage-eyebrow">Settings</span>
-          <div className="about-title-row">
-            <h2>About DN</h2>
-            <span className="about-version-badge">v{appVersion}</span>
-          </div>
-        </div>
-      </header>
-
       <section className="settings-section about-panel">
         <div className="settings-section-heading">
           <span className="settings-accordion-icon"><Info size={18} /></span>
