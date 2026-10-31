@@ -8,6 +8,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     test(`route titles replace duplicate page headings at ${width}px ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
+      await page.goto('/dashboard'); // about:blank has no accessible localStorage.
       const initial = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map(key => localStorage.getItem(key)));
       const mainTitle = page.locator('.dn-header .dn-shell-page-title');
