@@ -597,3 +597,105 @@ html[data-theme] .quick-create-activity-form .dn-quick-activity-context strong {
   color: var(--color-text);
   font-weight: 700;
 }
+
+/* CHG-238: one quiet field hierarchy for the universal + and Moment composer.
+   Never turn quick creation into stacked cards or a second page. */
+html[data-theme] .dn-activity-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 11px;
+  min-width: 0;
+}
+html[data-theme] .dn-activity-create-form :is(
+  .dn-activity-create-title, .dn-activity-create-priority,
+  .dn-activity-create-field
+) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+  min-width: 0;
+}
+html[data-theme] .dn-activity-create-form :is(
+  .dn-activity-create-title, .dn-activity-create-priority,
+  .dn-activity-create-field
+) > label,
+html[data-theme] .dn-activity-create-form .dn-activity-create-title {
+  font-size: var(--dn-type-caption);
+  font-weight: 650;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+html[data-theme] .dn-activity-create-form .dn-activity-create-title > input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: var(--dn-interactive-min);
+  color: var(--color-text);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+}
+html[data-theme] .dn-activity-create-form .dn-activity-create-destination {
+  display: grid;
+  gap: 8px;
+  padding-bottom: 11px;
+  border-bottom: 1px solid var(--dn-quiet-outline);
+  min-width: 0;
+}
+html[data-theme] .dn-activity-create-form .dn-activity-create-moment-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 9px;
+  min-width: 0;
+}
+html[data-theme] .dn-activity-create-form .dn-entry-mode-picker {
+  gap: 7px;
+  padding: 0;
+}
+html[data-theme] .dn-activity-create-form .dn-entry-mode-help {
+  margin: 0;
+  line-height: 1.45;
+}
+html[data-theme] .dn-activity-create-form .activity-date-time-row {
+  min-width: 0;
+}
+html[data-theme] .dn-modal .dn-activity-create-form .dn-activity-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: nowrap;
+  min-width: 0;
+  gap: 8px;
+  padding-top: 11px;
+  border-top: 1px solid var(--dn-quiet-outline);
+}
+html[data-theme] .dn-modal .dn-activity-create-actions > button {
+  min-width: 0;
+  min-height: 44px !important;
+  flex: 0 1 auto;
+  padding-inline: 14px;
+  white-space: nowrap;
+  font-size: var(--dn-type-control);
+}
+html[data-theme] .dn-activity-create-form :is(
+  .dn-activity-create-title input,
+  .dn-activity-create-priority button,
+  .dn-activity-create-field button
+):focus-visible {
+  outline: var(--dn-focus-ring);
+  outline-offset: 2px;
+}
+@media (max-width: 760px) {
+  html[data-theme] .dn-activity-create-form {
+    gap: 10px;
+  }
+  html[data-theme] .dn-activity-create-form .dn-activity-create-destination {
+    padding-bottom: 9px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-activity-create-form :is(input, button) {
+    transition: none !important;
+  }
+}
