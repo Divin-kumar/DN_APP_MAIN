@@ -5,7 +5,7 @@ import { normalizeUserFilterGroup } from './userFilterSchema.js';
 import { momentConditions, activityConditions, transactionConditions } from './listConditionMigration.js';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES } from './activityListState.js';
 import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_VALUES } from './userListSort.js';
-import { listStateKey, listStateMemory } from './listStateMemory.js';
+import { listStateKey, listStateMemory, normalizeListState } from './listStateMemory.js';
 
 export const MOMENT_LIST_DEFAULTS = Object.freeze({ search: '', category: 'All moments', field: 'date', direction: 'asc' });
 export const MOMENT_LIST_RULES = Object.freeze({ field: MOMENT_SORT_OPTIONS.map(({ value }) => value), direction: ['asc', 'desc'] });
@@ -51,4 +51,64 @@ export const resetSavedListDefaultsForScope = (scope) => {
       LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES,
       { group: systemConditionGroup(domain), migrationVersion: 1 });
   }
+};
+
+// Optional portable Settings configuration for DN v3 application backups.
+// This captures only saved baselines, never live Refine state or raw storage
+// keys. Import applies it to the destination scope after records succeed.
+export const exportSavedListDefaultsForScope = (scope) => {
+  if (!scope || scope === 'signed-out') return null;
+  return Object.fromEntries(Object.entries(LIST_DOMAINS).map(([domain, config]) => {
+    const filters = listStateMemory.read(listStateKey(scope, `defaults:${domain}`), config.defaults, config.rules);
+    const saved = listStateMemory.read(listStateKey(scope, `conditions:defaults:${domain}`),
+      LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES);
+    return [domain, { filters: { ...filters }, group: configuredConditionGroup(domain, saved) }];
+  }));
+};
+
+export const validateSavedListDefaultsDocument = (document) => {
+  if (!document || typeof document !== 'object' || Array.isArray(document)
+    || Object.keys(document).sort().join(',') !== Object.keys(LIST_DOMAINS).sort().join(',')) {
+    throw new Error('Backup saved List defaults are incomplete or invalid.');
+  }
+  // Bound user-supplied filter trees before record restoration, including
+  // when the backup was manually edited or received from another device.
+  let encoded;
+  try { encoded = JSON.stringify(document); } catch { /* Cyclic objects are invalid. */ }
+  if (!encoded || encoded.length > 60000) throw new Error('Backup saved List defaults exceed the supported size.');
+  for (const [domain, config] of Object.entries(LIST_DOMAINS)) {
+    const entry = document[domain];
+    const filters = entry?.filters;
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)
+      || Object.keys(entry).sort().join(',') !== 'filters,group'
+      || !filters || typeof filters !== 'object' || Array.isArray(filters)
+      || Object.keys(filters).sort().join(',') !== Object.keys(config.defaults).sort().join(',')) {
+      throw new Error(`Backup saved ${domain} preferences are invalid.`);
+    }
+    const normalizedFilters = normalizeListState(filters, config.defaults, config.rules);
+    if (Object.keys(config.defaults).some((key) => normalizedFilters[key] !== filters[key])) {
+      throw new Error(`Backup saved ${domain} sorting or search has an invalid value.`);
+    }
+    const group = entry.group;
+    if (!group || group.kind !== 'group' || !Array.isArray(group.children)) {
+      throw new Error(`Backup saved ${domain} filter conditions are invalid.`);
+    }
+    const normalizedGroup = normalizeConditionGroup(group);
+    if (JSON.stringify(group) !== JSON.stringify(normalizedGroup)) {
+      throw new Error(`Backup saved ${domain} filter conditions contain invalid rules.`);
+    }
+  }
+  return document;
+};
+
+export const restoreSavedListDefaultsForScope = (scope, document) => {
+  if (!scope || scope === 'signed-out' || document === undefined) return false;
+  validateSavedListDefaultsDocument(document);
+  for (const [domain, config] of Object.entries(LIST_DOMAINS)) {
+    const { filters, group } = document[domain];
+    listStateMemory.update(listStateKey(scope, `defaults:${domain}`), config.defaults, config.rules, filters);
+    listStateMemory.update(listStateKey(scope, `conditions:defaults:${domain}`),
+      LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES, { group, migrationVersion: 1 });
+  }
+  return true;
 };
