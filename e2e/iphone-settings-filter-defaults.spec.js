@@ -58,7 +58,7 @@ test('Activity filter defaults stay in Settings and Reset restores their conditi
   await rule.getByRole('combobox', { name: 'Filter by' }).click();
   await page.getByRole('option', { name: 'Priority', exact: true }).click();
   await rule.getByRole('combobox', { name: 'Value for Priority' }).click();
-  await page.getByRole('option', { name: 'High', exact: true }).click();
+  await page.getByRole('option', { name: 'High priority', exact: true }).click();
   await expect(editor.getByRole('region', { name: 'Active filters' })).toContainText('Priority');
 
   await page.goto('/activities');
