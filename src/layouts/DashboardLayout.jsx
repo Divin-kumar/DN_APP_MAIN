@@ -54,6 +54,8 @@ const mobileDockEnd = [
   { label: 'Moments', path: '/events', icon: BookHeart },
   { label: 'Transactions', path: '/financials/transactions', icon: Receipt },
 ];
+// Portrait iPhones and short, touch-enabled landscape iPhones share the dock.
+const MOBILE_DOCK_MEDIA = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
 const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
 
@@ -76,7 +78,7 @@ export default function DashboardLayout() {
   const contentRef = useRef(null);
   const previousLocationRef = useRef(null);
   const scrollPositionsRef = useRef(new Map());
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia('(max-width: 760px)').matches);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia(MOBILE_DOCK_MEDIA).matches);
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -117,7 +119,7 @@ export default function DashboardLayout() {
   }, [theme]);
 
   useEffect(() => {
-    const mobileQuery = window.matchMedia('(max-width: 760px)');
+    const mobileQuery = window.matchMedia(MOBILE_DOCK_MEDIA);
     const handleViewportChange = (event) => {
       setSidebarCollapsed(event.matches);
     };
@@ -512,7 +514,7 @@ export default function DashboardLayout() {
           <button type="button" className="mobile-dock-create-trigger"
             onClick={() => setQuickCreateOpen((open) => !open)}
             aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
-            aria-expanded={quickCreateOpen} aria-controls="dn-mobile-quick-create">
+            aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-mobile-quick-create' : undefined}>
             {quickCreateOpen ? <X size={24} aria-hidden="true" /> : <Plus size={24} aria-hidden="true" />}
           </button>
           {quickCreateOpen ? (
