@@ -17,7 +17,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
     : <div className="event-activity-empty"><span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
       <strong>A few helpful steps can make this moment easier</strong><p>Activities help you track things to do for {eventName}.</p></div>;
-  const activeActivities = progressActivities.filter((activity) => activityStatus(activity) !== 'cancelled');
+  const activeActivities = progressActivities.filter((activity) => activity.entryMode !== ENTRY_MODES.DAILY && activityStatus(activity) !== 'cancelled');
   const visibleActivities = includeCancelled ? activities : activities.filter((activity) => (activityStatus(activity) === 'cancelled') === showCancelled);
   const completedCount = activeActivities.filter((activity) => activityStatus(activity) === 'completed').length;
   const progress = activeActivities.length ? Math.round(completedCount / activeActivities.length * 100) : 0;
@@ -32,8 +32,9 @@ export default function ActivityList({ eventName = 'This event', activities, all
         const parentMoment = visualCards ? getMoment?.(activity) : null;
         const completed = status === 'completed', cancelled = status === 'cancelled';
         let date; try { date = parseMomentDate(activity.date); } catch { /* Safe legacy date. */ }
-        const overdue = !completed && !cancelled && date && date < new Date(new Date().setHours(0, 0, 0, 0));
-        const dueText = !date ? 'Date to be decided' : overdue
+        const overdue = activity.entryMode !== ENTRY_MODES.DAILY && !completed && !cancelled && date && date < new Date(new Date().setHours(0, 0, 0, 0));
+        const dueText = !date ? 'Date to be decided' : activity.entryMode === ENTRY_MODES.DAILY
+          ? new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date) : overdue
           ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date)}`
           : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)}`;
         // Swiping either direction only reveals actions; it never writes by itself.
