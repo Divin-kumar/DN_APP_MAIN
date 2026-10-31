@@ -49,20 +49,29 @@ export const resolveMomentStoryPresentation = (moment = {}, momentTypes = []) =>
   return VALID_PRESENTATIONS.includes(selected) ? selected : defaultPresentation(configured?.value || typeName);
 };
 
-const makeActivityEntry = (moment, activity) => {
-  const id = recordId(activity.id) || recordId(activity.firestoreId);
+const makeActivityEntry = (moment, activity, subEntry = null, isFirst = false) => {
+  const parentId = recordId(activity.id) || recordId(activity.firestoreId);
+  const id = subEntry?.id || parentId;
+  const linked = parentId ? summaryAttachmentsFor(moment, parentId) : [];
   return {
     kind: 'activity',
     id,
-    title: activity.title || '',
-    description: activity.description || '',
-    date: calendarKey(activity.date),
-    displayTime: activityTime(activity),
-    status: activityStatus(activity),
-    // Keep the actual underlying record available for Activity Detail / PDF
-    // consumers without manufacturing a second saved Activity.
+    activityId: parentId,
+    title: subEntry?.title ?? activity.title ?? '',
+    description: subEntry?.description ?? activity.description ?? '',
+    date: calendarKey(subEntry?.date || activity.date),
+    displayTime: subEntry ? activityTime(subEntry) : activityTime(activity),
+    status: subEntry?.status || activityStatus(activity),
     activity,
-    attachments: id ? summaryAttachmentsFor(moment, id) : [],
+    // Journal appends remain part of their owning memory, with independent
+    // timestamps and editable entry IDs. Diary children become day chapters.
+    subEntries: !subEntry && Array.isArray(activity.entries)
+      ? [...activity.entries].sort((a, b) =>
+        (a.date || '').localeCompare(b.date || '')
+          || (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99')
+          || String(a.id || '').localeCompare(String(b.id || '')))
+      : [],
+    attachments: subEntry ? linked.filter((file) => file.entryId === id || (isFirst && !file.entryId)) : linked,
   };
 };
 
@@ -80,8 +89,15 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
   let activeMonth = null;
   let activeDay = null;
 
-  for (const activity of sortedSummaryActivities(asRecords(source.activities))) {
-    const entry = makeActivityEntry(source, activity);
+  const entries = sortedSummaryActivities(asRecords(source.activities)).flatMap((activity) => {
+    if (activity.entryMode !== 'diary' || !Array.isArray(activity.entries) || !activity.entries.length) {
+      return [makeActivityEntry(source, activity)];
+    }
+    return [...activity.entries].sort((a, b) => (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99'))
+      .map((item, index) => makeActivityEntry(source, activity, item, index === 0));
+  }).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')
+    || (a.displayTime || '99:99').localeCompare(b.displayTime || '99:99'));
+  for (const entry of entries) {
     if (!entry.date) {
       undated.push(entry);
       continue;
