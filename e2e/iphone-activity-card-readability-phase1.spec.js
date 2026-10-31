@@ -182,19 +182,19 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     const action = card.getByRole('button', { name: 'Manage photos for Book a lakeside stay' });
     await expect(action).toBeVisible();
     const metrics = await page.evaluate(() => {
-      const heading = document.querySelector('.activities-page .life-timeline-heading');
-      const title = heading.querySelector('h2');
+      const title = document.querySelector('.dn-header .dn-shell-page-title');
+      const duplicateHeading = document.querySelector('.activities-page .life-timeline-heading');
       const progress = document.querySelector('.activities-page .event-activity-progress');
       const button = document.querySelector('.activities-page .dn-v2-activity-cover-action');
       const cover = button.closest('.dn-v2-activity-cover');
       const b = button.getBoundingClientRect(), c = cover.getBoundingClientRect();
-      return { titleCount:heading.children.length, title: title.textContent,
+      return { duplicateHeadingCount:Number(Boolean(duplicateHeading)), title: title?.textContent,
         progressBorder:getComputedStyle(progress).borderTopWidth,
         buttonWidth:b.width, buttonHeight:b.height,
         inside:b.left >= c.left - 1 && b.right <= c.right + 1,
         pageWidth:document.documentElement.scrollWidth };
     });
-    expect(metrics.titleCount).toBe(1);
+    expect(metrics.duplicateHeadingCount).toBe(0);
     expect(metrics.title).toBe('Activities');
     expect(metrics.progressBorder).toBe('0px');
     expect(metrics.buttonWidth).toBeGreaterThanOrEqual(43.9);
