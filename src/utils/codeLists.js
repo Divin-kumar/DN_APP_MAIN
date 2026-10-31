@@ -149,6 +149,15 @@ export const migrateStoredCodeLists = (
   return { adminValues, version };
 };
 
+// Legacy types are normalized to one explicit mode without deleting any
+// configured type. The editor requires a conscious choice for every new type.
+const explicitEntryMode = (value, name) => {
+  if (['journey', 'diary', 'chronicle'].includes(value)) return value;
+  const key = String(name || '').trim().toLocaleLowerCase();
+  if (key === 'diary') return 'diary';
+  if (['application and youtube', 'career', 'iqvia', 'project', 'work', 'task', 'tasks', 'to-do', 'todo'].includes(key)) return 'chronicle';
+  return 'journey';
+};
 const normalizeMetaEntry = (item) => {
   if (typeof item === 'string') {
     const value = item.trim();
@@ -161,6 +170,7 @@ const normalizeMetaEntry = (item) => {
       greetingTemplate: '',
       showInDashboardUpcoming: true,
       showActivitiesOnDashboard: true,
+      storyPresentation: explicitEntryMode(null, value),
     } : null;
   }
 
@@ -179,6 +189,7 @@ const normalizeMetaEntry = (item) => {
       greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
       showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
       showActivitiesOnDashboard: item.showActivitiesOnDashboard ?? true,
+      storyPresentation: explicitEntryMode(item.storyPresentation, value),
     };
   }
 
@@ -239,7 +250,7 @@ export const serializeCodeListEntries = (items) => {
     .map((item) => {
       if (typeof item === 'string') {
         const value = item.trim();
-        return value ? { value, label: value, active: true, isActive: true, canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true, showActivitiesOnDashboard: true } : null;
+        return value ? { value, label: value, active: true, isActive: true, canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true, showActivitiesOnDashboard: true, storyPresentation: explicitEntryMode(null, value) } : null;
       }
       if (item && typeof item === 'object') {
         const value = String(item.value ?? item.id ?? '').trim();
@@ -255,6 +266,7 @@ export const serializeCodeListEntries = (items) => {
           greetingTemplate: typeof item.greetingTemplate === 'string' ? item.greetingTemplate : (typeof item.template === 'string' ? item.template : ''),
           showInDashboardUpcoming: item.showInDashboardUpcoming ?? item.showInDashboard ?? true,
           showActivitiesOnDashboard: item.showActivitiesOnDashboard ?? true,
+          storyPresentation: explicitEntryMode(item.storyPresentation, value),
         };
       }
       return null;
