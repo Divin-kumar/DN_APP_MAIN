@@ -87,11 +87,11 @@ const openSettings = async (t, initialStorage) => {
   const { default: Settings } = await server.ssrLoadModule('/src/pages/Settings.jsx');
   const expenseService = await server.ssrLoadModule('/src/services/expenseService.js');
   const eventService = await server.ssrLoadModule('/src/services/eventService.js');
-  const render = () => { cursor = 0; return Settings(); };
+  // Recovery operations now live on the dedicated Data & Backup page, using
+  // the same Settings controller but without the old home accordion.
+  const render = () => { cursor = 0; return Settings({ dataBackupOnly: true }); };
   const prepareRestore = async (backup) => {
     let tree = render();
-    const toggle = nodes(tree).find((node) => node.type === 'button' && label(node).includes('Data & Backup'));
-    if (!toggle.props['aria-expanded']) { toggle.props.onClick(); tree = render(); }
     const input = nodes(tree).find((node) => node.type === 'input' && node.props.type === 'file');
     await input.props.onChange({ target: { value: 'synthetic-backup.json', files: [new File([JSON.stringify(backup)], 'synthetic-backup.json', { type: 'application/json' })] } });
     tree = render();
