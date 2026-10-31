@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom';
 import { activityDetailPath } from '../../utils/activityDetail';
 import { paymentMethodLabel } from '../../utils/paymentMethod';
 import './TransactionEmptyPremium.css';
+import '../common/RecordCardPremium.css';
 
 export const formatTransactionMoney = (amount) => new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
@@ -60,7 +61,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
     onDelete: onDelete ? () => onDelete(transaction) : undefined,
   };
   return (
-    <Card role="listitem" className="dn-transaction-card" {...actionProps}>
+    <Card role="listitem" className={`dn-transaction-card dn-v2-transaction-card ${isIncome ? 'is-income' : 'is-expense'}`} {...actionProps}>
       <div className="dn-transaction-card-core">
         <span className={isIncome ? 'dn-transaction-icon is-income' : 'dn-transaction-icon is-expense'}>
           {isIncome ? <ArrowDownLeft size={16} /> : <ArrowUpRight size={16} />}
