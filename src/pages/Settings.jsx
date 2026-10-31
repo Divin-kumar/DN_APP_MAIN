@@ -7,9 +7,9 @@ import './GuestTour.css';
 import './SettingsDataPremium.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud, ArrowLeft, FileJson, LockKeyhole, BookOpen } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase/config';
 import ModalDialog from '../components/common/ModalDialog';
@@ -86,7 +86,7 @@ const ValueListEditor = ({ label, value, onChange }) => {
   );
 };
 
-export default function Settings() {
+export default function Settings({ dataBackupOnly = false }) {
   const location = useLocation();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
@@ -147,7 +147,6 @@ export default function Settings() {
       '#preferences': 'defaults',
       '#theme': 'defaults',
       '#notifications': 'notifications',
-      '#backup': 'backup',
     };
     if (sectionByHash[location.hash]) setOpenSection(sectionByHash[location.hash]);
   }, [location.hash]);
@@ -816,7 +815,7 @@ export default function Settings() {
 
   const renderDataSection = () => (
     <div className="settings-accordion-body dn-data-backup">
-      <section className="dn-data-backup-block" aria-label="Backup and restore">
+      <section id="backup-actions" className="dn-data-backup-block" aria-label="Backup and restore">
         <div className="dn-data-backup-head">
           <span className="dn-data-backup-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
           <div><strong>Protect your records</strong><p>Save a copy of your Moments, transactions, settings and available original photos before making changes.</p></div>
@@ -837,7 +836,7 @@ export default function Settings() {
         <p className="settings-helper">Export produces a JSON backup. Restore merges records into the current workspace and preserves existing IDs. Original files stored in this browser can be included when available.</p>
       </section>
 
-      <section className="dn-data-backup-block dn-data-clear-block" aria-label="Clear DN data">
+      <section id="data-management" className="dn-data-backup-block dn-data-clear-block" aria-label="Clear DN data">
         <div className="dn-data-backup-head">
           <span className="dn-data-backup-icon"><HardDrive size={18} aria-hidden="true" /></span>
           <div><strong>Manage stored data</strong><p>Choose exactly where to clear. Browser data and online Firebase records are separate.</p></div>
@@ -869,117 +868,10 @@ export default function Settings() {
     </div>
   );
 
-  const sections = [
-    { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
-    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
-    { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
-    { key: 'backup', heading: 'Data & Backup', description: 'Protect, restore or clear browser and online records.', icon: Database, body: renderDataSection() },
-  ];
-
-  return (
-    <div className="settings-page feature-page dn-settings-home">
-      <div className="settings-heading">
-        <h2>Settings</h2>
-        <p>Keep DN comfortable for the way you plan and remember.</p>
-      </div>
-
-      {isGuest && !user ? (
-        <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
-          <div>
-            <span className="settings-section-heading"><Database size={17} /> Explore DN · Guided demo</span>
-            <p>{activeSampleScenario === GUEST_TOUR_SCENARIO
-              ? 'You are exploring isolated example Moments, Activities, Journal photos, Diary writing, Tasks and Cash/Online transactions. Your own Guest records remain separate.'
-              : 'Explore sample Moments, a photo Journal, monthly Diary, Tasks and linked finances without touching your own Guest records.'}</p>
-            <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
-              ? ' · Updated examples available' : ''}</small>
-          </div>
-          <div className="dev-sample-actions dn-guest-tour-actions">
-            <button type="button" className="dn-tour-refresh-button" onClick={startOrRefreshGuestTour}>
-              {activeSampleScenario === GUEST_TOUR_SCENARIO ? <RefreshCw size={15} aria-hidden="true" /> : <Database size={15} aria-hidden="true" />}
-              {activeSampleScenario === GUEST_TOUR_SCENARIO ? 'Refresh demo' : 'Explore demo'}
-            </button>
-            {activeSampleScenario === GUEST_TOUR_SCENARIO ? <button type="button" className="dn-tour-personal-switch"
-              onClick={leaveGuestTour}>Use my Guest data <ArrowRight size={15} aria-hidden="true" /></button> : null}
-          </div>
-        </section>
-      ) : null}
-      {import.meta.env.DEV && !user ? (
-        <section className="dev-sample-panel" aria-label="Development sample data">
-          <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
-          <div className={`dev-sample-actions${activeSampleScenario ? ' has-active-sample' : ''}`}>
-            <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
-              {Object.entries(getSampleScenarioDefinitions()).filter(([key]) => key !== GUEST_TOUR_SCENARIO).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
-            </DropdownSelect>
-            <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} disabled={Boolean(user)} aria-label="Load sample data" title="Load sample data">
-              <Database size={16} aria-hidden="true" /><span className="dev-sample-action-label">Load sample</span>
-            </button>
-            {activeSampleScenario ? <button type="button" className="settings-secondary-button dev-sample-icon-action" onClick={clearSampleData} aria-label="Clear sample data" title="Clear sample data">
-              <Trash2 size={16} aria-hidden="true" /><span className="dev-sample-action-label">Clear sample</span>
-            </button> : null}
-          </div>
-          {activeSampleScenario ? <small className="dev-sample-active">Active: {getSampleScenarioLabel(activeSampleScenario)} · {getActiveSampleData()?.events.length || 0} events · {getActiveSampleData()?.activities.length || 0} activities · {getActiveSampleData()?.memories.length || 0} memories</small> : null}
-        </section>
-      ) : null}
-
-      {sections.map(({ key, heading, description, icon: Icon, body }) => {
-        const isOpen = openSection === key;
-        return (
-          <section key={key} className="settings-section">
-            <button type="button" className="settings-accordion-toggle" onClick={() => toggleSection(key)} aria-expanded={isOpen}>
-              <span className="settings-accordion-header-main">
-                <span className="settings-accordion-icon"><Icon size={18} /></span>
-                <span className="settings-accordion-text">
-                  <strong>{heading}</strong>
-                  <small>{description}</small>
-                </span>
-              </span>
-              <span className="settings-accordion-indicator" aria-hidden="true"><ChevronDown size={17} strokeWidth={2.1} /></span>
-            </button>
-            {isOpen ? body : null}
-          </section>
-        );
-      })}
-
-      <div className="settings-navigation-hub settings-about-footer">
-        <Link to="/settings/code-lists#list-order" className="settings-hub-card dn-settings-list-defaults-link"
-          aria-label="Open List defaults">
-          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>List defaults</strong>
-            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
-          <span className="settings-hub-icon"><Settings2 size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>Code Lists</strong>
-            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
-          <span className="settings-hub-icon"><Info size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>About</strong>
-            <small>Application overview, version, guide, and release notes</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-      </div>
-
-      <section className="settings-reset-card">
-        <div>
-          <strong>Restore default settings</strong>
-          <p>Reset appearance, preferences, reminders, greeting settings, Code Lists and saved list defaults without deleting your records.</p>
-        </div>
-        <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
-          <RotateCcw size={15} /> Reset all settings
-        </button>
-      </section>
-
+  // All operations and their established dialogs share one controller.
+  // The normal Settings page no longer mounts these forms or danger actions.
+  const dataDialogs = (
+    <>
       {pendingBackup ? (
         <ModalDialog title="Review backup restore" onClose={() => { if (!importingBackup) setPendingBackup(null); }}>
           <div className="settings-reset-warning">
@@ -1062,6 +954,202 @@ export default function Settings() {
           </div>
         </ModalDialog>
       ) : null}
+
+    </>
+  );
+
+  if (dataBackupOnly) {
+    const signedIn = Boolean(user?.uid && !isGuest && !getActiveSampleScenario(user.uid));
+    return (
+      <main className="settings-page feature-page dn-settings-home dn-data-page">
+        <header className="settings-subpage-header dn-data-page-header">
+          <Link className="settings-back-button" to="/settings" aria-label="Back to Settings">
+            <ArrowLeft size={17} aria-hidden="true" />
+          </Link>
+          <div className="settings-subpage-title-wrap">
+            <span className="settings-subpage-eyebrow">SETTINGS / STORAGE</span>
+            <h2>Data & Backup</h2>
+          </div>
+        </header>
+
+        <section className="dn-data-page-intro" aria-label="Your data protection">
+          <div className="dn-data-page-intro-copy">
+            <span className="dn-data-page-overline"><ShieldCheck size={15} aria-hidden="true" /> Your data, your control</span>
+            <p>Make a recovery copy, move your records to another device, or manage what DN keeps in your browser and Firebase.</p>
+          </div>
+          <span className="dn-data-account-chip">
+            {signedIn ? <Cloud size={15} aria-hidden="true" /> : <HardDrive size={15} aria-hidden="true" />}
+            {signedIn ? 'Signed-in workspace' : 'Guest · this device'}
+          </span>
+        </section>
+
+        <nav className="dn-data-page-jumps" aria-label="Data and Backup sections">
+          <a href="#backup-actions"><Download size={14} aria-hidden="true" /> Backup</a>
+          <a href="#data-management"><HardDrive size={14} aria-hidden="true" /> Manage data</a>
+          <a href="#data-guide"><BookOpen size={14} aria-hidden="true" /> Data guide</a>
+        </nav>
+
+        {renderDataSection()}
+
+        <section id="data-guide" className="dn-data-page-guide" aria-label="How DN stores your data">
+          <div className="dn-data-guide-heading">
+            <BookOpen size={18} aria-hidden="true" />
+            <div><h3>Know what lives where</h3><p>Account sync, original files and downloads have different responsibilities.</p></div>
+          </div>
+          <div className="dn-data-location-grid">
+            <div className="dn-data-location-item">
+              <Cloud size={18} aria-hidden="true" />
+              <strong>Firebase records</strong>
+              <p>When signed in, Moments, Activity details, transactions and Code Lists live in your account's Firestore data. Guest records are browser-only.</p>
+            </div>
+            <div className="dn-data-location-item">
+              <HardDrive size={18} aria-hidden="true" />
+              <strong>Original photos</strong>
+              <p>New original attachments remain in this browser, even when signed in. Cloud metadata cannot replace a missing original file.</p>
+            </div>
+            <div className="dn-data-location-item">
+              <FileJson size={18} aria-hidden="true" />
+              <strong>Recovery copy</strong>
+              <p>Your downloaded JSON can contain records, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
+            </div>
+          </div>
+          <details className="dn-data-recovery-guide">
+            <summary><span><LockKeyhole size={16} aria-hidden="true" /> Before changing device or clearing data</span><ChevronDown size={16} aria-hidden="true" /></summary>
+            <ol>
+              <li><strong>Export backup.</strong> Download your JSON while you still have access to this device and account.</li>
+              <li><strong>Keep the file safely.</strong> It can contain private notes, photos and financial entries; DN does not encrypt this download.</li>
+              <li><strong>Check the restore preview.</strong> Select the file under Restore backup to inspect the counts and warnings without writing data. Cancel if you only wanted to inspect it.</li>
+              <li><strong>Confirm the destination.</strong> Restoring merges into the active Guest or signed-in account, and matching record IDs are preserved.</li>
+              <li><strong>Then clear deliberately.</strong> Local clearing does not remove Firebase records; online clearing does not delete browser originals, Google sign-in or older Storage files.</li>
+            </ol>
+          </details>
+        </section>
+        {dataDialogs}
+      </main>
+    );
+  }
+
+  // Preserve older links without keeping the old accordion on Settings.
+  if (location.hash === '#backup') return <Navigate to="/settings/data-backup" replace />;
+
+  const sections = [
+    { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
+    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
+    { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
+  ];
+
+  return (
+    <div className="settings-page feature-page dn-settings-home">
+      <div className="settings-heading">
+        <h2>Settings</h2>
+        <p>Keep DN comfortable for the way you plan and remember.</p>
+      </div>
+
+      {isGuest && !user ? (
+        <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
+          <div>
+            <span className="settings-section-heading"><Database size={17} /> Explore DN · Guided demo</span>
+            <p>{activeSampleScenario === GUEST_TOUR_SCENARIO
+              ? 'You are exploring isolated example Moments, Activities, Journal photos, Diary writing, Tasks and Cash/Online transactions. Your own Guest records remain separate.'
+              : 'Explore sample Moments, a photo Journal, monthly Diary, Tasks and linked finances without touching your own Guest records.'}</p>
+            <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
+              ? ' · Updated examples available' : ''}</small>
+          </div>
+          <div className="dev-sample-actions dn-guest-tour-actions">
+            <button type="button" className="dn-tour-refresh-button" onClick={startOrRefreshGuestTour}>
+              {activeSampleScenario === GUEST_TOUR_SCENARIO ? <RefreshCw size={15} aria-hidden="true" /> : <Database size={15} aria-hidden="true" />}
+              {activeSampleScenario === GUEST_TOUR_SCENARIO ? 'Refresh demo' : 'Explore demo'}
+            </button>
+            {activeSampleScenario === GUEST_TOUR_SCENARIO ? <button type="button" className="dn-tour-personal-switch"
+              onClick={leaveGuestTour}>Use my Guest data <ArrowRight size={15} aria-hidden="true" /></button> : null}
+          </div>
+        </section>
+      ) : null}
+      {import.meta.env.DEV && !user ? (
+        <section className="dev-sample-panel" aria-label="Development sample data">
+          <div><span className="settings-section-heading"><Database size={17} /> Safe sample-data lab</span><p>Development only. Fixtures are isolated from guest backups and Firebase, and are disabled while signed in.</p></div>
+          <div className={`dev-sample-actions${activeSampleScenario ? ' has-active-sample' : ''}`}>
+            <DropdownSelect value={sampleScenario} onChange={(event) => setSampleScenario(event.target.value)} aria-label="Sample data scenario">
+              {Object.entries(getSampleScenarioDefinitions()).filter(([key]) => key !== GUEST_TOUR_SCENARIO).map(([key, scenario]) => <option key={key} value={key}>{scenario.label} · {scenario.events} events</option>)}
+            </DropdownSelect>
+            <button type="button" className="settings-primary-button dev-sample-icon-action" onClick={loadSampleData} disabled={Boolean(user)} aria-label="Load sample data" title="Load sample data">
+              <Database size={16} aria-hidden="true" /><span className="dev-sample-action-label">Load sample</span>
+            </button>
+            {activeSampleScenario ? <button type="button" className="settings-secondary-button dev-sample-icon-action" onClick={clearSampleData} aria-label="Clear sample data" title="Clear sample data">
+              <Trash2 size={16} aria-hidden="true" /><span className="dev-sample-action-label">Clear sample</span>
+            </button> : null}
+          </div>
+          {activeSampleScenario ? <small className="dev-sample-active">Active: {getSampleScenarioLabel(activeSampleScenario)} · {getActiveSampleData()?.events.length || 0} events · {getActiveSampleData()?.activities.length || 0} activities · {getActiveSampleData()?.memories.length || 0} memories</small> : null}
+        </section>
+      ) : null}
+
+      {sections.map(({ key, heading, description, icon: Icon, body }) => {
+        const isOpen = openSection === key;
+        return (
+          <section key={key} className="settings-section">
+            <button type="button" className="settings-accordion-toggle" onClick={() => toggleSection(key)} aria-expanded={isOpen}>
+              <span className="settings-accordion-header-main">
+                <span className="settings-accordion-icon"><Icon size={18} /></span>
+                <span className="settings-accordion-text">
+                  <strong>{heading}</strong>
+                  <small>{description}</small>
+                </span>
+              </span>
+              <span className="settings-accordion-indicator" aria-hidden="true"><ChevronDown size={17} strokeWidth={2.1} /></span>
+            </button>
+            {isOpen ? body : null}
+          </section>
+        );
+      })}
+
+      <div className="settings-navigation-hub settings-about-footer">
+        <Link to="/settings/data-backup" className="settings-hub-card dn-settings-data-link" aria-label="Open Data & Backup page">
+          <span className="settings-hub-icon"><Database size={18} aria-hidden="true" /></span>
+          <span className="settings-hub-copy">
+            <strong>Data & Backup</strong>
+            <small>Export and restore records, understand storage and manage browser or Firebase data</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/code-lists#list-order" className="settings-hub-card dn-settings-list-defaults-link"
+          aria-label="Open List defaults">
+          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>List defaults</strong>
+            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
+          <span className="settings-hub-icon"><Settings2 size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>Code Lists</strong>
+            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
+          <span className="settings-hub-icon"><Info size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>About</strong>
+            <small>Application overview, version, guide, and release notes</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+      </div>
+
+      <section className="settings-reset-card">
+        <div>
+          <strong>Restore default settings</strong>
+          <p>Reset appearance, preferences, reminders, greeting settings, Code Lists and saved list defaults without deleting your records.</p>
+        </div>
+        <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
+          <RotateCcw size={15} /> Reset all settings
+        </button>
+      </section>
 
       {confirmResetSettings ? (
         <ModalDialog title="Reset all settings?" className="settings-reset-dialog" onClose={() => { if (!resettingSettings) setConfirmResetSettings(false); }}>
