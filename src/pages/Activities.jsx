@@ -90,6 +90,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches),
   [conditionRecords, filters.search, filters.field, filters.direction, conditions.matches]);
   const allInScope = projection.entries;
+  const allViews = useMemo(() => allInScope.map((entry) => projection.views.get(entry.key)), [allInScope, projection.views]);
   const visible = selected.map((entry) => projection.views.get(entry.key));
   const reference = (view) => {
     const entry = projection.context.get(view);
@@ -185,7 +186,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
               onClear={allInScope.length && canResetActivity ? resetActivityDiscovery : undefined} />
-          : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={allInScope.map((entry) => projection.views.get(entry.key))}
+          : <ActivityList eventName="your Moments" activities={visible} allActivities={allViews} progressActivities={allViews}
             progressLabel="overall active steps complete"
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
