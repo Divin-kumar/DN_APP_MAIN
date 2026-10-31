@@ -1,8 +1,8 @@
 # DN
 
-**Batch 1 Firebase candidate (owner currently deploying/testing):** `OldVersion` at exact commit `57a497e75356dcca64517efbe4790935463f4b61`, covering CHG-213–224. **Do not modify this branch while release validation is underway.**
+**Current development policy (31 October 2026):** All DN 2.1 source changes, test fixes and documentation updates happen on **`OldVersion` only**. Never write to `main`, `DN-2.1-batch2`, or the pre-Apple recovery checkpoint. No new branch, PR, merge, Firebase/Vercel deployment or version bump without specific owner authorization. The earlier Batch 1/Batched 2 development restrictions below are historical and superseded by [agent rules](AGENTS.md).
 
-**Batch 2 development branch:** `DN-2.1-batch2`, covering CHG-225 onward. All subsequent changes stay here until the owner separately authorizes integration and release. **Owner review and manual verification are Firebase-only; Vercel is not a testing requirement.** Batch 2 source commits are not evidence that the Batch 1 app is deployed or that Firebase contains those fixes. See [agent rules](AGENTS.md).
+**Current QA/release state:** CHG-240 is the first focused recovery pass after an executed browser regression run reported 387 passed/191 failed; the remaining E2E, build and dependency advisory gates are **not green**. Firebase-only owner acceptance remains the release plan, not evidence that newer `OldVersion` source is already live. Read the [change log](docs/CHANGE_AUDIT_LOG.md) and [master](docs/MASTER_SOURCE_OF_TRUTH.md) before further work.
 
 - [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
