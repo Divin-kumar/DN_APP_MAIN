@@ -160,7 +160,7 @@ export const mergeLegacyDiaryActivities = (moment) => {
     dates.get(date).push(activity);
   }
   let next = moment;
-  for (const [date, group] of dates) {
+  for (const date of dates.keys()) {
     const pending = (next.activities || []).filter((activity) => dateKey(activity.date) === date);
     if (!pending.length || (pending.length === 1 && pending[0].entryMode === ENTRY_MODES.DAILY)) continue;
     const target = pending.find((activity) => activity.entryMode === ENTRY_MODES.DAILY) || pending[0];
