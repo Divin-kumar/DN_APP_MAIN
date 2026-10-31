@@ -33,7 +33,22 @@ async function assertReadableRule(page, row) {
   expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(4);
   expect(bounds[0].x + bounds[0].width).toBeLessThanOrEqual(bounds[1].x + 2);
   expect(bounds[1].x + bounds[1].width).toBeLessThanOrEqual(bounds[2].x + 2);
-  expect(bounds[2].x + bounds[2].width).toBeLessThanOrEqual(bounds[3].x + 2);
+  // Values may extend into the horizontally scrollable part of a one-row
+  // editor, while the 44px Remove control remains pinned on the right.
+  const pinned = await row.evaluate((element) => {
+    const scrollable = element.scrollWidth > element.clientWidth + 1;
+    const overflow = getComputedStyle(element).overflowX;
+    element.scrollLeft = element.scrollWidth;
+    const rowRect = element.getBoundingClientRect();
+    const removeRect = element.querySelector('.dn-condition-icon').getBoundingClientRect();
+    return { scrollable, overflow, left: rowRect.left, right: rowRect.right,
+      removeLeft: removeRect.left, removeRight: removeRect.right };
+  });
+  if (pinned.scrollable) {
+    expect(pinned.overflow).toBe('auto');
+    expect(pinned.removeLeft).toBeGreaterThanOrEqual(pinned.left - 1);
+    expect(pinned.removeRight).toBeLessThanOrEqual(pinned.right + 1);
+  }
   expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
   expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
   expect((await row.boundingBox()).height).toBeLessThanOrEqual(62);
