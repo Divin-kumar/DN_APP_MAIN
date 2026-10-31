@@ -5,7 +5,7 @@ import { seedGuest } from './fixtures.js';
 // Synthetic Chromium geometry cannot prove installed iPhone Safari behavior.
 const pages = [
   { path:'/activities', search:'Search activities and Moments', sample:'Book a lakeside stay' },
-  { path:'/events', search:'Search events', sample:'Weekend in Ooty' },
+  { path:'/events', search:'Search moments', sample:'Weekend in Ooty' },
   { path:'/financials/transactions', search:'Search transactions', sample:'Room deposit' },
 ];
 for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme of ['dark','light']) {
