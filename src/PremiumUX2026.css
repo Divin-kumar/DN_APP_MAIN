@@ -580,3 +580,20 @@ html[data-theme] .dn-activity-entry-actions > button:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-activity-entry-actions > button { transition: none !important; }
 }
+
+/* Activity Detail universal +: a quiet confirmation of inherited destination. */
+html[data-theme] .quick-create-activity-form .dn-quick-activity-context {
+  margin: 1px 0 3px;
+  padding: 9px 11px;
+  border-inline-start: 2px solid var(--color-primary);
+  border-radius: 6px 11px 11px 6px;
+  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+html[data-theme] .quick-create-activity-form .dn-quick-activity-context strong {
+  color: var(--color-text);
+  font-weight: 700;
+}
