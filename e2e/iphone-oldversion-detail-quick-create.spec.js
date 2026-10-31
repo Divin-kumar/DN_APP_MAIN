@@ -92,3 +92,55 @@ test('Cancelled Journal entry does not become an unsafe implicit append destinat
   expect(await read(page)).toEqual(moments);
   expect(errors).toEqual([]);
 });
+
+test('Saved Moment-type picker cannot hide Activity Detail parent at 320px', async ({ page }) => {
+  const moments = fixture();
+  await page.setViewportSize({ width: 320, height: 694 });
+  const errors = await seedGuest(page, { moments, theme: 'dark', incomes: [], expenses: [] });
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('group', { name: 'Quick create actions' })
+    .getByRole('button', { name: 'Activity', exact: true }).click();
+  let editor = page.getByRole('dialog', { name: 'Add an activity' });
+  await editor.getByRole('combobox', { name: 'Moment type' }).click();
+  await page.getByRole('option', { name: 'Project', exact: true }).click();
+  await editor.getByRole('button', { name: 'Cancel' }).click();
+
+  await page.goto('/events/journal/activities/same');
+  await expect(page.locator('.activity-detail-heading h1')).toBeVisible();
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('group', { name: 'Quick create actions' })
+    .getByRole('button', { name: 'Activity', exact: true }).click();
+  editor = page.getByRole('dialog', { name: 'Add an activity' });
+  await expect(editor.getByRole('combobox', { name: 'Moment type' })).toContainText('All moment types');
+  await expect(editor.getByRole('combobox', { name: 'Life moment' })).toContainText('Weekend journal');
+  await expect(editor.locator('#dn-journal-append-target')).toContainText('Original memory');
+  await editor.getByRole('button', { name: 'Cancel' }).click();
+  expect(await read(page)).toEqual(moments);
+  expect(errors).toEqual([]);
+});
+
+test('Rapid duplicate Save taps append only one entry to Journal', async ({ page }) => {
+  const moments = fixture();
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { moments, theme: 'light', incomes: [], expenses: [] });
+  await page.goto('/events/journal/activities/same');
+  await expect(page.locator('.activity-detail-heading h1')).toBeVisible();
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('group', { name: 'Quick create actions' })
+    .getByRole('button', { name: 'Activity', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Add an activity' });
+  await editor.getByRole('textbox', { name: 'Activity title' }).fill('One added paragraph');
+  await editor.evaluate((node) => {
+    const form = node.querySelector('form.quick-create-activity-form');
+    // Dispatch twice in one event turn, before React can paint a disabled state.
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+    form.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
+  });
+  await expect(editor).toHaveCount(0);
+  const after = await read(page);
+  expect(after.find((moment) => moment.id === 'journal').activities[0].entries)
+    .toHaveLength(1);
+  expect(after.find((moment) => moment.id === 'tasks')).toEqual(moments[2]);
+  expect(errors).toEqual([]);
+});
