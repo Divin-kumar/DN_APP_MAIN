@@ -42,7 +42,7 @@ export const orderedActivityEntries = (activity) => activityEntries(activity).sl
   const dates = dateKey(a.date).localeCompare(dateKey(b.date));
   return dates || (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99')
     || String(a.createdAt || '').localeCompare(String(b.createdAt || ''))
-    || String(a.id).localeCompare(String(b.id);
+    || String(a.id).localeCompare(String(b.id));
 });
 
 // Pure update: the existing Activity is only changed when the caller chooses
