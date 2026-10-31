@@ -46,11 +46,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(home.getByRole('link', { name: 'Open List defaults' })).toHaveAttribute('href', '/settings/code-lists#list-order');
       await expect(home.getByRole('link', { name: 'Open About page' })).toHaveAttribute('href', '/settings/about');
       await backupLink.click();
-      await expect(page).toHaveURL(/\\/settings\\/data-backup$/);
+      await expect(page).toHaveURL(new RegExp('/settings/data-backup$'));
       await expect(page.getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
       await expect(page.getByRole('button', { name: 'Export backup' })).toBeVisible();
       await page.getByRole('link', { name: 'Back to Settings' }).click();
-      await expect(page).toHaveURL(/\\/settings$/);
+      await expect(page).toHaveURL(new RegExp('/settings$'));
 
       const geometry = await page.evaluate(() => ({
         pageWidth: document.documentElement.scrollWidth,
