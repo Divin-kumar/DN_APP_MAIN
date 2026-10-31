@@ -134,3 +134,27 @@ test('three canonical form surfaces keep defaults tucked away and reveal them on
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   expect(errors).toEqual([]);
 });
+
+test('invalid required metadata automatically opens its disclosure before save', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page);
+  await page.goto('/events');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('group', { name: 'Quick create actions' })
+    .getByRole('button', { name: 'Life moment', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Create a life moment' });
+  await dialog.getByRole('textbox', { name: 'Moment name' }).fill('A missing-date check');
+  const disclosure = dialog.locator('.dn-form-disclosure');
+  await disclosure.locator('summary').click();
+  await dialog.locator('input[name="date"]').fill('');
+  await disclosure.locator('summary').click();
+  await expect(disclosure).not.toHaveAttribute('open', '');
+  await dialog.getByRole('button', { name: 'Save moment' }).click();
+  await expect(disclosure).toHaveAttribute('open', '');
+  await expect(dialog.locator('input[name="date"]')).toBeVisible();
+  await expect(dialog).toBeVisible();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  expect(errors).toEqual([]);
+});
