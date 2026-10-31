@@ -2,7 +2,7 @@
 
 Development branch: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
 
-Approved changes are committed and pushed to `OldVersion` for owner review through the existing Vercel integration. Firebase publication remains a separately authorized step after that review; see [agent rules](AGENTS.md).
+Approved changes are committed to `OldVersion` and tracked as one deferred Firebase-release batch. **Owner review and manual verification are Firebase-only; Vercel is not a testing requirement.** Publishing to Firebase and changing the version remain separately authorized actions; see [agent rules](AGENTS.md).
 
 - [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
@@ -17,7 +17,7 @@ The read-only comparison script `node scripts/audit-live-builds.mjs` inspects pu
 
 ## Pending Firebase batch (30 October 2026)
 
-The owner finished an initial Firebase iPhone visual pass, found no major issues and requested **one later combined deployment**, not incremental publication. Track CHG-213 (discovery empty states), CHG-214 (Settings-owned filter/sort defaults), CHG-215 (direct List defaults access and reset warning), CHG-216 (readable compact filter rules on small iPhones), CHG-217 (backup of saved List defaults), CHG-218 (priority-label test selectors and confirmed CHG-216 preview), CHG-219 (owner iPhone checkpoint and safe Settings reset), plus subsequent approved OldVersion work, in the master source of truth and change log. Those updates are source-only pending release; do not bump the app version, upload to Firebase, alter `main`, or assume a Vercel build exists. Confirm the actual last-live source and version, run full CI against the candidate SHA, and obtain separate owner release authorization before the batch upload.
+The owner finished an initial Firebase iPhone visual pass, found no major issues and requested **one later combined deployment**, not incremental publication. Track CHG-213 (discovery empty states), CHG-214 (Settings-owned filter/sort defaults), CHG-215 (direct List defaults access and reset warning), CHG-216 (readable compact filter rules on small iPhones), CHG-217 (backup of saved List defaults), CHG-218 (priority-label test selectors and confirmed CHG-216 preview), CHG-219 (owner iPhone checkpoint and safe Settings reset), CHG-220 (filter-independent overall Activity completion), plus subsequent approved OldVersion work, in the master source of truth and change log. Those updates are source-only pending release; do not bump the app version, upload to Firebase, alter `main`, or assume a Vercel build exists. Confirm the actual last-live source and version, run full CI against the candidate SHA, and obtain separate owner release authorization before the batch upload.
 
 Settings → List defaults opens the saved browser-local filter/sort baseline directly (the existing Code Lists → Sorting & filters section), without a long scroll. These defaults do not mirror the live list. Moments, Activities and Transactions use those defaults on a new list and restore them when their Refine Reset is selected. Existing working filters remain until Reset. Nested Moment list filters are not overridden. New v3 application backups also include each domain's saved baseline; older backups lacking it leave current Settings baselines untouched, and importing never replaces active page filters.
 
@@ -25,9 +25,9 @@ Settings → List defaults opens the saved browser-local filter/sort baseline di
 
 On 31 October 2026 the owner marked all 16 manual checklist items Checked on the READY `a769030c` preview. No defects were reported in that response. It is an acceptance checkpoint for the UI and filter behavior through CHG-216 only, not an automated pass, CHG-217 backup test or authorization to publish Firebase. CHG-219 adds fail-closed protection to actual Reset all settings: verify all three record stores belong to the initiating Guest/account and demo context before changing referenced Code Lists and decline applying preferences to a different session after an asynchronous write.
 
-### Current available review build
+### Firebase-only manual QA boundary
 
-Both Vercel projects show a READY `OldVersion` preview at commit `a769030c` (through CHG-216): https://life-7gs8tqlbh-dn-14b9.vercel.app . It is a useful manual iPhone test candidate for saved Settings defaults, direct List defaults access, and narrow-screen filter layout. The newer CHG-217 backup/defaults transfer is **not** verified in that build; current final-SHA Vercel status remains blocked by the no-cost build limit. Test that feature only after a READY preview for a commit containing it. The three new iPhone/filter/backup tests now use the actual default `High priority` Code List label. These source changes remain in one unreleased Firebase batch.
+The owner now relies on the permanent Firebase app for all future manual testing. The historical 16-item acceptance checkpoint on commit `a769030c` is retained, but new CHG-217–220 changes are not currently published to Firebase and are **not** approved by that checkpoint. No Vercel build or preview is needed to continue development. Exact-SHA unit, lint, build, E2E, offline, backup and upgrade checks must be run before an authorized Firebase batch release. CHG-220 keeps the overall Activities progress fraction based on all active Activities across Moments even when search or Refine shows only a subset of cards. The three newer filter-related browser tests use the actual default `High priority` Code List label.
 
 ## Run locally
 
