@@ -47,11 +47,14 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card {
   box-shadow: 0 6px 22px color-mix(in srgb, var(--color-bg) 65%, transparent);
   transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
-html[data-theme] .life-timeline-page .dn-v2-moment-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--color-primary) 36%, var(--color-border));
-  background: var(--color-card);
-  box-shadow: 0 13px 30px color-mix(in srgb, var(--color-bg) 48%, transparent);
+/* Only a real mouse/trackpad earns the lift. Safari may preserve :hover after a tap. */
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card:hover {
+    transform: translateY(-2px);
+    border-color: color-mix(in srgb, var(--color-primary) 36%, var(--color-border));
+    background: var(--color-card);
+    box-shadow: 0 13px 30px color-mix(in srgb, var(--color-bg) 48%, transparent);
+  }
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-swipe-main,
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewport {
@@ -176,12 +179,33 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger 
   border: 1px solid transparent; border-radius: 11px;
   background: transparent; color: var(--color-text-muted);
 }
-html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:hover,
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:hover {
+    background: var(--color-card-raised); border-color: var(--color-border);
+  }
+}
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:focus-visible {
   background: var(--color-card-raised); border-color: var(--color-border);
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card :is(.dn-record-menu-trigger,.dn-v2-moment-open):focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: -3px;
+}
+/* CHG-227: legacy horizontal swipe transforms must not shift the current
+   popup-menu Moment cards on hover, keyboard focus or touch. */
+html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
+  transform: none !important;
+  transition: background-color .18s ease !important;
+}
+@media (hover: none), (pointer: coarse) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card:hover {
+    transform: none;
+    background: var(--color-card);
+    border-color: var(--color-border);
+    box-shadow: 0 6px 22px color-mix(in srgb, var(--color-bg) 65%, transparent);
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:hover:not(:focus-visible) {
+    background: transparent; border-color: transparent;
+  }
 }
 @media (max-width: 850px) {
   html[data-theme] .life-timeline-page .life-journey-items { grid-template-columns: minmax(0,1fr); gap: 11px; }
