@@ -15,8 +15,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const progress = workspace.locator('.event-activity-progress');
       const bar = progress.getByRole('progressbar');
       const cards = workspace.locator('.event-activity-list .event-activity-card');
-      await expect(cards).toHaveCount(3);
-      // One completed + one open Activity; cancelled is visible but not counted.
+      await expect(cards).toHaveCount(2);
+      // The default Moment filter hides cancelled cards; the progress still
+      // represents the one completed and one open Activity in the full Moment.
       await expect(progress).toContainText('1 of 2');
       await expect(bar).toHaveAttribute('aria-valuenow', '50');
 
