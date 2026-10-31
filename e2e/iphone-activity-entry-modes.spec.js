@@ -98,6 +98,13 @@ test('Diary appends new entries, Journal offers optional link then deliberate ap
   expect(journal.activities).toHaveLength(1);
   expect(journal.activities[0].mergedActivityIds).toContain('journal-b');
   expect(journal.activities[0].entries[0].title).toBe('Evening photo');
+  // Journal's Story presents the preserved memory as dated chapters, not a
+  // separate 'Appended entries' subsection or a silently duplicated record.
+  await page.goto('/events/journal/overview');
+  const journalStory = page.locator('.dn-v2-story');
+  await expect(journalStory.locator('[aria-label="Appended entries"]')).toHaveCount(0);
+  await expect(journalStory.locator('.dn-journal-chapter')).toHaveCount(2);
+  await expect(journalStory).toContainText('Evening photo');
 
   await page.goto('/events/tasks/activities?create=activity');
   const taskEditor = page.getByRole('dialog', { name: 'Add activity' });
