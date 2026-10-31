@@ -237,7 +237,7 @@ html[data-theme] .dn-data-page .dn-data-page-overline {
 }
 html[data-theme] .dn-data-page .dn-data-page-intro-copy p {
   max-width:60ch;margin:0;color:var(--color-text-muted);
-  font-size:12px;line-height:1.65;
+  font-size:13px;line-height:1.62;
 }
 html[data-theme] .dn-data-page .dn-data-account-chip {
   display:inline-flex;align-items:center;gap:7px;align-self:flex-start;
@@ -294,7 +294,7 @@ html[data-theme] .dn-data-page .dn-data-guide-heading h3 {
   font-weight:750;letter-spacing:-.02em;
 }
 html[data-theme] .dn-data-page .dn-data-guide-heading p {
-  margin:0;color:var(--color-text-muted);font-size:11px;line-height:1.5;
+  margin:0;color:var(--color-text-muted);font-size:13px;line-height:1.5;
 }
 html[data-theme] .dn-data-page .dn-data-location-grid {
   display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0;
@@ -311,7 +311,7 @@ html[data-theme] .dn-data-page .dn-data-location-item strong {
   color:var(--color-text);font-size:12px;line-height:1.3;font-weight:760;
 }
 html[data-theme] .dn-data-page .dn-data-location-item p {
-  margin:0;color:var(--color-text-muted);font-size:11px;line-height:1.62;
+  margin:0;color:var(--color-text-muted);font-size:13px;line-height:1.56;
   overflow-wrap:anywhere;
 }
 html[data-theme] .dn-data-page .dn-data-recovery-guide {
@@ -328,7 +328,7 @@ html[data-theme] .dn-data-page .dn-data-recovery-guide summary svg {flex:0 0 aut
 html[data-theme] .dn-data-page .dn-data-recovery-guide[open] summary > svg {transform:rotate(180deg);}
 html[data-theme] .dn-data-page .dn-data-recovery-guide ol {
   display:grid;gap:9px;margin:0 0 5px;padding:9px 0 0 22px;
-  color:var(--color-text-muted);font-size:11.5px;line-height:1.62;
+  color:var(--color-text-muted);font-size:13px;line-height:1.56;
 }
 html[data-theme] .dn-data-page .dn-data-recovery-guide li {padding-left:2px;}
 html[data-theme] .dn-data-page .dn-data-recovery-guide li strong {color:var(--color-text);}
