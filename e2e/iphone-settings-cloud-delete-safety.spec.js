@@ -13,7 +13,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         localStorage.getItem('dn_guest_incomes'),
         localStorage.getItem('dn_guest_expenses'),
       ]);
-      await page.goto('/settings#backup');
+      await page.goto('/settings/data-backup');
       const controls = page.locator('.dn-data-backup');
       await expect(controls).toBeVisible();
       await expect(controls.getByRole('button', { name: 'Export backup' })).toBeVisible();
