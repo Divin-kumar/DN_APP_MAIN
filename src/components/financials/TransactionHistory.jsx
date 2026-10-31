@@ -28,7 +28,7 @@ const dateLabel = (date) => {
 export function TransactionCard({ transaction, events = [], onEdit, onDelete, onOpen, showActivity = false, compact = false, readOnly = false }) {
   const isIncome = transaction.transactionKind === 'income';
   const event = events.find((item) => (item.id || item.firestoreId) === transaction.eventId);
-  const activity = event?.activities?.find((item) => item.id === transaction.activityId);
+  const activity = event?.activities?.find((item) => item.id === transaction.activityId || (item.mergedActivityIds || []).includes(transaction.activityId));
   const eventTitle = event?.name || transaction.eventTitle || (transaction.eventId ? 'Unavailable moment' : '');
   const activityTitle = activity?.title || transaction.activityTitle;
   const category = isIncome ? transaction.type : transaction.category;
