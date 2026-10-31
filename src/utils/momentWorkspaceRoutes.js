@@ -33,3 +33,24 @@ export const isSameMomentWorkspace = (first, second) => {
   const key = getMomentWorkspaceKey(first);
   return Boolean(key && key === getMomentWorkspaceKey(second));
 };
+
+/* CHG-234: one route-aware title for the shared app header. A record's
+   content title remains in its own hero; the top bar tells you where you are.
+   All legacy Moment aliases deliberately map to their current workspace tab. */
+export const getShellPageTitle = (pathname, { momentTitle = '' } = {}) => {
+  if (/^\/dashboard\/?$/.test(pathname) || pathname === '/') return 'Dashboard';
+  if (/^\/activities\/?$/.test(pathname)) return 'Activities';
+  if (/^\/events\/?$/.test(pathname)) return 'Moments';
+  if (isActivityDetailRoute(pathname)) return 'Activity Detail';
+  if (getMomentWorkspaceKey(pathname)) return momentTitle?.trim() || 'Moment';
+  if (/^\/financials(?:\/|$)/.test(pathname)) return 'Transactions';
+  if (/^\/insights\/?$/.test(pathname)) return 'Insights';
+  if (/^\/settings\/data-backup\/?$/.test(pathname)) return 'Data & Backup';
+  if (/^\/settings\/code-lists\/?$/.test(pathname)) return 'Code Lists';
+  if (/^\/settings\/about\/?$/.test(pathname)) return 'About DN';
+  if (/^\/settings\/?$/.test(pathname)) return 'Settings';
+  return 'DN';
+};
+
+export const shellSettingsBackPath = (pathname) =>
+  /^\/settings\/(data-backup|code-lists|about)\/?$/.test(pathname) ? '/settings' : null;
