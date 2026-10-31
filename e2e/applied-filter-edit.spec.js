@@ -100,7 +100,10 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
   await page.goto('/settings/code-lists');const preferences=page.getByRole('region',{name:'List sorting and filters preferences'});
   await preferences.getByRole('button',{name:/Activities filters/}).click();const editor=preferences.getByRole('region',{name:'activities filters',exact:true});
   await editor.locator('.dn-condition-chip').filter({hasText:'Cancelled'}).getByRole('combobox',{name:'Change Status filter'}).click();await page.getByRole('option',{name:'Completed',exact:true}).click();
-  expect(await saved(page,'activities')).toEqual(before);
+  // Code Lists edits the Settings baseline; the live working group remains
+  // unchanged until that list's explicit Refine Reset.
+  await expect(editor.locator('.dn-condition-chip')).toContainText('Completed');
+  expect(await saved(page,'activities')).toEqual(changed);
   await page.goto('/financials');await add(page,'Title');await page.getByRole('textbox',{name:'Value for Title',exact:true}).fill('Room');await page.getByRole('textbox',{name:'Value for Title',exact:true}).blur();
   await expect(page.locator('.dn-condition-chip')).toHaveCount(1);await page.getByRole('button',{name:/^Filters/}).click();const guestFilter=await saved(page,'transactions');
   await page.getByRole('button',{name:'Change Title filter',exact:true}).click();await page.getByRole('dialog').getByRole('textbox',{name:'Value for Title',exact:true}).fill('Uncommitted draft');
