@@ -412,3 +412,30 @@ test('malformed optional List defaults fail backup preflight instead of partiall
   assert.throws(() => validateBackupDocument(document), /saved activities sorting or search has an invalid value/);
   assert.throws(() => parseBackupDocument(JSON.parse(JSON.stringify(document))), /saved activities sorting or search has an invalid value/);
 });
+
+test('legacy backup without Dashboard shortcut keys keeps the omission through v3 conversion', () => {
+  const backup = parseBackupDocument({
+    exportedAt: '2026-10-19T12:00:00.000Z',
+    data: { dn_preferences: { theme: 'light' } },
+  });
+  assert.equal(backup.backupVersion, 3);
+  assert.deepEqual(backup.dashboardConfiguration, {});
+});
+
+test('v3 Dashboard shortcut fields are optional, but malformed present arrays fail before import', () => {
+  const original = fixture();
+  const noShortcuts = structuredClone(original);
+  noShortcuts.dashboardConfiguration = {};
+  assert.equal(parseBackupDocument(noShortcuts), noShortcuts);
+  const explicitClear = structuredClone(original);
+  explicitClear.dashboardConfiguration = { favorites: [], recent: [] };
+  assert.equal(parseBackupDocument(explicitClear), explicitClear);
+  for (const invalid of [
+    { favorites: null }, { recent: 'not-an-array' },
+    { favorites: [null] }, { recent: [{}] },
+  ]) {
+    const edited = structuredClone(original);
+    edited.dashboardConfiguration = invalid;
+    assert.throws(() => parseBackupDocument(edited), /Backup dashboard/);
+  }
+});
