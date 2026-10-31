@@ -6,6 +6,8 @@ import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useTransactionManager from '../hooks/useTransactionManager';
+import { getActiveSampleScenario } from '../dev/sampleData';
+import { isFinancialViewReady } from '../utils/financialLoadScope';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
 import { matchesListDefaults } from '../utils/listViewDefaults';
@@ -25,15 +27,18 @@ const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
 
 const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES };
 
-export default function Financials() {
+function FinancialsContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const showToast = useAppStore((state) => state.showToast);
   const uid = user?.uid;
-  const { incomes, loading: loadingIncome, error: incomeError, loadedFor: incomeScope, loadIncomes } = useIncomeStore();
-  const { expenses, loading: loadingExpense, error: expenseError, loadedFor: expenseScope, loadExpenses } = useExpenseStore();
+  const sample = getActiveSampleScenario(uid);
+  const incomeState = useIncomeStore();
+  const expenseState = useExpenseStore();
+  const { incomes, loading: loadingIncome, error: incomeError, loadIncomes } = incomeState;
+  const { expenses, loading: loadingExpense, error: expenseError, loadExpenses } = expenseState;
   const { events } = useScopedMoments();
   const { saveTransaction, removeTransaction } = useTransactionManager();
   const settingsDefaults = useListViewDefaults('transactions');
@@ -50,12 +55,12 @@ export default function Financials() {
     if (!user && !isGuest) return;
     loadIncomes(uid, isGuest);
     loadExpenses(uid, isGuest);
-  }, [uid, isGuest, user, loadIncomes, loadExpenses]);
+  }, [uid, isGuest, sample, loadIncomes, loadExpenses]);
 
   const expectedScope = (isGuest ? 'guest' : 'user') + ':' + (uid || 'anonymous');
-  // Never display transactions belonging to a previous signed-in user while
-  // the new account's stores are still loading.
-  const ready = incomeScope === expectedScope && expenseScope === expectedScope;
+  // Both ledgers must belong to this account AND this isolated Guest scenario.
+  // A matching old loadedFor alone can expose a previous sample's totals.
+  const ready = isFinancialViewReady(incomeState, expenseState, expectedScope, sample);
   const allTransactions = useMemo(
     () => ready ? toTransactions(incomes, expenses) : [],
     [ready, incomes, expenses],
@@ -155,4 +160,15 @@ export default function Financials() {
         confirmLabel={busy ? 'Deleting…' : 'Delete'} /> : null}
     </main>
   );
+}
+
+ 
+// A new account or Guest sample must never inherit an existing account's
+// edit/delete dialogs, mutation drafts or quick-create prefilled links.
+export default function Financials() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const sample = getActiveSampleScenario(user?.uid);
+  const identity = JSON.stringify([isGuest ? 'guest' : 'user', user?.uid || null, sample]);
+  return <FinancialsContent key={identity} />;
 }
