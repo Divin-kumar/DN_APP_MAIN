@@ -625,23 +625,28 @@ export function EventWorkspaceContent() {
       ) : null}
       {activityDialogOpen ? (
         <ModalDialog title={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
-          <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
+          <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
             <ActivityEntryModeFields moment={event} momentTypes={momentTypes} date={activityDate}
               choice={activityCreationChoice} targetId={activityAppendTarget}
               onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} disabled={activityBusy} />
-            <input value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)} placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'} style={styles.input} autoFocus />
+            <label className="dn-activity-create-title" htmlFor="dn-workspace-entry-title">{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
+              <input id="dn-workspace-entry-title" value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)}
+                placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'What needs doing?' : 'What would you like to remember?'}
+                style={styles.input} required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
+            </label>
             <div className="activity-date-time-row">
               <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
               <ActivityTimeField value={activityTime} onChange={setActivityTime} />
             </div>
-            <DropdownSelect value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
+            <div className="dn-activity-create-priority"><label htmlFor="dn-workspace-entry-priority">Priority</label>
+            <DropdownSelect id="dn-workspace-entry-priority" value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
               {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
-            </DropdownSelect>
-            <RichTextEditor label="Activity notes" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
-            <div className="dialog-actions" style={styles.dialogActions}>
+            </DropdownSelect></div>
+            <RichTextEditor label={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity notes (optional)' : 'Entry notes (optional)'} value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
+            <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
               <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'}</button>
             </div>
