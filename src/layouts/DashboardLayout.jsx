@@ -27,6 +27,7 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
+import { resolveQuickCreateMoment, quickActivityEntryKind } from '../utils/quickActivityContext';
 import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from '../utils/momentWorkspaceRoutes';
 import { recordId } from '../utils/recordIdentity';
 import { financialDate } from '../utils/financialRecords';
@@ -67,7 +68,7 @@ export default function DashboardLayout() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const eventState = useEventStore();
-  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent, updateEventItem } = eventState;
+  const { events, loading: eventsLoading, error: eventsError, loadEvents, addEvent } = eventState;
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
@@ -95,6 +96,7 @@ export default function DashboardLayout() {
   const transactionMounted = useRef(true);
   useEffect(() => { transactionMounted.current = true; return () => { transactionMounted.current = false; }; }, []);
   const [quickActivityEventId, setQuickActivityEventId] = useState('');
+  const quickActivityContextRef = useRef(null);
   const [activityPickerFilter, changeActivityPickerFilter] = usePersistentListState('activity-picker', ACTIVITY_PICKER_DEFAULTS);
   const quickActivityType = activityPickerFilter.type;
   const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
@@ -108,6 +110,9 @@ export default function DashboardLayout() {
   const activityDetailMatch = useMatch('/events/:eventId/activities/:activityId');
   const workspaceKey = getMomentWorkspaceKey(location.pathname);
   const workspaceMoment = workspaceKey ? activityMoments.find((moment) => workspaceKey === `/events/${encodeURIComponent(momentId(moment))}`) : null;
+  const quickCreateMoment = resolveQuickCreateMoment(activityMoments, activityDetailMatch?.params, workspaceMoment);
+  const selectedQuickActivityMoment = activityMoments.find((moment) => momentId(moment) === quickActivityEventId);
+  const quickActivityKind = activityDetailMatch ? quickActivityEntryKind(selectedQuickActivityMoment, adminValues.eventTypes) : 'activity';
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
 
@@ -294,7 +299,7 @@ export default function DashboardLayout() {
   const beginQuickCreate = (type, activationEvent) => {
     if (transactionSaving.current) return;
     if (type === 'transaction') {
-      const parent = activityDetailMatch ? activityMoments.find((moment) => momentId(moment) === activityDetailMatch.params.eventId) : workspaceMoment;
+      const parent = quickCreateMoment;
       const activity = parent?.activities?.find((item) => recordId(item.id) === activityDetailMatch?.params.activityId);
       setQuickTransaction({ context: records.capture(), preset: { eventId: momentId(parent), activityId: recordId(activity?.id), date: financialDate(activity?.date) } });
       setTransactionBusy(false);
@@ -311,8 +316,10 @@ export default function DashboardLayout() {
     setQuickCreateError('');
     setQuickCreateType(type);
     if (type === 'activity') {
-      const currentMomentId = momentId(workspaceMoment);
-      if (workspaceMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
+      quickActivityContextRef.current = records.capture();
+      const currentMomentId = momentId(quickCreateMoment);
+      // Override a stale saved type filter only when it would hide the parent.
+      if (quickCreateMoment && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
       setQuickActivityTime(currentEntryTime());
@@ -367,13 +374,18 @@ export default function DashboardLayout() {
     }
   };
 
-  // Add a task-like activity under an existing life moment.
-  // This is the same idea as creating a to-do attached to a life event.
+  // Diary and Journal entries are Activities appended to their parent Moment;
+  // task-style Moments use the same record shape with Activity wording.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
     const event = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
     if (!event || !quickActivityTitle.trim()) {
-      setQuickCreateError('Choose a life moment and enter an activity title.');
+      setQuickCreateError('Choose a life moment and enter a title.');
+      return;
+    }
+    const context = quickActivityContextRef.current;
+    if (!records.isCurrent(context)) {
+      setQuickCreateError('Your session changed. Reopen + to add this entry.');
       return;
     }
     try {
@@ -388,11 +400,20 @@ export default function DashboardLayout() {
         completedAt: null,
         createdAt: new Date().toISOString(),
       };
-      await updateEventItem(user?.uid, isGuest, { ...event, activities: [...(event.activities || []), activity] });
+      // Resolve the latest scoped parent at commit time, avoiding a stale
+      // snapshot that could overwrite a concurrently added entry.
+      await records.mutateMoment(context, momentId(event), (current) => ({
+        ...current, activities: [...(current.activities || []), activity],
+      }));
+      if (!records.isCurrent(context)) return;
       setQuickCreateType(null);
-      showToast('Activity added successfully', 'success', { label: 'View', to: `/events/${activity.eventId}/activities` });
-    } catch {
-      setQuickCreateError('Could not save this activity. Please try again.');
+      const kind = activityDetailMatch ? quickActivityEntryKind(event, adminValues.eventTypes) : 'activity';
+      const message = kind === 'activity' ? 'Activity added successfully' : `${kind === 'diary entry' ? 'Diary' : 'Journal'} entry added`;
+      const to = kind === 'activity' ? `/events/${encodeURIComponent(activity.eventId)}/activities`
+        : `/events/${encodeURIComponent(activity.eventId)}/story`;
+      showToast(message, 'success', { label: 'View', to });
+    } catch (error) {
+      setQuickCreateError(error?.message || 'Could not save this entry. Please try again.');
     }
   };
 
@@ -576,7 +597,7 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (
-        <ModalDialog title="Add an activity" onClose={() => setQuickCreateType(null)}>
+        <ModalDialog title={quickActivityKind === 'activity' ? 'Add an activity' : `Add a ${quickActivityKind}`} onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form" onSubmit={saveQuickActivity}>
             <label htmlFor="quick-activity-type">Moment type</label>
@@ -595,7 +616,8 @@ export default function DashboardLayout() {
               {filteredActivityMoments.map((event) => <option key={momentId(event)} value={momentId(event)}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
             </DropdownSelect>
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
-            <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
+            {activityDetailMatch && selectedQuickActivityMoment ? <p className="dn-quick-activity-context">Adding {quickActivityKind === 'activity' ? 'a new activity' : `a new ${quickActivityKind}`} to <strong>{selectedQuickActivityMoment.name || 'this Moment'}</strong></p> : null}
+            <input value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)} placeholder={quickActivityKind === 'activity' ? 'Activity title' : 'Entry title'} aria-label={quickActivityKind === 'activity' ? 'Activity title' : 'Entry title'} autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
             <div className="activity-date-time-row">
               <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
               <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} />
@@ -605,8 +627,8 @@ export default function DashboardLayout() {
                 <option key={option.value} value={option.value}>{option.label}</option>
               ))}
             </DropdownSelect>
-            <RichTextEditor label="Activity notes" value={quickActivityDescription} onChange={setQuickActivityDescription} placeholder="Description (optional)" rows={4} />
-            <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
+            <RichTextEditor label={quickActivityKind === 'activity' ? 'Activity notes' : 'Entry notes'} value={quickActivityDescription} onChange={setQuickActivityDescription} placeholder="Description (optional)" rows={4} />
+            <div className="form-actions"><button className="primaryButton" type="submit">Save {quickActivityKind}</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
       ) : null}
