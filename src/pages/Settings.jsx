@@ -7,7 +7,7 @@ import './GuestTour.css';
 import './SettingsDataPremium.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldAlert, HardDrive, Cloud, CheckCircle2 } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldAlert, HardDrive, Cloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
