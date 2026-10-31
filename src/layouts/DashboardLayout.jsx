@@ -70,7 +70,7 @@ export default function DashboardLayout() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const eventState = useEventStore();
-  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent, updateEventItem } = eventState;
+  const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent } = eventState;
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
   const location = useLocation();
