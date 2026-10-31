@@ -12,6 +12,8 @@ import ActivityActionDialogs from '../../components/events/ActivityActionDialogs
 import LinkedTransactions from '../finance/components/LinkedTransactions';
 import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
+import ActivityEntryTimeline from './components/ActivityEntryTimeline';
+import { entryCount, ENTRY_MODES } from '../../utils/activityEntries';
 import { activityDateLabel, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
 import { getActivityMomentType } from '../../utils/activityRecords';
 import { isActivityEditable } from '../../utils/scopedRecordActions';
@@ -46,14 +48,15 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const status = activityStatus(activity);
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
   const parentTo = navigation.returnTo;
+  const isDaily = activity.entryMode === ENTRY_MODES.DAILY;
   const menuActions = [
-    status === 'cancelled'
+    ...(!isDaily ? [status === 'cancelled'
       ? { label: 'Restore', icon: RotateCcw, onClick: () => actions.setCancelled(target, false) }
       : { label: status === 'completed' ? 'Reopen' : 'Close', icon: status === 'completed' ? RotateCcw : Check,
           disabled: status !== 'completed' && (moment.archived || ['archived', 'cancelled'].includes(moment.status)),
           onClick: () => actions.setCompleted(target, status !== 'completed') },
     ...(isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => actions.edit(target) }] : []),
-    ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => actions.setCancelled(target, true) }] : []),
+    ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => actions.setCancelled(target, true) }] : [])] : []),
   ];
   const dates = [
     { label: 'Created', value: activityDateLabel(activity.createdAt, '') },
@@ -76,7 +79,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       {moment.archived ? <p className="activity-archived"><Archive size={14} aria-hidden="true" /> Archived Moment</p> : null}
       <div className="activity-detail-metadata" aria-busy={actions.busy}>
         <div className="activity-detail-facts">
-          <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
+          <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{isDaily ? `${entryCount(activity)} entries` : activityStatusLabel(activity)}</span>
           <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
@@ -90,6 +93,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <h2 className="sr-only" id="activity-description-heading">Description</h2>
         <RichText value={activity.description} headingLevel={3} className="activity-description" />
       </section> : null}
+      <ActivityEntryTimeline activity={activity} actions={actions} target={target} />
       <LinkedTransactions eventId={eventId} activityId={activityId} minimal />
       <section className="activity-detail-section"><ActivityAttachments moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} /></section>
       {navigation.index >= 0 && navigation.ids.length > 1 ? <nav className="activity-pagination" aria-label="Activity navigation">
