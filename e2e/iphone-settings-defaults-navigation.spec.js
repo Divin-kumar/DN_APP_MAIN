@@ -51,3 +51,21 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     });
   }
 }
+
+test('Reset all settings discloses saved list-default loss before confirmation', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page);
+  await page.goto('/settings');
+  const before = await page.evaluate(() =>
+    ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)));
+  await page.getByRole('button', { name: 'Reset all settings', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Reset all settings?' });
+  await expect(dialog.getByText('Saved default sorting and filters for Moments, Activities and Transactions')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  await expect(dialog).toHaveCount(0);
+  expect(await page.evaluate(() =>
+    ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)))).toEqual(before);
+  expect(errors).toEqual([]);
+});
