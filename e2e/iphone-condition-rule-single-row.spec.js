@@ -7,8 +7,8 @@ import { seedGuest } from './fixtures.js';
 // the saved Settings default editor. Only the rule scrolls horizontally.
 const pages = [
   { path: '/events', label: 'Moments', field: 'Status', value: 'Completed' },
-  { path: '/activities', label: 'Activities', field: 'Priority', value: 'High' },
-  { path: '/events/moment-one/activities', label: 'Moment Activities', field: 'Priority', value: 'High' },
+  { path: '/activities', label: 'Activities', field: 'Priority', value: 'High priority' },
+  { path: '/events/moment-one/activities', label: 'Moment Activities', field: 'Priority', value: 'High priority' },
   { path: '/financials/transactions', label: 'Transactions', field: 'Type', value: 'Income' },
 ];
 
