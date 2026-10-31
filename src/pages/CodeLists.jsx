@@ -599,16 +599,6 @@ export default function CodeLists() {
 
   return (
     <div className="feature-page settings-page about-page code-lists-page dn-premium-code-lists">
-      <header className="settings-subpage-header">
-        <button type="button" className="settings-back-button" onClick={() => navigate('/settings')} aria-label="Back to Settings">
-          <ArrowLeft size={16} />
-        </button>
-        <div className="settings-subpage-title-wrap">
-          <span className="settings-subpage-eyebrow">Settings</span>
-          <h2>Code Lists</h2>
-        </div>
-      </header>
-
       {adminValuesLoading ? <section className="settings-section" role="status">Loading account Code Lists…</section> : null}
       {adminValuesError ? (
         <section className="settings-section" role="alert" aria-live="assertive">
