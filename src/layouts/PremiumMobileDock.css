@@ -1,7 +1,7 @@
 /* CHG-224 | iPhone navigation has one source of truth, not another patch
    to the legacy 4-column dock. Five equal slots keep universal + centered.
    Scope all overrides to this dock; desktop sidebar and dialogs are unchanged. */
-@media (max-width: 760px) {
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   html[data-theme] .mobile-tabbar.dn-premium-dock {
     --dn-dock-gap: 2px;
     position: fixed !important;
@@ -261,6 +261,69 @@
     letter-spacing: -.035em !important;
   }
   html[data-theme] .dn-premium-dock .dn-dock-icon { width: 31px; }
+}
+
+/* Short landscape iPhones can exceed 760 CSS px. Keep their familiar dock
+   rather than switching to the desktop sidebar when the device rotates.
+   Restrict this override to coarse/touch pointers to avoid desktop laptops. */
+@media (min-width: 761px) and (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-header {
+    min-height: 56px !important;
+    height: 56px !important;
+    padding: 5px 16px !important;
+  }
+  html[data-theme] .dn-header .menu-button,
+  html[data-theme] .dn-sidebar,
+  html[data-theme] .mobile-nav-overlay { display: none !important; }
+  html[data-theme] .dn-main {
+    display: flex !important;
+    height: calc(100dvh - 56px) !important;
+    min-height: 0 !important;
+    padding: 0 14px !important;
+    overflow: hidden;
+  }
+  html[data-theme] .dn-main > .dn-content {
+    flex: 1 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 0 !important;
+    padding: 10px 0 max(108px, calc(90px + var(--dn-safe-area-bottom, 0px))) !important;
+    overflow-x: hidden !important;
+    overflow-y: auto;
+    box-sizing: border-box;
+  }
+  html[data-theme] .dn-quick-create { display: none !important; }
+
+  /* Transactions still scroll within their list, not by sliding the shell
+     behind the fixed dock in landscape. */
+  html[data-theme] .dn-content:has(.dn-financial-workspace) {
+    height: calc(100dvh - 56px) !important;
+    padding-bottom: calc(106px + var(--dn-safe-area-bottom, 0px)) !important;
+    overflow: hidden !important;
+  }
+  html[data-theme] .dn-content:has(.dn-financial-workspace) > .dn-route-transition,
+  html[data-theme] .dn-financial-workspace,
+  html[data-theme] .dn-financial-workspace .financials-content-panel,
+  html[data-theme] .dn-financial-workspace .dn-transactions-page {
+    display: flex !important;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0 !important;
+    overflow: hidden;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary,
+  html[data-theme] .dn-financial-workspace .transactions-heading,
+  html[data-theme] .dn-financial-workspace .dn-list-controls { flex: 0 0 auto; }
+  html[data-theme] .dn-financial-workspace .dn-transactions-page .dn-transactions-results {
+    flex: 1 1 auto;
+    min-height: 0;
+    max-height: none !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
