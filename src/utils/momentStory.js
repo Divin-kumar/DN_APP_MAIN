@@ -1,6 +1,6 @@
 import { activityTime } from './activityTime.js';
 import { activityStatus } from './activityDetail.js';
-import { getCodeListMeta } from './codeLists.js';
+import { resolveMomentEntryMode } from './momentEntryMode.js';
 import { getEventStatus } from './eventStatus.js';
 import { formatMomentDate, parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
@@ -14,9 +14,6 @@ export const STORY_PRESENTATIONS = Object.freeze({
   CHRONICLE: 'chronicle',
 });
 
-const VALID_PRESENTATIONS = Object.freeze(Object.values(STORY_PRESENTATIONS));
-const PROJECT_TYPES = new Set(['application and youtube', 'career', 'iqvia', 'project', 'work', 'task', 'tasks', 'to-do', 'todo']);
-
 const asRecords = (items) => Array.isArray(items)
   ? items.filter((item) => item && typeof item === 'object' && !Array.isArray(item)) : [];
 
@@ -25,29 +22,9 @@ const calendarKey = (value) => {
   catch { return null; }
 };
 
-const defaultPresentation = (name) => {
-  const key = String(name || '').trim().toLocaleLowerCase();
-  if (key === 'diary') return STORY_PRESENTATIONS.DIARY;
-  if (key === 'journal' || key === 'memory book' || key === 'photo journal') return STORY_PRESENTATIONS.JOURNEY;
-  if (PROJECT_TYPES.has(key)) return STORY_PRESENTATIONS.CHRONICLE;
-  return STORY_PRESENTATIONS.JOURNEY;
-};
-
-// The optional storyPresentation property already round-trips through DN's
-// Moment Type Code Lists. Unknown/inactive legacy types remain readable.
-export const resolveMomentStoryPresentation = (moment = {}, momentTypes = []) => {
-  const rawType = String(moment?.type || '').trim();
-  const customType = String(moment?.customType || '').trim();
-  const typeName = rawType.toLocaleLowerCase() === 'other' && customType ? customType : rawType;
-  const entries = getCodeListMeta('eventTypes', momentTypes);
-  const findType = (name) => entries.find((entry) => (
-    entry.value.toLocaleLowerCase() === name.toLocaleLowerCase()
-    || entry.label.toLocaleLowerCase() === name.toLocaleLowerCase()
-  ));
-  const configured = findType(typeName) || (rawType.toLocaleLowerCase() === 'other' ? findType('Other') : null);
-  const selected = configured?.storyPresentation;
-  return VALID_PRESENTATIONS.includes(selected) ? selected : defaultPresentation(configured?.value || typeName);
-};
+// The same mandatory mode governs creating Activities and rendering Story/PDF.
+// The independent resolver avoids a cycle through Activity Detail.
+export const resolveMomentStoryPresentation = resolveMomentEntryMode;
 
 const makeActivityEntry = (moment, activity, subEntry = null, isFirst = false) => {
   const parentId = recordId(activity.id) || recordId(activity.firestoreId);
