@@ -33,7 +33,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(layout.top).toBeLessThan(layout.paneBottom);
       expect(layout.bottom).toBeGreaterThan(layout.paneTop);
       expect(layout.documentWidth).toBeLessThanOrEqual(width + 1);
-      await page.getByRole('button', { name: 'Back to Settings' }).click();
+      await page.locator('.dn-header').getByRole('link', { name: 'Back to Settings' }).click();
       await expect(page).toHaveURL(/\/settings$/);
       expect(await page.evaluate(() =>
         ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
