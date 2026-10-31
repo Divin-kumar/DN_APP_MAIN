@@ -49,7 +49,7 @@ for (const [width, height, theme] of [[390, 844, 'light'], [430, 932, 'dark']]) 
       }
 
       const title = `Added ${scenario.momentId} from detail`;
-      await editor.getByRole('textbox', { name: 'Activity title' }).fill(title);
+      await editor.getByRole('textbox', { name: scenario.mode === 'chronicle' ? 'Activity title' : 'Entry title' }).fill(title);
       await editor.getByRole('button', { name: scenario.mode === 'chronicle' ? 'Save activity' : 'Save entry' }).click();
       await expect(editor).toHaveCount(0);
 
