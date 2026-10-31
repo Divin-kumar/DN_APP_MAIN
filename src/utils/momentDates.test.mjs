@@ -88,3 +88,62 @@ test('calendar-day distance is stable across daylight saving changes', () => {
   assert.equal(result.stdout.trim(), '30\n0');
   assert.equal(getCalendarDaysRemaining(new Date(2026, 9, 23), new Date(2026, 9, 22)), 1);
 });
+
+test('monthly Moments on the 29th, 30th and 31st use each shorter month’s last day', () => {
+  const monthly = (day, reference) => formatMomentDate(getNextOccurrenceDate({
+    date: `2020-01-${day}`, recurrence: 'monthly',
+  }, new Date(...reference)));
+  assert.equal(monthly('31', [2026, 1, 1]), '2026-02-28');
+  assert.equal(monthly('31', [2026, 1, 28]), '2026-02-28');
+  assert.equal(monthly('31', [2026, 2, 1]), '2026-03-31');
+  assert.equal(monthly('31', [2026, 3, 1]), '2026-04-30');
+  assert.equal(monthly('30', [2026, 1, 1]), '2026-02-28');
+  assert.equal(monthly('29', [2028, 1, 1]), '2028-02-29');
+  assert.equal(monthly('31', [2028, 1, 1]), '2028-02-29');
+  assert.equal(monthly('31', [2026, 11, 31]), '2026-12-31');
+  assert.equal(monthly('31', [2027, 0, 1]), '2027-01-31');
+});
+
+test('yearly leap-day anniversaries use February 28 in non-leap years and February 29 in leap years', () => {
+  const event = { date: '2000-02-29', recurrence: 'yearly' };
+  const next = (year, month, day) => formatMomentDate(getNextOccurrenceDate(event, new Date(year, month, day)));
+  assert.equal(next(2026, 1, 27), '2026-02-28');
+  assert.equal(next(2026, 1, 28), '2026-02-28');
+  assert.equal(next(2026, 2, 1), '2027-02-28');
+  assert.equal(next(2028, 1, 28), '2028-02-29');
+  assert.equal(next(2028, 1, 29), '2028-02-29');
+  assert.equal(getNextBirthdayAge('2000-02-29', new Date(2026, 1, 28)), 26);
+  assert.equal(getNextBirthdayAge('2000-02-29', new Date(2026, 2, 1)), 27);
+});
+
+test('recurrence dates honor their original start and never shift saved dates or moment time', () => {
+  const future = { date: '2027-01-31', recurrence: 'monthly' };
+  assert.equal(formatMomentDate(getNextOccurrenceDate(future, new Date(2026, 1, 1))), '2027-01-31');
+  const original = { date: '2020-01-31', recurrence: 'monthly', time: '09:45', name: 'Family tradition' };
+  assert.equal(formatMomentDate(getNextOccurrenceDate(original, new Date(2026, 1, 1))), '2026-02-28');
+  assert.deepEqual(original, { date: '2020-01-31', recurrence: 'monthly', time: '09:45', name: 'Family tradition' });
+  assert.equal(formatMomentDate(getNextOccurrenceDate({ date: '2026-01-31', recurrence: 'none' }, new Date(2026, 1, 1))), '2026-01-31');
+});
+
+test('Dashboard respects calendar-safe recurring February dates and the inclusive 30-day window', () => {
+  const events = [
+    { id: 'monthly-31', date: '2020-01-31', recurrence: 'monthly' },
+    { id: 'annual-leap', date: '2000-02-29', recurrence: 'yearly' },
+    { id: 'future', date: '2028-01-31', recurrence: 'monthly' },
+  ];
+  const upcoming = getUpcomingDashboardEvents(events, new Date(2026, 1, 1));
+  assert.deepEqual(upcoming.map((item) => item.id), ['monthly-31', 'annual-leap']);
+  assert.equal(getUpcomingDashboardEvents(events, new Date(2026, 2, 1)).some((item) => item.id === 'annual-leap'), false);
+});
+
+test('short-month recurrence stays on local calendar dates in negative UTC zones', () => {
+  const moduleUrl = new URL('./momentDates.js', import.meta.url).href;
+  const result = spawnSync(process.execPath, ['--input-type=module', '-e', `
+    import { getNextOccurrenceDate, formatMomentDate } from ${JSON.stringify(moduleUrl)};
+    const monthly = getNextOccurrenceDate({ date: '2020-01-31', recurrence: 'monthly' }, new Date(2026, 1, 1));
+    const yearly = getNextOccurrenceDate({ date: '2000-02-29', recurrence: 'yearly' }, new Date(2026, 1, 1));
+    console.log(formatMomentDate(monthly), formatMomentDate(yearly));
+  `], { env: { ...process.env, TZ: 'America/Los_Angeles' }, encoding: 'utf8' });
+  assert.equal(result.status, 0, result.stderr);
+  assert.equal(result.stdout.trim(), '2026-02-28 2026-02-28');
+});
