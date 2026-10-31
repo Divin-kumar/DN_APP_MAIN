@@ -12,10 +12,10 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { ArrowLeft, BellRing, Check, Hash, ListFilter, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
+import { BellRing, Check, Hash, ListFilter, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -570,7 +570,6 @@ function ListOrderingPreferences() {
 }
 
 export default function CodeLists() {
-  const navigate = useNavigate();
   const location = useLocation();
   useEffect(() => {
     // The app uses a nested scroll owner (.dn-content), not document scroll.
