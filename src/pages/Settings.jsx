@@ -921,6 +921,7 @@ export default function Settings() {
               <li>Saved preferences; Notifications is Coming Soon</li>
               <li>Greeting types and templates</li>
               <li>All Code Lists and their system default values</li>
+              <li>Saved default sorting and filters for Moments, Activities and Transactions</li>
             </ul>
             <p>Unused custom Code List values will be removed. Values referenced by existing records will remain available as inactive values.</p>
             <p><strong>Your events, expenses, income, activities, memories, attachments, and account data will not be deleted or edited.</strong></p>
