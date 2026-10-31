@@ -185,7 +185,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
               onClear={allInScope.length && canResetActivity ? resetActivityDiscovery : undefined} />
-          : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={visible}
+          : <ActivityList eventName="your Moments" activities={visible} allActivities={allInScope.map((entry) => projection.views.get(entry.key))} progressActivities={allInScope.map((entry) => projection.views.get(entry.key))}
+            progressLabel="overall active steps complete"
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
             getMoment={(view) => momentsById.get(projection.context.get(view).momentId)}
