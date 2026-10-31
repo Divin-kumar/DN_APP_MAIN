@@ -10,20 +10,20 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await page.goto('/insights');
     const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
-    const heading = page.locator('.insights-page > .insights-heading');
+    const heading = page.locator('.dn-header');
     await expect(heading.getByRole('heading', { name:'Insights', exact:true })).toBeVisible();
-    await expect(heading.locator('.insights-eyebrow, p')).toHaveCount(0);
-    const exportAction = heading.getByRole('button', { name:'Export Insights data' });
+    await expect(page.locator('.insights-page > .insights-heading')).toHaveCount(0);
+    const exportAction = page.locator('.insights-discovery').getByRole('button', { name:'Export Insights data' });
     await expect(exportAction).toBeVisible();
     const discovery = page.locator('.insights-page > .insights-discovery');
-    const field = discovery.getByRole('searchbox', { name:'Search Insights' });
+    const field = discovery.getByRole('searchbox', { name:'Search milestones in Insights' });
     await expect(field).toBeVisible();
     const metrics = page.locator('.insights-metric-grid > .insight-metric');
     await expect(metrics).toHaveCount(4);
     const sizes = await page.evaluate(() => {
-      const header = document.querySelector('.insights-page > .insights-heading');
-      const title = header.querySelector('h2').getBoundingClientRect();
-      const exportRect = header.querySelector('.insights-export').getBoundingClientRect();
+      const header = document.querySelector('.dn-header');
+      const title = header.querySelector('h1').getBoundingClientRect();
+      const exportRect = document.querySelector('.insights-discovery .insights-export').getBoundingClientRect();
       const search = document.querySelector('.insights-discovery input').getBoundingClientRect();
       const tiles = [...document.querySelectorAll('.insights-metric-grid > .insight-metric')].map(node => {
         const box = node.getBoundingClientRect(), value = node.querySelector('strong').getBoundingClientRect();
@@ -36,10 +36,10 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         inputFont:parseFloat(getComputedStyle(document.querySelector('.insights-discovery input')).fontSize),
         tiles, scrollWidth:document.documentElement.scrollWidth };
     });
-    expect(Math.abs(sizes.titleTop - sizes.exportTop)).toBeLessThanOrEqual(14);
+    expect(sizes.titleTop).toBeLessThan(sizes.exportTop);
     expect(sizes.exportWidth).toBeGreaterThanOrEqual(44);
     expect(sizes.exportHeight).toBeGreaterThanOrEqual(43.9);
-    expect(sizes.searchTop).toBeGreaterThan(sizes.exportTop + sizes.exportHeight - 1);
+    expect(Math.abs(sizes.searchTop - sizes.exportTop)).toBeLessThanOrEqual(3);
     expect(sizes.inputFont).toBeGreaterThanOrEqual(16);
     expect(sizes.scrollWidth).toBeLessThanOrEqual(width + 1);
     for (const tile of sizes.tiles) {
