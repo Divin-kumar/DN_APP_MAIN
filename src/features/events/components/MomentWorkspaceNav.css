@@ -88,3 +88,46 @@ html[data-theme] .dn-moment-panel > .dn-workspace-section-heading h2 {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-moment-nav .event-workspace-nav-item { transition:none; }
 }
+
+/* CHG-228: a quiet three-part instrument under the Moment date. No boxed
+   mini-cards, no changes to finance math, and never a fourth horizontal row.
+   The amount column gets extra space but long INR figures may wrap safely. */
+html[data-theme] .dn-moment-hero-swipe .event-moment-content .event-moment-stat-line {
+  display:grid !important;
+  grid-template-columns:minmax(0,.78fr) minmax(0,1fr) minmax(0,1.55fr);
+  align-items:start; width:min(100%,560px); min-width:0;
+  gap:0 !important; margin-top:12px !important;
+  padding:10px 0 0; border-top:1px solid color-mix(in srgb,var(--color-text-muted) 22%,transparent);
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric {
+  display:flex; flex-direction:column; align-items:flex-start; justify-content:start;
+  min-width:0; gap:3px; padding:1px clamp(7px,2vw,15px);
+  border-left:1px solid color-mix(in srgb,var(--color-text-muted) 16%,transparent);
+  color:var(--color-text);
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric:first-child {
+  border-left:0; padding-left:0;
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric strong {
+  display:block; min-width:0; max-width:100%;
+  font-size:clamp(13px,3.9vw,17px) !important; font-weight:780;
+  font-variant-numeric:tabular-nums; line-height:1.23;
+  letter-spacing:-.025em; overflow-wrap:anywhere;
+  color:var(--color-text) !important;
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric small {
+  display:block; max-width:100%; font-size:11px !important;
+  line-height:1.35; font-weight:600; letter-spacing:0;
+  color:var(--color-text-muted); white-space:nowrap;
+}
+@media(max-width:360px) {
+  html[data-theme] .dn-moment-hero-swipe .event-moment-content .event-moment-stat-line {
+    margin-top:9px !important; padding-top:8px;
+  }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric {
+    gap:2px; padding-inline:7px;
+  }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric:first-child { padding-left:0; }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric strong { font-size:12px !important; }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric small { font-size:10px !important; }
+}
