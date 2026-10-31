@@ -203,3 +203,38 @@ html[data-theme] .dn-conditions .dn-condition-rule .dn-condition-no-value {
   }
   html[data-theme] .dn-conditions .dn-condition-rule .dropdown-field .dropdown-trigger { padding-inline: 3px !important; }
 }
+
+/* DN 2.1 small-iPhone Refine legibility.
+   At 320px the four single-row controls previously compressed to ~60px
+   columns and cut off field/value labels. Scroll only this individual rule,
+   never the whole page, Refine panel or nested condition list. The remove
+   target remains pinned to the right edge of that rule. Larger iPhones
+   retain the full equal-width row without a horizontal scroller. */
+@media (max-width: 390px) {
+  html[data-theme] .dn-conditions .dn-condition-rule,
+  html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule {
+    grid-template-columns: minmax(92px, 1.05fr) minmax(64px, .75fr) minmax(108px, 1.15fr) 44px;
+    gap: 4px;
+    padding: 3px 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    scroll-padding-inline: 6px 48px;
+  }
+  html[data-theme] .dn-conditions .dn-condition-rule::-webkit-scrollbar { display: none; }
+  html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon {
+    position: sticky;
+    right: 0;
+    z-index: 1;
+    background: var(--color-card);
+    box-shadow: -5px 0 9px -5px color-mix(in srgb, var(--color-text) 12%, transparent);
+  }
+  html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon:is(:hover,:focus-visible) {
+    background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card));
+  }
+  html[data-theme] .dn-conditions .dn-condition-rule:focus-within {
+    border-color: var(--action-border);
+  }
+}
