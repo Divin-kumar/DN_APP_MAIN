@@ -26,6 +26,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
   const legacyOther = initialValues?.type === 'Other';
+  const legacyType = initialValues?.type && !eventTypeOptions.includes(initialValues.type) ? initialValues.type : '';
   const [form, setForm] = useState(() => ({ ...createDefaultState(defaultEventType),
     ...(initialValues ? { ...initialValues, time: activityTime(initialValues), customType: initialValues.customType || '' } : {}),
   }));
@@ -59,7 +60,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       return;
     }
 
-    if (!eventTypeOptions.includes(form.type) && !(legacyOther && form.type === 'Other')) {
+    if (!eventTypeOptions.includes(form.type) && form.type !== legacyType) {
       alert('Choose a configured Moment type in Settings → Code Lists.');
       return;
     }
@@ -93,7 +94,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
             {eventTypeOptions.map((option) => (
               <option key={option} value={option}>{option}</option>
             ))}
-            {legacyOther && !eventTypeOptions.includes('Other') ? <option value="Other">Other (legacy)</option> : null}
+            {legacyType ? <option value={legacyType}>{legacyOther ? 'Other (legacy)' : legacyType + ' (legacy)'}</option> : null}
           </DropdownSelect>
         </label>
 
