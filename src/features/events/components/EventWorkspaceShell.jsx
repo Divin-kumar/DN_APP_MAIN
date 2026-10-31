@@ -505,7 +505,11 @@ export function EventWorkspaceContent() {
             {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge}</span> : null}
             <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
           </div>
-          <div className="event-moment-stat-line" aria-label="Moment highlights"><strong>{activities.length}</strong> Steps <i>·</i> <strong>{memoryCount}</strong> Reflections <i>·</i> <strong>{currency(totalSpent)}</strong> Spent</div>
+          <div className="event-moment-stat-line" aria-label="Moment highlights">
+            <span className="dn-moment-metric"><strong>{activities.length}</strong><small>Steps</small></span>
+            <span className="dn-moment-metric"><strong>{memoryCount}</strong><small>Reflections</small></span>
+            <span className="dn-moment-metric is-financial"><strong>{currency(totalSpent)}</strong><small>Spent</small></span>
+          </div>
         </div>
       </header>
       </SwipeActionCard>
