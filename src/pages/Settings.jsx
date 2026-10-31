@@ -1016,7 +1016,7 @@ export default function Settings() {
               <p>Moments, Activities, linked files' metadata, income, expenses, transactions, Code Lists and legacy Firestore records in this account will be removed.</p></div>
           </div>
           <p className="dn-cloud-delete-account"><strong>Signed-in account</strong><span>{user?.uid === confirmCloudDeleteUid ? (user?.email || user?.displayName || 'Current account') : 'Account changed'}</span></p>
-          <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. Other signed-in DN tabs may recreate cloud settings, so close them first.</p>
+          <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. DN may create default Code Lists again when you sign back in. Other signed-in DN tabs can also recreate cloud records, so close them first.</p>
           <label className="dn-cloud-confirm-check">
             <input type="checkbox" checked={cloudDeleteAcknowledged} onChange={(event) => setCloudDeleteAcknowledged(event.target.checked)} disabled={deletingCloudRecords} />
             <span>I understand this is permanent and have saved a backup if needed.</span>
@@ -1044,11 +1044,11 @@ export default function Settings() {
       ) : null}
 
       {confirmClearData ? (
-        <ModalDialog title="Clear local DN data?" onClose={() => setConfirmClearData(false)}>
+        <ModalDialog title="Clear local DN data?" className="dn-local-clear-modal" onClose={() => setConfirmClearData(false)}>
           <p className="settings-helper">This removes guest records, preferences, and local record backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
-            <button type="button" className="settings-primary-button" onClick={clearLocalData}>Clear local data</button>
+            <button type="button" className="dn-data-outlined-button is-danger" onClick={clearLocalData}><Trash2 size={15} aria-hidden="true" /> Clear local data</button>
           </div>
         </ModalDialog>
       ) : null}
