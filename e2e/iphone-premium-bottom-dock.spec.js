@@ -9,8 +9,6 @@ for (const [width, height] of [[320, 640], [375, 667], [390, 844], [430, 932]]) 
     test(`premium five-slot iPhone dock remains centered and usable at ${width}px ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
-      const before = await page.evaluate(() => null).catch(() => null);
-      void before;
       await page.goto('/dashboard');
 
       const dock = page.getByRole('navigation', { name: 'Main navigation' });
