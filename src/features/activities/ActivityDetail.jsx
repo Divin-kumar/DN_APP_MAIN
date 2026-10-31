@@ -35,12 +35,13 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const navigation = useActivityNavigation({ scoped, eventId, activityId, disabled: actions.busy || Boolean(actions.draft || actions.deleteTarget) || coverEditing });
   useEffect(() => { if (navigation.isPaging) heading.current?.focus({ preventScroll: true }); }, [navigation.isPaging]);
   const found = resolveActivityDetail(scoped.events, eventId, activityId);
+  const canonicalId = recordId(found?.activity?.id);
   // An old saved link to a merged Diary or Journal Activity remains usable.
   useEffect(() => {
-    if (found && recordId(found.activity.id) !== recordId(activityId)) {
-      navigate(activityDetailPath(eventId, found.activity.id), { replace: true });
+    if (canonicalId && canonicalId !== recordId(activityId)) {
+      navigate(activityDetailPath(eventId, canonicalId), { replace: true });
     }
-  }, [found?.activity?.id, activityId, eventId, navigate]);
+  }, [canonicalId, activityId, eventId, navigate]);
   if (scoped.loadError) return <div className="activity-detail-page" role="alert"><h1>Activity couldn’t be loaded</h1>
     <p>Your Moments couldn’t be loaded. Please try again.</p><button type="button" className="secondaryButton" onClick={scoped.retry}>Try again</button></div>;
   if (scoped.pending) return <div className="activity-detail-page activity-detail-skeleton" aria-busy="true">
@@ -51,7 +52,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
     <div className="activity-detail-actions"><Link className="primaryButton" to="/activities">Back to Activities</Link><Link className="secondaryButton" to="/dashboard">Dashboard</Link></div>
   </section>;
   const { moment, activity } = found;
-  const target = { momentId: eventId, activityId };
+  const target = { momentId: eventId, activityId: recordId(activity.id) };
   const status = activityStatus(activity);
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
   const parentTo = navigation.returnTo;
