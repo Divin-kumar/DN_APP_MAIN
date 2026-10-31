@@ -4,9 +4,10 @@ import { exportSavedListDefaultsForScope, resetSavedListDefaultsForScope, restor
 import { settingsResetContext, assertSettingsResetContext, assertSettingsResetRecords } from '../utils/settingsResetSafety';
 import { dashboardConfigurationRestorePatch } from '../utils/backupDashboardConfiguration';
 import './GuestTour.css';
+import './SettingsDataPremium.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldAlert, HardDrive, Cloud, CheckCircle2 } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -24,6 +25,8 @@ import { downloadBlob } from '../utils/download';
 import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, mergeEventGroupsForRestore, mergeRecordsById } from '../services/backupService';
 import { createBackupFile, readBackupFile } from '../services/backupFileService';
 import { restoreAttachmentFiles } from '../services/attachmentService';
+import { deleteSignedInCloudRecords } from '../services/accountCloudDeletionService';
+import { CLOUD_DELETE_CONFIRMATION } from '../utils/accountCloudDeletionSafety';
 
 const normalizeList = (value) =>
   value
@@ -125,6 +128,11 @@ export default function Settings() {
   useEffect(() => () => backupOperationRef.current?.abort(), []);
   const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
+  const [confirmCloudDeleteUid, setConfirmCloudDeleteUid] = useState(null);
+  const [cloudDeletePhrase, setCloudDeletePhrase] = useState('');
+  const [cloudDeleteAcknowledged, setCloudDeleteAcknowledged] = useState(false);
+  const [deletingCloudRecords, setDeletingCloudRecords] = useState(false);
+  const [cloudDeleteProgress, setCloudDeleteProgress] = useState(null);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
   const [resettingSettings, setResettingSettings] = useState(false);
   const [theme, setTheme] = useState(preferences.theme || 'light');
@@ -539,6 +547,52 @@ export default function Settings() {
     }
   };
 
+  const closeCloudDelete = () => {
+    if (deletingCloudRecords) return;
+    setConfirmCloudDeleteUid(null);
+    setCloudDeletePhrase('');
+    setCloudDeleteAcknowledged(false);
+    setCloudDeleteProgress(null);
+  };
+
+  const openCloudDelete = () => {
+    if (!user?.uid || isGuest || getActiveSampleScenario(user.uid)
+      || deletingCloudRecords || exportingBackup || importingBackup || readingBackup) return;
+    setCloudDeletePhrase('');
+    setCloudDeleteAcknowledged(false);
+    setCloudDeleteProgress(null);
+    setConfirmCloudDeleteUid(user.uid);
+  };
+
+  const clearOnlineRecords = async () => {
+    const uid = confirmCloudDeleteUid;
+    if (!uid || deletingCloudRecords || cloudDeletePhrase !== CLOUD_DELETE_CONFIRMATION
+      || !cloudDeleteAcknowledged || uid !== user?.uid || isGuest || getActiveSampleScenario(uid)
+      || exportingBackup || importingBackup || readingBackup) return;
+    setDeletingCloudRecords(true);
+    setCloudDeleteProgress({ stage: 'checking', deleted: 0, total: 0 });
+    let committed = 0;
+    try {
+      const result = await deleteSignedInCloudRecords(uid, (progress) => {
+        committed = progress.deleted;
+        setCloudDeleteProgress(progress);
+      });
+      setConfirmCloudDeleteUid(null);
+      setBackupMessage(`Online Firestore records cleared: ${result.deleted} documents deleted. Google sign-in, local originals and legacy Firebase Storage files were not deleted. Reloading DN…`);
+      showToast('Online records cleared', 'success');
+      window.location.reload();
+    } catch (error) {
+      console.error('Online account data deletion did not complete:', error);
+      setBackupMessage(`Online deletion incomplete: ${error.message || 'Unable to verify the cloud records.'} ${committed ? `${committed} records were already deleted and cannot be restored without a backup.` : 'Deletion may not have started; check Firebase before retrying.'}`);
+      showToast('Online deletion incomplete. Review the details in Data & Backup.', 'danger');
+      setConfirmCloudDeleteUid(null);
+    } finally {
+      setDeletingCloudRecords(false);
+      setCloudDeletePhrase('');
+      setCloudDeleteAcknowledged(false);
+    }
+  };
+
   const clearLocalData = () => {
     clearDnLocalData();
     setBackupMessage('Local records and preferences cleared. Stored originals and account data are retained. Reloading...');
@@ -751,25 +805,56 @@ export default function Settings() {
   );
 
   const renderDataSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <div className="settings-input-block">
-          <span>Local backup</span>
-          <p className="settings-helper">Export records, available original attachments, Code Lists and saved List defaults to one JSON file. DN has no fixed backup size cap; available browser memory and storage still apply. Restore adds missing records to the active Guest or signed-in account, preserves existing record IDs, and restores saved list defaults when the backup includes them. Your current page filters remain separate.</p>
+    <div className="settings-accordion-body dn-data-backup">
+      <section className="dn-data-backup-block" aria-label="Backup and restore">
+        <div className="dn-data-backup-head">
+          <span className="dn-data-backup-icon"><ShieldAlert size={18} aria-hidden="true" /></span>
+          <div><strong>Protect your records</strong><p>Save a copy of your Moments, transactions, settings and available original photos before making changes.</p></div>
         </div>
-      </div>
+        <div className="dn-data-action-grid">
+          <button type="button" className="settings-primary-button dn-data-action-button" onClick={exportBackup}
+            disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords}>
+            <Download size={17} aria-hidden="true" /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}
+          </button>
+          <label className="settings-secondary-button dn-backup-file-picker dn-data-action-button">
+            <Upload size={17} aria-hidden="true" /> Restore backup
+            <input type="file" accept=".json,application/json" aria-label="Choose a DN backup JSON file"
+              onChange={importBackup} disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords} />
+          </label>
+        </div>
+        {readingBackup || exportingBackup ? <button type="button" className="settings-secondary-button dn-data-cancel-prep"
+          onClick={() => backupOperationRef.current?.abort()}>Cancel preparation</button> : null}
+        <p className="settings-helper">Export produces a JSON backup. Restore merges records into the current workspace and preserves existing IDs. Original files stored in this browser can be included when available.</p>
+      </section>
 
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={exportBackup} disabled={exportingBackup || importingBackup || readingBackup}><Download size={15} /> {exportingBackup ? 'Preparing backup…' : 'Export backup'}</button>
-        <label className="settings-secondary-button dn-backup-file-picker">
-          <Upload size={15} aria-hidden="true" /> Restore backup
-          <input type="file" accept=".json,application/json" aria-label="Choose a DN backup JSON file"
-            onChange={importBackup} disabled={exportingBackup || importingBackup || readingBackup} />
-        </label>
-        <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(true)} disabled={exportingBackup || importingBackup || readingBackup}><Trash2 size={15} /> Clear local data</button>
-        {readingBackup || exportingBackup ? <button type="button" className="settings-secondary-button" onClick={() => backupOperationRef.current?.abort()}>Cancel preparation</button> : null}
-      </div>
-
+      <section className="dn-data-backup-block dn-data-clear-block" aria-label="Clear DN data">
+        <div className="dn-data-backup-head">
+          <span className="dn-data-backup-icon"><HardDrive size={18} aria-hidden="true" /></span>
+          <div><strong>Manage stored data</strong><p>Choose exactly where to clear. Browser data and online Firebase records are separate.</p></div>
+        </div>
+        <div className="dn-data-clear-options">
+          <div className="dn-data-clear-option">
+            <div><span className="dn-data-clear-label"><HardDrive size={15} aria-hidden="true" /> This browser</span>
+              <p>Clear local app data and preferences. Does not remove your online records or stored original files.</p></div>
+            <button type="button" className="dn-data-outlined-button" onClick={() => setConfirmClearData(true)}
+              disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords}>
+              <Trash2 size={15} aria-hidden="true" /> Clear local
+            </button>
+          </div>
+          {user?.uid && !isGuest && !getActiveSampleScenario(user.uid) ? (
+            <div className="dn-data-clear-option is-cloud">
+              <div><span className="dn-data-clear-label"><Cloud size={15} aria-hidden="true" /> Firebase cloud</span>
+                <p>Permanently remove this account's online DN Firestore records, including older collections. Keep Google login and browser originals.</p></div>
+              <button type="button" className="dn-data-outlined-button is-danger" onClick={openCloudDelete}
+                disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords}>
+                <CloudOff size={15} aria-hidden="true" /> Delete online
+              </button>
+            </div>
+          ) : (
+            <p className="dn-data-guest-note">To clear Firebase records, sign in to the account that owns them. Guest records stay on this device.</p>
+          )}
+        </div>
+      </section>
       {backupMessage ? <p className="settings-message" role="status" aria-live="polite">{backupMessage}</p> : null}
     </div>
   );
@@ -778,7 +863,7 @@ export default function Settings() {
     { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
     { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
-    { key: 'backup', heading: 'Data & Backup', description: 'Backup, restore or clear local data.', icon: Database, body: renderDataSection() },
+    { key: 'backup', heading: 'Data & Backup', description: 'Protect, restore or clear browser and online records.', icon: Database, body: renderDataSection() },
   ];
 
   return (
@@ -918,6 +1003,41 @@ export default function Settings() {
             <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
             <button type="button" className="settings-primary-button" onClick={restorePendingBackup} disabled={importingBackup || exportingBackup}>
               {importingBackup ? 'Restoring backup…' : 'Confirm restore'}
+            </button>
+          </div>
+        </ModalDialog>
+      ) : null}
+
+      {confirmCloudDeleteUid ? (
+        <ModalDialog title="Delete online Firebase data?" className="dn-cloud-delete-modal" onClose={closeCloudDelete}>
+          <div className="dn-cloud-delete-warning">
+            <span className="dn-cloud-delete-warning-icon"><CloudOff size={22} aria-hidden="true" /></span>
+            <div><strong>This permanently deletes online records</strong>
+              <p>Moments, Activities, linked files' metadata, income, expenses, transactions, Code Lists and legacy Firestore records in this account will be removed.</p></div>
+          </div>
+          <p className="dn-cloud-delete-account"><strong>Signed-in account</strong><span>{user?.uid === confirmCloudDeleteUid ? (user?.email || user?.displayName || 'Current account') : 'Account changed'}</span></p>
+          <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. Other signed-in DN tabs may recreate cloud settings, so close them first.</p>
+          <label className="dn-cloud-confirm-check">
+            <input type="checkbox" checked={cloudDeleteAcknowledged} onChange={(event) => setCloudDeleteAcknowledged(event.target.checked)} disabled={deletingCloudRecords} />
+            <span>I understand this is permanent and have saved a backup if needed.</span>
+          </label>
+          <label className="dn-cloud-confirm-phrase">Type <strong>{CLOUD_DELETE_CONFIRMATION}</strong> to confirm
+            <input type="text" value={cloudDeletePhrase} onChange={(event) => setCloudDeletePhrase(event.target.value)}
+              autoCapitalize="characters" autoCorrect="off" autoComplete="off" spellCheck={false}
+              disabled={deletingCloudRecords} placeholder="Confirmation phrase" />
+          </label>
+          {deletingCloudRecords ? <p role="status" className="dn-cloud-delete-progress" aria-live="polite">
+            {cloudDeleteProgress?.stage === 'deleting'
+              ? `Deleting online records: ${cloudDeleteProgress.deleted} of ${cloudDeleteProgress.total}…`
+              : 'Checking your online records and permissions…'}
+          </p> : null}
+          <div className="settings-actions dn-cloud-delete-actions">
+            <button type="button" className="settings-secondary-button" onClick={closeCloudDelete} disabled={deletingCloudRecords}>Cancel</button>
+            <button type="button" className="dn-data-outlined-button is-danger is-confirm"
+              disabled={deletingCloudRecords || !cloudDeleteAcknowledged || cloudDeletePhrase !== CLOUD_DELETE_CONFIRMATION
+                || confirmCloudDeleteUid !== user?.uid || isGuest || Boolean(getActiveSampleScenario(confirmCloudDeleteUid))}
+              onClick={clearOnlineRecords}>
+              <CloudOff size={16} aria-hidden="true" /> {deletingCloudRecords ? 'Deleting online data…' : 'Permanently delete online data'}
             </button>
           </div>
         </ModalDialog>
