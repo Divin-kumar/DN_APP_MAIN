@@ -27,7 +27,7 @@ On 31 October 2026 the owner marked all 16 manual checklist items Checked on the
 
 ### Transactions stay scoped during account and Guest demo changes
 
-CHG-223 makes the Finance screen wait until **both** Income and Expense stores belong to the current account or current isolated Guest sample before showing cards and the compact Income/Expense/Balance totals. During a sample/account switch, the existing loading skeleton replaces stale values and any existing edit/delete draft is discarded. The source is queued for Firebase-only owner verification, **not yet deployed**. New unit and iPhone synthetic browser tests were authored but not executed.
+CHG-223 makes the Finance screen wait until **both** Income and Expense stores belong to the current account or current isolated Guest sample before showing cards and the compact Income/Expense/Balance totals. During a sample/account switch, the existing loading skeleton replaces stale values and any existing edit/delete draft is discarded. The source is queued for Firebase-only owner verification, **not yet deployed**. Exact-Git-blob offline Node checks passed **8/8** in `financialLoadScope.test.mjs`; three iPhone synthetic browser tests are authored but **not executed**, and no full build/CI was performed.
 
 ### Safe restore of Dashboard shortcuts from older backups
 
@@ -39,7 +39,7 @@ Monthly Moments dated on the 29th, 30th or 31st repeat on a short month's **last
 
 ### Firebase-only manual QA boundary
 
-The owner now relies on the permanent Firebase app for all future manual testing. The historical 16-item acceptance checkpoint on commit `a769030c` is retained, but new CHG-217–220 changes are not currently published to Firebase and are **not** approved by that checkpoint. No Vercel build or preview is needed to continue development. Exact-SHA unit, lint, build, E2E, offline, backup and upgrade checks must be run before an authorized Firebase batch release. CHG-220 keeps the overall Activities progress fraction based on all active Activities across Moments even when search or Refine shows only a subset of cards. The three newer filter-related browser tests use the actual default `High priority` Code List label.
+The owner now relies on the permanent Firebase app for all future manual testing. The historical 16-item acceptance checkpoint on commit `a769030c` is retained, but new CHG-217–223 changes are not currently published to Firebase and are **not** approved by that checkpoint. No Vercel build or preview is needed to continue development. Exact-SHA unit, lint, build, E2E, offline, backup and upgrade checks must be run before an authorized Firebase batch release. CHG-220 keeps the overall Activities progress fraction based on all active Activities across Moments even when search or Refine shows only a subset of cards. The three newer filter-related browser tests use the actual default `High priority` Code List label.
 
 ## Run locally
 
