@@ -93,7 +93,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.goto('/settings/code-lists');
   await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Diary');
+  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Daily · One Activity per day');
   // Loading old Guest records adds safe defaults and Diary consolidates
   // previous day entries. Preserve every historical title/ID rather than
   // comparing the byte-identical pre-hydration objects.
@@ -283,7 +283,7 @@ test('Tasks status controls persist, re-group, and confirm cancellation without 
     expect(retained, 'retained Diary entry: ' + original.id).toBeTruthy();
     if (retained.title !== original.title) {
       expect(retained.entries?.some((part) =>
-        part.title === original.title && part.description === original.description)).toBe(true);
+        part.title === original.title && String(part.description || '') === String(original.description || ''))).toBe(true);
     }
   }
   expect(errors).toEqual([]);
