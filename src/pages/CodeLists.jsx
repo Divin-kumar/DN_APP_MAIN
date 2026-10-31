@@ -486,7 +486,7 @@ function ListFilterPreferences({ domain }) {
     scoped.retry();
     if (isFinance) { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }
   };
-  return <div className="dn-code-list-filter-editor" aria-label={`${domain} filter preferences`}>
+  return <div className="dn-code-list-filter-editor" role="region" aria-label={`${domain} filters`}>
     {notSignedIn ? <p className="settings-helper">Sign in or continue as Guest to change your list filters.</p>
       : error ? <div role="alert" className="settings-helper">
         Your filter choices are saved, but records could not be loaded.
