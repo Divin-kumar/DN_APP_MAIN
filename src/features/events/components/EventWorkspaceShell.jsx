@@ -2,7 +2,7 @@ import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
 import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
-import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES } from '../../../utils/activityEntries';
+import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeJournalActivities, journalAppendCandidates } from '../../../utils/activityEntries';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
@@ -92,6 +92,9 @@ export function EventWorkspaceContent() {
   const [activityPriority, setActivityPriority] = useState('medium');
   const [activityCreationChoice, setActivityCreationChoice] = useState('new');
   const [activityAppendTarget, setActivityAppendTarget] = useState('');
+  const [journalMergeOpen, setJournalMergeOpen] = useState(false);
+  const [journalMergeTarget, setJournalMergeTarget] = useState('');
+  const [journalMergeSource, setJournalMergeSource] = useState('');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
   const { search: activitySearch, filter: activityFilter, field: activitySort, direction: activitySortDirection } = activityList;
   const setActivitySearch = (search) => changeActivityList({ search });
@@ -454,6 +457,13 @@ export function EventWorkspaceContent() {
             search={<DebouncedFilterInput scopeKey={activityConditions.editorKey} id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}>
             <ConditionBuilder filter={activityConditions} title="Moment Activity conditions" />
           </ListControls>
+          {getMomentEntryMode(event, momentTypes) === ENTRY_MODES.JOURNAL && journalAppendCandidates(event).length > 1
+            ? <div className="dn-journal-merge-bar">
+              <button type="button" className="settings-secondary-button" onClick={() => {
+                setJournalMergeTarget(''); setJournalMergeSource(''); setActivityError(''); setJournalMergeOpen(true);
+              }}>Merge Journal entries</button>
+              <span>Existing memories stay separate unless you choose to merge them.</span>
+            </div> : null}
           <ActivityList readOnly visualCards showMomentName={false}
             uid={user?.uid} isGuest={isGuest} sample={sample}
             getMoment={() => event}
@@ -578,6 +588,41 @@ export function EventWorkspaceContent() {
           <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
         </form>
       </ModalDialog> : null}
+      {journalMergeOpen ? (
+        <ModalDialog title="Merge Journal entries" className="event-activity-editor-modal"
+          onClose={() => { if (!activitySavingRef.current) setJournalMergeOpen(false); }}>
+          <form className="dn-journal-merge-form" aria-busy={activityBusy} onSubmit={(submitEvent) => {
+            submitEvent.preventDefault();
+            if (!journalMergeSource || !journalMergeTarget || journalMergeSource === journalMergeTarget) {
+              setActivityError('Choose two different Journal entries to merge.'); return;
+            }
+            runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) =>
+              mergeJournalActivities(latest, journalMergeTarget, journalMergeSource)), () => {
+                setJournalMergeOpen(false); showToast('Journal entries merged. Original links retained.', 'success');
+              }).catch(() => {});
+          }}>
+            <p className="dn-entry-mode-help">The destination keeps its identity and cover. The source becomes a timed, editable entry inside it. Linked photos and financial references remain traceable.</p>
+            {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
+            <label htmlFor="journal-merge-destination">Keep this memory</label>
+            <DropdownSelect id="journal-merge-destination" value={journalMergeTarget} disabled={activityBusy}
+              onChange={(e) => setJournalMergeTarget(e.target.value)}>
+              <option value="">Choose destination</option>
+              {journalAppendCandidates(event).map((item) => <option value={item.id} key={item.id}>{item.title || 'Untitled'} · {item.date || 'Undated'}</option>)}
+            </DropdownSelect>
+            <label htmlFor="journal-merge-source">Move this entry into it</label>
+            <DropdownSelect id="journal-merge-source" value={journalMergeSource} disabled={activityBusy}
+              onChange={(e) => setJournalMergeSource(e.target.value)}>
+              <option value="">Choose source</option>
+              {journalAppendCandidates(event).filter((item) => item.id !== journalMergeTarget)
+                .map((item) => <option value={item.id} key={item.id}>{item.title || 'Untitled'} · {item.date || 'Undated'}</option>)}
+            </DropdownSelect>
+            <div className="dialog-actions">
+              <button type="button" className="secondaryButton" onClick={() => setJournalMergeOpen(false)} disabled={activityBusy}>Cancel</button>
+              <button type="submit" className="primaryButton" disabled={activityBusy || !journalMergeSource || !journalMergeTarget || journalMergeSource === journalMergeTarget}>Merge entries</button>
+            </div>
+          </form>
+        </ModalDialog>
+      ) : null}
       {activityDialogOpen ? (
         <ModalDialog title={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
           <form aria-busy={activityBusy} onSubmit={addActivity} style={{ display: 'grid', gap: '12px' }}>
