@@ -5,7 +5,8 @@ import { listStateKey, listStateMemory } from './listStateMemory.js';
 import {
   LIST_DOMAINS, LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES,
   systemConditionGroup, configuredConditionGroup, matchesListDefaults,
-  resetSavedListDefaultsForScope,
+  resetSavedListDefaultsForScope, exportSavedListDefaultsForScope,
+  restoreSavedListDefaultsForScope, validateSavedListDefaultsDocument,
 } from './listViewDefaults.js';
 
 const priorityHigh = {
@@ -52,4 +53,61 @@ test('saved list preferences are isolated by account/Guest scope', () => {
   assert.notEqual(a, b);
   assert.notEqual(listStateKey('guest', 'moments'), a);
   assert.notEqual(listStateKey('guest', 'conditions:moments'), listStateKey('guest', 'conditions:defaults:moments'));
+});
+
+test('backup round-trip copies saved defaults, not active page filters, across scopes', () => {
+  const source = 'test:backup-source';
+  const destination = 'test:backup-destination';
+  const config = LIST_DOMAINS.activities;
+  const liveKey = listStateKey(source, 'activities');
+  listStateMemory.update(liveKey, config.defaults, config.rules, { search: 'do-not-backup', direction: 'desc' });
+  listStateMemory.update(listStateKey(source, 'defaults:activities'), config.defaults, config.rules, {
+    field: 'priority', direction: 'desc', search: 'my-saved-default',
+  });
+  listStateMemory.update(listStateKey(source, 'conditions:defaults:activities'),
+    LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES, { group: priorityHigh, migrationVersion: 1 });
+  const portable = exportSavedListDefaultsForScope(source);
+  assert.deepEqual(validateSavedListDefaultsDocument(portable), portable);
+  assert.equal(portable.activities.filters.search, 'my-saved-default');
+  assert.equal(portable.activities.filters.field, 'priority');
+  assert.equal(portable.activities.group.children[0].value, 'high');
+  assert.notEqual(portable.activities.filters.search, listStateMemory.read(liveKey, config.defaults, config.rules).search);
+
+  const destinationLive = listStateKey(destination, 'activities');
+  listStateMemory.update(destinationLive, config.defaults, config.rules, { search: 'keep-working' });
+  assert.equal(restoreSavedListDefaultsForScope(destination, JSON.parse(JSON.stringify(portable))), true);
+  assert.deepEqual(exportSavedListDefaultsForScope(destination), portable);
+  assert.equal(listStateMemory.read(destinationLive, config.defaults, config.rules).search, 'keep-working');
+});
+
+test('older v3 backups without the optional saved defaults preserve current Settings', () => {
+  const scope = 'test:backup-legacy';
+  const config = LIST_DOMAINS.moments;
+  listStateMemory.update(listStateKey(scope, 'defaults:moments'), config.defaults, config.rules,
+    { field: 'name', direction: 'desc' });
+  const before = exportSavedListDefaultsForScope(scope);
+  assert.equal(restoreSavedListDefaultsForScope(scope, undefined), false);
+  assert.deepEqual(exportSavedListDefaultsForScope(scope), before);
+});
+
+test('reject malformed saved defaults before any destination preference can change', () => {
+  const scope = 'test:backup-malformed';
+  const original = exportSavedListDefaultsForScope(scope);
+  const invalidSort = structuredClone(original);
+  invalidSort.transactions.filters.sort = 'not-a-valid-sort';
+  assert.throws(() => restoreSavedListDefaultsForScope(scope, invalidSort), /invalid value/);
+  const invalidRule = structuredClone(original);
+  invalidRule.activities.group.children.push({
+    id: 'bad', kind: 'rule', field: 'constructor', operator: 'eq', value: 'wrong',
+  });
+  assert.throws(() => restoreSavedListDefaultsForScope(scope, invalidRule), /invalid rules/);
+  const missing = structuredClone(original);
+  delete missing.moments;
+  assert.throws(() => restoreSavedListDefaultsForScope(scope, missing), /incomplete or invalid/);
+  assert.deepEqual(exportSavedListDefaultsForScope(scope), original);
+});
+
+test('a saved-default backup is not exported or restored without a workspace scope', () => {
+  assert.equal(exportSavedListDefaultsForScope('signed-out'), null);
+  assert.equal(restoreSavedListDefaultsForScope('signed-out', {}), false);
 });
