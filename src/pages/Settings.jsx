@@ -7,7 +7,7 @@ import './GuestTour.css';
 import './SettingsDataPremium.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldAlert, HardDrive, Cloud } from 'lucide-react';
+import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
@@ -808,7 +808,7 @@ export default function Settings() {
     <div className="settings-accordion-body dn-data-backup">
       <section className="dn-data-backup-block" aria-label="Backup and restore">
         <div className="dn-data-backup-head">
-          <span className="dn-data-backup-icon"><ShieldAlert size={18} aria-hidden="true" /></span>
+          <span className="dn-data-backup-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
           <div><strong>Protect your records</strong><p>Save a copy of your Moments, transactions, settings and available original photos before making changes.</p></div>
         </div>
         <div className="dn-data-action-grid">
