@@ -3424,3 +3424,12 @@ html[data-theme] .dn-settings-home :is(.settings-accordion-toggle,.settings-hub-
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-settings-home .settings-accordion-indicator svg { transition: none; }
 }
+
+/* Settings: saved list defaults are a distinct, direct destination. */
+html[data-theme] .dn-settings-home .dn-settings-list-defaults-link {
+  border-color:color-mix(in srgb,var(--color-primary) 25%,var(--color-border)) !important;
+  background:color-mix(in srgb,var(--color-primary) 3%,var(--color-card)) !important;
+}
+html[data-theme] .dn-settings-home .dn-settings-list-defaults-link:is(:hover,:focus-visible) {
+  border-color:color-mix(in srgb,var(--color-primary) 42%,var(--color-border)) !important;
+}
