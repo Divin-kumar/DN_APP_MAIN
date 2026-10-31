@@ -65,6 +65,7 @@ export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
+  const adminValuesOwner = useAppStore((state) => state.adminValuesOwner);
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
@@ -122,7 +123,7 @@ export default function DashboardLayout() {
   // Automatic, idempotent legacy Diary consolidation. Only after this scoped
   // account/Guest dataset is loaded. A failed write is not marked complete.
   useEffect(() => {
-    if (!activityMoments.length) return;
+    if (!activityMoments.length || adminValuesOwner !== (isGuest ? 'guest' : user?.uid)) return;
     const moment = activityMoments.find((item) => {
       if (getMomentEntryMode(item, adminValues.eventTypes) !== ENTRY_MODES.DAILY) return false;
       const key = JSON.stringify([eventScope, getActiveSampleScenario(user?.uid), momentId(item)]);
@@ -139,7 +140,7 @@ export default function DashboardLayout() {
         diaryMigrationAttempts.current.delete(key);
         if (records.isCurrent(context)) showToast(error?.message || 'Diary entries could not be consolidated.', 'danger');
       });
-  }, [activityMoments, adminValues.eventTypes, eventScope, user?.uid, showToast]);
+  }, [activityMoments, adminValues.eventTypes, adminValuesOwner, eventScope, user?.uid, isGuest, showToast]);
 
   // Apply the saved theme to the page root so colors change across the whole app.
   useLayoutEffect(() => {
