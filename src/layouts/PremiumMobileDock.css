@@ -249,11 +249,10 @@
   }
 }
 
-/* CHG-225: Mobile Safari may keep :hover after a tap, even when
-   the quick-create menu closes. Always render the same premium resting
-   fill for pointer-hover/touch-focus; only the icon and menu indicate state.
-   Keyboard :focus-visible retains its distinct accessible focus ring. */
-@media (hover: none) and (pointer: coarse) {
+/* Narrow mouse viewports must retain the same premium + gradient as touch
+   Safari: generic :hover styles otherwise replace it with a flat fill after
+   the menu closes. Keep visible keyboard focus and the original icon/menu. */
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center .mobile-dock-create-trigger:is(:hover, :focus:not(:focus-visible)),
   html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center.is-open .mobile-dock-create-trigger {
     background: linear-gradient(145deg,
