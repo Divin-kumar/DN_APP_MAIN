@@ -1,0 +1,284 @@
+/* DN 2.1 CHG-232 | Unified iPhone-first refinement layer.
+   Loaded after design-system.css. Respect old feature layout contracts:
+   five-slot navigation, photo-led Moments, one-line filters, nested finance
+   scrolling, modal keyboard safety, and all touch swipe actions. */
+
+/* One documented semantic scale rather than extra scattered arbitrary values.
+   Existing feature components may retain larger local sizes intentionally. */
+html[data-theme] {
+  --dn-type-overline: 11.5px;
+  --dn-type-caption: 12.5px;
+  --dn-type-support: 13px;
+  --dn-type-control: 14px;
+  --dn-type-content: 15px;
+  --dn-type-section: 18px;
+  --dn-interactive-min: 44px;
+  --dn-focus-ring: 2px solid var(--color-primary);
+  --dn-quiet-outline: color-mix(in srgb, var(--color-text) 9%, var(--color-border));
+  --dn-premium-radius: 16px;
+  accent-color: var(--color-primary);
+}
+
+/* Section headings maintain a common hierarchy without replacing the
+   photo-card hero headings or forcing extra whitespace into compact screens. */
+html[data-theme] :is(
+  .settings-section-heading h3,
+  .dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3,
+  .dn-premium-about > .settings-section > .settings-section-heading h3,
+  .dn-data-page .dn-data-guide-heading h3
+) {
+  font-size: clamp(16px, 1.05rem, 18px) !important;
+  font-weight: 750;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+  text-wrap: pretty;
+}
+html[data-theme] :is(
+  .life-timeline-heading h2,
+  .transactions-heading h2,
+  .activity-detail-heading h1,
+  .insights-heading h2
+) {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+}
+
+/* Supporting information is readable while keeping the cards lightweight.
+   Semantic colors are inherited from each theme, never fixed to light mode. */
+html[data-theme] .event-activity-content .event-activity-context,
+html[data-theme] .event-activity-content .event-activity-context > span:last-child,
+html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-details span,
+html[data-theme] .dn-transactions-page .dn-v2-transaction-card .dn-transaction-meta {
+  font-size: var(--dn-type-caption) !important;
+  line-height: 1.45;
+  color: var(--color-text-muted);
+}
+html[data-theme] .dashboard-compact .dashboard-section-actions :is(
+  .dashboard-section-toggle, .dashboard-date-views button
+) {
+  font-size: var(--dn-type-caption);
+}
+html[data-theme] :is(
+  .dn-discovery-empty p,
+  .dn-transactions-page .dn-transactions-empty-premium > p
+) {
+  font-size: var(--dn-type-support);
+  line-height: 1.55;
+}
+html[data-theme] :is(
+  .dn-discovery-empty .dn-discovery-empty-reset,
+  .dn-transactions-page .dn-transactions-empty-reset
+) {
+  min-height: var(--dn-interactive-min);
+  font-size: var(--dn-type-support);
+}
+
+/* Refine is shared across Moments, Activities and Transactions. Preserve
+   its left field / right direction-and-reset single row. */
+html[data-theme] .dn-list-controls :is(.dn-list-controls-context, .dn-list-controls-summary) {
+  font-size: var(--dn-type-caption) !important;
+  line-height: 1.45;
+}
+html[data-theme] .dn-list-controls-panel .dn-list-controls-field > :is(label, span) {
+  font-size: var(--dn-type-caption);
+}
+html[data-theme] .dn-list-controls-panel :is(
+  .dn-list-controls-reset, .dn-sort-direction
+) {
+  min-height: var(--dn-interactive-min);
+  font-size: 12px !important;
+}
+html[data-theme] .dn-conditions :is(
+  .dn-condition-count, .dn-condition-group-note, .dn-condition-empty
+) {
+  font-size: var(--dn-type-caption);
+  line-height: 1.45;
+}
+html[data-theme] .dn-conditions .dn-condition-selected-values button {
+  min-height: 40px;
+  font-size: var(--dn-type-caption);
+}
+html[data-theme] .dn-conditions :is(
+  .dn-condition-chip-remove, .dn-condition-icon,
+  .dn-conditions-actions > button
+) {
+  min-height: var(--dn-interactive-min);
+}
+
+/* Clear text and actions in the separate settings destinations. */
+html[data-theme] .dn-data-page :is(
+  .dn-data-backup-head p, .dn-data-clear-option p,
+  .dn-data-page-intro-copy p, .dn-data-location-item p,
+  .dn-data-recovery-guide ol, .dn-data-guide-heading p
+) {
+  font-size: var(--dn-type-support) !important;
+  line-height: 1.55;
+}
+html[data-theme] .dn-data-page :is(
+  .dn-data-clear-label, .dn-data-action-button,
+  .dn-data-outlined-button, .dn-data-page-jumps a,
+  .dn-data-recovery-guide summary, .dn-data-location-item strong
+) {
+  font-size: var(--dn-type-support) !important;
+}
+html[data-theme] .dn-data-page :is(
+  .dn-data-page-jumps a, .dn-data-action-button, .dn-data-outlined-button,
+  .dn-data-recovery-guide summary, .settings-back-button
+) {
+  min-height: var(--dn-interactive-min);
+}
+html[data-theme] .dn-premium-code-lists :is(
+  .dn-code-list-index-label, .dn-defaults-kicker,
+  .dn-defaults-sort-label small, .dn-defaults-saved,
+  .dn-defaults-filter-footer p
+) {
+  font-size: var(--dn-type-caption);
+  line-height: 1.45;
+}
+html[data-theme] .dn-premium-about :is(
+  .about-summary-label, .settings-subpage-eyebrow,
+  .settings-section-heading p
+) {
+  font-size: var(--dn-type-caption);
+  line-height: 1.45;
+}
+
+/* PDF editing remains narrow and preview-first; raise action targets
+   and supporting labels instead of enlarging whole preview cards. */
+html[data-theme] .dn-pdf-studio-page :is(
+  .dn-pdf-studio-intro p, .dn-pdf-studio-toggle small,
+  .dn-pdf-studio-preview-head small, .dn-pdf-studio-footer small,
+  .dn-pdf-studio-stale, .dn-pdf-studio-error
+) {
+  font-size: var(--dn-type-caption);
+  line-height: 1.45;
+}
+html[data-theme] .dn-pdf-studio-page :is(
+  .dn-pdf-page-nav button, .dn-pdf-update-button,
+  .dn-pdf-studio-footer button
+) {
+  min-width: var(--dn-interactive-min);
+  min-height: var(--dn-interactive-min);
+}
+
+/* Activity detail, dialog and editor controls are consistently operable.
+   Keep editable text at 16px on touch devices to prevent Safari input zoom. */
+html[data-theme] .activity-detail-page :is(
+  .activity-pagination button, .dn-record-menu-trigger
+) {
+  min-width: var(--dn-interactive-min);
+  min-height: var(--dn-interactive-min);
+}
+html[data-theme] .dn-modal :is(
+  .modal-close-button, .modal-action-button,
+  .form-actions button, .settings-actions button
+) {
+  min-height: var(--dn-interactive-min);
+}
+html[data-theme] :is(.dn-modal, .dn-data-page, .dn-premium-code-lists) :is(
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="hidden"]),
+  textarea, select, [contenteditable="true"]
+) {
+  min-height: var(--dn-interactive-min);
+}
+
+/* Moment workspace navigation is a genuine horizontal navigation row,
+   not a miniature-label toolbar. Keep the user's three-metric hero intact. */
+html[data-theme] .dn-moment-nav .event-workspace-nav-item {
+  font-size: var(--dn-type-caption) !important;
+}
+html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line .dn-moment-metric small {
+  font-size: 11.5px !important;
+}
+
+/* Keyboard and switch-control affordances must survive blur and glass.
+   Touch should never have the persistent desktop hover shadow. */
+html[data-theme] :is(
+  .dn-premium-dock, .dn-data-page, .dn-premium-about, .dn-premium-code-lists,
+  .dn-list-controls, .dn-pdf-studio-page, .activity-detail-page
+) :is(a,button,input,select,textarea,[role="button"],summary):focus-visible {
+  outline: var(--dn-focus-ring) !important;
+  outline-offset: 2px;
+}
+@media (hover: none) and (pointer: coarse) {
+  html[data-theme] .dashboard-compact .dashboard-section-actions :is(
+    button:hover, button:focus:not(:focus-visible)
+  ) {
+    box-shadow: none;
+  }
+  html[data-theme] .dn-premium-code-lists .code-list-row:hover:not(:focus-visible) {
+    transform: none;
+  }
+}
+@media (max-width: 760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] :is(
+    .dn-modal, .dn-data-page, .dn-premium-code-lists,
+    .activity-detail-page, .dn-pdf-studio-page
+  ) :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]), textarea, select, [contenteditable="true"]) {
+    font-size: 16px !important;
+  }
+  html[data-theme] .dn-moment-nav .event-workspace-nav-item {
+    font-size: 12px !important;
+    min-height: 46px;
+  }
+}
+/* With enlarged OS text or user zoom, prefer reflow over a clipped action
+   row; keep the 320px layout and the transaction's list scroller intact. */
+@media (max-width: 360px) {
+  html[data-theme] .dn-data-page .dn-data-action-grid {
+    grid-template-columns: minmax(0,1fr);
+  }
+  html[data-theme] .dn-data-page :is(
+    .dn-data-account-chip, .dn-data-location-item p,
+    .dn-data-clear-option > div
+  ) {
+    min-width: 0;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric strong {
+    font-size: 13px !important;
+  }
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric small {
+    font-size: 11px !important;
+  }
+}
+@media (prefers-contrast: more) {
+  html[data-theme] :is(
+    .dn-data-backup-block, .dn-data-page-guide, .dn-v2-moment-card,
+    .dn-v2-activity-card, .dn-v2-transaction-card, .dn-list-controls-panel
+  ) {
+    border-color: var(--color-text-muted) !important;
+  }
+  html[data-theme] :is(.dn-list-controls-context,.dn-list-controls-summary,
+    .dn-data-location-item p,.dn-data-recovery-guide ol) {
+    color: var(--color-text) !important;
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme] :is(
+    .dn-header, .mobile-tabbar.dn-premium-dock,
+    .dn-dock-action-menu, .dn-data-page-intro
+  ) {
+    background: var(--color-card) !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+}
+@media (forced-colors:active) {
+  html[data-theme] :is(
+    .dn-data-backup-block, .dn-list-controls-panel, .dn-v2-moment-card,
+    .dn-v2-activity-card, .dn-v2-transaction-card
+  ) {
+    border:1px solid CanvasText !important;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-theme] :is(
+    .dn-pdf-studio-page, .dn-premium-about, .dn-premium-code-lists,
+    .dn-data-page, .dn-list-controls, .event-workspace-nav
+  ) :is(button,a,summary) {
+    transition:none !important;
+    scroll-behavior:auto;
+  }
+}
