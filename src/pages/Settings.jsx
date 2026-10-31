@@ -961,7 +961,7 @@ export default function Settings({ dataBackupOnly = false }) {
   if (dataBackupOnly) {
     const signedIn = Boolean(user?.uid && !isGuest && !getActiveSampleScenario(user.uid));
     return (
-      <main className="settings-page feature-page dn-settings-home dn-data-page">
+      <div className="settings-page feature-page dn-settings-home dn-data-page">
         <header className="settings-subpage-header dn-data-page-header">
           <Link className="settings-back-button" to="/settings" aria-label="Back to Settings">
             <ArrowLeft size={17} aria-hidden="true" />
@@ -1025,7 +1025,7 @@ export default function Settings({ dataBackupOnly = false }) {
           </details>
         </section>
         {dataDialogs}
-      </main>
+      </div>
     );
   }
 
