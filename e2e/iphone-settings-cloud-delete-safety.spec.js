@@ -8,12 +8,12 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     test(`Data & Backup clearly separates local and cloud scope at ${width}px ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
+      await page.goto('/settings/data-backup'); // Read only after the app origin loads.
       const before = await page.evaluate(() => [
         localStorage.getItem('dn_guest_eventGroups'),
         localStorage.getItem('dn_guest_incomes'),
         localStorage.getItem('dn_guest_expenses'),
       ]);
-      await page.goto('/settings/data-backup');
       const controls = page.locator('.dn-data-backup');
       await expect(controls).toBeVisible();
       await expect(controls.getByRole('button', { name: 'Export backup' })).toBeVisible();
