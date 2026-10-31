@@ -102,6 +102,19 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <RichText value={activity.description} headingLevel={3} className="activity-description" />
       </section> : null}
       <ActivityEntryTimeline activity={activity} actions={actions} target={target} />
+      {Array.isArray(activity.linkedJournalActivityIds) && moment.activities.some((item) =>
+        activity.linkedJournalActivityIds.some((id) => recordId(id) === recordId(item.id))) ? (
+        <section className="activity-detail-section dn-linked-journal-memories" aria-label="Linked Journal memories">
+          <h2>Related Journal memories</h2>
+          <div className="dn-linked-journal-list">
+            {moment.activities.filter((item) => activity.linkedJournalActivityIds.some((id) =>
+              recordId(id) === recordId(item.id)) && recordId(item.id) !== recordId(activity.id))
+              .map((item) => <Link key={recordId(item.id)} to={activityDetailPath(eventId, recordId(item.id))}>
+                {item.title || 'Untitled memory'} <ChevronRight size={16} aria-hidden="true" />
+              </Link>)}
+          </div>
+        </section>
+      ) : null}
       <LinkedTransactions eventId={eventId} activityId={activityId} minimal />
       <section className="activity-detail-section"><ActivityAttachments moment={moment} activityId={activityId} uid={scoped.uid} isGuest={scoped.isGuest} /></section>
       {navigation.index >= 0 && navigation.ids.length > 1 ? <nav className="activity-pagination" aria-label="Activity navigation">

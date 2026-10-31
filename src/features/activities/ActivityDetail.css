@@ -178,3 +178,12 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
 .activity-detail-page .activity-detail-heading { display:grid; grid-template-columns:minmax(0,1fr); width:100%; min-width:0; max-width:100%; }
 .activity-detail-page .activity-parent-context { box-sizing:border-box; width:100%; max-width:100%; min-width:0; overflow:hidden; }
 .activity-detail-page .activity-parent-context-link { flex:1 1 0%; min-width:0; max-width:100%; overflow:hidden; }
+
+.dn-linked-journal-memories { display:grid; gap:8px; }
+.dn-linked-journal-memories h2 { margin:0; font-size:14px; }
+.dn-linked-journal-list { display:grid; gap:6px; }
+.dn-linked-journal-list a { display:flex; align-items:center; justify-content:space-between;
+  min-height:44px; padding:8px 12px; border:1px solid var(--color-border);
+  border-radius:12px; color:var(--color-text); background:var(--color-card);
+  text-decoration:none; font-size:13px; font-weight:600; overflow-wrap:anywhere; }
+.dn-linked-journal-list a:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
