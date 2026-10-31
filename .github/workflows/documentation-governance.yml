@@ -29,11 +29,18 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Test Activity and Moment browser journeys
         run: npm run test:e2e
+      # Keep independent release evidence visible even when a browser journey
+      # fails; every failing step still makes this CI job red.
       - name: Build production application
+        id: production_build
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run build
       - name: Verify built shell, offline originals and PDF export
+        if: ${{ !cancelled() && steps.production_build.outcome == 'success' }}
         run: npm run test:production
       - name: Build the reviewed pre-release upgrade fixture
+        id: upgrade_fixture
+        if: ${{ !cancelled() && steps.production_build.outcome == 'success' }}
         env:
           DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
         run: |
@@ -43,6 +50,7 @@ jobs:
           ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
           npm --prefix .verification/phase9/previous run build
       - name: Verify the release update preserves records, preferences and originals
+        if: ${{ !cancelled() && steps.upgrade_fixture.outcome == 'success' }}
         run: npm run test:upgrade
       - name: Check dependency advisories (blocking)
         if: ${{ always() && steps.install.outcome == 'success' }}
