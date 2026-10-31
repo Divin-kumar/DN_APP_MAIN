@@ -268,7 +268,9 @@ export default function Settings() {
         preferences,
         settings: {
           themeChoiceEnabled: Boolean(localStorage.getItem('dn_theme_choice')),
-          listViewDefaults: exportSavedListDefaultsForScope(listStateScope(useAppStore.getState())),
+          ...(sourceUid || sourceGuest ? {
+            listViewDefaults: exportSavedListDefaultsForScope(listStateScope(useAppStore.getState())),
+          } : {}),
         },
         dashboardConfiguration: {
           favorites: readIdList(`dn_favorite_event_ids_${pickerStorageId}`),
@@ -741,7 +743,7 @@ export default function Settings() {
       <div className="settings-admin-grid">
         <div className="settings-input-block">
           <span>Local backup</span>
-          <p className="settings-helper">Export app settings, records and available original attachments to one JSON file. DN has no fixed backup size cap; available browser memory and storage still apply. Restore adds missing records to the active Guest or signed-in account and preserves existing records with matching IDs.</p>
+          <p className="settings-helper">Export records, available original attachments, Code Lists and saved List defaults to one JSON file. DN has no fixed backup size cap; available browser memory and storage still apply. Restore adds missing records to the active Guest or signed-in account, preserves existing record IDs, and restores saved list defaults when the backup includes them. Your current page filters remain separate.</p>
         </div>
       </div>
 
@@ -888,7 +890,7 @@ export default function Settings() {
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
                   <li>Code Lists, preferences, dashboard configuration, and saved List defaults (when present)</li>
                 </ul>
-                <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration from the backup replaces the destination configuration. An interrupted restore can be retried; completed records are recognized by ID.</p>
+                <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration in the backup replaces its matching destination settings. Older backups without saved List defaults leave your current List defaults unchanged. An interrupted restore can be retried; completed records are recognized by ID.</p>
                 <p>Original files in this backup are integrity-checked and stored before record writes. Older attachment records without a stored original remain metadata only.</p>
                 {pendingBackup.referenceWarnings.length ? (
                   <div role="alert"><strong>Relationship warnings</strong><ul>{pendingBackup.referenceWarnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>
