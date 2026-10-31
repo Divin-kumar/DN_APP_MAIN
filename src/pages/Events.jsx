@@ -2,6 +2,9 @@ import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
 import ActivityTimeField from '../components/common/ActivityTimeField';
+import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
+import { createOrAppendActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
+import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
   Moments listing, saved filters and scoped create/edit actions.
@@ -175,6 +178,8 @@ export default function Events() {
   const [activityDate, setActivityDate] = useState(formatMomentDate(new Date()));
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityPriority, setActivityPriority] = useState('medium');
+  const [activityCreationChoice, setActivityCreationChoice] = useState('new');
+  const [activityAppendTarget, setActivityAppendTarget] = useState('');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const settingsDefaults = useListViewDefaults('moments');
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', settingsDefaults.filters, momentFilterRules);
@@ -248,30 +253,31 @@ export default function Events() {
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
+    setActivityCreationChoice('new');
+    setActivityAppendTarget('');
   };
 
   const saveActivityFromChooser = async (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityChooserEvent || !activityTitle.trim()) return;
     const eventId = activityChooserEvent.id || activityChooserEvent.firestoreId;
-    const activity = {
-      id: crypto.randomUUID(),
-      eventId,
-      title: activityTitle.trim(),
-      description: activityDescription,
-      date: activityDate, time: activityTime,
-      priority: activityPriority,
-      completed: false,
-      completedAt: null,
-      createdAt: new Date().toISOString(),
-    };
+    const mode = getMomentEntryMode(activityChooserEvent, adminValues.eventTypes);
+    if (mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' && !activityAppendTarget) {
+      showToast('Choose the Journal entry to append to.', 'danger'); return;
+    }
+    const context = records.capture();
     try {
-      await updateEventItem(user?.uid, isGuest, { ...activityChooserEvent, activities: [...(activityChooserEvent.activities || []), activity] });
+      await records.mutateMoment(context, eventId, (latest) =>
+        createOrAppendActivity(latest, { title: activityTitle, description: activityDescription,
+          date: activityDate, time: activityTime, priority: activityPriority, mode,
+          targetId: mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' ? activityAppendTarget : '',
+        }).moment);
+      if (!records.isCurrent(context)) return;
       setActivityChooserEvent(null);
-      showToast('Activity saved', 'success');
+      showToast('Entry saved', 'success');
       navigate(`/events/${eventId}/activities`);
-    } catch {
-      showToast('Could not save this activity. Please try again.', 'error');
+    } catch (error) {
+      showToast(error?.message || 'Could not save this entry. Please try again.', 'danger');
     }
   };
 
@@ -414,10 +420,12 @@ export default function Events() {
         </ModalDialog>
       ) : null}
       {activityChooserEvent ? (
-        <ModalDialog title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
+        <ModalDialog title={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Add an activity' : 'Add entry'} onClose={() => setActivityChooserEvent(null)}>
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
-            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder="Activity title" aria-label="Activity title" autoFocus={typeof window !== "undefined" && window.innerWidth > 760} required />
+            <ActivityEntryModeFields moment={activityChooserEvent} momentTypes={adminValues.eventTypes} date={activityDate}
+              choice={activityCreationChoice} targetId={activityAppendTarget} onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} />
+            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'} aria-label="Activity title" autoFocus={typeof window !== "undefined" && window.innerWidth > 760} required />
             <div className="activity-date-time-row">
               <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
               <ActivityTimeField value={activityTime} onChange={setActivityTime} />
@@ -428,7 +436,7 @@ export default function Events() {
               ))}
             </DropdownSelect>
             <RichTextEditor label="Activity description" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" />
-            <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
+            <div className="form-actions"><button className="primaryButton" type="submit">{getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
       ) : null}
