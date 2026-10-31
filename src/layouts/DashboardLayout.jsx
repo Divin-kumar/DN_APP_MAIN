@@ -11,7 +11,7 @@ import ActivityTimeField from '../components/common/ActivityTimeField';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Activity, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
+import { Activity, ArrowLeft, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -27,7 +27,7 @@ import useTransactionManager from '../hooks/useTransactionManager';
 import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
-import { getMomentWorkspaceKey, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from '../utils/momentWorkspaceRoutes';
+import { getMomentWorkspaceKey, getRouteTransitionKey, getShellPageTitle, isSameMomentWorkspace, primaryNavigationPath, shellSettingsBackPath } from '../utils/momentWorkspaceRoutes';
 import { recordId } from '../utils/recordIdentity';
 import { financialDate } from '../utils/financialRecords';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
@@ -108,6 +108,8 @@ export default function DashboardLayout() {
   const activityDetailMatch = useMatch('/events/:eventId/activities/:activityId');
   const workspaceKey = getMomentWorkspaceKey(location.pathname);
   const workspaceMoment = workspaceKey ? activityMoments.find((moment) => workspaceKey === `/events/${encodeURIComponent(momentId(moment))}`) : null;
+  const shellTitle = getShellPageTitle(location.pathname, { momentTitle: workspaceMoment?.name });
+  const shellBackPath = shellSettingsBackPath(location.pathname);
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
 
@@ -411,9 +413,11 @@ export default function DashboardLayout() {
           >
             ☰
           </button>
-          <div className="brand-lockup" aria-label="DN · Personal Experience">
-            <span className="brand-mark" aria-hidden="true">DN</span>
-            <span className="brand-lockup-title">Personal Experience</span>
+          <div className="brand-lockup dn-route-brand">
+            {shellBackPath ? <Link className="dn-shell-back" to={shellBackPath} aria-label="Back to Settings" title="Back to Settings">
+              <ArrowLeft size={19} strokeWidth={1.9} aria-hidden="true" />
+            </Link> : <span className="brand-mark" aria-hidden="true">DN</span>}
+            <h1 className="brand-lockup-title dn-shell-page-title" title={shellTitle}>{shellTitle}</h1>
           </div>
         </div>
 
