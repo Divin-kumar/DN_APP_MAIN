@@ -253,7 +253,7 @@ export function EventWorkspaceContent() {
     return result ? (activitySortDirection === 'desc' ? -result : result) : dateOrder;
   });
   const filteredActivities = activities.filter((activity) => {
-    const matchesSearch = [activity.title, activity.description].some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase()));
+    const matchesSearch = [activity.title, activity.description, ...(activity.entries || []).flatMap((part) => [part.title, part.description])].some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase()));
     return matchesSearch && activityConditions.matches(activityConditionRecord(activity));
   });
   const totalSpent = finance.summary.expense;
