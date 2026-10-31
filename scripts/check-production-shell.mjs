@@ -26,7 +26,10 @@ try {
   const page = await context.newPage();
   const errors = await seedGuest(page);
   await page.goto('/events/moment-one/gallery');
-  await expect(page.locator('h1')).toContainText('Weekend in Ooty');
+  // The opened Moment's hero is the single page-level heading; the compact
+  // shared route label is a styled span, not a duplicate h1.
+  await expect(page.locator('h1')).toHaveCount(1);
+  await expect(page.locator('.dn-moment-hero-swipe h1')).toContainText('Weekend in Ooty');
   await page.waitForFunction(() => navigator.serviceWorker.controller);
   const manifest = await page.evaluate(async () => (await fetch('/manifest.webmanifest')).json());
   await page.getByRole('button', { name:'Open quick create menu', exact:true }).click();
