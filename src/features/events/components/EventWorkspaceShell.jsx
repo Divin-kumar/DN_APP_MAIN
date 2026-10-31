@@ -593,7 +593,7 @@ export function EventWorkspaceContent() {
       {notesDialogOpen ? (
         <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
           <form onSubmit={saveNotes} style={{ display: 'grid', gap: '12px' }}>
-            <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this event?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
+            <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
               <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
