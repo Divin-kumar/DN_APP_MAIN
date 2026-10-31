@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.30.3';
+export const GUEST_TOUR_VERSION = '2026.10.31.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Save photographs, stories and moments together. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. Save photographs, stories and moments together. Open any Journal Activity Detail, then use + → Activity to add another page to this same Moment, already selected. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
@@ -300,7 +300,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: d, name: 'Explore DN · This month in words', type: 'Diary', date: diaryDay(1),
-    notes: 'One Moment per month. Write as much as you want: pictures are optional, and the Diary PDF is for reading.',
+    notes: 'One Moment per month. Write as much as you want: pictures are optional, and the Diary PDF is for reading. From a Diary Activity Detail, + → Activity automatically selects this month and appends a new dated Diary entry.',
     attachments: [], memories: [], activities: [
       activity('d1', d, 'A quiet Monday', -6, 'Today I noticed how much better my mornings feel with a slower start. Three things I am grateful for, and one idea I want to follow.'),
       activity('d2', d, 'What I learned', -3, 'Listening changed a difficult conversation. This is the sort of detail I would otherwise forget.'),
@@ -308,7 +308,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: t, name: 'Explore DN · Home project', type: 'Project', date: date(-4),
-    notes: 'Try changing a task status. In progress comes first, then Completed, then Cancelled. Dates sort within each group. In Transactions, filter by Cash or Online and watch Income, Expense and Balance follow the matching rows. Add your own payment choices in Settings → Code Lists → Payment Methods.',
+    notes: 'Try changing a task status. From any task Detail, + → Activity starts another step in this same project, without reselecting its Moment. In progress comes first, then Completed, then Cancelled. Dates sort within each group. In Transactions, filter by Cash or Online and watch Income, Expense and Balance follow the matching rows. Add your own payment choices in Settings → Code Lists → Payment Methods.',
     attachments: [], memories: [{ id: 'dn-tour-memory-2', title: 'The original plan', body: 'Older notes remain readable reflections.' }],
     activities: [
       activity('t1', t, 'Choose a paint colour', -4, 'Compare two options.', 'completed'),
