@@ -49,6 +49,9 @@ const openSettings = async (t, initialStorage) => {
           if (source === 'react') return '\0guest-restore-react';
           if (['react/jsx-runtime', 'react/jsx-dev-runtime'].includes(source)) return '\0guest-restore-jsx';
           if (source === 'react-router-dom') return '\0guest-restore-router';
+          if (source === 'firebase/auth') return '\0guest-restore-auth';
+          if (source === '../firebase/config') return '\0guest-restore-db';
+          if (source === '../services/accountCloudDeletionService') return '\0guest-restore-cloud-delete';
           if (source === 'lucide-react') return '\0guest-restore-icons';
           if (source.startsWith('../components/common/')) return '\0guest-restore-component';
           if (source === '../store/useAppStore') return '\0guest-restore-app';
@@ -65,13 +68,15 @@ const openSettings = async (t, initialStorage) => {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
         if (id === '\0guest-restore-react') return `export const useState = ${fixture}.state; export const useRef = (initial) => useState(() => ({current: initial}))[0]; export const useMemo = (fn) => fn(); export const useEffect = () => {};`;
         if (id === '\0guest-restore-jsx') return 'export const jsx = (type, props) => ({type, props}); export const jsxs = jsx; export const jsxDEV = jsx; export const Fragment = "fragment";';
-        if (id === '\0guest-restore-router') return 'export const Link = "link"; export const useLocation = () => ({hash: ""});';
-        if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", RotateCcw="icon", Plus="icon", ArrowRight="icon", RefreshCw="icon";';
+        if (id === '\0guest-restore-router') return 'export const Link = "link", Navigate = "navigate"; export const useLocation = () => ({hash: ""});';
+        if (id === '\0guest-restore-icons') return 'export const UserCircle="icon", Settings2="icon", Database="icon", Download="icon", Upload="icon", Trash2="icon", Bell="icon", Clock3="icon", Info="icon", ChevronRight="icon", ChevronDown="icon", RotateCcw="icon", Plus="icon", ArrowRight="icon", RefreshCw="icon", SlidersHorizontal="icon", CloudOff="icon", ShieldCheck="icon", HardDrive="icon", Cloud="icon", ArrowLeft="icon", FileJson="icon", LockKeyhole="icon", BookOpen="icon";';
         if (id === '\0guest-restore-component') return 'export default "component";';
         if (id === '\0guest-restore-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0guest-restore-store') return 'const useStore = () => ({}); useStore.getState = useStore; export default useStore;';
         if (id === '\0guest-restore-attachments') return `export const restoreAttachmentFiles=(...args)=>${fixture}.restoreOriginals(...args); export const exportAttachmentFiles=()=>{throw new Error("Unexpected attachment export");};`;
-        if (id === '\0guest-restore-db') return 'export const db = {};';
+        if (id === '\0guest-restore-db') return 'export const db = {}, auth = {};';
+        if (id === '\0guest-restore-auth') return 'export const signOut = async () => {};';
+        if (id === '\0guest-restore-cloud-delete') return 'export const deleteSignedInCloudRecords = async () => { throw new Error("Cloud delete must not run in Guest restore tests"); };';
         if (id === '\0guest-restore-firestore') return `export const addDoc=${fixture}.cloud, collection=${fixture}.cloud, deleteDoc=${fixture}.cloud, doc=${fixture}.cloud, getDocs=${fixture}.cloud, updateDoc=${fixture}.cloud, writeBatch=${fixture}.cloud;`;
         return null;
       },
