@@ -105,12 +105,7 @@ export default function TransactionHistory({
   const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
   const resetAllFilters = () => onResetDefaults?.();
   return (
-    <section className="transactions-panel dn-transactions-page" aria-labelledby="dn-transactions-heading">
-      <header className="transactions-heading">
-        <div className="dn-transactions-heading-copy">
-          <h2 id="dn-transactions-heading">Transactions</h2>
-        </div>
-      </header>
+    <section className="transactions-panel dn-transactions-page" aria-label="Transactions">
       <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
         resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}
         sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
