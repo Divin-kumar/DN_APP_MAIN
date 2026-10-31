@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-225 | Fix sticky universal + color on iPhone without touching Batch 1
+- **Owner report:** Screenshot from the freshly implemented Firebase iPhone navigation shows the centered + changes color after tapping and does not return until a tap elsewhere. Preserve the accepted five-position dock design.
+- **Source diagnosis:** Mobile Safari may retain `:hover` following touch. The shared quick-create handler also unconditionally focused the + button after a menu action, leaving touch focus where keyboard focus was intended. Both can prolong an apparent pressed/selected style after menu transitions.
+- **Implementation:** Scoped touch-only CSS in `src/layouts/PremiumMobileDock.css` forces the original gradient, white glyph, border and shadow under hovered/focused/open touch states, leaving keyboard `:focus-visible` intact. In `src/layouts/DashboardLayout.jsx`, touch toggles blur the + while keyboard toggles retain focus. Menu actions pass their click event to `beginQuickCreate` and restore focus to + only for keyboard activation (`event.detail === 0`). Escape still returns focus to +. No changes to create forms, callbacks, menus, business records, or dock geometry.
+- **New tests:** Two synthetic iPhone touch cases compare computed style across repeat taps, menu action/cancel and outside tap in light/dark, and one keyboard test verifies Escape focus return. Files are source-verified **but not executed**. Physical iPhone Safari and full CI/build remain unverified.
+- **Release isolation:** Owner actively implementing/testing Batch 1 CHG-213–224 from frozen `OldVersion` SHA `57a497e75356dcca64517efbe4790935463f4b61`. CHG-225 begins **Batch 2** on new `DN-2.1-batch2` branch based on that exact SHA. **No edits to OldVersion/main, no version bump, merge or Firebase release.** Batch 2 code will not appear in the currently tested Firebase release.
+
 ## CHG-20261031-224 | Premium five-slot iPhone bottom dock with centered universal +
 - **Owner direction:** Bottom navigation must contain Dashboard, Activities, Moments, Transactions and universal `+`, with a premium iPhone visual design and preferably a centered `+`. Keep ongoing work on `OldVersion` and in the deferred Firebase-only batch.
 - **Before:** Bottom dock contained Home, Activities and Moments, followed by + at the right. Global four-column CSS declarations conflicted across legacy and design-system layers; Transactions had no dock destination and no active route state.
