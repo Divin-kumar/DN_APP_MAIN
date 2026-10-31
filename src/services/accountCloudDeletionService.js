@@ -1,4 +1,4 @@
-import { collection, getDocsFromServer, writeBatch } from 'firebase/firestore';
+import { collection, doc, getDocFromServer, getDocsFromServer, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
 import useAppStore from '../store/useAppStore';
 import { getActiveSampleScenario } from '../dev/sampleData';
@@ -17,8 +17,15 @@ export const deleteSignedInCloudRecords = async (uid, onProgress) => {
   assertCurrent();
   return executeCloudRecordDeletion({
     uid, assertCurrent, onProgress,
-    listCollection: async (name, owner) =>
-      (await getDocsFromServer(collection(db, 'users', owner, name))).docs.map((item) => item.ref),
+    listCollection: async (name, owner) => {
+      // Existing Code List rules may grant access to its known document but
+      // not list permission for the entire settings collection.
+      if (name === 'settings') {
+        const snapshot = await getDocFromServer(doc(db, 'users', owner, 'settings', 'codelists'));
+        return snapshot.exists() ? [snapshot.ref] : [];
+      }
+      return (await getDocsFromServer(collection(db, 'users', owner, name))).docs.map((item) => item.ref);
+    },
     deleteBatch: async (references) => {
       assertCurrent();
       const batch = writeBatch(db);
