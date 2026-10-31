@@ -112,6 +112,10 @@ const legacyAsEntry = (activity) => ({
   time: activityTime(activity),
   createdAt: activity.createdAt || null,
   status: activity.status || (activity.completed ? 'completed' : 'in-progress'),
+  // A lossless record snapshot excluding the separately preserved expense
+  // mirrors and flattened child entries. Custom legacy metadata survives.
+  legacyActivityFields: Object.fromEntries(Object.entries(activity)
+    .filter(([key]) => key !== 'expenses' && key !== 'entries')),
 });
 // Merge ownership into the original target ID. References to old Activity IDs
 // are kept as aliases for finance, and existing photo originals are relinked
@@ -129,9 +133,9 @@ const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
   const aliases = [...new Set([
     ...aliasesFor(target), ...sources.flatMap((source) => [recordId(source.id), ...aliasesFor(source)]),
   ])].filter((id) => id !== targetId);
+  // Do not discard historical nested ledger copies here. Existing finance
+  // projections perform precedence/deduplication while data stays recoverable.
   const storedExpenses = [...(target.expenses || []), ...sources.flatMap((source) => source.expenses || [])];
-  const distinctExpenses = [...new Map(storedExpenses.map((expense) =>
-    [recordId(expense.id) || JSON.stringify(expense), expense])).values()];
   const merged = {
     ...target, ...(daily ? {
       title: dailyActivityTitle(dateKey(target.date)), description: '', time: '',
@@ -139,7 +143,7 @@ const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
       entryMode: ENTRY_MODES.DAILY,
     } : {}),
     entries: orderedActivityEntries({ entries }),
-    mergedActivityIds: aliases, expenses: distinctExpenses,
+    mergedActivityIds: aliases, expenses: storedExpenses,
   };
   const ownerById = new Map(sources.map((activity) => [recordId(activity.id), recordId(activity.id)]));
   const attachments = (moment.attachments || []).map((file) => {
