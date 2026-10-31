@@ -89,8 +89,8 @@ test.describe('local calendar defaults', () => {
     await page.goto('/events/moment-one/activities?create=activity');
     const activityDialog = page.getByRole('dialog');
     await expect(activityDialog.locator('input[type="date"]')).toHaveValue('2026-10-29');
-    await activityDialog.getByPlaceholder('Activity title', { exact:true }).fill('After midnight task');
-    await activityDialog.getByRole('button', { name:'Add activity', exact:true }).click();
+    await activityDialog.getByPlaceholder('Entry title', { exact:true }).fill('After midnight task');
+    await activityDialog.getByRole('button', { name:'Add entry', exact:true }).click();
     await expect(activityDialog).toHaveCount(0);
     await page.goto('/financials/transactions');
     await openUniversalTransaction(page);

@@ -66,8 +66,10 @@ test('Guest demo can restore a valid personal backup without manual exit, with a
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/login');
   await page.getByRole('button', { name: 'Continue as Guest' }).click();
-  await page.goto('/settings#backup');
+  await page.goto('/settings');
   await expect(page.getByRole('region', { name: 'Explore DN guest demo' })).toBeVisible();
+  await page.goto('/settings#backup');
+  await expect(page).toHaveURL(/\/settings\/data-backup$/);
   const picker = page.getByLabel('Choose a DN backup JSON file');
   await expect(picker).toBeAttached();
   const backup = await page.evaluate(async () => {

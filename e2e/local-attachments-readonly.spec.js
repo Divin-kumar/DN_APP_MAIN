@@ -123,7 +123,8 @@ test('universal + is the only transaction creation entry and blocks repeated sub
   await expect(dialog).toHaveCount(0);
   await expect(page).toHaveURL(/\/events\/moment-one\/transactions$/);
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Universal coffee');
-  await expect(page.getByRole('button', { name: 'Open quick create menu', exact: true })).toBeFocused();
+  // Pointer-created transactions should not leave a sticky + focus highlight.
+  await expect(page.getByRole('button', { name: 'Open quick create menu', exact: true })).not.toBeFocused();
 });
 
 test('an obsolete universal transaction draft closes on scope change without writing into either scope', async ({ page }) => {
