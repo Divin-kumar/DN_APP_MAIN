@@ -1,7 +1,7 @@
 import { activityTime, normalizeActivityTime } from './activityTime.js';
 import { formatMomentDate, parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
-import { resolveMomentStoryPresentation } from './momentStory.js';
+import { resolveMomentEntryMode } from './momentEntryMode.js';
 
 // The three permitted creation behaviours follow the existing, configurable
 // Story presentation. No unconfigured fourth behaviour or silent merge path.
@@ -12,7 +12,7 @@ export const ENTRY_MODE_LABELS = Object.freeze([
   { value: ENTRY_MODES.TASKS, label: 'Tasks · Independent Activities' },
 ]);
 export const getMomentEntryMode = (moment, momentTypes = []) =>
-  resolveMomentStoryPresentation(moment, momentTypes);
+  resolveMomentEntryMode(moment, momentTypes);
 
 const dateKey = (date) => {
   try { return formatMomentDate(parseMomentDate(date)); } catch { return ''; }
