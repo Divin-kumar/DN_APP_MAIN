@@ -172,3 +172,17 @@ html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-actions > button {
   html[data-theme] .dn-settings-home .dn-data-outlined-button,
   html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button {transition:none;}
 }
+
+/* Existing local-clear dialog gets the same quiet danger treatment, rather
+   than the primary green action reserved for safe operations. */
+html[data-theme] .dn-local-clear-modal .dn-data-outlined-button.is-danger {
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  min-height:44px;padding:10px 13px;border-radius:11px;
+  border:1px solid color-mix(in srgb,var(--color-danger,#ae444a) 32%,var(--color-border));
+  color:var(--color-danger,#ae444a);
+  background:color-mix(in srgb,var(--color-danger,#ae444a) 5%,var(--color-card));
+  font:inherit;font-size:12px;font-weight:730;cursor:pointer;
+}
+html[data-theme] .dn-local-clear-modal .dn-data-outlined-button:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:3px;
+}
