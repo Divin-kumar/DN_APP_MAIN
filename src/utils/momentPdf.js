@@ -373,6 +373,13 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     if (entry.description) await pdf.text(studioText(entry.description), {
       size: 12, leading: 1.58, after: 18,
     });
+    for (const child of entry.subEntries || []) {
+      await pdf.ensure(85);
+      await pdf.text(studioText(child.title || 'Appended memory') + (child.time ? `  |  ${child.time}` : ''),
+        { size: 13, bold: true, after: 5 });
+      if (child.date && child.date !== entry.date) await pdf.text(studioDate(child.date), { size: 9, color: palette.muted, after: 4 });
+      if (child.description) await pdf.text(studioText(child.description), { size: 11.5, leading: 1.6, after: 14 });
+    }
     // Each selected Journal entry keeps its own photos, including entries
     // without a date and optional future plans. Do not invent occurrence dates.
     const photos = entry.attachments.filter((item) =>
