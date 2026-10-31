@@ -699,3 +699,107 @@ html[data-theme] .dn-activity-create-form :is(
     transition: none !important;
   }
 }
+
+/* DN 2.1: Apple-style progressive form disclosure, shared across the
+   Moment, Activity and Transaction forms. Defaults are never discarded. */
+html[data-theme] .dn-form-disclosure {
+  min-width: 0;
+  width: 100%;
+  border-top: 1px solid var(--color-border);
+}
+html[data-theme] .dn-form-disclosure > summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 10px;
+  min-height: 44px;
+  padding: 10px 2px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 690;
+  list-style: none;
+  -webkit-tap-highlight-color: transparent;
+}
+html[data-theme] .dn-form-disclosure > summary::-webkit-details-marker { display: none; }
+html[data-theme] .dn-form-disclosure > summary > small {
+  min-width: 0;
+  max-width: 100%;
+  flex: 1 1 120px;
+  color: var(--color-text-muted);
+  font-size: 11px;
+  font-weight: 450;
+  overflow-wrap: anywhere;
+}
+html[data-theme] .dn-form-disclosure > summary::after {
+  content: '⌄';
+  margin-left: auto;
+  color: var(--color-text-muted);
+  font-size: 17px;
+  line-height: 1;
+  transition: transform .18s ease;
+}
+html[data-theme] .dn-form-disclosure[open] > summary::after { transform: rotate(180deg); }
+html[data-theme] .dn-form-disclosure > summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: 7px;
+}
+html[data-theme] .dn-form-disclosure-content {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
+  padding: 9px 0 14px;
+  min-width: 0;
+}
+html[data-theme] .dn-activity-moment-disclosure { border: 0; }
+html[data-theme] .dn-activity-moment-disclosure > summary { padding-block: 6px; }
+html[data-theme] .dn-form-context { margin: 0; font-size: 12px; color: var(--color-text-muted); }
+html[data-theme] .dn-form-context strong { color: var(--color-text); }
+
+/* A Journal append is continuous prose inside the original memory.
+   Keep its own timestamp and edit action, never a second chapter/card. */
+html[data-theme] .dn-journal-chapter .dn-story-subentries.dn-journal-continuation {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 13px;
+}
+html[data-theme] .dn-journal-chapter .dn-journal-continuation .dn-story-subentry {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  box-shadow: none;
+  font-family: Georgia, 'Times New Roman', serif;
+  line-height: 1.8;
+}
+html[data-theme] .dn-journal-chapter .dn-journal-continuation .dn-story-subentry strong {
+  display: block;
+  font-weight: 600;
+  font-size: 1rem;
+}
+html[data-theme] .dn-journal-continuation-detail.activity-detail-section {
+  border-top: 0;
+  margin-top: 0;
+  padding-top: 2px;
+}
+html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-items {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  gap: 0;
+}
+html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-item {
+  border: 0;
+  padding: 15px 0 0;
+  gap: 7px;
+}
+html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-item > strong {
+  font-size: 14px;
+  font-weight: 650;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-form-disclosure > summary::after { transition: none; }
+}

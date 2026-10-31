@@ -1,6 +1,6 @@
 import { currentEntryTime } from '../utils/activityTime.js';
-import ActivityTimeField from '../components/common/ActivityTimeField';
 import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
+import ActivityFormFields from '../components/events/ActivityFormFields';
 import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeLegacyDiaryActivities } from '../utils/activityEntries';
 import { detailQuickActivityContext } from '../utils/quickActivityDetailContext';
 /*
@@ -20,14 +20,11 @@ import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
-import DateField from '../components/common/DateField';
 import DropdownSelect from '../components/common/DropdownSelect';
 import TransactionForm from '../components/financials/TransactionForm';
-import RichTextEditor from '../components/common/RichTextEditor';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useEventStore from '../store/useEventStore';
 import useTransactionManager from '../hooks/useTransactionManager';
-import { getActiveCodeListMeta } from '../utils/codeLists';
 import ConnectivityBanner from '../components/common/ConnectivityBanner';
 import { activityMomentTypes, filterActivityMoments } from '../utils/activityMomentPicker';
 import { getMomentWorkspaceKey, getRouteTransitionKey, getShellPageTitle, isSameMomentWorkspace, primaryNavigationPath, shellSettingsBackPath } from '../utils/momentWorkspaceRoutes';
@@ -645,7 +642,13 @@ export default function DashboardLayout() {
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>
             <div className="dn-activity-create-destination">
-              <div className="dn-activity-create-moment-fields">
+              <details className="dn-form-disclosure dn-activity-moment-disclosure"
+                key={quickActivityEventId || 'choose'} open={!quickSelectedMoment}>
+                <summary><span>{quickSelectedMoment
+                  ? `Moment · ${quickSelectedMoment.name || 'This Moment'}` : 'Choose a Moment'}</span>
+                  <small>{quickSelectedMoment ? 'Change destination' : 'Select where this Activity belongs'}</small></summary>
+                <div className="dn-form-disclosure-content">
+                <div className="dn-activity-create-moment-fields">
                 <div className="dn-activity-create-field">
                   <label htmlFor="quick-activity-type">Moment type</label>
             <DropdownSelect id="quick-activity-type" value={quickActivityType} onChange={(changeEvent) => {
@@ -669,7 +672,9 @@ export default function DashboardLayout() {
               {filteredActivityMoments.map((event) => <option key={momentId(event)} value={momentId(event)}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
                 </DropdownSelect>
                 </div>
-              </div>
+                </div>
+                </div>
+              </details>
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             {activityDetailMatch && quickSelectedMoment ? <p className="dn-quick-activity-context">
               {quickMode === ENTRY_MODES.TASKS ? 'New Activity under ' : quickMode === ENTRY_MODES.DAILY ? 'Diary entry for ' : quickActivityChoice === 'append' ? 'Append a Journal entry under ' : 'New Journal entry under '}
@@ -680,22 +685,17 @@ export default function DashboardLayout() {
             </div>
             <ActivityEntryModeFields moment={quickSelectedMoment} momentTypes={adminValues.eventTypes} date={quickActivityDate}
               choice={quickActivityChoice} targetId={quickActivityTargetId} onChoiceChange={setQuickActivityChoice} onTargetChange={setQuickActivityTargetId} />
-            <label className="dn-activity-create-title" htmlFor="dn-quick-activity-title">{quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-              <input id="dn-quick-activity-title" value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)}
-                placeholder={quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-                autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
-            </label>
-            <div className="activity-date-time-row">
-              <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
-              <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} />
-            </div>
-            <div className="dn-activity-create-priority"><label htmlFor="dn-quick-activity-priority">Priority</label>
-            <DropdownSelect id="dn-quick-activity-priority" value={quickActivityPriority} onChange={(event) => setQuickActivityPriority(event.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </DropdownSelect></div>
-            <RichTextEditor label={quickMode === ENTRY_MODES.TASKS ? 'Activity notes (optional)' : 'Entry notes (optional)'} value={quickActivityDescription} onChange={setQuickActivityDescription} placeholder="Description (optional)" rows={4} />
+            <ActivityFormFields mode={quickMode || ENTRY_MODES.TASKS} namePrefix="dn-quick-activity"
+              value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
+                description: quickActivityDescription, priority: quickActivityPriority }}
+              priorities={adminValues.activityPriorities} disabled={quickActivityBusy}
+              onChange={(patch) => {
+                if (patch.title !== undefined) setQuickActivityTitle(patch.title);
+                if (patch.date !== undefined) setQuickActivityDate(patch.date);
+                if (patch.time !== undefined) setQuickActivityTime(patch.time);
+                if (patch.description !== undefined) setQuickActivityDescription(patch.description);
+                if (patch.priority !== undefined) setQuickActivityPriority(patch.priority);
+              }} />
             <div className="form-actions dn-activity-create-actions"><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : quickMode === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button></div>
           </form>
         </ModalDialog>

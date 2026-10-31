@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
-import ActivityTimeField from '../../../components/common/ActivityTimeField';
-import DateField from '../../../components/common/DateField';
 import RichText from '../../../components/common/RichText';
-import RichTextEditor from '../../../components/common/RichTextEditor';
+import ActivityFormFields from '../../../components/events/ActivityFormFields';
 import { activityEntries, orderedActivityEntries, ENTRY_MODES } from '../../../utils/activityEntries';
 
 // One Activity can contain distinct timed journal/diary notes. Only child
@@ -25,11 +23,11 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
       setDraft(null);
     } catch { /* The scoped writer shows the error in Activity Detail. */ }
   };
-  return <section className="dn-activity-entry-timeline activity-detail-section" aria-label={isDaily ? 'Daily diary entries' : 'Journal entries'}>
-    <div className="dn-activity-entry-heading">
-      <h2>{isDaily ? 'Entries for this day' : 'Journal entries'}</h2>
+  return <section className={`dn-activity-entry-timeline activity-detail-section${isDaily ? '' : ' dn-journal-continuation-detail'}`} aria-label={isDaily ? 'Daily diary entries' : 'Journal entries'}>
+    {isDaily ? <div className="dn-activity-entry-heading">
+      <h2>Entries for this day</h2>
       <span>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
-    </div>
+    </div> : <h2 className="sr-only">Journal continuation</h2>}
     <div className="dn-activity-entry-items">
       {entries.map((entry) => <article key={entry.id} className="dn-activity-entry-item" id={`entry-${entry.id}`}>
         <div className="dn-activity-entry-top">
@@ -48,15 +46,10 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
     </div>
     {draft ? <ModalDialog title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
       <form className="dn-activity-entry-editor" onSubmit={save}>
-        <label htmlFor="dn-entry-title">Entry title</label>
-        <input id="dn-entry-title" value={draft.title} required disabled={actions.busy}
-          onChange={(e) => setDraft((old) => ({ ...old, title: e.target.value }))} />
-        {!isDaily ? <DateField label="Date" name="entry-date" value={draft.date}
-          disabled={actions.busy} onChange={(e) => setDraft((old) => ({ ...old, date: e.target.value }))} /> : null}
-        <ActivityTimeField value={draft.time || ''} disabled={actions.busy}
-          onChange={(time) => setDraft((old) => ({ ...old, time }))} />
-        <RichTextEditor label="Entry notes" value={draft.description} disabled={actions.busy}
-          onChange={(description) => setDraft((old) => ({ ...old, description }))} />
+        <ActivityFormFields namePrefix="dn-entry" mode={ENTRY_MODES.JOURNAL}
+          value={draft} showDate={!isDaily} showPriority={false} disabled={actions.busy}
+          notesLabel="Entry notes"
+          onChange={(patch) => setDraft((previous) => ({ ...previous, ...patch }))} />
         <div className="dialog-actions">
           <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
           <button type="submit" className="primaryButton" disabled={actions.busy || !draft.title.trim()}>Save entry</button>

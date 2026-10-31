@@ -233,3 +233,18 @@ test('task groups put active first, completed second, cancelled last, then sort 
   assert.equal(groups[0].entries[2].displayTime, '15:20');
   assert.equal(JSON.stringify(moment), original);
 });
+
+test('Journal appends continue one chapter without duplicating the parent memory', () => {
+  const moment = { id: 'journal-1', type: 'Journal', activities: [{
+    id: 'memory-1', title: 'Morning', date: '2026-10-27', description: 'First thought',
+    entries: [{ id: 'append-1', title: 'Afternoon', date: '2026-10-27', time: '15:00',
+      description: 'Continued writing' }],
+  }] };
+  const before = JSON.stringify(moment);
+  const story = build(moment);
+  assert.equal(chapters(story).length, 1);
+  assert.equal(chapters(story)[0].title, 'Morning');
+  assert.equal(chapters(story)[0].subEntries[0].id, 'append-1');
+  assert.equal(chapters(story)[0].subEntries[0].description, 'Continued writing');
+  assert.equal(JSON.stringify(moment), before, 'projection does not change stored journal records');
+});

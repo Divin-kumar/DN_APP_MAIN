@@ -2,6 +2,7 @@ import ActivityTimeField from '../common/ActivityTimeField';
 import { activityTime, currentEntryTime } from '../../utils/activityTime';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
+import FormDisclosure from '../common/FormDisclosure';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
@@ -159,6 +160,8 @@ export default function TransactionForm({
         {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
           ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
       </fieldset>
+      <FormDisclosure label="More options" hint={form.eventId
+        ? 'Linked Moment, date, time and notes' : 'Date, time, links and notes'}>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
         <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
@@ -196,6 +199,7 @@ export default function TransactionForm({
       </div>
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
+      </FormDisclosure>
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       <div className="form-actions">
         <button className="primaryButton" type="submit" disabled={busy}>

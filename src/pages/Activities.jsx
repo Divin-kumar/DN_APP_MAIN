@@ -1,16 +1,13 @@
-import ActivityTimeField from '../components/common/ActivityTimeField';
 import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityList from '../components/events/ActivityList';
+import ActivityFormFields from '../components/events/ActivityFormFields';
 import QuietEmptyState from '../components/common/QuietEmptyState';
-import DateField from '../components/common/DateField';
-import DropdownSelect from '../components/common/DropdownSelect';
 import ListControls from '../components/common/ListControls';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
-import RichTextEditor from '../components/common/RichTextEditor';
 import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
@@ -21,7 +18,6 @@ import { activityConditions as migrateActivityConditions, activityEntryCondition
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import { projectActivities, selectActivityEntries } from '../utils/activityRecords';
-import { getActiveCodeListMeta } from '../utils/codeLists';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { recordId } from '../utils/recordIdentity';
 import { activityCancellationPatch, activityCompletionPatch, activityDetailPath, activityStatus } from '../utils/activityDetail';
@@ -205,20 +201,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       {draft ? <ModalDialog title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
         <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
           {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
-          <label htmlFor="activity-editor-moment">Moment</label>
-          <DropdownSelect id="activity-editor-moment" value={draft.momentId} disabled={Boolean(draft.activityId) || busy} onChange={(event) => setDraft({ ...draft, momentId: event.target.value })}>
-            <option value="">Choose a Moment</option>{events.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>{moment.name || 'Untitled Moment'}{moment.archived ? ' (Archived)' : ''}</option>)}
-          </DropdownSelect>
-          <input autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} required value={draft.title} onChange={(event) => setDraft({ ...draft, title: event.target.value })} placeholder="Activity title" aria-label="Activity title" disabled={busy} />
-          <div className="activity-date-time-row">
-            <DateField label="Date" name="activity-date" value={draft.date} onChange={(event) => setDraft({ ...draft, date: event.target.value })} disabled={busy} />
-            <ActivityTimeField value={draft.time} disabled={busy} onChange={(time) => setDraft({ ...draft, time })} />
-          </div>
-          <DropdownSelect value={draft.priority} aria-label="Activity priority" disabled={busy} onChange={(event) => setDraft({ ...draft, priority: event.target.value })}>
-            {!getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).some((option) => option.value === draft.priority) ? <option value={draft.priority}>{draft.priority}</option> : null}
-            {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-          </DropdownSelect>
-          <RichTextEditor label="Activity notes" value={draft.description} onChange={(description) => setDraft({ ...draft, description })} placeholder="Description (optional)" rows={4} disabled={busy} />
+          <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
+          <ActivityFormFields namePrefix="activity-editor" value={draft}
+            priorities={adminValues.activityPriorities} disabled={busy}
+            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
           <div className="form-actions"><button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button><button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button></div>
         </form>
       </ModalDialog> : null}

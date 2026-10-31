@@ -1,8 +1,8 @@
 import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
-import ActivityTimeField from '../components/common/ActivityTimeField';
 import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
+import ActivityFormFields from '../components/events/ActivityFormFields';
 import { createOrAppendActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
@@ -17,14 +17,11 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
-import DateField from '../components/common/DateField';
-import DropdownSelect from '../components/common/DropdownSelect';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
-import { getActiveCodeListMeta } from '../utils/codeLists';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
@@ -37,7 +34,6 @@ import ListControls from '../components/common/ListControls';
 import QuietEmptyState from '../components/common/QuietEmptyState';
 import SortControl from '../components/common/SortControl';
 import { MOMENT_SORT_OPTIONS, momentSortSummary, sortMoments } from '../utils/userListSort';
-import RichTextEditor from '../components/common/RichTextEditor';
 import RichText from '../components/common/RichText';
 import AttachmentGallery from '../components/common/AttachmentGallery';
 import { isAttachmentImage, coverImageKey, legacyAttachmentImage } from '../utils/activityDetail';
@@ -425,18 +421,18 @@ export default function Events() {
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
             <ActivityEntryModeFields moment={activityChooserEvent} momentTypes={adminValues.eventTypes} date={activityDate}
               choice={activityCreationChoice} targetId={activityAppendTarget} onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} />
-            <input value={activityTitle} onChange={(event) => setActivityTitle(event.target.value)} placeholder={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'} aria-label="Activity title" autoFocus={typeof window !== "undefined" && window.innerWidth > 760} required />
-            <div className="activity-date-time-row">
-              <DateField label="Date" name="activity-date" value={activityDate} onChange={(event) => setActivityDate(event.target.value)} aria-label="Activity date" />
-              <ActivityTimeField value={activityTime} onChange={setActivityTime} />
-            </div>
-            <DropdownSelect value={activityPriority} onChange={(event) => setActivityPriority(event.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </DropdownSelect>
-            <RichTextEditor label="Activity description" value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" />
-            <div className="form-actions"><button className="primaryButton" type="submit">{getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
+            <ActivityFormFields mode={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes)}
+               namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
+               value={{ title: activityTitle, date: activityDate, time: activityTime,
+                 priority: activityPriority, description: activityDescription }}
+               onChange={(patch) => {
+                 if (patch.title !== undefined) setActivityTitle(patch.title);
+                 if (patch.date !== undefined) setActivityDate(patch.date);
+                 if (patch.time !== undefined) setActivityTime(patch.time);
+                 if (patch.description !== undefined) setActivityDescription(patch.description);
+                 if (patch.priority !== undefined) setActivityPriority(patch.priority);
+               }} />
+             <div className="form-actions"><button className="primaryButton" type="submit">{getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
       ) : null}

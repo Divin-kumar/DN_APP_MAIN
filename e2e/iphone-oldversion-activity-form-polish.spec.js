@@ -16,12 +16,19 @@ for (const [width, height, theme] of [[320, 694, 'dark'], [390, 844, 'light'], [
     const dialog = page.getByRole('dialog', { name: 'Add an activity' });
     const form = dialog.locator('form.dn-activity-create-form');
     await expect(form).toBeVisible();
+    await expect(dialog.locator('.dn-activity-moment-disclosure > summary')).toContainText(moments[0].name);
+    await expect(dialog.getByRole('combobox', { name: 'Moment type' })).toBeHidden();
+    await dialog.locator('.dn-activity-moment-disclosure > summary').click();
     await expect(dialog.getByRole('combobox', { name: 'Moment type' })).toBeVisible();
     await expect(dialog.getByRole('combobox', { name: 'Life moment' })).toContainText(moments[0].name);
+    await dialog.locator('.dn-activity-moment-disclosure > summary').click();
     await expect(dialog.getByRole('combobox', { name: 'Journal entry action' })).toBeVisible();
     await expect(dialog.getByRole('combobox', { name: 'Journal append destination' })).toContainText('Book a lakeside stay');
     await expect(dialog.getByRole('textbox', { name: 'Entry title' })).toBeVisible();
+    await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeHidden();
+    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
     await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeVisible();
+    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
     const cancel = dialog.getByRole('button', { name: 'Cancel' });
     const save = dialog.getByRole('button', { name: 'Save entry' });
     await expect(cancel).toBeVisible();
@@ -52,7 +59,10 @@ for (const [width, height, theme] of [[320, 694, 'dark'], [390, 844, 'light'], [
     const title = dialog.getByRole('textbox', { name: 'Entry title' });
     await expect(title).toBeVisible();
     await expect(title).not.toBeFocused();
+    await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeHidden();
+    await dialog.locator('.dn-form-disclosure > summary').click();
     await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeVisible();
+    await dialog.locator('.dn-form-disclosure > summary').click();
     await expect(dialog.getByRole('combobox', { name: 'Journal entry action' })).toBeVisible();
     const actions = dialog.locator('.dn-activity-create-actions');
     await expect(actions.getByRole('button', { name: 'Cancel' })).toBeVisible();
@@ -81,6 +91,7 @@ test('Changing Moment type from Journal Detail clears inherited append target', 
     .getByRole('button', { name: 'Activity', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Add an activity' });
   await expect(dialog.getByRole('combobox', { name: 'Journal append destination' })).toContainText('Original page');
+  await dialog.locator('.dn-activity-moment-disclosure > summary').click();
   await dialog.getByRole('combobox', { name: 'Moment type' }).click();
   await page.getByRole('option', { name: 'Project', exact: true }).click();
   await expect(dialog.getByRole('combobox', { name: 'Life moment' })).toContainText('Choose a life moment');

@@ -117,6 +117,7 @@ test('Saved Moment-type picker cannot hide Activity Detail parent at 320px', asy
   await page.getByRole('group', { name: 'Quick create actions' })
     .getByRole('button', { name: 'Activity', exact: true }).click();
   editor = page.getByRole('dialog', { name: 'Add an activity' });
+  await editor.locator('.dn-activity-moment-disclosure > summary').click();
   await expect(editor.getByRole('combobox', { name: 'Moment type' })).toContainText('All moment types');
   await expect(editor.getByRole('combobox', { name: 'Life moment' })).toContainText('Weekend journal');
   await expect(editor.locator('#dn-journal-append-target')).toContainText('Original memory');
@@ -148,5 +149,31 @@ test('Rapid duplicate Save taps append only one entry to Journal', async ({ page
   expect(after.find((moment) => moment.id === 'journal').activities[0].entries)
     .toHaveLength(1);
   expect(after.find((moment) => moment.id === 'tasks')).toMatchObject(normalizedBefore.find((moment) => moment.id === 'tasks'));
+  expect(errors).toEqual([]);
+});
+
+test('Journal detail can explicitly switch a preselected append into a new memory', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const moments = fixture();
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  await page.goto('/events/journal/activities/same');
+  await expect(page.locator('.activity-detail-heading h1')).toBeVisible();
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('group', { name: 'Quick create actions' })
+    .getByRole('button', { name: 'Activity', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'Add an activity' });
+  await expect(editor.locator('#dn-journal-entry-choice')).toContainText('Append to existing entry');
+  await editor.locator('#dn-journal-entry-choice').click();
+  await page.getByRole('option', { name: /New entry.*Separate memory/ }).click();
+  await expect(editor.locator('#dn-journal-append-target')).toHaveCount(0);
+  await editor.getByRole('textbox', { name: 'Entry title' }).fill('A separate sunset');
+  await editor.getByRole('button', { name: 'Save entry' }).click();
+  await expect(editor).toHaveCount(0);
+  const journal = (await read(page)).find((item) => item.id === 'journal');
+  expect(journal.activities).toHaveLength(2);
+  expect(journal.activities[0].id).toBe('same');
+  expect(journal.activities[0].title).toBe('Original memory');
+  expect(journal.activities[0].description).toBe('Before we added more.');
+  expect(journal.activities[1].title).toBe('A separate sunset');
   expect(errors).toEqual([]);
 });

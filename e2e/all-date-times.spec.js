@@ -29,6 +29,7 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await page.goto('/events?create=event');
   const dialog=page.getByRole('dialog');
   await dialog.getByRole('textbox',{name:'Moment name',exact:true}).fill('A timed Moment');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await dialog.locator('input[name="date"]').fill('2026-10-01');
   await dialog.getByLabel('Moment time',{exact:true}).fill('12:15');
   await paired(dialog,'Moment');
@@ -52,12 +53,14 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   await page.getByRole('button',{name:'Actions for A timed Moment',exact:true}).click();
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await dialog.getByRole('button',{name:'Clear moment time',exact:true}).click();
   await dialog.getByRole('button',{name:'Update Event',exact:true}).click();
   await expect(dialog).toHaveCount(0);
   const savedMoment=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find(x=>x.name==='A timed Moment'));
   expect(savedMoment.time).toBe('');
   await page.goto('/financials/transactions?create=expense');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await dialog.getByRole('textbox',{name:'Title *',exact:true}).fill('Timed purchase');
   await dialog.getByRole('spinbutton').fill('50');
   await dialog.getByRole('radio',{name:'Cash',exact:true}).check();
@@ -71,6 +74,7 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await expect(transaction).toContainText('00:00');
   await transaction.locator('.dn-transaction-copy > strong').click();
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await expect(dialog.getByLabel('Transaction time',{exact:true})).toHaveValue('00:00');
   await dialog.getByRole('button',{name:'Clear transaction time',exact:true}).click();
   await dialog.getByRole('button',{name:'Save Changes',exact:true}).click();

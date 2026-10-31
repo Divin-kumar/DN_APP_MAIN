@@ -34,7 +34,7 @@ export default function ActivityEntryModeFields({ moment, momentTypes = [], date
       </DropdownSelect>
     </> : null}
     <small className="dn-entry-mode-help">
-      {choice === 'append' ? 'Add a separately editable, timed note to your chosen memory.' : 'Keep this memory independent with its own cover photo and transactions.'}
+      {choice === 'append' ? 'Continue the selected memory. Your writing will appear directly below its existing text and remain editable.' : 'Start a separate memory with its own photos and transactions.'}
     </small>
   </div>;
 }

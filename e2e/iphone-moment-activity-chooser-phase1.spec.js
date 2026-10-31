@@ -15,11 +15,14 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
       .map((key) => localStorage.getItem(key)));
     await picker.locator('.activity-event-option-main').first().click();
     const dialog = page.getByRole('dialog', { name: 'Add entry', exact: true });
-    const title = dialog.getByRole('textbox', { name: 'Activity title', exact: true });
+    const title = dialog.getByRole('textbox', { name: 'Entry title', exact: true });
     await expect(title).toBeVisible();
     await expect(title).not.toBeFocused();
     expect(await title.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
-    await expect(dialog.getByLabel('Activity date', { exact: true })).toBeVisible();
+    await expect(dialog.locator('input[type="date"]')).toBeHidden();
+    await dialog.locator('.dn-form-disclosure > summary').click();
+    await expect(dialog.locator('input[type="date"]')).toBeVisible();
+    await dialog.locator('.dn-form-disclosure > summary').click();
 
     await title.click();
     await expect(title).toBeFocused();

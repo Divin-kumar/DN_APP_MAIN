@@ -1,7 +1,7 @@
 import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
-import ActivityTimeField from '../../../components/common/ActivityTimeField';
 import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
+import ActivityFormFields from '../../../components/events/ActivityFormFields';
 import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeJournalActivities, linkJournalActivities, unlinkJournalActivities, journalAppendCandidates } from '../../../utils/activityEntries';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
@@ -16,7 +16,6 @@ import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/at
 import { getActiveSampleData, getActiveSampleScenario } from '../../../dev/sampleData';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
-import DateField from '../../../components/common/DateField';
 import RichTextEditor from '../../../components/common/RichTextEditor';
 import RichText from '../../../components/common/RichText';
 import DropdownSelect from '../../../components/common/DropdownSelect';
@@ -26,7 +25,6 @@ import useExpenseStore from '../../../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
-import { getActiveCodeListMeta } from '../../../utils/codeLists';
 import usePersistentListState from '../../../hooks/usePersistentListState';
 import useConditionFilters from '../../../hooks/useConditionFilters';
 import ConditionBuilder, { ConditionChips } from '../../../components/common/ConditionBuilder';
@@ -652,23 +650,18 @@ export function EventWorkspaceContent() {
             <ActivityEntryModeFields moment={event} momentTypes={momentTypes} date={activityDate}
               choice={activityCreationChoice} targetId={activityAppendTarget}
               onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} disabled={activityBusy} />
-            <label className="dn-activity-create-title" htmlFor="dn-workspace-entry-title">{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-              <input id="dn-workspace-entry-title" value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)}
-                placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-                style={styles.input} autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
-            </label>
-            <div className="activity-date-time-row">
-              <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
-              <ActivityTimeField value={activityTime} onChange={setActivityTime} />
-            </div>
-            <div className="dn-activity-create-priority"><label htmlFor="dn-workspace-entry-priority">Priority</label>
-            <DropdownSelect id="dn-workspace-entry-priority" value={activityPriority} onChange={(submitEvent) => setActivityPriority(submitEvent.target.value)} aria-label="Activity priority">
-              {getActiveCodeListMeta('activityPriorities', adminValues.activityPriorities).map((option) => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </DropdownSelect></div>
-            <RichTextEditor label={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity notes (optional)' : 'Entry notes (optional)'} value={activityDescription} onChange={setActivityDescription} placeholder="Description (optional)" rows={4} />
-            <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
+            <ActivityFormFields mode={getMomentEntryMode(event, momentTypes)} namePrefix="dn-workspace-entry"
+               value={{ title: activityTitle, date: activityDate, time: activityTime,
+                 description: activityDescription, priority: activityPriority }}
+               priorities={adminValues.activityPriorities} disabled={activityBusy}
+               onChange={(patch) => {
+                 if (patch.title !== undefined) setActivityTitle(patch.title);
+                 if (patch.date !== undefined) setActivityDate(patch.date);
+                 if (patch.time !== undefined) setActivityTime(patch.time);
+                 if (patch.description !== undefined) setActivityDescription(patch.description);
+                 if (patch.priority !== undefined) setActivityPriority(patch.priority);
+               }} />
+             <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
               <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'}</button>
             </div>

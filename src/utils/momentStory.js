@@ -76,10 +76,9 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
       return ordered.map((item, index) => makeActivityEntry(source, activity, item, index === 0));
     }
     if (presentation === STORY_PRESENTATIONS.JOURNEY) {
-      const original = makeActivityEntry(source, activity);
-      const base = { ...original, subEntries: [],
-        attachments: original.attachments.filter((file) => !file.entryId) };
-      return [base, ...ordered.map((item) => makeActivityEntry(source, activity, item))];
+      // A Journal append continues the original memory, not another chapter.
+      // Keep child IDs/metadata for editing and backup, and show them inline.
+      return [makeActivityEntry(source, activity)];
     }
     return [makeActivityEntry(source, activity)];
   }).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')

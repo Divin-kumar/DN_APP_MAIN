@@ -5,6 +5,7 @@ import { formatMomentDate } from '../../utils/momentDates';
 import { useEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
+import FormDisclosure from '../common/FormDisclosure';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
@@ -88,6 +89,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required />
       </label>
 
+      <FormDisclosure label="More options" hint="Type, date, time, repeat, notes">
       <div className="event-form-fields">
         <label htmlFor="event-type">Moment type
           <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
@@ -120,6 +122,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
 
       <RichTextEditor label="Notes (optional)" id="event-notes" name="notes" value={form.notes}
         onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
+      </FormDisclosure>
 
       <div className="event-form-actions">
         <button type="submit" className="primaryButton">{submitLabel}</button>

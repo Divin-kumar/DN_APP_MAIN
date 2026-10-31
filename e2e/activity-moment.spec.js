@@ -152,6 +152,7 @@ test('Moment Transactions has five reachable tabs, matching totals, independent 
   await expect(totals.locator('dd')).toHaveText(['₹0', '₹20', '-₹20']);
   await openUniversalTransaction(page);
   const dialog = page.getByRole('dialog');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment', exact: true })).toContainText('Weekend in Ooty');
   await dialog.getByRole('combobox', { name: 'Linked Activity', exact: true }).click();
   await expect(page.getByRole('listbox')).not.toContainText('A different activity');

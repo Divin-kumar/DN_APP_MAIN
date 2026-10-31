@@ -98,3 +98,39 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(errors).toEqual([]);
   });
 }
+
+test('three canonical form surfaces keep defaults tucked away and reveal them on demand', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page);
+  const openQuick = async (label) => {
+    await page.getByRole('button', { name: 'Open quick create menu' }).click();
+    await page.getByRole('group', { name: 'Quick create actions' }).getByRole('button', { name: label, exact: true }).click();
+  };
+  await page.goto('/events/moment-one/activities/shared');
+  await openQuick('Activity');
+  let dialog = page.getByRole('dialog', { name: 'Add an activity' });
+  await expect(dialog.locator('.dn-activity-moment-disclosure > summary')).toContainText('Weekend in Ooty');
+  await expect(dialog.locator('input[type="date"]')).toBeHidden();
+  await expect(dialog.getByRole('textbox', { name: 'Entry title' })).toBeVisible();
+  await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
+  await expect(dialog.locator('input[type="date"]')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+  await openQuick('Life moment');
+  dialog = page.getByRole('dialog', { name: 'Create a life moment' });
+  await expect(dialog.getByRole('textbox', { name: 'Moment name' })).toBeVisible();
+  await expect(dialog.locator('input[name="date"]')).toBeHidden();
+  await dialog.locator('.dn-form-disclosure > summary').click();
+  await expect(dialog.locator('input[name="date"]')).toBeVisible();
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+
+  await openQuick('Transaction');
+  dialog = page.getByRole('dialog', { name: 'Add Transaction' });
+  await expect(dialog.getByRole('spinbutton', { name: 'Amount *' })).toBeVisible();
+  await expect(dialog.getByRole('combobox', { name: 'Linked Moment' })).toBeHidden();
+  await dialog.locator('.dn-form-disclosure > summary').click();
+  await expect(dialog.getByRole('combobox', { name: 'Linked Moment' })).toBeVisible();
+  await expect(dialog.getByRole('combobox', { name: 'Linked Activity' })).toContainText('Book a lakeside stay');
+  await dialog.getByRole('button', { name: 'Cancel' }).click();
+  expect(errors).toEqual([]);
+});

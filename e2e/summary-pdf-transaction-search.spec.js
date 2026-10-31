@@ -53,6 +53,7 @@ test('editing a linked transaction offers choices first; explicit Moment search 
   const dialog = page.getByRole('dialog', { name: 'Edit Transaction' });
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole('textbox', { name: 'Title' })).toHaveValue('Room deposit');
+  await dialog.locator('.dn-form-disclosure > summary').click();
   const moment = dialog.getByRole('combobox', { name: 'Linked Moment' });
   await moment.click();
   await expect(page.getByRole('option', { name: moments[0].name, exact: true })).toBeVisible();

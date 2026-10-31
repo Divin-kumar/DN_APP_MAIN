@@ -36,6 +36,7 @@ for (const width of [320,390,1280]) {
     expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
     await page.goto('/events/moment-one/activities/early');
     await activityDetailAction(page,'Edit');
+    await page.getByRole('dialog').locator('.dn-form-disclosure > summary').click();
     await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue('07:20');
     await page.getByLabel('Activity time',{exact:true}).fill('06:30');
     await expect(page.getByRole('dialog')).toHaveCSS('opacity','1');
@@ -44,9 +45,11 @@ for (const width of [320,390,1280]) {
     await page.getByRole('button',{name:'Save activity',exact:true}).click();
     await expect(page.getByRole('dialog')).toHaveCount(0);await page.reload();
     await expect(page.locator('.activity-detail-due')).toContainText('06:30');
-    await activityDetailAction(page,'Edit');await page.getByRole('button',{name:'Clear activity time',exact:true}).click();
+    await activityDetailAction(page,'Edit');await page.getByRole('dialog').locator('.dn-form-disclosure > summary').click();
+    await page.getByRole('button',{name:'Clear activity time',exact:true}).click();
     await page.getByRole('button',{name:'Save activity',exact:true}).click();await expect(page.getByRole('dialog')).toHaveCount(0);
     await page.goto('/events/moment-one/activities?create=activity');
+    await page.getByRole('dialog').locator('.dn-form-disclosure > summary').click();
     await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue(/^[0-2]\d:[0-5]\d$/);
     await page.getByPlaceholder('Entry title',{exact:true}).fill('Midnight chapter');
     await page.getByLabel('Activity time',{exact:true}).fill('00:00');
@@ -81,6 +84,7 @@ test('universal Activity creation saves its clock time and the next draft captur
     await page.getByRole('button',{name:'Activity',exact:true}).click();
   };
   await open();
+  await page.getByRole('dialog').locator('.dn-form-disclosure > summary').click();
   await page.getByRole('textbox',{name:'Entry title',exact:true}).fill('Lunch entry');
   await page.getByLabel('Activity time',{exact:true}).fill('12:45');
   await page.getByRole('button',{name:'Save entry',exact:true}).click();

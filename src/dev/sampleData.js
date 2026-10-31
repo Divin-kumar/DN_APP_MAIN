@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.10.31.3';
+export const GUEST_TOUR_VERSION = '2026.10.31.4';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Each memory is a regular dated Story entry. From Moment Activities, Link or append existing lets you connect independent memories, unlink them, or deliberately combine them later. Save photographs, stories and moments together. From an Activity Detail, + → Activity now prepares an append to the opened Journal memory. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. An appended note continues directly inside the original memory, without a second boxed chapter. The road to the hills includes a sample continuation. From Moment Activities, Link or append existing lets you connect independent memories, unlink them, or deliberately combine them later. Save photographs, stories and moments together. From Activity Detail, + → Activity preselects Append to the opened Journal memory, and the action menu lets you switch to New at any time. Each Moment, Activity and Transaction form hides the already-filled date, time and other supporting choices under More options. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
@@ -324,6 +324,14 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   events[1].activities[0].time = '18:30';
   events[1].activities[1].time = '07:20';
   events[1].notes += ' Optional Activity times put same-day entries in clock order in Story and PDF; entries without a time stay last.';
+  // A sample Journal continuation demonstrates in-place Story reading without
+  // introducing another Activity or changing the existing transaction owner.
+  events[0].activities[0].entryMode = 'journal';
+  events[0].activities[0].entries = [{
+    id: 'dn-tour-entry-j1-continued', title: 'A little tea-stop reflection',
+    date: date(-24), time: '12:15',
+    description: 'We stopped beside the road for tea. That small pause became part of the same memory.',
+  }];
   events[0].time = '09:30';
   events[2].time = '14:00';
   events[2].notes += ' New Moments, Activities and Transactions start with the current local time when their form opens. Change it or use Clear time if the entry should be untimed; editing an existing untimed entry keeps it untimed. Date filters include the whole day, with saved times ordering same-day entries; choose a Time filter to narrow the results.';

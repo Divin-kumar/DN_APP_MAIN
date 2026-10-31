@@ -71,7 +71,7 @@ function Chapter({ entry, momentId, uid, isGuest, presentation }) {
       <ActivityTitle entry={entry} momentId={momentId} />
       {entry.displayTime ? <time className="dn-story-entry-aside">{entry.displayTime}</time> : null}
       {entry.description ? <RichText value={entry.description} className="dn-v2-story-entry-description free-text-content" /> : null}
-      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label={isJournal ? "Journal entries" : "Diary entries"}>
+      {entry.subEntries?.length ? <div className={'dn-story-subentries' + (isJournal ? ' dn-journal-continuation' : '')} aria-label={isJournal ? "Journal continuation" : "Diary entries"}>
         {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
           <small>{item.date || entry.date}{item.time ? ` · ${item.time}` : ''}</small>
           <strong>{item.title || 'Untitled entry'}</strong>
