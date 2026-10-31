@@ -1,6 +1,7 @@
 import { clearDnLocalData } from '../utils/storageMigration';
 import { listStateScope } from '../utils/listStateMemory';
 import { exportSavedListDefaultsForScope, resetSavedListDefaultsForScope, restoreSavedListDefaultsForScope } from '../utils/listViewDefaults';
+import { settingsResetContext, assertSettingsResetContext, assertSettingsResetRecords } from '../utils/settingsResetSafety';
 import './GuestTour.css';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
@@ -544,28 +545,33 @@ export default function Settings() {
     setResettingSettings(true);
 
     try {
-      if (!isGuest && !user?.uid) throw new Error('Your account records could not be identified. No settings were changed.');
+      const initial = useAppStore.getState();
+      const context = settingsResetContext(initial, getActiveSampleScenario(initial.user?.uid || null));
+      const assertCurrent = () => assertSettingsResetContext(
+        context, useAppStore.getState(), getActiveSampleScenario(context.uid),
+      );
+      assertCurrent();
 
       await Promise.all([
-        useEventStore.getState().loadEvents(user?.uid, isGuest),
-        useExpenseStore.getState().loadExpenses(user?.uid, isGuest),
-        useIncomeStore.getState().loadIncomes(user?.uid, isGuest),
+        useEventStore.getState().loadEvents(context.uid, context.isGuest),
+        useExpenseStore.getState().loadExpenses(context.uid, context.isGuest),
+        useIncomeStore.getState().loadIncomes(context.uid, context.isGuest),
       ]);
 
+      assertCurrent();
       const eventState = useEventStore.getState();
       const expenseState = useExpenseStore.getState();
       const incomeState = useIncomeStore.getState();
-      if (eventState.error || expenseState.error || incomeState.error) {
-        throw new Error('DN could not verify all existing records. No settings were changed. Please try again when you are online.');
-      }
+      assertSettingsResetRecords(context, eventState, expenseState, incomeState);
 
       const referencedValues = collectReferencedCodeListValues({
         events: eventState.events,
         expenses: expenseState.expenses,
         incomes: incomeState.incomes,
       });
-      await resetAllSettings(referencedValues);
-      resetSavedListDefaultsForScope(listStateScope(useAppStore.getState()));
+      await resetAllSettings(referencedValues, assertCurrent);
+      assertCurrent();
+      resetSavedListDefaultsForScope(context.scope);
       setTheme('dark');
       document.documentElement.dataset.theme = 'dark';
       setPrefForm({
