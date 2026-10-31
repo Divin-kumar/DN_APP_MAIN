@@ -120,7 +120,12 @@ test('Code Lists owns sorting and live filter preferences without a duplicate Se
   await preferences.getByRole('button', { name: /Transactions filters/ }).click();
   await expect(preferences.getByRole('region', { name: 'transactions filters' })).toBeVisible();
 
+  // Clearing Settings defaults does not silently overwrite the active list.
+  // Reset in Refine explicitly restores the newly cleared baseline.
   await page.goto('/activities');
+  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: /^Filters/ }).click();
+  await page.locator('.dn-list-controls-action-line').getByRole('button', { name: 'Reset', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(originalRecords);
   expect(errors).toEqual([]);
