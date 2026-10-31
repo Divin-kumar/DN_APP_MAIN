@@ -468,7 +468,7 @@ html[data-theme] .dn-journal-merge-bar {
   min-width: 0;
 }
 html[data-theme] .dn-journal-merge-bar > .settings-secondary-button {
-  min-height: 42px;
+  min-height: 44px;
   padding: 7px 12px;
   font-size: 12px;
   white-space: nowrap;
