@@ -1,0 +1,280 @@
+/* CHG-224 | iPhone navigation has one source of truth, not another patch
+   to the legacy 4-column dock. Five equal slots keep universal + centered.
+   Scope all overrides to this dock; desktop sidebar and dialogs are unchanged. */
+@media (max-width: 760px) {
+  html[data-theme] .mobile-tabbar.dn-premium-dock {
+    --dn-dock-gap: 2px;
+    position: fixed !important;
+    left: max(10px, env(safe-area-inset-left, 0px) + 8px) !important;
+    right: max(10px, env(safe-area-inset-right, 0px) + 8px) !important;
+    bottom: max(10px, var(--dn-safe-area-bottom, 0px)) !important;
+    z-index: 90 !important;
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    align-items: center !important;
+    justify-items: stretch !important;
+    gap: var(--dn-dock-gap) !important;
+    min-height: 72px !important;
+    padding: 7px 7px 8px !important;
+    box-sizing: border-box !important;
+    border: 1px solid color-mix(in srgb, var(--color-border) 78%, transparent) !important;
+    border-radius: 26px !important;
+    background: linear-gradient(150deg,
+      color-mix(in srgb, var(--color-card) 96%, transparent),
+      color-mix(in srgb, var(--color-glass) 91%, var(--color-card))) !important;
+    color: var(--color-text) !important;
+    box-shadow: 0 14px 42px color-mix(in srgb, var(--color-text) 13%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-card) 75%, transparent) !important;
+    backdrop-filter: blur(28px) saturate(1.48) !important;
+    -webkit-backdrop-filter: blur(28px) saturate(1.48) !important;
+    isolation: isolate;
+    overflow: visible !important;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  html[data-theme="dark"] .mobile-tabbar.dn-premium-dock {
+    background: linear-gradient(150deg, rgba(28, 40, 62, .96), rgba(13, 22, 39, .94)) !important;
+    border-color: rgba(151, 171, 205, .24) !important;
+    box-shadow: 0 20px 48px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .08) !important;
+  }
+  html[data-theme="light"] .mobile-tabbar.dn-premium-dock {
+    background: linear-gradient(150deg, rgba(255, 255, 255, .98), rgba(244, 249, 255, .95)) !important;
+    box-shadow: 0 14px 38px rgba(33, 50, 78, .16), inset 0 1px 0 rgba(255, 255, 255, 1) !important;
+  }
+
+  html[data-theme] .mobile-tabbar.dn-premium-dock::before {
+    inset: -6px 5px -8px !important;
+    z-index: -1;
+    border-radius: 29px !important;
+    background: radial-gradient(ellipse at 50% 30%,
+      color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 74%) !important;
+    opacity: .65 !important;
+    filter: blur(12px) !important;
+  }
+
+  html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab {
+    position: relative;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px !important;
+    min-width: 0;
+    width: 100%;
+    min-height: 54px !important;
+    padding: 3px 1px !important;
+    box-sizing: border-box;
+    border: 0 !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    color: var(--color-text-muted) !important;
+    font-size: 10px !important;
+    font-weight: 600 !important;
+    letter-spacing: -.015em !important;
+    line-height: 1.2 !important;
+    text-decoration: none;
+    transition: color 160ms ease, transform 160ms ease;
+    touch-action: manipulation;
+  }
+
+  html[data-theme] .dn-premium-dock .dn-dock-icon {
+    position: relative;
+    display: grid;
+    place-items: center;
+    width: 34px;
+    min-height: 33px;
+    flex: 0 0 33px;
+    border-radius: 12px;
+    background: transparent;
+    transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-icon svg {
+    width: 20px !important;
+    height: 20px !important;
+    flex: none !important;
+    stroke-width: 1.85;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-label {
+    display: block;
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: center;
+    text-overflow: clip;
+    font-size: inherit;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab-active {
+    background: transparent !important;
+    color: var(--color-primary) !important;
+    font-weight: 745 !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab-active .dn-dock-icon {
+    color: var(--color-primary);
+    background: color-mix(in srgb, var(--color-primary) 13%, var(--color-card)) !important;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 12%, transparent);
+  }
+
+  html[data-theme] .dn-premium-dock .dn-dock-center.mobile-dock-create {
+    position: relative;
+    display: grid !important;
+    min-width: 0;
+    min-height: 54px;
+    align-self: stretch;
+    place-items: center;
+    transform: translateY(-7px);
+    z-index: 2;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-center::before {
+    position: absolute;
+    width: 62px;
+    height: 62px;
+    border-radius: 50%;
+    background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--color-primary) 11%, transparent);
+    content: '';
+    pointer-events: none;
+  }
+  html[data-theme] .dn-premium-dock .mobile-dock-create-trigger {
+    position: relative;
+    z-index: 1;
+    display: grid !important;
+    width: 53px !important;
+    min-width: 53px !important;
+    height: 53px !important;
+    min-height: 53px !important;
+    padding: 0 !important;
+    place-items: center !important;
+    border: 1px solid color-mix(in srgb, var(--color-primary) 72%, white) !important;
+    border-radius: 50% !important;
+    background: linear-gradient(145deg,
+      color-mix(in srgb, var(--color-primary) 80%, white), var(--color-primary)) !important;
+    color: #fff !important;
+    box-shadow: 0 8px 19px color-mix(in srgb, var(--color-primary) 33%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, .4) !important;
+    cursor: pointer;
+    transition: transform 160ms ease, box-shadow 160ms ease !important;
+    touch-action: manipulation;
+  }
+  html[data-theme] .dn-premium-dock .mobile-dock-create-trigger svg {
+    width: 24px !important;
+    height: 24px !important;
+    stroke-width: 2 !important;
+    transition: transform 160ms ease;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-center.is-open .mobile-dock-create-trigger svg {
+    transform: rotate(0deg);
+  }
+  html[data-theme] .dn-premium-dock .mobile-dock-create-trigger:active {
+    transform: scale(.94) !important;
+  }
+
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu.mobile-dock-create-menu {
+    position: absolute;
+    left: 50%;
+    right: auto !important;
+    bottom: calc(100% + 10px);
+    z-index: 4;
+    display: grid;
+    gap: 3px !important;
+    width: min(234px, calc(100vw - 30px)) !important;
+    min-width: 0 !important;
+    max-height: min(330px, calc(100dvh - 125px));
+    padding: 8px !important;
+    overflow-x: hidden;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 19px !important;
+    background: color-mix(in srgb, var(--color-card) 97%, transparent) !important;
+    color: var(--color-text) !important;
+    box-shadow: 0 22px 58px color-mix(in srgb, var(--color-text) 20%, transparent),
+      inset 0 1px 0 color-mix(in srgb, var(--color-card) 90%, transparent) !important;
+    backdrop-filter: blur(24px) saturate(1.25);
+    -webkit-backdrop-filter: blur(24px) saturate(1.25);
+    transform: translateX(-50%);
+    transform-origin: 50% 100%;
+    animation: dn-dock-menu-in 170ms cubic-bezier(.16,.84,.24,1) both !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-menu-title {
+    display: block;
+    padding: 7px 11px 5px;
+    color: var(--color-text-muted);
+    font-size: 10px;
+    font-weight: 730;
+    letter-spacing: .11em;
+    line-height: 1.2;
+    text-transform: uppercase;
+    text-align: left;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu button {
+    display: flex;
+    align-items: center;
+    gap: 11px !important;
+    min-height: 46px !important;
+    width: 100%;
+    padding: 0 12px !important;
+    border: 1px solid transparent !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: var(--color-text) !important;
+    font-size: 13px !important;
+    font-weight: 670;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu button svg {
+    width: 18px !important;
+    height: 18px !important;
+    flex: 0 0 18px;
+    color: var(--color-primary) !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu button:active {
+    background: color-mix(in srgb, var(--color-primary) 12%, var(--color-card)) !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu button:focus-visible,
+  html[data-theme] .dn-premium-dock .dn-dock-destination:focus-visible,
+  html[data-theme] .dn-premium-dock .mobile-dock-create-trigger:focus-visible {
+    outline: 2px solid var(--color-primary) !important;
+    outline-offset: 2px !important;
+  }
+
+  /* Leave the final record visible above the dock when the outer page owns
+     scrolling. Transactions keep their independent nested scroller and
+     existing, more specific 106px+safe-area reservation. */
+  html[data-theme] .dn-content:not(:has(.dn-financial-workspace)) {
+    box-sizing: border-box;
+    padding-bottom: max(110px, calc(90px + var(--dn-safe-area-bottom, 0px))) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  html[data-theme] .mobile-tabbar.dn-premium-dock {
+    left: 8px !important;
+    right: 8px !important;
+    gap: 0 !important;
+    padding-inline: 4px !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab {
+    font-size: 9px !important;
+    letter-spacing: -.035em !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-icon { width: 31px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-premium-dock .dn-dock-destination,
+  html[data-theme] .dn-premium-dock .dn-dock-icon,
+  html[data-theme] .dn-premium-dock .mobile-dock-create-trigger {
+    transition: none !important;
+  }
+  html[data-theme] .dn-premium-dock .dn-dock-action-menu.mobile-dock-create-menu {
+    animation: none !important;
+  }
+}
+
+@keyframes dn-dock-menu-in {
+  from { opacity: 0; transform: translate(-50%, 9px) scale(.97); }
+  to { opacity: 1; transform: translate(-50%, 0) scale(1); }
+}
