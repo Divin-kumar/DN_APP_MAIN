@@ -376,7 +376,7 @@ export default function Events() {
             onFieldChange={(field) => changeMomentFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeMomentFilters({ direction: sortDirection === 'asc' ? 'desc' : 'asc' })} />}
           canReset={canResetMoment} onReset={resetMomentDiscovery}
-          search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search events" />}>
+          search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-filter-search" type="search" value={search} onChange={(changeEvent) => setSearch(changeEvent.target.value)} placeholder="Find a moment" aria-label="Search moments" />}>
           <ConditionBuilder filter={conditions} title="Moment conditions" />
         </ListControls>
       </div>
