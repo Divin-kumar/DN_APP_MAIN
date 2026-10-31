@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-226 | Activity cover and Transaction record premium visual pass
+- **Design audit:** Activities' owner-preferred photo-left cover, status first-row and shared swipe menu already work; Transactions' compact three numbers already look intentional. Avoid a fresh redesign or needless whitespace. Introduce only clearer empty-photo illustration, overdue cue, semantic transaction identity and stable touch feedback.
+- **Source:** New `src/components/common/RecordCardPremium.css` imported into ActivityList and TransactionHistory. Style placeholder covers (never real photos), overdue due line, focus-visible card border; assign full Transaction cards semantic `dn-v2-transaction-card is-income|is-expense` and show a slender colored edge, bordered income/expense icon, balanced amount/metadata text, light/dark shadow and fine-pointer hover only. Leave active-card action menus and all handlers unchanged.
+- **Regression coverage authored:** Six Playwright light/dark iPhone tests at 320/390/430px, with a long Activity title and oversized transaction amount; check status alignment, no horizontal overflow, overdue text contrast, preserved photo-picker button, semantic income/expense CSS, details expand/collapse, swipe popup and unchanged Guest record storage. **Not executed.**
+- **Downstream:** No record fields, event IDs, monetary calculations, original-file retention, cover selection, business filters, Guest tour fixture/version, Settings, PDF, nested scroll geometry, toolbar/dock, form behavior, release version or dependencies modified. Empty state retains prior behavior and no new Add Transaction button.
+- **Release:** Batch 2 CHG-226 follows CHG-225 exclusively on `DN-2.1-batch2`. Batch 1 CHG-213–224 remains at frozen `OldVersion` SHA `57a497e7`, owner deploying/testing Firebase independently. No merge, production publication or `main` edits.
+
 ## CHG-20261031-225 | Fix sticky universal + color on iPhone without touching Batch 1
 - **Owner report:** Screenshot from the freshly implemented Firebase iPhone navigation shows the centered + changes color after tapping and does not return until a tap elsewhere. Preserve the accepted five-position dock design.
 - **Source diagnosis:** Mobile Safari may retain `:hover` following touch. The shared quick-create handler also unconditionally focused the + button after a menu action, leaving touch focus where keyboard focus was intended. Both can prolong an apparent pressed/selected style after menu transitions.
