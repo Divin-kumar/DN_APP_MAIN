@@ -24,12 +24,13 @@ export const assertSettingsResetContext = (expected, current, scenario = null) =
 // Never retire Code List choices without verified current records from all
 // three stores.
 export const assertSettingsResetRecords = (expected, ...states) => {
-  const complete = states.length === 3 && states.every((state) =>
+  const collectionKeys = ['events', 'expenses', 'incomes'];
+  const complete = states.length === collectionKeys.length && states.every((state, index) =>
     state && !state.loading && !state.error && state.loadedFor === expected.loadKey
     && state.activeLoadKey === expected.loadKey
     && (state.loadedSample ?? null) === expected.scenario
     && (state.activeSample ?? null) === expected.scenario
-    && Array.isArray(state.events ?? state.expenses ?? state.incomes));
+    && Array.isArray(state[collectionKeys[index]]));
   if (!complete) {
     throw new Error('DN could not verify all records in this workspace. No settings were reset. Please retry after data finishes loading.');
   }
