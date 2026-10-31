@@ -293,3 +293,46 @@ html[data-theme] :is(.primaryButton,.settings-primary-button) {
   background: linear-gradient(145deg,#326ee0,#2d61c9) !important;
   color:#fff !important;
 }
+
+/* CHG-233: Finish the Activity Detail readability pass. The 10px parent
+   category, 11px status/priority and tiny audit dates predate the premium
+   card hierarchy. Raise their type without changing the two-column facts,
+   compact title trail, cover proportions or action positions. */
+html[data-theme] .activity-detail-page .activity-parent-context-type {
+  font-size: 11.5px;
+  letter-spacing: .035em;
+}
+html[data-theme] .activity-detail-page .activity-parent-context-link {
+  font-size: 13px;
+}
+html[data-theme] .activity-detail-page .activity-detail-facts > :is(
+  .activity-status-pill, .activity-detail-priority
+) {
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+html[data-theme] .activity-detail-page :is(
+  .activity-detail-due, .activity-archived, .activity-secondary,
+  .activity-pagination, .activity-detail-section h2 small,
+  .activity-secondary-metadata dt, .activity-secondary-metadata dd
+) {
+  font-size: 12.5px;
+  line-height: 1.5;
+}
+
+/* Safari focuses and zooms text controls that render below 16px. Protect
+   the primary create/edit workspaces as well as the already-scoped settings,
+   Code Lists and dialog fields. File/checkbox/radio/range widgets keep their
+   native layout, and all non-mobile styling remains exactly as before. */
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] :is(
+    .events-page, .activities-page, .dn-financial-workspace,
+    .activity-detail-page, .dn-login
+  ) :is(
+    input[type="text"], input[type="search"], input[type="number"],
+    input[type="email"], input[type="password"], input[type="tel"],
+    input:not([type]):not([hidden]), textarea, [contenteditable="true"]
+  ) {
+    font-size: 16px !important;
+  }
+}
