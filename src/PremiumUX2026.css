@@ -336,3 +336,101 @@ html[data-theme] .activity-detail-page :is(
     font-size: 16px !important;
   }
 }
+
+/* CHG-234: one page identity in the persistent top header. Removing duplicate
+   in-page headings gives the viewport back to actual records and controls.
+   Keep iPhone title truncation independent of right-side profile controls. */
+html[data-theme] .dn-header > div:first-child {
+  min-width: 0;
+  max-width: calc(100% - 300px);
+}
+html[data-theme] .dn-header .dn-route-brand {
+  min-width: 0;
+  max-width: 100%;
+  flex: 0 1 auto;
+  gap: 10px;
+  pointer-events: auto;
+}
+html[data-theme] .dn-header .dn-shell-page-title.brand-lockup-title {
+  display: block;
+  flex: 0 1 auto;
+  width: auto;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0 !important;
+  padding: 0;
+  overflow: hidden;
+  color: var(--color-text) !important;
+  font-size: 18px !important;
+  font-weight: 750;
+  letter-spacing: -.033em !important;
+  line-height: 1.22;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme] .dn-header .dn-shell-back {
+  display: grid;
+  flex: 0 0 44px;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: 13px;
+  background: color-mix(in srgb, var(--color-card) 94%, transparent);
+  color: var(--color-text);
+  text-decoration: none;
+  box-shadow: none;
+  touch-action: manipulation;
+}
+html[data-theme] .dn-header .dn-shell-back:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+  color: var(--color-primary);
+}
+html[data-theme] .dn-header .dn-shell-back:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Keep Insights Export beside its search, not on a redundant title row.
+   Preserve original export behavior and the shared search/filter component. */
+html[data-theme] .insights-page .insights-discovery.dn-insights-compact-search {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  min-width: 0;
+}
+html[data-theme] .insights-page .dn-insights-compact-search > .dn-list-controls {
+  flex: 1 1 0;
+  width: auto;
+  min-width: 0;
+}
+html[data-theme] .insights-page .dn-insights-compact-search > .insights-export {
+  flex: 0 0 auto;
+  min-width: 78px;
+  min-height: 44px;
+}
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-header > div:first-child {
+    flex: 1 1 auto;
+    max-width: calc(100% - 103px);
+  }
+  html[data-theme] .dn-header .dn-route-brand { gap: 8px; }
+  html[data-theme] .dn-header .dn-shell-page-title.brand-lockup-title {
+    font-size: clamp(14px, 3.9vw, 17px) !important;
+    letter-spacing: -.03em !important;
+  }
+  html[data-theme] .dn-header .dn-shell-back {
+    flex-basis: 44px;
+    border-radius: 12px;
+  }
+}
+@media (max-width: 360px) {
+  html[data-theme] .insights-page .dn-insights-compact-search { gap: 6px; }
+  html[data-theme] .insights-page .dn-insights-compact-search > .insights-export {
+    min-width: 70px;
+    padding-inline: 8px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-header .dn-shell-back { transition: none !important; }
+}
