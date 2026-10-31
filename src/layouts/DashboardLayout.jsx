@@ -97,6 +97,8 @@ export default function DashboardLayout() {
   useEffect(() => { transactionMounted.current = true; return () => { transactionMounted.current = false; }; }, []);
   const [quickActivityEventId, setQuickActivityEventId] = useState('');
   const quickActivityContextRef = useRef(null);
+  const quickActivitySaving = useRef(false);
+  const [quickActivityBusy, setQuickActivityBusy] = useState(false);
   const [activityPickerFilter, changeActivityPickerFilter] = usePersistentListState('activity-picker', ACTIVITY_PICKER_DEFAULTS);
   const quickActivityType = activityPickerFilter.type;
   const setQuickActivityType = (type) => changeActivityPickerFilter({ type });
@@ -297,7 +299,7 @@ export default function DashboardLayout() {
   // Quick create opens a lightweight modal for common tasks without leaving the page.
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type, activationEvent) => {
-    if (transactionSaving.current) return;
+    if (transactionSaving.current || quickActivitySaving.current) return;
     if (type === 'transaction') {
       const parent = quickCreateMoment;
       const activity = parent?.activities?.find((item) => recordId(item.id) === activityDetailMatch?.params.activityId);
@@ -378,6 +380,7 @@ export default function DashboardLayout() {
   // task-style Moments use the same record shape with Activity wording.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
+    if (quickActivitySaving.current) return;
     const event = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
     if (!event || !quickActivityTitle.trim()) {
       setQuickCreateError('Choose a life moment and enter a title.');
@@ -388,6 +391,8 @@ export default function DashboardLayout() {
       setQuickCreateError('Your session changed. Reopen + to add this entry.');
       return;
     }
+    quickActivitySaving.current = true;
+    setQuickActivityBusy(true);
     try {
       const activity = {
         id: crypto.randomUUID(),
@@ -413,7 +418,10 @@ export default function DashboardLayout() {
         : `/events/${encodeURIComponent(activity.eventId)}/story`;
       showToast(message, 'success', { label: 'View', to });
     } catch (error) {
-      setQuickCreateError(error?.message || 'Could not save this entry. Please try again.');
+      if (records.isCurrent(context)) setQuickCreateError(error?.message || 'Could not save this entry. Please try again.');
+    } finally {
+      quickActivitySaving.current = false;
+      setQuickActivityBusy(false);
     }
   };
 
@@ -597,7 +605,7 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (
-        <ModalDialog title={quickActivityKind === 'activity' ? 'Add an activity' : `Add a ${quickActivityKind}`} onClose={() => setQuickCreateType(null)}>
+        <ModalDialog title={quickActivityKind === 'activity' ? 'Add an activity' : `Add a ${quickActivityKind}`} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form" onSubmit={saveQuickActivity}>
             <label htmlFor="quick-activity-type">Moment type</label>
@@ -628,7 +636,7 @@ export default function DashboardLayout() {
               ))}
             </DropdownSelect>
             <RichTextEditor label={quickActivityKind === 'activity' ? 'Activity notes' : 'Entry notes'} value={quickActivityDescription} onChange={setQuickActivityDescription} placeholder="Description (optional)" rows={4} />
-            <div className="form-actions"><button className="primaryButton" type="submit">Save {quickActivityKind}</button><button className="secondaryButton" type="button" onClick={() => setQuickCreateType(null)}>Cancel</button></div>
+            <div className="form-actions"><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : `Save ${quickActivityKind}`}</button><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
       ) : null}
