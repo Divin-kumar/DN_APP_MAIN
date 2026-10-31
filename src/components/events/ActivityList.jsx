@@ -22,10 +22,10 @@ export default function ActivityList({ eventName = 'This event', activities, all
   const completedCount = activeActivities.filter((activity) => activityStatus(activity) === 'completed').length;
   const progress = activeActivities.length ? Math.round(completedCount / activeActivities.length * 100) : 0;
   return <div className="event-activity-content">
-    <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} active activities complete`}>
+    {activeActivities.length ? <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} active activities complete`}>
       <div><strong>{completedCount} of {activeActivities.length}</strong><span>{progressLabel}</span></div>
       <span className="event-activity-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></span>
-    </div>
+    </div> : null}
     <div className="event-activity-list">
       {!visibleActivities.length ? <div className="event-activity-filter-empty">{includeCancelled || hasActiveFilters ? 'No activities match these filters.' : showCancelled ? 'No cancelled activities.' : activeActivities.length === 0 ? 'All activities are cancelled.' : 'No activities match these filters.'}</div> : visibleActivities.map((activity) => {
         const key = getActivityKey(activity), status = activityStatus(activity);
