@@ -476,7 +476,7 @@ export default function DashboardLayout() {
               <ArrowLeft size={19} strokeWidth={1.9} aria-hidden="true" />
             </Link> : <span className="brand-mark" aria-hidden="true">DN</span>}
             <section className="dn-shell-page-context">
-              {activityDetailMatch
+              {activityDetailMatch || workspaceKey
                 ? <span className="brand-lockup-title dn-shell-page-title" title={shellTitle}>{shellTitle}</span>
                 : <h1 className="brand-lockup-title dn-shell-page-title" title={shellTitle}>{shellTitle}</h1>}
               <small
