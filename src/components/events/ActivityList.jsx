@@ -6,6 +6,7 @@ import { activityStatus, activityStatusLabel } from '../../utils/activityDetail'
 import { parseMomentDate } from '../../utils/momentDates';
 import { isActivityEditable } from '../../utils/scopedRecordActions';
 import './ActivityList.css';
+import '../common/RecordCardPremium.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
