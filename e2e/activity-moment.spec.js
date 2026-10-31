@@ -190,7 +190,7 @@ for (const [label, width, height] of [['portrait', 300, 800], ['square', 600, 60
     const detailUrls = await page.locator('.activity-detail-page img').evaluateAll((images) =>
       images.map((image) => image.src).filter((src) => src.startsWith('blob:')));
     expect(detailUrls.length).toBeGreaterThan(0);
-    await page.locator('.mobile-tab').filter({ hasText: 'Home' }).click();
+    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Dashboard' }).click();
     await expect.poll(() => page.evaluate((urls) =>
       urls.every((url) => window.__dnUrls.revoked.includes(url)), detailUrls)).toBe(true);
   });

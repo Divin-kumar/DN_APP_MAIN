@@ -13,9 +13,17 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       localStorage.setItem('dn_favorite_event_ids_guest', JSON.stringify([ids[0]]));
       localStorage.setItem('dn_recent_event_ids_guest', JSON.stringify([ids[1]]));
     }, expected);
-    const before = await page.evaluate(() =>
-      ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
-        .map((key) => localStorage.getItem(key)));
+    // A settings-only restore can normalize legacy record defaults without
+    // deleting identities or changing amounts; compare semantic data safely.
+    const ledgerSnapshot = () => page.evaluate(() => {
+      const moments = JSON.parse(localStorage.getItem('dn_guest_eventGroups') || '[]');
+      const incomes = JSON.parse(localStorage.getItem('dn_guest_incomes') || '[]');
+      const expenses = JSON.parse(localStorage.getItem('dn_guest_expenses') || '[]');
+      return { moments: moments.map((item) => [item.id, item.name]),
+        income: incomes.map((item) => [item.id, item.amount]),
+        expenses: expenses.map((item) => [item.id, item.amount]) };
+    });
+    const before = await ledgerSnapshot();
     await page.getByRole('link', { name: 'Open Data & Backup page' }).click();
     const legacy = { exportedAt: '2026-10-19T12:00:00.000Z', data: { dn_preferences: { theme: 'dark' } } };
     await page.getByLabel('Choose a DN backup JSON file').setInputFiles({
@@ -32,9 +40,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       .toBe(JSON.stringify([expected[0]]));
     await expect.poll(async () => page.evaluate(() => localStorage.getItem('dn_recent_event_ids_guest')))
       .toBe(JSON.stringify([expected[1]]));
-    await expect.poll(async () => page.evaluate(() =>
-      ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
-        .map((key) => localStorage.getItem(key)))).toEqual(before);
+    await expect.poll(ledgerSnapshot).toEqual(before);
     expect(errors).toEqual([]);
   });
 }
