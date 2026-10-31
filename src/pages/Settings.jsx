@@ -962,16 +962,6 @@ export default function Settings({ dataBackupOnly = false }) {
     const signedIn = Boolean(user?.uid && !isGuest && !getActiveSampleScenario(user.uid));
     return (
       <div className="settings-page feature-page dn-settings-home dn-data-page">
-        <header className="settings-subpage-header dn-data-page-header">
-          <Link className="settings-back-button" to="/settings" aria-label="Back to Settings">
-            <ArrowLeft size={17} aria-hidden="true" />
-          </Link>
-          <div className="settings-subpage-title-wrap">
-            <span className="settings-subpage-eyebrow">SETTINGS / STORAGE</span>
-            <h2>Data & Backup</h2>
-          </div>
-        </header>
-
         <section className="dn-data-page-intro" aria-label="Your data protection">
           <div className="dn-data-page-intro-copy">
             <span className="dn-data-page-overline"><ShieldCheck size={15} aria-hidden="true" /> Your data, your control</span>
@@ -1040,11 +1030,6 @@ export default function Settings({ dataBackupOnly = false }) {
 
   return (
     <div className="settings-page feature-page dn-settings-home">
-      <div className="settings-heading">
-        <h2>Settings</h2>
-        <p>Keep DN comfortable for the way you plan and remember.</p>
-      </div>
-
       {isGuest && !user ? (
         <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
           <div>
