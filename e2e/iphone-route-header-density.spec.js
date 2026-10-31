@@ -66,6 +66,10 @@ test('Moment names use truncated header titles without hiding the important stor
   const title = page.locator('.dn-header .dn-shell-page-title');
   await expect(title).toHaveText('Weekend in Ooty — family plans and memories');
   await expect(page.locator('.dn-moment-hero-swipe h1')).toHaveText('Weekend in Ooty — family plans and memories');
+  // The Moment hero is the only page-level heading. The identical header
+  // label remains visually unchanged but is not a competing second h1.
+  await expect(page.locator('.dn-header h1')).toHaveCount(0);
+  await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('.dn-moment-panel #dn-moment-panel-title')).toHaveText('Your Moment Story');
   await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading')).toHaveCount(0);
   await expect(title).toHaveCSS('text-overflow', 'ellipsis');
