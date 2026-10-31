@@ -282,3 +282,14 @@ html[data-theme] :is(
     scroll-behavior:auto;
   }
 }
+
+/* Accessible primary action contrast without recoloring photo cards,
+   secondary controls or the distinctive universal +. The brightest gradient
+   stop (#326ee0) still has >=4.5:1 contrast against white in WCAG sRGB. */
+html[data-theme="light"] {
+  --color-primary: #2f65cc;
+}
+html[data-theme] :is(.primaryButton,.settings-primary-button) {
+  background: linear-gradient(145deg,#326ee0,#2d61c9) !important;
+  color:#fff !important;
+}
