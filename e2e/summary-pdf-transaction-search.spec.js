@@ -25,7 +25,7 @@ test('Moments actions export a real multi-page PDF with original photos', async 
   await card.focus();
   await page.keyboard.press('Enter');
   await page.getByRole('menuitem', { name: 'PDF Studio', exact: true }).click();
-  const studio = page.getByRole('region', { name: 'PDF Studio', exact: true });
+  const studio = page.locator('.dn-pdf-studio-page');
   await expect(studio).toBeVisible();
   await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
   const downloadButton = studio.getByRole('button', { name: 'Download customized PDF' });
