@@ -69,9 +69,9 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Edit moment type' });
-  await expect(editor.getByRole('combobox', { name: 'Story presentation' })).toBeVisible();
-  await editor.getByRole('combobox', { name: 'Story presentation' }).click();
-  await page.getByRole('option', { name: 'Diary · Monthly writing' }).click();
+  await expect(editor.getByRole('combobox', { name: 'Activity mode (required)' })).toBeVisible();
+  await editor.getByRole('combobox', { name: 'Activity mode (required)' }).click();
+  await page.getByRole('option', { name: /Daily/ }).click();
   await editor.getByRole('button', { name: 'Save moment type' }).click();
   await page.goto('/events/personal/overview');
   await expect(page.locator('.dn-v2-story')).toHaveAttribute('data-presentation', 'diary');
@@ -80,7 +80,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.goto('/settings/code-lists');
   await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Story presentation' })).toContainText('Diary');
+  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Diary');
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
   expect(errors).toEqual([]);
 });
