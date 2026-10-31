@@ -435,8 +435,12 @@ export const collectBackupReferenceWarnings = (backup) => {
   const momentIds = new Set(backup.moments.map((moment) => moment.id));
   const activityOwners = new Map();
   backup.activities.forEach((activity) => {
-    if (!activityOwners.has(activity.id)) activityOwners.set(activity.id, []);
-    activityOwners.get(activity.id).push(activity.momentId);
+    for (const id of [activity.id, ...(activity.mergedActivityIds || [])]) {
+      const key = recordId(id);
+      if (!key) continue;
+      if (!activityOwners.has(key)) activityOwners.set(key, []);
+      activityOwners.get(key).push(activity.momentId);
+    }
   });
   return backup.expenses.flatMap((expense) => {
     const warnings = [];
