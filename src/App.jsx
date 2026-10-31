@@ -27,6 +27,7 @@ const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
 const Financials = lazy(() => import('./pages/Financials'));
 const Settings = lazy(() => import('./pages/Settings'));
+const DataBackup = lazy(() => import('./pages/DataBackup'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
 const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
@@ -177,6 +178,7 @@ export default function App() {
             <Route path="financials/income" element={<Navigate to="/financials/transactions" replace />} />
             <Route path="financials/expenses" element={<Navigate to="/financials/transactions" replace />} />
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
+            <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />
           </Route>
