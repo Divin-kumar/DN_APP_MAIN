@@ -633,7 +633,7 @@ export function EventWorkspaceContent() {
             <label className="dn-activity-create-title" htmlFor="dn-workspace-entry-title">{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
               <input id="dn-workspace-entry-title" value={activityTitle} onChange={(submitEvent) => setActivityTitle(submitEvent.target.value)}
                 placeholder={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-                style={styles.input} required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
+                style={styles.input} autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
             </label>
             <div className="activity-date-time-row">
               <DateField label="Date" name="activity-date" value={activityDate} onChange={(submitEvent) => setActivityDate(submitEvent.target.value)} />
