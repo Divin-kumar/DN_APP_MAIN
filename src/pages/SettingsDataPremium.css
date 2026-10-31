@@ -1,0 +1,174 @@
+/* CHG-230: restrained iPhone-first Data & Backup controls.
+   Destructive online action stays separate from backup actions, and never
+   reuses the saturated primary CTA used for exporting safely. */
+html[data-theme] .dn-settings-home .dn-data-backup {
+  display:grid; gap:14px; min-width:0;
+}
+html[data-theme] .dn-settings-home .dn-data-backup * {box-sizing:border-box;}
+html[data-theme] .dn-settings-home .dn-data-backup-block {
+  display:grid; gap:14px; min-width:0; padding:clamp(14px,3vw,20px);
+  border:1px solid var(--color-border); border-radius:18px;
+  background:color-mix(in srgb,var(--color-card) 94%,var(--color-primary) 6%);
+  box-shadow:0 8px 26px color-mix(in srgb,var(--color-text) 4%,transparent);
+}
+html[data-theme] .dn-settings-home .dn-data-backup-head {
+  display:flex; align-items:flex-start; gap:12px; min-width:0;
+}
+html[data-theme] .dn-settings-home .dn-data-backup-head > div {
+  flex:1; min-width:0; display:grid; gap:4px;
+}
+html[data-theme] .dn-settings-home .dn-data-backup-head strong {
+  color:var(--color-text); font-size:14px; font-weight:750; letter-spacing:-.018em;
+}
+html[data-theme] .dn-settings-home .dn-data-backup-head p,
+html[data-theme] .dn-settings-home .dn-data-clear-option p {
+  margin:0; color:var(--color-text-muted); font-size:12px; line-height:1.55;
+}
+html[data-theme] .dn-settings-home .dn-data-backup-icon {
+  flex:0 0 36px; display:grid; place-items:center; width:36px; height:36px;
+  color:var(--color-primary); border:1px solid color-mix(in srgb,var(--color-primary) 18%,var(--color-border));
+  border-radius:11px; background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
+}
+html[data-theme] .dn-settings-home .dn-data-action-grid {
+  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:9px;
+}
+html[data-theme] .dn-settings-home .dn-data-action-button {
+  display:flex; width:100%; min-width:0; min-height:47px;
+  align-items:center; justify-content:center; gap:8px;
+  padding:9px 10px !important; border-radius:12px !important;
+  font-size:12px !important; font-weight:720 !important; white-space:nowrap;
+  text-align:center;
+}
+html[data-theme] .dn-settings-home .dn-data-action-button svg { flex:0 0 auto; }
+html[data-theme] .dn-settings-home .dn-data-backup-block > .settings-helper {
+  font-size:11px; line-height:1.58; color:var(--color-text-muted);
+}
+html[data-theme] .dn-settings-home .dn-data-cancel-prep {
+  width:fit-content; margin-left:auto; min-height:42px;
+}
+html[data-theme] .dn-settings-home .dn-data-clear-block {
+  background:var(--color-card);
+}
+html[data-theme] .dn-settings-home .dn-data-clear-options {display:grid;gap:0;}
+html[data-theme] .dn-settings-home .dn-data-clear-option {
+  display:flex; align-items:center; justify-content:space-between; gap:13px;
+  min-width:0; padding:13px 0; border-top:1px solid var(--color-border);
+}
+html[data-theme] .dn-settings-home .dn-data-clear-option > div {
+  flex:1 1 0; display:grid; gap:5px; min-width:0;
+}
+html[data-theme] .dn-settings-home .dn-data-clear-label {
+  display:inline-flex; align-items:center; gap:7px; color:var(--color-text);
+  font-size:12px; font-weight:750;
+}
+html[data-theme] .dn-settings-home .dn-data-clear-label svg {color:var(--color-text-muted);}
+html[data-theme] .dn-settings-home .dn-data-outlined-button,
+html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button {
+  display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:7px;
+  min-height:44px; padding:9px 12px; border:1px solid var(--color-border);
+  border-radius:11px; color:var(--color-text); background:var(--color-card-raised);
+  font:inherit; font-size:12px; font-weight:720; cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  transition:border-color .17s ease,background-color .17s ease,color .17s ease;
+}
+html[data-theme] .dn-settings-home .dn-data-outlined-button.is-danger,
+html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button.is-danger {
+  color:var(--color-danger,#ae444a);
+  border-color:color-mix(in srgb,var(--color-danger,#ae444a) 32%,var(--color-border));
+  background:color-mix(in srgb,var(--color-danger,#ae444a) 5%,var(--color-card));
+}
+@media(hover:hover) and (pointer:fine) {
+  html[data-theme] .dn-settings-home .dn-data-outlined-button:not(:disabled):hover,
+  html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button:not(:disabled):hover {
+    border-color:var(--color-primary);background:var(--color-card-raised);
+  }
+  html[data-theme] .dn-settings-home .dn-data-outlined-button.is-danger:not(:disabled):hover,
+  html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button.is-danger:not(:disabled):hover {
+    border-color:var(--color-danger,#ae444a);
+    background:color-mix(in srgb,var(--color-danger,#ae444a) 11%,var(--color-card));
+  }
+}
+html[data-theme] .dn-settings-home .dn-data-outlined-button:focus-visible,
+html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:3px;
+}
+html[data-theme] .dn-settings-home .dn-data-outlined-button:disabled,
+html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button:disabled {
+  opacity:.49;cursor:not-allowed;box-shadow:none;
+}
+html[data-theme] .dn-settings-home .dn-data-guest-note {
+  margin:0; padding-top:10px; border-top:1px solid var(--color-border);
+  color:var(--color-text-muted); font-size:11px; line-height:1.5;
+}
+/* Online deletion requires two deliberate steps. No bright red hero button. */
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-warning {
+  display:flex; gap:11px; padding:13px;
+  background:color-mix(in srgb,var(--color-danger,#ae444a) 7%,var(--color-card));
+  border:1px solid color-mix(in srgb,var(--color-danger,#ae444a) 23%,var(--color-border));
+  border-radius:14px;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-warning-icon {
+  flex:0 0 34px; display:grid;place-items:center; width:34px;height:34px;
+  border-radius:10px;color:var(--color-danger,#ae444a);
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-warning > div {
+  min-width:0;display:grid;gap:6px;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-warning strong {
+  color:var(--color-text);font-size:13px;line-height:1.4;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-warning p {
+  margin:0;color:var(--color-text-muted);font-size:12px;line-height:1.55;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-account {
+  display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;
+  margin:0;padding:10px 0;border-bottom:1px solid var(--color-border);
+  font-size:12px;color:var(--color-text-muted);
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-account strong {
+  color:var(--color-text);font-weight:720;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-check {
+  display:flex;align-items:flex-start;gap:10px;min-height:44px;
+  font-size:12px;line-height:1.5;color:var(--color-text);cursor:pointer;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-check input {
+  flex:0 0 auto;width:18px;height:18px;accent-color:var(--color-primary);
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-phrase {
+  display:grid;gap:8px;color:var(--color-text);font-size:12px;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-phrase strong {
+  font-weight:800;letter-spacing:.045em;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-phrase input {
+  width:100%;min-width:0;min-height:46px;padding:10px 12px;
+  border:1px solid var(--color-border);border-radius:11px;
+  background:var(--color-card-raised);color:var(--color-text);
+  font-size:16px;outline-offset:2px;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-confirm-phrase input:focus-visible {
+  outline:2px solid var(--color-primary);
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-progress {
+  margin:0;color:var(--color-text);font-size:12px;font-weight:700;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-actions {
+  flex-wrap:wrap;gap:9px;justify-content:stretch;
+}
+html[data-theme] .dn-cloud-delete-modal .dn-cloud-delete-actions > button {
+  flex:1 1 170px;min-height:46px;
+}
+@media(max-width:370px) {
+  html[data-theme] .dn-settings-home .dn-data-action-grid {grid-template-columns:minmax(0,1fr);}
+  html[data-theme] .dn-settings-home .dn-data-clear-option {
+    align-items:stretch;flex-direction:column;gap:10px;
+  }
+  html[data-theme] .dn-settings-home .dn-data-clear-option .dn-data-outlined-button {
+    align-self:flex-start;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-settings-home .dn-data-outlined-button,
+  html[data-theme] .dn-cloud-delete-modal .dn-data-outlined-button {transition:none;}
+}
