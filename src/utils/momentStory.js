@@ -66,12 +66,22 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
   let activeMonth = null;
   let activeDay = null;
 
+  const presentation = resolveMomentStoryPresentation(source, momentTypes);
   const entries = sortedSummaryActivities(asRecords(source.activities)).flatMap((activity) => {
-    if (activity.entryMode !== 'diary' || !Array.isArray(activity.entries) || !activity.entries.length) {
-      return [makeActivityEntry(source, activity)];
+    const children = Array.isArray(activity.entries) ? activity.entries : [];
+    if (!children.length) return [makeActivityEntry(source, activity)];
+    const ordered = [...children].sort((a, b) => (a.date || '').localeCompare(b.date || '')
+      || (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99'));
+    if (activity.entryMode === 'diary') {
+      return ordered.map((item, index) => makeActivityEntry(source, activity, item, index === 0));
     }
-    return [...activity.entries].sort((a, b) => (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99'))
-      .map((item, index) => makeActivityEntry(source, activity, item, index === 0));
+    if (presentation === STORY_PRESENTATIONS.JOURNEY) {
+      const original = makeActivityEntry(source, activity);
+      const base = { ...original, subEntries: [],
+        attachments: original.attachments.filter((file) => !file.entryId) };
+      return [base, ...ordered.map((item) => makeActivityEntry(source, activity, item))];
+    }
+    return [makeActivityEntry(source, activity)];
   }).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')
     || (a.displayTime || '99:99').localeCompare(b.displayTime || '99:99'));
   for (const entry of entries) {
@@ -104,7 +114,7 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
     momentDate: calendarKey(source.date),
     momentTime: activityTime(source),
     status: getEventStatus(source),
-    presentation: resolveMomentStoryPresentation(source, momentTypes),
+    presentation,
     introduction: source.notes || '',
     timeline: months,
     upcoming,

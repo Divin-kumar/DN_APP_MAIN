@@ -2,7 +2,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   ENTRY_MODES, getMomentEntryMode, createOrAppendActivity, mergeLegacyDiaryActivities,
-  mergeJournalActivities, updateActivityEntry, removeActivityEntry, activityOwnsLinkedId,
+  mergeJournalActivities, linkJournalActivities, unlinkJournalActivities,
+  updateActivityEntry, removeActivityEntry, activityOwnsLinkedId,
 } from './activityEntries.js';
 import { buildMomentStory } from './momentStory.js';
 import { projectMomentTransactions } from './momentTransactions.js';
@@ -90,7 +91,7 @@ test('Journal retains separate Activities until user selects Append or Merge', (
     { mode: ENTRY_MODES.JOURNAL, date, time: '12:00', title: 'Note', targetId: 'memory-one' }, fixed).moment;
   assert.equal(append.activities.length, 2);
   assert.equal(append.activities[0].entries[0].title, 'Note');
-  assert.deepEqual(storyEntries(append)[0].subEntries.map((item) => item.title), ['Note']);
+  assert.deepEqual(storyEntries(append).map((item) => item.title), ['Travel', 'Note', 'Dinner']);
   const merged = mergeJournalActivities(original, 'memory-one', 'memory-two');
   assert.equal(original.activities.length, 2, 'merge never modifies old source');
   assert.equal(merged.activities.length, 1);
@@ -138,4 +139,36 @@ test('backup restore and transaction updates retain merged Activity aliases', ()
   const updated = reconcileExpenseActivities([restored], null, { ...expense, amount: 90, transactionKind: 'expense' });
   assert.equal(updated.length, 1);
   assert.equal(updated[0].activities[0].expenses[0].amount, 90);
+});
+
+
+test('Journal links preserve independent Activity IDs, photos and allow unlink', () => {
+  const moment = { id: 'journal', type: 'Journal',
+    activities: [make('a', 'First'), make('b', 'Second'), make('c', 'Third')],
+    attachments: [{ id: 'photo', activityId: 'b', assetId: 'original' }] };
+  const original = JSON.stringify(moment);
+  const linked = linkJournalActivities(moment, 'a', 'b');
+  assert.equal(JSON.stringify(moment), original);
+  assert.deepEqual(linked.activities.map((a) => a.id), ['a', 'b', 'c']);
+  assert.deepEqual(linked.activities[0].linkedJournalActivityIds, ['b']);
+  assert.deepEqual(linked.attachments, moment.attachments);
+  assert.equal(linkJournalActivities(linked, 'a', 'b'), linked);
+  assert.throws(() => linkJournalActivities(linked, 'b', 'a'), /circle/);
+  assert.throws(() => linkJournalActivities(linked, 'a', 'missing'), /different/);
+  const unlinked = unlinkJournalActivities(linked, 'a', 'b');
+  assert.deepEqual(unlinked.activities[0].linkedJournalActivityIds, []);
+  assert.deepEqual(unlinked.attachments, moment.attachments);
+  assert.throws(() => unlinkJournalActivities(unlinked, 'a', 'b'), /not linked/);
+});
+
+test('Appending linked Journal Activity retains old aliases and updates relationships', () => {
+  const input = { id: 'journal', type: 'Journal', activities: [
+    make('a', 'Main'), make('b', 'Related'), make('c', 'Other', '21:00')], attachments: [] };
+  const linked = linkJournalActivities(linkJournalActivities(input, 'a', 'b'), 'c', 'b');
+  const merged = mergeJournalActivities(linked, 'a', 'b');
+  assert.equal(merged.activities.length, 2);
+  assert.deepEqual(merged.activities[0].linkedJournalActivityIds, []);
+  assert.deepEqual(merged.activities[1].linkedJournalActivityIds, ['a']);
+  assert.deepEqual(storyEntries(merged).map((item) => item.title), ['Main', 'Related', 'Other']);
+  assert.equal(activityOwnsLinkedId(merged.activities[0], 'b'), true);
 });

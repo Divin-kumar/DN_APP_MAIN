@@ -38,6 +38,36 @@ export const journalAppendCandidates = (moment) =>
   (moment?.activities || []).filter((activity) =>
     activity && recordId(activity.id) && !activity.cancelled && activity.status !== 'cancelled');
 
+// Optional, reversible, same-Moment references. Never change record ownership.
+const journalLinks = (activity) => Array.isArray(activity?.linkedJournalActivityIds)
+  ? [...new Set(activity.linkedJournalActivityIds.map(recordId).filter(Boolean))] : [];
+export const linkJournalActivities = (moment, destinationId, sourceId) => {
+  const candidates = journalAppendCandidates(moment);
+  const destination = candidates.find((a) => recordId(a.id) === recordId(destinationId));
+  const source = candidates.find((a) => recordId(a.id) === recordId(sourceId));
+  if (!destination || !source || destination === source) throw new Error('Choose two different available Journal memories.');
+  const fromId = recordId(source.id), toId = recordId(destination.id);
+  if (journalLinks(destination).includes(fromId)) return moment;
+  const nodes = new Map(candidates.map((a) => [recordId(a.id), a]));
+  const visited = new Set();
+  const pathToDestination = (id) => {
+    if (id === toId) return true;
+    if (visited.has(id)) return false;
+    visited.add(id);
+    return journalLinks(nodes.get(id)).some(pathToDestination);
+  };
+  if (pathToDestination(fromId)) throw new Error('Journal memories cannot link in a circle.');
+  return { ...moment, activities: moment.activities.map((a) => a === destination
+    ? { ...a, linkedJournalActivityIds: [...journalLinks(a), fromId] } : a) };
+};
+export const unlinkJournalActivities = (moment, destinationId, sourceId) => {
+  const destination = (moment?.activities || []).find((a) => recordId(a?.id) === recordId(destinationId));
+  const id = recordId(sourceId);
+  if (!destination || !id || !journalLinks(destination).includes(id)) throw new Error('These Journal memories are not linked.');
+  return { ...moment, activities: moment.activities.map((a) => a === destination
+    ? { ...a, linkedJournalActivityIds: journalLinks(a).filter((linkedId) => linkedId !== id) } : a) };
+};
+
 const newEntry = ({ title = '', description = '', date, time = '' }, makeId, now) => ({
   id: makeId(), title: String(title).trim(), description: description || '',
   date: dateKey(date), time: normalizeActivityTime(time), createdAt: now,
@@ -137,7 +167,8 @@ const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
   // projections perform precedence/deduplication while data stays recoverable.
   const storedExpenses = [...(target.expenses || []), ...sources.flatMap((source) => source.expenses || [])];
   const merged = {
-    ...target, ...(daily ? {
+    ...target, linkedJournalActivityIds: [...new Set([...journalLinks(target), ...sources.flatMap(journalLinks)])]
+      .filter((id) => id !== targetId && !sourceIds.has(id)), ...(daily ? {
       title: dailyActivityTitle(dateKey(target.date)), description: '', time: '',
       status: 'in-progress', completed: false, completedAt: null, cancelled: false,
       entryMode: ENTRY_MODES.DAILY,
@@ -153,7 +184,13 @@ const mergeRecords = (moment, target, sources, { daily = false } = {}) => {
   });
   return { ...moment,
     activities: (moment.activities || []).filter((activity) => !sourceIds.has(recordId(activity.id)))
-      .map((activity) => activity === target ? merged : activity),
+      .map((activity) => {
+        if (activity === target) return merged;
+        if (!journalLinks(activity).some((id) => sourceIds.has(id))) return activity;
+        const ids = journalLinks(activity).map((id) => sourceIds.has(id) ? targetId : id);
+        return { ...activity, linkedJournalActivityIds: [...new Set(ids)]
+          .filter((id) => id !== recordId(activity.id)) };
+      }),
     attachments,
   };
 };

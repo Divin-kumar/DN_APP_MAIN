@@ -25,9 +25,9 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
       setDraft(null);
     } catch { /* The scoped writer shows the error in Activity Detail. */ }
   };
-  return <section className="dn-activity-entry-timeline activity-detail-section" aria-label={isDaily ? 'Daily diary entries' : 'Appended Journal entries'}>
+  return <section className="dn-activity-entry-timeline activity-detail-section" aria-label={isDaily ? 'Daily diary entries' : 'Journal entries'}>
     <div className="dn-activity-entry-heading">
-      <h2>{isDaily ? 'Entries for this day' : 'Appended entries'}</h2>
+      <h2>{isDaily ? 'Entries for this day' : 'Journal entries'}</h2>
       <span>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
     </div>
     <div className="dn-activity-entry-items">
