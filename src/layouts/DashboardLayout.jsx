@@ -681,7 +681,7 @@ export default function DashboardLayout() {
             <label className="dn-activity-create-title" htmlFor="dn-quick-activity-title">{quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
               <input id="dn-quick-activity-title" value={quickActivityTitle} onChange={(event) => setQuickActivityTitle(event.target.value)}
                 placeholder={quickMode === ENTRY_MODES.TASKS ? 'Activity title' : 'Entry title'}
-                required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px)').matches} />
+                required autoFocus={typeof window !== 'undefined' && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
             </label>
             <div className="activity-date-time-row">
               <DateField label="Date" name="quick-activity-date" value={quickActivityDate} onChange={(event) => setQuickActivityDate(event.target.value)} aria-label="Activity date" />
