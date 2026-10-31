@@ -1,6 +1,7 @@
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
 import { recordId } from '../utils/recordIdentity.js';
+import { activityOwnsLinkedId } from '../utils/activityEntries.js';
 import { financialDate } from '../utils/financialRecords.js';
 import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
 import { validateSavedListDefaultsDocument } from '../utils/listViewDefaults.js';
@@ -299,13 +300,21 @@ export const buildEventGroupsFromBackup = (backup, options = {}) => {
   const attachmentsByMoment = new Map(backup.moments.map((moment) => [moment.id, []]));
   const expensesByActivity = new Map();
   const ownersByActivity = new Map();
+  const canonicalByActivity = new Map();
   const childKey = (momentId, activityId) => JSON.stringify([momentId, activityId]);
 
   backup.activities.forEach((activity) => {
     const { momentId, ...activityFields } = activity;
     activitiesByMoment.get(momentId).push({ ...activityFields, eventId: activityFields.eventId || momentId, expenses: [] });
-    if (!ownersByActivity.has(activity.id)) ownersByActivity.set(activity.id, []);
-    ownersByActivity.get(activity.id).push(momentId);
+    // Merged Diary/Journal source IDs are still legitimate finance references.
+    // Keep those ledger IDs intact and reattach mirrors to the surviving Activity.
+    for (const id of [activity.id, ...(activity.mergedActivityIds || [])]) {
+      const alias = recordId(id);
+      if (!alias) continue;
+      if (!ownersByActivity.has(alias)) ownersByActivity.set(alias, []);
+      ownersByActivity.get(alias).push(momentId);
+      canonicalByActivity.set(childKey(momentId, alias), activity.id);
+    }
   });
   backup.memories.forEach((memory) => {
     const { momentId, ...memoryFields } = memory;
@@ -322,7 +331,7 @@ export const buildEventGroupsFromBackup = (backup, options = {}) => {
     // An ambiguous legacy link remains in the ledger, never copied to two
     // unrelated Moments merely because they share a child ID.
     if (!momentId || !owners.includes(momentId)) return;
-    const key = childKey(momentId, expense.activityId);
+    const key = childKey(momentId, canonicalByActivity.get(childKey(momentId, expense.activityId)) || expense.activityId);
     if (!expensesByActivity.has(key)) expensesByActivity.set(key, []);
     expensesByActivity.get(key).push(expense);
   });
@@ -367,7 +376,7 @@ const preferDestinationExpenseMirrors = (importedGroups, destinationExpenses) =>
         // A backup must not relink an existing ledger record or copy its stale
         // values into a newly added activity mirror. Existing values win.
         const existingMomentId = recordId(existing.eventId) || recordId(existing.momentId);
-        if (existingMomentId !== recordId(moment.id) || recordId(existing.activityId) !== recordId(activity.id)) return [];
+        if (existingMomentId !== recordId(moment.id) || !activityOwnsLinkedId(activity, existing.activityId)) return [];
         return [portableRecord(existing)];
       }),
     })),
