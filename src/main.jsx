@@ -18,6 +18,7 @@ import { readServiceWorkerVersion, shouldPromptForServiceWorkerUpdate } from './
 import { initializeFirebaseAnalytics } from './firebase/config';
 import './index.css';
 import './design-system.css';
+import './PremiumUX2026.css';
 
 const applyDocumentTheme = (theme) => {
   const normalizedTheme = theme === 'light' ? 'light' : 'dark';
