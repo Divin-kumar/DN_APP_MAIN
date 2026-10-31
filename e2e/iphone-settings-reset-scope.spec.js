@@ -8,11 +8,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   test(`Reset all settings safely restores baseline without deleting Guest records at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page);
+    await page.goto('/settings/code-lists'); // Guest storage is available on the app origin only.
 
     const recordsBefore = await page.evaluate(() =>
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
-    await page.goto('/settings/code-lists');
     const activityOrder = page.getByRole('group', { name: 'Sort Activities in settings' });
     await activityOrder.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Title', exact: true }).click();
