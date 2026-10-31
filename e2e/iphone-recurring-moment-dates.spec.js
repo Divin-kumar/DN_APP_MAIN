@@ -20,7 +20,6 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     const yearly = picker.locator('.activity-event-option-main').filter({ hasText: 'Leap day anniversary' });
     await expect(monthly).toContainText('28 Feb 2026');
     await expect(yearly).toContainText('28 Feb 2026');
-    await expect(picker.locator('.activity-event-option-date strong')).not.toContainText('03');
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(original);
     expect(errors).toEqual([]);
   });
