@@ -18,7 +18,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await rule.getByRole('combobox', { name: 'Filter by' }).click();
     await page.getByRole('option', { name: 'Priority', exact: true }).click();
     await rule.getByRole('combobox', { name: 'Value for Priority' }).click();
-    await page.getByRole('option', { name: 'High', exact: true }).click();
+    await page.getByRole('option', { name: 'High priority', exact: true }).click();
 
     await page.goto('/settings');
     await page.getByRole('button', { name: /Data & Backup/ }).click();
