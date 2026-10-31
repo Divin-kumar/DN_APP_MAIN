@@ -23,6 +23,8 @@ test('an explicit empty Dashboard shortcut list clears only that list', () => {
 });
 
 test('shortcuts restore only existing Moment IDs, once per ID, with recent capped at eight', () => {
+  assert.deepEqual(dashboardConfigurationRestorePatch({ favorites: ['42'], recent: [42] },
+    new Set(['moment-one', 42])), { favorites: ['42'], recent: ['42'] });
   const patch = dashboardConfigurationRestorePatch({
     favorites: ['moment-one', 'not-imported', 'moment-one', 42, 'moment-two'],
     recent: ['moment-one', 'moment-one', 'not-imported', 'moment-two', 42],
