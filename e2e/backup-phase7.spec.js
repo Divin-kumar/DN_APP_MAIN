@@ -12,7 +12,7 @@ test('a backup above 50 MiB exports, previews without writes and restores exact 
     incomes: [{ id: 'phase7-income', name: 'Trip fund', amount: 100, date: '2026-10-28', type: 'Other', paymentMethod: 'Online' }],
     expenses: [{ id: 'phase7-expense', name: 'Tickets', amount: 20, date: '2026-10-28', category: 'Other',
       eventId: 'phase7-moment', activityId: 'phase7-activity', paymentMethod: 'Cash' }] });
-  await page.goto('/settings#backup');
+  await page.goto('/settings/data-backup');
   const hashes = await page.evaluate(async () => {
     const { attachmentRepository } = await import('/src/services/attachmentService.js');
     const moments = JSON.parse(localStorage.getItem('dn_guest_eventGroups'));
@@ -39,7 +39,7 @@ test('a backup above 50 MiB exports, previews without writes and restores exact 
   try {
     const restored = await destination.newPage();
     const restoreErrors = await seedGuest(restored, { moments: [], incomes: [], expenses: [] });
-    await restored.goto('/settings#backup');
+    await restored.goto('/settings/data-backup');
     await restored.getByLabel('Choose a DN backup JSON file').setInputFiles(path);
     const review = restored.getByRole('dialog', { name: 'Review backup restore' });
     await expect(review).toBeVisible({ timeout: 60000 });
@@ -79,7 +79,7 @@ test('a backup above 50 MiB exports, previews without writes and restores exact 
 test('backup reading can be cancelled before confirmation or persistence and the same file can be selected again', async ({ page }) => {
   const errors = await seedGuest(page, { moments: [], incomes: [], expenses: [] });
   await page.setViewportSize({ width: 320, height: 740 });
-  await page.goto('/settings#backup');
+  await page.goto('/settings/data-backup');
   const backup = await page.evaluate(async () => {
     const { createBackupDocument } = await import('/src/services/backupService.js');
     const { DEFAULT_CODE_LISTS } = await import('/src/utils/codeLists.js');
