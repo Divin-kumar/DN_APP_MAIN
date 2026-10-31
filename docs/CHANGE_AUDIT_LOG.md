@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261031-228 | Align Moment hero highlights without unnecessary cards
+- **Finding:** The Moment workspace hero rendered Steps, Reflections and Spent as bare inline numbers separated by dots. Flex wrapping on narrow iPhones could split amounts from labels and produce uneven rows, particularly with large INR totals. This is a presentation issue, not a calculation defect.
+- **Implementation:** Group existing counts in three value-and-label blocks in `src/features/events/components/EventWorkspaceShell.jsx`. Add a scoped, borderless, three-column metric strip in `src/features/events/components/MomentWorkspaceNav.css`: restrained dividers, tabular figures, more room for currency, safe text wrapping and smaller-but-readable 320px typography. Preserve all original numeric values, the source formatter, date/countdown, header actions and section navigation.
+- **QA authored:** Six responsive cases in `e2e/iphone-moment-header-metrics.spec.js` (320/390/430px light/dark), with long Moment title and ₹12,34,56,789 expense, testing column alignment, no page overflow, action sizes, route switching and unchanged Guest data. **Tests not executed**; exact-commit CI/build, WebKit and real iPhone/account checks remain unverified.
+- **Downstream:** No finance logic, records, swipe actions, forms, photo originals, PDFs, backups, saved filters, Guest tour data/version, nested Transaction scroll, five-slot dock or other routes altered. Existing Guest example already demonstrates this shared presentation; fixture stays unchanged.
+- **Release:** Only `DN-2.1-batch2` after CHG-227. Frozen Batch 1 `OldVersion` SHA `57a497e7`, `main`, Firebase, version and production user data unchanged. Separate owner authorization required before any Batch 2 publication.
+
 ## CHG-20261031-227 | Keep premium Moment cards stable on touch and hover
 - **Finding:** Moment cards now use the fixed swipe action popup, but old shared CSS could still shift their main button 246px horizontally on desktop hover. Unconditional card/menu hover could also stick after an iPhone tap. Keep the preferred photo-led card rather than redesign it.
 - **Fix:** `src/components/events/MomentList.css` scopes a no-horizontal-transform override to modern Moments, reserves card lift and menu hover styling for true fine-pointer hover, and restores neutral touch/coarse pointer surfaces. Keep keyboard focus-visible behavior, activity/status information, photos, navigation and current popup gestures unchanged.
