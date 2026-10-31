@@ -27,7 +27,7 @@ On 31 October 2026 the owner marked all 16 manual checklist items Checked on the
 
 ### Premium iPhone bottom navigation
 
-CHG-224 changes the mobile dock to **Dashboard | Activities | + | Moments | Transactions** with a centered, raised universal create button and a compact menu above it. The shared shell retains the current Create Moment/Activity/Transaction and optional Attachment handlers, active navigation state, keyboard support, iOS safe-area spacing and Transactions' nested list scrolling. Desktop sidebar, Guest tour fixtures and data remain unchanged. This change is **committed on OldVersion but not on Firebase**; eight viewport/theme browser cases and a nested-scroll case are authored but not executed. Owner acceptance remains reserved for the separately approved Firebase release.
+CHG-224 changes the mobile dock to **Dashboard | Activities | + | Moments | Transactions** with a centered, raised universal create button and a compact menu above it. The shared shell retains the current Create Moment/Activity/Transaction and optional Attachment handlers, active navigation state, keyboard support, iOS safe-area spacing, touch-landscape navigation and Transactions' nested list scrolling. Non-touch desktop sidebar, Guest tour fixtures and data remain unchanged. This change is **committed on OldVersion but not on Firebase**; eight portrait viewport/theme browser cases, two landscape cases and a nested-scroll case are authored but not executed. Owner acceptance remains reserved for the separately approved Firebase release.
 
 ### Transactions stay scoped during account and Guest demo changes
 
@@ -43,7 +43,7 @@ Monthly Moments dated on the 29th, 30th or 31st repeat on a short month's **last
 
 ### Firebase-only manual QA boundary
 
-The owner now relies on the permanent Firebase app for all future manual testing. The historical 16-item acceptance checkpoint on commit `a769030c` is retained, but new CHG-217–223 changes are not currently published to Firebase and are **not** approved by that checkpoint. No Vercel build or preview is needed to continue development. Exact-SHA unit, lint, build, E2E, offline, backup and upgrade checks must be run before an authorized Firebase batch release. CHG-220 keeps the overall Activities progress fraction based on all active Activities across Moments even when search or Refine shows only a subset of cards. The three newer filter-related browser tests use the actual default `High priority` Code List label.
+The owner now relies on the permanent Firebase app for all future manual testing. The historical 16-item acceptance checkpoint on commit `a769030c` is retained, but new CHG-217–224 changes are not currently published to Firebase and are **not** approved by that checkpoint. No Vercel build or preview is needed to continue development. Exact-SHA unit, lint, build, E2E, offline, backup and upgrade checks must be run before an authorized Firebase batch release. CHG-220 keeps the overall Activities progress fraction based on all active Activities across Moments even when search or Refine shows only a subset of cards. The three newer filter-related browser tests use the actual default `High priority` Code List label.
 
 ## Run locally
 
