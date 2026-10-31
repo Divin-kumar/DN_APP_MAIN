@@ -92,3 +92,19 @@ test('Changing Moment type from Journal Detail clears inherited append target', 
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
   expect(errors).toEqual([]);
 });
+
+test.describe('Touch landscape composer focus safety', () => {
+  test.use({ hasTouch: true, isMobile: true });
+  test('844px landscape width does not auto-open the Activity title keyboard', async ({ page }) => {
+    const moments = fixtureMoments();
+    await page.setViewportSize({ width: 844, height: 390 });
+    const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+    await page.goto('/events/moment-one/activities?create=activity');
+    const dialog = page.getByRole('dialog', { name: 'Add entry' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog.getByRole('textbox', { name: 'Entry title' })).not.toBeFocused();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
+    expect(errors).toEqual([]);
+  });
+});
