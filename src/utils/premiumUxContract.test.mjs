@@ -129,7 +129,7 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(swipe, /aria-label=\{`Actions for/);
   assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
   const transactions = read('../components/financials/TransactionHistory.jsx');
-  assert.match(transactions, /className="transactions-heading"/);
+  assert.match(transactions, /className="transactions-panel dn-transactions-page"/);
   assert.doesNotMatch(transactions, /dn-transaction-add|dn-transactions-heading-description/);
 });
 
@@ -139,14 +139,15 @@ test('finance density has one-row totals and universal-only transaction creation
   const css = read('../design-system.css');
   assert.match(page, /aria-label="Financial totals for matching transactions"/);
   assert.doesNotMatch(page, /className="dn-finance-summary-period"/);
-  assert.match(history, /className="dn-transactions-heading-copy"/);
-  assert.match(history, /<h2 id="dn-transactions-heading">Transactions<\/h2>/);
+  assert.match(history, /<ListControls title="Transaction filters"/);
+  assert.match(history, /aria-label="Search transactions"/);
+  assert.doesNotMatch(history, /<h2 id="dn-transactions-heading">/);
   assert.doesNotMatch(history, /dn-transactions-heading-description|dn-transaction-add|\bonAdd\b/);
   const layout = read('../layouts/DashboardLayout.jsx');
-  assert.match(layout, /onClick=\{\(\) => beginQuickCreate\('transaction'\)\}/);
+  assert.match(layout, /onClick=\{\(event\) => beginQuickCreate\('transaction', event\)\}/);
   assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{activityMoments\} onSubmit=\{saveQuickTransaction\}/);
   assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
-  assert.match(css, /\.dn-transactions-page \.transactions-heading \{\s*display:block !important/);
+  assert.match(css, /\.transactions-panel\.dn-transactions-page \{ padding:12px !important/);
   assert.doesNotMatch(css, /\.dn-transactions-page \.dn-transaction-add/);
 });
 test('Moment hero retains Greeting and attachment quick create while retiring Memory creation', () => {
