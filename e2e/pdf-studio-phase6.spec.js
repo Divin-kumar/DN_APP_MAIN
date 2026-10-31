@@ -8,7 +8,7 @@ async function openStudio(page) {
   await card.focus();
   await page.keyboard.press('Enter');
   await page.getByRole('menuitem', { name: 'PDF Studio', exact: true }).click();
-  const studio = page.getByRole('region', { name: 'PDF Studio', exact: true });
+  const studio = page.locator('.dn-pdf-studio-page');
   await expect(studio).toBeVisible();
   return studio;
 }
