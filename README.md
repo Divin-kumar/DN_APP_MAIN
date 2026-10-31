@@ -1,13 +1,21 @@
 # DN
 
-Development branch: `OldVersion` in `Divin-kumar/DN_APP_MAIN`.
+**Batch 1 Firebase candidate (owner currently deploying/testing):** `OldVersion` at exact commit `57a497e75356dcca64517efbe4790935463f4b61`, covering CHG-213–224. **Do not modify this branch while release validation is underway.**
 
-Approved changes are committed to `OldVersion` and tracked as one deferred Firebase-release batch. **Owner review and manual verification are Firebase-only; Vercel is not a testing requirement.** Publishing to Firebase and changing the version remain separately authorized actions; see [agent rules](AGENTS.md).
+**Batch 2 development branch:** `DN-2.1-batch2`, covering CHG-225 onward. All subsequent changes stay here until the owner separately authorizes integration and release. **Owner review and manual verification are Firebase-only; Vercel is not a testing requirement.** Batch 2 source commits are not evidence that the Batch 1 app is deployed or that Firebase contains those fixes. See [agent rules](AGENTS.md).
 
 - [DN business guide](docs/DN_BUSINESS_GUIDE.md) — plain-language app overview, current features, limits and future improvement checklist.
 - [Master source of truth](docs/MASTER_SOURCE_OF_TRUTH.md) — current behavior, architecture, data and limits.
 - [Agent rules](AGENTS.md) — authorization, development and documentation workflow.
 - [Change log](docs/CHANGE_AUDIT_LOG.md) — latest changes first; verification and release history.
+
+## Batch 2 | iPhone universal + returns to its original color (CHG-225)
+
+**Owner-observed on the Batch 1 iPhone Firebase build:** The center + remains visually highlighted/changes shade after tapping and does not return to its normal fill until tapping elsewhere. The latest screenshot showed the five-position dock and the visually sticky +. Root causes in source include persistent touch `:hover` styling inherited from the design-system and unconditional programmatic focus restoration to + after choosing a create action.
+
+On **`DN-2.1-batch2` only**, CHG-225 preserves the original premium blue gradient and white icon through touch hover/open/closed states, blurs the create trigger after touch-initiated menu toggles, and restores focus to + after choosing a quick-create action **only if that choice was keyboard-initiated**. Escape still intentionally restores focus for keyboard use and `:focus-visible` remains accessible. No behavior of create forms, active routes, stored records, modal save logic or dock geometry was changed.
+
+New focused Playwright touch tests cover repeat tap/open/close, action selection/cancel, outside-tap dismissal, light/dark style consistency and keyboard Escape. **Authored, not executed**. This code has **not been deployed to Firebase or merged into OldVersion**. Test it after the owner's current Batch 1 acceptance, then separately authorize a Batch 2 release.
 
 ## DN 2.1 version reconciliation (30 October 2026)
 
