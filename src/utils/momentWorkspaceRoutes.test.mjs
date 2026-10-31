@@ -15,7 +15,10 @@ test('Activity Detail highlights Activities; every other Moment workspace route 
   assert.equal(getMomentWorkspaceSection('/events/moment/transactions'), 'transactions');
   assert.equal(primaryNavigationPath('/dashboard'), '/dashboard');
   assert.equal(primaryNavigationPath('/'), '/dashboard');
-  assert.equal(primaryNavigationPath('/financials/transactions'), null);
+  for (const route of ['/financials', '/financials/transactions', '/financials/income', '/financials/expenses']) {
+    assert.equal(primaryNavigationPath(route), '/financials/transactions');
+  }
+  assert.equal(primaryNavigationPath('/settings'), null);
 });
 
 test('different Moments and app pages remain distinct navigation contexts', () => {
