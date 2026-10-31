@@ -61,17 +61,17 @@ test.describe('premium Moment cards on touch iPhones', () => {
         openTransform: getComputedStyle(root.querySelector('.dn-v2-moment-open')).transform,
         pageWidth: document.documentElement.scrollWidth,
         viewportWidth: document.documentElement.clientWidth,
-        border: getComputedStyle(root).borderColor,
-        normalBorder: getComputedStyle(document.documentElement).getPropertyValue('--color-border').trim(),
       }));
       expect(Math.abs(state.cardOffsetX)).toBeLessThan(0.5);
       expect(state.openTransform).toBe('none');
       expect(state.pageWidth).toBeLessThanOrEqual(state.viewportWidth + 1);
-      // Both left/right gestures must still open the lightweight popup.
-      await swipe(page, card, { distance: -100 });
-      await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
-      await page.locator('.life-timeline-heading h2').tap();
-      await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
+      // Both directions still summon the same lightweight popup.
+      for (const distance of [-100, 100]) {
+        await swipe(page, card, { distance });
+        await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
+        await page.locator('.life-timeline-heading h2').tap();
+        await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
+      }
       expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
       await card.locator('.dn-v2-moment-open').tap();
       await expect(page).toHaveURL(/\/events\/moment-one\/story$/);
