@@ -42,7 +42,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geom.refresh.height).toBeGreaterThanOrEqual(44);
       expect(geom.refresh.right).toBeLessThanOrEqual(width + 1);
       expect(geom.row.height).toBeLessThanOrEqual(110);
-      await root.getByRole('button',{name:'Back to Settings'}).click();
+      await page.locator('.dn-header').getByRole('link',{name:'Back to Settings'}).click();
       await expect(page).toHaveURL(/\/settings$/);
       expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
         .map(key => localStorage.getItem(key)))).toEqual(before);
