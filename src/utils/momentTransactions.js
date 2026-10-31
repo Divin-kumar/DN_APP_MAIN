@@ -12,7 +12,14 @@ export const projectMomentTransactions = (moments, incomes, expenses, eventId) =
     .map((expense) => ({ ...expense, eventId: expense.eventId || momentRecordId(moment), activityId: expense.activityId || activity.id }))));
   const transactions = toTransactions(mergeFinancialRecords(incomes, 'income'), mergeFinancialExpenses([...expenses, ...nested]));
   const moment = moments.find((item) => momentRecordId(item) === recordId(eventId));
-  return sortTransactions(transactions.filter((item) => recordId(item.eventId) === recordId(eventId)).map((item) => ({ ...item,
-    eventTitle: moment?.name || '', activityTitle: moment?.activities?.find((activity) => activityOwnsLinkedId(activity, item.activityId))?.title || '',
-  })), 'date-desc');
+  return sortTransactions(transactions.filter((item) => recordId(item.eventId) === recordId(eventId)).map((item) => {
+    const owner = moment?.activities?.find((activity) => activityOwnsLinkedId(activity, item.activityId));
+    return { ...item,
+      // View-only canonical ID: standalone finance records keep their original
+      // persisted Activity ID, so backups and historical references survive.
+      originalActivityId: item.activityId,
+      activityId: owner?.id || item.activityId,
+      eventTitle: moment?.name || '', activityTitle: owner?.title || '',
+    };
+  }), 'date-desc');
 };
