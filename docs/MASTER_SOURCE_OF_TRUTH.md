@@ -16,6 +16,10 @@ The version divergence has a concrete release-process explanation: `scripts/depl
 
 A read-only `scripts/audit-live-builds.mjs` now compares public index asset fingerprints, service-worker versions and build identifiers for Firebase production and Vercel review. The OldVersion push workflow reports its findings without publishing or touching accounts, Guest records or originals. Fingerprints can establish whether shells are byte-identical by referenced filenames, but mismatches alone cannot identify feature-level differences; any missing or inaccessible live evidence stays **Unverified**. The branch baseline and synthetic regression gate are ready for further DN 2.1 review work; actual production/source parity and physical installed-iPhone behavior remain explicit **release gates**, not completed checks. See CHG-20261030-163.
 
+## DN 2.1 preview restart and priority-label test corrections (31 October 2026)
+
+**CHG-20261031-218:** The owner reports that Vercel preview is accessible again. Authenticated Vercel deployment history confirms READY builds for the exact `OldVersion` commit `a769030c` in both connected projects; those builds include CHG-213–CHG-216, and this is the verified iPhone manual-QA candidate. The later CHG-217 code and current branch head still have build-rate-limit failures on GitHub; no matching READY final-SHA deployment was found. No assertion of live CHG-217 preview or Firebase source parity is made. Three Playwright suites now select the actual `High priority` Code List label instead of `High`, eliminating false selector failures from the new iPhone/filter/backup journeys. The corrective tests are committed but not executed in CI yet. No runtime business-data or UI behavior changed, and the Guest fixture version is unchanged.
+
 ## DN 2.1 saved List defaults survive backup and restore (31 October 2026)
 
 **CHG-20261031-217** extends the existing version **3** application backup *compatibly*. New backups now carry portable saved List defaults for Moments, Activities and Transactions in the optional `settings.listViewDefaults` object: each domain contains its saved list-state fields and condition group. No working page searches, sort choices, Refine state, raw browser storage keys or account IDs are copied as those defaults. Backup export reads the active Guest/account *Settings baseline* through the already scoped `listStateMemory`. It does not change the public app version or backup format version.
@@ -24,7 +28,7 @@ The backup parser validates the optional object, exact three-domain schema, allo
 
 The Data & Backup description and pre-confirmation restore summary now distinguish included saved defaults from working page state, and clarify omission behavior for old backups. Unit tests cover validation, round-trip, wrong scope, bad sort/condition trees, legacy backup compatibility and preservation of live filters; a 320/390/430px Playwright Guest export journey checks a downloaded v3 JSON's saved sorts and Activity priority default. **Tests were authored but not executed in this change**; a real signed-in round-trip, physical iPhone Safari file download and backup restore and exact-SHA CI remain required release gates. No change to records, original file bytes, attachment metadata, finance, PDF, Guest fixture or tour version.
 
-Add CHG-217 to the owner-directed pending Firebase batch after CHG-213/214/215/216. No Firebase publication, source app-version bump, paid Vercel change or `main` update.
+Add CHG-217 (and subsequent CHG-218 selector/preview QA correction) to the owner-directed pending Firebase batch after CHG-213/214/215/216. No Firebase publication, source app-version bump, paid Vercel change or `main` update.
 
 ## DN 2.1 compact, readable one-row filter rules on 320px iPhone (31 October 2026)
 
