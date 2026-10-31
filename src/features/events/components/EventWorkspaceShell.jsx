@@ -532,13 +532,13 @@ export function EventWorkspaceContent() {
       {activityBusy ? <p role="status">Saving activity…</p> : null}
       {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
-      <main className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel`}>
+      <section className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel`}>
         <div className="event-section-heading dn-workspace-section-heading">
           <h2>{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         </div>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
-      </main>
+      </section>
 
       {greetingDialogOpen ? (
         <ModalDialog title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
