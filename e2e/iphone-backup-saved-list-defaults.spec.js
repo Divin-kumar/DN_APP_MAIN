@@ -21,7 +21,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await page.getByRole('option', { name: 'High priority', exact: true }).click();
 
     await page.goto('/settings');
-    await page.getByRole('button', { name: /Data & Backup/ }).click();
+    await page.getByRole('link', { name: 'Open Data & Backup page' }).click();
     const downloadPromise = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export backup' }).click();
     const download = await downloadPromise;
