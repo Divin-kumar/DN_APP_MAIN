@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-276 | Remove CSV regexp lint blockers in DN 2.1.3 (OldVersion only)
+- **Executed diagnosis:** Fast CI 41288714605 on 7af6956b passed all 538 Node tests, production build, docs/governance and dependency audit with 0 vulnerabilities, but lint failed on `no-control-regex` in CSV safety matching and `no-regex-spaces` in its new test.
+- **Correction:** Use a Unicode control-character category for spreadsheet formula prefix escaping, and quantify test whitespace explicitly. CSV behavior is preserved. The newest exact-SHA fast CI remains the acceptance gate; physical Safari is unverified. No release trigger, storage/schema change or other-branch write.
+
 ## CHG-20261101-275 | DN 2.1.3 filtered CSV export and form/Activities polish (OldVersion only)
 - **Owner request:** Export only transactions matching the current search/Refine/sort and refine the forms and Activities page using fast patch verification rather than automatic full Playwright.
 - **Change:** Export uses the sorted transaction cohort given to History, with no alternate filter or ledger read. UTF-8 CSV includes payment/category/Moment/Activity/notes, safely quotes text and neutralizes spreadsheet formulas. Lightweight Export CSV sits on results line, disabled for empty views. More options previews the actual editable date/time, and overall Diary/Journal Activity cards show writing dates without task deadlines. About release history, package/lock v2.1.3 and Guest tour 2026.11.01.2 are aligned.

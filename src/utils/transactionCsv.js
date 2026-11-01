@@ -9,7 +9,7 @@ export const TRANSACTION_CSV_HEADERS = Object.freeze([
 const cell = (value, numeric = false) => {
   let text = String(value ?? '');
   // Neutralize spreadsheet formula prefixes, including leading whitespace/control chars.
-  if (!numeric && /^[\s\x00-\x1f]*[=+\-@]/u.test(text)) text = "'" + text;
+  if (!numeric && /^[\s\p{Cc}]*[=+@-]/u.test(text)) text = "'" + text;
   return '"' + text.replaceAll('"', '""') + '"';
 };
 export const transactionsToCsv = (transactions = [], events = []) => {

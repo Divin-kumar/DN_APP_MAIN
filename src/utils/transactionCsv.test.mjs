@@ -27,7 +27,7 @@ test('exports only visible sorted records with labels and without mutation', () 
 test('empty CSV has only headers; malicious text cannot be interpreted as a formula', () => {
   const csv = transactionsToCsv([{ transactionKind: 'expense', name: '  +cmd',
     date: '2026-10-03', amount: 3, category: '@evil', paymentMethod: '-oops' }]);
-  assert.match(csv, /"'  \+cmd"/);
+  assert.match(csv, /"'\s{2}\+cmd"/);
   assert.match(csv, /"'@evil"/);
   assert.match(csv, /"'-oops"/);
   assert.match(csv, /"3"/);
