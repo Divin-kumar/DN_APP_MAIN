@@ -1,0 +1,48 @@
+name: DN targeted browser verification (opt-in)
+# Never publishes to Firebase. This suite does not run on ordinary OldVersion commits.
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  targeted-browser:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[verify-211]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check only the DN 2.1.1 previously failing browser journeys
+        run: >-
+          npx playwright test
+          e2e/activity-cover-navigation-summary.spec.js
+          e2e/activity-moment.spec.js
+          e2e/iphone-about-premium.spec.js
+          e2e/iphone-activity-card-readability-phase1.spec.js
+          e2e/local-attachments-readonly.spec.js
+          e2e/responsive.spec.js
+          e2e/scope-recovery.spec.js
+          e2e/story-ownership-density.spec.js
+          --grep "completed Activities require reopening|the opening filtered sequence|Activity Detail and overview share|About keeps release controls|Activity titles and inline status|Moment Activities share action menus|contextual transaction rows|long Activity, five workspace tabs|Sample Activity changes stay|archived parents remain readable|legacy completed status exposes|story ownership and compact Activity cards at 820px|Story, original preview and Activity menu remain"
+      - name: Upload browser failure details
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-211-targeted-browser-failures
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
