@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-273 | Keep cancellation status when splitting Journal continuation (OldVersion only)
+- **Finding:** The 2.1.2 move-to-New transformation could silently set a cancelled child entry back to in-progress. Editing should never change a Journal entry's status unless the owner explicitly requests a status action.
+- **Correction:** Preserve the child's saved status and cancelled/completed markers when making a separate memory. Add focused regression coverage. Previous fast CI e81cf6a9 passed; new exact-commit CI must pass again. No schema, Firebase publication, version, guest sample or other branch change.
+
 ## CHG-20261101-272 | Restore edit-message compatibility and absent-time semantics (OldVersion only)
 - **Exact CI evidence:** v2.1.2 first candidate d80f45a1 passed lint, production build, dependency audit (0 vulnerabilities), documentation and audit checks, but Node tests reported three failures. The existing Dashboard editing test expected the established 'Activity updated' announcement, the Activities edit test required that untimed legacy records not acquire an empty time field, and a new Journal assertion assumed insertion rather than canonical chronological order.
 - **Correction:** Keep the established success announcement, only normalize/assign time when the edit patch supplies one, and assert existing chronological merge behavior. No production publication, non-OldVersion branch write, schema change or Playwright rerun; new exact-SHA fast CI remains mandatory.

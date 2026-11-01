@@ -257,6 +257,20 @@ test('2.1.2 appended Journal editing switches between Append and New safely', ()
     { choice: 'new' }), /title/);
 });
 
+test('2.1.2 a cancelled continuation stays cancelled after becoming standalone', () => {
+  const moment = { id: 'moment', type: 'Journal', activities: [
+    { ...make('parent', 'Parent'), entries: [{ id: 'cancelled-child', title: 'Cancelled', date,
+      status: 'cancelled', cancelled: true, completed: false }] },
+  ], attachments: [] };
+  const moved = editJournalContinuation(moment, 'parent', 'cancelled-child',
+    { title: 'Cancelled yet separate', date }, { choice: 'new' });
+  assert.equal(moved.activities[1].id, 'cancelled-child');
+  assert.equal(moved.activities[1].status, 'cancelled');
+  assert.equal(moved.activities[1].cancelled, true);
+  assert.equal(moved.activities[1].completed, false);
+  assert.equal(moment.activities[0].entries[0].title, 'Cancelled');
+});
+
 test('2.1.2 completed Journal entries still require reopening before edit', () => {
   const moment = { id: 'moment', type: 'Journal', activities: [
     { ...make('parent', 'Parent'), entries: [{ id: 'done', title: 'Completed', date, completed: true }] },

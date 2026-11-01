@@ -175,7 +175,8 @@ export const editJournalContinuation = (moment, ownerId, entryId, patch,
   const standalone = { ...revised, id: newId,
     eventId: recordId(moment.id) || recordId(moment.firestoreId),
     entryMode: ENTRY_MODES.JOURNAL, entries: [],
-    completed: false, cancelled: false, status: 'in-progress', completedAt: null };
+    completed: Boolean(revised.completed), cancelled: Boolean(revised.cancelled || revised.status === 'cancelled'),
+    status: revised.status || 'in-progress', completedAt: revised.completedAt || null };
   return { ...moment, activities: [...activities, standalone], attachments: (moment.attachments || []).map((file) => {
     if (recordId(file.activityId) !== from || recordId(file.entryId) !== id) return file;
     const { entryId: ignoredEntryId, ...owned } = file;
