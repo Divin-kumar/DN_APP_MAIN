@@ -5,7 +5,6 @@ import { Archive, CalendarDays, Check, ChevronLeft, ChevronRight, Circle, Flag, 
 import useScopedMoments from '../../hooks/useScopedMoments';
 import useActivityActions from '../../hooks/useActivityActions';
 import useActivityNavigation from '../../hooks/useActivityNavigation';
-import RichText from '../../components/common/RichText';
 import LoadingSkeleton from '../../components/common/LoadingSkeleton';
 import SwipeActionCard from '../../components/common/SwipeActionCard';
 import ActivityActionDialogs from '../../components/events/ActivityActionDialogs';
@@ -13,7 +12,7 @@ import LinkedTransactions from '../finance/components/LinkedTransactions';
 import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
 import ActivityEntryTimeline from './components/ActivityEntryTimeline';
-import { entryCount, ENTRY_MODES } from '../../utils/activityEntries';
+import { orderedUnifiedContent } from '../../utils/activityEntries';
 import { activityDateLabel, activityDetailPath, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
 import { recordId } from '../../utils/recordIdentity';
 import { getActivityMomentType } from '../../utils/activityRecords';
@@ -56,7 +55,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const status = activityStatus(activity);
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
   const parentTo = navigation.returnTo;
-  const isDaily = activity.entryMode === ENTRY_MODES.DAILY;
+  const contentCount = orderedUnifiedContent(activity).length;
   // Diary day containers share the same Activity actions as other modes.
   const menuActions = [
     status === 'cancelled'
@@ -89,7 +88,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       <div className="activity-detail-metadata" aria-busy={actions.busy}>
         <div className="activity-detail-facts">
           <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
-          {isDaily ? <span className="activity-detail-entry-count">{entryCount(activity)} {entryCount(activity) === 1 ? 'entry' : 'entries'}</span> : null}
+          <span className="activity-detail-entry-count">{contentCount} {contentCount === 1 ? 'entry' : 'entries'}</span>
           <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
@@ -99,11 +98,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       <p className="activity-detail-due"><CalendarDays size={13} aria-hidden="true" />{activityDateLabel(activity.date)}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</p>
       {actions.error && !actions.draft && !actions.deleteTarget ? <p className="quick-create-error" role="alert">{actions.error}</p> : null}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{actions.announcement}</p>
-      {activity.description ? <section className="activity-detail-section" aria-labelledby="activity-description-heading">
-        <h2 className="sr-only" id="activity-description-heading">Description</h2>
-        <RichText value={activity.description} headingLevel={3} className="activity-description" />
-      </section> : null}
-      <ActivityEntryTimeline activity={activity} moment={moment} actions={actions} target={target} />
+      <ActivityEntryTimeline activity={activity} actions={actions} target={target} />
       {Array.isArray(activity.linkedJournalActivityIds) && moment.activities.some((item) =>
         activity.linkedJournalActivityIds.some((id) => recordId(id) === recordId(item.id))) ? (
         <section className="activity-detail-section dn-linked-journal-memories" aria-label="Linked Journal memories">
