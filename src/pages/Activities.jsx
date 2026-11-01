@@ -194,6 +194,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             progressLabel="overall active steps complete"
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
+            getEntryMode={(view) => getMomentEntryMode(momentsById.get(projection.context.get(view).momentId), adminValues.eventTypes)}
             getMoment={(view) => momentsById.get(projection.context.get(view).momentId)}
             visualCards uid={uid} isGuest={isGuest} sample={getActiveSampleScenario(uid)}
             includeCancelled hasActiveFilters={Boolean(activeCount || conditions.activeCount)}

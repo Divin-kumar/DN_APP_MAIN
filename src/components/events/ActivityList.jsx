@@ -11,7 +11,7 @@ import '../common/RecordCardPremium.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
-  showCancelled = false, includeCancelled = false, hasActiveFilters = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id,
+  showCancelled = false, includeCancelled = false, hasActiveFilters = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id, getEntryMode,
   getEventName, getMoment, visualCards = false, showMomentName = true, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
@@ -31,12 +31,14 @@ export default function ActivityList({ eventName = 'This event', activities, all
         const key = getActivityKey(activity), status = activityStatus(activity);
         const parentMoment = visualCards ? getMoment?.(activity) : null;
         const completed = status === 'completed', cancelled = status === 'cancelled';
+        const entryMode = getEntryMode?.(activity) || activity.entryMode;
+        const writing = entryMode === ENTRY_MODES.DAILY || entryMode === ENTRY_MODES.JOURNAL;
         let date; try { date = parseMomentDate(activity.date); } catch { /* Safe legacy date. */ }
-        const overdue = activity.entryMode !== ENTRY_MODES.DAILY && !completed && !cancelled && date && date < new Date(new Date().setHours(0, 0, 0, 0));
-        const dueText = !date ? 'Date to be decided' : activity.entryMode === ENTRY_MODES.DAILY
-          ? new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date) : overdue
-          ? `Past due · ${new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date)}`
-          : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)}`;
+        const dateText = date ? new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short' }).format(date) : '';
+        const overdue = !writing && !completed && !cancelled && date && date < new Date(new Date().setHours(0, 0, 0, 0));
+        const dueText = !date ? 'Date to be decided' : entryMode === ENTRY_MODES.DAILY
+          ? `Diary · ${dateText}` : entryMode === ENTRY_MODES.JOURNAL
+          ? `Journal · ${dateText}` : overdue ? `Past due · ${dateText}` : `Due ${dateText}`;
         // Swiping either direction only reveals actions; it never writes by itself.
         const actions = readOnly ? [] : [
           ...(onEdit && isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),

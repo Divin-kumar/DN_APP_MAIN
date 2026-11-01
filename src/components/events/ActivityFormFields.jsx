@@ -17,8 +17,13 @@ export default function ActivityFormFields({
   const titleLabel = labelOverride || (isWriting ? 'Entry title' : 'Activity title');
   const options = getActiveCodeListMeta('activityPriorities', priorities);
   const priority = value.priority || 'medium';
-  const metadata = [showDate && 'date', 'time', showPriority && 'priority', !isWriting && 'notes']
-    .filter(Boolean).join(', ');
+  // Show existing editable values before expanding More options.
+  const metadata = [
+    showDate ? (value.date || 'Choose date') : null,
+    value.time || 'No time',
+    showPriority ? options.find((option) => option.value === priority)?.label || priority : null,
+    !isWriting && 'Notes',
+  ].filter(Boolean).join(' · ');
   return <>
     <label className="dn-activity-create-title" htmlFor={`${namePrefix}-title`}>{titleLabel}
       <input id={`${namePrefix}-title`} aria-label={titleLabel} type="text"

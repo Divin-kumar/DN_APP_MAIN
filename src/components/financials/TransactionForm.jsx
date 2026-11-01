@@ -82,6 +82,8 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
+  const supportingDetails = [form.date || 'Choose date', form.time || 'No time',
+    form.eventId && 'Moment linked', form.activityId && 'Activity linked'].filter(Boolean).join(' · ');
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -160,8 +162,7 @@ export default function TransactionForm({
         {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
           ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
       </fieldset>
-      <FormDisclosure label="More options" hint={form.eventId
-        ? 'Linked Moment, date, time and notes' : 'Date, time, links and notes'}>
+      <FormDisclosure label="More options" hint={supportingDetails}>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
         <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
