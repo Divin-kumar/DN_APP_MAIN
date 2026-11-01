@@ -39,14 +39,14 @@ export default function ActivityList({ eventName = 'This event', activities, all
           : `Due ${new Intl.DateTimeFormat('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }).format(date)}`;
         // Swiping either direction only reveals actions; it never writes by itself.
         const actions = readOnly ? [] : [
-          ...(onEdit && isActivityEditable(activity) && activity.entryMode !== ENTRY_MODES.DAILY ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
-          ...(!cancelled && activity.entryMode !== ENTRY_MODES.DAILY && onToggleComplete ? [{ label: completed ? 'Reopen' : 'Complete',
+          ...(onEdit && isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
+          ...(!cancelled && onToggleComplete ? [{ label: completed ? 'Reopen' : 'Complete',
             icon: completed ? RotateCcw : Check, onClick: () => onToggleComplete(activity.id, activity) }] : []),
-          ...(activity.entryMode !== ENTRY_MODES.DAILY && onToggleCancelled ? [{ label: cancelled ? 'Restore' : 'Cancel',
+          ...(onToggleCancelled ? [{ label: cancelled ? 'Restore' : 'Cancel',
             icon: cancelled ? RotateCcw : XCircle, onClick: () => onToggleCancelled(activity.id, activity) }] : []),
         ];
         const card = <SwipeActionCard key={key} as="article" className={`event-activity-card${visualCards && parentMoment ? ' dn-v2-activity-card' : ''}${readOnly ? ' is-readonly' : ''}${completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${cancelled ? ' is-cancelled' : ''}`}
-          label={activity.title || 'Untitled activity'} menuButton={false}
+          label={activity.title || 'Untitled activity'} menuButton={!readOnly && (actions.length > 0 || Boolean(onDelete))}
           onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={!readOnly && (actions.length > 0 || Boolean(onDelete))}
           disabled={disabled} otherActions={actions} onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
           <div className="event-activity-main">
@@ -55,7 +55,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
               onOpen={onOpen ? () => onOpen(activity) : undefined} disabled={disabled} /> : null}
             <div className="event-activity-copy">
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
-              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={activity.entryMode === ENTRY_MODES.DAILY ? `${entryCount(activity)} diary entries` : `Status: ${activityStatusLabel(activity)}`}>{activity.entryMode === ENTRY_MODES.DAILY ? `${entryCount(activity)} entries` : activityStatusLabel(activity)}</span>
+              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</span>
             </div>
             <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
           </div></div>

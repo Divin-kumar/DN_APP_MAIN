@@ -57,14 +57,15 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
   const parentTo = navigation.returnTo;
   const isDaily = activity.entryMode === ENTRY_MODES.DAILY;
+  // Diary day containers share the same Activity actions as other modes.
   const menuActions = [
-    ...(!isDaily ? [status === 'cancelled'
+    status === 'cancelled'
       ? { label: 'Restore', icon: RotateCcw, onClick: () => actions.setCancelled(target, false) }
-      : { label: status === 'completed' ? 'Reopen' : 'Close', icon: status === 'completed' ? RotateCcw : Check,
+      : { label: status === 'completed' ? 'Reopen' : 'Complete', icon: status === 'completed' ? RotateCcw : Check,
           disabled: status !== 'completed' && (moment.archived || ['archived', 'cancelled'].includes(moment.status)),
           onClick: () => actions.setCompleted(target, status !== 'completed') },
     ...(isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => actions.edit(target) }] : []),
-    ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => actions.setCancelled(target, true) }] : [])] : []),
+    ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle, onClick: () => actions.setCancelled(target, true) }] : []),
   ];
   const dates = [
     { label: 'Created', value: activityDateLabel(activity.createdAt, '') },
@@ -87,7 +88,8 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       {moment.archived ? <p className="activity-archived"><Archive size={14} aria-hidden="true" /> Archived Moment</p> : null}
       <div className="activity-detail-metadata" aria-busy={actions.busy}>
         <div className="activity-detail-facts">
-          <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{isDaily ? `${entryCount(activity)} entries` : activityStatusLabel(activity)}</span>
+          <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
+          {isDaily ? <span className="activity-detail-entry-count">{entryCount(activity)} {entryCount(activity) === 1 ? 'entry' : 'entries'}</span> : null}
           <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}

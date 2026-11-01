@@ -10,7 +10,7 @@ import { ENTRY_MODES } from '../../utils/activityEntries';
 // destination and the scoped persistence callback vary between entry points.
 export default function ActivityFormFields({
   value, onChange, priorities = [], mode = ENTRY_MODES.TASKS, disabled = false,
-  namePrefix = 'dn-activity', showDate = true, showPriority = true,
+  namePrefix = 'dn-activity', showDate = true, showPriority = true, dateLocked = false,
   notesLabel, titleLabel: labelOverride, autoFocus = false,
 }) {
   const isWriting = mode !== ENTRY_MODES.TASKS;
@@ -34,10 +34,11 @@ export default function ActivityFormFields({
     <FormDisclosure label="More options" hint={metadata}>
       <div className="activity-date-time-row">
         {showDate ? <DateField label="Date" name={`${namePrefix}-date`} value={value.date || ''}
-          onChange={(event) => onChange({ date: event.target.value })} disabled={disabled} required /> : null}
+          onChange={(event) => onChange({ date: event.target.value })} disabled={disabled || dateLocked} required /> : null}
         <ActivityTimeField value={value.time || ''} onChange={(time) => onChange({ time })}
           disabled={disabled} />
       </div>
+      {dateLocked ? <p className="dn-entry-mode-help">Diary entries stay on this day. You can change the time below.</p> : null}
       {showPriority ? <div className="dn-activity-create-priority">
         <label htmlFor={`${namePrefix}-priority`}>Priority</label>
         <DropdownSelect id={`${namePrefix}-priority`} aria-label="Activity priority"

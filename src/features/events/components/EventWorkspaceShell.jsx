@@ -10,6 +10,8 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, CalendarDays, Download, FileText, Images, ListChecks, Pencil, Receipt, Save, Search, Sparkles, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
+import ActivityActionDialogs from '../../../components/events/ActivityActionDialogs';
+import useActivityActions from '../../../hooks/useActivityActions';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
 import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/attachmentService';
@@ -84,6 +86,7 @@ export function EventWorkspaceContent() {
   const activitySavingRef = useRef(false);
   const [activityBusy, setActivityBusy] = useState(false);
   const [activityTitle, setActivityTitle] = useState('');
+  const listActivityActions = useActivityActions();
   const [activityDate, setActivityDate] = useState(() => formatMomentDate(new Date()));
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityDescription, setActivityDescription] = useState('');
@@ -463,13 +466,21 @@ export function EventWorkspaceContent() {
               }}>Link or append existing</button>
               <span>Organize memories later without automatic merging.</span>
             </div> : null}
-          <ActivityList readOnly visualCards showMomentName={false}
+          <ActivityList visualCards showMomentName={false}
             uid={user?.uid} isGuest={isGuest} sample={sample}
             getMoment={() => event}
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
             allActivities={activities} progressActivities={activities}
-            includeCancelled
+            includeCancelled disabled={activityBusy || listActivityActions.busy}
+            onEdit={(activity) => listActivityActions.edit({ momentId: eventId, activityId: recordId(activity.id) })}
+            onToggleComplete={(_id, activity) => listActivityActions.setCompleted(
+              { momentId: eventId, activityId: recordId(activity.id) },
+              !(activity.completed || activity.status === 'completed')).catch(() => {})}
+            onToggleCancelled={(_id, activity) => listActivityActions.setCancelled(
+              { momentId: eventId, activityId: recordId(activity.id) },
+              !(activity.cancelled || activity.status === 'cancelled')).catch(() => {})}
+            onDelete={(_id, activity) => listActivityActions.requestDelete({ momentId: eventId, activityId: recordId(activity.id) })}
             hasActiveFilters={Boolean(activitySearch.trim()) || Boolean(activityConditions.activeCount)}
             onOpen={(activity) => navigate(activityDetailPath(eventId, activity.id), { state: {
               activityOrigin: `/events/${encodeURIComponent(eventId)}/activities`,
@@ -679,6 +690,7 @@ export function EventWorkspaceContent() {
           </form>
         </ModalDialog>
       ) : null}
+      <ActivityActionDialogs actions={listActivityActions} />
       {pendingTaskCancellation ? <ConfirmDialog title="Cancel task?"
         message={`Cancel “${pendingTaskCancellation.title}”? You can restore it later by changing its status.`}
         confirmLabel="Cancel task" busy={activityBusy} onCancel={() => setPendingTaskCancellation(null)}

@@ -68,9 +68,9 @@ export const unlinkJournalActivities = (moment, destinationId, sourceId) => {
     ? { ...a, linkedJournalActivityIds: journalLinks(a).filter((linkedId) => linkedId !== id) } : a) };
 };
 
-const newEntry = ({ title = '', description = '', date, time = '' }, makeId, now) => ({
+const newEntry = ({ title = '', description = '', date, time = '', priority = 'medium' }, makeId, now) => ({
   id: makeId(), title: String(title).trim(), description: description || '',
-  date: dateKey(date), time: normalizeActivityTime(time), createdAt: now,
+  date: dateKey(date), time: normalizeActivityTime(time), priority, createdAt: now,
 });
 export const orderedActivityEntries = (activity) => activityEntries(activity).slice().sort((a, b) => {
   const dates = dateKey(a.date).localeCompare(dateKey(b.date));
@@ -87,7 +87,7 @@ export const createOrAppendActivity = (moment, { title, description = '', date, 
   const day = dateKey(date);
   if (!day || !String(title || '').trim()) throw new Error('Enter an entry title and a valid date.');
   if (!Object.values(ENTRY_MODES).includes(mode)) throw new Error('Choose a configured Moment activity mode.');
-  const item = newEntry({ title, description, date: day, time }, makeId, now);
+  const item = newEntry({ title, description, date: day, time, priority }, makeId, now);
   const current = Array.isArray(moment?.activities) ? moment.activities : [];
   let selected = null;
   if (mode === ENTRY_MODES.DAILY) selected = findDailyActivity(moment, day);

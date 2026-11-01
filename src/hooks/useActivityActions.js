@@ -2,10 +2,11 @@ import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import { useEffect, useRef, useState } from 'react';
 import useAppStore from '../store/useAppStore';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
-import { activityCancellationPatch, activityCompletionPatch } from '../utils/activityDetail';
+import { activityCancellationPatch, activityCompletionPatch, activityStatusTransitionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
-import { updateActivityEntry, removeActivityEntry, getMomentEntryMode } from '../utils/activityEntries';
+import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries, ENTRY_MODES } from '../utils/activityEntries';
+import { recordId } from '../utils/recordIdentity';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
 // scoped writer, so every entry point serializes changes to a parent Moment.
@@ -60,8 +61,23 @@ export default function useActivityActions() {
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };
   const saveEntry = (target, entryId, patch) => run(target,
-    (activity) => updateActivityEntry(activity, entryId, patch),
+    (activity) => {
+      const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
+      if (!entry) throw new Error('Entry no longer exists.');
+      assertActivityEditable(entry);
+      if (activity.entryMode === ENTRY_MODES.DAILY && patch.date !== activity.date)
+        throw new Error('Diary entries must keep their parent day date.');
+      return updateActivityEntry(activity, entryId, patch);
+    },
     'entry-edit:' + entryId, 'Entry updated');
+  const setEntryStatus = (target, entryId, status) => run(target,
+    (activity, moment) => {
+      const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
+      if (!entry) throw new Error('Entry no longer exists.');
+      return updateActivityEntry(activity, entryId, activityStatusTransitionPatch(entry, moment, status));
+    },
+    'entry-status:' + entryId + ':' + status,
+    status === 'completed' ? 'Entry completed' : status === 'cancelled' ? 'Entry cancelled' : 'Entry reopened');
   const deleteEntry = (target, entryId) => run(target,
     (activity) => removeActivityEntry(activity, entryId),
     'entry-delete:' + entryId, 'Entry removed');
@@ -71,7 +87,7 @@ export default function useActivityActions() {
     setDeleteTarget(null); if (changed) after?.();
   }).catch(() => {});
   return { busy, error, announcement, draft, deleteTarget, edit, save, closeEditor, requestDelete, remove,
-    saveEntry, deleteEntry,
+    saveEntry, deleteEntry, setEntryStatus,
     changeDraft: (patch) => { if (!saving.current) setDraft((value) => ({ ...value, ...patch })); },
     closeDelete: () => { if (!saving.current) setDeleteTarget(null); }, setCompleted, setCancelled };
 }

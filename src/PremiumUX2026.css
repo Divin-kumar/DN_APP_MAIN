@@ -803,3 +803,46 @@ html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-item > stron
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-form-disclosure > summary::after { transition: none; }
 }
+
+/* DN 2.1.1 shared three-dot menu, kept outside the content reading order. */
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .dn-swipe-main { position:relative; }
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .dn-record-menu-trigger {
+  position:absolute; top:4px; right:4px; z-index:4; margin:0; width:44px; height:44px;
+  border-radius:12px; background:color-mix(in srgb,var(--color-card) 89%,transparent);
+  backdrop-filter:blur(12px); color:var(--color-text-muted);
+}
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .event-activity-copy { padding-right:51px !important; }
+html[data-theme] .dn-activity-entry-item.dn-swipe-surface {
+  position:relative; overflow:visible; isolation:auto; border-radius:0;
+  background:transparent; box-shadow:none;
+}
+html[data-theme] .dn-activity-entry-item > .dn-swipe-main {
+  display:grid; grid-template-columns:minmax(0,1fr); gap:6px;
+  min-width:0; padding-right:48px; background:transparent;
+}
+html[data-theme] .dn-activity-entry-item .dn-record-menu-trigger {
+  position:absolute; top:0; right:0; margin:0; background:transparent; border-radius:12px;
+}
+html[data-theme] .dn-activity-entry-item .dn-swipe-main > strong {
+  color:var(--color-text); font-size:clamp(15px,2vw,17px);
+  font-weight:720; line-height:1.35; overflow-wrap:anywhere;
+}
+html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-item .dn-swipe-main > strong {
+  font-size:clamp(16px,2.2vw,18px);
+}
+html[data-theme] .dn-activity-entry-top { justify-content:flex-start; gap:9px; flex-wrap:wrap; }
+html[data-theme] .dn-activity-entry-status {
+  padding:3px 8px; border:1px solid var(--color-border); border-radius:999px;
+  color:var(--color-text-muted); font-size:10px; line-height:1.35; font-weight:650;
+}
+html[data-theme] .dn-activity-entry-status.status-completed {
+  color:var(--color-primary); background:color-mix(in srgb,var(--color-success) 9%,transparent);
+}
+html[data-theme] .dn-activity-entry-status.status-cancelled { opacity:.7; }
+html[data-theme] .dn-activity-entry-item .dn-swipe-main > small { color:var(--color-text-muted); font-size:11px; }
+html[data-theme] .dn-activity-entry-item:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+@media(max-width:360px) {
+  html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .event-activity-copy {
+    padding-right:45px !important;
+  }
+}

@@ -187,3 +187,6 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   border-radius:12px; color:var(--color-text); background:var(--color-card);
   text-decoration:none; font-size:13px; font-weight:600; overflow-wrap:anywhere; }
 .dn-linked-journal-list a:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
+
+/* DN 2.1.1: Diary status and day entry count are separately readable. */
+.activity-detail-entry-count { color:var(--color-text-muted); font-size:11px; font-weight:650; }

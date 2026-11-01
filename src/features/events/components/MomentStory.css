@@ -318,3 +318,19 @@ html[data-theme] .dn-task-row-end .dn-task-status-control:disabled {cursor:wait;
 @media(prefers-reduced-motion:reduce) {
  html[data-theme] .dn-task-status-switcher {transition:none;}
 }
+
+/* DN 2.1.1 Journal editorial hierarchy: chapter titles above body copy. */
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-chapter .dn-v2-story-entry-body > h4 {
+  margin:0 0 2px; font-family:Georgia,"Times New Roman",serif;
+  font-size:clamp(1.5rem,4.6vw,2.05rem); font-weight:730;
+  line-height:1.22; letter-spacing:-.025em; color:var(--color-text); overflow-wrap:anywhere;
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-chapter .dn-v2-story-entry-body > h4 a {
+  color:inherit; font:inherit; text-decoration:none;
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-chapter .dn-v2-story-entry-description {
+  font-size:clamp(.94rem,1.85vw,1.06rem); font-weight:400; line-height:1.83; letter-spacing:normal;
+}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-continuation .dn-story-subentry > strong {
+  font-size:clamp(1.13rem,2.75vw,1.32rem); font-weight:700; line-height:1.36; letter-spacing:-.012em;
+}
