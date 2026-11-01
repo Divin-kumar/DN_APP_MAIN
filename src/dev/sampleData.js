@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Every Activity is independent and can hold multiple dated writing entries. Open an Activity and use universal + → Add entry to record more detail, with an optional clock time. Old content and original photos stay linked. Story and PDF Studio read the same Activity content. You can explore filters, original photos, Transactions and Settings → Data & Backup using these disposable Guest examples. Activity and Transaction forms keep supporting choices under More options. Your JSON backup includes original files; you can cancel backup preparation before restoring.',
+    notes: 'Welcome to Journal. Every Activity is independent and can hold multiple dated writing entries. Open an Activity and use universal + → Add entry to record more detail, with an optional clock time. Old content and original photos stay linked. Story and PDF Studio read the same Activity content. You can explore filters, the Gallery of original photos, Transactions and Settings → Data & Backup using these disposable Guest examples. Activity and Transaction forms keep supporting choices under More options. Your JSON backup includes original files; you can cancel backup preparation before restoring.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
