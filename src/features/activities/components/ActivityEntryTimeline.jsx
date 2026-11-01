@@ -1,92 +1,93 @@
 import { useState } from 'react';
-import { Check, Pencil, RotateCcw, XCircle } from 'lucide-react';
+import { Pencil } from 'lucide-react';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import RichText from '../../../components/common/RichText';
-import SwipeActionCard from '../../../components/common/SwipeActionCard';
-import ActivityFormFields from '../../../components/events/ActivityFormFields';
-import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
-import useAppStore from '../../../store/useAppStore';
-import { activityStatus, activityStatusLabel } from '../../../utils/activityDetail';
-import { isActivityEditable } from '../../../utils/scopedRecordActions';
-import { orderedActivityEntries, ENTRY_MODES } from '../../../utils/activityEntries';
+import RichTextEditor from '../../../components/common/RichTextEditor';
+import DateField from '../../../components/common/DateField';
+import ActivityTimeField from '../../../components/common/ActivityTimeField';
+import { orderedUnifiedContent } from '../../../utils/activityEntries';
+import { parseMomentDate } from '../../../utils/momentDates';
 
-// Entry edits never change the owning Activity ID, attachments or linked costs.
-export default function ActivityEntryTimeline({ activity, moment, actions, target }) {
-  const priorities = useAppStore((state) => state.adminValues.activityPriorities);
+// A linear reading surface. Legacy root descriptions and historical nested
+// entries are rendered as content rows without changing their stored identity.
+const readableDate = (value) => {
+  const date = parseMomentDate(value);
+  return date ? date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Date not recorded';
+};
+const readableTime = (value) => {
+  if (!value) return 'Time not recorded';
+  const [hours, minutes] = value.split(':').map(Number);
+  return new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true,
+    timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 0, 1, hours, minutes)));
+};
+
+export default function ActivityEntryTimeline({ activity, actions, target }) {
   const [draft, setDraft] = useState(null);
   const [deleting, setDeleting] = useState(null);
-  const entries = orderedActivityEntries(activity);
-  if (!entries.length) return null;
-  const isDaily = activity.entryMode === ENTRY_MODES.DAILY;
+  const rows = orderedUnifiedContent(activity);
   const save = async (event) => {
     event.preventDefault();
-    if (!draft?.title?.trim()) return;
+    if (!draft?.description?.trim() || !draft.date) return;
     try {
-      await actions.saveEntry(target, draft.id, {
-        title: draft.title.trim(), description: draft.description || '',
-        date: isDaily ? activity.date : draft.date,
-        time: draft.time, priority: draft.priority,
-      }, isDaily ? null : { choice: draft.journalChoice, targetId: draft.journalTargetId });
-      setDraft(null);
-    } catch { /* Scoped Activity Detail displays the failure. */ }
+      if (draft.root) {
+        // The existing Activity edit path retains the root description and ID.
+        setDraft(null);
+        actions.edit(target);
+        return;
+      }
+      const changed = await actions.saveEntry(target, draft.id, {
+        description: draft.description, date: draft.date, time: draft.time || '',
+      });
+      if (changed) setDraft(null);
+    } catch { /* Scoped action displays the failure. */ }
   };
-  const editEntry = (entry) => setDraft({
-    ...entry, date: isDaily ? activity.date : entry.date || activity.date,
-    time: entry.time || '', priority: entry.priority || activity.priority || 'medium',
-    journalChoice: 'append', journalTargetId: target.activityId,
-  });
-  return <section className={`dn-activity-entry-timeline activity-detail-section${isDaily ? '' : ' dn-journal-continuation-detail'}`} aria-label={isDaily ? 'Daily diary entries' : 'Journal entries'}>
-    {isDaily ? <div className="dn-activity-entry-heading">
-      <h2>Entries for this day</h2>
-      <span>{entries.length} {entries.length === 1 ? 'entry' : 'entries'}</span>
-    </div> : <h2 className="sr-only">Journal continuation</h2>}
-    <div className="dn-activity-entry-items">
-      {entries.map((entry) => {
-        const status = activityStatus(entry);
-        const menuActions = [
-          ...(isActivityEditable(entry) ? [{ label: 'Edit', icon: Pencil, onClick: () => editEntry(entry) }] : []),
-          status === 'cancelled'
-            ? { label: 'Restore', icon: RotateCcw, onClick: () => actions.setEntryStatus(target, entry.id, 'in-progress') }
-            : { label: status === 'completed' ? 'Reopen' : 'Complete',
-                icon: status === 'completed' ? RotateCcw : Check,
-                onClick: () => actions.setEntryStatus(target, entry.id, status === 'completed' ? 'in-progress' : 'completed') },
-          ...(status !== 'cancelled' ? [{ label: 'Cancel', icon: XCircle,
-            onClick: () => actions.setEntryStatus(target, entry.id, 'cancelled') }] : []),
-        ];
-        return <SwipeActionCard as="article" key={entry.id} className="dn-activity-entry-item"
-          label={entry.title || 'Untitled entry'} menuButton menuLabel={`Entry options: ${entry.title || 'Untitled entry'}`}
-          swipeEnabled={false} disabled={actions.busy} otherActions={menuActions}
-          onDelete={() => setDeleting(entry)}>
-          <div className="dn-activity-entry-top">
-            <time dateTime={entry.date}>{entry.time || 'No time'}</time>
-            <span className={`dn-activity-entry-status status-${status}`}>{activityStatusLabel(entry)}</span>
-          </div>
-          <strong>{entry.title || 'Untitled entry'}</strong>
-          {!isDaily && entry.date && entry.date !== activity.date ? <small>{entry.date}</small> : null}
-          {entry.description ? <RichText value={entry.description} className="free-text-content" /> : null}
-        </SwipeActionCard>;
-      })}
+  return <section className="activity-detail-section dn-content-section" aria-label="Activity entries">
+    <div className="dn-content-heading">
+      <h2>Entries</h2>
+      <span>{rows.length} {rows.length === 1 ? 'entry' : 'entries'}</span>
     </div>
+    {rows.length ? <div className="dn-content-rows">{rows.map((row) => {
+      const differentDay = !row.date || row.date !== activity.date;
+      return <article className="dn-content-row" key={row.id}>
+        <div className="dn-content-row-main">
+          <div className="dn-content-row-meta">
+            {differentDay ? <span className="dn-content-row-date">{readableDate(row.date)}</span> : null}
+            <span className="dn-content-row-time">{readableTime(row.time)}</span>
+          </div>
+          <div className="dn-content-row-body">
+            {!row.root && row.title ? <strong className="dn-content-legacy-title">{row.title}</strong> : null}
+            {row.description ? <RichText value={row.description} className="free-text-content" /> : null}
+          </div>
+        </div>
+        <div className="dn-content-row-actions">
+          <button type="button" aria-label={row.root ? 'Edit original activity writing' : 'Edit entry'}
+            title="Edit" disabled={actions.busy} onClick={() => row.root
+              ? actions.edit(target) : setDraft({ ...row, date: row.date || activity.date })}>
+            <Pencil size={15} aria-hidden="true" />
+          </button>
+          {!row.root ? <button type="button" disabled={actions.busy} className="dn-content-remove"
+            onClick={() => setDeleting(row)} aria-label="Delete entry">Delete</button> : null}
+        </div>
+      </article>;
+    })}</div> : <p className="dn-content-empty">No entries yet. Use + and choose Add entry to write your first update.</p>}
     {draft ? <ModalDialog title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
-      <form className="form-surface quick-create-activity-form dn-activity-entry-editor" onSubmit={save} aria-busy={actions.busy}>
-        <p className="dashboard-activity-context">{isDaily ? 'Diary · ' + activity.date : 'Journal · ' + (activity.title || 'Memory')}</p>
-        {!isDaily && moment ? <ActivityEntryModeFields moment={moment} date={draft.date}
-          choice={draft.journalChoice} targetId={draft.journalTargetId}
-          namePrefix="dn-continuation-edit" editing continuation disabled={actions.busy}
-          onChoiceChange={(journalChoice) => setDraft((current) => ({ ...current, journalChoice }))}
-          onTargetChange={(journalTargetId) => setDraft((current) => ({ ...current, journalTargetId }))} /> : null}
-        <ActivityFormFields namePrefix="dn-entry" mode={isDaily ? ENTRY_MODES.DAILY : ENTRY_MODES.JOURNAL}
-          value={draft} priorities={priorities} dateLocked={isDaily} disabled={actions.busy}
-          notesLabel="Entry notes"
-          onChange={(patch) => setDraft((previous) => ({ ...previous, ...patch }))} />
+      <form className="form-surface dn-entry-edit-form" aria-busy={actions.busy} onSubmit={save}>
+        <RichTextEditor label="Entry content" value={draft.description || ''} rows={5}
+          disabled={actions.busy} onChange={(description) => setDraft((previous) => ({ ...previous, description }))} />
+        <div className="activity-date-time-row">
+          <DateField label="Date" name="dn-edit-entry-date" value={draft.date || activity.date}
+            disabled={actions.busy} required onChange={(event) => setDraft((previous) => ({ ...previous, date: event.target.value }))} />
+          <ActivityTimeField value={draft.time || ''} disabled={actions.busy}
+            onChange={(time) => setDraft((previous) => ({ ...previous, time }))} />
+        </div>
         <div className="dialog-actions">
           <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
-          <button type="submit" className="primaryButton" disabled={actions.busy || !draft.title.trim()}>Save entry</button>
+          <button type="submit" className="primaryButton" disabled={actions.busy || !draft.description.trim()}>Save entry</button>
         </div>
       </form>
     </ModalDialog> : null}
-    {deleting ? <ConfirmDialog title="Remove entry?" message={`Remove “${deleting.title || 'Untitled entry'}” from this Activity? Other entries, photos, transactions and original files remain.`}
+    {deleting ? <ConfirmDialog title="Delete entry?" message="Remove only this entry? The Activity, other entries, transactions and original attachment files remain."
       busy={actions.busy} onCancel={() => setDeleting(null)}
-      onConfirm={() => actions.deleteEntry(target, deleting.id).then(() => setDeleting(null)).catch(() => {})} /> : null}
+      onConfirm={() => actions.deleteEntry(target, deleting.id).then((changed) => { if (changed) setDeleting(null); }).catch(() => {})} /> : null}
   </section>;
 }
