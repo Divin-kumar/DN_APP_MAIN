@@ -7,8 +7,8 @@ import { resolveMomentEntryMode } from './momentEntryMode.js';
 // Story presentation. No unconfigured fourth behaviour or silent merge path.
 export const ENTRY_MODES = Object.freeze({ DAILY: 'diary', JOURNAL: 'journey', TASKS: 'chronicle' });
 export const ENTRY_MODE_LABELS = Object.freeze([
-  { value: ENTRY_MODES.DAILY, label: 'Daily · One Activity per day' },
-  { value: ENTRY_MODES.JOURNAL, label: 'Journal · New or append' },
+  { value: ENTRY_MODES.DAILY, label: 'Diary · Independent Activities' },
+  { value: ENTRY_MODES.JOURNAL, label: 'Journal · Independent Activities' },
   { value: ENTRY_MODES.TASKS, label: 'Tasks · Independent Activities' },
 ]);
 export const getMomentEntryMode = (moment, momentTypes = []) =>
