@@ -81,7 +81,18 @@ export default function useActivityActions() {
     'entry-status:' + entryId + ':' + status,
     status === 'completed' ? 'Entry completed' : status === 'cancelled' ? 'Entry cancelled' : 'Entry reopened');
   const deleteEntry = (target, entryId) => run(target,
-    (activity) => removeActivityEntry(activity, entryId),
+    (activity, moment) => {
+      const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
+      if (!entry) throw new Error('Entry no longer exists.');
+      // Historic consolidated Diary/Journal entries may own original records,
+      // aliases, transactions and attachments. Never silently discard them.
+      if (entry.sourceActivityId || entry.legacyActivityFields
+        || (moment.attachments || []).some((file) => recordId(file.activityId) === recordId(activity.id)
+          && recordId(file.entryId) === recordId(entryId))) {
+        throw new Error('This historical entry or its original attachments must be preserved.');
+      }
+      return removeActivityEntry(activity, entryId);
+    },
     'entry-delete:' + entryId, 'Entry removed');
   const closeEditor = () => { if (!saving.current) { setDraft(null); setError(''); } };
   const requestDelete = (target) => { if (!saving.current) { setError(''); setDeleteTarget(target); } };
