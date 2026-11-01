@@ -4,9 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-259 | Preserve immutable CI audit history and record serialized browser workers (OldVersion only)
+- **Governance correction:** The previous commit `6d98698` changed the text of historical entry `CHG-20261101-258` instead of adding a new entry, causing the documented append-only audit contract to fail. Restore `CHG-20261101-258` byte-for-byte from its preceding commit `6fe38f1`; do not weaken the check.
+- **CI adjustment being recorded:** Playwright now uses one browser worker when `CI` is set, retaining two workers for local development. This was intended to reduce concurrent requests against a single Vite development server. The exact responsive browser gate and Firebase live read-back for `6d98698` were still in progress when this historical correction was prepared; no claim of passing Playwright or a completed deployment is made.
+- **Scope:** Documentation-only, OldVersion only. No runtime, Guest fixtures, stored data, Firebase records, release version, or other branches are changed.
+
 ## CHG-20261101-258 | Stabilize CI browser server lifecycle (OldVersion only)
 - **Failure:** The authorized 2.1.0 Firebase workflow passed dependency, unit, lint and Chromium gates but its 582-test browser suite failed while Vite was restarting/closing during dependency scanning. Firebase publication was correctly skipped.
-- **Correction:** When Playwright sets `DN_BROWSER_TEST=1`, Vite now disables HMR and file watching, and CI runs the browser suite with one worker so concurrent first-load dependency scans cannot restart the single Vite server. Browser journeys do not edit source files or need hot reload, so this removes an unnecessary restart race while leaving interactive local development at two workers.
+- **Correction:** When Playwright sets `DN_BROWSER_TEST=1`, Vite now disables HMR and file watching. Browser journeys do not edit source files or need hot reload, so this removes an unnecessary restart race while leaving interactive local development unchanged.
 - **Validation boundary:** Local unit tests, lint, production build and documentation checks remain required; the exact repaired CI browser journey and Firebase live read-back are pending. No Guest fixture or stored-data behavior changes.
 
 ## CHG-20261101-257 | Publish DN 2.1.0 to Firebase Hosting (OldVersion only)
