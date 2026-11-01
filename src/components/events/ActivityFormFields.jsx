@@ -13,8 +13,8 @@ export default function ActivityFormFields({
   namePrefix = 'dn-activity', showDate = true, showPriority = true, dateLocked = false,
   notesLabel, titleLabel: labelOverride, autoFocus = false,
 }) {
-  const isWriting = mode !== ENTRY_MODES.TASKS;
-  const titleLabel = labelOverride || (isWriting ? 'Entry title' : 'Activity title');
+  const isWriting = true;
+  const titleLabel = labelOverride || 'Activity title';
   const options = getActiveCodeListMeta('activityPriorities', priorities);
   const priority = value.priority || 'medium';
   // Show existing editable values before expanding More options.
