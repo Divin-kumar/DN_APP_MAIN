@@ -351,7 +351,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
               </DropdownSelect>
               <small className="settings-helper" aria-live="polite">
                 {momentTypeEditor.storyPresentation
-                  ? `Daily appends entries to one Activity per date. Journal offers New or Append. Tasks always creates a separate Activity. This mode also controls the Story presentation.`
+                  ? `Diary, Journal and Tasks all create independent Activities. Each Activity supports dated content entries. This choice controls the Story presentation, not Activity creation.`
                   : 'Select one mode to enable this Moment type. No unconfigured creation mode is allowed.'}
               </small>
             </div>
