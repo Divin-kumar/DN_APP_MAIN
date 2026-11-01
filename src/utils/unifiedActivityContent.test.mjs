@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ENTRY_MODES, addUnifiedContentEntry, createStandaloneActivity, orderedUnifiedContent } from './activityEntries.js';
+import { buildMomentStory, groupMomentStoryTasks } from './momentStory.js';
 
 const day = '2026-11-01';
 const base = {
@@ -72,5 +73,25 @@ test('Diary, Journal and Tasks all create independent Activities without merging
     assert.equal(result.activities[1].description, 'Original entry');
     assert.deepEqual(result.activities[1].entries, []);
     assert.equal(moment.activities.length, 1);
+  }
+});
+
+test('Story keeps Diary original writing and all dated rows, while Tasks and Journal keep one parent Activity', () => {
+  const activity = { ...base, entryMode: ENTRY_MODES.DAILY };
+  const moment = (type) => ({ id: 'moment-1', type, date: day, activities: [activity], attachments: [] });
+  const diary = buildMomentStory(moment('Diary'), { now: new Date('2026-11-04T12:00:00') });
+  const chapters = diary.timeline.flatMap((month) => month.days.flatMap((date) => date.entries));
+  assert.deepEqual(chapters.map((entry) => entry.id),
+    ['activity-1', 'untimed', 'early', 'timed', 'next-day']);
+  assert.equal(chapters[0].description, base.description);
+  for (const type of ['Journal', 'Project']) {
+    const story = buildMomentStory(moment(type), { now: new Date('2026-11-04T12:00:00') });
+    const projected = story.timeline.flatMap((month) => month.days.flatMap((date) => date.entries));
+    assert.equal(projected.length, 1, type + ' retains the top-level Activity count');
+    assert.equal(projected[0].subEntries.length, 4);
+    assert.equal(projected[0].description, base.description);
+    if (type === 'Project') {
+      assert.equal(groupMomentStoryTasks(story).flatMap((group) => group.entries).length, 1);
+    }
   }
 });
