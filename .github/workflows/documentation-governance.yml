@@ -9,7 +9,10 @@ permissions:
   contents: read
 jobs:
   application-smoke-tests:
+    # Fast checks on every OldVersion push/PR; comprehensive browser and upgrade
+    # checks run only in the explicit full Firebase release verification tier.
     runs-on: ubuntu-latest
+    timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -19,43 +22,14 @@ jobs:
       - name: Install locked dependencies
         id: install
         run: npm ci
-      # Test and build should still run even if the existing advisory baseline
-      # is unresolved. Audit remains an independent, failing release gate below.
       - name: Run Node unit tests
         run: npm test
       - name: Lint application and tests
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run lint
-      - name: Install Chromium for synthetic browser regressions
-        id: chromium_install
-        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
-        run: npx playwright install --with-deps chromium
-      - name: Test Activity and Moment browser journeys
-        if: ${{ !cancelled() && steps.chromium_install.outcome == 'success' }}
-        run: npm run test:e2e
-      # Keep independent release evidence visible even when a browser journey
-      # fails; every failing step still makes this CI job red.
       - name: Build production application
-        id: production_build
         if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: npm run build
-      - name: Verify built shell, offline originals and PDF export
-        if: ${{ !cancelled() && steps.production_build.outcome == 'success' && steps.chromium_install.outcome == 'success' }}
-        run: npm run test:production
-      - name: Build the reviewed pre-release upgrade fixture
-        id: upgrade_fixture
-        if: ${{ !cancelled() && steps.production_build.outcome == 'success' }}
-        env:
-          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
-        run: |
-          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
-          mkdir -p .verification/phase9/previous
-          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
-          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
-          npm --prefix .verification/phase9/previous run build
-      - name: Verify the release update preserves records, preferences and originals
-        if: ${{ !cancelled() && steps.upgrade_fixture.outcome == 'success' && steps.chromium_install.outcome == 'success' }}
-        run: npm run test:upgrade
       - name: Check dependency advisories (blocking)
         if: ${{ always() && steps.install.outcome == 'success' }}
         run: npm audit --audit-level=moderate

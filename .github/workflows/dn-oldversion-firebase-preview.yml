@@ -1,5 +1,6 @@
 name: DN OldVersion Firebase usability preview
-# Opt-in: Only commits tagged [deploy-preview] on OldVersion deploy to non-live Hosting.
+# Opt-in: Only [deploy-preview] commits or explicit manual dispatch on OldVersion.
+# Fast preflight for usability previews; full browser/upgrade checks are release-only.
 on:
   push:
     branches: [OldVersion]
@@ -24,16 +25,16 @@ jobs:
         run: npm ci
       - name: Check dependency advisories
         run: npm audit --audit-level=moderate
-      - name: Verify tests
-        run: npm test
-      - name: Install Chromium for the built-app check
-        run: npx playwright install --with-deps chromium
+      - name: Verify unit tests and lint
+        run: |
+          npm test
+          npm run lint
       - name: Build Vite app
         env:
           VITE_DEPLOY_ENV: Firebase preview
         run: npm run build
-      - name: Verify built shell, offline originals and PDF export
-        run: npm run test:production
+      - name: Verify build entry exists
+        run: test -s dist/index.html
       - name: Verify Firebase deploy credentials
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
