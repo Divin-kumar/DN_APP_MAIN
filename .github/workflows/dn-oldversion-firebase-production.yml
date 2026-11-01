@@ -1,14 +1,14 @@
 name: DN production Firebase Hosting
-# Opt-in OldVersion only: [deploy-live] publishes a patch; X.Y.0 feature releases
-# and [release-full] require the full browser/offline/PDF/upgrade gate.
-# All published builds still require unit/lint/audit/build, newer version and exact read-back.
+# Opt-in OldVersion only. Production never executes browser tests: a separately
+# completed successful full pre-release workflow on the exact source SHA is required
+# for X.Y.0 and explicitly full-verified releases. Publication keeps fast gates.
 on:
   push:
     branches: [OldVersion]
   workflow_dispatch:
     inputs:
       validation_mode:
-        description: 'Fast patches by default; X.Y.0 and [release-full] always run full'
+        description: 'Fast patch deploy, or require prior full pre-release verification; X.Y.0 always requires full'
         required: true
         default: fast
         type: choice
@@ -17,6 +17,7 @@ on:
           - fast
 permissions:
   contents: read
+  actions: read
 concurrency:
   group: dn-firebase-hosting-production
   cancel-in-progress: false
@@ -71,32 +72,25 @@ jobs:
         run: |
           npm test
           npm run lint
-      - name: Install Chromium
-        if: steps.verification.outputs.mode == 'full'
-        run: npx playwright install --with-deps chromium
-      - name: Verify responsive browser journeys
-        if: steps.verification.outputs.mode == 'full'
-        run: npm run test:e2e
       - name: Build production release
         env:
           VITE_DEPLOY_ENV: Production
         run: npm run build
-      - name: Verify built shell, offline originals and PDF export
-        if: steps.verification.outputs.mode == 'full'
-        run: npm run test:production
-      - name: Build the reviewed previous-release upgrade fixture
+      - name: Require successful full pre-release verification for exact source SHA
         if: steps.verification.outputs.mode == 'full'
         env:
-          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
         run: |
-          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
-          mkdir -p .verification/phase9/previous
-          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
-          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
-          npm --prefix .verification/phase9/previous run build
-      - name: Verify release upgrade preserves records, settings and original attachments
-        if: steps.verification.outputs.mode == 'full'
-        run: npm run test:upgrade
+          set -euo pipefail
+          # Fail closed if the independent check has not finished successfully.
+          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/dn-oldversion-full-pre-release.yml/runs?head_sha=${GITHUB_SHA}&per_page=100")"
+          if ! jq -e --arg sha "$GITHUB_SHA" '.workflow_runs | any(.[]; .head_sha == $sha and .head_branch == "OldVersion" and .status == "completed" and .conclusion == "success")' <<< "$runs" > /dev/null; then
+            echo "::error::Full pre-release checks must pass for this exact OldVersion commit before production may publish."
+            echo "::error::Run the separate DN full pre-release verification workflow, then launch this release after it passes."
+            exit 1
+          fi
+          echo "Verified completed full pre-release checks for $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
       - name: Block duplicate or downgraded live version
         run: node scripts/check-hosting-release-version.mjs
       - name: Require configured Firebase service account
@@ -139,6 +133,6 @@ jobs:
             echo "- Source commit: $GITHUB_SHA"
             echo "- Verification tier: ${{ steps.verification.outputs.mode }}"
             echo "- Always verified: unit tests, lint, dependency audit, production build, newer live version and Firebase credential"
-            echo "- Full tier only: Chromium journeys, offline/PDF/originals and previous-release upgrade preservation"
+            echo "- Full tier only: separately completed green full pre-release workflow verified at exact source SHA; no browser execution in production"
             echo "- Verification: live index bytes match dist/index.html"
           } >> "$GITHUB_STEP_SUMMARY"
