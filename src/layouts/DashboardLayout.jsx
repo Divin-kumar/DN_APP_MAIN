@@ -1,5 +1,4 @@
 import { currentEntryTime } from '../utils/activityTime.js';
-import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
 import ActivityFormFields from '../components/events/ActivityFormFields';
 import RichTextEditor from '../components/common/RichTextEditor';
 import DateField from '../components/common/DateField';
@@ -106,8 +105,6 @@ export default function DashboardLayout() {
   const [quickActivityTime, setQuickActivityTime] = useState(currentEntryTime);
   const [quickActivityPriority, setQuickActivityPriority] = useState('medium');
   const [quickActivityDescription, setQuickActivityDescription] = useState('');
-  const [quickActivityChoice, setQuickActivityChoice] = useState('new');
-  const [quickActivityTargetId, setQuickActivityTargetId] = useState('');
   const quickActivitySessionRef = useRef(null);
   const quickActivitySaving = useRef(false);
   const [quickActivityBusy, setQuickActivityBusy] = useState(false);
@@ -338,8 +335,6 @@ export default function DashboardLayout() {
       setQuickActivityDate(financialDate(new Date()));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');
-      setQuickActivityChoice(openedActivityContext?.choice || 'new');
-      setQuickActivityTargetId(openedActivityContext?.targetId || '');
     }
   };
 
@@ -691,8 +686,6 @@ export default function DashboardLayout() {
               setQuickActivityType(nextType);
               if (!filterActivityMoments(activityMoments, nextType).some((event) => momentId(event) === quickActivityEventId)) {
                 setQuickActivityEventId('');
-                setQuickActivityChoice('new');
-                setQuickActivityTargetId('');
               }
             }} aria-label="Moment type" disabled={eventsLoading}>
               <option value="">All moment types</option>
@@ -702,7 +695,7 @@ export default function DashboardLayout() {
                 </div>
                 <div className="dn-activity-create-field">
                   <label htmlFor="quick-activity-moment">Life moment</label>
-            <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => { setQuickActivityEventId(event.target.value); setQuickActivityChoice('new'); setQuickActivityTargetId(''); }} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
+            <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
               <option value="">Choose a life moment</option>
               {filteredActivityMoments.map((event) => <option key={momentId(event)} value={momentId(event)}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
                 </DropdownSelect>
@@ -714,12 +707,10 @@ export default function DashboardLayout() {
             {activityDetailMatch && quickSelectedMoment ? <p className="dn-quick-activity-context">
               {'New Activity under '}
               <strong>{quickSelectedMoment.name || 'this Moment'}</strong>
-              {quickMode === ENTRY_MODES.JOURNAL && quickActivityChoice === 'append' && quickActivityTargetId
-                ? <span> · {quickSelectedMoment.activities?.find((item) => recordId(item.id) === quickActivityTargetId)?.title || 'Selected entry'}</span> : null}
+
             </p> : null}
             </div>
-            <ActivityEntryModeFields moment={quickSelectedMoment} momentTypes={adminValues.eventTypes} date={quickActivityDate}
-              choice="new" targetId="" onChoiceChange={setQuickActivityChoice} onTargetChange={setQuickActivityTargetId} />
+
             <ActivityFormFields mode={quickMode || ENTRY_MODES.TASKS} namePrefix="dn-quick-activity"
               value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
                 description: quickActivityDescription, priority: quickActivityPriority }}
@@ -731,7 +722,7 @@ export default function DashboardLayout() {
                 if (patch.description !== undefined) setQuickActivityDescription(patch.description);
                 if (patch.priority !== undefined) setQuickActivityPriority(patch.priority);
               }} />
-            <div className="form-actions dn-activity-create-actions"><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : quickMode === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button></div>
+            <div className="form-actions dn-activity-create-actions"><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : 'Save activity'}</button></div>
           </form>
         </ModalDialog>
       ) : null}
