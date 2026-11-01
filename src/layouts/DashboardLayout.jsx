@@ -327,7 +327,8 @@ export default function DashboardLayout() {
       // new independent Activity in the selected Moment.
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
       const currentMomentId = momentId(parent);
-      quickActivitySessionRef.current = { context: records.capture(), ready: isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) };
+      quickActivitySessionRef.current = { context: records.capture(), ready: isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)),
+        momentId: momentId(openedActivityContext?.moment), activityId: recordId(openedActivityContext?.activity?.id) };
       if (parent && !filteredActivityMoments.some((moment) => momentId(moment) === currentMomentId)) setQuickActivityType('');
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
@@ -431,7 +432,8 @@ export default function DashboardLayout() {
     const opening = quickActivitySessionRef.current;
     const parent = openedActivityContext?.moment;
     const owner = openedActivityContext?.activity;
-    if (!opening?.ready || !records.isCurrent(opening.context) || !parent || !owner) {
+    if (!opening?.ready || !records.isCurrent(opening.context) || !parent || !owner
+      || opening.momentId !== momentId(parent) || opening.activityId !== recordId(owner.id)) {
       setQuickCreateError('Activity or session changed. Reopen Add entry.');
       return;
     }
