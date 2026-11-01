@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-257 | Publish DN 2.1.0 to Firebase Hosting (OldVersion only)
+- **Release:** Promoted the already documented DN 2.1.0 iPhone-first experience from in-development metadata to the installed release by updating the package and lock versions from 2.0.3 to 2.1.0. The About page's existing 2.1.0 history now resolves as the installed release without changing stored records, schemas, account boundaries or Guest fixtures.
+- **Executed validation:** `npm test`, `npm run lint`, `npm run build` and `npm audit --audit-level=moderate` passed on the release source. Responsive Chromium journeys, production shell/offline/PDF checks, reviewed upgrade preservation, the live-version guard and Firebase publication/read-back are release gates for the exact published commit.
+- **Compatibility and risks:** This is a metadata and publication release of existing OldVersion behavior. Guest tour version `2026.10.31.4` remains unchanged because no sample content or record-writing behavior changed. Firebase production publication is permanent at `dn-10.web.app`; exact live read-back and physical iPhone/Safari behavior remain pending until the guarded workflow completes.
+
 ## CHG-20261101-256 | Match installed About release notes to actual semver (OldVersion only)
 - **Correction:** The first Version History implementation accidentally escaped the digit groups twice in its semantic-version matcher, so it always fell back to v2.0.0 and marked v2.0.3 as a future release. Replace the source regex with actual digit matching. Add explicit 2.0.3 installed/2.1.0 in-development labels and current What's New heading to the responsive Chromium test, alongside the original release-order and Guest-data assertions. No stored records, sample tour, Firebase or version changes.
 - **Validation boundary:** Source-reviewed and committed; exact-commit automated/physical Safari checks remain pending. Earlier documentation entries describe intended behavior, not proof of the faulty intermediate revision.
