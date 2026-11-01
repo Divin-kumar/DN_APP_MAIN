@@ -25,6 +25,8 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.ok(demo.events[0].notes.includes('switch to New'));
   assert.ok(demo.events[0].notes.includes('In v2.1.2'));
   assert.ok(demo.events[0].notes.includes('parent finances'));
+  assert.ok(demo.events[2].notes.includes('In v2.1.3'));
+  assert.ok(demo.events[2].notes.includes('Export CSV'));
 
   assert.equal(demo.imagesReady, false);
   assert.ok(demo.events.every((event) => !event.attachments.length));

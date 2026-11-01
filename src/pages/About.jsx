@@ -43,7 +43,7 @@ const guideItems = [
   { title: 'Writing and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Earlier Memories remain safe, read-only reflections in Story; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Story, Activity Detail and Gallery. Identical originals share one stored file. All new originals stay in this browser, separately for each account or Guest. Only filenames and reference details sync to an account. Download a backup to move or recover originals; no paid cloud file storage is used for new saves. Older file details cannot recover an original that was never stored.' },
   { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format, spacing and included sections, then update the actual page preview and download the PDF. Original photos remain in their current browser scope. PDF pages contain rendered text and images; use a recovery backup to preserve editable records and original files.' },
-  { title: 'Transactions', description: 'Use universal + to add income or expenses, optionally linked to a Moment or Activity. It presets the current Moment or Activity Detail. Edit or delete existing transactions in Transactions under Profile; Activity and Moment histories are read-only. Search or use friendly filters, then sort by Date, Amount or Title in either direction. History starts newest first. Income, Expense and Balance follow all filters and search on this page and in Moment Transactions. Add your own payment choices in Settings → Code Lists → Payment Methods.' },
+  { title: 'Transactions', description: 'Use universal + to add income or expenses, optionally linked to a Moment or Activity. It presets the current Moment or Activity Detail. Edit or delete existing transactions in Transactions under Profile; Activity and Moment histories are read-only. Search or use friendly filters, then sort by Date, Amount or Title in either direction. Export CSV saves exactly the matching records in their displayed order, including search and Refine conditions. History starts newest first. Income, Expense and Balance follow all filters and search on this page and in Moment Transactions. Add your own payment choices in Settings → Code Lists → Payment Methods.' },
   { title: 'Insights', description: 'Open Insights under Profile to review counts, spending and income patterns. Its JSON report is separate from a recovery backup.' },
   { title: 'Settings and backup', description: 'Open Settings under Profile to manage theme, preferences, greeting options and Code Lists. Export a JSON backup and review the restore summary before importing it. Notifications is Coming Soon; saved preferences and Reminder Presets are retained.' },
 ];
@@ -51,6 +51,17 @@ const guideItems = [
 // Documented product milestones, not an automatic log of GitHub commits.
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
+  {
+    version: '2.1.3',
+    title: 'Filtered transaction export and quieter editing',
+    summary: 'Export the exact transaction view and see defaults before opening More options.',
+    changes: [
+      'Export CSV downloads only the transactions matching current search, Refine conditions and sort order.',
+      'CSV includes details and linked Moment/Activity names with spreadsheet-safe text.',
+      'Activity and Transaction forms preview date, time and selected links under More options.',
+      'Activities show Diary and Journal dates as writing dates instead of task deadlines.',
+    ],
+  },
   {
     version: '2.1.2',
     title: 'Journal editing that matches creation',
