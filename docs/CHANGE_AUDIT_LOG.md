@@ -6,7 +6,7 @@
 
 ## CHG-20261101-258 | Stabilize CI browser server lifecycle (OldVersion only)
 - **Failure:** The authorized 2.1.0 Firebase workflow passed dependency, unit, lint and Chromium gates but its 582-test browser suite failed while Vite was restarting/closing during dependency scanning. Firebase publication was correctly skipped.
-- **Correction:** When Playwright sets `DN_BROWSER_TEST=1`, Vite now disables HMR and file watching. Browser journeys do not edit source files or need hot reload, so this removes an unnecessary restart race while leaving interactive local development unchanged.
+- **Correction:** When Playwright sets `DN_BROWSER_TEST=1`, Vite now disables HMR and file watching, and CI runs the browser suite with one worker so concurrent first-load dependency scans cannot restart the single Vite server. Browser journeys do not edit source files or need hot reload, so this removes an unnecessary restart race while leaving interactive local development at two workers.
 - **Validation boundary:** Local unit tests, lint, production build and documentation checks remain required; the exact repaired CI browser journey and Firebase live read-back are pending. No Guest fixture or stored-data behavior changes.
 
 ## CHG-20261101-257 | Publish DN 2.1.0 to Firebase Hosting (OldVersion only)
