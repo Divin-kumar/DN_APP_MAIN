@@ -1,7 +1,10 @@
 import { currentEntryTime } from '../utils/activityTime.js';
 import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
 import ActivityFormFields from '../components/events/ActivityFormFields';
-import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeLegacyDiaryActivities } from '../utils/activityEntries';
+import RichTextEditor from '../components/common/RichTextEditor';
+import DateField from '../components/common/DateField';
+import ActivityTimeField from '../components/common/ActivityTimeField';
+import { addUnifiedContentEntry, createStandaloneActivity, getMomentEntryMode, ENTRY_MODES } from '../utils/activityEntries';
 import { detailQuickActivityContext } from '../utils/quickActivityDetailContext';
 /*
   Moment-first app shell for dashboard and workspace navigation.
@@ -63,7 +66,6 @@ export default function DashboardLayout() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
-  const adminValuesOwner = useAppStore((state) => state.adminValuesOwner);
   const theme = useAppStore((state) => state.preferences.theme || 'light');
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
@@ -121,28 +123,8 @@ export default function DashboardLayout() {
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
   const quickSelectedMoment = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
   const quickMode = quickSelectedMoment ? getMomentEntryMode(quickSelectedMoment, adminValues.eventTypes) : null;
-  const diaryMigrationAttempts = useRef(new Set());
-  // Automatic, idempotent legacy Diary consolidation. Only after this scoped
-  // account/Guest dataset is loaded. A failed write is not marked complete.
-  useEffect(() => {
-    if (!activityMoments.length || adminValuesOwner !== (isGuest ? 'guest' : user?.uid)) return;
-    const moment = activityMoments.find((item) => {
-      if (getMomentEntryMode(item, adminValues.eventTypes) !== ENTRY_MODES.DAILY) return false;
-      const key = JSON.stringify([eventScope, getActiveSampleScenario(user?.uid), momentId(item)]);
-      return !diaryMigrationAttempts.current.has(key) && mergeLegacyDiaryActivities(item) !== item;
-    });
-    if (!moment) return;
-    const key = JSON.stringify([eventScope, getActiveSampleScenario(user?.uid), momentId(moment)]);
-    const context = records.capture();
-    diaryMigrationAttempts.current.add(key);
-    records.mutateMoment(context, momentId(moment), (latest) =>
-      getMomentEntryMode(latest, adminValues.eventTypes) === ENTRY_MODES.DAILY
-        ? mergeLegacyDiaryActivities(latest) : latest, 'diary-legacy-consolidation')
-      .catch((error) => {
-        diaryMigrationAttempts.current.delete(key);
-        if (records.isCurrent(context)) showToast(error?.message || 'Diary entries could not be consolidated.', 'danger');
-      });
-  }, [activityMoments, adminValues.eventTypes, adminValuesOwner, eventScope, user?.uid, isGuest, showToast]);
+  // Historical same-day Diary Activities remain intact. New content is added
+  // only when the owner explicitly saves inside the opened Activity.
 
   // Apply the saved theme to the page root so colors change across the whole app.
   useLayoutEffect(() => {
@@ -342,7 +324,7 @@ export default function DashboardLayout() {
         .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
     }
     setQuickCreateError('');
-    setQuickCreateType(type);
+    setQuickCreateType(type === 'activity' && openedActivityContext?.activity ? 'activity-entry' : type);
     if (type === 'activity') {
       // A Detail Activity owns the parent and append target. Elsewhere, keep
       // the existing Moment-workspace and global + defaults.
@@ -353,7 +335,7 @@ export default function DashboardLayout() {
       setQuickActivityEventId(currentMomentId);
       setQuickActivityTitle('');
       setQuickActivityTime(currentEntryTime());
-      setQuickActivityDate(financialDate(openedActivityContext?.date, financialDate(new Date())));
+      setQuickActivityDate(financialDate(new Date()));
       setQuickActivityPriority('medium');
       setQuickActivityDescription('');
       setQuickActivityChoice(openedActivityContext?.choice || 'new');
@@ -406,7 +388,7 @@ export default function DashboardLayout() {
     }
   };
 
-  // Add a task-like activity under an existing life moment.
+  // Every new Activity is independent regardless of Diary, Journal or Tasks.
   // This is the same idea as creating a to-do attached to a life event.
   const saveQuickActivity = async (submitEvent) => {
     submitEvent.preventDefault();
@@ -417,10 +399,6 @@ export default function DashboardLayout() {
       return;
     }
     const mode = getMomentEntryMode(event, adminValues.eventTypes);
-    if (mode === ENTRY_MODES.JOURNAL && quickActivityChoice === 'append' && !quickActivityTargetId) {
-      setQuickCreateError('Choose the Journal entry you want to append to.');
-      return;
-    }
     const opening = quickActivitySessionRef.current;
     // Global + can open before Moments finish loading. Capture the final
     // revision only in that case, while requiring the original account scope.
@@ -435,18 +413,51 @@ export default function DashboardLayout() {
     setQuickActivityBusy(true);
     try {
       await records.mutateMoment(context, momentId(event), (latest) =>
-        createOrAppendActivity(latest, {
+        createStandaloneActivity(latest, {
           title: quickActivityTitle, description: quickActivityDescription,
-          date: quickActivityDate, time: quickActivityTime, priority: quickActivityPriority,
-          mode, targetId: mode === ENTRY_MODES.JOURNAL && quickActivityChoice === 'append' ? quickActivityTargetId : '',
-        }).moment);
+          date: quickActivityDate, time: quickActivityTime, priority: quickActivityPriority, mode,
+        }));
       if (!records.isCurrent(context)) return;
       setQuickCreateType(null);
-      showToast(mode === ENTRY_MODES.DAILY || quickActivityChoice === 'append' && mode === ENTRY_MODES.JOURNAL
-        ? 'Entry added to Activity' : 'Activity added successfully', 'success',
+      showToast('Activity added successfully', 'success',
       { label: 'View', to: `/events/${momentId(event)}/activities` });
     } catch (error) {
       if (records.isCurrent(context)) setQuickCreateError(error?.message || 'Could not save this entry. Please try again.');
+    } finally {
+      quickActivitySaving.current = false;
+      setQuickActivityBusy(false);
+    }
+  };
+
+  // Activity Detail uses a dedicated content-only form, never a nested Activity.
+  const saveQuickEntry = async (submitEvent) => {
+    submitEvent.preventDefault();
+    if (quickActivitySaving.current) return;
+    const opening = quickActivitySessionRef.current;
+    const parent = openedActivityContext?.moment;
+    const owner = openedActivityContext?.activity;
+    if (!opening?.ready || !records.isCurrent(opening.context) || !parent || !owner) {
+      setQuickCreateError('Activity or session changed. Reopen Add entry.');
+      return;
+    }
+    quickActivitySaving.current = true;
+    setQuickActivityBusy(true);
+    setQuickCreateError('');
+    try {
+      await records.mutateActivity(opening.context, momentId(parent), recordId(owner.id),
+        (latest) => {
+          if (latest.completed || latest.cancelled || latest.status === 'completed' || latest.status === 'cancelled') {
+            throw new Error('Reopen or restore this Activity before adding an entry.');
+          }
+          return addUnifiedContentEntry(latest, {
+            description: quickActivityDescription, date: quickActivityDate, time: quickActivityTime,
+          });
+        });
+      if (!records.isCurrent(opening.context)) return;
+      setQuickCreateType(null);
+      showToast('Entry added to Activity', 'success');
+    } catch (error) {
+      if (records.isCurrent(opening.context)) setQuickCreateError(error?.message || 'Could not add entry.');
     } finally {
       quickActivitySaving.current = false;
       setQuickActivityBusy(false);
@@ -594,7 +605,7 @@ export default function DashboardLayout() {
             <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
               <span className="dn-dock-menu-title">Create new</span>
               <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
-              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>Activity</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{openedActivityContext?.activity ? 'Add entry' : 'Activity'}</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
               {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
@@ -614,7 +625,7 @@ export default function DashboardLayout() {
         {quickCreateOpen ? (
           <div className="dn-quick-create-menu" aria-label="Quick create actions">
             <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} /><span>Life moment</span></button>
-            <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>Activity</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{openedActivityContext?.activity ? 'Add entry' : 'Activity'}</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} /><span>Transaction</span></button>
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
@@ -635,6 +646,30 @@ export default function DashboardLayout() {
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
+        </ModalDialog>
+      ) : null}
+      {quickCreateType === 'activity-entry' ? (
+        <ModalDialog title="Add entry" className="dn-entry-add-dialog"
+          onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
+          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+          <form className="form-surface quick-create-activity-form dn-entry-add-form"
+            aria-busy={quickActivityBusy} onSubmit={saveQuickEntry}>
+            <p className="dn-form-context">Activity · <strong>{openedActivityContext?.activity?.title || 'Current Activity'}</strong></p>
+            <RichTextEditor label="Entry content" value={quickActivityDescription} disabled={quickActivityBusy}
+              onChange={setQuickActivityDescription} rows={5} placeholder="What happened next?" required />
+            <div className="activity-date-time-row">
+              <DateField label="Date" name="dn-new-entry-date" value={quickActivityDate}
+                onChange={(event) => setQuickActivityDate(event.target.value)} disabled={quickActivityBusy} required />
+              <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} disabled={quickActivityBusy} />
+            </div>
+            <div className="form-actions dn-activity-create-actions">
+              <button type="button" className="secondaryButton" disabled={quickActivityBusy}
+                onClick={() => setQuickCreateType(null)}>Cancel</button>
+              <button type="submit" className="primaryButton" disabled={quickActivityBusy || !quickActivityDescription.trim()}>
+                {quickActivityBusy ? 'Saving…' : 'Save entry'}
+              </button>
+            </div>
+          </form>
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (
@@ -677,14 +712,14 @@ export default function DashboardLayout() {
               </details>
             {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
             {activityDetailMatch && quickSelectedMoment ? <p className="dn-quick-activity-context">
-              {quickMode === ENTRY_MODES.TASKS ? 'New Activity under ' : quickMode === ENTRY_MODES.DAILY ? 'Diary entry for ' : quickActivityChoice === 'append' ? 'Append a Journal entry under ' : 'New Journal entry under '}
+              {'New Activity under '}
               <strong>{quickSelectedMoment.name || 'this Moment'}</strong>
               {quickMode === ENTRY_MODES.JOURNAL && quickActivityChoice === 'append' && quickActivityTargetId
                 ? <span> · {quickSelectedMoment.activities?.find((item) => recordId(item.id) === quickActivityTargetId)?.title || 'Selected entry'}</span> : null}
             </p> : null}
             </div>
             <ActivityEntryModeFields moment={quickSelectedMoment} momentTypes={adminValues.eventTypes} date={quickActivityDate}
-              choice={quickActivityChoice} targetId={quickActivityTargetId} onChoiceChange={setQuickActivityChoice} onTargetChange={setQuickActivityTargetId} />
+              choice="new" targetId="" onChoiceChange={setQuickActivityChoice} onTargetChange={setQuickActivityTargetId} />
             <ActivityFormFields mode={quickMode || ENTRY_MODES.TASKS} namePrefix="dn-quick-activity"
               value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
                 description: quickActivityDescription, priority: quickActivityPriority }}
