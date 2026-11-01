@@ -32,7 +32,7 @@ export default function ActivityFormFields({
         placeholder={titleLabel} autoFocus={autoFocus && typeof window !== 'undefined'
           && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
     </label>
-    {isWriting ? <RichTextEditor label={notesLabel || 'Entry notes (optional)'}
+    {isWriting ? <RichTextEditor label={notesLabel || 'Description (optional)'}
       value={value.description || ''} disabled={disabled}
       onChange={(description) => onChange({ description })}
       placeholder="Write what you want to remember" rows={4} /> : null}
