@@ -1,0 +1,64 @@
+name: DN full pre-release verification (OldVersion only)
+# Run and finish browser/offline/PDF/upgrade verification before an authorized
+# full-tier Firebase publication. This workflow never deploys anything.
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify-release-candidate:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[verify-full]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Check dependency advisories
+        run: npm audit --audit-level=moderate
+      - name: Verify Node tests and lint
+        run: |
+          npm test
+          npm run lint
+      - name: Check documentation contracts
+        run: npm run check:docs
+      - name: Install Chromium for pre-release tests only
+        run: npx playwright install --with-deps chromium
+      - name: Verify responsive browser journeys
+        run: npm run test:e2e
+      - name: Build release candidate
+        env:
+          VITE_DEPLOY_ENV: Production
+        run: npm run build
+      - name: Verify offline originals, PDF and production shell locally
+        run: npm run test:production
+      - name: Build reviewed previous-release upgrade fixture
+        env:
+          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+        run: |
+          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
+          mkdir -p .verification/phase9/previous
+          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
+          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
+          npm --prefix .verification/phase9/previous run build
+      - name: Verify upgrade preserves records and original attachments
+        run: npm run test:upgrade
+      - name: Summarize successful independent pre-release check
+        if: success()
+        run: |
+          {
+            echo "## Full pre-release verification passed"
+            echo "- Branch: OldVersion"
+            echo "- Source SHA: $GITHUB_SHA"
+            echo "- Chromium, offline/PDF/originals, upgrade, Node, lint, build, docs and security: passed"
+            echo "- This workflow does not publish to Firebase or Vercel"
+          } >> "$GITHUB_STEP_SUMMARY"
