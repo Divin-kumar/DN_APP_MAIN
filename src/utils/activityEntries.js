@@ -294,3 +294,63 @@ export const mergeJournalActivities = (moment, targetId, sourceId) => {
 };
 export const activityOwnsLinkedId = (activity, id) => recordId(activity?.id) === recordId(id)
   || aliasesFor(activity).includes(recordId(id));
+
+
+// Unified content layer: every Activity has a stable identity. Its historic root
+// description is a read-only presentation row; saved entries stay unchanged.
+// No read, ordering or add operation merges/renames existing Activities.
+export const orderedUnifiedContent = (activity = {}) => {
+  const baseDate = dateKey(activity.date);
+  const rows = [];
+  if (String(activity.description || '').trim()) rows.push({
+    id: 'root:' + recordId(activity.id), root: true,
+    description: activity.description, date: baseDate, time: activityTime(activity),
+    createdAt: activity.createdAt || '', order: -1,
+  });
+  activityEntries(activity).forEach((entry, index) => {
+    rows.push({ ...entry, root: false, date: dateKey(entry.date) || baseDate,
+      time: activityTime(entry), order: index, description: entry.description || '' });
+  });
+  return rows.sort((a, b) => {
+    // Old records without a date/time never receive invented timestamps.
+    const dayOrder = (a.date || '').localeCompare(b.date || '');
+    const timeOrder = (a.time || '').localeCompare(b.time || '');
+    return dayOrder || timeOrder || a.order - b.order;
+  });
+};
+
+// A content update is not an Activity, sub-Activity or Journal append/merge.
+// Use this inside the existing session-guarded mutateActivity queue.
+export const addUnifiedContentEntry = (activity, { description, date, time = '' },
+  { makeId = () => crypto.randomUUID(), now = new Date().toISOString() } = {}) => {
+  const day = dateKey(date);
+  if (!day) throw new Error('Choose a valid entry date.');
+  if (!String(description || '').trim()) throw new Error('Write something before saving this entry.');
+  const id = recordId(makeId());
+  if (!id || id === recordId(activity?.id)
+    || activityEntries(activity).some((entry) => recordId(entry.id) === id)) {
+    throw new Error('Could not allocate a unique entry ID.');
+  }
+  return { entries: [...activityEntries(activity), {
+    id, description, date: day, time: normalizeActivityTime(time), createdAt: now,
+  }] };
+};
+
+// New Activity creation is independent for Diary, Journal and Tasks. Historic
+// Daily and Journal append/merge helpers above remain only for reading old data.
+export const createStandaloneActivity = (moment, { title, description = '', date, time = '', priority = 'medium', mode },
+  { makeId = () => crypto.randomUUID(), now = new Date().toISOString() } = {}) => {
+  const day = dateKey(date);
+  if (!day || !String(title || '').trim()) throw new Error('Enter an activity title and valid date.');
+  if (!Object.values(ENTRY_MODES).includes(mode)) throw new Error('Choose a configured Moment activity mode.');
+  const id = recordId(makeId());
+  if (!id || (moment?.activities || []).some((item) => recordId(item.id) === id
+    || (item.mergedActivityIds || []).map(recordId).includes(id))) {
+    throw new Error('Could not allocate a unique Activity ID.');
+  }
+  const activity = { id, eventId: recordId(moment.id) || recordId(moment.firestoreId),
+    title: String(title).trim(), description, date: day, time: normalizeActivityTime(time),
+    priority, entryMode: mode, entries: [], completed: false, completedAt: null,
+    cancelled: false, status: 'in-progress', createdAt: now };
+  return { ...moment, activities: [...(moment.activities || []), activity] };
+};
