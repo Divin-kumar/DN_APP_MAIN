@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-263 | Reconcile isolated Moment workspace tests with the shared Activity actions (OldVersion only)
+- **Root cause:** DN 2.1.1 CI run `41272956034` passed earlier prerequisites but Node produced 18 failures in isolated workspace harnesses. Their Vite import shims did not intercept the newly added useActivityActions hook, so the real Zustand hook executed outside React and every fixture crashed with an invalid hook call. This did not demonstrate a production hook violation.
+- **Correction:** Make both isolated harnesses mock that shared hook as they already mock their other hooks, leaving real browser and dedicated scoped action coverage in place. Replace only the obsolete 'workspace cards must be read-only' assertion with a check that Activity action callbacks are exposed while finance callbacks remain unavailable and rendering is write-free. Preserve synthetic create, account and attachment tests, browser/Node gates and all historical audit entries. No app data/schema or Firebase user records touched.
+- **Release boundary:** Candidate 2.1.1 still requires exact commit CI, security, upgrade preservation, production shell and Firebase version/read-back before any 'deployed' claim.
+
 ## CHG-20261101-262 | Protect Diary date and correct native disclosure test (OldVersion only)
 - **Correction:** The first 2.1.1 browser regression targeted native `<summary>` as a button even though the shared More options control is a keyboard-accessible `<details>` disclosure. Use its actual summary element, without changing or skipping assertions. The parent Diary Activity edit form now locks its date to the original day with a save guard; individual Diary entries already retain that same day. This prevents a one-per-day activity from moving to a conflicting date.
 - **Boundary:** No schema migration, account mutation, feature rollback or release-gate bypass. The previous audit entry remains byte-for-byte unchanged, and exact-SHA CI, Firebase version guard and read-back are still required.

@@ -98,6 +98,7 @@ const openWorkspace = async (t) => {
         if (!file.endsWith('/src/features/events/components/EventWorkspaceShell.jsx')) return null;
         if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
         if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
+        if (source.endsWith('/hooks/useActivityActions')) return '\0workspace-create-activity-actions';
         if (source === './MomentContents') return '\0workspace-create-child:MomentContents';
         if (source === './MomentStory') return '\0workspace-create-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-create-router';
@@ -120,6 +121,7 @@ const openWorkspace = async (t) => {
         if (id.startsWith('\0workspace-create-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
         if (id === '\0workspace-shared-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
         if (id === '\0workspace-shared-finance') return `export default ()=>({ready:true,transactions:[],summary:{income:0,expense:0,balance:0},error:null});`;
+        if (id === '\0workspace-create-activity-actions') return 'export default ()=>({busy:false, draft:null, deleteTarget:null, edit:()=>{}, setCompleted:async()=>{}, setCancelled:async()=>{}, requestDelete:()=>{}, save:()=>{}, closeEditor:()=>{}, closeDelete:()=>{}, changeDraft:()=>{}, remove:async()=>{}});';
         if (id === '\0workspace-create-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0workspace-create-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0workspace-create-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;

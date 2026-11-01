@@ -60,6 +60,7 @@ const openWorkspace = async (t) => {
         if (!file.endsWith('/src/features/events/components/EventWorkspaceShell.jsx')) return null;
         if (source.endsWith('/services/scopedRecordActions')) return '\0workspace-shared-writer';
         if (source.endsWith('/hooks/useMomentFinance')) return '\0workspace-shared-finance';
+        if (source.endsWith('/hooks/useActivityActions')) return '\0workspace-transaction-activity-actions';
         if (source === './MomentContents') return '\0workspace-transaction-child:MomentContents';
         if (source === './MomentStory') return '\0workspace-transaction-child:MomentContents';
         if (source === 'react-router-dom') return '\0workspace-transaction-router';
@@ -82,6 +83,7 @@ const openWorkspace = async (t) => {
         if (id.startsWith('\0workspace-transaction-child:')) return `export default ${JSON.stringify(id.split(':').at(-1))}; export const ConfirmDialog="ConfirmDialog";`;
         if (id === '\0workspace-shared-writer') return `import {createScopedRecordActions} from '/src/utils/scopedRecordActions.js'; export const scopedRecordActions=createScopedRecordActions({getSession:()=>${fixture}.app,getEvents:()=>${fixture}.eventStore});`;
         if (id === '\0workspace-shared-finance') return `export default ()=>({ready:true,transactions:[],summary:{income:0,expense:0,balance:0},error:null});`;
+        if (id === '\0workspace-transaction-activity-actions') return 'export default ()=>({busy:false, draft:null, deleteTarget:null, edit:()=>{}, setCompleted:async()=>{}, setCancelled:async()=>{}, requestDelete:()=>{}, save:()=>{}, closeEditor:()=>{}, closeDelete:()=>{}, changeDraft:()=>{}, remove:async()=>{}});';
         if (id === '\0workspace-transaction-app') return `const useStore=(select)=>select(${fixture}.app); useStore.getState=()=>${fixture}.app; export default useStore;`;
         if (id === '\0workspace-transaction-events') return `const useStore=()=>${fixture}.eventStore; useStore.getState=useStore; export default useStore;`;
         if (id === '\0workspace-transaction-expenses') return `const useStore=()=>${fixture}.expenseStore; useStore.getState=useStore; export default useStore;`;
@@ -99,18 +101,21 @@ const openWorkspace = async (t) => {
   return { activity, api, calls, navigations, toasts, render, find };
 };
 
-test('Moment Activities exposes read-only cards without record or finance mutation callbacks', async (t) => {
+test('Moment Activities exposes consistent Activity actions without finance mutations on render', async (t) => {
   const harness = await openWorkspace(t);
   const list = harness.find('ActivityList');
-  assert.equal(list.props.readOnly, true);
-  for (const action of ['onEdit', 'onDelete', 'onToggleComplete', 'onToggleCancelled', 'onAddExpense', 'onLinkExpense']) {
-    assert.equal(list.props[action], undefined, action + ' is unavailable in this tab');
+  assert.notEqual(list.props.readOnly, true);
+  for (const action of ['onEdit', 'onDelete', 'onToggleComplete', 'onToggleCancelled']) {
+    assert.equal(typeof list.props[action], 'function', action + ' is available in this tab');
+  }
+  for (const action of ['onAddExpense', 'onLinkExpense']) {
+    assert.equal(list.props[action], undefined, action + ' must not mutate finance here');
   }
   assert.equal(harness.find('TransactionForm'), undefined);
-  assert.deepEqual(harness.calls, []);
+  assert.deepEqual(harness.calls, [], 'opening the workspace never writes records');
 });
 
-test('read-only Moment Activity selection opens the canonical nested Detail route', async (t) => {
+test('Moment Activity selection still opens the canonical nested Detail route', async (t) => {
   const harness = await openWorkspace(t);
   harness.find('ActivityList').props.onOpen(harness.activity);
   assert.equal(harness.navigations[0][0], '/events/moment-one/activities/activity-one');
