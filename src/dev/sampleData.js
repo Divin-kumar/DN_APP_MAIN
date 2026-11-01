@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.01.2';
+export const GUEST_TOUR_VERSION = '2026.11.01.3';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. An appended note continues directly inside the original memory, without a second boxed chapter. The road to the hills includes a sample continuation. In v2.1.2, edit either a Journal memory or its appended entry to switch between New and Append, and choose a destination; attached entry photos stay with the edited entry while parent finances stay with their memory. From Moment Activities, Link or append existing lets you connect independent memories, unlink them, or deliberately combine them later. Save photographs, stories and moments together. From Activity Detail, + → Activity preselects Append to the opened Journal memory, and the action menu lets you switch to New at any time. Each Moment, Activity and Transaction form hides the already-filled date, time and other supporting choices under More options. In Activities, search for a step or tap Refine to filter and sort without changing any records. In Insights, review the four overview tiles and search for upcoming or remembered milestones; Export saves your current report. Tap the little photo button on a card to choose among its linked photos, or open Activity Detail to add photos. Open Story to read your Journal, Gallery to browse its original files, or PDF Studio to customize your memory book. For a recovery copy, use Settings → Data & Backup. Your JSON backup includes stored original files; review the restore summary before confirming. You can cancel backup preparation before any restore begins.',
+    notes: 'Welcome to Journal. Every Activity is independent and can hold multiple dated writing entries. Open an Activity and use universal + → Add entry to record more detail, with an optional clock time. Old content and original photos stay linked. Story and PDF Studio read the same Activity content. You can explore filters, original photos, Transactions and Settings → Data & Backup using these disposable Guest examples.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
@@ -300,7 +300,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: d, name: 'Explore DN · This month in words', type: 'Diary', date: diaryDay(1),
-    notes: 'One Moment per month. Write as much as you want: pictures are optional, and the Diary PDF is for reading. From a daily Activity Detail, + → Activity starts a new note in that same Diary day.',
+    notes: 'Diary Activities are independent even on the same date. Open Activity Detail and use + → Add entry to keep writing under the same Activity. Older Diary day links remain unchanged.',
     attachments: [], memories: [], activities: [
       activity('d1', d, 'A quiet Monday', -6, 'Today I noticed how much better my mornings feel with a slower start. Three things I am grateful for, and one idea I want to follow.'),
       activity('d2', d, 'What I learned', -3, 'Listening changed a difficult conversation. This is the sort of detail I would otherwise forget.'),
@@ -308,7 +308,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: t, name: 'Explore DN · Home project', type: 'Project', date: date(-4),
-    notes: 'Try changing a task status. From a task Detail, + → Activity starts a separate task inside this same Moment. In progress comes first, then Completed, then Cancelled. Dates sort within each group. In Transactions, filter by Cash or Online and watch Income, Expense and Balance follow the matching rows. In v2.1.3, tap Export CSV to download matching rows in their shown order. More options in Activity and Transaction forms previews the selected date and time, while Journal/Diary Activities show writing dates instead of task deadlines. Add your own payment choices in Settings → Code Lists → Payment Methods.',
+    notes: 'Tasks use the same dated content entries as Diary and Journal. From Activity Detail, + → Add entry keeps the existing Task and adds one dated update. Creating a new Activity makes a separate Task. Completed and cancelled statuses still belong to each Activity. Transactions and PDF Studio remain linked to the original Activity.',
     attachments: [], memories: [{ id: 'dn-tour-memory-2', title: 'The original plan', body: 'Older notes remain readable reflections.' }],
     activities: [
       activity('t1', t, 'Choose a paint colour', -4, 'Compare two options.', 'completed'),
@@ -323,14 +323,24 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   for (const [index, item] of events[1].activities.entries()) item.date = diaryDay([5, 5, 21][index]);
   events[1].activities[0].time = '18:30';
   events[1].activities[1].time = '07:20';
-  events[1].notes += ' Optional Activity times put same-day entries in clock order in Story and PDF; entries without a time stay last.';
-  // A sample Journal continuation demonstrates in-place Story reading without
-  // introducing another Activity or changing the existing transaction owner.
+  events[1].notes += ' Untimed historical entries remain untimed and display first for their day.';
+  // Demo content rows for all three Activity types; nothing changes existing IDs,
+  // original attachment ownership or transaction relationships.
   events[0].activities[0].entryMode = 'journal';
   events[0].activities[0].entries = [{
-    id: 'dn-tour-entry-j1-continued', title: 'A little tea-stop reflection',
+    id: 'dn-tour-entry-j1-continued',
     date: date(-24), time: '12:15',
     description: 'We stopped beside the road for tea. That small pause became part of the same memory.',
+  }];
+  events[1].activities[0].entries = [
+    { id: 'dn-tour-entry-d1-untimed', date: events[1].activities[0].date,
+      description: 'An old note without a recorded time.' },
+    { id: 'dn-tour-entry-d1-afternoon', date: events[1].activities[0].date, time: '15:15',
+      description: 'A little more writing from the same day.' },
+  ];
+  events[2].activities[1].entries = [{
+    id: 'dn-tour-entry-t2-update', date: date(3), time: '10:45',
+    description: 'Called to confirm the appointment for tomorrow.',
   }];
   events[0].time = '09:30';
   events[2].time = '14:00';
