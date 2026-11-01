@@ -5,7 +5,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { activityCancellationPatch, activityCompletionPatch, activityStatusTransitionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
-import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries, ENTRY_MODES, editJournalActivity, editJournalContinuation } from '../utils/activityEntries';
+import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries } from '../utils/activityEntries';
 import { recordId } from '../utils/recordIdentity';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
@@ -61,32 +61,17 @@ export default function useActivityActions() {
   const save = (event) => {
     event.preventDefault();
     if (!draft?.title.trim() || !parseMomentDate(draft.date)) { setError('Enter an activity title and a valid date.'); return; }
-    if (draft.entryMode === ENTRY_MODES.DAILY && draft.date !== draft.originalDate) {
-      setError('Diary days must keep their original date. Edit individual entries instead.'); return;
-    }
-    if (draft.entryMode === ENTRY_MODES.JOURNAL) return run(draft, (moment) => {
-      const activity = moment.activities?.find((item) => recordId(item.id) === recordId(draft.activityId));
-      if (!activity) throw new Error('This Journal memory no longer exists.');
-      return editJournalActivity(moment, draft.activityId,
-        { title: draft.title, date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority },
-        { choice: draft.journalChoice, targetId: draft.journalTargetId });
-    }, 'journal-edit:' + draft.activityId, 'Activity updated', () => setDraft(null), true).catch(() => {});
     return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };
-  const saveEntry = (target, entryId, patch, placement = null) => placement
-    ? run(target, (moment) => editJournalContinuation(moment, target.activityId, entryId, patch, placement),
-      'journal-continuation-edit:' + entryId, 'Journal entry updated', undefined, true)
-    : run(target,
-    (activity) => {
-      const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
-      if (!entry) throw new Error('Entry no longer exists.');
-      assertActivityEditable(entry);
-      if (activity.entryMode === ENTRY_MODES.DAILY && patch.date !== activity.date)
-        throw new Error('Diary entries must keep their parent day date.');
-      return updateActivityEntry(activity, entryId, patch);
-    },
-    'entry-edit:' + entryId, 'Entry updated');
+  const saveEntry = (target, entryId, patch) => run(target, (activity) => {
+    const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
+    if (!entry) throw new Error('Entry no longer exists.');
+    assertActivityEditable(entry);
+    if (!parseMomentDate(patch.date)) throw new Error('Choose a valid entry date.');
+    if (!String(patch.description || '').trim()) throw new Error('Write something before saving this entry.');
+    return updateActivityEntry(activity, entryId, patch);
+  }, 'entry-edit:' + entryId, 'Entry updated');
   const setEntryStatus = (target, entryId, status) => run(target,
     (activity, moment) => {
       const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
