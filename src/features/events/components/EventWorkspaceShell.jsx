@@ -90,8 +90,6 @@ export function EventWorkspaceContent() {
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
-  const [journalMergeTarget, setJournalMergeTarget] = useState('');
-  const [journalMergeSource, setJournalMergeSource] = useState('');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
   const { search: activitySearch, filter: activityFilter, field: activitySort, direction: activitySortDirection } = activityList;
   const setActivitySearch = (search) => changeActivityList({ search });
@@ -583,7 +581,7 @@ export function EventWorkspaceContent() {
         </form>
       </ModalDialog> : null}
       {activityDialogOpen ? (
-        <ModalDialog title={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
+        <ModalDialog title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
           <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
 
@@ -600,7 +598,7 @@ export function EventWorkspaceContent() {
                }} />
              <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>{getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'}</button>
+              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
             </div>
           </form>
         </ModalDialog>
