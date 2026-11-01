@@ -2,7 +2,7 @@ import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
 import ActivityFormFields from '../components/events/ActivityFormFields';
-import { createStandaloneActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
+import { createStandaloneActivity, getMomentEntryMode } from '../utils/activityEntries';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
@@ -424,7 +424,7 @@ export default function Events() {
                  if (patch.description !== undefined) setActivityDescription(patch.description);
                  if (patch.priority !== undefined) setActivityPriority(patch.priority);
                }} />
-             <div className="form-actions"><button className="primaryButton" type="submit">{getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Save activity' : 'Save entry'}</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
+             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
           </form>
         </ModalDialog>
       ) : null}
