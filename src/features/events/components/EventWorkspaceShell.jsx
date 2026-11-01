@@ -1,8 +1,7 @@
 import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
-import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
 import ActivityFormFields from '../../../components/events/ActivityFormFields';
-import { createOrAppendActivity, getMomentEntryMode, ENTRY_MODES, mergeJournalActivities, linkJournalActivities, unlinkJournalActivities, journalAppendCandidates } from '../../../utils/activityEntries';
+import { createStandaloneActivity, getMomentEntryMode, ENTRY_MODES } from '../../../utils/activityEntries';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
@@ -91,10 +90,6 @@ export function EventWorkspaceContent() {
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityDescription, setActivityDescription] = useState('');
   const [activityPriority, setActivityPriority] = useState('medium');
-  const [activityCreationChoice, setActivityCreationChoice] = useState('new');
-  const [activityAppendTarget, setActivityAppendTarget] = useState('');
-  const [journalMergeOpen, setJournalMergeOpen] = useState(false);
-  const [journalMergeAction, setJournalMergeAction] = useState('link');
   const [journalMergeTarget, setJournalMergeTarget] = useState('');
   const [journalMergeSource, setJournalMergeSource] = useState('');
   const [activityList, changeActivityList, resetActivityList] = usePersistentListState(`activities:${eventId}`, ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_OPTIONS);
@@ -348,16 +343,12 @@ export function EventWorkspaceContent() {
     submitEvent.preventDefault();
     if (!activityTitle.trim()) { setActivityError('Enter an activity title.'); return; }
     const mode = getMomentEntryMode(event, momentTypes);
-    if (mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' && !activityAppendTarget) {
-      setActivityError('Choose a Journal entry to append to.'); return;
-    }
     return runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) =>
-      createOrAppendActivity(latest, { title: activityTitle, date: activityDate,
-        time: activityTime, description: activityDescription, priority: activityPriority,
-        mode, targetId: mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' ? activityAppendTarget : '',
-      }).moment), () => {
+      createStandaloneActivity(latest, { title: activityTitle, date: activityDate,
+        time: activityTime, description: activityDescription, priority: activityPriority, mode,
+      })), () => {
         setActivityTitle(''); setActivityDescription(''); setActivityTime(currentEntryTime());
-        setActivityCreationChoice('new'); setActivityAppendTarget(''); setActivityDialogOpen(false);
+        setActivityDialogOpen(false);
       }).catch(() => {});
   };
 
@@ -459,13 +450,6 @@ export function EventWorkspaceContent() {
             search={<DebouncedFilterInput scopeKey={activityConditions.editorKey} id="activity-filter-search" type="search" value={activitySearch} onChange={(changeEvent) => setActivitySearch(changeEvent.target.value)} placeholder="Search activities" aria-label="Search activities by title" />}>
             <ConditionBuilder filter={activityConditions} title="Moment Activity conditions" />
           </ListControls>
-          {getMomentEntryMode(event, momentTypes) === ENTRY_MODES.JOURNAL && journalAppendCandidates(event).length > 1
-            ? <div className="dn-journal-merge-bar">
-              <button type="button" className="settings-secondary-button" onClick={() => {
-                setJournalMergeTarget(''); setJournalMergeSource(''); setJournalMergeAction('link'); setActivityError(''); setJournalMergeOpen(true);
-              }}>Link or append existing</button>
-              <span>Organize memories later without automatic merging.</span>
-            </div> : null}
           <ActivityList visualCards showMomentName={false}
             uid={user?.uid} isGuest={isGuest} sample={sample}
             getMoment={() => event}
@@ -598,69 +582,11 @@ export function EventWorkspaceContent() {
           <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
         </form>
       </ModalDialog> : null}
-      {journalMergeOpen ? (
-        <ModalDialog title="Organize Journal memories" className="event-activity-editor-modal"
-          onClose={() => { if (!activitySavingRef.current) setJournalMergeOpen(false); }}>
-          <form className="dn-journal-merge-form" aria-busy={activityBusy} onSubmit={(submitEvent) => {
-            submitEvent.preventDefault();
-            if (!journalMergeSource || !journalMergeTarget || journalMergeSource === journalMergeTarget) {
-              setActivityError('Choose two different Journal memories.'); return;
-            }
-            runActivityWrite(() => records.mutateMoment(mutationContext, eventId, (latest) => {
-              if (getMomentEntryMode(latest, momentTypes) !== ENTRY_MODES.JOURNAL)
-                throw new Error('This Moment is no longer a Journal.');
-              return journalMergeAction === 'append'
-                ? mergeJournalActivities(latest, journalMergeTarget, journalMergeSource)
-                : journalMergeAction === 'unlink'
-                  ? unlinkJournalActivities(latest, journalMergeTarget, journalMergeSource)
-                  : linkJournalActivities(latest, journalMergeTarget, journalMergeSource);
-            }), () => {
-              setJournalMergeOpen(false);
-              showToast(journalMergeAction === 'append' ? 'Journal entry appended; old links retained.'
-                : journalMergeAction === 'unlink' ? 'Journal link removed.' : 'Journal memories linked without merging.', 'success');
-            }).catch(() => {});
-          }}>
-            <p className="dn-entry-mode-help">Link keeps both memories, photos and transactions independent. Append deliberately combines them while preserving old links and financial references.</p>
-            <label htmlFor="journal-arrange-action">Action</label>
-            <DropdownSelect id="journal-arrange-action" value={journalMergeAction} disabled={activityBusy}
-              onChange={(e) => { setJournalMergeAction(e.target.value); setJournalMergeSource(''); setActivityError(''); }}>
-              <option value="link">Link · keep both memories</option>
-              <option value="append">Append · combine memories</option>
-              <option value="unlink">Unlink · keep both separate</option>
-            </DropdownSelect>
-            {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
-            <label htmlFor="journal-merge-destination">Destination memory</label>
-            <DropdownSelect id="journal-merge-destination" value={journalMergeTarget} disabled={activityBusy}
-              onChange={(e) => setJournalMergeTarget(e.target.value)}>
-              <option value="">Choose destination</option>
-              {journalAppendCandidates(event).map((item) => <option value={item.id} key={item.id}>{item.title || 'Untitled'} · {item.date || 'Undated'}</option>)}
-            </DropdownSelect>
-            <label htmlFor="journal-merge-source">{journalMergeAction === 'unlink' ? 'Remove link to' : 'Existing memory'}</label>
-            <DropdownSelect id="journal-merge-source" value={journalMergeSource} disabled={activityBusy}
-              onChange={(e) => setJournalMergeSource(e.target.value)}>
-              <option value="">Choose source</option>
-              {journalAppendCandidates(event).filter((item) => item.id !== journalMergeTarget
-                && (journalMergeAction !== 'unlink'
-                  || event.activities?.find((target) => target.id === journalMergeTarget)?.linkedJournalActivityIds?.includes(item.id)))
-                .map((item) => <option value={item.id} key={item.id}>{item.title || 'Untitled'} · {item.date || 'Undated'}</option>)}
-            </DropdownSelect>
-            {journalMergeAction === 'append' ? <p className="dn-entry-mode-help">The source will become an entry inside the destination, not a separate Activity. Its history, photos and financial references stay traceable, but this combination cannot be automatically undone. Export a backup first if needed.</p> : null}
-            <div className="dialog-actions">
-              <button type="button" className="secondaryButton" onClick={() => setJournalMergeOpen(false)} disabled={activityBusy}>Cancel</button>
-              <button type="submit" className="primaryButton" disabled={activityBusy || !journalMergeSource || !journalMergeTarget || journalMergeSource === journalMergeTarget}>
-                {journalMergeAction === 'append' ? 'Append existing memory' : journalMergeAction === 'unlink' ? 'Unlink memories' : 'Link memories'}
-              </button>
-            </div>
-          </form>
-        </ModalDialog>
-      ) : null}
       {activityDialogOpen ? (
         <ModalDialog title={getMomentEntryMode(event, momentTypes) === ENTRY_MODES.TASKS ? 'Add activity' : 'Add entry'} className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
           <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
-            <ActivityEntryModeFields moment={event} momentTypes={momentTypes} date={activityDate}
-              choice={activityCreationChoice} targetId={activityAppendTarget}
-              onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} disabled={activityBusy} />
+
             <ActivityFormFields mode={getMomentEntryMode(event, momentTypes)} namePrefix="dn-workspace-entry"
                value={{ title: activityTitle, date: activityDate, time: activityTime,
                  description: activityDescription, priority: activityPriority }}
