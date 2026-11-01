@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-258 | Stabilize CI browser server lifecycle (OldVersion only)
+- **Failure:** The authorized 2.1.0 Firebase workflow passed dependency, unit, lint and Chromium gates but its 582-test browser suite failed while Vite was restarting/closing during dependency scanning. Firebase publication was correctly skipped.
+- **Correction:** When Playwright sets `DN_BROWSER_TEST=1`, Vite now disables HMR and file watching. Browser journeys do not edit source files or need hot reload, so this removes an unnecessary restart race while leaving interactive local development unchanged.
+- **Validation boundary:** Local unit tests, lint, production build and documentation checks remain required; the exact repaired CI browser journey and Firebase live read-back are pending. No Guest fixture or stored-data behavior changes.
+
 ## CHG-20261101-257 | Publish DN 2.1.0 to Firebase Hosting (OldVersion only)
 - **Release:** Promoted the already documented DN 2.1.0 iPhone-first experience from in-development metadata to the installed release by updating the package and lock versions from 2.0.3 to 2.1.0. The About page's existing 2.1.0 history now resolves as the installed release without changing stored records, schemas, account boundaries or Guest fixtures.
 - **Executed validation:** `npm test`, `npm run lint`, `npm run build` and `npm audit --audit-level=moderate` passed on the release source. Responsive Chromium journeys, production shell/offline/PDF checks, reviewed upgrade preservation, the live-version guard and Firebase publication/read-back are release gates for the exact published commit.

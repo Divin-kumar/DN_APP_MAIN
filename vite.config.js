@@ -101,6 +101,8 @@ export default defineConfig({
   server: {
     host: '0.0.0.0',
     port: 5173,
+    hmr: process.env.DN_BROWSER_TEST === '1' ? false : undefined,
+    watch: process.env.DN_BROWSER_TEST === '1' ? null : undefined,
   },
   preview: {
     host: '0.0.0.0',
