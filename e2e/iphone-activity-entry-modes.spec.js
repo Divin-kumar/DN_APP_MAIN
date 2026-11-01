@@ -57,10 +57,11 @@ test('Diary appends new entries, Journal offers optional link then deliberate ap
   await page.goto('/events/diary/activities?create=activity');
   const editor = page.getByRole('dialog', { name: 'Add entry' });
   await expect(editor).toBeVisible();
-  await expect(editor.getByText('This entry will be added to the existing daily Activity.')).toBeVisible();
   await editor.getByPlaceholder('Entry title').fill('Late reflection');
   await editor.locator('.dn-form-disclosure > summary').click();
   await editor.locator('input[type="date"]').fill('2026-10-31');
+  // The form defaults to today's date; check the append state only after choosing a date with an existing daily Activity.
+  await expect(editor.getByText('This entry will be added to the existing daily Activity.')).toBeVisible();
   await editor.getByRole('button', { name: 'Add entry' }).click();
   await expect(editor).toHaveCount(0);
   const diary = (await read(page)).find((item) => item.id === 'diary');

@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-260 | Correct release browser assertions against the current DN 2.1 interface (OldVersion only)
+- **Observed evidence:** The `6fe38f1` release workflow `41265998087` finished its real responsive Chromium gate with 578 of 582 passing. Four failures were an assertion that queried Diary append text before selecting its historical date, a Chromium 43.99976px measurement of a nominal 44px Code Lists button, and two checks requiring old DN 2.0 release details in the new DN 2.1.0 What's New highlights. The Vite dependency-scan shutdown logs arose during passing Node unit tests, so they did not explain these four browser assertions.
+- **Test repair:** Confirm Diary append after setting its existing date; retain the 44px touch-target intent with a sub-pixel measurement allowance; validate current 2.1 highlights and open DN 2.0.0 Version History and its guide to verify older features rather than requiring them in the newest highlights. Do not skip tests or change app data/logic. Playwright remains a mandatory deployment blocker.
+- **Verification boundary:** Full exact-commit CI, release upgrade tests, Firebase publication and physical Safari checks remain pending. Earlier audit entries remain byte-for-byte unchanged.
+
 ## CHG-20261101-259 | Preserve immutable CI audit history and record serialized browser workers (OldVersion only)
 - **Governance correction:** The previous commit `6d98698` changed the text of historical entry `CHG-20261101-258` instead of adding a new entry, causing the documented append-only audit contract to fail. Restore `CHG-20261101-258` byte-for-byte from its preceding commit `6fe38f1`; do not weaken the check.
 - **CI adjustment being recorded:** Playwright now uses one browser worker when `CI` is set, retaining two workers for local development. This was intended to reduce concurrent requests against a single Vite development server. The exact responsive browser gate and Firebase live read-back for `6d98698` were still in progress when this historical correction was prepared; no claim of passing Playwright or a completed deployment is made.
