@@ -72,9 +72,10 @@ test('completed Activities require reopening before Edit, and a stale editor can
   await expect(page.locator('.activity-detail-content > :last-child')).toContainText('Completed25 Oct 2026');
   await page.goto('/activities');
   const completed = page.getByRole('group', { name: 'Open Choose the train', exact: true });
-  await expect(completed.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
-  await completed.click();
-  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await expect(completed.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await completed.locator('.event-activity-title-row > strong').click();
+  await expect(page).toHaveURL(/moment-one\/activities\/completed$/);
+  await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toHaveCount(0);
   await expect(page.getByRole('menuitem', { name: 'Reopen', exact: true })).toBeVisible();
 });
@@ -112,7 +113,7 @@ test('the opening filtered sequence survives completion, while single-result fil
   await page.goto('/activities'); await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('');
   await setActivityStatusCondition(page, 'in-progress');
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).locator('.event-activity-title-row > strong').click();
-  await activityDetailAction(page, 'Close'); await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
+  await activityDetailAction(page, 'Complete'); await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await drag(page, page.locator('.activity-cover'), -150);
   await expect(page).toHaveURL(/\/events\/moment-two\/activities\/shared$/);
 });

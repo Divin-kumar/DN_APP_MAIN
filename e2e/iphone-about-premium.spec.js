@@ -19,7 +19,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.locator('.about-guide-grid details')).toHaveCount(10);
       const history = root.locator('.dn-about-release-entry');
       await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
-      await expect(history).toHaveCount(5);
+      await expect(history).toHaveCount(6);
       await expect(history.first()).toHaveAttribute('data-version', '2.1.1');
       const installedVersion = (await root.locator('.about-summary-item').nth(1).locator('strong').innerText()).trim();
       const installedEntry = root.locator(`.dn-about-release-entry[data-version="${installedVersion.slice(1)}"]`);
@@ -33,8 +33,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await history.last().locator('summary').click();
       await expect(history.last()).toHaveAttribute('open');
       await expect(history.last().getByText(/Moment Story offers Journal, Diary and Tasks/)).toBeVisible();
-      await history.nth(3).locator('summary').click();
-      await expect(history.nth(3).getByText(/not documented precisely enough/)).toBeVisible();
+      const legacyHistory = root.locator('.dn-about-release-entry[data-version="2.0.1"]');
+      await legacyHistory.locator('summary').click();
+      await expect(legacyHistory.getByText(/not documented precisely enough/)).toBeVisible();
       await history.last().locator('summary').focus();
       await page.keyboard.press('Enter');
       await expect(history.last()).not.toHaveAttribute('open');

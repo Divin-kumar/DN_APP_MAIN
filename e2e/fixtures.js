@@ -92,7 +92,11 @@ export async function openUniversalTransaction(page) {
 }
 
 export async function activityDetailAction(page, name) {
-  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  // Route transitions can briefly retain the underlying Activities list.
+  // Target only the Detail menu so similarly named card menus cannot intercept edits.
+  const detail = page.locator('.activity-detail-page .activity-detail-more');
+  await expect(detail.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await detail.getByRole('button', { name: 'Activity options', exact: true }).click();
   await page.getByRole('menuitem', { name, exact: true }).click();
 }
 

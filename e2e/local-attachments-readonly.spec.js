@@ -3,12 +3,12 @@ import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScop
 
 // Only the Firestore store edge is mocked; file IO uses the real scoped IndexedDB repository.
 
-test('Moment Activities is read-only, still opens Detail, and the retired Timeline URL shows Story', async ({ page }) => {
+test('Moment Activities share action menus, open Detail and retain retired Timeline on Story', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
   await expect(card).not.toHaveAttribute('aria-expanded');
-  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
   await expect(page.locator('.workspace-activities .dn-swipe-complete')).toHaveCount(0);
   await expect(page.locator('.workspace-activities').getByRole('button', { name: /Edit|Delete|Complete|Reopen|Add transaction|Link existing/ })).toHaveCount(0);
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
@@ -21,7 +21,7 @@ test('Moment Activities is read-only, still opens Detail, and the retired Timeli
   await page.getByRole('navigation', { name: 'Moment contents' }).getByRole('link', { name: /Activities/ }).click();
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
-  await page.getByRole('button', { name: 'Activity options', exact: true }).click();
+  await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toBeVisible();
 });
 
@@ -52,9 +52,10 @@ test('contextual transaction rows have no edit, delete, swipe or Add controls; m
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
-  await card.click();
-  await page.getByRole('button', { name: 'Activity options' }).click();
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await card.locator('.event-activity-title-row > strong').click();
+  await expect(page).toHaveURL(/moment-one\/activities\/shared$/);
+  await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Add transaction', exact: true })).toHaveCount(0);
 });
 

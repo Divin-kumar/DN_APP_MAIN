@@ -61,7 +61,7 @@ test('Sample Activity changes stay in the isolated fixture and clearing Sample r
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.locator('h1')).toHaveText('Isolated Sample Activity');
   const guest = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-  await activityDetailAction(page, 'Close');
+  await activityDetailAction(page, 'Complete');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(guest);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).events[0].activities[0].completed)).toBe(true);
@@ -82,7 +82,7 @@ test('archived parents remain readable, cancelled restore stays explicit and inv
   await expect(page.getByText('Archived Moment', { exact: true })).toBeVisible();
   await expect(page.locator('.activity-detail-due')).toContainText('Date to be decided');
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
-  await expect(page.getByRole('menuitem', { name: 'Close', exact: true })).toBeDisabled();
+  await expect(page.getByRole('menuitem', { name: 'Complete', exact: true })).toBeDisabled();
   await page.goto('/events/moment-one/activities/cancelled');
   await expect(page.locator('.activity-status-pill')).toHaveText('Cancelled');
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
@@ -190,10 +190,10 @@ test('legacy completed status exposes Reopen consistently in the list and detail
   await seedGuest(page, { moments }); await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card.locator('.event-activity-status')).toHaveText('Completed');
-  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
-  await page.getByRole('button', { name: 'Activity options' }).click();
+  await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Reopen', exact: true })).toBeVisible();
   await page.getByRole('menuitem', { name: 'Reopen', exact: true }).click();
   await expect(page.locator('.activity-status-pill')).toHaveText('In progress');

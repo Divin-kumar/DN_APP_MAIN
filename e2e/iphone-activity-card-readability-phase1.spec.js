@@ -17,7 +17,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await expect(card.locator('.event-activity-moment-name')).toContainText('Weekend in Ooty');
     await expect(card.locator('.event-activity-context > span:last-child')).toContainText(/Due|Past due/);
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
-    await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+    const options = card.getByRole('button', { name: 'Activity options', exact: true });
+    await expect(options).toBeVisible();
+    const menuBounds = await options.boundingBox();
+    expect(menuBounds.width).toBeGreaterThanOrEqual(43.9);
+    expect(menuBounds.height).toBeGreaterThanOrEqual(43.9);
     const metrics = await card.evaluate((node) => {
       const title = node.querySelector('.event-activity-title-row > strong');
       const status = node.querySelector('.event-activity-status');
