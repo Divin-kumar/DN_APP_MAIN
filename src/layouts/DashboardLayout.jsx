@@ -323,8 +323,8 @@ export default function DashboardLayout() {
     setQuickCreateError('');
     setQuickCreateType(type === 'activity' && openedActivityContext?.activity ? 'activity-entry' : type);
     if (type === 'activity') {
-      // A Detail Activity owns the parent and append target. Elsewhere, keep
-      // the existing Moment-workspace and global + defaults.
+      // Detail opens the separate Add entry form; elsewhere + creates a
+      // new independent Activity in the selected Moment.
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
       const currentMomentId = momentId(parent);
       quickActivitySessionRef.current = { context: records.capture(), ready: isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) };
