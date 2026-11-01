@@ -117,6 +117,73 @@ export const createOrAppendActivity = (moment, { title, description = '', date, 
     entryId: isDaily ? item.id : null, appended: false };
 };
 
+// Journal edit placement uses the same New / Append contract as creation.
+// An existing standalone memory merges only when the user chooses Append.
+export const editJournalActivity = (moment, sourceId, patch, { choice = 'new', targetId = '' } = {}) => {
+  const from = recordId(sourceId);
+  const source = (moment?.activities || []).find((item) => recordId(item.id) === from);
+  if (!source) throw new Error('The Journal memory no longer exists.');
+  if (source.completed || source.status === 'completed') throw new Error('Reopen this memory before editing it.');
+  const title = String(patch?.title || '').trim(), day = dateKey(patch?.date);
+  if (!title || !day) throw new Error('Enter an entry title and a valid date.');
+  const revised = { ...source, ...patch, id: source.id, title, date: day,
+    time: normalizeActivityTime(patch.time ?? activityTime(source)) };
+  const next = { ...moment, activities: moment.activities.map((item) => item === source ? revised : item) };
+  if (choice === 'new') return next;
+  if (choice !== 'append' || !targetId || recordId(targetId) === from)
+    throw new Error('Choose a different Journal entry to append to.');
+  return mergeJournalActivities(next, targetId, from);
+};
+
+// Move an appended child between Journal memories or make it a new standalone
+// memory. Only explicitly entry-owned photos move; parent expenses remain put.
+export const editJournalContinuation = (moment, ownerId, entryId, patch,
+  { choice = 'append', targetId = ownerId, makeId = () => crypto.randomUUID() } = {}) => {
+  const from = recordId(ownerId), id = recordId(entryId);
+  const owner = (moment?.activities || []).find((item) => recordId(item.id) === from);
+  if (!owner || owner.entryMode === ENTRY_MODES.DAILY) throw new Error('This Journal entry is unavailable.');
+  const entry = activityEntries(owner).find((item) => recordId(item.id) === id);
+  if (!entry) throw new Error('This Journal continuation no longer exists.');
+  if (entry.completed || entry.status === 'completed') throw new Error('Reopen this entry before editing it.');
+  const title = String(patch?.title || '').trim(), day = dateKey(patch?.date);
+  if (!title || !day) throw new Error('Enter an entry title and a valid date.');
+  const revised = { ...entry, ...patch, id: entry.id, title, date: day,
+    time: normalizeActivityTime(patch.time ?? activityTime(entry)) };
+  if (choice !== 'new' && choice !== 'append') throw new Error('Choose New or Append for this Journal entry.');
+  const to = recordId(targetId);
+  const recipient = choice === 'append' && to !== from
+    ? journalAppendCandidates(moment).find((item) => recordId(item.id) === to) : null;
+  if (choice === 'append' && (!to || (to !== from && !recipient)))
+    throw new Error('Choose an available Journal memory for this entry.');
+  const remaining = activityEntries(owner).filter((item) => recordId(item.id) !== id);
+  if (choice === 'append' && to === from) {
+    return { ...moment, activities: moment.activities.map((item) => item === owner
+      ? { ...owner, entries: activityEntries(owner).map((current) => recordId(current.id) === id ? revised : current) }
+      : item) };
+  }
+  const activities = moment.activities.map((item) => item === owner ? { ...owner, entries: remaining }
+    : item === recipient ? { ...recipient, entries: [...activityEntries(recipient), revised] } : item);
+  if (choice === 'append') {
+    return { ...moment, activities, attachments: (moment.attachments || []).map((file) =>
+      recordId(file.activityId) === from && recordId(file.entryId) === id
+        ? { ...file, activityId: to } : file) };
+  }
+  const existingIds = new Set(moment.activities.flatMap((item) =>
+    [recordId(item.id), ...(Array.isArray(item.mergedActivityIds) ? item.mergedActivityIds.map(recordId) : [])]));
+  const newId = existingIds.has(id) ? recordId(makeId()) : id;
+  if (!newId || existingIds.has(newId)) throw new Error('Could not assign a unique Journal entry ID.');
+  const standalone = { ...revised, id: newId,
+    eventId: recordId(moment.id) || recordId(moment.firestoreId),
+    entryMode: ENTRY_MODES.JOURNAL, entries: [],
+    completed: false, cancelled: false, status: 'in-progress', completedAt: null };
+  return { ...moment, activities: [...activities, standalone], attachments: (moment.attachments || []).map((file) => {
+    if (recordId(file.activityId) !== from || recordId(file.entryId) !== id) return file;
+    const { entryId: ignoredEntryId, ...owned } = file;
+    void ignoredEntryId;
+    return { ...owned, activityId: newId };
+  }) };
+};
+
 export const updateActivityEntry = (activity, entryId, patch) => {
   const entries = activityEntries(activity);
   const id = recordId(entryId);

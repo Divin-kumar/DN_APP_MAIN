@@ -103,7 +103,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <h2 className="sr-only" id="activity-description-heading">Description</h2>
         <RichText value={activity.description} headingLevel={3} className="activity-description" />
       </section> : null}
-      <ActivityEntryTimeline activity={activity} actions={actions} target={target} />
+      <ActivityEntryTimeline activity={activity} moment={moment} actions={actions} target={target} />
       {Array.isArray(activity.linkedJournalActivityIds) && moment.activities.some((item) =>
         activity.linkedJournalActivityIds.some((id) => recordId(id) === recordId(item.id))) ? (
         <section className="activity-detail-section dn-linked-journal-memories" aria-label="Linked Journal memories">

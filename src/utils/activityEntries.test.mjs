@@ -4,6 +4,7 @@ import {
   ENTRY_MODES, getMomentEntryMode, createOrAppendActivity, mergeLegacyDiaryActivities,
   mergeJournalActivities, linkJournalActivities, unlinkJournalActivities,
   updateActivityEntry, removeActivityEntry, activityOwnsLinkedId,
+  editJournalActivity, editJournalContinuation,
 } from './activityEntries.js';
 import { buildMomentStory } from './momentStory.js';
 import { projectMomentTransactions } from './momentTransactions.js';
@@ -193,4 +194,74 @@ test('Diary and Journal appended entries preserve separate status and priority f
     targetId: journal.activities[0].id, date, title: 'Continuation', priority: 'high' }, fixed).moment;
   assert.equal(appended.activities[0].entries[0].priority, 'high');
   assert.equal(appended.activities[0].title, 'Chapter');
+});
+
+test('2.1.2 standalone Journal edit switches New to Append without orphaning identity or photos', () => {
+  const moment = { id: 'moment', type: 'Journal', activities: [
+    make('main', 'Main'), { ...make('second', 'Second'), custom: 'retain',
+      entries: [{ id: 'child', title: 'Existing note', date, description: 'Keep', time: '12:00' }] },
+  ], attachments: [{ id: 'photo', activityId: 'second', assetId: 'original-bytes' }] };
+  const separate = editJournalActivity(moment, 'second', { title: 'Edited', date, time: '14:15', priority: 'high' });
+  assert.equal(separate.activities.length, 2);
+  assert.equal(separate.activities[1].id, 'second');
+  assert.equal(separate.activities[1].title, 'Edited');
+  assert.equal(moment.activities[1].title, 'Second');
+  const appended = editJournalActivity(separate, 'second', { ...separate.activities[1], title: 'Edited again' },
+    { choice: 'append', targetId: 'main' });
+  assert.equal(appended.activities.length, 1);
+  assert.deepEqual(appended.activities[0].mergedActivityIds, ['second']);
+  assert.deepEqual(appended.activities[0].entries.map((e) => e.title), ['Edited again', 'Existing note']);
+  assert.deepEqual(appended.attachments[0], { id: 'photo', activityId: 'main', entryId: 'second', assetId: 'original-bytes' });
+  const projected = projectMomentTransactions([appended], [], [
+    { id: 'payment', eventId: 'moment', activityId: 'second', amount: 22, date },
+  ], 'moment');
+  assert.equal(projected[0].activityId, 'main');
+  assert.equal(projected[0].originalActivityId, 'second');
+  assert.throws(() => editJournalActivity(moment, 'second', { title: 'No target', date },
+    { choice: 'append', targetId: 'second' }), /different/);
+  assert.throws(() => editJournalActivity(moment, 'second', { title: 'No target', date },
+    { choice: 'append', targetId: 'missing' }), /available|different/);
+});
+
+test('2.1.2 appended Journal editing switches between Append and New safely', () => {
+  const moment = { id: 'moment', type: 'Journal', activities: [
+    { ...make('parent', 'Parent'), entries: [{ id: 'entry', title: 'Before', date,
+      description: '<p>Notes</p>', time: '11:00', priority: 'high' },
+    { id: 'other-child', title: 'Stay here', date }] },
+    make('destination', 'Other memory'),
+  ], attachments: [
+    { id: 'child-photo', activityId: 'parent', entryId: 'entry', assetId: 'original-1' },
+    { id: 'parent-photo', activityId: 'parent', assetId: 'original-2' },
+  ] };
+  const moved = editJournalContinuation(moment, 'parent', 'entry',
+    { title: 'Edited', date, description: '<p>After</p>', time: '12:45', priority: 'low' },
+    { choice: 'append', targetId: 'destination' });
+  assert.equal(moved.activities.length, 2);
+  assert.deepEqual(moved.activities[0].entries.map((e) => e.id), ['other-child']);
+  assert.deepEqual(moved.activities[1].entries.map((e) => e.title), ['Edited']);
+  assert.deepEqual(moved.attachments.map((f) => f.activityId), ['destination', 'parent']);
+  assert.equal(moment.activities[0].entries[0].title, 'Before');
+  const detached = editJournalContinuation(moment, 'parent', 'entry',
+    { title: 'Own memory', date, description: '<p>Now standalone</p>', priority: 'medium' },
+    { choice: 'new' });
+  assert.equal(detached.activities.length, 3);
+  assert.equal(detached.activities[2].id, 'entry');
+  assert.equal(detached.activities[2].description, '<p>Now standalone</p>');
+  assert.equal(detached.activities[0].entries.length, 1);
+  assert.deepEqual(detached.attachments.map((f) => f.activityId), ['entry', 'parent']);
+  assert.equal(detached.attachments[0].entryId, undefined);
+  assert.deepEqual(storyEntries(detached).find((e) => e.id === 'entry').attachments.map((f) => f.id), ['child-photo']);
+  assert.throws(() => editJournalContinuation(moment, 'parent', 'entry', { title: 'No destination', date },
+    { choice: 'append', targetId: 'missing' }), /available/);
+  assert.throws(() => editJournalContinuation(moment, 'parent', 'other-child', { title: '', date },
+    { choice: 'new' }), /title/);
+});
+
+test('2.1.2 completed Journal entries still require reopening before edit', () => {
+  const moment = { id: 'moment', type: 'Journal', activities: [
+    { ...make('parent', 'Parent'), entries: [{ id: 'done', title: 'Completed', date, completed: true }] },
+    { ...make('finished', 'Finished'), completed: true },
+  ] };
+  assert.throws(() => editJournalContinuation(moment, 'parent', 'done', { title: 'Changed', date }, { choice: 'new' }), /Reopen/);
+  assert.throws(() => editJournalActivity(moment, 'finished', { title: 'Changed', date }), /Reopen/);
 });

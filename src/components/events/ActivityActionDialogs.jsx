@@ -1,11 +1,16 @@
 import useAppStore from '../../store/useAppStore';
+import useEventStore from '../../store/useEventStore';
+import { recordId } from '../../utils/recordIdentity';
 import DashboardActivityEditor from '../../features/dashboard/components/DashboardActivityEditor';
 import { ConfirmDialog } from '../common/ModalDialog';
 
 export default function ActivityActionDialogs({ actions, onDeleted }) {
   const priorities = useAppStore((state) => state.adminValues.activityPriorities);
+  const momentTypes = useAppStore((state) => state.adminValues.eventTypes);
+  const moments = useEventStore((state) => state.events);
+  const moment = moments.find((item) => (recordId(item.id) || recordId(item.firestoreId)) === recordId(actions.draft?.momentId));
   return <>
-    {actions.draft ? <DashboardActivityEditor draft={actions.draft} priorities={priorities}
+    {actions.draft ? <DashboardActivityEditor draft={actions.draft} moment={moment} momentTypes={momentTypes} priorities={priorities}
       busy={actions.busy} error={actions.error} onChange={actions.changeDraft}
       onSubmit={actions.save} onClose={actions.closeEditor} /> : null}
     {actions.deleteTarget ? <ConfirmDialog title="Delete activity?"

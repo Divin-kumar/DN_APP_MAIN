@@ -23,6 +23,9 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.equal(demo.events[0].activities[0].entries[0].id, 'dn-tour-entry-j1-continued');
   assert.ok(demo.events[0].notes.includes('More options'));
   assert.ok(demo.events[0].notes.includes('switch to New'));
+  assert.ok(demo.events[0].notes.includes('In v2.1.2'));
+  assert.ok(demo.events[0].notes.includes('parent finances'));
+
   assert.equal(demo.imagesReady, false);
   assert.ok(demo.events.every((event) => !event.attachments.length));
   assert.equal(buildGuestTourDataset(new Date('2026-10-28T12:00:00Z')).events[0].id, demo.events[0].id);

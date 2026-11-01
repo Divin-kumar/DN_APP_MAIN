@@ -4,7 +4,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityList from '../components/events/ActivityList';
 import ActivityFormFields from '../components/events/ActivityFormFields';
-import { getMomentEntryMode } from '../utils/activityEntries';
+import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
+import { editJournalActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
 import QuietEmptyState from '../components/common/QuietEmptyState';
 import ListControls from '../components/common/ListControls';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
@@ -141,7 +142,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       assertActivityEditable(activity);
       setSaveError('');
       setDraft({ ...target, title: activity.title || '', time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)) || today(),
-        priority: activity.priority || 'medium', description: activity.description || '' });
+        priority: activity.priority || 'medium', description: activity.description || '',
+        journalChoice: 'new', journalTargetId: '' });
     } catch (error) { setSaveError(error.message); }
   };
   const saveActivity = (event) => {
@@ -150,7 +152,15 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     runAction(async () => {
       const { moment, activity } = resolve(draft);
       const values = { title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity || {}, draft.time), description: draft.description, priority: draft.priority };
-      if (draft.activityId) return updateActivity(draft, () => values, 'edit');
+      if (draft.activityId) {
+        if (getMomentEntryMode(moment, adminValues.eventTypes) === ENTRY_MODES.JOURNAL) {
+          return records.mutateMoment(mutationContext, draft.momentId, (latest) =>
+            editJournalActivity(latest, draft.activityId, values,
+              { choice: draft.journalChoice, targetId: draft.journalTargetId }),
+          'journal-edit:' + draft.activityId);
+        }
+        return updateActivity(draft, () => values, 'edit');
+      }
       return updateEventItem(uid, isGuest, { ...moment, activities: [...(moment.activities || []), {
         ...values, id: crypto.randomUUID(), eventId: draft.momentId, completed: false, completedAt: null, createdAt: new Date().toISOString(),
       }] });
@@ -203,6 +213,12 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
           {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
           <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
+          {getMomentEntryMode(momentsById.get(draft.momentId), adminValues.eventTypes) === ENTRY_MODES.JOURNAL ?
+            <ActivityEntryModeFields moment={momentsById.get(draft.momentId)} momentTypes={adminValues.eventTypes}
+              date={draft.date} choice={draft.journalChoice} targetId={draft.journalTargetId}
+              excludeActivityId={draft.activityId} namePrefix="activity-edit" editing disabled={busy}
+              onChoiceChange={(journalChoice) => setDraft((current) => ({ ...current, journalChoice }))}
+              onTargetChange={(journalTargetId) => setDraft((current) => ({ ...current, journalTargetId }))} /> : null}
           <ActivityFormFields namePrefix="activity-editor" value={draft}
             titleLabel="Activity title"
             mode={getMomentEntryMode(momentsById.get(draft.momentId), adminValues.eventTypes)}

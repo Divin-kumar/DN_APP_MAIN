@@ -5,7 +5,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { activityCancellationPatch, activityCompletionPatch, activityStatusTransitionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
-import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries, ENTRY_MODES } from '../utils/activityEntries';
+import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries, ENTRY_MODES, editJournalActivity, editJournalContinuation } from '../utils/activityEntries';
 import { recordId } from '../utils/recordIdentity';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
@@ -22,12 +22,14 @@ export default function useActivityActions() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const current = () => mounted.current && records.isCurrent(context);
-  const run = async (target, updater, operation, message, after) => {
+  const run = async (target, updater, operation, message, after, wholeMoment = false) => {
     if (saving.current || !mounted.current) return false;
     saving.current = true;
     setBusy(true); setError('');
     try {
-      const changed = await records.mutateActivity(context, target.momentId, target.activityId, updater, operation);
+      const changed = wholeMoment
+        ? await records.mutateMoment(context, target.momentId, updater, operation)
+        : await records.mutateActivity(context, target.momentId, target.activityId, updater, operation);
       if (current()) { if (changed && message) setAnnouncement(message); after?.(changed); }
       return changed;
     } catch (reason) {
@@ -52,7 +54,8 @@ export default function useActivityActions() {
         entryMode: getMomentEntryMode(moment, useAppStore.getState().adminValues?.eventTypes || []),
         title: activity.title || '',
         time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)),
-        originalDate: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
+        originalDate: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '',
+        journalChoice: 'new', journalTargetId: '' });
     } catch (reason) { setError(reason.message); }
   };
   const save = (event) => {
@@ -61,10 +64,20 @@ export default function useActivityActions() {
     if (draft.entryMode === ENTRY_MODES.DAILY && draft.date !== draft.originalDate) {
       setError('Diary days must keep their original date. Edit individual entries instead.'); return;
     }
+    if (draft.entryMode === ENTRY_MODES.JOURNAL) return run(draft, (moment) => {
+      const activity = moment.activities?.find((item) => recordId(item.id) === recordId(draft.activityId));
+      if (!activity) throw new Error('This Journal memory no longer exists.');
+      return editJournalActivity(moment, draft.activityId,
+        { title: draft.title, date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority },
+        { choice: draft.journalChoice, targetId: draft.journalTargetId });
+    }, 'journal-edit:' + draft.activityId, 'Journal memory updated', () => setDraft(null), true).catch(() => {});
     return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };
-  const saveEntry = (target, entryId, patch) => run(target,
+  const saveEntry = (target, entryId, patch, placement = null) => placement
+    ? run(target, (moment) => editJournalContinuation(moment, target.activityId, entryId, patch, placement),
+      'journal-continuation-edit:' + entryId, 'Journal entry updated', undefined, true)
+    : run(target,
     (activity) => {
       const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
       if (!entry) throw new Error('Entry no longer exists.');

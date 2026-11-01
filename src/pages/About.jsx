@@ -52,6 +52,17 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.1.2',
+    title: 'Journal editing that matches creation',
+    summary: 'New and Append are now available when editing Journal memories and continuations.',
+    changes: [
+      'Journal editors now show the same New entry or Append to existing entry selector used when creating a memory.',
+      'Existing memories can be continued in another Journal entry while preserving original photo and transaction references.',
+      'Appended Journal entries can remain attached, move to another entry or become separate memories without changing parent transaction ownership.',
+      'The same editing controls appear across Activities, Dashboard and Activity Detail; the Guest tour explains the new choices.',
+    ],
+  },
+  {
     version: '2.1.1',
     title: 'Thoughtful writing, consistent actions',
     summary: 'The same clear controls for Diary and Journal entries, with more readable Journal pages.',

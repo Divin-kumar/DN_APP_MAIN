@@ -4,13 +4,14 @@ import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDial
 import RichText from '../../../components/common/RichText';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import ActivityFormFields from '../../../components/events/ActivityFormFields';
+import ActivityEntryModeFields from '../../../components/events/ActivityEntryModeFields';
 import useAppStore from '../../../store/useAppStore';
 import { activityStatus, activityStatusLabel } from '../../../utils/activityDetail';
 import { isActivityEditable } from '../../../utils/scopedRecordActions';
 import { orderedActivityEntries, ENTRY_MODES } from '../../../utils/activityEntries';
 
 // Entry edits never change the owning Activity ID, attachments or linked costs.
-export default function ActivityEntryTimeline({ activity, actions, target }) {
+export default function ActivityEntryTimeline({ activity, moment, actions, target }) {
   const priorities = useAppStore((state) => state.adminValues.activityPriorities);
   const [draft, setDraft] = useState(null);
   const [deleting, setDeleting] = useState(null);
@@ -25,13 +26,14 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
         title: draft.title.trim(), description: draft.description || '',
         date: isDaily ? activity.date : draft.date,
         time: draft.time, priority: draft.priority,
-      });
+      }, isDaily ? null : { choice: draft.journalChoice, targetId: draft.journalTargetId });
       setDraft(null);
     } catch { /* Scoped Activity Detail displays the failure. */ }
   };
   const editEntry = (entry) => setDraft({
     ...entry, date: isDaily ? activity.date : entry.date || activity.date,
     time: entry.time || '', priority: entry.priority || activity.priority || 'medium',
+    journalChoice: 'append', journalTargetId: target.activityId,
   });
   return <section className={`dn-activity-entry-timeline activity-detail-section${isDaily ? '' : ' dn-journal-continuation-detail'}`} aria-label={isDaily ? 'Daily diary entries' : 'Journal entries'}>
     {isDaily ? <div className="dn-activity-entry-heading">
@@ -68,6 +70,11 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
     {draft ? <ModalDialog title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
       <form className="form-surface quick-create-activity-form dn-activity-entry-editor" onSubmit={save} aria-busy={actions.busy}>
         <p className="dashboard-activity-context">{isDaily ? 'Diary · ' + activity.date : 'Journal · ' + (activity.title || 'Memory')}</p>
+        {!isDaily && moment ? <ActivityEntryModeFields moment={moment} date={draft.date}
+          choice={draft.journalChoice} targetId={draft.journalTargetId}
+          namePrefix="dn-continuation-edit" editing continuation disabled={actions.busy}
+          onChoiceChange={(journalChoice) => setDraft((current) => ({ ...current, journalChoice }))}
+          onTargetChange={(journalTargetId) => setDraft((current) => ({ ...current, journalTargetId }))} /> : null}
         <ActivityFormFields namePrefix="dn-entry" mode={isDaily ? ENTRY_MODES.DAILY : ENTRY_MODES.JOURNAL}
           value={draft} priorities={priorities} dateLocked={isDaily} disabled={actions.busy}
           notesLabel="Entry notes"
