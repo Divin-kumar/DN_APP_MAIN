@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-277 | DN 2.1.3 Firebase production publication confirmed (OldVersion only)
+- **Authorization and source:** Owner approved publication. Release trigger bd9e0fba reused the verified v2.1.3 app tree from 1e1e5be, which passed fast CI run 41288901921.
+- **Executed release:** Firebase production run 41289723527 succeeded. Required unit tests, lint, dependency security, build, version and credential checks passed; Hosting uploaded to https://dn-10.web.app and the live index matched the built index byte-for-byte.
+- **Boundary:** Full browser/offline/PDF/upgrade and physical iPhone acceptance were not run for this patch. No account-data change, schema migration, Vercel deployment or other-branch modification. This documentation-only entry is not a deployment trigger.
+
 ## CHG-20261101-276 | Remove CSV regexp lint blockers in DN 2.1.3 (OldVersion only)
 - **Executed diagnosis:** Fast CI 41288714605 on 7af6956b passed all 538 Node tests, production build, docs/governance and dependency audit with 0 vulnerabilities, but lint failed on `no-control-regex` in CSV safety matching and `no-regex-spaces` in its new test.
 - **Correction:** Use a Unicode control-character category for spreadsheet formula prefix escaping, and quantify test whitespace explicitly. CSV behavior is preserved. The newest exact-SHA fast CI remains the acceptance gate; physical Safari is unverified. No release trigger, storage/schema change or other-branch write.
