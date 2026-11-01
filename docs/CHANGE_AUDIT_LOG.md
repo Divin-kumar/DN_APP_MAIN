@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-274 | DN 2.1.2 fast Firebase production publication confirmed (OldVersion only)
+- **Authorization and candidate:** Owner approved Firebase production publication of DN v2.1.2 after exact-source fast CI succeeded for 21a402ec (Node tests, lint, build, security and audit rules).
+- **Release correction:** The initial release-trigger commit 444b21ab accidentally mentioned the reserved full-verification token in its prose, forcing the long browser suite. It was cancelled before Firebase publication; the temporary workflow concurrency override at d3fda183 cancelled it, and the final fast release trigger at 7146537a superseded the earlier attempt. No stale release was published. The ordinary safety setting was restored in the follow-up source commit.
+- **Executed production evidence:** GitHub Actions run 41286675132 on 7146537a completed successfully. Fast patch gates, dependency audit, unit tests, lint, production build, newer-version guard (2.1.2 over 2.1.1), Firebase credential requirement, Firebase Hosting live upload and exact public index byte-for-byte read-back all passed. Chromium installation, 584 browser journeys, offline/PDF and prior-release migration gates were explicitly skipped by the approved patch tier. Production URL: https://dn-10.web.app. Source app and package version unchanged after publication.
+- **Boundary:** Physical iPhone manual acceptance and signed-in data journeys remain unverified for this patch. No Firebase data reset, storage migration or other branch write. A normal fast CI push is expected after this release-ledger/workflow safety restoration; it is not another deployment.
+
 ## CHG-20261101-273 | Keep cancellation status when splitting Journal continuation (OldVersion only)
 - **Finding:** The 2.1.2 move-to-New transformation could silently set a cancelled child entry back to in-progress. Editing should never change a Journal entry's status unless the owner explicitly requests a status action.
 - **Correction:** Preserve the child's saved status and cancelled/completed markers when making a separate memory. Add focused regression coverage. Previous fast CI e81cf6a9 passed; new exact-commit CI must pass again. No schema, Firebase publication, version, guest sample or other branch change.
