@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-262 | Protect Diary date and correct native disclosure test (OldVersion only)
+- **Correction:** The first 2.1.1 browser regression targeted native `<summary>` as a button even though the shared More options control is a keyboard-accessible `<details>` disclosure. Use its actual summary element, without changing or skipping assertions. The parent Diary Activity edit form now locks its date to the original day with a save guard; individual Diary entries already retain that same day. This prevents a one-per-day activity from moving to a conflicting date.
+- **Boundary:** No schema migration, account mutation, feature rollback or release-gate bypass. The previous audit entry remains byte-for-byte unchanged, and exact-SHA CI, Firebase version guard and read-back are still required.
+
 ## CHG-20261101-261 | DN 2.1.1 Diary and Journal consistency (OldVersion only)
 - **Owner observations:** Diary day Activities lacked completion and common actions; appended Diary/Journal entries showed small edit/delete buttons and a smaller edit form; Journal headings were visually weaker than writing content.
 - **Implemented:** Restore the same scoped Complete/Reopen, Cancel/Restore, Edit and confirmed Delete menu to Diary day Activities, global list cards and Moment workspace cards. Added individual child-entry status with a matching three-dot menu and scoped status-transition guards. Appended editors reuse ActivityFormFields with title/notes visible and date, time and priority under More options; Diary child date stays tied to the parent day. Preserve canonical Activity IDs, aliases, photo/file references, finances and independent Journal chapters. Elevate primary and continuation headings. Bump package and lock to 2.1.1 and document the release in About and regression tests.

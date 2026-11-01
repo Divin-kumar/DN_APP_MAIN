@@ -51,12 +51,16 @@ export default function useActivityActions() {
       setDraft({ ...target, momentName: moment.name,
         entryMode: getMomentEntryMode(moment, useAppStore.getState().adminValues?.eventTypes || []),
         title: activity.title || '',
-        time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
+        time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)),
+        originalDate: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '' });
     } catch (reason) { setError(reason.message); }
   };
   const save = (event) => {
     event.preventDefault();
     if (!draft?.title.trim() || !parseMomentDate(draft.date)) { setError('Enter an activity title and a valid date.'); return; }
+    if (draft.entryMode === ENTRY_MODES.DAILY && draft.date !== draft.originalDate) {
+      setError('Diary days must keep their original date. Edit individual entries instead.'); return;
+    }
     return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };

@@ -40,7 +40,7 @@ for (const [width, theme] of [[390, 'light'], [320, 'dark']]) {
     await page.getByRole('menuitem', { name:'Edit', exact:true }).click();
     const form = page.getByRole('dialog', { name:'Edit entry' });
     await expect(form.getByRole('textbox', { name:'Entry title' })).toHaveValue('Morning thoughts');
-    await form.getByRole('button', { name:'More options' }).click();
+    await form.locator('.dn-form-disclosure > summary').click();
     await expect(form.locator('input[type="date"]')).toBeDisabled();
     await expect(form.getByLabel('Activity priority')).toBeVisible();
     await form.getByRole('textbox', { name:'Entry title' }).fill('Morning revised');
@@ -61,7 +61,7 @@ for (const [width, theme] of [[390, 'light'], [320, 'dark']]) {
     await appended.getByRole('button', { name:/Entry options/ }).click();
     await page.getByRole('menuitem', { name:'Edit', exact:true }).click();
     const journalForm = page.getByRole('dialog', { name:'Edit entry' });
-    await journalForm.getByRole('button', { name:'More options' }).click();
+    await journalForm.locator('.dn-form-disclosure > summary').click();
     await expect(journalForm.locator('input[type="date"]')).toBeEnabled();
     await expect(journalForm.getByLabel('Activity priority')).toBeVisible();
     await journalForm.getByRole('textbox', { name:'Entry title' }).fill('Details revised');
