@@ -22,11 +22,15 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.equal(demo.events[0].activities[0].entries.length, 1);
   assert.equal(demo.events[0].activities[0].entries[0].id, 'dn-tour-entry-j1-continued');
   assert.ok(demo.events[0].notes.includes('More options'));
-  assert.ok(demo.events[0].notes.includes('switch to New'));
-  assert.ok(demo.events[0].notes.includes('In v2.1.2'));
-  assert.ok(demo.events[0].notes.includes('parent finances'));
-  assert.ok(demo.events[2].notes.includes('In v2.1.3'));
+  assert.ok(demo.events[0].notes.includes('Add entry'));
+  assert.ok(demo.events[0].notes.includes('independent'));
+  assert.ok(!demo.events[0].notes.includes('switch to New'));
+  assert.equal(demo.events[1].activities[0].entries.length, 2);
+  assert.equal(demo.events[1].activities[0].entries[0].time, undefined);
+  assert.equal(demo.events[2].activities[1].entries.length, 1);
   assert.ok(demo.events[2].notes.includes('Export CSV'));
+  assert.ok(demo.events[2].notes.includes('v2.1.3'));
+
 
   assert.equal(demo.imagesReady, false);
   assert.ok(demo.events.every((event) => !event.attachments.length));
