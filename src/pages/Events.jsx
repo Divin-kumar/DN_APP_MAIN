@@ -263,7 +263,7 @@ export default function Events() {
         }));
       if (!records.isCurrent(context)) return;
       setActivityChooserEvent(null);
-      showToast('Entry saved', 'success');
+      showToast('Activity saved', 'success');
       navigate(`/events/${eventId}/activities`);
     } catch (error) {
       showToast(error?.message || 'Could not save this entry. Please try again.', 'danger');
@@ -409,7 +409,7 @@ export default function Events() {
         </ModalDialog>
       ) : null}
       {activityChooserEvent ? (
-        <ModalDialog title={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Add an activity' : 'Add entry'} onClose={() => setActivityChooserEvent(null)}>
+        <ModalDialog title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
