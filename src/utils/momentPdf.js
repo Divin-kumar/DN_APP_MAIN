@@ -375,7 +375,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     });
     for (const child of entry.subEntries || []) {
       await pdf.ensure(85);
-      await pdf.text(studioText(child.title || 'Appended memory') + (child.time ? `  |  ${child.time}` : ''),
+      await pdf.text(studioText(child.title || 'Entry') + (child.time ? `  |  ${child.time}` : '  |  Time not recorded'),
         { size: 13, bold: true, after: 5 });
       if (child.date && child.date !== entry.date) await pdf.text(studioDate(child.date), { size: 9, color: palette.muted, after: 4 });
       if (child.description) await pdf.text(studioText(child.description), { size: 11.5, leading: 1.6, after: 14 });
@@ -444,6 +444,14 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         const when = (entry.date ? studioDate(entry.date) : 'No date') + (entry.displayTime ? '  ' + entry.displayTime : '');
         await pdf.text(when, { size: 9, color: palette.muted, after: 5 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 10.5, after: 12 });
+        for (const item of entry.subEntries || []) {
+          await pdf.ensure(50);
+          const when = (item.date && item.date !== entry.date ? studioDate(item.date) + '  |  ' : '')
+            + (item.time || 'Time not recorded');
+          await pdf.text(when, { size: 9, color: palette.muted, after: 4 });
+          if (item.title) await pdf.text(studioText(item.title), { size: 10.5, bold: true, after: 4 });
+          if (item.description) await pdf.text(studioText(item.description), { size: 10.5, after: 10 });
+        }
       }
     }
   }
