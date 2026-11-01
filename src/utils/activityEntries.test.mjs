@@ -210,7 +210,7 @@ test('2.1.2 standalone Journal edit switches New to Append without orphaning ide
     { choice: 'append', targetId: 'main' });
   assert.equal(appended.activities.length, 1);
   assert.deepEqual(appended.activities[0].mergedActivityIds, ['second']);
-  assert.deepEqual(appended.activities[0].entries.map((e) => e.title), ['Edited again', 'Existing note']);
+  assert.deepEqual(appended.activities[0].entries.map((e) => e.title), ['Existing note', 'Edited again']);
   assert.deepEqual(appended.attachments[0], { id: 'photo', activityId: 'main', entryId: 'second', assetId: 'original-bytes' });
   const projected = projectMomentTransactions([appended], [], [
     { id: 'payment', eventId: 'moment', activityId: 'second', amount: 22, date },

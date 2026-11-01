@@ -70,7 +70,7 @@ export default function useActivityActions() {
       return editJournalActivity(moment, draft.activityId,
         { title: draft.title, date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority },
         { choice: draft.journalChoice, targetId: draft.journalTargetId });
-    }, 'journal-edit:' + draft.activityId, 'Journal memory updated', () => setDraft(null), true).catch(() => {});
+    }, 'journal-edit:' + draft.activityId, 'Activity updated', () => setDraft(null), true).catch(() => {});
     return run(draft, (activity) => ({ title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity, draft.time), description: draft.description, priority: draft.priority }),
       'edit', 'Activity updated', () => setDraft(null)).catch(() => {});
   };

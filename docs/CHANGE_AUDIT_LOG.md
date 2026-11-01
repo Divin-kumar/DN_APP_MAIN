@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-272 | Restore edit-message compatibility and absent-time semantics (OldVersion only)
+- **Exact CI evidence:** v2.1.2 first candidate d80f45a1 passed lint, production build, dependency audit (0 vulnerabilities), documentation and audit checks, but Node tests reported three failures. The existing Dashboard editing test expected the established 'Activity updated' announcement, the Activities edit test required that untimed legacy records not acquire an empty time field, and a new Journal assertion assumed insertion rather than canonical chronological order.
+- **Correction:** Keep the established success announcement, only normalize/assign time when the edit patch supplies one, and assert existing chronological merge behavior. No production publication, non-OldVersion branch write, schema change or Playwright rerun; new exact-SHA fast CI remains mandatory.
+
 ## CHG-20261101-271 | DN 2.1.2 Journal editing parity and safe placement changes (OldVersion only)
 - **Owner request:** The Journal New/Append picker existed when creating an Activity, but disappeared from its edit form, particularly for continued/appended entries. Requested consistent forms and a fast 2.1.2 patch without automatic full Playwright.
 - **Change:** Reuse the existing Journal entry selector in root editing on Activities, Dashboard and Activity Detail and in appended-entry editing. Add scoped pure transforms for edited standalone-to-appended memories, moving a child continuation, and splitting one into a New Journal memory. Existing Journal merge aliases and photo ownership are preserved; transactions associated with the parent stay with that parent. No changes to Diary/Tasks forms or irreversible implicit merge. About shows v2.1.2 with a precise release history; Guest sample tour notes and edition updated.

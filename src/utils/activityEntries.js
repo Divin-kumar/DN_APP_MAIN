@@ -127,7 +127,7 @@ export const editJournalActivity = (moment, sourceId, patch, { choice = 'new', t
   const title = String(patch?.title || '').trim(), day = dateKey(patch?.date);
   if (!title || !day) throw new Error('Enter an entry title and a valid date.');
   const revised = { ...source, ...patch, id: source.id, title, date: day,
-    time: normalizeActivityTime(patch.time ?? activityTime(source)) };
+    ...(patch.time !== undefined ? { time: normalizeActivityTime(patch.time) } : {}) };
   const next = { ...moment, activities: moment.activities.map((item) => item === source ? revised : item) };
   if (choice === 'new') return next;
   if (choice !== 'append' || !targetId || recordId(targetId) === from)
