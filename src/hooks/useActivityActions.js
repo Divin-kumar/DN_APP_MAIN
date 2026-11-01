@@ -67,7 +67,7 @@ export default function useActivityActions() {
   const saveEntry = (target, entryId, patch) => run(target, (activity) => {
     const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
     if (!entry) throw new Error('Entry no longer exists.');
-    assertActivityEditable(entry);
+    assertActivityEditable(activity);
     if (!parseMomentDate(patch.date)) throw new Error('Choose a valid entry date.');
     if (!String(patch.description || '').trim()) throw new Error('Write something before saving this entry.');
     return updateActivityEntry(activity, entryId, patch);
@@ -84,6 +84,7 @@ export default function useActivityActions() {
     (activity, moment) => {
       const entry = activityEntries(activity).find((item) => recordId(item.id) === recordId(entryId));
       if (!entry) throw new Error('Entry no longer exists.');
+      assertActivityEditable(activity);
       // Historic consolidated Diary/Journal entries may own original records,
       // aliases, transactions and attachments. Never silently discard them.
       if (entry.sourceActivityId || entry.legacyActivityFields
