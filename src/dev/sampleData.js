@@ -288,7 +288,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   const j = 'dn-tour-journal', d = 'dn-tour-diary', t = 'dn-tour-tasks';
   const events = [{
     id: j, name: 'Explore DN · Our little getaway', type: 'Vacation', date: date(-24),
-    notes: 'Welcome to Journal. Every Activity is independent and can hold multiple dated writing entries. Open an Activity and use universal + → Add entry to record more detail, with an optional clock time. Old content and original photos stay linked. Story and PDF Studio read the same Activity content. You can explore filters, original photos, Transactions and Settings → Data & Backup using these disposable Guest examples.',
+    notes: 'Welcome to Journal. Every Activity is independent and can hold multiple dated writing entries. Open an Activity and use universal + → Add entry to record more detail, with an optional clock time. Old content and original photos stay linked. Story and PDF Studio read the same Activity content. You can explore filters, original photos, Transactions and Settings → Data & Backup using these disposable Guest examples. Activity and Transaction forms keep supporting choices under More options. Your JSON backup includes original files; you can cancel backup preparation before restoring.',
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',
       body: 'Pictures hold the scene. Our words hold the feeling.' }],
     activities: [
@@ -308,7 +308,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     ],
   }, {
     id: t, name: 'Explore DN · Home project', type: 'Project', date: date(-4),
-    notes: 'Tasks use the same dated content entries as Diary and Journal. From Activity Detail, + → Add entry keeps the existing Task and adds one dated update. Creating a new Activity makes a separate Task. Completed and cancelled statuses still belong to each Activity. Transactions and PDF Studio remain linked to the original Activity.',
+    notes: 'Tasks use the same dated content entries as Diary and Journal. From Activity Detail, + → Add entry keeps the existing Task and adds one dated update. Creating a new Activity makes a separate Task. Completed and cancelled statuses still belong to each Activity. Transactions and PDF Studio remain linked to the original Activity. In Transactions, filter Cash or Online and use Export CSV for the current results (introduced in v2.1.3). Manage your payment methods in Settings → Code Lists.',
     attachments: [], memories: [{ id: 'dn-tour-memory-2', title: 'The original plan', body: 'Older notes remain readable reflections.' }],
     activities: [
       activity('t1', t, 'Choose a paint colour', -4, 'Compare two options.', 'completed'),
