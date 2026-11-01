@@ -1,3 +1,4 @@
+import { orderedUnifiedContent } from './activityEntries.js';
 import { activityTime } from './activityTime.js';
 import { activityStatus } from './activityDetail.js';
 import { resolveMomentEntryMode } from './momentEntryMode.js';
@@ -34,20 +35,14 @@ const makeActivityEntry = (moment, activity, subEntry = null, isFirst = false) =
     kind: 'activity',
     id,
     activityId: parentId,
-    title: subEntry?.title ?? activity.title ?? '',
+    title: subEntry ? (subEntry.title || 'Entry') : (activity.title || ''),
     description: subEntry?.description ?? activity.description ?? '',
     date: calendarKey(subEntry?.date || activity.date),
     displayTime: subEntry ? activityTime(subEntry) : activityTime(activity),
     status: subEntry?.status || activityStatus(activity),
     activity,
-    // Journal appends remain part of their owning memory, with independent
-    // timestamps and editable entry IDs. Diary children become day chapters.
-    subEntries: !subEntry && Array.isArray(activity.entries)
-      ? [...activity.entries].sort((a, b) =>
-        (a.date || '').localeCompare(b.date || '')
-          || (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99')
-          || String(a.id || '').localeCompare(String(b.id || '')))
-      : [],
+    // Unified internal dated content, without introducing separate Activities.
+    subEntries: !subEntry ? orderedUnifiedContent(activity).filter((part) => !part.root) : [],
     attachments: subEntry ? linked.filter((file) => file.entryId === id || (isFirst && !file.entryId)) : linked,
   };
 };
@@ -68,17 +63,19 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
 
   const presentation = resolveMomentStoryPresentation(source, momentTypes);
   const entries = sortedSummaryActivities(asRecords(source.activities)).flatMap((activity) => {
-    const children = Array.isArray(activity.entries) ? activity.entries : [];
-    if (!children.length) return [makeActivityEntry(source, activity)];
-    const ordered = [...children].sort((a, b) => (a.date || '').localeCompare(b.date || '')
-      || (activityTime(a) || '99:99').localeCompare(activityTime(b) || '99:99'));
-    if (activity.entryMode === 'diary') {
-      return ordered.map((item, index) => makeActivityEntry(source, activity, item, index === 0));
-    }
-    if (presentation === STORY_PRESENTATIONS.JOURNEY) {
-      // A Journal append continues the original memory, not another chapter.
-      // Keep child IDs/metadata for editing and backup, and show them inline.
-      return [makeActivityEntry(source, activity)];
+    const rows = orderedUnifiedContent(activity);
+    if (presentation === STORY_PRESENTATIONS.DIARY && rows.length) {
+      // Keep the original writing once, then project dated content rows.
+      // Existing consolidated Diary entries keep their old IDs and file owners.
+      const hasRoot = rows.some((item) => item.root);
+      const linked = summaryAttachmentsFor(source, recordId(activity.id));
+      return rows.map((item, index) => {
+        if (item.root) {
+          return { ...makeActivityEntry(source, activity), subEntries: [],
+            attachments: linked.filter((file) => !file.entryId) };
+        }
+        return makeActivityEntry(source, activity, item, !hasRoot && index === 0);
+      });
     }
     return [makeActivityEntry(source, activity)];
   }).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')
