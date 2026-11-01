@@ -300,3 +300,88 @@ html[data-theme] .dn-premium-about .about-version-footer {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-premium-about .dn-about-guide-entry > summary svg { transition:none; }
 }
+
+/* Native release disclosures keep the version trail compact and accessible. */
+html[data-theme] .dn-premium-about .dn-about-release-list {
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  min-width:0;
+  border-top:1px solid var(--color-border);
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry {
+  min-width:0;
+  border-bottom:1px solid var(--color-border);
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry > summary {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:54px;
+  padding:12px 3px;
+  color:var(--color-text);
+  cursor:pointer;
+  list-style:none;
+  -webkit-tap-highlight-color:transparent;
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry > summary::-webkit-details-marker { display:none; }
+html[data-theme] .dn-premium-about .dn-about-release-entry > summary::marker { content:''; }
+html[data-theme] .dn-premium-about .dn-about-release-meta {
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+html[data-theme] .dn-premium-about .dn-about-release-version {
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:8px;
+}
+html[data-theme] .dn-premium-about .dn-about-release-version > strong {
+  font-size:13px;
+  font-weight:730;
+  font-variant-numeric:tabular-nums;
+}
+html[data-theme] .dn-premium-about .dn-about-release-status {
+  padding:2px 7px;
+  border:1px solid var(--color-border);
+  border-radius:999px;
+  color:var(--color-text-muted);
+  font-size:10px;
+  font-weight:680;
+}
+html[data-theme] .dn-premium-about .dn-about-release-title {
+  color:var(--color-text-muted);
+  font-size:11px;
+  line-height:1.5;
+  overflow-wrap:anywhere;
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry > summary > svg {
+  flex:0 0 auto;
+  color:var(--color-text-muted);
+  transition:transform .18s ease;
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry[open] > summary > svg {
+  transform:rotate(180deg);
+  color:var(--color-primary);
+}
+html[data-theme] .dn-premium-about .dn-about-release-entry > summary:focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:-2px;
+  border-radius:8px;
+}
+html[data-theme] .dn-premium-about .dn-about-release-body {
+  display:grid;
+  gap:10px;
+  min-width:0;
+  padding:0 24px 17px 3px;
+}
+html[data-theme] .dn-premium-about .dn-about-release-body > p {
+  margin:0;
+  color:var(--color-text-muted);
+  font-size:12px;
+  line-height:1.65;
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-premium-about .dn-about-release-entry > summary > svg { transition:none; }
+}

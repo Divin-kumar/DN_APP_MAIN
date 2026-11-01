@@ -48,17 +48,78 @@ const guideItems = [
   { title: 'Settings and backup', description: 'Open Settings under Profile to manage theme, preferences, greeting options and Code Lists. Export a JSON backup and review the restore summary before importing it. Notifications is Coming Soon; saved preferences and Reminder Presets are retained.' },
 ];
 
-const whatsNew = [
-  'New Moments, Activities and Transactions start with the current local time; change it or use Clear time. Date filters include the whole day; saved clocks order same-day results, and Time filters narrow them.',
-  'Read each Moment as a photo-rich Journal, a monthly Diary or a Tasks view, with its original Activity dates and writing.',
-  'Move between Story, Activities, Transactions, Gallery and PDF Studio. Older Moment links still open their current destination.',
-  'Customize your PDF format, spacing and included sections, review the actual pages, then download the same previewed PDF.',
-  'Choose a payment method, starting with Cash and Online. Add your own in Settings → Code Lists; transaction totals follow your filters and search.',
-  'Recovery backups keep records, settings and stored original files together, with progress and cancellation before restore and no fixed DN backup size cap.',
-  'Explore Journal, Diary, Tasks and PDF Studio through the Guest demo. Existing demo edits stay yours until you explicitly refresh the examples.',
-  'Earlier Memories remain safe as read-only reflections. Original files retain their Moment and Activity links.',
-  'Notifications is Coming Soon. Your existing preferences and Reminder Presets remain saved.',
+// Documented product milestones, not an automatic log of GitHub commits.
+// v2.0.1 had a public worker version but no independently verified per-patch feature log.
+const versionHistory = [
+  {
+    version: '2.1.0',
+    title: 'An iPhone-first DN',
+    summary: 'Cleaner navigation, contextual creation and a quieter writing experience.',
+    changes: [
+      'The five-position bottom dock centers universal + beside Dashboard, Activities, Moments and Transactions.',
+      'One contextual form each for Moments, Activities and Transactions hides prefilled details in More options, while keeping them editable.',
+      'Journal continuations flow into the original memory instead of appearing in a separate box. New and Append remain explicit choices.',
+      'Refine controls, saved list defaults, compact financial totals and photo-led Activity cards share a consistent mobile design.',
+      'Data & Backup has a dedicated page for local backups, recovery and carefully confirmed data-management actions.',
+    ],
+  },
+  {
+    version: '2.0.3',
+    title: 'Connected planning and finances',
+    summary: 'More control over dates, payment choices and the numbers in your lists.',
+    changes: [
+      'New Moment, Activity and Transaction dates can include the current local time; clear or adjust it as needed.',
+      'Date filtering includes the whole selected day, while saved times determine the order of entries on that day.',
+      'Payment methods can be customized in Code Lists; Income, Expense and Balance reflect active search and filters.',
+    ],
+  },
+  {
+    version: '2.0.2',
+    title: 'Time-aware activities',
+    summary: 'Plan multiple Activities on the same day without losing their order.',
+    changes: [
+      'Activities support an optional time alongside their date, including a Clear time choice.',
+      'Same-day chronology remains consistent in Story, filtered lists and exported PDF pages.',
+      'Filter controls and the mobile date/time row were refined for easier scanning.',
+    ],
+  },
+  {
+    version: '2.0.1',
+    title: 'Early 2.0 maintenance',
+    summary: 'This version was observed in the live app, but a verified per-patch feature list was not preserved.',
+    changes: [
+      'The individual changes for v2.0.1 are not documented precisely enough to list as confirmed release notes.',
+      'See v2.0.0 for the documented foundation of the DN 2.0 experience.',
+    ],
+  },
+  {
+    version: '2.0.0',
+    title: 'The DN 2.0 foundation',
+    summary: 'A connected home for life Moments, writing, Activities and finances.',
+    changes: [
+      'Moment Story offers Journal, Diary and Tasks presentations, with Gallery and PDF Studio alongside them.',
+      'Activities, earlier Memories, linked original photos and documents stay connected to their Moment.',
+      'One Transactions experience records income and expenses with Cash and Online payment choices.',
+      'Recovery backups carry supported records, settings and local original-file bytes; Guest examples let you explore safely.',
+      'Notifications remain Coming Soon. Existing reminders and preferences are preserved.',
+    ],
+  },
 ];
+
+const versionNumbers = (value) => {
+  const match = /^(\\d+)\\.(\\d+)\\.(\\d+)$/.exec(String(value || ''));
+  return match ? match.slice(1).map(Number) : null;
+};
+const isAtLeastVersion = (current, baseline) => {
+  const a = versionNumbers(current), b = versionNumbers(baseline);
+  if (!a || !b) return false;
+  for (let i = 0; i < 3; i += 1) {
+    if (a[i] !== b[i]) return a[i] > b[i];
+  }
+  return true;
+};
+const documentedRelease = versionHistory.find((release) => isAtLeastVersion(appVersion, release.version))
+  || versionHistory.at(-1);
 
 const dataInfo = [
   'Signed-in records are stored in your account. Guest records stay in this browser; export a backup before changing browsers or devices.',
@@ -176,15 +237,51 @@ export default function About() {
         <div className="settings-section-heading">
           <span className="settings-accordion-icon"><Sparkles size={18} /></span>
           <div>
-            <h3>What&apos;s New in v{appVersion}</h3>
-            <p>Changes in this version of DN</p>
+            <h3>What&apos;s New in v{documentedRelease.version}</h3>
+            <p>{documentedRelease.version === appVersion ? 'Changes in your installed version' : 'Latest documented highlights for this version range'}</p>
           </div>
         </div>
         <ul className="about-list compact-list">
-          {whatsNew.map((item) => (
+          {documentedRelease.changes.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
+      </section>
+
+      <section className="settings-section dn-about-history" aria-labelledby="dn-about-history-title">
+        <div className="settings-section-heading">
+          <span className="settings-accordion-icon"><BookOpen size={18} /></span>
+          <div>
+            <h3 id="dn-about-history-title">Version History</h3>
+            <p>What changed in DN, starting with 2.0</p>
+          </div>
+        </div>
+        <div className="dn-about-release-list">
+          {versionHistory.map((release) => {
+            const current = appVersion === release.version;
+            const future = !isAtLeastVersion(appVersion, release.version);
+            return <details key={release.version} className="dn-about-release-entry"
+              data-version={release.version}>
+              <summary>
+                <span className="dn-about-release-meta">
+                  <span className="dn-about-release-version">
+                    <strong>v{release.version}</strong>
+                    {current ? <span className="dn-about-release-status">Installed</span> : null}
+                    {future ? <span className="dn-about-release-status">In development</span> : null}
+                  </span>
+                  <span className="dn-about-release-title">{release.title}</span>
+                </span>
+                <ChevronDown size={17} strokeWidth={1.9} aria-hidden="true" />
+              </summary>
+              <div className="dn-about-release-body">
+                <p>{release.summary}</p>
+                <ul className="about-list compact-list">
+                  {release.changes.map((item) => <li key={item}>{item}</li>)}
+                </ul>
+              </div>
+            </details>;
+          })}
+        </div>
       </section>
 
       <section className="settings-section">

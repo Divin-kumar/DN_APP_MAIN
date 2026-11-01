@@ -17,6 +17,28 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.getByRole('heading', { name: 'What\'s New', exact: false })).toBeVisible();
       await expect(root.getByRole('heading', { name: 'Your Data', exact: true })).toBeVisible();
       await expect(root.locator('.about-guide-grid details')).toHaveCount(10);
+      const history = root.locator('.dn-about-release-entry');
+      await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
+      await expect(history).toHaveCount(5);
+      await expect(history.first()).toHaveAttribute('data-version', '2.1.0');
+      await expect(history.last()).toHaveAttribute('data-version', '2.0.0');
+      await expect(history.last()).not.toHaveAttribute('open');
+      await history.last().locator('summary').click();
+      await expect(history.last()).toHaveAttribute('open');
+      await expect(history.last().getByText(/Moment Story offers Journal, Diary and Tasks/)).toBeVisible();
+      await history.nth(3).locator('summary').click();
+      await expect(history.nth(3).getByText(/not documented precisely enough/)).toBeVisible();
+      await history.last().locator('summary').focus();
+      await page.keyboard.press('Enter');
+      await expect(history.last()).not.toHaveAttribute('open');
+      const releaseGeometry = await history.evaluateAll((items) => items.map((item) => {
+        const summary = item.querySelector('summary');
+        const rect = summary.getBoundingClientRect();
+        return { height:rect.height,left:rect.left,right:rect.right };
+      }));
+      expect(releaseGeometry.every((item) => item.height >= 44
+        && item.left >= -1 && item.right <= width + 1)).toBe(true);
+
       const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
         .map(key => localStorage.getItem(key)));
       const entries = root.locator('.dn-about-guide-entry');
