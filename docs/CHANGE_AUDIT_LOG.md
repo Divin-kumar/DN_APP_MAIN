@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-269 | Fix shared browser helper lint after scoped Detail menu change (OldVersion only)
+- **Observed:** Exact fast CI 41276187510 on 41ddf7c1 passed documentation, Node, build and zero-vulnerability audit, but ESLint found an undefined expect reference added in e2e/fixtures.js. The shared helper intentionally has no Playwright test imports.
+- **Correction:** Remove the redundant expect assertion. Playwright's locator.click already waits for the Detail menu to become actionable, while the selector remains scoped to prevent cross-route Activity menu collisions. Recheck with fast CI and the opt-in targeted Chromium run; do not claim either green until results complete.
+- **Protection:** No app behavior, data, installed version, Firebase deployment or other branch changes. The large full suite remains an explicit release check.
+
 ## CHG-20261101-268 | Add explicitly opt-in 2.1.1 browser remediation gate (OldVersion only)
 - **Reason:** The owner requested both correction of the previously failed 2.1.1 regression and removal of full browser testing from every routine push. A fast green Node/build CI alone would not confirm the 42 formerly failing Chromium scenarios.
 - **Change:** Add an independently opt-in browser workflow triggered only by [verify-211] on an OldVersion commit or manual workflow dispatch. It executes selected previously failing cases across eight existing browser specs, with locked dependencies, Chromium, bounded timeout and retained failure diagnostics. Do not run full suites on ordinary commits, do not write application data, and do not deploy to Firebase.
