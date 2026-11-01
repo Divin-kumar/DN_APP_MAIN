@@ -1,9 +1,8 @@
 import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
-import ActivityEntryModeFields from '../components/events/ActivityEntryModeFields';
 import ActivityFormFields from '../components/events/ActivityFormFields';
-import { createOrAppendActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
+import { createStandaloneActivity, ENTRY_MODES, getMomentEntryMode } from '../utils/activityEntries';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 /*
@@ -174,8 +173,6 @@ export default function Events() {
   const [activityDate, setActivityDate] = useState(formatMomentDate(new Date()));
   const [activityTime, setActivityTime] = useState(currentEntryTime);
   const [activityPriority, setActivityPriority] = useState('medium');
-  const [activityCreationChoice, setActivityCreationChoice] = useState('new');
-  const [activityAppendTarget, setActivityAppendTarget] = useState('');
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(null);
   const settingsDefaults = useListViewDefaults('moments');
   const [momentFilters, changeMomentFilters, resetMomentFilters] = usePersistentListState('moments', settingsDefaults.filters, momentFilterRules);
@@ -249,8 +246,8 @@ export default function Events() {
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
-    setActivityCreationChoice('new');
-    setActivityAppendTarget('');
+    
+    
   };
 
   const saveActivityFromChooser = async (submitEvent) => {
@@ -258,16 +255,12 @@ export default function Events() {
     if (!activityChooserEvent || !activityTitle.trim()) return;
     const eventId = activityChooserEvent.id || activityChooserEvent.firestoreId;
     const mode = getMomentEntryMode(activityChooserEvent, adminValues.eventTypes);
-    if (mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' && !activityAppendTarget) {
-      showToast('Choose the Journal entry to append to.', 'danger'); return;
-    }
     const context = records.capture();
     try {
       await records.mutateMoment(context, eventId, (latest) =>
-        createOrAppendActivity(latest, { title: activityTitle, description: activityDescription,
+        createStandaloneActivity(latest, { title: activityTitle, description: activityDescription,
           date: activityDate, time: activityTime, priority: activityPriority, mode,
-          targetId: mode === ENTRY_MODES.JOURNAL && activityCreationChoice === 'append' ? activityAppendTarget : '',
-        }).moment);
+        }));
       if (!records.isCurrent(context)) return;
       setActivityChooserEvent(null);
       showToast('Entry saved', 'success');
@@ -419,8 +412,7 @@ export default function Events() {
         <ModalDialog title={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes) === ENTRY_MODES.TASKS ? 'Add an activity' : 'Add entry'} onClose={() => setActivityChooserEvent(null)}>
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
-            <ActivityEntryModeFields moment={activityChooserEvent} momentTypes={adminValues.eventTypes} date={activityDate}
-              choice={activityCreationChoice} targetId={activityAppendTarget} onChoiceChange={setActivityCreationChoice} onTargetChange={setActivityAppendTarget} />
+
             <ActivityFormFields mode={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes)}
                namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
                value={{ title: activityTitle, date: activityDate, time: activityTime,
