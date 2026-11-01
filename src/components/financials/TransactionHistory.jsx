@@ -1,6 +1,6 @@
 import { activityTime } from '../../utils/activityTime';
 import DebouncedFilterInput from '../common/DebouncedFilterInput';
-import { ArrowDownLeft, ArrowUpRight, ChevronDown, Pencil, ReceiptText, RotateCcw } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, Download, Pencil, ReceiptText, RotateCcw } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
 import ListControls from '../common/ListControls';
 import SortControl from '../common/SortControl';
@@ -99,7 +99,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 
 export default function TransactionHistory({
   transactions, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
-  onResetDefaults, canResetDefaults = false,
+  onResetDefaults, canResetDefaults = false, onExport,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
   const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
@@ -112,6 +112,11 @@ export default function TransactionHistory({
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
           onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
         canReset={canResetDefaults} onReset={resetAllFilters}
+        trailingAction={<button className="dn-transactions-export" type="button" onClick={onExport}
+          disabled={!transactions.length || !onExport} aria-label={`Export ${transactions.length} filtered transactions as CSV`}
+          title="Export only matching transactions in their current order">
+          <Download size={14} aria-hidden="true" /><span>Export CSV</span>
+        </button>}
         search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />

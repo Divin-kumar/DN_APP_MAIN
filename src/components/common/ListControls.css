@@ -495,3 +495,19 @@ html[data-theme] .dn-list-controls-panel:has(.dn-list-controls-builder) .dn-list
   max-width: 100%;
   min-width: 0;
 }
+
+/* Filtered export uses the quiet result row, not the compact search rail. */
+html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) { gap: 5px 9px; flex-wrap: wrap; }
+html[data-theme] .dn-list-controls-topline .dn-list-controls-tail-action { margin-left: auto; flex: 0 0 auto; }
+html[data-theme] .dn-transactions-export {
+  display: inline-flex; gap: 5px; align-items: center; justify-content: center;
+  min-height: 38px; padding: 0 9px; border: 0; border-radius: 9px;
+  background: transparent; color: var(--color-primary); font: inherit;
+  font-size: 12px; font-weight: 670; cursor: pointer;
+}
+html[data-theme] .dn-transactions-export:hover { background: var(--action-fill); }
+html[data-theme] .dn-transactions-export:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+html[data-theme] .dn-transactions-export:disabled { color: var(--color-text-muted); opacity: .55; cursor: not-allowed; }
+@media(max-width:360px) {
+  html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) .dn-list-controls-summary { order: 3; flex-basis: 100%; }
+}

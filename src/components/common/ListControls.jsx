@@ -5,7 +5,7 @@ import './ListControls.css';
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
   title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
-  summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, children,
+  summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, trailingAction, children,
 }) {
   const [open, setOpen] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
@@ -93,6 +93,7 @@ export default function ListControls({
       <div className="dn-list-controls-topline">
         {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}
+        {trailingAction ? <span className="dn-list-controls-tail-action">{trailingAction}</span> : null}
       </div>
     </div>
   );

@@ -14,6 +14,8 @@ import { matchesListDefaults } from '../utils/listViewDefaults';
 import useConditionFilters from '../hooks/useConditionFilters';
 import { transactionConditions } from '../utils/listConditionMigration';
 import { filterTransactions, sortTransactions, summarizeTransactions, toTransactions } from '../utils/transactionFilters';
+import { transactionsToCsv } from '../utils/transactionCsv';
+import { downloadBlob } from '../utils/download';
 import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
@@ -76,6 +78,19 @@ function FinancialsContent() {
   // Cards and rows always describe the same cohort, including search and OR groups.
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
   const hasLoadError = Boolean(incomeError || expenseError);
+  const exportVisibleTransactions = () => {
+    if (!ready || hasLoadError || loadingIncome || loadingExpense || !sorted.length) return;
+    try {
+      const date = new Date();
+      const stamp = [date.getFullYear(), String(date.getMonth() + 1).padStart(2, '0'),
+        String(date.getDate()).padStart(2, '0')].join('-');
+      downloadBlob(new Blob([transactionsToCsv(sorted, events)], { type: 'text/csv;charset=utf-8' }),
+        `dn-transactions-filtered-${stamp}.csv`);
+      showToast(`Exported ${sorted.length} matching transaction${sorted.length === 1 ? '' : 's'}`, 'success');
+    } catch {
+      showToast('Could not export these transactions. Try again.', 'danger');
+    }
+  };
 
   useEffect(() => {
     const requested = new URLSearchParams(location.search).get('create');
@@ -144,7 +159,7 @@ function FinancialsContent() {
           </section>
           <TransactionHistory transactions={sorted} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters}
-            events={events} onEdit={openEdit} onDelete={setDeleteTarget} />
+            events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} />
         </section>}
       {dialogOpen ? (
         <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"
