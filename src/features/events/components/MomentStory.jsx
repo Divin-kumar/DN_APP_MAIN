@@ -71,10 +71,10 @@ function Chapter({ entry, momentId, uid, isGuest, presentation }) {
       <ActivityTitle entry={entry} momentId={momentId} />
       {entry.displayTime ? <time className="dn-story-entry-aside">{entry.displayTime}</time> : null}
       {entry.description ? <RichText value={entry.description} className="dn-v2-story-entry-description free-text-content" /> : null}
-      {entry.subEntries?.length ? <div className={'dn-story-subentries' + (isJournal ? ' dn-journal-continuation' : '')} aria-label={isJournal ? "Journal continuation" : "Diary entries"}>
+      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label="Activity entries">
         {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
-          <small>{item.date || entry.date}{item.time ? ` · ${item.time}` : ''}</small>
-          <strong>{item.title || 'Untitled entry'}</strong>
+          <small>{item.date && item.date !== entry.date ? activityDateLabel(item.date) + ' · ' : ''}{item.time || 'Time not recorded'}</small>
+          {item.title ? <strong>{item.title}</strong> : null}
           {item.description ? <RichText value={item.description} className="free-text-content" /> : null}
         </section>)}
       </div> : null}
@@ -131,6 +131,13 @@ function TaskRow({ entry, momentId, onStatusChange, statusBusy, completionBlocke
         </Link> : <strong>{entry.title || 'Untitled task'}</strong>}
       </div>
       {entry.description ? <RichText className="dn-task-row-description free-text-content" value={entry.description} /> : null}
+      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label="Activity entries">
+        {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
+          <small>{item.date && item.date !== entry.date ? activityDateLabel(item.date) + ' · ' : ''}{item.time || 'Time not recorded'}</small>
+          {item.title ? <strong>{item.title}</strong> : null}
+          {item.description ? <RichText value={item.description} className="free-text-content" /> : null}
+        </section>)}
+      </div> : null}
       {entry.attachments?.length ? <span className="dn-task-files-note">
         {entry.attachments.length} {entry.attachments.length === 1 ? 'file' : 'files'} available in Activity detail
       </span> : null}
