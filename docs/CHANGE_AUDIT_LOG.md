@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-270 | Default manual patch verification to fast while protecting forced full gates (OldVersion only)
+- **Finding:** The 2.1.1 targeted Chromium fixes passed at d0e169a7 (42/42); fast Node/lint/build/security/documentation jobs also passed and Firebase production remained at 2.1.0. However, manually dispatching the production workflow still defaulted to the expensive full release suite for a patch, unlike the owner's fast-by-default patch policy.
+- **Change:** Manual production dispatch now defaults to fast for ordinary nonzero patch versions; it still permits explicit full verification. The checked-out HEAD commit message is now inspected across push and manual dispatch, so `X.Y.0` and `[release-full]` always force the complete browser/offline/PDF/upgrade gate, even if a manual caller selected fast. The version guard, locked install, security checks, Firebase secret gate, and exact production read-back are unchanged.
+- **Boundary/evidence:** Source-derived workflow and documentation correction, pending exact-new-SHA fast CI. DN remains v2.1.1; no application UI, user data, Guest fixture, Firebase/Vercel publication, release approval, or other branch changes. Physical iPhone and the complete 584-test suite remain unverified on this source candidate.
+
 ## CHG-20261101-269 | Fix shared browser helper lint after scoped Detail menu change (OldVersion only)
 - **Observed:** Exact fast CI 41276187510 on 41ddf7c1 passed documentation, Node, build and zero-vulnerability audit, but ESLint found an undefined expect reference added in e2e/fixtures.js. The shared helper intentionally has no Playwright test imports.
 - **Correction:** Remove the redundant expect assertion. Playwright's locator.click already waits for the Detail menu to become actionable, while the selector remains scoped to prevent cross-route Activity menu collisions. Recheck with fast CI and the opt-in targeted Chromium run; do not claim either green until results complete.

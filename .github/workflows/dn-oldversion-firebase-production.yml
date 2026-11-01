@@ -8,9 +8,9 @@ on:
   workflow_dispatch:
     inputs:
       validation_mode:
-        description: 'Fast patch checks or full release verification (X.Y.0 always full)'
+        description: 'Fast patches by default; X.Y.0 and [release-full] always run full'
         required: true
-        default: full
+        default: fast
         type: choice
         options:
           - full
@@ -41,15 +41,17 @@ jobs:
         shell: bash
         env:
           REQUESTED_MODE: ${{ inputs.validation_mode }}
-          RELEASE_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
           set -euo pipefail
           version="$(node -p "require('./package.json').version")"
           patch="${version##*.}"
-          if [[ "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ]]; then
-            mode="$REQUESTED_MODE"
-          elif [[ "$patch" == '0' || "$RELEASE_MESSAGE" == *'[release-full]'* ]]; then
+          release_message="$(git log -1 --format=%B)"
+          # Apply forced full gates before considering the manual patch default.
+          # Reading HEAD also preserves [release-full] for manual dispatch.
+          if [[ "$patch" == '0' || "$release_message" == *'[release-full]'* ]]; then
             mode=full
+          elif [[ "$GITHUB_EVENT_NAME" == 'workflow_dispatch' ]]; then
+            mode="$REQUESTED_MODE"
           else
             mode=fast
           fi
