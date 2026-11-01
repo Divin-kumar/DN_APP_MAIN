@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-265 | Resolve hidden Activity menu and preserve premium first-row status (OldVersion only)
+- **Root cause and correction:** The older ActivityList stylesheet intentionally hid global/Moment card `dn-record-menu-trigger` even after 2.1.1 enabled it in JSX. A more specific 2.1.1 rule now restores that 44px button, locates it at the lower trailing edge, and reserves space only in the secondary context line. The title and status retain their full top-row width even at 320px. Nested Diary/Journal entry menus are unchanged.
+- **Verification boundary:** Responsive browser geometry, action popups, Node, audit contract, production-shell, upgrade preservation, security and Firebase exact-read-back stay blocking. No stored records, schemas, credentials, prior audit entries or non-OldVersion branches changed.
+
 ## CHG-20261101-264 | Align premium Activity browser assertions with universal three-dot menus (OldVersion only)
 - **Regression-review finding:** Five existing browser suites still demanded the removed 2.1 rule that global and Moment Activity cards have no action menu, and two Detail assertions expected the previous 'Close' label. This contradicts the requested 2.1.1 consistent three-dot behavior.
 - **Correction:** Assert a visible accessible Activity options button across global and Moment cards, and 'Complete' on the Detail menu, while retaining all prior route, scroll, file/finance, keyboard, status-transition, 320px geometry, no-mutation and safe-delete assertions. The new 2.1.1 individual Diary and Journal child-action tests remain mandatory. No runtime behavior or guest data modified.

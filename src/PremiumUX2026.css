@@ -806,12 +806,21 @@ html[data-theme] .dn-journal-continuation-detail .dn-activity-entry-item > stron
 
 /* DN 2.1.1 shared three-dot menu, kept outside the content reading order. */
 html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .dn-swipe-main { position:relative; }
-html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .dn-record-menu-trigger {
-  position:absolute; top:4px; right:4px; z-index:4; margin:0; width:44px; height:44px;
-  border-radius:12px; background:color-mix(in srgb,var(--color-card) 89%,transparent);
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card .dn-record-menu-trigger {
+  /* The legacy compact-card rule hides all action triggers; 2.1.1 restores them. */
+  display:inline-grid; position:absolute; top:auto; bottom:5px; right:4px; z-index:4;
+  margin:0; width:44px; height:44px; border-radius:12px;
+  background:color-mix(in srgb,var(--color-card) 89%,transparent);
   backdrop-filter:blur(12px); color:var(--color-text-muted);
 }
-html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .event-activity-copy { padding-right:51px !important; }
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card .event-activity-copy {
+  /* Keep title and status together on the first line at 320px. */
+  padding-right:9px !important;
+}
+html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card .event-activity-context {
+  /* Reserve the lower corner for the 44px action target, not the title. */
+  padding-right:43px;
+}
 html[data-theme] .dn-activity-entry-item.dn-swipe-surface {
   position:relative; overflow:visible; isolation:auto; border-radius:0;
   background:transparent; box-shadow:none;
@@ -842,7 +851,7 @@ html[data-theme] .dn-activity-entry-status.status-cancelled { opacity:.7; }
 html[data-theme] .dn-activity-entry-item .dn-swipe-main > small { color:var(--color-text-muted); font-size:11px; }
 html[data-theme] .dn-activity-entry-item:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
 @media(max-width:360px) {
-  html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-card .event-activity-copy {
-    padding-right:45px !important;
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card .event-activity-copy {
+    padding-right:7px !important;
   }
 }
