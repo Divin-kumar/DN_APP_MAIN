@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-256 | Match installed About release notes to actual semver (OldVersion only)
+- **Correction:** The first Version History implementation accidentally escaped the digit groups twice in its semantic-version matcher, so it always fell back to v2.0.0 and marked v2.0.3 as a future release. Replace the source regex with actual digit matching. Add explicit 2.0.3 installed/2.1.0 in-development labels and current What's New heading to the responsive Chromium test, alongside the original release-order and Guest-data assertions. No stored records, sample tour, Firebase or version changes.
+- **Validation boundary:** Source-reviewed and committed; exact-commit automated/physical Safari checks remain pending. Earlier documentation entries describe intended behavior, not proof of the faulty intermediate revision.
+
 ## CHG-20261101-255 | Premium About release notes from DN 2.0 (OldVersion only)
 - **Requested change:** About previously displayed one static nine-item "What's New" list under the running build version, and there was no history back to DN 2.0. Replaced that ambiguous list with a version-selected summary and a compact, keyboard-accessible native disclosure history for 2.0.0, 2.0.1, 2.0.2, 2.0.3 and 2.1.0. Notes are derived from existing Phase 9 and current master/audit evidence rather than dates or features invented after the fact. 2.0.1 clearly explains that an independently verified patch-by-patch feature record is unavailable.
 - **Visual and release truth:** Each release entry has a short summary and detailed bullet points, revealed only on demand to preserve phone density. A version is labeled "Installed" only if it equals the actual Vite build version; newer planned notes say "In development". The headline "What's New" chooses the most recent documented version at or below the running version. Never imply a 2.1.0 source checkout has shipped merely because the features were coded.

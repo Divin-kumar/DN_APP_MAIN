@@ -107,7 +107,7 @@ const versionHistory = [
 ];
 
 const versionNumbers = (value) => {
-  const match = /^(\\d+)\\.(\\d+)\\.(\\d+)$/.exec(String(value || ''));
+  const match = /^(\d+)\.(\d+)\.(\d+)$/.exec(String(value || ''));
   return match ? match.slice(1).map(Number) : null;
 };
 const isAtLeastVersion = (current, baseline) => {
