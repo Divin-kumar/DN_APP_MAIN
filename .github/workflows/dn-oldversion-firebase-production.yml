@@ -19,7 +19,7 @@ permissions:
   contents: read
 concurrency:
   group: dn-firebase-hosting-production
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   production-release:
     if: >-
