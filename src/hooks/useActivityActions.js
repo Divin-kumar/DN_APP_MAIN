@@ -55,7 +55,7 @@ export default function useActivityActions() {
         title: activity.title || '',
         time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)),
         originalDate: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '',
-        journalChoice: 'new', journalTargetId: '' });
+      });
     } catch (reason) { setError(reason.message); }
   };
   const save = (event) => {
