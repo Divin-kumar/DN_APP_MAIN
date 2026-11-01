@@ -31,7 +31,7 @@ test('clean cards open detail by pointer/keyboard, and menus never navigate', as
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
   await expect(page.locator('.event-activity-complete, .event-activity-complete-static')).toHaveCount(0);
-  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
   await expect(card.locator('.event-activity-priority')).toHaveCount(0);
   await expect(card.locator('.event-activity-context a')).toHaveCount(0);
   await expect(card).toContainText('Weekend in Ooty');
@@ -99,15 +99,15 @@ test('either Activity swipe direction opens explicit actions without mutating re
   expect(values[1].activities[0].completed).toBe(false);
 });
 
-test('Activity Detail owns Cancel/Restore/Delete actions; overview cards stay menu-free', async ({ page }) => {
+test('Activity Detail and overview share the same accessible Activity actions', async ({ page }) => {
   await page.setViewportSize({ width:390, height:844 });
   await seedGuest(page); await page.goto('/activities');
   const first = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  await expect(first.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await expect(first.getByRole('button', { name: 'Activity options' })).toBeVisible();
   await first.click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await page.getByRole('button', { name: 'Activity options' }).click();
-  await expect(page.getByRole('menuitem', { name: 'Close', exact: true })).toBeVisible();
+  await expect(page.getByRole('menuitem', { name: 'Complete', exact: true })).toBeVisible();
   const menu = await page.getByRole('menu').boundingBox();
   expect(menu.x).toBeGreaterThanOrEqual(0); expect(menu.x + menu.width).toBeLessThanOrEqual(390);
   await page.getByRole('menuitem', { name: 'Cancel', exact: true }).click();

@@ -18,7 +18,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(card.locator('.event-activity-status')).toHaveText('In progress');
       await expect(card.locator('.event-activity-moment-name')).toHaveCount(0);
       await expect(card.locator('.event-activity-context')).toContainText(/Due|Past due/);
-      await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+      await expect(card.getByRole('button', { name: 'Activity options' })).toBeVisible();
       const measurement = await card.evaluate((node) => {
         const rect = (selector) => node.querySelector(selector).getBoundingClientRect();
         const cover = rect('.dn-v2-activity-cover'), copy = rect('.event-activity-copy');

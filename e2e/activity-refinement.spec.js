@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { fixtureMoments, seedGuest } from './fixtures.js';
 
-test('compact Activities list shows status but no priority, menu or Moment hyperlink', async ({ page }) => {
+test('compact Activities list shows status and actions but no priority or Moment hyperlink', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   await page.goto('/activities');
@@ -9,7 +9,7 @@ test('compact Activities list shows status but no priority, menu or Moment hyper
   await expect(card).toBeVisible();
   await expect(card.locator('.event-activity-status')).toHaveText('In progress');
   await expect(card.locator('.event-activity-priority')).toHaveCount(0);
-  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await expect(card.getByRole('button', { name: 'Activity options' })).toBeVisible();
   await expect(card.locator('.event-activity-context a')).toHaveCount(0);
   const momentName = card.locator('.event-activity-moment-name');
   await expect(momentName).toContainText('Weekend in Ooty');

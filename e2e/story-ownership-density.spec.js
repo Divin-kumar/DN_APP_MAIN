@@ -56,7 +56,7 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
     // The approved status-below-title design is taller than the 9px corner badge.
     expect((await card.boundingBox()).height).toBeLessThan(150);
     await expect(card.locator('.event-activity-status')).toHaveCSS('font-size', '11px');
-    await expect(card.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+    await expect(card.getByRole('button', { name:'Activity options', exact:true })).toBeVisible();
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     const columns = await page.locator('.event-activity-list').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
     expect(columns).toBe(viewport.width < 768 ? 1 : viewport.width < 1440 ? 2 : 3);
@@ -116,7 +116,7 @@ test('Story, original preview and Activity menu remain within a reduced viewport
   await page.keyboard.press('Escape');
   await page.goto('/activities');
   const activityCard = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
-  await expect(activityCard.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+  await expect(activityCard.getByRole('button', { name:'Activity options', exact:true })).toBeVisible();
   await activityCard.click();
   await page.getByRole('button', { name:'Activity options', exact:true }).click();
   await expect(page.getByRole('menuitem', { name:'Edit', exact:true })).toBeVisible();

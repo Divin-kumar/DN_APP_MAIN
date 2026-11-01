@@ -43,8 +43,8 @@ test('the metadata menu closes/reopens, edits, restores and confirms deletion wi
   await seedGuest(page); await page.goto('/events/moment-one/activities/shared');
   const trigger = page.getByRole('button', { name: 'Activity options', exact: true });
   await trigger.focus(); await page.keyboard.press('Enter');
-  await expect(page.getByRole('menuitem')).toHaveText(['Close', 'Edit', 'Cancel', 'Delete']);
-  await expect(page.getByRole('menuitem', { name: 'Close', exact: true })).toBeFocused();
+  await expect(page.getByRole('menuitem')).toHaveText(['Complete', 'Edit', 'Cancel', 'Delete']);
+  await expect(page.getByRole('menuitem', { name: 'Complete', exact: true })).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await expect(page.locator('.activity-detail-footer')).toContainText('Completed');

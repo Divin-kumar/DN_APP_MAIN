@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261101-264 | Align premium Activity browser assertions with universal three-dot menus (OldVersion only)
+- **Regression-review finding:** Five existing browser suites still demanded the removed 2.1 rule that global and Moment Activity cards have no action menu, and two Detail assertions expected the previous 'Close' label. This contradicts the requested 2.1.1 consistent three-dot behavior.
+- **Correction:** Assert a visible accessible Activity options button across global and Moment cards, and 'Complete' on the Detail menu, while retaining all prior route, scroll, file/finance, keyboard, status-transition, 320px geometry, no-mutation and safe-delete assertions. The new 2.1.1 individual Diary and Journal child-action tests remain mandatory. No runtime behavior or guest data modified.
+- **Release gate:** Do not bypass responsive browser, Node, audit, upgrade, offline/PDF, security or Firebase exact-build checks; 2.1.1 production status remains unverified until all exact-SHA gates succeed. Preserve historical log text and OldVersion-only scope.
+
 ## CHG-20261101-263 | Reconcile isolated Moment workspace tests with the shared Activity actions (OldVersion only)
 - **Root cause:** DN 2.1.1 CI run `41272956034` passed earlier prerequisites but Node produced 18 failures in isolated workspace harnesses. Their Vite import shims did not intercept the newly added useActivityActions hook, so the real Zustand hook executed outside React and every fixture crashed with an invalid hook call. This did not demonstrate a production hook violation.
 - **Correction:** Make both isolated harnesses mock that shared hook as they already mock their other hooks, leaving real browser and dedicated scoped action coverage in place. Replace only the obsolete 'workspace cards must be read-only' assertion with a check that Activity action callbacks are exposed while finance callbacks remain unavailable and rendering is write-free. Preserve synthetic create, account and attachment tests, browser/Node gates and all historical audit entries. No app data/schema or Firebase user records touched.
