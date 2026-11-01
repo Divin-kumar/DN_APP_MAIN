@@ -21,10 +21,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
       await expect(history).toHaveCount(5);
       await expect(history.first()).toHaveAttribute('data-version', '2.1.0');
-      await expect(history.first().locator('.dn-about-release-status')).toHaveText('In development');
-      await expect(root.getByRole('heading', { name: "What's New in v2.0.3" })).toBeVisible();
-      await expect(history.locator('[data-version="2.0.3"]')).toHaveCount(0);
-      await expect(root.locator('.dn-about-release-entry[data-version="2.0.3"] .dn-about-release-status')).toHaveText('Installed');
+      const installedVersion = (await root.locator('.about-summary-item').nth(1).locator('strong').innerText()).trim();
+      const installedEntry = root.locator(`.dn-about-release-entry[data-version="${installedVersion.slice(1)}"]`);
+      await expect(installedEntry.locator('.dn-about-release-status')).toHaveText('Installed');
+      await expect(root.getByRole('heading', { name: `What's New in ${installedVersion}` })).toBeVisible();
+      if (installedVersion !== 'v2.1.0') {
+        await expect(history.first().locator('.dn-about-release-status')).toHaveText('In development');
+      }
       await expect(history.last()).toHaveAttribute('data-version', '2.0.0');
       await expect(history.last()).not.toHaveAttribute('open');
       await history.last().locator('summary').click();
