@@ -1,7 +1,7 @@
 import { currentEntryTime } from '../../../utils/activityTime.js';
 import { activityTime as savedMomentTime, compareActivityDateTime } from '../../../utils/activityTime.js';
 import ActivityFormFields from '../../../components/events/ActivityFormFields';
-import { createStandaloneActivity, getMomentEntryMode, ENTRY_MODES } from '../../../utils/activityEntries';
+import { createStandaloneActivity, getMomentEntryMode } from '../../../utils/activityEntries';
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
