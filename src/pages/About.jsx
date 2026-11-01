@@ -38,8 +38,8 @@ const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 const guideItems = [
   { title: 'Home', description: 'A short personal greeting welcomes you. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
   { title: 'Moments', description: 'Create and search your Moments in one list. The compact Filters panel remembers your last choices automatically. Choose a field, a simple comparison and a value; add another filter when needed. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Reset restores the defaults. Use a Moment’s actions for Edit, PDF Studio, Archive or Delete.' },
-  { title: 'Moment workspace', description: 'Move between Story, Activities, Transactions, Gallery and PDF Studio using one horizontally scrolling section row. Story presents your Moment as a Journal, Diary or Tasks view. Moment Activity cards are read-only; open Activity Detail for actions. Moment Transactions shows existing income and expenses with totals for the matching filtered rows. Manage existing records from Transactions under Profile. Use the universal + to add items; Attachment is available there while a Moment is open.' },
-  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page, and each phone filter stays on one row. Completed titles stay readable; Reopen is required before editing. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
+  { title: 'Moment workspace', description: 'Move between Story, Activities, Transactions, Gallery and PDF Studio using one horizontally scrolling section row. Story presents your Moment as a Journal, Diary or Tasks view. Moment Activity cards share the same three-dot actions as global Activities; open Detail to edit individual Diary and Journal entries. Moment Transactions shows existing income and expenses with totals for the matching filtered rows. Manage existing records from Transactions under Profile. Use the universal + to add items; Attachment is available there while a Moment is open.' },
+  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page, and each phone filter stays on one row. Completed titles stay readable; Reopen is required before editing. Diary days now support the same three-dot actions as other Activities. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
   { title: 'Writing and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Earlier Memories remain safe, read-only reflections in Story; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Story, Activity Detail and Gallery. Identical originals share one stored file. All new originals stay in this browser, separately for each account or Guest. Only filenames and reference details sync to an account. Download a backup to move or recover originals; no paid cloud file storage is used for new saves. Older file details cannot recover an original that was never stored.' },
   { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format, spacing and included sections, then update the actual page preview and download the PDF. Original photos remain in their current browser scope. PDF pages contain rendered text and images; use a recovery backup to preserve editable records and original files.' },
@@ -51,6 +51,18 @@ const guideItems = [
 // Documented product milestones, not an automatic log of GitHub commits.
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
+  {
+    version: '2.1.1',
+    title: 'Thoughtful writing, consistent actions',
+    summary: 'The same clear controls for Diary and Journal entries, with more readable Journal pages.',
+    changes: [
+      'Diary day Activities and individual Diary entries offer Complete, Reopen, Cancel, Restore and Edit through the familiar three-dot menu.',
+      'Appended Journal entries also have their own three-dot actions and completion state, without becoming duplicate Activities.',
+      'Standalone and appended writing use the same Activity fields; prefilled date, time and priority stay under More options.',
+      'Diary entries retain their parent day date while allowing edits to their writing, time and priority.',
+      'Journal chapter and continuation headings now stand out clearly above their prose.',
+    ],
+  },
   {
     version: '2.1.0',
     title: 'An iPhone-first DN',

@@ -175,3 +175,22 @@ test('Appending linked Journal Activity retains old aliases and updates relation
   assert.equal(storyEntries(merged)[0].subEntries[0].title, 'Related');
   assert.equal(activityOwnsLinkedId(merged.activities[0], 'b'), true);
 });
+
+test('Diary and Journal appended entries preserve separate status and priority fields', () => {
+  const day = createOrAppendActivity({ id: 'moment', type: 'Diary', activities: [] },
+    { mode: ENTRY_MODES.DAILY, date, title: 'Morning', priority: 'high', time: '09:00' }, fixed).moment;
+  const child = day.activities[0].entries[0];
+  assert.equal(child.priority, 'high');
+  const patched = updateActivityEntry(day.activities[0], child.id,
+    { priority: 'low', status: 'completed', completed: true, completedAt: fixed.now });
+  assert.equal(patched.entries[0].priority, 'low');
+  assert.equal(patched.entries[0].status, 'completed');
+  assert.equal(day.activities[0].entries[0].priority, 'high');
+  assert.equal(patched.entries[0].date, date);
+  const journal = createOrAppendActivity({ id: 'moment', type: 'Journal', activities: [] },
+    { mode: ENTRY_MODES.JOURNAL, date, title: 'Chapter' }, fixed).moment;
+  const appended = createOrAppendActivity(journal, { mode: ENTRY_MODES.JOURNAL,
+    targetId: journal.activities[0].id, date, title: 'Continuation', priority: 'high' }, fixed).moment;
+  assert.equal(appended.activities[0].entries[0].priority, 'high');
+  assert.equal(appended.activities[0].title, 'Chapter');
+});

@@ -12,7 +12,7 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     await expect(page.locator('.about-version-footer')).toContainText(`v${version}`);
     const release = page.locator('.settings-section').filter({ has:page.getByRole('heading', { name:`What's New in v${version}`, exact:true }) });
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
-    for (const text of ['five-position bottom dock', 'universal +', 'More options', 'Journal continuations', 'Refine controls', 'Data & Backup']) {
+    for (const text of ['Diary day', 'Journal entries', 'three-dot', 'More options', 'headings']) {
       await expect(release).toContainText(text);
     }
     const foundation = page.locator('.dn-about-release-entry[data-version="2.0.0"]');
