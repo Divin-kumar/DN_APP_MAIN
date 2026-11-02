@@ -366,6 +366,26 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     await pdf.text(studioText(event.greetingCard.body), { size: 12, after: 14 });
   }
 
+  // A dated update is another paragraph of the same Activity, never a child
+  // chapter or a label reading "Entry". Both layouts use one heading rule.
+  const renderContinuedWriting = async (entry, { size = 11.5, leading = 1.6 } = {}) => {
+    for (const part of entry.subEntries || []) {
+      await pdf.ensure(58);
+      const changedDate = Boolean(part.date && part.date !== entry.date);
+      const heading = [changedDate ? studioDate(part.date) : '', part.time || ''].filter(Boolean).join('  |  ');
+      if (heading) await pdf.text(heading, {
+        size: 9.5, bold: true, color: palette.muted, after: 6,
+      });
+      // Historical notes can retain a real title. Never invent a new title.
+      if (part.title) await pdf.text(studioText(part.title), {
+        size, bold: true, after: part.description ? 4 : 12,
+      });
+      if (part.description) await pdf.text(studioText(part.description), {
+        size, leading, after: 15,
+      });
+    }
+  };
+
   const renderJournalEntry = async (entry, { section = 'timeline', datePage = pdf.pageNumber,
     title = entry.title || 'A memory' } = {}) => {
     const titlePage = pdf.pageNumber;
@@ -373,13 +393,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     if (entry.description) await pdf.text(studioText(entry.description), {
       size: 12, leading: 1.58, after: 18,
     });
-    for (const child of entry.subEntries || []) {
-      await pdf.ensure(85);
-      await pdf.text(studioText(child.title || 'Entry') + (child.time ? `  |  ${child.time}` : '  |  Time not recorded'),
-        { size: 13, bold: true, after: 5 });
-      if (child.date && child.date !== entry.date) await pdf.text(studioDate(child.date), { size: 9, color: palette.muted, after: 4 });
-      if (child.description) await pdf.text(studioText(child.description), { size: 11.5, leading: 1.6, after: 14 });
-    }
+    await renderContinuedWriting(entry, { size: 11.5, leading: 1.6 });
     // Each selected Journal entry keeps its own photos, including entries
     // without a date and optional future plans. Do not invent occurrence dates.
     const photos = entry.attachments.filter((item) =>
@@ -430,16 +444,9 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       await pdf.ensure(74);
       await pdf.text(studioDate(day.date), { size: 10, bold: true, color: palette.accent, after: 12 });
       for (const entry of day.entries) {
-        await pdf.text(studioText(entry.title || 'Diary entry') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 15, bold: true, after: 8 });
+        await pdf.text(studioText(entry.title || 'Untitled activity') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 15, bold: true, after: 8 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 12, leading: 1.7, after: 20 });
-        for (const item of entry.subEntries || []) {
-          await pdf.ensure(65);
-          const when = (item.date && item.date !== entry.date ? studioDate(item.date) + '  |  ' : '')
-            + (item.time || 'Time not recorded');
-          await pdf.text(when, { size: 10, bold: true, color: palette.accent, after: 6 });
-          if (item.title) await pdf.text(studioText(item.title), { size: 11, bold: true, after: 5 });
-          if (item.description) await pdf.text(studioText(item.description), { size: 11.5, leading: 1.6, after: 14 });
-        }
+        await renderContinuedWriting(entry, { size: 11.5, leading: 1.7 });
       }
     }
   } else {
@@ -452,14 +459,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         const when = (entry.date ? studioDate(entry.date) : 'No date') + (entry.displayTime ? '  ' + entry.displayTime : '');
         await pdf.text(when, { size: 9, color: palette.muted, after: 5 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 10.5, after: 12 });
-        for (const item of entry.subEntries || []) {
-          await pdf.ensure(50);
-          const when = (item.date && item.date !== entry.date ? studioDate(item.date) + '  |  ' : '')
-            + (item.time || 'Time not recorded');
-          await pdf.text(when, { size: 9, color: palette.muted, after: 4 });
-          if (item.title) await pdf.text(studioText(item.title), { size: 10.5, bold: true, after: 4 });
-          if (item.description) await pdf.text(studioText(item.description), { size: 10.5, after: 10 });
-        }
+        await renderContinuedWriting(entry, { size: 10.5, leading: 1.55 });
       }
     }
   }
