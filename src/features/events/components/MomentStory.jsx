@@ -60,6 +60,28 @@ function ActivityTitle({ entry, momentId }) {
   </Link> : (entry.title || 'Untitled activity')}</h4>;
 }
 
+// Follow-up writing belongs to the same Activity paragraph, not to a nested
+// Story card. A new date is printed only when it differs from the Activity day.
+function ContinuedWriting({ entry, className = '' }) {
+  if (!entry.subEntries?.length) return null;
+  return <div className={'dn-story-writing-continuation ' + className}>
+    {entry.subEntries.map((item) => {
+      const changedDate = Boolean(item.date && item.date !== entry.date);
+      const hasHeading = changedDate || Boolean(item.time);
+      return <div className="dn-story-writing-part" key={item.id}>
+        {hasHeading ? <p className="dn-story-writing-heading">
+          {changedDate ? <time dateTime={item.date}>{activityDateLabel(item.date)}</time> : null}
+          {changedDate && item.time ? ' · ' : null}
+          {item.time ? <time dateTime={item.date ? item.date + 'T' + item.time : undefined}>{item.time}</time> : null}
+        </p> : null}
+        {item.title ? <strong className="dn-story-writing-legacy-title">{item.title}</strong> : null}
+        {item.description ? <RichText value={item.description}
+          className="dn-story-writing-text dn-v2-story-entry-description free-text-content" /> : null}
+      </div>;
+    })}
+  </div>;
+}
+
 function Chapter({ entry, momentId, uid, isGuest, presentation }) {
   const isJournal = presentation === STORY_PRESENTATIONS.JOURNEY;
   const files = entry.attachments?.length || 0;
@@ -71,16 +93,10 @@ function Chapter({ entry, momentId, uid, isGuest, presentation }) {
       <ActivityTitle entry={entry} momentId={momentId} />
       {entry.displayTime ? <time className="dn-story-entry-aside">{entry.displayTime}</time> : null}
       {entry.description ? <RichText value={entry.description} className="dn-v2-story-entry-description free-text-content" /> : null}
-      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label="Activity entries">
-        {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
-          <small>{item.date && item.date !== entry.date ? activityDateLabel(item.date) + ' · ' : ''}{item.time || 'Time not recorded'}</small>
-          {item.title ? <strong>{item.title}</strong> : null}
-          {item.description ? <RichText value={item.description} className="free-text-content" /> : null}
-        </section>)}
-      </div> : null}
+      <ContinuedWriting entry={entry} />
       {entry.status === 'cancelled' ? <small className="dn-story-entry-aside">Cancelled activity</small> : null}
       {!isJournal && files ? <Link className="dn-story-entry-files" to={activityLink(momentId, entry)}>
-        {files} original {files === 1 ? 'file' : 'files'} saved with this entry <ArrowUpRight size={13} aria-hidden="true" />
+        {files} original {files === 1 ? 'file' : 'files'} saved with this Activity <ArrowUpRight size={13} aria-hidden="true" />
       </Link> : null}
     </div>
   </article>;
@@ -131,13 +147,7 @@ function TaskRow({ entry, momentId, onStatusChange, statusBusy, completionBlocke
         </Link> : <strong>{entry.title || 'Untitled task'}</strong>}
       </div>
       {entry.description ? <RichText className="dn-task-row-description free-text-content" value={entry.description} /> : null}
-      {entry.subEntries?.length ? <div className="dn-story-subentries" aria-label="Activity entries">
-        {entry.subEntries.map((item) => <section className="dn-story-subentry" key={item.id}>
-          <small>{item.date && item.date !== entry.date ? activityDateLabel(item.date) + ' · ' : ''}{item.time || 'Time not recorded'}</small>
-          {item.title ? <strong>{item.title}</strong> : null}
-          {item.description ? <RichText value={item.description} className="free-text-content" /> : null}
-        </section>)}
-      </div> : null}
+      <ContinuedWriting entry={entry} className="dn-task-writing-continuation" />
       {entry.attachments?.length ? <span className="dn-task-files-note">
         {entry.attachments.length} {entry.attachments.length === 1 ? 'file' : 'files'} available in Activity detail
       </span> : null}
@@ -211,7 +221,7 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
       <div><span className="dn-v2-story-kicker"><EditionIcon size={16} /> {edition.label}</span>
         <h3>{edition.heading}</h3><p>{edition.description}</p></div>
       <div className="dn-v2-story-stats">
-        <span><strong>{isTask ? total : recorded}</strong> {isTask ? 'tasks' : 'entries'}</span>
+        <span><strong>{isTask ? total : recorded}</strong> {isTask ? 'tasks' : 'activities'}</span>
         {!isTask && story.upcoming.length ? <span><strong>{story.upcoming.length}</strong> upcoming</span> : null}
       </div>
     </header>
