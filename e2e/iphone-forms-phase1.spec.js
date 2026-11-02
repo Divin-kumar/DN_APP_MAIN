@@ -99,7 +99,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
   });
 }
 
-test('three canonical form surfaces keep defaults tucked away and reveal them on demand', async ({ page }) => {
+test('Activity Detail entry and two canonical create forms preserve distinct date controls', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   const openQuick = async (label) => {
@@ -107,13 +107,11 @@ test('three canonical form surfaces keep defaults tucked away and reveal them on
     await page.getByRole('group', { name: 'Quick create actions' }).getByRole('button', { name: label, exact: true }).click();
   };
   await page.goto('/events/moment-one/activities/shared');
-  await openQuick('Activity');
-  let dialog = page.getByRole('dialog', { name: 'Add an activity' });
-  await expect(dialog.locator('.dn-activity-moment-disclosure > summary')).toContainText('Weekend in Ooty');
-  await expect(dialog.locator('input[type="date"]')).toBeHidden();
-  await expect(dialog.getByRole('textbox', { name: 'Entry title' })).toBeVisible();
-  await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
+  await openQuick('Add entry');
+  let dialog = page.getByRole('dialog', { name: 'Add entry' });
+  await expect(dialog.getByRole('textbox', { name: 'Entry content' })).toBeVisible();
   await expect(dialog.locator('input[type="date"]')).toBeVisible();
+  await expect(dialog.getByRole('textbox', { name: 'Activity title' })).toHaveCount(0);
   await dialog.getByRole('button', { name: 'Cancel' }).click();
 
   await openQuick('Life moment');
@@ -167,7 +165,7 @@ test('Journal Activity Detail edit prioritizes writing without changing its stor
   await activityDetailAction(page, 'Edit');
   const editor = page.getByRole('dialog', { name: 'Edit activity' });
   await expect(editor.getByRole('textbox', { name: 'Activity title' })).toBeVisible();
-  await expect(editor.getByText('Entry notes (optional)')).toBeVisible();
+  await expect(editor.getByText('Description (optional)')).toBeVisible();
   await expect(editor.locator('.dn-form-disclosure > summary')).toContainText('More options');
   await editor.getByRole('button', { name: 'Cancel' }).click();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
