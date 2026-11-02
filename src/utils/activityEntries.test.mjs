@@ -62,9 +62,12 @@ test('Diary consolidates same-day legacy records with stable ID and owner-specif
   assert.equal(activityOwnsLinkedId(merged.activities[0], 'late'), true);
   assert.equal(mergeLegacyDiaryActivities(merged), merged, 'reopening does not remigrate');
   const chapters = storyEntries(merged);
-  assert.deepEqual(chapters.map((item) => item.title), ['Morning', 'Evening', 'Next day']);
-  assert.deepEqual(chapters[1].attachments.map((item) => item.id), ['portrait']);
-  assert.equal(chapters[1].activityId, 'early');
+  assert.deepEqual(chapters.map((item) => item.id), ['early', 'tomorrow'],
+    'Diary Story shows each Activity only once, never as appended Activity chapters');
+  assert.deepEqual(chapters[0].subEntries.map((item) => item.title), ['Morning', 'Evening']);
+  assert.deepEqual(chapters[0].attachments.map((item) => item.id), ['portrait']);
+  assert.equal(chapters[0].attachments[0].entryId, 'late');
+  assert.equal(chapters[0].activityId, 'early');
 });
 
 test('Diary appends new same-day records but Tasks create independently', () => {
@@ -72,7 +75,8 @@ test('Diary appends new same-day records but Tasks create independently', () => 
   const appended = createOrAppendActivity(diary, { mode: ENTRY_MODES.DAILY, date, time: '12:30', title: 'Lunch' }, fixed).moment;
   assert.equal(appended.activities.length, 1);
   assert.equal(appended.activities[0].entries.length, 2);
-  assert.deepEqual(storyEntries(appended).map((item) => item.title), ['Morning', 'Lunch']);
+  assert.deepEqual(storyEntries(appended).map((item) => item.id), ['first']);
+  assert.deepEqual(storyEntries(appended)[0].subEntries.map((item) => item.title), ['Morning', 'Lunch']);
   const task = createOrAppendActivity({ id: 'moment', type: 'Project', activities: [make('first', 'Task 1')] },
     { mode: ENTRY_MODES.TASKS, date, title: 'Task 2' }, fixed).moment;
   assert.equal(task.activities.length, 2);
