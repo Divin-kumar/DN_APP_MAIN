@@ -3297,6 +3297,23 @@ html[data-theme] .insights-page .insight-metric > small {
   }
 }
 
+/* Short landscape iPhones can fit the five-slot dock but have too little
+   vertical space for the usual 10px panel gaps and 12px card padding.
+   Reduce only decorative spacing at <=400px height. Keep every financial
+   control, its touch target and the independent transaction scroller. */
+@media (min-width: 761px) and (orientation: landscape) and (max-height: 400px) and (pointer: coarse) {
+  html[data-theme] .dn-financial-workspace .financials-content-panel {
+    gap: 5px !important;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary > .moment-finance-caption {
+    margin-bottom: 3px;
+  }
+  html[data-theme] .dn-financial-workspace .transactions-panel.dn-transactions-page {
+    gap: 4px !important;
+    padding: 6px 10px !important;
+  }
+}
+
 /* DN 2.1 Settings: quiet navigation rows.
    Match the editorial Home / Transactions visual language without moving any
    account, backup, demo or preference actions. The entire row remains the
