@@ -52,6 +52,19 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.1.4',
+    title: 'Independent Activities and a cleaner writing flow',
+    summary: 'One clear place to add each Activity, with a lighter mobile date and time row.',
+    changes: [
+      'Journal, Diary and Tasks create independent Activities, even on the same date; older records and their links remain accessible.',
+      'Use the Activity Detail + menu to add dated writing to the same Activity, without another nested Activity.',
+      'Story and PDF Studio show continued writing as flowing paragraphs with appropriate date and time headings.',
+      'New and Edit Moment forms always show Moment Name and Type immediately; Date and optional Time stay under More options.',
+      'Date and Time controls stay side by side with a compact Clear time action, including on narrow mobile screens.',
+      'Compact iPhone layouts refine Activity metadata and Transactions scrolling above the bottom navigation dock.',
+    ],
+  },
+  {
     version: '2.1.3',
     title: 'Filtered transaction export and quieter editing',
     summary: 'Export the exact transaction view and see defaults before opening More options.',

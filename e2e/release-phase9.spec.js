@@ -13,9 +13,11 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     const release = page.locator('.settings-section').filter({ has:page.getByRole('heading', { name:`What's New in v${version}`, exact:true }) });
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
-    for (const text of (version === '2.1.3'
-      ? ['Export CSV', 'More options', 'Diary and Journal dates']
-      : ['More options'])) {
+    for (const text of (version === '2.1.4'
+      ? ['independent Activities', 'Clear time', 'PDF Studio']
+      : version === '2.1.3'
+        ? ['Export CSV', 'More options', 'Diary and Journal dates']
+        : ['More options'])) {
       await expect(release).toContainText(text);
     }
     const foundation = page.locator('.dn-about-release-entry[data-version="2.0.0"]');
