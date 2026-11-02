@@ -3,6 +3,14 @@ import { seedGuest } from './fixtures.js';
 
 test('Moment Type is immediately visible in New/Edit Moment; Other does not require More options', async ({ page }) => {
   const errors = await seedGuest(page, { moments: [] });
+  // A fresh Guest's default Code List has no "Other" option. Configure it
+  // explicitly in this disposable fixture; never modify the app's defaults.
+  await page.addInitScript(() => {
+    localStorage.setItem('dn_guest_admin_values', JSON.stringify({
+      eventTypes: ['Personal', 'Birthday', 'Other'],
+    }));
+    localStorage.setItem('dn_guest_admin_values_schema_version', '2');
+  });
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/events?create=event');
 
