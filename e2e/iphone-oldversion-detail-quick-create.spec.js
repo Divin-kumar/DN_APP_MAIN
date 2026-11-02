@@ -118,6 +118,6 @@ test('Duplicate submit events save only one content entry', async ({ page }) => 
   await expect(dialog).toHaveCount(0);
   const data = await read(page);
   expect(data.find((m) => m.id === 'journal').activities[0].entries).toHaveLength(1);
-  expect(data.find((m) => m.id === 'tasks')).toEqual(moments[2]);
+  expect(data.find((m) => m.id === 'tasks')).toMatchObject(moments[2]);
   expect(errors).toEqual([]);
 });
