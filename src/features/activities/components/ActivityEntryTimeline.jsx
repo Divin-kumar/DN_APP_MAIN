@@ -21,7 +21,7 @@ const readableTime = (value) => {
     timeZone: 'UTC' }).format(new Date(Date.UTC(2026, 0, 1, hours, minutes)));
 };
 
-export default function ActivityEntryTimeline({ activity, actions, target }) {
+export default function ActivityEntryTimeline({ activity, moment, actions, target }) {
   const [draft, setDraft] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const rows = orderedUnifiedContent(activity);
@@ -48,6 +48,9 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
     </div>
     {rows.length ? <div className="dn-content-rows">{rows.map((row) => {
       const differentDay = !row.date || row.date !== activity.date;
+      const historicalOwner = row.sourceActivityId || row.legacyActivityFields
+        || (moment?.attachments || []).some((file) =>
+          String(file.activityId) === String(activity.id) && String(file.entryId || '') === String(row.id));
       return <article className="dn-content-row" key={row.id}>
         <div className="dn-content-row-main">
           <div className="dn-content-row-meta">
@@ -65,7 +68,7 @@ export default function ActivityEntryTimeline({ activity, actions, target }) {
               ? actions.edit(target) : setDraft({ ...row, date: row.date || activity.date })}>
             <Pencil size={15} aria-hidden="true" />
           </button>
-          {!row.root ? <button type="button" disabled={actions.busy} className="dn-content-remove"
+          {!row.root && !historicalOwner ? <button type="button" disabled={actions.busy} className="dn-content-remove"
             onClick={() => setDeleting(row)} aria-label="Delete entry">Delete</button> : null}
         </div>
       </article>;
