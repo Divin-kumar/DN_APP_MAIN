@@ -84,7 +84,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   const editor = page.getByRole('dialog', { name: 'Edit moment type' });
   await expect(editor.getByRole('combobox', { name: 'Activity mode (required)' })).toBeVisible();
   await editor.getByRole('combobox', { name: 'Activity mode (required)' }).click();
-  await page.getByRole('option', { name: /Daily/ }).click();
+  await page.getByRole('option', { name: 'Diary · Independent Activities', exact: true }).click();
   await editor.getByRole('button', { name: 'Save moment type' }).click();
   await page.goto('/events/personal/overview');
   await expect(page.locator('.dn-v2-story')).toHaveAttribute('data-presentation', 'diary');
@@ -93,7 +93,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.goto('/settings/code-lists');
   await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
-  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Daily · One Activity per day');
+  await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Diary · Independent Activities');
   // Loading old Guest records adds safe defaults and Diary consolidates
   // previous day entries. Preserve every historical title/ID rather than
   // comparing the byte-identical pre-hydration objects.
