@@ -474,6 +474,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         } else {
           await pdf.text(studioDate(entry.date) + (entry.displayTime ? ` ${entry.displayTime}` : '') + '  |  ' + studioText(entry.title || 'Future plan'), { size: 12, bold: true, after: 8 });
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+          await renderContinuedWriting(entry, { size: 11, leading: 1.6 });
         }
       }
     }
@@ -483,10 +484,11 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         if (template === 'journey') {
           await pdf.ensure(74);
           await renderJournalEntry(entry, { section: 'undated', datePage: null,
-            title: entry.title || 'Untitled entry' });
+            title: entry.title || 'Untitled activity' });
         } else {
-          await pdf.text(studioText(entry.title || 'Untitled entry') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 12, bold: true, after: 8 });
+          await pdf.text(studioText(entry.title || 'Untitled activity') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 12, bold: true, after: 8 });
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
+          await renderContinuedWriting(entry, { size: 11, leading: 1.6 });
         }
       }
     }
