@@ -15,7 +15,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await expect(card).toBeVisible();
     await expect(card.locator('.event-activity-status')).toHaveText('In progress');
     await expect(card.locator('.event-activity-moment-name')).toContainText('Weekend in Ooty');
-    await expect(card.locator('.event-activity-context > span:last-child')).toContainText(/Due|Past due/);
+    await expect(card.locator('.event-activity-context > span:last-child')).toContainText(/Journal · \d{1,2} [A-Za-z]{3}/);
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     const options = card.getByRole('button', { name: 'Activity options', exact: true });
     await expect(options).toBeVisible();
