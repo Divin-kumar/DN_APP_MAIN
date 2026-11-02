@@ -2,6 +2,8 @@
 
 The repository's latest reviewed app source remains **DN 2.1.3** on the authorized `OldVersion` branch. The unified Activity changes below are development work **not yet published to Firebase**. The current live Firebase release has not been independently reverified for this update.
 
+**A lighter Date and Time row (OldVersion, unreleased):** Wherever you enter a Moment, Activity, new Activity entry or Transaction date, Date and Time remain on the same line, even on a compact phone. When a time is filled in, a small × beside it clears **just the time** without pushing anything below. Your selected date, existing entries and saved records are unaffected; nothing needs to be refreshed or migrated.
+
 **Creating or editing Moments (OldVersion, unreleased):** Moment Type is now always visible immediately under Moment Name. Choosing Other shows Custom Moment Type without opening More options. Date, optional Time, Repeat and Notes stay in More options. Your existing types, dates, notes and saved Moments are unaffected; Guest demo content needs no reset for this visual change.
 
 **Unified Activities (OldVersion, unreleased):** Diary, Journal and Tasks now use one Activity-creation model. Every new Activity is independent, even when multiple Activities share a date. Historical same-day Diary associations and previously consolidated content remain intact. Journal Append, Merge and New/Append destination pickers are removed from the user-facing workflow. A change of Moment type affects its Story presentation, not Activity identity or writing behavior. All three types show the same Description field.
