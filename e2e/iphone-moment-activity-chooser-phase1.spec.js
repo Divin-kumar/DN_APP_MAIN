@@ -14,8 +14,8 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
     await picker.locator('.activity-event-option-main').first().click();
-    const dialog = page.getByRole('dialog', { name: 'Add entry', exact: true });
-    const title = dialog.getByRole('textbox', { name: 'Entry title', exact: true });
+    const dialog = page.getByRole('dialog', { name: 'Add an activity', exact: true });
+    const title = dialog.getByRole('textbox', { name: 'Activity title', exact: true });
     await expect(title).toBeVisible();
     await expect(title).not.toBeFocused();
     expect(await title.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
