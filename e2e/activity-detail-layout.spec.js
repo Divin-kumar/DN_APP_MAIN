@@ -26,7 +26,7 @@ test('detail shows actual content in reading order, compact file previews and re
   const totals = page.getByRole('group', { name: 'Totals for this Activity' });
   await expect(totals.locator('dd')).toHaveText(['₹250', '₹120', '₹130']);
   await expect(totals).not.toContainText('Totals for this Activity');
-  const readingOrder = ['.activity-cover', '.activity-detail-heading', '.activity-detail-metadata', '.activity-description',
+  const readingOrder = ['.activity-cover', '.activity-detail-heading', '.activity-detail-metadata', '.dn-content-section',
     '.dn-transactions-results', '.moment-finance-summary', '.activity-attachments', '.activity-detail-footer'];
   expect(await page.evaluate((selectors) => selectors.every((selector, index) => !index || Boolean(
     document.querySelector(selectors[index - 1]).compareDocumentPosition(document.querySelector(selector)) & Node.DOCUMENT_POSITION_FOLLOWING)), readingOrder)).toBe(true);
