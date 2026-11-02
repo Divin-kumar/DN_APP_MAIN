@@ -98,7 +98,7 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       <p className="activity-detail-due"><CalendarDays size={13} aria-hidden="true" />{activityDateLabel(activity.date)}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</p>
       {actions.error && !actions.draft && !actions.deleteTarget ? <p className="quick-create-error" role="alert">{actions.error}</p> : null}
       <p className="sr-only" role="status" aria-live="polite" aria-atomic="true">{actions.announcement}</p>
-      <ActivityEntryTimeline activity={activity} actions={actions} target={target} />
+      <ActivityEntryTimeline activity={activity} moment={moment} actions={actions} target={target} />
       {Array.isArray(activity.linkedJournalActivityIds) && moment.activities.some((item) =>
         activity.linkedJournalActivityIds.some((id) => recordId(id) === recordId(item.id))) ? (
         <section className="activity-detail-section dn-linked-journal-memories" aria-label="Linked Journal memories">
