@@ -140,11 +140,18 @@ test.describe('short touch-enabled iPhone landscape dock', () => {
       await expect(dock.getByRole('link', { name: 'Transactions' })).toHaveAttribute('aria-current', 'page');
       const results = page.locator('.dn-transactions-results');
       await expect(results).toBeVisible();
-      const bounds = await page.evaluate(() => ({
-        listBottom: document.querySelector('.dn-transactions-results').getBoundingClientRect().bottom,
-        navTop: document.querySelector('.dn-premium-dock').getBoundingClientRect().top,
-      }));
-      expect(bounds.listBottom).toBeLessThanOrEqual(bounds.navTop + 2);
+      const bounds = await page.evaluate(() => {
+        const results = document.querySelector('.dn-transactions-results').getBoundingClientRect();
+        const nav = document.querySelector('.dn-premium-dock').getBoundingClientRect();
+        const summary = document.querySelector('.dn-finance-summary').getBoundingClientRect();
+        const controls = document.querySelector('.dn-transactions-page > .dn-list-controls').getBoundingClientRect();
+        return {
+          listTop: results.top, listBottom: results.bottom, listHeight: results.height,
+          navTop: nav.top, summaryBottom: summary.bottom, controlsBottom: controls.bottom,
+          viewportHeight: innerHeight,
+        };
+      });
+      expect(bounds.listBottom, JSON.stringify(bounds)).toBeLessThanOrEqual(bounds.navTop + 2);
       expect(errors).toEqual([]);
     });
   }
