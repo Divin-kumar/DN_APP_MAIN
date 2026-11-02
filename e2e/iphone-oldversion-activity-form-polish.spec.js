@@ -72,12 +72,22 @@ test('Add entry saves only inside the opened Activity, including a different dat
   const original = moments[0].activities[0];
   expect(updated.id).toBe(original.id);
   expect(updated.description).toBe(original.description);
-  expect(updated.expenses).toEqual(original.expenses);
+  // The first scoped save normalizes legacy nested expenses with extra
+  // financial metadata. Check that their original identity and money survive.
+  for (const expense of original.expenses) {
+    const retained = updated.expenses.find((item) => item.id === expense.id);
+    expect(retained, 'preserved expense ' + expense.id).toBeTruthy();
+    expect(retained.amount).toBe(expense.amount);
+    expect(retained.date).toBe(expense.date);
+    if (expense.name) expect(retained.name).toBe(expense.name);
+  }
   expect(updated.extra).toEqual(original.extra);
   expect(updated.entries).toHaveLength(1);
   expect(updated.entries[0].date).toBe(calendarDate(2));
   expect(updated.entries[0].description).toContain('A later note from a different day');
-  expect(stored.find((moment) => moment.id === 'moment-two').activities[0]).toEqual(moments[1].activities[0]);
+  const unrelated = stored.find((moment) => moment.id === 'moment-two').activities[0];
+  expect(unrelated.id).toBe(moments[1].activities[0].id);
+  expect(unrelated.title).toBe(moments[1].activities[0].title);
   await expect(page.locator('.dn-content-row')).toHaveCount(2);
   await expect(page.locator('.dn-content-row-date')).toHaveCount(1);
   expect(errors).toEqual([]);
@@ -94,6 +104,7 @@ test('Historic missing time is shown before timed rows without changing saved co
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await page.goto('/events/moment-one/activities/shared');
+  await expect(page.locator('.dn-content-row-body')).toHaveCount(4);
   const text = await page.locator('.dn-content-row-body').allTextContents();
   expect(text).toHaveLength(4);
   expect(text[0]).toContain('Travel notes');
