@@ -301,3 +301,55 @@ test('Task completion is disabled for an archived parent and original Activity d
   await expect(page).toHaveURL(/\/events\/tasks\/activities\/planned/);
   expect(errors).toEqual([]);
 });
+
+
+test('Continuous Activity writing has no nested Story cards and dates appear only when changed', async ({ page }) => {
+  const sameDay = '2026-10-09', differentDay = '2026-11-02';
+  const moments = ['Vacation', 'Diary', 'Tasks'].map((type, i) => ({
+    id: 'writing-' + i, name: 'Long-form memory ' + i, type, date: sameDay,
+    notes: '', memories: [], attachments: [],
+    activities: [{
+      id: 'one', title: 'The road to the hills', date: sameDay, time: '06:20',
+      completed: true, description: 'The morning began peacefully.',
+      entries: [
+        { id: 'same-day', date: sameDay, time: '12:15',
+          description: 'We stopped beside the road for tea.' },
+        { id: 'later-day', date: differentDay, time: '06:21',
+          description: 'A new morning on the same journey.' },
+      ],
+    }],
+  }));
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  for (const width of [320, 390, 768]) {
+    await page.setViewportSize({ width, height: 844 });
+    for (let i = 0; i < moments.length; i++) {
+      await page.goto('/events/writing-' + i + '/overview');
+      const story = page.locator('.dn-v2-story');
+      await expect(story.locator('[data-story-activity="one"]')).toHaveCount(1);
+      await expect(story.locator('.dn-story-writing-part')).toHaveCount(2);
+      await expect(story.locator('.dn-story-subentries, .dn-story-subentry')).toHaveCount(0);
+      const headings = story.locator('.dn-story-writing-heading');
+      await expect(headings).toHaveCount(2);
+      await expect(headings.first()).toHaveText('12:15');
+      await expect(headings.nth(1)).toContainText('2 Nov 2026');
+      await expect(headings.nth(1)).toContainText('06:21');
+      await expect(story.locator('.dn-story-writing-continuation')).not.toContainText('Entry |');
+      const presentation = await story.locator('[data-story-activity="one"]').evaluate((card) => {
+        const original = card.querySelector('.dn-v2-story-entry-description, .dn-task-row-description');
+        const next = card.querySelector('.dn-story-writing-text');
+        const continuation = card.querySelector('.dn-story-writing-continuation');
+        const style = getComputedStyle(continuation);
+        return {
+          sameLeft: Math.abs(original.getBoundingClientRect().left - next.getBoundingClientRect().left) <= 2,
+          noBorder: parseFloat(style.borderLeftWidth) === 0,
+          noPadding: parseFloat(style.paddingLeft) === 0,
+          noBackground: style.backgroundColor === 'rgba(0, 0, 0, 0)',
+        };
+      });
+      expect(presentation).toEqual({ sameLeft: true, noBorder: true, noPadding: true, noBackground: true });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    }
+  }
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
+  expect(errors).toEqual([]);
+});
