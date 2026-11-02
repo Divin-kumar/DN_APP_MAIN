@@ -321,7 +321,7 @@ export default function DashboardLayout() {
         .find((node) => node?.getClientRects().length)?.focus({ preventScroll: true });
     }
     setQuickCreateError('');
-    setQuickCreateType(type === 'activity' && openedActivityContext?.activity ? 'activity-entry' : type);
+    setQuickCreateType(type === 'activity' && activityDetailMatch ? 'activity-entry' : type);
     if (type === 'activity') {
       // Detail opens the separate Add entry form; elsewhere + creates a
       // new independent Activity in the selected Moment.
@@ -602,7 +602,7 @@ export default function DashboardLayout() {
             <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
               <span className="dn-dock-menu-title">Create new</span>
               <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
-              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{openedActivityContext?.activity ? 'Add entry' : 'Activity'}</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
               {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
@@ -622,7 +622,7 @@ export default function DashboardLayout() {
         {quickCreateOpen ? (
           <div className="dn-quick-create-menu" aria-label="Quick create actions">
             <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} /><span>Life moment</span></button>
-            <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{openedActivityContext?.activity ? 'Add entry' : 'Activity'}</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} /><span>Transaction</span></button>
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
