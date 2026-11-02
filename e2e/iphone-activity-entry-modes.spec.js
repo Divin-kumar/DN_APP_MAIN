@@ -86,6 +86,7 @@ test('Old merged Diary aliases still navigate to the surviving Activity without 
   await page.goto('/events/diary/activities/diary-old');
   await expect(page).toHaveURL(/\/events\/diary\/activities\/diary-am$/);
   await expect(page.getByRole('region', { name: 'Activity entries' })).toContainText('Preserved old writing');
+  await expect(page.getByRole('button', { name: 'Delete entry' })).toHaveCount(0);
   const data = (await read(page)).find((m) => m.id === 'diary');
   expect(data.activities[0].mergedActivityIds).toEqual(['diary-old']);
   expect(data.attachments[0].entryId).toBe('diary-old');
