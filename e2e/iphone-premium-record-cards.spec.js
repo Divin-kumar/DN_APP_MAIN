@@ -9,9 +9,21 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     const moments = fixtureMoments();
     moments[0].activities[0].date = calendarDate(-2);
     moments[0].activities[0].title = 'Book the family lakeside accommodation with an accessible guest room';
+    // A Journal's date is a writing date. A genuine Tasks deadline must
+    // retain overdue treatment; verify both without changing the base data.
+    moments.push({
+      id: 'task-deadline-fixture', name: 'Overdue Task example', type: 'Tasks',
+      date: calendarDate(-7), memories: [], attachments: [],
+      activities: [{ id: 'due-task', title: 'Overdue Task check',
+        date: calendarDate(-2), completed: false, priority: 'high' }],
+    });
     const errors = await seedGuest(page, { theme, moments });
     await page.goto('/activities');
     const list = page.locator('.activities-page .event-activity-list');
+    const dueTask = list.locator('.dn-v2-activity-card.is-overdue')
+      .filter({ hasText: 'Overdue Task check' });
+    await expect(dueTask).toBeVisible();
+    await expect(dueTask.locator('.event-activity-context')).toContainText('Past due');
     const activity = list.locator('.dn-v2-activity-card').filter({ hasText: moments[0].activities[0].title });
     await expect(activity).toBeVisible();
     await expect(activity.locator('.event-activity-status')).toBeVisible();
