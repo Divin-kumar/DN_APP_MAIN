@@ -9,8 +9,8 @@ test('direct detail/refresh uses both IDs, shows safe formatted notes and never 
   await page.goto('/events/moment-one/activities/shared');
   await expect(page.getByRole('heading', { name: 'Book a lakeside stay', exact: true })).toBeVisible();
   await expect(page.locator('h1')).toHaveCount(1);
-  await expect(page.locator('.activity-description')).toContainText('<script>alert("literal")</script>');
-  await expect(page.locator('.activity-description img, .activity-description script, .activity-description a')).toHaveCount(0);
+  await expect(page.locator('.dn-content-row-body')).toContainText('<script>alert("literal")</script>');
+  await expect(page.locator('.dn-content-row-body img, .dn-content-row-body script, .dn-content-row-body a')).toHaveCount(0);
   await expect(page.locator('.activity-cover img')).toHaveCount(0);
   await expect(page.locator('.activity-cover')).toContainText('No cover photo');
   await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Activities');
