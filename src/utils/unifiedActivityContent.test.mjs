@@ -81,8 +81,10 @@ test('Story keeps Diary original writing and all dated rows, while Tasks and Jou
   const moment = (type) => ({ id: 'moment-1', type, date: day, activities: [activity], attachments: [] });
   const diary = buildMomentStory(moment('Diary'), { now: new Date('2026-11-04T12:00:00') });
   const chapters = diary.timeline.flatMap((month) => month.days.flatMap((date) => date.entries));
-  assert.deepEqual(chapters.map((entry) => entry.id),
-    ['activity-1', 'untimed', 'early', 'timed', 'next-day']);
+  assert.deepEqual(chapters.map((entry) => entry.id), ['activity-1'],
+    'Diary must not create Story-level sub-Activities');
+  assert.deepEqual(chapters[0].subEntries.map((entry) => entry.id),
+    ['untimed', 'early', 'timed', 'next-day']);
   assert.equal(chapters[0].description, base.description);
   for (const type of ['Journal', 'Project']) {
     const story = buildMomentStory(moment(type), { now: new Date('2026-11-04T12:00:00') });
