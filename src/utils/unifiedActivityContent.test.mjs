@@ -2,6 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ENTRY_MODES, addUnifiedContentEntry, createStandaloneActivity, orderedUnifiedContent } from './activityEntries.js';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory.js';
+import { createBackupDocument, buildEventGroupsFromBackup } from '../services/backupService.js';
+import { DEFAULT_CODE_LISTS } from './codeLists.js';
+import { projectMomentTransactions } from './momentTransactions.js';
 
 const day = '2026-11-01';
 const base = {
@@ -96,4 +99,24 @@ test('Story keeps Diary original writing and all dated rows, while Tasks and Jou
       assert.equal(groupMomentStoryTasks(story).flatMap((group) => group.entries).length, 1);
     }
   }
+});
+
+test('v3 backup round-trip preserves new content, historical aliases and financial ownership', () => {
+  const original = { ...base, ...addUnifiedContentEntry(base,
+    { description: 'Fresh update', date: '2026-11-03', time: '12:45' }, options) };
+  const moment = { id: 'moment-1', type: 'Diary', date: day,
+    activities: [original], attachments: [] };
+  const expense = { id: 'legacy-expense', eventId: 'moment-1', activityId: 'old-id',
+    date: day, category: 'Food', amount: 45 };
+  const portable = createBackupDocument({ moments: [moment], expenses: [expense],
+    codeLists: DEFAULT_CODE_LISTS });
+  const [restored] = buildEventGroupsFromBackup(portable);
+  const saved = restored.activities[0];
+  assert.equal(saved.id, original.id);
+  assert.equal(saved.description, original.description);
+  assert.deepEqual(saved.entries, original.entries);
+  assert.deepEqual(saved.mergedActivityIds, ['old-id']);
+  const [projected] = projectMomentTransactions([restored], [], [expense], 'moment-1');
+  assert.equal(projected.activityId, 'activity-1');
+  assert.equal(projected.originalActivityId, 'old-id');
 });
