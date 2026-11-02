@@ -282,3 +282,60 @@ test('public Guest Journal keeps the reflections heading with its writing on the
   expect(pages['Pictures hold the scene. Our words hold the feeling.']).toBe(pages['Earlier reflections']);
   expect(errors).toEqual([]);
 });
+
+
+test('PDF Studio prints continued writing without Entry labels, extra cards or invented times', async ({ page }) => {
+  const moments = fixtureMoments();
+  const activity = moments[0].activities.find((item) => item.id === 'shared');
+  activity.date = '2026-10-09';
+  activity.time = '06:20';
+  activity.completed = true;
+  activity.description = 'The morning began peacefully.';
+  activity.entries = [
+    { id: 'noon', date: '2026-10-09', time: '12:15', description: 'We stopped for tea.' },
+    { id: 'next', date: '2026-11-02', time: '06:21', description: 'The next morning was beautiful.' },
+    { id: 'old', date: '2026-10-09', description: 'An older note without a clock.' },
+  ];
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  await page.goto('/events');
+  const unchanged = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const reports = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const data = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    const proto = CanvasRenderingContext2D.prototype;
+    const original = proto.fillText;
+    const reports = [];
+    try {
+      for (const template of ['journey', 'diary', 'chronicle']) {
+        const ink = [];
+        proto.fillText = function (value, ...params) {
+          ink.push(String(value));
+          return original.call(this, value, ...params);
+        };
+        const output = await renderMomentStudioPdf(data, { template, includeCover: false,
+          includeIntro: false, includeReflections: false });
+        reports.push({ template, text: ink, pages: output.pages.length, byteLength: output.blob.size });
+      }
+    } finally {
+      proto.fillText = original;
+    }
+    return reports;
+  });
+  for (const result of reports) {
+    const text = result.text.join(' ');
+    expect(result.pages).toBeGreaterThan(0);
+    expect(result.byteLength).toBeGreaterThan(1500);
+    expect(text).toContain('The morning began peacefully.');
+    expect(text).toContain('An older note without a clock.');
+    expect(text).toContain('We stopped for tea.');
+    expect(text).toContain('The next morning was beautiful.');
+    expect(text).toContain('12:15');
+    expect(text).toContain('2 Nov 2026');
+    expect(text).toContain('06:21');
+    expect(text).not.toMatch(/Entry\s*\|\s*(12:15|06:21)/);
+    expect(text).not.toContain('Time not recorded');
+    expect(text.indexOf('An older note without a clock.')).toBeLessThan(text.indexOf('We stopped for tea.'));
+  }
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(unchanged);
+  expect(errors).toEqual([]);
+});
