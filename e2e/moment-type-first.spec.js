@@ -28,7 +28,7 @@ test('Default New/Edit Moment shows Name then Type without opening More options'
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups') || '[]'));
   const added = saved.find((moment) => moment.name === 'Baseline Moment');
   expect(added?.type).toBe('Personal');
-  expect(added?.date).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  expect(added?.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   expect(added?.recurrence).toBe('none');
 
   await page.getByRole('button', { name: 'Actions for Baseline Moment' }).click();
