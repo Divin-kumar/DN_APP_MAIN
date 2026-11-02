@@ -4,7 +4,7 @@ import { calendarDate, fixtureMoments, seedGuest, swipe } from './fixtures.js';
 // CHG-226: visual polish only. Keep Activity cover behavior, transaction
 // semantic identity, swipe actions, detail disclosure and Guest records.
 for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [430, 932, 'light']]) {
-  test(`photo-led Activities remain readable with status and overdue cues at ${width}px ${theme}`, async ({ page }) => {
+  test(`photo-led Journal Activities remain readable with recorded writing dates at ${width}px ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const moments = fixtureMoments();
     moments[0].activities[0].date = calendarDate(-2);
@@ -12,12 +12,14 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     const errors = await seedGuest(page, { theme, moments });
     await page.goto('/activities');
     const list = page.locator('.activities-page .event-activity-list');
-    const activity = list.locator('.dn-v2-activity-card.is-overdue').filter({ hasText: moments[0].activities[0].title });
+    const activity = list.locator('.dn-v2-activity-card').filter({ hasText: moments[0].activities[0].title });
     await expect(activity).toBeVisible();
     await expect(activity.locator('.event-activity-status')).toBeVisible();
     await expect(activity.locator('.dn-v2-activity-cover:not(.has-photo)')).toBeVisible();
     await expect(activity.locator('.dn-v2-activity-cover-action')).toBeVisible();
-    await expect(activity.locator('.event-activity-context')).toContainText('Past due');
+    // Journal writing dates are not task deadlines.
+    await expect(activity.locator('.event-activity-context')).toContainText('Journal');
+    await expect(activity).not.toHaveClass(/is-overdue/);
     const visual = await activity.evaluate((card) => {
       const title = card.querySelector('.event-activity-title-row > strong').getBoundingClientRect();
       const status = card.querySelector('.event-activity-status').getBoundingClientRect();
@@ -34,7 +36,7 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     expect(visual.statusRight).toBeLessThanOrEqual(visual.cardRight + 1);
     expect(Math.abs(visual.titleTop - visual.statusTop)).toBeLessThan(7);
     expect(visual.coverWidth).toBeGreaterThanOrEqual(79);
-    expect(visual.dueColor).not.toBe(visual.originalColor);
+    expect(visual.dueColor).toMatch(/^rgb/);
 
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     await swipe(page, activity, { distance: -100 });
