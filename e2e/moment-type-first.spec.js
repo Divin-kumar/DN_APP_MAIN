@@ -31,6 +31,7 @@ test('Default New/Edit Moment shows Name then Type without opening More options'
   expect(added?.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   expect(added?.recurrence).toBe('none');
 
+  await page.goto('/events');
   await page.getByRole('button', { name: 'Actions for Baseline Moment' }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Baseline Moment' });
