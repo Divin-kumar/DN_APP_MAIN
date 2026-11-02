@@ -99,9 +99,12 @@ html[data-theme] .activity-detail-page .dn-attachment-open strong { white-space:
   gap:8px; margin-top:13px; min-height:44px;
 }
 .activity-detail-facts {
-  display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-  align-items:center; gap:10px; min-width:0;
+  display:grid; grid-template-columns:max-content minmax(0,1fr);
+  align-items:center; gap:7px 10px; min-width:0;
 }
+.activity-detail-facts > .activity-status-pill { grid-column:1; grid-row:1; }
+.activity-detail-facts > .activity-detail-priority { grid-column:2; grid-row:1; }
+.activity-detail-facts > .activity-detail-entry-count { grid-column:1 / -1; grid-row:2; }
 .activity-detail-facts > .activity-status-pill,
 .activity-detail-facts > .activity-detail-priority {
   display:inline-flex; min-width:0; justify-self:start;
