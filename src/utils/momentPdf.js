@@ -432,6 +432,14 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       for (const entry of day.entries) {
         await pdf.text(studioText(entry.title || 'Diary entry') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 15, bold: true, after: 8 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 12, leading: 1.7, after: 20 });
+        for (const item of entry.subEntries || []) {
+          await pdf.ensure(65);
+          const when = (item.date && item.date !== entry.date ? studioDate(item.date) + '  |  ' : '')
+            + (item.time || 'Time not recorded');
+          await pdf.text(when, { size: 10, bold: true, color: palette.accent, after: 6 });
+          if (item.title) await pdf.text(studioText(item.title), { size: 11, bold: true, after: 5 });
+          if (item.description) await pdf.text(studioText(item.description), { size: 11.5, leading: 1.6, after: 14 });
+        }
       }
     }
   } else {
