@@ -62,23 +62,12 @@ export const buildMomentStory = (moment = {}, { momentTypes = [], now = new Date
   let activeDay = null;
 
   const presentation = resolveMomentStoryPresentation(source, momentTypes);
-  const entries = sortedSummaryActivities(asRecords(source.activities)).flatMap((activity) => {
-    const rows = orderedUnifiedContent(activity);
-    if (presentation === STORY_PRESENTATIONS.DIARY && rows.length) {
-      // Keep the original writing once, then project dated content rows.
-      // Existing consolidated Diary entries keep their old IDs and file owners.
-      const hasRoot = rows.some((item) => item.root);
-      const linked = summaryAttachmentsFor(source, recordId(activity.id));
-      return rows.map((item, index) => {
-        if (item.root) {
-          return { ...makeActivityEntry(source, activity), subEntries: [],
-            attachments: linked.filter((file) => !file.entryId) };
-        }
-        return makeActivityEntry(source, activity, item, !hasRoot && index === 0);
-      });
-    }
-    return [makeActivityEntry(source, activity)];
-  }).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')
+  // Story presentation may vary by Moment type, but an Activity is always
+  // exactly one chapter/row. Dated updates stay inside that Activity, not
+  // independent Story chapters or sub-Activities. No historical rewrite.
+  const entries = sortedSummaryActivities(asRecords(source.activities)).map((activity) =>
+    makeActivityEntry(source, activity)
+  ).sort((a, b) => (a.date || '9999-12-31').localeCompare(b.date || '9999-12-31')
     || (a.displayTime || '99:99').localeCompare(b.displayTime || '99:99'));
   for (const entry of entries) {
     if (!entry.date) {
