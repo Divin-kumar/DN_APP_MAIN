@@ -2969,6 +2969,47 @@ html[data-theme] .activity-date-time-row {
   min-width: 0;
 }
 html[data-theme] .activity-time-field { gap: 6px; }
+html[data-theme] .activity-time-control {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  min-width: 0;
+  width: 100%;
+}
+html[data-theme] .activity-time-control > input[type="time"] {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+}
+html[data-theme] .activity-time-control > .activity-time-clear {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  min-width: 34px;
+  height: 44px;
+  min-height: 44px;
+  padding: 0 !important;
+  margin: 0;
+  border: 0 !important;
+  border-radius: 9px !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--color-text-muted) !important;
+  cursor: pointer;
+}
+html[data-theme] .activity-time-control > .activity-time-clear:is(:hover, :focus-visible) {
+  background: color-mix(in srgb, var(--color-primary) 7%, transparent) !important;
+  color: var(--color-primary) !important;
+}
+html[data-theme] .activity-time-control > .activity-time-clear:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+html[data-theme] .activity-time-control > .activity-time-clear:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
 html[data-theme] .activity-time-field > label {
   color: var(--color-text-muted) !important;
   font-size: .76rem;
