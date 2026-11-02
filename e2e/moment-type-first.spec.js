@@ -1,7 +1,47 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-test('Moment Type is immediately visible in New/Edit Moment; Other does not require More options', async ({ page }) => {
+test('Default New/Edit Moment shows Name then Type without opening More options', async ({ page }) => {
+  const errors = await seedGuest(page, { moments: [], incomes: [], expenses: [] });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/events?create=event');
+
+  const create = page.getByRole('dialog', { name: 'New event' });
+  await expect(create).toBeVisible();
+  const name = create.getByLabel('Moment name');
+  const type = create.getByRole('combobox', { name: 'Moment type' });
+  await expect(name).toBeVisible();
+  await expect(type).toBeVisible();
+  await expect(name).toBeInViewport();
+  await expect(type).toBeInViewport();
+  await expect(type).toContainText('Personal');
+  await expect(create.locator('form.event-form > label').nth(0)).toContainText('Moment name');
+  await expect(create.locator('form.event-form > label').nth(1)).toContainText('Moment type');
+  await expect(create.locator('details.dn-form-disclosure')).not.toHaveAttribute('open', '');
+  await expect(create.getByLabel('Date', { exact: true })).toBeHidden();
+
+  // Save with the configured default and existing hidden date. No "Other"
+  // selection or More options expansion should ever be required.
+  await name.fill('Baseline Moment');
+  await create.getByRole('button', { name: 'Save Event' }).click();
+  await expect(create).toHaveCount(0);
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups') || '[]'));
+  const added = saved.find((moment) => moment.name === 'Baseline Moment');
+  expect(added?.type).toBe('Personal');
+  expect(added?.date).toMatch(/^\\d{4}-\\d{2}-\\d{2}$/);
+  expect(added?.recurrence).toBe('none');
+
+  await page.getByRole('button', { name: 'Actions for Baseline Moment' }).click();
+  await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+  const edit = page.getByRole('dialog', { name: 'Baseline Moment' });
+  await expect(edit.getByLabel('Moment name')).toBeVisible();
+  await expect(edit.getByRole('combobox', { name: 'Moment type' })).toBeVisible();
+  await expect(edit.getByRole('combobox', { name: 'Moment type' })).toContainText('Personal');
+  await expect(edit.locator('details.dn-form-disclosure')).not.toHaveAttribute('open', '');
+  expect(errors).toEqual([]);
+});
+
+test('Configured custom Moment Type stays accessible without opening More options', async ({ page }) => {
   const errors = await seedGuest(page, { moments: [] });
   // A fresh Guest's default Code List has no "Other" option. Configure it
   // explicitly in this disposable fixture; never modify the app's defaults.
