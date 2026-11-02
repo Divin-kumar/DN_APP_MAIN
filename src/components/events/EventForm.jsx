@@ -89,28 +89,26 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required />
       </label>
 
-      <FormDisclosure label="More options" hint="Type, date, time, repeat, notes">
-      <div className="event-form-fields">
-        <label htmlFor="event-type">Moment type
-          <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
-            {eventTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-            {legacyType ? <option value={legacyType}>{legacyOther ? 'Other (legacy)' : legacyType + ' (legacy)'}</option> : null}
-          </DropdownSelect>
-        </label>
-
-        <div className="activity-date-time-row">
-          <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
-          <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
-        </div>
-      </div>
+      <label htmlFor="event-type">Moment type
+        <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
+          {eventTypeOptions.map((option) => (
+            <option key={option} value={option}>{option}</option>
+          ))}
+          {legacyType ? <option value={legacyType}>{legacyOther ? 'Other (legacy)' : legacyType + ' (legacy)'}</option> : null}
+        </DropdownSelect>
+      </label>
 
       {form.type === 'Other' ? (
         <label htmlFor="event-custom-type">Custom moment type
           <input id="event-custom-type" name="customType" value={form.customType} onChange={handleChange} placeholder="What kind of moment is this?" required />
         </label>
       ) : null}
+
+      <FormDisclosure label="More options" hint="Date, time, repeat, notes">
+        <div className="activity-date-time-row">
+          <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
+          <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
+        </div>
 
       <label htmlFor="event-recurrence">Repeat
         <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
