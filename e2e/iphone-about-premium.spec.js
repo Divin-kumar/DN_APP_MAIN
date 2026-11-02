@@ -19,15 +19,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.locator('.about-guide-grid details')).toHaveCount(10);
       const history = root.locator('.dn-about-release-entry');
       await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
-      await expect(history).toHaveCount(7);
-      await expect(history.first()).toHaveAttribute('data-version', '2.1.2');
+      await expect(history).toHaveCount(8);
       const installedVersion = (await root.locator('.about-summary-item').nth(1).locator('strong').innerText()).trim();
       const installedEntry = root.locator(`.dn-about-release-entry[data-version="${installedVersion.slice(1)}"]`);
       await expect(installedEntry.locator('.dn-about-release-status')).toHaveText('Installed');
       await expect(root.getByRole('heading', { name: `What's New in ${installedVersion}` })).toBeVisible();
-      if (installedVersion !== 'v2.1.2') {
-        await expect(history.first().locator('.dn-about-release-status')).toHaveText('In development');
-      }
+      // Release history must start with the installed build, not a stale fixed version.
+      await expect(history.first()).toHaveAttribute('data-version', installedVersion.slice(1));
       await expect(history.last()).toHaveAttribute('data-version', '2.0.0');
       await expect(history.last()).not.toHaveAttribute('open');
       await history.last().locator('summary').click();
