@@ -36,6 +36,11 @@ jobs:
           e2e/scope-recovery.spec.js
           e2e/story-ownership-density.spec.js
           --grep "completed Activities require reopening|the opening filtered sequence|Activity Detail and overview share|About keeps release controls|Activity titles and inline status|Moment Activities share action menus|contextual transaction rows|long Activity, five workspace tabs|Sample Activity changes stay|archived parents remain readable|legacy completed status exposes|story ownership and compact Activity cards at 820px|Story, original preview and Activity menu remain"
+      - name: Verify iPhone landscape Transactions and dock only
+        run: >-
+          npx playwright test
+          e2e/iphone-premium-bottom-dock.spec.js
+          --grep "short touch-enabled iPhone landscape dock|Transactions retains its own nested scroll area"
       - name: Upload browser failure details
         if: failure()
         uses: actions/upload-artifact@v4
