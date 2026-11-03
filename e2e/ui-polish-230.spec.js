@@ -65,6 +65,11 @@ for (const width of [320, 390, 1280]) {
       await expect(page.getByRole('button', { name: 'New Task', exact: true })).toHaveCount(0);
       await waitForReadableSurface(page, '.dn-tasks-page');
       await assertTaskToolbarAlignment(page);
+      await page.getByRole('button', { name: 'Task options for Pack travel documents' }).click();
+      await expect(page.getByRole('menu', { name: 'Actions for Pack travel documents' })
+        .getByRole('menuitem', { name: 'Edit' })).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(page.getByRole('menu', { name: 'Actions for Pack travel documents' })).toHaveCount(0);
       await assertNoPageOverflow(page);
       await testInfo.attach(`Tasks-${width}-${theme}`, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
 
@@ -103,6 +108,7 @@ for (const route of ['/events', '/activities', '/financials/transactions']) {
     const sheet = page.getByRole('dialog');
     await expect(sheet.locator('.dn-refine-sheet-intro')).toBeVisible();
     await expect(sheet.locator('.dn-refine-sort-chips')).toBeVisible();
+    await waitForReadableSurface(page, '.dn-refine-sheet');
     await expect(sheet.getByRole('button', { name: 'Show results' })).toBeVisible();
     await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
     await assertNoPageOverflow(page);
