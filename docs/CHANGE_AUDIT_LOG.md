@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-359 | DN 2.3 iPhone PDF Studio exact-SHA acceptance
+- **Executed:** GitHub Actions [41697511716](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41697511716) passed **10/10 synthetic Chromium tests** at application SHA `dfcd2bce8a0c2c1dd37001adc3f0189a9efd8685`. Four new mobile/coarse-pointer cases cover 320/390/430px portrait and 844x390 landscape, 44px touch areas, zoom and full-screen actions, saved-default recovery, no horizontal overflow and unchanged Guest records. Six previous PDF preview/pagination/Settings regression checks also passed.
+- **Executed:** Same-SHA [governance 41697511500](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41697511500) passed Node unit tests, ESLint, production build, blocking dependency checks and documentation contracts.
+- **Limits:** This is a focused simulated iPhone acceptance, not physical Safari, VoiceOver or authenticated data testing. No renderer/file-byte change, app version bump, PR, main write or Firebase deployment. Documentation-only follow-up keeps the release ledger aligned with measured evidence.
+
 ## CHG-20261104-358 | DN 2.3 iPhone-first PDF Studio tap targets
 - **Source audit:** Apple's recommended 44pt mobile targets exposed 40px preview zoom and fullscreen buttons in PDF Studio; **Use saved default** had a narrow text-only touch area. The existing dock, pagination and content disclosure already address phone layouts, so no duplicate overhaul is needed.
 - **Change:** On phone/coarse-pointer landscape widths, reserve 44px preview/Close targets, enlarge the saved-design action to 44px with legible text and provide focus-visible outlines. Retain light controls, responsive wrapping, PDF design choices and document rendering.

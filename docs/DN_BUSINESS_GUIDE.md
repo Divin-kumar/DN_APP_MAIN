@@ -1,6 +1,6 @@
 # DN — Your App and Improvement Checklist
 
-**DN 2.3 iPhone PDF Studio touch polish (OldVersion only, unpublished):** Zoom, page-preview and full-screen Close actions have roomier tap areas on iPhone. **Use saved default** is also easier to tap without becoming a heavy settings card. PDF pages, saved records and existing navigation controls stay unchanged. Synthetic phone and landscape verification is required separately from actual Safari/VoiceOver acceptance.
+**DN 2.3 iPhone PDF Studio touch polish (OldVersion only, unpublished):** Zoom, page-preview and full-screen Close actions have roomier tap areas on iPhone. **Use saved default** is also easier to tap without becoming a heavy settings card. PDF pages, saved records and existing navigation controls stay unchanged. All 10 focused synthetic iPhone/landscape and PDF regression checks passed, along with routine code/build checks. Physical Safari/VoiceOver acceptance remains separate.
 
 **DN 2.3 universal + keyboard accessibility (OldVersion only, unpublished):** Desktop users who open the + menu with Enter or Space now move straight into its creation choices, can Tab through them, and can use Escape to return to +. Mouse and iPhone tap behavior stays unchanged. This does not add any features or touch saved Tasks, Moments, Activities or financial data. All nine focused browser checks and routine unit/lint/build/dependency checks passed at the exact application commit. Real-device accessibility and full-release acceptance remain separate.
 
