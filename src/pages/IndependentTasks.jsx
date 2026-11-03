@@ -14,6 +14,7 @@ import { sortIndependentTasks, resolveIndependentTaskParent } from '../utils/ind
 import { formatMomentDate } from '../utils/momentDates.js';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
+import '../components/common/ListControls.css';
 import './IndependentTasks.css';
 
 const EMPTY = Object.freeze([]);
