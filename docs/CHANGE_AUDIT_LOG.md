@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-325 | DN 2.3 Phase 3A: isolated Task record contract, parent safety and grouping
+- **Scope:** Add a pure independent Tasks model with deterministic normalization, local optional due date/time, stable non-Activity IDs, separate status transitions, priority and one-Moment/one-Activity links. Resolve Activity aliases only inside the stated Moment; explicit parent deletion detaches links rather than deleting a Task. Add immutable due-date sorting and four presentation-only grouping choices with counts, never nesting entries into Stories/PDFs.
+- **Impact analysis:** No existing Moment, Activity, finance, Story, PDF, attachment, backup, Guest/account, navigation or storage code is modified. This module is not yet called by the application. No sample dataset change is warranted without a Task surface; Phase 7 owns the single comprehensive Guest tour. Cloud rules were not found in OldVersion; do not enable account Task persistence before permissions are verified.
+- **Verification:** New pure Node tests cover malformed date/time/links, stable identity, historical Activity aliases, completion independence, deletion-unlink and no duplicate grouping. Test code authored; exact-SHA CI is required before marking executed. No version bump, production hosting, PR, merge or main change.
+
 ## CHG-20261103-324 | DN 2.3 Phase 2B: update responsive filter regression to compact draft sheet
 - **Scope:** Adapt the five-list mobile-friendly filter tests to Refine as a modal bottom sheet, sort chips and accurate draft result preview. Check that choosing fields, comparisons, search, values and long phone filter rows does not prematurely apply; only Show results commits. Rewrite the eight-active-filter test for two inline applied chips plus +N access to all eight rules, with independent chip edit/removal and persistence after reload.
 - **Safety:** Synthetic Guest data only, unchanged production code or CSS, no account records, schema, service, PDF or Story change. The browser assertions have been authored but not yet executed. The full suite and Safari/iPhone acceptance are reserved for the phase gate; no deployments, PRs, merges or main writes.
