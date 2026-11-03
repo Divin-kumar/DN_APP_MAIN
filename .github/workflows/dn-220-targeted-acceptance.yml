@@ -31,6 +31,8 @@ jobs:
           e2e/story-paper-contrast-220.spec.js
           e2e/story-design-phase1.spec.js
           --workers=1
+      - name: Check 2.3 draft Refine sheet pilot (synthetic Guest)
+        run: npx playwright test e2e/refine-sheet-230.spec.js --workers=1
       # Playwright clears its outputDir before each separate invocation. Archive
       # Story screenshots now, before the next PDF suite overwrites them.
       - name: Preserve synthetic Story dark/light screenshots
