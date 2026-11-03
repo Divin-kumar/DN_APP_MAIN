@@ -27,15 +27,12 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
       <input required maxLength={500} autoComplete="off" value={title}
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
     </label>
-    <label className="dn-task-field">Notes (optional)
-      <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
-        placeholder="Helpful details" />
-    </label>
-    <div className="dn-task-date-row">
-      <DateField label="Due date (optional)" name="dn-task-date" value={dueDate}
+    <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
+      <DateField label="Due date" name="dn-task-date" value={dueDate}
         onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={!dueDate} />
     </div>
+    {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
         <DropdownSelect id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
@@ -59,6 +56,10 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
           ? 'Historical Activity link (preserved)' : 'Unavailable Activity (preserve link)'}</option> : null}
       </DropdownSelect>
     </div> : null}
+    <label className="dn-task-field">Notes (optional)
+      <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
+        placeholder="Helpful details" />
+    </label>
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">
       <button type="button" className="secondaryButton" onClick={onClose}>Cancel</button>

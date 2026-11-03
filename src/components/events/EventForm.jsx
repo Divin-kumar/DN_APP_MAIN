@@ -31,11 +31,15 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   const [form, setForm] = useState(() => ({ ...createDefaultState(defaultEventType),
     ...(initialValues ? { ...initialValues, time: activityTime(initialValues), customType: initialValues.customType || '' } : {}),
   }));
+  const [validationError, setValidationError] = useState('');
+  const nameInputRef = useRef(null);
+  const customTypeInputRef = useRef(null);
 
   const sourceRef = useRef(initialValues);
   useEffect(() => {
     if (sourceRef.current === initialValues) return;
     sourceRef.current = initialValues;
+    setValidationError('');
     if (initialValues) {
       setForm({
         ...createDefaultState(defaultEventType),
@@ -51,25 +55,36 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   const handleChange = (event) => {
     const { name, value } = event.target;
     setForm((prev) => ({ ...prev, [name]: value }));
+    setValidationError('');
   };
 
   const handleSubmit = (event) => {
     event.preventDefault();
 
-    if (!form.name.trim() || !form.date) {
-      alert('Event name and date are required.');
+    if (!form.name.trim()) {
+      setValidationError('Enter a Moment name.');
+      nameInputRef.current?.focus({ preventScroll: true });
       return;
     }
-
+    if (!form.date) {
+      setValidationError('Choose a date in More options.');
+      const disclosure = event.currentTarget.querySelector('details.dn-form-disclosure');
+      if (disclosure) disclosure.open = true;
+      event.currentTarget.querySelector('#event-date')?.focus({ preventScroll: true });
+      return;
+    }
     if (!eventTypeOptions.includes(form.type) && form.type !== legacyType) {
-      alert('Choose a configured Moment type in Settings → Code Lists.');
+      setValidationError('Choose a Moment type available in Settings → Code Lists.');
+      event.currentTarget.querySelector('#event-type')?.focus({ preventScroll: true });
       return;
     }
     if (form.type === 'Other' && !form.customType.trim()) {
-      alert('Please enter a custom event type.');
+      setValidationError('Enter a custom Moment type.');
+      customTypeInputRef.current?.focus({ preventScroll: true });
       return;
     }
 
+    setValidationError('');
     const { time, ...values } = form;
     onSubmit({
       ...values,
@@ -86,7 +101,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       <p className="event-form-intro">Add the details that make this moment easy to remember.</p>
 
       <label htmlFor="event-name">Moment name
-        <input id="event-name" name="name" value={form.name} onChange={handleChange} placeholder="e.g. A birthday worth celebrating" required />
+        <input ref={nameInputRef} id="event-name" name="name" value={form.name} onChange={handleChange}
+          aria-invalid={Boolean(validationError && !form.name.trim())}
+          placeholder="e.g. A birthday worth celebrating" required />
       </label>
 
       <label htmlFor="event-type">Moment type
@@ -100,7 +117,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
 
       {form.type === 'Other' ? (
         <label htmlFor="event-custom-type">Custom moment type
-          <input id="event-custom-type" name="customType" value={form.customType} onChange={handleChange} placeholder="What kind of moment is this?" required />
+          <input ref={customTypeInputRef} id="event-custom-type" name="customType" value={form.customType}
+            onChange={handleChange} aria-invalid={Boolean(validationError && !form.customType.trim())}
+            placeholder="What kind of moment is this?" required />
         </label>
       ) : null}
 
@@ -122,6 +141,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
       </FormDisclosure>
 
+      {validationError ? <p className="event-form-validation" role="alert">{validationError}</p> : null}
       <div className="event-form-actions">
         <button type="submit" className="primaryButton">{submitLabel}</button>
         {onCancel ? (

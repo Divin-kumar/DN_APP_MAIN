@@ -53,6 +53,37 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  form-polish-230:
+    # Opt-in responsive Task/Moment form QA; no Hosting publish or PR.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-form-ui]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify compact form layout and inline validation
+        run: npx playwright test e2e/form-polish-230.spec.js --workers=2
+      - name: Upload focused QA evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-form-ui
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   search-recovery-230:
     # Opt-in synthetic Guest UI test. No Firebase/Vercel publishing.
     if: >-

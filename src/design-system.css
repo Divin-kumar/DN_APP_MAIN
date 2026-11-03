@@ -624,6 +624,10 @@ html[data-theme] .event-greeting-editor-actions .event-greeting-close-button:hov
 html[data-theme] .event-greeting-editor-actions button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 html[data-theme] .event-form { display: grid; gap: var(--space-md); }
 html[data-theme] .event-form-intro { margin: 0 0 var(--space-xs); color: var(--color-text-muted); font-size: var(--font-caption); line-height: 1.5; }
+html[data-theme] .event-form .event-form-validation {
+  margin: 0; padding: 0 2px; color: var(--color-danger,#b34344);
+  font-size: 12px; font-weight: 620; line-height: 1.45;
+}
 html[data-theme] .event-form > label,
 html[data-theme] .event-form-fields > label { display: grid; min-width: 0; gap: var(--space-xs); color: var(--color-text-muted); font-size: var(--font-caption); font-weight: 650; }
 html[data-theme] .event-form-fields { display: grid; grid-template-columns: minmax(0,1fr); gap: var(--space-md); }
