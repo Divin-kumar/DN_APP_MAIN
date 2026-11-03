@@ -1,66 +1,69 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-// Synthetic Chromium is not a substitute for physical iPhone Safari testing.
+// Synthetic Guest Chromium is not a substitute for physical iPhone Safari.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   for (const theme of ['light', 'dark']) {
-    test(`Settings overview stays calm, readable and functional at ${width}px ${theme}`, async ({ page }) => {
-      await page.setViewportSize({ width, height });
-      const errors = await seedGuest(page, { theme });
-      await page.goto('/settings');
-      await expect(page.getByRole('heading', { name: 'Settings', exact: true })).toBeVisible();
+    test('Settings destinations and dedicated Appearance are usable at '+width+'px '+theme,
+      async ({ page }, testInfo) => {
+        await page.setViewportSize({ width, height });
+        const errors = await seedGuest(page, { theme });
+        await page.goto('/settings');
+        await expect(page.getByRole('heading',{name:'Settings',exact:true})).toBeVisible();
+        const original = await page.evaluate(() => [
+          'dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses','dn_guest_tasks',
+        ].map((key) => localStorage.getItem(key)));
+        const home = page.locator('.dn-settings-redesign');
+        const nav = home.getByRole('navigation',{name:'Settings destinations'});
+        const links = nav.locator('.settings-hub-card');
+        await expect(links).toHaveCount(5);
+        await expect(home.locator('.settings-accordion-toggle')).toHaveCount(0);
+        const positions = await links.evaluateAll((items) => items.map((el) => {
+          const rect=el.getBoundingClientRect();
+          return {left:rect.left,right:rect.right,height:rect.height};
+        }));
+        expect(positions.every((item)=>item.height>=60 && item.left>=-1 && item.right<=width+1)).toBe(true);
+        const demo = home.getByRole('region',{name:'Explore DN guest demo'});
+        if(await demo.count()){
+          const navRect = await nav.boundingBox(), demoRect = await demo.boundingBox();
+          expect(navRect.y).toBeLessThan(demoRect.y);
+        }
+        await testInfo.attach('Settings-hub-'+width+'-'+theme,{
+          body:await page.screenshot({animations:'disabled'}),contentType:'image/png',
+        });
 
-      const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
-        .map((key) => localStorage.getItem(key)));
-      const home = page.locator('.dn-settings-home');
-      const cards = home.locator('.settings-section');
-      await expect(cards).toHaveCount(3);
+        await home.getByRole('link',{name:'Open Appearance & preferences'}).click();
+        await expect(page).toHaveURL(/\/settings\/appearance$/);
+        await expect(page.getByRole('heading',{name:'Appearance & preferences'})).toBeVisible();
+        await expect(page.getByText('Default dashboard view')).toHaveCount(0);
+        const themes=page.getByRole('group',{name:'Color theme'});
+        await expect(themes.locator('button')).toHaveCount(2);
+        await expect(themes.getByRole('button',{name:/Soft light/})).toBeVisible();
+        await expect(themes.getByRole('button',{name:/Dark/})).toBeVisible();
+        await expect(page.getByRole('region',{name:'Defaults for new records'})).toBeVisible();
+        await expect(page.getByRole('region',{name:'Story and PDF appearance'})).toBeVisible();
+        await testInfo.attach('Appearance-'+width+'-'+theme,{
+          body:await page.screenshot({animations:'disabled'}),contentType:'image/png',
+        });
+        await page.locator('.dn-appearance-back').click();
+        await expect(page).toHaveURL(/\/settings$/);
 
-      const measures = await cards.evaluateAll((nodes) => nodes.map((card) => {
-        const toggle = card.querySelector('.settings-accordion-toggle');
-        const chevron = toggle.querySelector('.settings-accordion-indicator');
-        const cardRect = card.getBoundingClientRect();
-        const toggleRect = toggle.getBoundingClientRect();
-        const chevronRect = chevron.getBoundingClientRect();
-        return {
-          left: cardRect.left, right: cardRect.right,
-          radius: parseFloat(getComputedStyle(card).borderTopLeftRadius),
-          height: toggleRect.height, chevron: chevronRect.width,
-          chevronHeight: chevronRect.height, svg: Boolean(chevron.querySelector('svg')),
-        };
-      }));
-      expect(measures.every((item) => item.left >= -1 && item.right <= width + 1)).toBe(true);
-      expect(measures.every((item) => item.radius >= 14 && item.height >= 60)).toBe(true);
-      // The accordion BUTTON is the 68px+ tap target; chevron is decorative.
-      expect(measures.every((item) => item.chevron >= 17 && item.chevronHeight >= 17 && item.svg)).toBe(true);
-
-      const preferences = page.getByRole('button', { name: /Appearance & preferences/ });
-      await expect(preferences).toHaveAttribute('aria-expanded', 'false');
-      await preferences.click();
-      await expect(preferences).toHaveAttribute('aria-expanded', 'true');
-      await expect(page.getByText('Default currency', { exact: true })).toBeVisible();
-      await expect(home.getByRole('button', { name: /Data & Backup/ })).toHaveCount(0);
-      const backupLink = home.getByRole('link', { name: 'Open Data & Backup page' });
-      await expect(backupLink).toHaveAttribute('href', '/settings/data-backup');
-      await expect(home.getByRole('link', { name: 'Open Code Lists page' })).toHaveAttribute('href', '/settings/code-lists');
-      await expect(home.getByRole('link', { name: 'Open List defaults' })).toHaveAttribute('href', '/settings/list-defaults');
-      await expect(home.getByRole('link', { name: 'Open About page' })).toHaveAttribute('href', '/settings/about');
-      await backupLink.click();
-      await expect(page).toHaveURL(new RegExp('/settings/data-backup$'));
-      await expect(page.getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
-      await expect(page.getByRole('button', { name: 'Export backup' })).toBeVisible();
-      await page.getByRole('link', { name: 'Back to Settings' }).click();
-      await expect(page).toHaveURL(new RegExp('/settings$'));
-
-      const geometry = await page.evaluate(() => ({
-        pageWidth: document.documentElement.scrollWidth,
-        homeRight: document.querySelector('.dn-settings-home').getBoundingClientRect().right,
-      }));
-      expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
-      expect(geometry.homeRight).toBeLessThanOrEqual(width + 1);
-      expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
-        .map((key) => localStorage.getItem(key)))).toEqual(before);
-      expect(errors).toEqual([]);
-    });
+        await nav.getByRole('link',{name:'Open Data & Backup page'}).click();
+        await expect(page).toHaveURL(/\/settings\/data-backup$/);
+        await expect(page.getByRole('heading',{name:'Data & Backup'})).toBeVisible();
+        await expect(page.getByRole('button',{name:'Export backup'})).toBeVisible();
+        await page.getByRole('link',{name:'Back to Settings'}).click();
+        await expect(page).toHaveURL(/\/settings$/);
+        await page.goto('/settings#preferences');
+        await expect(page).toHaveURL(/\/settings\/appearance$/);
+        const geometry=await page.evaluate(()=>({
+          width:document.documentElement.clientWidth, scroll:document.documentElement.scrollWidth,
+        }));
+        expect(geometry.scroll).toBeLessThanOrEqual(geometry.width+1);
+        expect(await page.evaluate(() => [
+          'dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses','dn_guest_tasks',
+        ].map((key) => localStorage.getItem(key)))).toEqual(original);
+        expect(errors).toEqual([]);
+      });
   }
 }
