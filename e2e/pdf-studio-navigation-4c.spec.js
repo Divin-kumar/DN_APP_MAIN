@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
+import { addOriginal, calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
 
 const fixture = () => {
   const moments = fixtureMoments();
@@ -132,3 +132,42 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     expect(errors).toEqual([]);
   });
 }
+
+
+test('real original photo remains on its PDF page at 40% writable space and moves at 39%', async ({ page }) => {
+  const errors = await seedGuest(page, { incomes: [], expenses: [] });
+  await addOriginal(page, { width: 680, height: 940, count: 1 });
+  const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const results = await page.evaluate(async () => {
+    const { MomentPdfPainter } = await import('/src/utils/momentPdf.js');
+    const moment = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    const attachment = moment.attachments.find((file) => file.id === 'photo-0');
+    const top = 43;
+    const bottom = 842 - 51;
+    const writableHeight = bottom - top;
+    const result = [];
+    for (const freeFraction of [.4, .39]) {
+      const painter = new MomentPdfPainter(() => {}, { template: 'journey', pageQuality: 'standard' });
+      painter.y = bottom - writableHeight * freeFraction;
+      const positions = await painter.photoGrid([attachment], {
+        uid: null, isGuest: true, sample: false, assertCurrent: () => {},
+      });
+      const placed = positions.find((entry) => entry.id === attachment.id);
+      const rendered = await painter.renderedPages();
+      result.push({ freeFraction, page: placed?.page, width: placed?.width,
+        height: placed?.height, pageCount: rendered.pages.length });
+    }
+    return result;
+  });
+  expect(results[0].page).toBe(1);
+  expect(results[0].pageCount).toBe(1);
+  expect(results[1].page).toBe(2);
+  expect(results[1].pageCount).toBe(2);
+  for (const result of results) {
+    expect(result.width).toBeGreaterThan(0);
+    expect(result.height).toBeGreaterThan(0);
+    expect(result.width / result.height).toBeCloseTo(680 / 940, 2);
+  }
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
+  expect(errors).toEqual([]);
+});
