@@ -124,7 +124,7 @@ export default function TransactionHistory({
           title="Export only matching transactions in their current order">
           <Download size={14} aria-hidden="true" /><span>Export CSV</span>
         </button>}
-        search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
+        search={<DebouncedFilterInput clearable scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />
       </ListControls>

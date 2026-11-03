@@ -9,11 +9,11 @@ html[data-theme] .dn-task-hero p { margin:0; font-size:13px; line-height:1.55; c
 html[data-theme] .dn-task-eyebrow { font-size:10px; letter-spacing:.1em; text-transform:uppercase; font-weight:750; color:var(--color-text-muted); }
 html[data-theme] .dn-task-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px; min-width:0; }
 html[data-theme] .dn-task-metrics span {
-  display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0; min-height:66px; padding:11px 14px;
-  border:1px solid color-mix(in srgb,var(--color-border) 74%,transparent); border-radius:15px;
-  background:color-mix(in srgb,var(--color-card) 92%,var(--color-surface));
+  display:flex; flex-direction:column; justify-content:center; gap:4px; min-width:0; min-height:57px; padding:6px 13px;
+  border:0; border-radius:0; background:transparent;
   color:var(--color-text-muted); font-size:11px; font-weight:600; line-height:1.3;
 }
+html[data-theme] .dn-task-metrics span + span { border-inline-start:1px solid var(--color-border); }
 html[data-theme] .dn-task-metrics strong { color:var(--color-text); font-size:21px; line-height:1; font-weight:750; font-variant-numeric:tabular-nums; }
 html[data-theme] .dn-task-discovery { margin:3px 0 0; }
 html[data-theme] .dn-task-discovery-summary { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; min-height:20px; color:var(--color-text-muted); font-size:12px; }
@@ -61,8 +61,20 @@ html[data-theme] .dn-refine-sheet .dn-refine-choice-row button:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:2px;
 }
 html[data-theme] .dn-task-empty {
-  display:grid; justify-items:center; gap:10px; padding:38px 18px; border:1px dashed var(--color-border);
-  border-radius:17px; background:var(--color-card); text-align:center;
+  display:grid; justify-items:center; gap:10px; padding:27px 18px;
+  border:0; border-radius:0; background:transparent; text-align:center;
+}
+html[data-theme] .dn-task-empty-actions {
+  display:flex; justify-content:center; align-items:center; flex-wrap:wrap; gap:5px 14px;
+  margin-top:2px;
+}
+html[data-theme] .dn-task-empty-actions button {
+  min-height:44px; padding:8px 5px; border:0; background:transparent;
+  color:var(--color-primary); font:inherit; font-size:13px; font-weight:650;
+  text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+}
+html[data-theme] .dn-task-empty-actions button:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px;
 }
 html[data-theme] .dn-task-empty h3 { margin:0; font-size:17px; }
 html[data-theme] .dn-task-empty p { margin:0; max-width:42ch; font-size:13px; line-height:1.6; color:var(--color-text-muted); }

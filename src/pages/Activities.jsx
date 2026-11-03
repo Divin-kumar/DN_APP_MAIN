@@ -178,7 +178,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}
-          search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
+          search={<DebouncedFilterInput clearable scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
           <ConditionBuilder filter={conditions} title="Activity conditions" />
         </ListControls>
       </div>

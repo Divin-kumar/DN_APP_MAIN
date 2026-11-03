@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Circle, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, XCircle } from 'lucide-react';
+import { Check, Circle, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import TaskEditor from '../components/tasks/TaskEditor';
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
 import { ConditionChips } from '../components/common/ConditionBuilder';
-import { conditionCount, normalizeConditionGroup } from '../utils/conditionEngine.js';
+import { conditionCount, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine.js';
 import { taskFilterFields, taskViewConditionGroup } from '../utils/taskConditionFields.js';
 import { filterTaskResults } from '../utils/taskListFilters.js';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -141,6 +141,9 @@ export function TaskListContent() {
           <Search className="dn-list-controls-search-icon" size={18} aria-hidden="true" />
           <input type="search" aria-label="Search Tasks" value={view.search}
             onChange={(event) => changeView({ search: event.target.value })} placeholder="Search Tasks" />
+          {view.search ? <button type="button" className="dn-search-clear" aria-label="Clear Task search"
+            title="Clear Task search" onPointerDown={(event) => event.preventDefault()}
+            onClick={() => changeView({ search: '' })}><X size={17} aria-hidden="true" /></button> : null}
         </div>
         <button type="button" className={`dn-list-controls-trigger${activeFilterCount ? ' is-active' : ''}`}
           aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
@@ -162,6 +165,12 @@ export function TaskListContent() {
     {ready && tasks.length > 0 && displayedTasks.length === 0
       ? <div className="dn-task-empty" role="status"><Search size={24} aria-hidden="true" />
         <h3>No matching Tasks</h3><p>Try another search or change your Refine selections.</p>
+        <div className="dn-task-empty-actions">
+          {view.search ? <button type="button" onClick={() => changeView({ search: '' })}>Clear search</button> : null}
+          {activeFilterCount ? <button type="button" onClick={() => changeView({
+            group: emptyGroup(), status: 'all', priority: 'all', due: 'all',
+          })}>Clear filters</button> : null}
+        </div>
       </div> : null}
     <div className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {

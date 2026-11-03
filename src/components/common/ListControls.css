@@ -231,6 +231,25 @@ html[data-theme] .dn-list-controls .dn-list-controls-search input::placeholder {
   color:var(--color-text-muted); opacity:.86;
 }
 html[data-theme] .dn-list-controls .dn-list-controls-search input::-webkit-search-decoration { display:none; }
+/* Recover a search without resetting saved sort or condition chips. */
+html[data-theme] .dn-list-controls-search:has(.dn-search-clear) input { padding-inline-end:48px !important; }
+html[data-theme] .dn-list-controls-search:has(.dn-search-clear) input::-webkit-search-cancel-button {
+  -webkit-appearance:none; appearance:none; display:none;
+}
+html[data-theme] .dn-list-controls .dn-list-controls-search .dn-search-clear {
+  position:absolute; z-index:2; inset-inline-end:0; top:50%; transform:translateY(-50%);
+  display:grid; place-items:center; width:44px; height:44px; min-width:44px;
+  margin:0; padding:0; border:0; border-radius:10px;
+  background:transparent; color:var(--color-text-muted);
+  box-shadow:none; cursor:pointer; touch-action:manipulation;
+}
+html[data-theme] .dn-list-controls-search .dn-search-clear:hover {
+  background:color-mix(in srgb,var(--color-primary) 7%,transparent);
+  color:var(--color-text);
+}
+html[data-theme] .dn-list-controls-search .dn-search-clear:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:-3px;
+}
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger {
   position:relative; display:inline-flex; flex:0 0 auto; align-items:center;
   min-width:81px; min-height:44px !important; height:44px; gap:6px;

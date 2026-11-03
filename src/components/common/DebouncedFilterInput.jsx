@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { X } from 'lucide-react';
 
-function SearchDraft({ value = '', onChange, delay = 160, onBlur, onKeyDown, onCompositionStart, onCompositionEnd, ...props }) {
+function SearchDraft({ value = '', onChange, delay = 160, onBlur, onKeyDown, onCompositionStart, onCompositionEnd, clearable = false, ...props }) {
   const [draft, setDraft] = useState(value);
   const [composing, setComposing] = useState(false);
   const notify = useRef(onChange); notify.current = onChange;
@@ -16,11 +17,21 @@ function SearchDraft({ value = '', onChange, delay = 160, onBlur, onKeyDown, onC
     pending.current = setTimeout(() => commit(draft), delay);
     return () => clearTimeout(pending.current);
   }, [draft, value, delay, composing]);
-  return <input {...props} ref={input} value={draft} onChange={(event) => setDraft(event.target.value)}
-    onBlur={(event) => { if (!composing) commit(draft); onBlur?.(event); }}
-    onKeyDown={(event) => { if (event.key === 'Enter' && !composing) commit(draft); onKeyDown?.(event); }}
-    onCompositionStart={(event) => { setComposing(true); onCompositionStart?.(event); }}
-    onCompositionEnd={(event) => { setComposing(false); onCompositionEnd?.(event); }} />;
+  const clearSearch = () => {
+    setDraft('');
+    commit('');
+    input.current?.focus({ preventScroll: true });
+  };
+  return <>
+    <input {...props} ref={input} value={draft} onChange={(event) => setDraft(event.target.value)}
+      onBlur={(event) => { if (!composing) commit(draft); onBlur?.(event); }}
+      onKeyDown={(event) => { if (event.key === 'Enter' && !composing) commit(draft); onKeyDown?.(event); }}
+      onCompositionStart={(event) => { setComposing(true); onCompositionStart?.(event); }}
+      onCompositionEnd={(event) => { setComposing(false); onCompositionEnd?.(event); }} />
+    {clearable && draft && !composing ? <button type="button" className="dn-search-clear"
+      aria-label="Clear search" title="Clear search" onPointerDown={(event) => event.preventDefault()}
+      onClick={clearSearch}><X size={17} aria-hidden="true" /></button> : null}
+  </>;
 }
 // Remount the input draft when its Account/Guest/Moment/Sample identity changes.
 export default function DebouncedFilterInput({ scopeKey, ...props }) {
