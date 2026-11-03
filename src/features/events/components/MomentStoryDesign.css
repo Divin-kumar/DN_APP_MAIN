@@ -215,3 +215,38 @@ html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
   .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4 a:visited {
   color:var(--dn-book-ink)!important;
 }
+
+
+/* DN 2.3 Phase 1: unboxed Story chapters belong to the app shell, not to
+   the light paper palette. Only upcoming and undated Journal/Diary chapters
+   live in .dn-v2-story-aux; recorded chapters keep their paper ink. */
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body > h4,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body > h4 a,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body > h4 a:visited,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-journal-chapter .dn-v2-story-entry-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-diary-paragraph .dn-v2-story-entry-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-story-writing-legacy-title {
+  color:var(--color-text);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body > h4 a:hover,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-v2-story-entry-body > h4 a:focus-visible {
+  color:var(--color-primary);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-journal-chapter .dn-story-entry-aside,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-diary-paragraph .dn-story-entry-aside,
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-story-writing-heading {
+  color:var(--color-text-muted);
+}

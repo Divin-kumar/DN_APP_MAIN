@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest } from './fixtures.js';
+import { calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
 
 const formatNames = [
   { id: 'journal-contrast', type: 'Vacation', format: 'journey',
@@ -69,6 +69,77 @@ for (const theme of ['dark', 'light']) {
           const prose = story.locator(paper + ' .dn-v2-story-entry-description').first();
           await expect(prose).toBeVisible();
           expect(await readableContrast(prose, paper), `${format}/${style}/${theme} prose`).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    }
+    expect(errors).toEqual([]);
+  });
+}
+
+
+// 2.3 Phase 1: auxiliary future/undated chapters render on the application
+// shell, not on the light book paper. They must not inherit dark paper ink.
+for (const { width, theme } of [
+  { width: 320, theme: 'dark' },
+  { width: 390, theme: 'dark' },
+  { width: 430, theme: 'dark' },
+  { width: 390, theme: 'light' },
+]) {
+  test('Unboxed future and undated Story chapters use shell ink at ' + width + 'px ' + theme, async ({ page }, testInfo) => {
+    test.setTimeout(120000);
+    const moments = [
+      { id: 'aux-journey', type: 'Vacation', presentation: 'journey' },
+      { id: 'aux-diary', type: 'Diary', presentation: 'diary' },
+    ].map(({ id, type }) => ({
+      id, name: 'Shell contrast sample', type, date: calendarDate(-2),
+      notes: 'A synthetic Story contrast check.',
+      attachments: [], memories: [],
+      activities: [
+        { id: id + '-future', eventId: id, title: 'Future chapter',
+          description: '<p>Future writing should be readable.</p>',
+          status: 'in-progress', completed: false, date: calendarDate(8),
+          entries: [{ id: id + '-continuation', date: calendarDate(9),
+            time: '10:15', description: '<p>Additional future writing.</p>' }] },
+        { id: id + '-undated', eventId: id, title: 'Undated chapter',
+          description: '<p>Untimed writing should be readable.</p>',
+          status: 'in-progress', completed: false, date: '' },
+      ],
+    }));
+    const errors = await seedGuest(page, { moments, theme });
+    await page.setViewportSize({ width, height: 844 });
+    await page.goto('/events');
+    for (const style of ['heritage', 'editorial', 'minimal']) {
+      await page.evaluate((visualStyle) => {
+        localStorage.setItem('dn_story_pdf_design_v1:guest', JSON.stringify({
+          version: 1, styles: {
+            journey: visualStyle, diary: visualStyle, chronicle: visualStyle,
+          },
+        }));
+      }, style);
+      for (const moment of moments) {
+        await page.goto('/events/' + moment.id + '/story');
+        const story = page.locator('.dn-v2-story');
+        await expect(story).toHaveAttribute('data-design-style', style);
+        const shellInk = await story.evaluate((node) => getComputedStyle(node).color);
+        const sections = story.locator('.dn-v2-story-aux');
+        await expect(sections).toHaveCount(2);
+        for (const section of [sections.nth(0), sections.nth(1)]) {
+          for (const selector of [
+            '.dn-v2-story-entry-body > h4',
+            '.dn-v2-story-entry-body > h4 a',
+            '.dn-v2-story-entry-description',
+          ]) {
+            const element = section.locator(selector).first();
+            await expect(element).toBeVisible();
+            const ink = await element.evaluate((node) => getComputedStyle(node).color);
+            expect(ink, style + ' ' + moment.type + ' ' + selector + ' ' + theme).toBe(shellInk);
+          }
+        }
+        if (theme === 'dark' && width === 390 && style === 'editorial' && moment.type === 'Vacation') {
+          await testInfo.attach('unboxed-story-dark-390px', {
+            body: await page.screenshot({ fullPage: false }),
+            contentType: 'image/png',
+          });
         }
       }
     }
