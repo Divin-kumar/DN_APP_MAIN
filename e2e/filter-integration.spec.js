@@ -27,6 +27,7 @@ async function addTextCondition(page, field, value) {
   await page.getByRole('button', { name: 'Add filter', exact: true }).first().click();
   await selectOption(page, 'Filter by', field);
   await page.getByRole('textbox', { name: `Value for ${field}`, exact: true }).fill(value);
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('button', { name: new RegExp(`Remove filter ${field} Contains ${value}`) })).toBeVisible();
 }
 
@@ -64,7 +65,8 @@ test('all five lists migrate legacy choices once and keep the active conditions 
       await page.goto(item.route);
       const trigger = await openFilters(page);
       await expect(trigger).toHaveAttribute('aria-label', new RegExp(`${item.active} active$`));
-      await expect(page.locator('.dn-condition-chip')).toHaveCount(item.active);
+      await expect(page.locator('.dn-condition-chip')).toHaveCount(Math.min(item.active, 2));
+      if (item.active > 2) await expect(page.getByRole('button', { name: `Show ${item.active - 2} more active filters` })).toBeVisible();
       await expect(page.locator(item.rows)).toHaveCount(1);
       await expect.poll(() => page.evaluate((key) => JSON.parse(localStorage.getItem(key)).migrationVersion,
         storageKey('guest', item.conditions))).toBe(1);
@@ -75,6 +77,7 @@ test('all five lists migrate legacy choices once and keep the active conditions 
       await expect(page.getByRole('tab', { name: /Saved|Recent|Favorites/ })).toHaveCount(0);
 
       await page.getByRole('button', { name: 'Clear all', exact: true }).click();
+      await page.getByRole('button', { name: 'Show results', exact: true }).click();
       await expect(page.locator('.dn-condition-chip')).toHaveCount(0);
       await expect(page.locator(item.rows)).toHaveCount(item.total);
       await page.reload();
@@ -147,6 +150,7 @@ test('Finance totals follow the same AND and OR conditions as the transaction ro
   await selectOption(page, 'Filter by', 'Type');
   await selectOption(page, 'Comparison', 'Is');
   await selectOption(page, 'Value for Type', 'Expense');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(1);
   await expect(page.locator('.dn-transaction-copy > strong')).toHaveText('October expense');
   await expect(page.locator('.dn-finance-metric-income strong')).toHaveText('₹0');

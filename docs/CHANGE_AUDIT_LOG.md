@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-323 | DN 2.3 Phase 2B: adapt high-value regression cases to draft-only Refine
+- **Scope:** Update preexisting synthetic Playwright assertions for the shared bottom-sheet rather than an inline list panel. Cover single-row mobile rule geometry, compact selected sort chips, saved Settings route, draft-only Apply semantics, maximum two applied chips plus overflow and unchanged Guest/account record boundaries. Refresh legacy filter integration tests so Clear All and text/range changes only affect visible results after Show results.
+- **Boundary:** Test and documentation maintenance only. No application data, business logic, UI CSS, Firebase, Guest tour, PDF, Story, backup or app version change. Broader browser cases can still need exact-SHA acceptance; changed tests are authored, not claimed passing. No merge, PR, deployment or main write.
+
 ## CHG-20261103-322 | DN 2.3 Phase 2B: accurate draft result previews across shared lists
 - **Scope:** Every shared Refine sheet now receives exactly the list's search-scoped, pre-condition candidate cohort. The sheet compiles its staged AND/OR group using the existing condition schema and renders an accessible live count of matching Moments, Activities or Transactions. Sorting changes do not modify the count; Reset previews its staged baseline. Until Show results, visible cards, money totals, CSV and stored list preferences remain unchanged.
 - **Compatibility:** Factor existing search selection before condition filtering on main Moments/Activities/Transactions, Moment workspace Activities and Moment Transactions, so draft previews and eventual Apply share identical search/condition semantics. Activity entries still map to their original parent Activities; counts are never computed from nested continuation rows. No record/storage/backup/Firestore/Story/PDF logic or Guest fixtures are changed. The comprehensive Guest tour refresh remains Phase 7.

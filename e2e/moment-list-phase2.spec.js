@@ -174,9 +174,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
       'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
     ].map((key) => localStorage.getItem(key)));
     await page.getByRole('button', { name: /^Filters/ }).click();
-    await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toBeVisible();
+    const sheet = page.getByRole('dialog', { name: 'Moment filters' });
+    await expect(sheet.getByRole('group', { name: 'Sort moments' }).getByRole('button', { name: /^Sort by Event date/ })).toBeVisible();
     await page.keyboard.press('Escape');
-    await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toHaveCount(0);
+    await expect(sheet).toHaveCount(0);
     const after = await page.evaluate(() => [
       'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',
     ].map((key) => localStorage.getItem(key)));

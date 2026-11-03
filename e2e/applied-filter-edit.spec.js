@@ -28,7 +28,7 @@ for(const width of [320,390,1280]) {
     const errors=await seedGuest(page,{theme:width===390?'light':'dark'});await page.goto('/events');const original=await records(page);
     for(const consumer of consumers) {
       await page.goto(consumer.route);await add(page,consumer.field,consumer.from);
-      await page.getByRole('button',{name:/^Filters(?: and sort)?(?:,|$)/}).click();
+      await page.getByRole('button',{name:'Show results',exact:true}).click();
       const before=await saved(page,consumer.key);expect(rules(before)).toHaveLength(1);
       const chip=page.locator('.dn-condition-chip');
       const style=await chip.evaluate(e=>({border:getComputedStyle(e).borderWidth,background:getComputedStyle(e).backgroundColor}));
@@ -51,8 +51,8 @@ test('applied text, date and range edits keep their identity and Cancel discards
   const errors=await seedGuest(page);await page.goto('/financials');const original=await records(page);
   await add(page,'Title');await page.getByRole('textbox',{name:'Value for Title',exact:true}).fill('Room');
   await page.getByRole('textbox',{name:'Value for Title',exact:true}).blur();
+  await page.getByRole('button',{name:'Show results',exact:true}).click();
   await expect(page.locator('.dn-condition-chip')).toContainText('Room');
-  await page.getByRole('button',{name:/^Filters/}).click();
   let before=rules(await saved(page,'transactions'))[0];
   await page.getByRole('button',{name:'Change Title filter',exact:true}).click();
   let dialog=page.getByRole('dialog',{name:'Change Title filter',exact:true});
@@ -67,7 +67,8 @@ test('applied text, date and range edits keep their identity and Cancel discards
   await page.locator('.dn-condition-chip-remove').click();
   await add(page,'Amount');await choice(page,'Comparison','Equals');
   await page.getByRole('spinbutton',{name:'Value for Amount',exact:true}).fill('100');await page.getByRole('spinbutton',{name:'Value for Amount',exact:true}).blur();
-  await expect(page.locator('.dn-condition-chip')).toHaveCount(1);await page.getByRole('button',{name:/^Filters/}).click();before=rules(await saved(page,'transactions'))[0];
+  await page.getByRole('button',{name:'Show results',exact:true}).click();
+  await expect(page.locator('.dn-condition-chip')).toHaveCount(1);before=rules(await saved(page,'transactions'))[0];
   await page.getByRole('button',{name:'Change Amount filter',exact:true}).click();
   await choice(page,'Comparison for Amount','Between');dialog=page.getByRole('dialog');
   await expect(dialog.getByRole('button',{name:'Apply filter',exact:true})).toBeDisabled();
@@ -75,7 +76,8 @@ test('applied text, date and range edits keep their identity and Cancel discards
   await dialog.getByRole('button',{name:'Apply filter',exact:true}).click();
   expect(rules(await saved(page,'transactions'))[0]).toEqual({...before,operator:'between',value:['20','200']});
   await page.locator('.dn-condition-chip-remove').click();
-  await add(page,'Date');await choice(page,'Comparison','This month');await page.getByRole('button',{name:/^Filters/}).click();before=rules(await saved(page,'transactions'))[0];
+  await add(page,'Date');await choice(page,'Comparison','This month');
+  await page.getByRole('button',{name:'Show results',exact:true}).click();before=rules(await saved(page,'transactions'))[0];
   await page.getByRole('button',{name:'Change Date filter',exact:true}).click();await choice(page,'Comparison for Date','Today');
   await page.getByRole('dialog').getByRole('button',{name:'Apply filter',exact:true}).click();
   expect(rules(await saved(page,'transactions'))[0]).toEqual({...before,operator:'today',value:''});
@@ -97,7 +99,7 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
   expect(boxes[1].y).toBe(boxes[0].y);expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x+boxes[0].w);
   await chips.filter({hasText:'Completed'}).getByRole('combobox',{name:'Change Status filter'}).click();await page.getByRole('option',{name:'Cancelled',exact:true}).click();
   const changed=await saved(page,'activities');expect(changed).toEqual({...before,children:before.children.map(n=>n.id==='completed-filter'?{...n,value:'cancelled'}:n)});
-  await page.goto('/settings/code-lists');const preferences=page.getByRole('region',{name:'List sorting and filters preferences'});
+  await page.goto('/settings/list-defaults');const preferences=page.getByRole('region',{name:'List sorting and filters preferences'});
   await preferences.getByRole('button',{name:/Activities filters/}).click();const editor=preferences.getByRole('region',{name:'activities filters',exact:true});
   await editor.locator('.dn-condition-chip').filter({hasText:'Cancelled'}).getByRole('combobox',{name:'Change Status filter'}).click();await page.getByRole('option',{name:'Completed',exact:true}).click();
   // Code Lists edits the Settings baseline; the live working group remains
@@ -105,7 +107,8 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
   await expect(editor.locator('.dn-condition-chip').filter({ hasText: 'Status' })).toContainText('Completed');
   expect(await saved(page,'activities')).toEqual(changed);
   await page.goto('/financials');await add(page,'Title');await page.getByRole('textbox',{name:'Value for Title',exact:true}).fill('Room');await page.getByRole('textbox',{name:'Value for Title',exact:true}).blur();
-  await expect(page.locator('.dn-condition-chip')).toHaveCount(1);await page.getByRole('button',{name:/^Filters/}).click();const guestFilter=await saved(page,'transactions');
+  await page.getByRole('button',{name:'Show results',exact:true}).click();
+  await expect(page.locator('.dn-condition-chip')).toHaveCount(1);const guestFilter=await saved(page,'transactions');
   await page.getByRole('button',{name:'Change Title filter',exact:true}).click();await page.getByRole('dialog').getByRole('textbox',{name:'Value for Title',exact:true}).fill('Uncommitted draft');
   await accountScope(page,'applied-filter-review',fixtureMoments());await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await saved(page,'transactions')).toEqual(guestFilter);expect(await records(page)).toEqual(original);expect(await page.evaluate(()=>window.__dnAccountWrites)).toEqual([]);expect(errors).toEqual([]);

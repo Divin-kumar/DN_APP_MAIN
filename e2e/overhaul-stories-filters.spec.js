@@ -22,7 +22,8 @@ test('Moments default to recorded Event Date, including across past and future y
   await page.reload();
   await expect(cards.nth(0)).toContainText('A separate Moment');
   await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(page.getByRole('combobox', { name: 'Sort moments field', exact: true })).toBeVisible();
+  await expect(page.getByRole('dialog', { name: 'Moment filters' }).getByRole('group', { name: 'Sort moments' })
+    .getByRole('button', { name: /^Sort by Event date/ })).toBeVisible();
 });
 
 test('Story photos belong to their exact Moment or Activity', async ({ page }) => {
@@ -60,6 +61,7 @@ test('the compact Activity Filters panel remembers its last filter and offers no
   await selectConditionOption(page, 'Filter by', 'Activity name');
   await selectConditionOption(page, 'Comparison', 'Contains');
   await page.getByRole('textbox', { name: 'Value for Activity name', exact: true }).fill('Book a');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open A different activity with the same ID', exact: true })).toHaveCount(0);
   await expect(page.getByRole('button', { name: /Remove filter Activity name Contains Book a/ })).toBeVisible();
@@ -93,6 +95,7 @@ test('Product filter choices stay limited while large named Moment choices remai
   expect(await page.getByRole('option').count()).toBeLessThan(30);
   await page.getByRole('searchbox', { name: 'Search options', exact: true }).fill('Plan 159');
   await page.keyboard.press('Enter');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Task 159', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open Task 000', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
@@ -111,10 +114,12 @@ test('numeric ranges keep both boundaries and existing nested OR rules retain th
   await page.getByRole('button', { name: /^Filters/ }).click();
   await page.getByRole('spinbutton', { name: 'From Amount', exact: true }).fill('99');
   await page.getByRole('spinbutton', { name: 'To Amount', exact: true }).fill('101');
-  await expect(page.getByRole('button', { name: /Remove filter Amount Between 99 – 101/ })).toBeVisible();
-  await expect(page.locator('.dn-transaction-copy strong', { hasText: 'Room deposit' })).toBeVisible();
+  await expect(page.getByRole('spinbutton', { name: 'To Amount', exact: true })).toHaveValue('101');
+  await expect(page.getByRole('dialog', { name: 'Transaction filters' }).getByRole('status')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Add filter group', exact: true })).toHaveCount(0);
   await page.getByRole('spinbutton', { name: 'Value for Amount', exact: true }).fill('50');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
+  await expect(page.getByRole('button', { name: /Remove filter Amount Between 99 – 101/ })).toBeVisible();
   await expect(page.getByRole('button', { name: /Remove filter AND › OR · Amount Greater than 50/ })).toBeVisible();
 });
 
@@ -132,7 +137,7 @@ test('An uncommitted filter draft cannot cross a Guest to synthetic Account scop
   await page.getByRole('button', { name: /^Filters/ }).click();
   await page.getByRole('textbox', { name: 'Value for Moment name', exact: true }).fill('Weekend');
   await accountScope(page, 'filter-owner', moments);
-  await expect(page.getByRole('textbox', { name: 'Value for Moment name', exact: true })).toHaveValue('');
+  await expect(page.getByRole('dialog', { name: 'Moment filters' })).toHaveCount(0);
   // Observe beyond the 220ms debounce so a delayed cross-scope write would run.
   await page.waitForTimeout(350);
   await expect.poll(() => page.evaluate(() => {

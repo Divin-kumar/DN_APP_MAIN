@@ -12,7 +12,7 @@ const routes = [
 ];
 
 async function assertOneRow(page) {
-  const measurement = await page.locator('.dn-list-controls-panel .dn-condition-rule').first().evaluate((rule) => {
+  const measurement = await page.locator('.dn-refine-sheet .dn-condition-rule').first().evaluate((rule) => {
     const [field, comparison, value, remove] = [...rule.children].map((node) => {
       const rect = node.getBoundingClientRect();
       return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height };
@@ -29,7 +29,7 @@ async function assertOneRow(page) {
   // On small iPhones the value may scroll beneath a pinned remove control.
   // Measure reachable geometry after scrolling, not the offscreen scroll area.
   expect(remove.right).toBeLessThanOrEqual(measurement.rowRight + 1);
-  const pin = await page.locator('.dn-list-controls-panel .dn-condition-rule').first().evaluate((rule) => {
+  const pin = await page.locator('.dn-refine-sheet .dn-condition-rule').first().evaluate((rule) => {
     const overflow = getComputedStyle(rule).overflowX;
     const scrollable = rule.scrollWidth > rule.clientWidth + 1;
     rule.scrollLeft = rule.scrollWidth;
@@ -59,7 +59,7 @@ for (const [route, label] of routes) {
       await refine.click();
       const add = page.getByRole('button', { name: 'Add filter', exact: true }).first();
       await add.click();
-      const rule = page.locator('.dn-list-controls-panel .dn-condition-rule').first();
+      const rule = page.locator('.dn-refine-sheet .dn-condition-rule').first();
       await expect(rule).toBeVisible();
       await rule.getByRole('combobox', { name: 'Filter by' }).click();
       await page.locator('.dropdown-menu-portal [role="option"]').first().click();
@@ -77,7 +77,7 @@ test('numeric range remains inside one row without horizontal page overflow', as
   await page.goto('/financials/transactions');
   await page.getByRole('button', { name: /^Filters and sort/ }).click();
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
-  const rule = page.locator('.dn-list-controls-panel .dn-condition-rule').first();
+  const rule = page.locator('.dn-refine-sheet .dn-condition-rule').first();
   await rule.getByRole('combobox', { name: 'Filter by' }).click();
   await page.getByRole('option', { name: 'Amount', exact: true }).click();
   await rule.getByRole('combobox', { name: 'Comparison' }).click();
