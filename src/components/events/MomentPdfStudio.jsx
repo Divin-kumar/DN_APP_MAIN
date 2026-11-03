@@ -165,7 +165,7 @@ export default function MomentPdfStudio({ event }) {
           <div><strong>Your memory book</strong>
             <small>{PDF_STYLE_NAMES[preview?.options.visualStyle || settings.visualStyle]}
               {' · '}{PDF_TEMPLATES.find((item) => item.value === settings.template)?.label || 'Story'}
-              {' · '}A4 portrait</small>
+              {' · '}A4 portrait{preview?.options.searchableText ? ' · Searchable text' : ''}</small>
           </div>
           {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length}
             {preview.pageUrls.length === 1 ? ' page' : ' pages'}</span> : null}
@@ -261,6 +261,17 @@ export default function MomentPdfStudio({ event }) {
             </option>)}
           </select>
         </label>
+        <fieldset className="dn-pdf-searchable-option">
+          <legend>PDF text</legend>
+          <label className="dn-pdf-studio-toggle">
+            <input type="checkbox" checked={settings.searchableText}
+              onChange={(e) => update('searchableText', e.target.checked)} disabled={busy}
+              aria-label="Add searchable writing to PDF" />
+            <span><strong>Searchable writing (experimental)</strong>
+              <small>Add selectable/searchable source text without OCR. Pages
+                remain image-based; this does not increase printing resolution.</small></span>
+          </label>
+        </fieldset>
         <details className="dn-pdf-content-options" open>
           <summary>Included content</summary>
           <fieldset className="dn-pdf-studio-sections">

@@ -1,0 +1,46 @@
+import { test, expect } from '@playwright/test';
+import { readFile } from 'node:fs/promises';
+import { seedGuest } from './fixtures.js';
+
+test('searchable PDF retains preview pixels and exports real ToUnicode writing without changing records', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/events/moment-one/pdf');
+  const studio = page.locator('.dn-pdf-studio-page');
+  await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
+  const recordsBefore = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const fingerprint = () => page.evaluate(async () => {
+    const source = document.querySelector('.dn-pdf-preview-page img')?.src;
+    const bytes = await (await fetch(source)).arrayBuffer();
+    const hash = new Uint8Array(await crypto.subtle.digest('SHA-256', bytes));
+    return Array.from(hash, value => value.toString(16).padStart(2, '0')).join('');
+  });
+  const before = await fingerprint();
+  const option = studio.getByRole('checkbox', { name: 'Add searchable writing to PDF' });
+  await expect(option).not.toBeChecked();
+  await option.check();
+  await expect(studio.getByText('Settings changed. Update the preview to download.')).toBeVisible();
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeDisabled();
+  await studio.getByRole('button', { name: 'Update preview' }).click();
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 25000 });
+  expect(await fingerprint()).toBe(before);
+  const done = page.waitForEvent('download');
+  await studio.getByRole('button', { name: 'Download customized PDF' }).click();
+  const file = await readFile(await (await done).path());
+  const pdf = file.toString('latin1');
+  expect(pdf).toContain('/ToUnicode');
+  expect(pdf).toContain('3 Tr');
+  expect(pdf).toContain('/Subtype /Image');
+  expect(pdf).toMatch(/startxref\n\d+\n%%EOF/);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(recordsBefore);
+  await option.uncheck();
+  await studio.getByRole('button', { name: 'Update preview' }).click();
+  await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 25000 });
+  expect(await fingerprint()).toBe(before);
+  const legacyDownload = page.waitForEvent('download');
+  await studio.getByRole('button', { name: 'Download customized PDF' }).click();
+  const standard = (await readFile(await (await legacyDownload).path())).toString('latin1');
+  expect(standard).not.toContain('/ToUnicode');
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(recordsBefore);
+  expect(errors).toEqual([]);
+});

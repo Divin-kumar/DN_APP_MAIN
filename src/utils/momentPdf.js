@@ -41,6 +41,7 @@ export class MomentPdfPainter {
     this.pageNumber = 0;
     this.template = options.template || 'legacy';
     this.visualStyle = options.visualStyle || 'legacy';
+    this.searchableText = options.searchableText === true;
     this.palette = PDF_STYLE_PALETTES[this.visualStyle] || palette;
     this.density = options.density || 'balanced';
     this.begin();
@@ -52,6 +53,19 @@ export class MomentPdfPainter {
     this.ctx = this.canvas.getContext('2d');
     if (!this.ctx) throw new Error('PDF rendering is unavailable in this browser.');
     this.ctx.scale(SCALE, SCALE);
+    this.pageTextRuns = [];
+    if (this.searchableText) {
+      const actualFillText = this.ctx.fillText.bind(this.ctx);
+      this.ctx.fillText = (value, x, y, maxWidth) => {
+        const text = String(value ?? '');
+        const size = Number(this.ctx.font.match(/([0-9.]+)px/)?.[1] || 10);
+        this.pageTextRuns.push({
+          text, x, y, size, width: this.ctx.measureText(text).width,
+        });
+        if (maxWidth === undefined) return actualFillText(value, x, y);
+        return actualFillText(value, x, y, maxWidth);
+      };
+    }
     this.ctx.fillStyle = this.palette.paper || (this.template === 'journey' ? '#fffcf6'
       : this.template === 'diary' ? '#fffefa' : '#fff');
     this.ctx.fillRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT);
@@ -77,7 +91,9 @@ export class MomentPdfPainter {
       INSET, PDF_PAGE_HEIGHT - 28);
     const num = String(this.pageNumber);
     ctx.fillText(num, PDF_PAGE_WIDTH - INSET - ctx.measureText(num).width, PDF_PAGE_HEIGHT - 28);
-    this.pages.push(await jpegBytes(this.canvas));
+    const page = await jpegBytes(this.canvas);
+    if (this.searchableText) page.textRuns = this.pageTextRuns;
+    this.pages.push(page);
     this.assertCurrent();
     this.canvas.width = 0;
     this.canvas.height = 0;
@@ -300,7 +316,7 @@ export class MomentPdfPainter {
     await this.finishPage();
     const pages = this.pages;
     this.pages = [];
-    return { blob: pdfFromJpegPages(pages), pages };
+    return { blob: pdfFromJpegPages(pages, { searchableText: this.searchableText }), pages };
   }
   async done() {
     return (await this.renderedPages()).blob;

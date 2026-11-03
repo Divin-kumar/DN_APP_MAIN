@@ -39,6 +39,7 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
   return {
     template,
     visualStyle,
+    searchableText: flag(source?.searchableText, false),
     density: PDF_DENSITIES.includes(source?.density) ? source.density : 'balanced',
     includeCover: flag(source?.includeCover, template === 'journey'),
     includeIntro: flag(source?.includeIntro, true),
