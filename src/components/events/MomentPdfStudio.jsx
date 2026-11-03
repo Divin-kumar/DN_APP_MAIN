@@ -118,6 +118,17 @@ export default function MomentPdfStudio({ event }) {
     setSettings(next);
   };
 
+  const changeChapterLayoutByKey = (event) => {
+    const key = event.key;
+    if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(key)) return;
+    event.preventDefault();
+    const current = settingsRef.current.pageBreakBetweenActivities ? 1 : 0;
+    const nextIndex = key === 'Home' ? 0 : key === 'End' ? 1 : (current + 1) % 2;
+    const nextValue = nextIndex === 1;
+    if (settingsRef.current.pageBreakBetweenActivities !== nextValue) update('pageBreakBetweenActivities', nextValue);
+    event.currentTarget.querySelectorAll('[role="radio"]')[nextIndex]?.focus();
+  };
+
   const restoreSavedStyle = () => {
     styleOverrideRef.current = false;
     update('visualStyle', savedStyles[settingsRef.current.template]);
@@ -351,12 +362,14 @@ export default function MomentPdfStudio({ event }) {
         <fieldset className="dn-pdf-pagination-option" disabled={busy}>
           <legend>Activity pagination</legend>
           <p className="dn-pdf-pagination-help">How should each complete Activity begin in the book?</p>
-          <div className="dn-pdf-break-choices" role="radiogroup" aria-label="Activity page layout">
+          <div className="dn-pdf-break-choices" role="radiogroup" aria-label="Activity page layout"
+            onKeyDown={changeChapterLayoutByKey}>
             {[{ value: false, title: 'Natural flow', description: 'A seamless book with less unused space.' },
               { value: true, title: 'New activity, new page', description: 'A fresh page for each Activity, not each entry.' }]
               .map(({ value, title, description }) => <button type="button" role="radio" key={String(value)}
                 className={'dn-pdf-break-choice' + (settings.pageBreakBetweenActivities === value ? ' is-selected' : '')}
                 aria-checked={settings.pageBreakBetweenActivities === value}
+                tabIndex={settings.pageBreakBetweenActivities === value ? 0 : -1}
                 aria-label={value ? 'Start each Activity on a new PDF page' : 'Continue Activities on the same PDF page'}
                 onClick={() => update('pageBreakBetweenActivities', value)}>
                 <span className={'dn-pdf-break-illustration' + (value ? ' is-chapters' : '')} aria-hidden="true">
