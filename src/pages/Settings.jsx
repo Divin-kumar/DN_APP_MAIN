@@ -1112,7 +1112,7 @@ export default function Settings({ dataBackupOnly = false }) {
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>
 
-        <Link to="/settings/code-lists#list-order" className="settings-hub-card dn-settings-list-defaults-link"
+        <Link to="/settings/list-defaults" className="settings-hub-card dn-settings-list-defaults-link"
           aria-label="Open List defaults">
           <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
           <span className="settings-hub-copy">

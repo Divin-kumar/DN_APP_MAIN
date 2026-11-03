@@ -47,10 +47,11 @@ export const getShellPageTitle = (pathname, { momentTitle = '' } = {}) => {
   if (/^\/insights\/?$/.test(pathname)) return 'Insights';
   if (/^\/settings\/data-backup\/?$/.test(pathname)) return 'Data & Backup';
   if (/^\/settings\/code-lists\/?$/.test(pathname)) return 'Code Lists';
+  if (/^\/settings\/list-defaults\/?$/.test(pathname)) return 'Filter & Sort Defaults';
   if (/^\/settings\/about\/?$/.test(pathname)) return 'About DN';
   if (/^\/settings\/?$/.test(pathname)) return 'Settings';
   return 'DN';
 };
 
 export const shellSettingsBackPath = (pathname) =>
-  /^\/settings\/(data-backup|code-lists|about)\/?$/.test(pathname) ? '/settings' : null;
+  /^\/settings\/(data-backup|code-lists|list-defaults|about)\/?$/.test(pathname) ? '/settings' : null;

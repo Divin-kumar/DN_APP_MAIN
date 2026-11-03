@@ -12,10 +12,10 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { BellRing, Check, Hash, ListFilter, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
+import { BellRing, Check, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -28,17 +28,6 @@ import RichText from '../components/common/RichText';
 import DropdownSelect from '../components/common/DropdownSelect';
 import { resolveMomentStoryPresentation, STORY_PRESENTATIONS } from '../utils/momentStory';
 import { ENTRY_MODE_LABELS } from '../utils/activityEntries';
-import SortControl from '../components/common/SortControl';
-import ConditionBuilder, { ConditionChips } from '../components/common/ConditionBuilder';
-import useConditionFilters from '../hooks/useConditionFilters';
-import useScopedMoments from '../hooks/useScopedMoments';
-import { momentConditionRecord, activityEntryConditionRecord } from '../utils/listConditionMigration';
-import { projectActivities } from '../utils/activityRecords';
-import { toTransactions } from '../utils/transactionFilters';
-import usePersistentListState from '../hooks/usePersistentListState';
-import { MOMENT_LIST_DEFAULTS, MOMENT_LIST_RULES, TRANSACTION_LIST_DEFAULTS, TRANSACTION_LIST_RULES, systemConditionGroup } from '../utils/listViewDefaults';
-import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
-import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, transactionSortForField } from '../utils/userListSort';
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -441,150 +430,8 @@ function PaymentMethodsSection() {
 }
 
 
-// Settings owns independent baseline keys, not the active page's working keys.
-// Filter editing still loads real field choices only when its panel opens.
-function ListFilterPreferences({ domain }) {
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
-  const uid = user?.uid;
-  const scope = `${isGuest ? 'guest' : 'user'}:${uid || 'anonymous'}`;
-  const scoped = useScopedMoments();
-  const incomes = useIncomeStore((state) => state.incomes);
-  const incomeScope = useIncomeStore((state) => state.loadedFor);
-  const incomeError = useIncomeStore((state) => state.error);
-  const loadIncomes = useIncomeStore((state) => state.loadIncomes);
-  const expenses = useExpenseStore((state) => state.expenses);
-  const expenseScope = useExpenseStore((state) => state.loadedFor);
-  const expenseError = useExpenseStore((state) => state.error);
-  const loadExpenses = useExpenseStore((state) => state.loadExpenses);
-  const settings = domain === 'moments' ? MOMENT_LIST_DEFAULTS
-    : domain === 'activities' ? ACTIVITY_LIST_DEFAULTS : TRANSACTION_LIST_DEFAULTS;
-  const rules = domain === 'moments' ? MOMENT_LIST_RULES
-    : domain === 'activities' ? ACTIVITY_LIST_RULES : TRANSACTION_LIST_RULES;
-  const [, , resetSavedSort] = usePersistentListState(`defaults:${domain}`, settings, rules);
-  const isFinance = domain === 'transactions';
-  useEffect(() => {
-    if (!isFinance || (!uid && !isGuest)) return;
-    loadIncomes(uid, isGuest);
-    loadExpenses(uid, isGuest);
-  }, [isFinance, uid, isGuest, loadIncomes, loadExpenses]);
-  const isFinanceReady = incomeScope === scope && expenseScope === scope;
-  const records = useMemo(() => {
-    if (isFinance) return isFinanceReady ? toTransactions(incomes, expenses) : [];
-    if (!scoped.ready) return [];
-    if (domain === 'moments') return scoped.events.map(momentConditionRecord);
-    return projectActivities(scoped.events).map(activityEntryConditionRecord);
-  }, [domain, isFinance, isFinanceReady, incomes, expenses, scoped.ready, scoped.events]);
-  const initialGroup = systemConditionGroup(domain);
-  const config = isFinance ? { initialGroup, moments: scoped.events, storageScope: `defaults:${domain}` }
-    : { initialGroup, storageScope: `defaults:${domain}` };
-  const conditions = useConditionFilters(domain, records, usePersistentListState, config);
-  const notSignedIn = !uid && !isGuest;
-  const loading = !notSignedIn && (!scoped.ready || (isFinance && !isFinanceReady));
-  const error = Boolean(scoped.loadError || (isFinance && (incomeError || expenseError)));
-  const retry = () => {
-    scoped.retry();
-    if (isFinance) { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }
-  };
-  return <div className="dn-code-list-filter-editor" role="region" aria-label={`${domain} filters`}>
-    {notSignedIn ? <p className="settings-helper">Sign in or continue as Guest to change your list filters.</p>
-      : error ? <div role="alert" className="settings-helper">
-        Your filter choices are saved, but records could not be loaded.
-        <button type="button" className="settings-secondary-button" onClick={retry}>Retry loading filters</button>
-      </div>
-        : loading ? <p className="settings-helper" role="status">Loading your available filter choices…</p>
-          : <>
-            <div className="dn-defaults-filter-heading">
-              <div><strong>Saved filter baseline</strong><small>Changes save automatically on this device.</small></div>
-              <span className="dn-defaults-saved">Default</span>
-            </div>
-            <ConditionBuilder filter={conditions} title={`${domain} default filters`} showChips />
-            <div className="dn-defaults-filter-footer">
-              <p>Reset on {domain === 'moments' ? 'Moments' : domain === 'activities' ? 'Activities' : 'Transactions'} restores these conditions and the saved sort order. Changes on the list do not change this baseline.</p>
-              <button type="button" className="dn-defaults-factory" onClick={() => {
-                resetSavedSort();
-                conditions.restore(systemConditionGroup(domain));
-              }}>Restore built-in defaults</button>
-            </div>
-          </>}
-  </div>;
-}
-
-function ListOrderingPreferences() {
-  const [moments, setMoments] = usePersistentListState('defaults:moments', MOMENT_LIST_DEFAULTS, MOMENT_LIST_RULES);
-  const [activities, setActivities] = usePersistentListState('defaults:activities', ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES);
-  const [finance, setFinance] = usePersistentListState('defaults:transactions', TRANSACTION_LIST_DEFAULTS, TRANSACTION_LIST_RULES);
-  const [financeField, financeDirection] = finance.sort.split('-');
-  const [editingFilters, setEditingFilters] = useState(null);
-  return <section className="settings-section code-list-section" id="list-order" aria-label="List sorting and filters preferences">
-    <div className="settings-section-heading">
-      <span className="settings-accordion-icon"><Hash size={18} aria-hidden="true" /></span>
-      <div><h3>List sorting and filters</h3></div>
-    </div>
-    <div className="dn-defaults-intro">
-      <span className="dn-defaults-kicker">YOUR LIST DEFAULTS</span>
-      <p>Set the starting order and filters for each main list. Changes on a list stay temporary to that list; its <strong>Reset</strong> restores what you save here.</p>
-      <span className="dn-defaults-saved">Saved automatically · This device</span>
-    </div>
-    <div className="settings-admin-grid dn-list-sort-settings">
-      <div className="settings-input-block dn-defaults-sort-card">
-        <div className="dn-defaults-sort-label"><strong>Moments</strong><small>Default order</small></div>
-        <SortControl label="Sort Moments in settings" field={moments.field} direction={moments.direction}
-          options={MOMENT_SORT_OPTIONS} onFieldChange={(field) => setMoments({ field, direction: 'asc' })}
-          onToggleDirection={() => setMoments({ direction: moments.direction === 'asc' ? 'desc' : 'asc' })} />
-      </div>
-      <div className="settings-input-block dn-defaults-sort-card">
-        <div className="dn-defaults-sort-label"><strong>Activities</strong><small>Default order</small></div>
-        <SortControl label="Sort Activities in settings" field={activities.field} direction={activities.direction}
-          options={ACTIVITY_SORTS} onFieldChange={(field) => setActivities({ field, direction: 'asc' })}
-          onToggleDirection={() => setActivities({ direction: activities.direction === 'asc' ? 'desc' : 'asc' })} />
-      </div>
-      <div className="settings-input-block dn-defaults-sort-card">
-        <div className="dn-defaults-sort-label"><strong>Transactions</strong><small>Default order</small></div>
-        <SortControl label="Sort Transactions in settings" field={financeField} direction={financeDirection}
-          options={TRANSACTION_SORT_OPTIONS}
-          onFieldChange={(field) => setFinance({ sort: transactionSortForField(field) })}
-          onToggleDirection={() => setFinance({ sort: `${financeField}-${financeDirection === 'asc' ? 'desc' : 'asc'}` })} />
-      </div>
-    </div>
-    <div className="dn-list-filter-preferences">
-      <div className="dn-list-filter-intro">
-        <h4>Default filters</h4>
-        <p className="code-list-description">Choose the conditions Reset should restore. These settings no longer mirror what you are browsing on the page.</p>
-      </div>
-      <div className="dn-list-filter-switches" role="group" aria-label="Choose list filters to edit">
-        {[
-          { domain: 'moments', label: 'Moments' },
-          { domain: 'activities', label: 'Activities' },
-          { domain: 'transactions', label: 'Transactions' },
-        ].map(({ domain, label }) => <button key={domain} type="button"
-          className={`dn-list-filter-switch${editingFilters === domain ? ' is-active' : ''}`}
-          aria-expanded={editingFilters === domain} aria-controls={`dn-filter-editor-${domain}`}
-          onClick={() => setEditingFilters((current) => current === domain ? null : domain)}>
-          <ListFilter size={15} aria-hidden="true" /><span>{label} filters</span>
-          <small>{editingFilters === domain ? 'Close' : 'Set defaults'}</small>
-        </button>)}
-      </div>
-      {editingFilters ? <div className="dn-list-filter-expanded" id={`dn-filter-editor-${editingFilters}`}>
-        <ListFilterPreferences key={editingFilters} domain={editingFilters} />
-      </div> : null}
-    </div>
-  </section>;
-}
-
 export default function CodeLists() {
   const location = useLocation();
-  useEffect(() => {
-    // The app uses a nested scroll owner (.dn-content), not document scroll.
-    // Let the route's scroll reset finish before revealing deep-linked settings.
-    if (location.hash !== '#list-order') return undefined;
-    const frame = window.requestAnimationFrame(() => {
-      document.getElementById('list-order')?.scrollIntoView({
-        block: 'start', inline: 'nearest', behavior: 'auto',
-      });
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [location.hash, location.pathname]);
   const user = useAppStore((state) => state.user);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
@@ -598,6 +445,9 @@ export default function CodeLists() {
       // The error panel remains visible and allows another explicit retry.
     }
   };
+
+  // Legacy bookmarked list defaults now have their own route.
+  if (location.hash === '#list-order') return <Navigate to="/settings/list-defaults" replace />;
 
   return (
     <div className="feature-page settings-page about-page code-lists-page dn-premium-code-lists">
@@ -622,7 +472,6 @@ export default function CodeLists() {
               { id: "code-list-paymentMethods", title: "Payment Methods" },
               { id: "code-list-activityPriorities", title: "Activity Priorities" },
               { id: "code-list-reminderPresets", title: "Reminder Presets" },
-              { id: "list-order", title: "Sorting & filters" },
             ].map(({ id, title }) => <a key={id} href={`#${id}`}>{title}</a>)}
           </div>
         </nav>
@@ -633,7 +482,6 @@ export default function CodeLists() {
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
         <CodeListSection title="Reminder Presets" description="Saved presets for the future Notifications feature." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
       </> : null}
-      <ListOrderingPreferences />
 
       <section className="settings-section">
         <div className="settings-section-heading">

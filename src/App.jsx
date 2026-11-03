@@ -29,6 +29,7 @@ const Financials = lazy(() => import('./pages/Financials'));
 const Settings = lazy(() => import('./pages/Settings'));
 const DataBackup = lazy(() => import('./pages/DataBackup'));
 const CodeLists = lazy(() => import('./pages/CodeLists'));
+const ListDefaults = lazy(() => import('./pages/ListDefaults'));
 const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
 const CHUNK_RELOAD_KEY = `dn-chunk-reload:${APP_VERSION}`;
@@ -180,6 +181,7 @@ export default function App() {
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
             <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
+            <Route path="settings/list-defaults" element={loadScreen(<ListDefaults />, 'list defaults')} />
             <Route path="settings/about" element={loadScreen(<About />, 'about')} />
           </Route>
 
