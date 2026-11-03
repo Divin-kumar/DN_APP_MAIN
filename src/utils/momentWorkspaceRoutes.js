@@ -47,7 +47,7 @@ export const getShellPageTitle = (pathname, { momentTitle = '' } = {}) => {
   if (getMomentWorkspaceKey(pathname)) return momentTitle?.trim() || 'Moment';
   if (/^\/financials(?:\/|$)/.test(pathname)) return 'Transactions';
   if (/^\/insights\/?$/.test(pathname)) return 'Insights';
-  if (/^\/settings\/appearance\/?$/.test(pathname)) return 'Appearance & preferences';
+  if (/^\/settings\/appearance\/?$/.test(pathname)) return 'Appearance';
   if (/^\/settings\/data-backup\/?$/.test(pathname)) return 'Data & Backup';
   if (/^\/settings\/code-lists\/?$/.test(pathname)) return 'Code Lists';
   if (/^\/settings\/list-defaults\/?$/.test(pathname)) return 'Filter & Sort Defaults';
