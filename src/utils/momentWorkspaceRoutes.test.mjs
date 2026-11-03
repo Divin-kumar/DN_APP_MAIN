@@ -53,7 +53,7 @@ test('legacy Memories links render Story but retain workspace navigation identit
 });
 
 test('Appearance is a named Settings subpage with the shared back action', () => {
-  assert.equal(getShellPageTitle('/settings/appearance'), 'Appearance & preferences');
+  assert.equal(getShellPageTitle('/settings/appearance'), 'Appearance');
   assert.equal(shellSettingsBackPath('/settings/appearance'), '/settings');
   assert.equal(primaryNavigationPath('/settings/appearance'), null);
 });
