@@ -158,3 +158,8 @@ html[data-theme] .dn-pdf-fullscreen-viewport img {display:block;width:min(100%,6
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-pdf-style-option,html[data-theme] .dn-pdf-preview-tools button {transition:none;}
 }
+/* Keep the higher-resolution memory warning legible in both app themes. */
+html[data-theme] .dn-pdf-quality-hint {
+  color:var(--color-text-muted);
+  font-size:.7rem;line-height:1.5;font-weight:450;
+}

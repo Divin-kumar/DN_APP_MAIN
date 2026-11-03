@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-296 | DN 2.2 Phase 3B interim: bounded A4 page-quality profiles
+- **Owner direction:** Continue archival renderer work while correcting the Story dark-mode observation. This small in-app step improves PDF page resolution without replacing the established renderer or claiming full vector or PDF/A output.
+- **Output options:** Standard 1.65x/~119dpi with JPEG .84 remains the default and unchanged. Enhanced 3x/~216dpi JPEG .90 and Print draft 300/72x/300dpi JPEG .92 are explicitly experimental. Cap the latter modes at 60 and 24 pages respectively for browser memory safety, fail closed above the limit, and require an updated preview before download. Keep the same JPEG image bytes in preview and export. The print rating is a **page raster DPI**, not certification of original attachment print DPI.
+- **Affected modules:** PDF Studio quality select, PDF options normalization, dynamic painter scale/JPEG compression, targeted Node and authored 390px browser verification. Source Moment/Activity records, Story rendering, data migrations, account/Guest storage, actual original photos, page pagination and existing standard PDF code remain unchanged.
+- **Guest tour:** Update opt-in demo copy/edition to `2026.11.03.3` so the page quality option is discoverable. Existing user-edited tour and personal Guest records are not silently reset. Fast CI and actual browser/iPhone status are separate evidence; no full-vector font claim.
+- **Release boundary:** Only `OldVersion`, no version bump, package updates, merge/PR, Firebase/Vercel deployment or `main` write.
+
 ## CHG-20261103-295 | Fix Story book-paper contrast in dark mode
 - **Observation:** Owner shared an actual iPhone Vercel Story screenshot: pale Journal page background with near-white Activity title “The little village.” The later 2.1 Journal `>h4` rule overrode the newer palette because of selector specificity.
 - **Scoped correction:** Stronger selectors target chapter headings/links and other text inside the three paper surfaces, including writing continuations and Tasks status controls. Preserve all layout structure, original photographs, photo captions, unboxed auxiliary sections, dark navigation and existing data. Use dark page ink with a subtle dark-shell shadow. No full renderer redesign or new user controls.

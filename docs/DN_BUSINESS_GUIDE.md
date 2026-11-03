@@ -1,5 +1,7 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.2.0 optional higher-resolution PDF pages (OldVersion only, not yet released):** Choose Standard, Enhanced (216dpi) or experimental Print draft (300dpi) in PDF Studio. The higher-resolution options create larger page images and potentially larger files, and have page limits for memory safety. They do not increase the source photo's actual detail or guarantee print-ready output. Standard is the default and remains the reliable fallback; the full vector-text upgrade is still pending.
+
 **DN 2.2.0 Story dark-mode readability fix (OldVersion only, not yet released):** All three book styles now keep rich, dark, readable writing and chapter titles on their pale page surfaces even when DN's app theme is dark. The app navigation stays dark; original photos and Story content remain unchanged. This corrects the nearly invisible Journal title seen in the owner's phone screenshot.
 
 **DN 2.2.0 searchable writing experiment (OldVersion only, not yet released):** In PDF Studio, the optional **Searchable writing (experimental)** checkbox adds selectable/searchable Unicode source text to the same beautiful image-based PDF pages. This avoids OCR and keeps the selected cover, photos, diary chapters and preview unchanged. It is off by default, so the established standard PDF remains available. This is **not** yet vector typography or print-quality 300 dpi output; PDF reader selection may vary and actual iPhone testing remains necessary.

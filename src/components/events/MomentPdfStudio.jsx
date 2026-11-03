@@ -8,7 +8,8 @@ import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
 import { getActiveSampleScenario } from '../../dev/sampleData';
 import { resolveMomentStoryPresentation } from '../../utils/momentStory';
 import {
-  PDF_DENSITIES, PDF_TEMPLATES, PDF_STYLE_NAMES, normalizePdfStudioOptions,
+  PDF_DENSITIES, PDF_TEMPLATES, PDF_STYLE_NAMES, PDF_PAGE_QUALITY_OPTIONS,
+  normalizePdfStudioOptions,
 } from '../../utils/pdfStudioOptions';
 import { STORY_DESIGN_STYLES } from '../../utils/storyDesignPreferences';
 import { renderMomentStudioPdf } from '../../utils/momentPdf';
@@ -165,7 +166,11 @@ export default function MomentPdfStudio({ event }) {
           <div><strong>Your memory book</strong>
             <small>{PDF_STYLE_NAMES[preview?.options.visualStyle || settings.visualStyle]}
               {' · '}{PDF_TEMPLATES.find((item) => item.value === settings.template)?.label || 'Story'}
-              {' · '}A4 portrait{preview?.options.searchableText ? ' · Searchable text' : ''}</small>
+              {' · '}A4 portrait
+              {preview?.options.pageQuality !== 'standard'
+                ? ' · ' + (PDF_PAGE_QUALITY_OPTIONS.find((item) =>
+                  item.value === preview?.options.pageQuality)?.label || '') : ''}
+              {preview?.options.searchableText ? ' · Searchable text' : ''}</small>
           </div>
           {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length}
             {preview.pageUrls.length === 1 ? ' page' : ' pages'}</span> : null}
@@ -260,6 +265,20 @@ export default function MomentPdfStudio({ event }) {
               {value.charAt(0).toUpperCase() + value.slice(1)}
             </option>)}
           </select>
+        </label>
+        <label className="dn-pdf-studio-field">
+          <span>Page image quality</span>
+          <select aria-label="PDF page image quality" value={settings.pageQuality}
+            disabled={busy} onChange={(e) => update('pageQuality', e.target.value)}>
+            {PDF_PAGE_QUALITY_OPTIONS.map((option) => <option key={option.value} value={option.value}>
+              {option.label} · {option.description}
+            </option>)}
+          </select>
+          {settings.pageQuality !== 'standard' ? <small className="dn-pdf-quality-hint">
+            Experimental high-resolution page rendering. It may use more device memory
+            and create larger files. The original photo resolution still determines
+            how much detail a print can show. For long books, choose Standard.
+          </small> : null}
         </label>
         <fieldset className="dn-pdf-searchable-option">
           <legend>PDF text</legend>

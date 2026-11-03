@@ -7,6 +7,25 @@ export const PDF_TEMPLATES = Object.freeze([
   { value: 'chronicle', label: 'Tasks', description: 'Status report' },
 ]);
 export const PDF_DENSITIES = Object.freeze(['airy', 'balanced', 'compact']);
+/*
+ * Pixel density of the complete A4 paper page, not original-photo quality.
+ * Print draft is experimental, bounded to avoid runaway multi-page memory use.
+ * Original standard output retains the exact previous 1.65x / JPEG .84 path.
+ */
+export const PDF_PAGE_QUALITY_PROFILES = Object.freeze({
+  standard: Object.freeze({ scale: 1.65, jpegQuality: .84, maxPages: 300, dpi: 119 }),
+  enhanced: Object.freeze({ scale: 3, jpegQuality: .9, maxPages: 60, dpi: 216 }),
+  print: Object.freeze({ scale: 300 / 72, jpegQuality: .92, maxPages: 24, dpi: 300 }),
+});
+export const PDF_PAGE_QUALITY_OPTIONS = Object.freeze([
+  { value: 'standard', label: 'Standard', description: 'Fast and smaller files' },
+  { value: 'enhanced', label: 'Enhanced · 216 dpi', description: 'Experimental, larger files' },
+  { value: 'print', label: 'Print draft · 300 dpi', description: 'Experimental, up to 24 pages' },
+]);
+export const pdfPagePixelSize = (quality = 'standard') => {
+  const profile = PDF_PAGE_QUALITY_PROFILES[quality] || PDF_PAGE_QUALITY_PROFILES.standard;
+  return { width: Math.round(595 * profile.scale), height: Math.round(842 * profile.scale) };
+};
 export const PDF_STYLE_NAMES = Object.freeze({
   heritage: 'Heritage', editorial: 'Editorial', minimal: 'Minimal',
 });
@@ -40,6 +59,8 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
     template,
     visualStyle,
     searchableText: flag(source?.searchableText, false),
+    pageQuality: Object.hasOwn(PDF_PAGE_QUALITY_PROFILES, source?.pageQuality)
+      ? source.pageQuality : 'standard',
     density: PDF_DENSITIES.includes(source?.density) ? source.density : 'balanced',
     includeCover: flag(source?.includeCover, template === 'journey'),
     includeIntro: flag(source?.includeIntro, true),

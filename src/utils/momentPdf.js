@@ -4,22 +4,22 @@ import { attachmentRepository } from '../services/attachmentService';
 import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
-import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES } from './pdfStudioOptions';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES } from './pdfStudioOptions';
 import { pdfStoryText } from './pdfStoryText';
 
-const SCALE = 1.65;
+const STANDARD_SCALE = PDF_PAGE_QUALITY_PROFILES.standard.scale;
 const INSET = 43;
 const CONTENT_WIDTH = PDF_PAGE_WIDTH - INSET * 2;
 const BOTTOM = PDF_PAGE_HEIGHT - 51;
 const palette = { ink: '#28313f', muted: '#64748b', accent: '#266a65', line: '#e0e6e9', surface: '#f1f7f5' };
-const makeCanvas = () => {
+const makeCanvas = (scale = STANDARD_SCALE) => {
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(PDF_PAGE_WIDTH * SCALE);
-  canvas.height = Math.round(PDF_PAGE_HEIGHT * SCALE);
+  canvas.width = Math.round(PDF_PAGE_WIDTH * scale);
+  canvas.height = Math.round(PDF_PAGE_HEIGHT * scale);
   return canvas;
 };
-const jpegBytes = async (canvas) => {
-  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', .84));
+const jpegBytes = async (canvas, quality = .84) => {
+  const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', quality));
   if (!blob) throw new Error('The PDF page could not be rendered.');
   return { width: canvas.width, height: canvas.height, bytes: new Uint8Array(await blob.arrayBuffer()) };
 };
@@ -42,17 +42,28 @@ export class MomentPdfPainter {
     this.template = options.template || 'legacy';
     this.visualStyle = options.visualStyle || 'legacy';
     this.searchableText = options.searchableText === true;
+    const pageProfile = PDF_PAGE_QUALITY_PROFILES[options.pageQuality]
+      || PDF_PAGE_QUALITY_PROFILES.standard;
+    this.renderScale = pageProfile.scale;
+    this.jpegQuality = pageProfile.jpegQuality;
+    this.maxPages = pageProfile.maxPages;
+    this.pageQuality = options.pageQuality || 'standard';
     this.palette = PDF_STYLE_PALETTES[this.visualStyle] || palette;
     this.density = options.density || 'balanced';
     this.begin();
   }
   begin() {
-    if (this.pageNumber >= 300) throw new Error('This summary is too long to export safely in one PDF.');
+    if (this.pageNumber >= this.maxPages) {
+      if (this.pageQuality === 'print' || this.pageQuality === 'enhanced') {
+        throw new Error('This document exceeds the experimental high-resolution page limit. Choose Standard page quality to export the full document.');
+      }
+      throw new Error('This summary is too long to export safely in one PDF.');
+    }
     this.pageNumber += 1;
-    this.canvas = makeCanvas();
+    this.canvas = makeCanvas(this.renderScale);
     this.ctx = this.canvas.getContext('2d');
     if (!this.ctx) throw new Error('PDF rendering is unavailable in this browser.');
-    this.ctx.scale(SCALE, SCALE);
+    this.ctx.scale(this.renderScale, this.renderScale);
     this.pageTextRuns = [];
     if (this.searchableText) {
       const actualFillText = this.ctx.fillText.bind(this.ctx);
@@ -91,7 +102,7 @@ export class MomentPdfPainter {
       INSET, PDF_PAGE_HEIGHT - 28);
     const num = String(this.pageNumber);
     ctx.fillText(num, PDF_PAGE_WIDTH - INSET - ctx.measureText(num).width, PDF_PAGE_HEIGHT - 28);
-    const page = await jpegBytes(this.canvas);
+    const page = await jpegBytes(this.canvas, this.jpegQuality);
     if (this.searchableText) page.textRuns = this.pageTextRuns;
     this.pages.push(page);
     this.assertCurrent();

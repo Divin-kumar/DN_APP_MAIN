@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePdfStudioOptions, PDF_STYLE_NAMES, PDF_STYLE_PALETTES } from './pdfStudioOptions.js';
+import { normalizePdfStudioOptions, PDF_STYLE_NAMES, PDF_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES, pdfPagePixelSize } from './pdfStudioOptions.js';
 import { STORY_DESIGN_STYLES, STORY_DESIGN_DEFAULTS } from './storyDesignPreferences.js';
 
 test('nine combinations keep Story format separate from the PDF look', () => {
@@ -41,4 +41,19 @@ test('PDF format and content options retain all existing flags', () => {
     includeCover: true, includeIntro: false, includeReflections: true,
     includeUpcoming: false, includeCompleted: false, includeCancelled: true,
   });
+});
+
+test('paper quality profiles keep the legacy pixel size as default', () => {
+  const standard = pdfPagePixelSize();
+  const enhanced = pdfPagePixelSize('enhanced');
+  const print = pdfPagePixelSize('print');
+  assert.deepEqual(standard, { width: 982, height: 1389 });
+  assert.deepEqual(enhanced, { width: 1785, height: 2526 });
+  assert.deepEqual(print, { width: 2479, height: 3508 });
+  assert.equal(normalizePdfStudioOptions().pageQuality, 'standard');
+  assert.equal(normalizePdfStudioOptions({ pageQuality: 'enhanced' }).pageQuality, 'enhanced');
+  assert.equal(normalizePdfStudioOptions({ pageQuality: 'print' }).pageQuality, 'print');
+  assert.equal(normalizePdfStudioOptions({ pageQuality: 'fake' }).pageQuality, 'standard');
+  assert.ok(PDF_PAGE_QUALITY_PROFILES.print.maxPages < PDF_PAGE_QUALITY_PROFILES.standard.maxPages);
+  assert.equal(PDF_PAGE_QUALITY_PROFILES.print.dpi, 300);
 });
