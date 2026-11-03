@@ -51,3 +51,33 @@ test('Moments Refine applies draft sort only when Show results is pressed', asyn
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(priorRecords);
   expect(errors).toEqual([]);
 });
+
+const sharedLists = [
+  { route: '/activities', title: 'Activity filters', sort: 'Sort activities' },
+  { route: '/financials/transactions', title: 'Transaction filters', sort: 'Sort transactions' },
+  { route: '/events/moment-one/activities', title: 'Activity filters', sort: 'Sort activities' },
+  { route: '/events/moment-one/transactions', title: 'Moment transaction filters', sort: 'Sort Moment transactions' },
+];
+for (const list of sharedLists) {
+  test(list.route + ' uses the same cancellable Refine sheet without changing Guest records', async ({ page }) => {
+    const errors = await seedGuest(page);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(list.route);
+    const recordSnapshot = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)));
+    const trigger = page.getByRole('button', { name: /^Filters and sort/ });
+    await expect(trigger).toBeVisible();
+    await trigger.click();
+    const sheet = page.getByRole('dialog', { name: list.title });
+    await expect(sheet).toBeVisible();
+    const options = sheet.getByRole('group', { name: list.sort });
+    await expect(options.getByRole('button', { name: /^Sort by / }).first()).toBeVisible();
+    await sheet.getByRole('button', { name: 'Add filter' }).click();
+    await expect(sheet.locator('.dn-condition-rule')).toHaveCount(1);
+    await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(sheet).toHaveCount(0);
+    expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
+      .map((key) => localStorage.getItem(key)))).toEqual(recordSnapshot);
+    expect(errors).toEqual([]);
+  });
+}
