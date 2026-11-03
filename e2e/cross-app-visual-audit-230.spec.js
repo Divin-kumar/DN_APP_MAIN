@@ -15,6 +15,7 @@ const routes = [
   ['10-all-transactions', '/financials/transactions'],
   ['11-insights', '/insights'],
   ['12-settings', '/settings'],
+  ['12a-settings-appearance', '/settings/appearance'],
   ['13-settings-list-defaults', '/settings/list-defaults'],
   ['14-settings-code-lists', '/settings/code-lists'],
   ['15-settings-backup', '/settings/data-backup'],
@@ -43,10 +44,8 @@ for (const { width, height, theme } of viewportModes) {
           await expect(page.locator('.dn-pdf-studio-page')).toBeVisible({ timeout: 20000 });
           await expect(page.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 35000 });
         }
-        if (step === '12-settings') {
-          const appearance = page.getByRole('button', { name: /Appearance & preferences/ });
-          await expect(appearance).toBeVisible();
-          await appearance.click();
+        if (step === '12a-settings-appearance') {
+          await expect(page.getByRole('group', { name: 'Color theme' })).toBeVisible();
         }
         if (step === '13-settings-list-defaults') {
           const filter = page.getByRole('button', { name: /Activities filters/ });
