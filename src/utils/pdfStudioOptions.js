@@ -78,7 +78,11 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
     pageNumberPosition: PDF_PAGE_NUMBER_POSITIONS.some((item) => item.value === source?.pageNumberPosition)
       ? source.pageNumberPosition : 'right',
     numberCoverPage: flag(source?.numberCoverPage, true),
+    // The date-boundary option is distinct from per-Activity page breaks.
+    // Legacy boolean export requests remain unchanged.
     pageBreakBetweenActivities: flag(source?.pageBreakBetweenActivities, false),
+    pageBreakBetweenDays: flag(source?.pageBreakBetweenDays, false)
+      && !flag(source?.pageBreakBetweenActivities, false) && template !== 'chronicle',
     includeCover: flag(source?.includeCover, template === 'journey'),
     includeIntro: flag(source?.includeIntro, true),
     includeReflections: flag(source?.includeReflections, false),
