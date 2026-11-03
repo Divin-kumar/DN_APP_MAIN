@@ -44,6 +44,7 @@ for (const width of [320, 390, 1280]) {
       await refine.getByRole('button', { name: 'Cancel', exact: true }).click();
 
       await page.goto('/dashboard');
+      await page.evaluate((nextTheme) => { document.documentElement.dataset.theme = nextTheme; }, theme);
       await expect(page.locator('.dashboard-overview.dashboard-compact > section').first()).toBeVisible();
       const order = await page.locator('.dashboard-overview.dashboard-compact > section').evaluateAll((items) =>
         items.map((item) => item.getAttribute('aria-label')));
