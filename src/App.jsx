@@ -181,6 +181,7 @@ export default function App() {
             <Route path="financials/income" element={<Navigate to="/financials/transactions" replace />} />
             <Route path="financials/expenses" element={<Navigate to="/financials/transactions" replace />} />
             <Route path="settings" element={loadScreen(<Settings />, 'settings')} />
+            <Route path="settings/appearance" element={loadScreen(<Settings appearanceOnly />, 'appearance and preferences')} />
             <Route path="settings/data-backup" element={loadScreen(<DataBackup />, 'data and backup')} />
             <Route path="settings/code-lists" element={loadScreen(<CodeLists />, 'code lists')} />
             <Route path="settings/list-defaults" element={loadScreen(<ListDefaults />, 'list defaults')} />
