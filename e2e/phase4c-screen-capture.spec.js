@@ -14,6 +14,21 @@ const screens = [
   ['09-code-lists', '/settings/code-lists', null],
   ['10-about', '/settings/about', null],
 ];
+const readyContent = (page, name) => {
+  switch (name) {
+    case '01-dashboard': return page.locator('.dashboard-greeting');
+    case '02-moments': return page.locator('.dn-v2-moment-card').first();
+    case '03-activities': return page.locator('.dn-v2-activity-card').first();
+    case '04-activity-detail': return page.locator('.dn-content-row').first();
+    case '05-story': return page.locator('[data-story-layout]').first();
+    case '06-pdf-studio': return page.locator('.dn-pdf-preview-page img');
+    case '07-settings': return page.locator('.settings-accordion-toggle').first();
+    case '08-data-backup': return page.getByRole('button', { name: 'Export backup' });
+    case '09-code-lists': return page.getByText('Moment Types', { exact: true }).first();
+    case '10-about': return page.getByText('Version Information', { exact: true }).first();
+    default: throw new Error('Missing content-readiness marker: ' + name);
+  }
+};
 for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) {
   test(`capture 4C UI surfaces and check overflow at ${width}px ${theme}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width, height });
@@ -24,7 +39,8 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
       await page.goto(route);
       await expect(page.locator('main')).toBeVisible();
       if (heading) await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible();
-      if (name === '06-pdf-studio') await expect(page.locator('.dn-pdf-preview-page img')).toBeVisible({ timeout: 30000 });
+      await expect(readyContent(page, name)).toBeVisible({ timeout: 30000 });
+      await expect(page.locator('.loading-skeleton')).toHaveCount(0);
       const dimensions = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth,
