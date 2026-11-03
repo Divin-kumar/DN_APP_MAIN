@@ -74,16 +74,20 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
     // translucent rails made underlying form labels visibly bleed through.
     const pinnedNav = page.locator('.event-workspace-nav');
     await expect(pinnedNav).toBeVisible();
-    const navAlpha = await pinnedNav.evaluate((node) => {
+    const { navAlpha, background } = await pinnedNav.evaluate((node) => {
       const background = getComputedStyle(node).backgroundColor;
-      if (background.startsWith('rgba(')) {
-        return Number(background.slice(5, -1).split(',').at(-1)?.trim());
-      }
-      // A computed solid rgb() surface has an implicit alpha of 1.
-      if (background.startsWith('rgb(') && !background.includes('/')) return 1;
-      return Number.NaN;
+      // Chromium may return legacy rgb(), CSS Color 4 color() or other
+      // valid computed colors. Sample their actual alpha, not their syntax.
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = 1;
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      context.clearRect(0, 0, 1, 1);
+      context.fillStyle = 'rgba(0, 0, 0, 0)';
+      context.fillStyle = background;
+      context.fillRect(0, 0, 1, 1);
+      return { navAlpha: context.getImageData(0, 0, 1, 1).data[3] / 255, background };
     });
-    expect(navAlpha, `Pinned ${theme} tabs must fully mask scrolled controls`).toBe(1);
+    expect(navAlpha, `Pinned ${theme} tabs must fully mask scrolled controls (computed: ${background})`).toBe(1);
     await page.screenshot({ path: testInfo.outputPath(`12-pdf-customization-${theme}-${width}.png`),
       fullPage: false, animations: 'disabled' });
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
