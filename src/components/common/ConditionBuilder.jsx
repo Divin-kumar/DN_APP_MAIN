@@ -166,15 +166,20 @@ function AppliedCondition({ filter, chip, node }) {
     </ModalDialog> : null}
   </div>;
 }
-export function ConditionChips({ filter }) {
+export function ConditionChips({ filter, maxVisible, onShowMore }) {
   const chips = conditionChipEntries(filter.state.group, filter.schema);
   const nodes = useMemo(() => {
     const byId = new Map();
     const visit = (node) => { if (node.kind === 'group') node.children.forEach(visit); else byId.set(node.id, node); };
     visit(filter.state.group); return byId;
   }, [filter.state.group]);
-  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{chips.map((chip) =>
-    <AppliedCondition key={`${filter.editorKey}:${chip.id}`} filter={filter} chip={chip} node={nodes.get(chip.id)} />)}</div> : null;
+  const compact = Number.isInteger(maxVisible) && maxVisible > 0;
+  const visible = compact ? chips.slice(0, maxVisible) : chips;
+  const overflow = chips.length - visible.length;
+  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{visible.map((chip) =>
+    <AppliedCondition key={`${filter.editorKey}:${chip.id}`} filter={filter} chip={chip} node={nodes.get(chip.id)} />)}
+    {overflow > 0 ? <button type="button" className="dn-condition-more" aria-label={`Show ${overflow} more active filters`}
+      onClick={onShowMore}>+{overflow}</button> : null}</div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.

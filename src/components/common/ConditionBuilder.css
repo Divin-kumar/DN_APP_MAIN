@@ -238,3 +238,16 @@ html[data-theme] .dn-conditions .dn-condition-rule .dn-condition-no-value {
     border-color: var(--action-border);
   }
 }
+
+/* Remaining applied conditions are reached through the same Refine sheet. */
+html[data-theme] .dn-condition-chips .dn-condition-more {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto; min-width: 44px; min-height: 44px; padding: 0 10px;
+  border: 1px solid var(--color-border); border-radius: 999px;
+  background: var(--color-surface); color: var(--color-text-muted);
+  font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
+}
+html[data-theme] .dn-condition-chips .dn-condition-more:hover { color: var(--color-primary); }
+html[data-theme] .dn-condition-chips .dn-condition-more:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: -2px;
+}

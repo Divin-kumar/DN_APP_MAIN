@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import './ListControls.css';
 import FilterSortSheet from './FilterSortSheet';
@@ -16,6 +16,8 @@ export default function ListControls({
   const railRef = useRef(null);
   const triggerRef = useRef(null);
   const label = hasSort || sort ? 'Filters and sort' : 'Filters';
+  const displayChips = refine && isValidElement(chips)
+    ? cloneElement(chips, { maxVisible: 2, onShowMore: () => setOpen(true) }) : chips;
   const updateEdges = () => {
     const rail = railRef.current;
     if (!rail) return;
@@ -93,7 +95,7 @@ export default function ListControls({
           </div> : null}
         </div>}
       </section> : null}
-      {chips}
+      {displayChips}
       <div className="dn-list-controls-topline">
         {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}
