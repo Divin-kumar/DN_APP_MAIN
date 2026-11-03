@@ -14,10 +14,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
     const activityOrder = page.getByRole('group', { name: 'Sort Activities in settings' });
-    await activityOrder.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Title', exact: true }).click();
-    await activityOrder.getByRole('button', { name: 'Sort descending' }).click();
-    await expect(activityOrder.getByRole('button', { name: 'Sort ascending' })).toBeVisible();
+    await activityOrder.getByRole('button', { name: 'Sort by Title', exact: true }).click();
+    await activityOrder.getByRole('button', { name: 'Sort by Title, ascending' }).click();
+    await expect(activityOrder.getByRole('button', { name: 'Sort by Title, descending' })).toBeVisible();
 
     await page.goto('/settings');
     await page.getByRole('button', { name: 'Reset all settings', exact: true }).click();
