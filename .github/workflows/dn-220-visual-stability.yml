@@ -1,0 +1,38 @@
+name: DN 2.2 focused visual stability check (opt-in)
+# Diagnostic only. No Firebase/Vercel deployment or branch mutation.
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  visual-stability:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[verify-220-visual]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked app dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Compare ready versus settled Moments and Activities
+        run: npx playwright test e2e/phase4c-fade-regression.spec.js --workers=1
+      - name: Preserve synthetic settled-screen evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-220-visual-stability-diagnostics
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
