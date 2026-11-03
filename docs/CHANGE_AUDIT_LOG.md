@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-329 | DN 2.3 Phase 3C: staged browser acceptance for independent Guest Task backups
+- **Scope:** Add browser regression for independent Guest Tasks exported in v4, Task count in restore preview, no preview mutations, destination-wins merge on a separate browser context, preservation of Activity links, optional untimed fields and a repeated import with no duplicate IDs.
+- **Boundary:** Playwright acceptance authored but not executed; the native iPhone Safari and exact-SHA full 2.3 gate remain pending. No production functionality, data-model, storage, UI, Guest tour, Story or PDF change. Documentation-only business guide alignment was committed immediately before this test. No deployment, app version bump, PR or main write.
+
 ## CHG-20261103-328 | DN 2.3 Phase 3C2: Guest Tasks included in v4 backup/restore
 - **Scope:** Wire independent Guest Tasks into Data & Backup v4 export and restore. Preflight the Guest Task collection before any file/record writes; merge with destination-wins stable-ID semantics, preserving all Tasks and independent Activity links and avoiding duplicate imports. Show Task count in backup confirmation and import summary. Old v3/v2 files do not clear existing Tasks. Account restore of Task-bearing backups is explicitly blocked before touching any records until Firestore rules are verified.
 - **Impact:** Settings Data & Backup controller, guarded Guest Task service, Node/Settings restore tests and corrected v4 test-version assertions. No Tasks UI, dashboard, account CRUD, live deletion hooks, data migration, Story, PDF, existing Activity or finance-model changes. Guest demo intentionally unchanged as no standalone Task UI is yet exposed; Phase 7 demo refresh remains approved. No deployment or app version bump.
