@@ -259,6 +259,7 @@ jobs:
         run: >-
           npx playwright test
           e2e/settings-appearance-preferences-230.spec.js
+          e2e/iphone-dock-label-230.spec.js
           e2e/iphone-settings-premium.spec.js
           e2e/story-design-phase1.spec.js
           e2e/iphone-settings-defaults-navigation.spec.js
