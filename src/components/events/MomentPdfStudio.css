@@ -322,3 +322,91 @@ html[data-theme] .dn-pdf-break-illustration.is-chapters i:nth-child(2) {
   html[data-theme] .dn-pdf-break-choices {grid-template-columns:minmax(0,1fr);}
   html[data-theme] .dn-pdf-break-choice {min-height:77px;grid-template-columns:38px minmax(0,1fr);padding:10px 34px 10px 11px;}
 }
+
+
+/* DN 2.2 owner iPhone acceptance: premium, accessible switches throughout Studio.
+   Keep genuine checkbox inputs for keyboard, screen reader and automation use. */
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle {
+  display:flex;flex-direction:row-reverse;align-items:center;justify-content:space-between;
+  gap:15px;min-width:0;min-height:70px;padding:12px 13px;
+  border:1px solid var(--color-border);border-radius:13px;
+  background:var(--color-card-raised);transition:background .16s,border-color .16s;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:has(input:checked) {
+  border-color:color-mix(in srgb,var(--color-primary) 45%,var(--color-border));
+  background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:focus-within {
+  outline:2px solid var(--color-primary);outline-offset:2px;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle > span {flex:1;min-width:0;}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"] {
+  appearance:none;-webkit-appearance:none;display:block;position:relative;cursor:pointer;
+  flex:0 0 46px;width:46px;height:27px;margin:0;padding:0;
+  border-radius:999px;border:1px solid var(--color-border);
+  background:var(--color-surface);box-shadow:inset 0 1px 2px rgb(0 0 0 / .07);
+  transition:background .16s,border-color .16s;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]::after {
+  content:"";position:absolute;top:3px;left:3px;width:19px;height:19px;
+  border-radius:50%;background:var(--color-text-muted);
+  box-shadow:0 1px 3px rgb(0 0 0 / .2);transition:transform .16s,background .16s;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]:checked {
+  background:var(--color-primary);border-color:var(--color-primary);
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]:checked::after {
+  transform:translateX(19px);background:#fff;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:4px;
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]:disabled {
+  opacity:.5;cursor:not-allowed;
+}
+/* Three clear page flows fit narrow sidebars as well as 320px iPhones. */
+html[data-theme] .dn-pdf-break-choices {grid-template-columns:minmax(0,1fr);gap:9px;}
+html[data-theme] .dn-pdf-break-choice {
+  grid-template-columns:36px minmax(0,1fr);min-height:76px;
+  padding:10px 35px 10px 12px;gap:10px;
+}
+html[data-theme] .dn-pdf-break-illustration {width:34px;height:43px;}
+html[data-theme] .dn-pdf-break-copy {gap:3px;}
+html[data-theme] .dn-pdf-content-options {
+  background:var(--color-card);border:1px solid var(--color-border);
+  border-radius:13px;padding:0;overflow:hidden;
+}
+html[data-theme] .dn-pdf-content-options > summary {
+  display:flex;align-items:center;flex-wrap:wrap;gap:4px 10px;
+  position:relative;min-height:56px;padding:12px 41px 12px 13px;
+  list-style:none;font-weight:720;border-radius:12px;
+}
+html[data-theme] .dn-pdf-content-options > summary::-webkit-details-marker {display:none;}
+html[data-theme] .dn-pdf-content-options > summary small {
+  color:var(--color-text-muted);font-size:11px;font-weight:550;
+}
+html[data-theme] .dn-pdf-content-options > summary::after {
+  content:"";position:absolute;right:18px;top:50%;width:9px;height:9px;
+  border-right:2px solid var(--color-text-muted);border-bottom:2px solid var(--color-text-muted);
+  transform:translateY(-70%) rotate(45deg);transition:transform .15s;
+}
+html[data-theme] .dn-pdf-content-options[open] > summary::after {
+  transform:translateY(-30%) rotate(225deg);
+}
+html[data-theme] .dn-pdf-content-options[open] > summary {margin:0;border-bottom:1px solid var(--color-border);}
+html[data-theme] .dn-pdf-content-options > summary:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:-3px;
+}
+html[data-theme] .dn-pdf-content-options .dn-pdf-studio-sections {padding:12px;gap:9px;}
+html[data-theme] .dn-pdf-content-options .dn-pdf-studio-sections legend {
+  font-size:11px;padding:0 0 8px;
+}
+@media(max-width:420px) {
+  html[data-theme] .dn-pdf-break-choices {grid-template-columns:minmax(0,1fr);}
+  html[data-theme] .dn-pdf-break-choice {min-height:76px;grid-template-columns:36px minmax(0,1fr);padding:10px 35px 10px 12px;}
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle,
+  html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input,
+  html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input::after {transition:none;}
+}
