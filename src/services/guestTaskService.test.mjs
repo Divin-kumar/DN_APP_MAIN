@@ -90,6 +90,26 @@ test('parent unlink keeps every independent Task and its status', () => {
   assert.equal(afterMoment[0].momentId, '');
   assert.equal(afterMoment[0].status, 'completed');
 });
+test('deleted Activity aliases detach in one write without losing other Tasks or parent links', () => {
+  const ctx = fixture();
+  ctx.repository.upsert(task('alias-one', { activityId: 'legacy-activity', status: 'completed' }));
+  ctx.repository.upsert(task('canonical', { activityId: 'new-activity' }));
+  ctx.repository.upsert(task('other-moment', { momentId: 'moment-two', activityId: 'legacy-activity' }));
+  const originalMoment = ctx.records.get('dn_guest_eventGroups');
+  const next = ctx.repository.detachParent({ momentId: 'moment-one',
+    activityIds: ['legacy-activity', 'new-activity'] });
+  assert.equal(next.length, 3);
+  assert.equal(next[0].momentId, 'moment-one');
+  assert.equal(next[0].activityId, '');
+  assert.equal(next[0].status, 'completed');
+  assert.equal(next[1].activityId, '');
+  assert.equal(next[2].activityId, 'legacy-activity');
+  assert.equal(ctx.records.get('dn_guest_eventGroups'), originalMoment);
+  const unchanged = ctx.records.get(GUEST_TASKS_KEY);
+  ctx.repository.detachParent({ momentId: 'moment-one', activityIds: [] });
+  assert.equal(ctx.records.get(GUEST_TASKS_KEY), unchanged);
+});
+
 test('storage failure propagates and never reports a successful Task save', () => {
   const repository = createGuestTaskRepository({ storage: { getItem: () => null, setItem: () => { throw new Error('quota'); } },
     assertGuest: () => true });
