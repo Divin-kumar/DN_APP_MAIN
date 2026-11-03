@@ -118,3 +118,42 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  phase5-230:
+    # Owner-approved in-scope UI acceptance; never deploys to Firebase or Vercel.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-phase5]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify compact Settings, shared Refine, Story, PDF and Tasks
+        run: >-
+          npx playwright test
+          e2e/phase5-ui-audit-fixes.spec.js
+          e2e/iphone-settings-premium.spec.js
+          e2e/iphone-settings-filter-defaults.spec.js
+          e2e/shared-refine-premium.spec.js
+          e2e/pdf-studio-controls-4c.spec.js
+          e2e/story-paper-contrast-220.spec.js
+          e2e/independent-tasks-phase4.spec.js
+      - name: Upload reviewed screenshots and targeted failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-phase5-ui-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
