@@ -12,7 +12,7 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { BellRing, Check, Hash, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
+import { BellRing, Check, ChevronLeft, ChevronRight, Hash, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -436,6 +436,40 @@ export default function CodeLists() {
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
   const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
+  // Keep section links reachable and discoverable on compact iPhones without
+  // moving the document or changing any Code List values.
+  const sectionRailRef = useRef(null);
+  const [sectionEdges, setSectionEdges] = useState({ previous: false, next: false });
+  useEffect(() => {
+    if (adminValuesLoading || adminValuesError) return undefined;
+    const rail = sectionRailRef.current;
+    if (!rail) return undefined;
+    const update = () => {
+      const previous = rail.scrollLeft > 2;
+      const next = rail.scrollLeft + rail.clientWidth < rail.scrollWidth - 2;
+      setSectionEdges((current) =>
+        current.previous === previous && current.next === next ? current : { previous, next });
+    };
+    update();
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(update) : null;
+    observer?.observe(rail);
+    rail.querySelectorAll('a').forEach((link) => observer?.observe(link));
+    rail.addEventListener('scroll', update, { passive: true });
+    window.addEventListener('resize', update);
+    return () => {
+      observer?.disconnect();
+      rail.removeEventListener('scroll', update);
+      window.removeEventListener('resize', update);
+    };
+  }, [adminValuesLoading, adminValuesError]);
+  const moveSectionRail = (direction) => {
+    const rail = sectionRailRef.current;
+    if (!rail) return;
+    rail.scrollBy({
+      left: direction * Math.max(120, rail.clientWidth * .7),
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth',
+    });
+  };
 
   const retryCodeLists = async () => {
     if (!user?.uid) return;
@@ -464,7 +498,13 @@ export default function CodeLists() {
       {!adminValuesLoading && !adminValuesError ? <>
         <nav className="dn-code-list-index" aria-label="Code List sections">
           <span className="dn-code-list-index-label">Browse</span>
-          <div className="dn-code-list-index-scroll">
+          <div className="dn-code-list-nav-window">
+            {sectionEdges.previous ? <button type="button" className="dn-code-list-nav-arrow is-previous"
+              aria-label="Previous Code List sections" onClick={() => moveSectionRail(-1)}>
+              <ChevronLeft size={18} aria-hidden="true" />
+            </button> : null}
+            <div ref={sectionRailRef} className="dn-code-list-index-scroll" tabIndex={0}
+              aria-label="Scroll Code List sections horizontally">
             {[
               { id: "code-list-eventTypes", title: "Moment Types" },
               { id: "code-list-expenseCategories", title: "Expense Categories" },
@@ -473,6 +513,11 @@ export default function CodeLists() {
               { id: "code-list-activityPriorities", title: "Activity Priorities" },
               { id: "code-list-reminderPresets", title: "Reminder Presets" },
             ].map(({ id, title }) => <a key={id} href={`#${id}`}>{title}</a>)}
+            </div>
+            {sectionEdges.next ? <button type="button" className="dn-code-list-nav-arrow is-next"
+              aria-label="More Code List sections" onClick={() => moveSectionRail(1)}>
+              <ChevronRight size={18} aria-hidden="true" />
+            </button> : null}
           </div>
         </nav>
         <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type must use Daily, Journal, or Tasks creation mode. Configure greeting generation and Dashboard visibility separately." listKey="eventTypes" placeholder="Add moment type" />
