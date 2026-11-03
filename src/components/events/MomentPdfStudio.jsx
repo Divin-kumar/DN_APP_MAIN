@@ -350,15 +350,24 @@ export default function MomentPdfStudio({ event }) {
         </fieldset>
         <fieldset className="dn-pdf-pagination-option" disabled={busy}>
           <legend>Activity pagination</legend>
-          <label className="dn-pdf-studio-toggle">
-            <input type="checkbox" checked={settings.pageBreakBetweenActivities}
-              aria-label="Start each Activity on a new PDF page"
-              onChange={(event) => update('pageBreakBetweenActivities', event.target.checked)} />
-            <span><strong>Start each Activity on a new page</strong>
-              <small>Optional chapter-like spacing for all three formats.
-                Each Activity remains intact, but the book may use more pages.
-                For long books or Print draft, keep this off.</small></span>
-          </label>
+          <p className="dn-pdf-pagination-help">How should each complete Activity begin in the book?</p>
+          <div className="dn-pdf-break-choices" role="radiogroup" aria-label="Activity page layout">
+            {[{ value: false, title: 'Natural flow', description: 'A seamless book with less unused space.' },
+              { value: true, title: 'New activity, new page', description: 'A fresh page for each Activity, not each entry.' }]
+              .map(({ value, title, description }) => <button type="button" role="radio" key={String(value)}
+                className={'dn-pdf-break-choice' + (settings.pageBreakBetweenActivities === value ? ' is-selected' : '')}
+                aria-checked={settings.pageBreakBetweenActivities === value}
+                aria-label={value ? 'Start each Activity on a new PDF page' : 'Continue Activities on the same PDF page'}
+                onClick={() => update('pageBreakBetweenActivities', value)}>
+                <span className={'dn-pdf-break-illustration' + (value ? ' is-chapters' : '')} aria-hidden="true">
+                  <i /><i /><i />
+                </span>
+                <span className="dn-pdf-break-copy"><strong>{title}</strong><small>{description}</small></span>
+                <span className="dn-pdf-break-check" aria-hidden="true">✓</span>
+              </button>)}
+          </div>
+          <p className="dn-pdf-pagination-note">All dated updates stay inside their parent Activity.
+            Long writing may still continue naturally onto the next page.</p>
         </fieldset>
         <fieldset className="dn-pdf-searchable-option">
           <legend>PDF text</legend>
