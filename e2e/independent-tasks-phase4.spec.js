@@ -6,7 +6,7 @@ for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: width < 700 ? 780 : 900 });
     const errors = await seedGuest(page);
     await page.goto('/tasks');
-    await expect(page.getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible();
+    await expect(page.locator('main.dn-tasks-page h2').filter({ hasText: 'Tasks' })).toBeVisible();
     const source = await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'), localStorage.getItem('dn_guest_expenses'), localStorage.getItem('dn_guest_incomes'),
     ]);
