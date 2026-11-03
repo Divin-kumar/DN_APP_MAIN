@@ -34,7 +34,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
 
         await home.getByRole('link',{name:'Open Appearance & preferences'}).click();
         await expect(page).toHaveURL(/\/settings\/appearance$/);
-        await expect(page.getByRole('heading',{name:'Appearance & preferences'})).toBeVisible();
+        await expect(page.getByRole('heading',{name:'Make DN yours'})).toBeVisible();
         await expect(page.getByText('Default dashboard view')).toHaveCount(0);
         const themes=page.getByRole('group',{name:'Color theme'});
         await expect(themes.locator('button')).toHaveCount(2);
