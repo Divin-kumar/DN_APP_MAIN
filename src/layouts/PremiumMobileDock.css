@@ -386,3 +386,12 @@
     box-shadow:inset 0 0 0 2px currentColor !important;
   }
 }
+
+/* DN 2.3: On compact iPhones, Finance is the short visible label for the
+   existing Transactions destination. Its link keeps aria-label="Transactions",
+   route and actions unchanged, and wider screens retain the full wording. */
+html[data-theme] .dn-premium-dock .dn-dock-compact-label { display:none; }
+@media (max-width:430px) {
+  html[data-theme] .dn-premium-dock .dn-dock-full-label { display:none; }
+  html[data-theme] .dn-premium-dock .dn-dock-compact-label { display:inline; }
+}
