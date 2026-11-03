@@ -28,13 +28,16 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
           width:rect.width, left:rect.left, right:rect.right,
           page:document.documentElement.scrollWidth,
           viewport:document.documentElement.clientWidth,
-          touchTargets:[...element.querySelectorAll('button,.dn-backup-file-picker')].map(button => button.getBoundingClientRect().height),
+          touchTargets:[...element.querySelectorAll('button,.dn-backup-file-picker')].map(button => ({
+            label: (button.getAttribute('aria-label') || button.textContent || '').trim().slice(0,48),
+            height:button.getBoundingClientRect().height,
+          })),
         };
       });
       expect(geometry.left).toBeGreaterThanOrEqual(-1);
       expect(geometry.right).toBeLessThanOrEqual(width + 1);
       expect(geometry.page).toBeLessThanOrEqual(geometry.viewport + 1);
-      expect(geometry.touchTargets.every(size => size >= 44)).toBe(true);
+      expect(geometry.touchTargets.filter((target) => target.height < 44)).toEqual([]);
 
       await controls.getByRole('button', { name: 'Clear local' }).click();
       const dialog = page.getByRole('dialog', { name: 'Clear local DN data?' });
