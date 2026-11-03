@@ -93,9 +93,22 @@ const compareDue = (a, b, direction = 'asc') => {
   const sign = direction === 'desc' ? -1 : 1;
   return sign * (first.localeCompare(second) || (a.dueTime && b.dueTime ? a.dueTime.localeCompare(b.dueTime) : a.dueTime ? -1 : b.dueTime ? 1 : 0));
 };
+const taskSortRank = (task, field) => field === 'priority'
+  ? ({ high: 0, medium: 1, low: 2 })[task.priority] ?? 3
+  : ({ 'in-progress': 0, completed: 1, cancelled: 2 })[task.status] ?? 3;
+const compareTaskField = (a, b, field, direction) => {
+  const sign = direction === 'desc' ? -1 : 1;
+  if (field === 'dueDate') return compareDue(a, b, direction);
+  if (field === 'priority' || field === 'status') return sign * (taskSortRank(a, field) - taskSortRank(b, field));
+  if (field === 'createdAt' || field === 'updatedAt') {
+    const left = a[field] || '', right = b[field] || '';
+    // Missing historical timestamps always follow dated records.
+    return !left || !right ? left ? -1 : right ? 1 : 0 : sign * left.localeCompare(right);
+  }
+  return sign * String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' });
+};
 export const sortIndependentTasks = (tasks = [], direction = 'asc', sortBy = 'dueDate') => [...tasks].sort((a, b) => {
-  const primary = sortBy === 'title' ? String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' })
-    * (direction === 'desc' ? -1 : 1) : compareDue(a, b, direction);
+  const primary = compareTaskField(a, b, sortBy, direction);
   return primary || compareDue(a, b, direction)
     || String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' })
     || String(a.id).localeCompare(String(b.id));
