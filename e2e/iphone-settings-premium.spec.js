@@ -67,3 +67,37 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       });
   }
 }
+
+
+test('Appearance theme is independent of unsaved creation defaults, reset and record data', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/settings/appearance');
+  const initialRecords = await page.evaluate(() => [
+    'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks',
+  ].map((key) => localStorage.getItem(key)));
+  const currency = page.getByRole('combobox', { name: 'Default currency' });
+  await currency.click();
+  const dropdownSearch = page.locator('.dropdown-menu-portal input[type="search"]');
+  if (await dropdownSearch.count()) await dropdownSearch.fill('EUR');
+  await page.getByRole('option', { name: /EUR/ }).click();
+  await expect(currency).toContainText('EUR');
+  await page.getByRole('group', { name: 'Color theme' })
+    .getByRole('button', { name: /Soft light/ }).click();
+  await expect(currency).toContainText('EUR');
+  expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
+  await page.getByRole('button', { name: 'Reset defaults' }).click();
+  await expect(currency).toContainText('INR');
+  expect(await page.evaluate(() => document.documentElement.dataset.theme)).toBe('light');
+  await page.getByRole('button', { name: 'Save defaults' }).click();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_preferences')));
+  expect(saved.theme).toBe('light');
+  expect(saved.currency).toBe('INR');
+  await page.reload();
+  await expect(page.getByRole('group', { name: 'Color theme' })
+    .getByRole('button', { name: /Soft light/ })).toHaveAttribute('aria-pressed', 'true');
+  expect(await page.evaluate(() => [
+    'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks',
+  ].map((key) => localStorage.getItem(key)))).toEqual(initialRecords);
+  expect(errors).toEqual([]);
+});
