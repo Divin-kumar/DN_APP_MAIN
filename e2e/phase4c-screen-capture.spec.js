@@ -70,6 +70,16 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
     await page.goto('/events/moment-one/pdf');
     await expect(page.locator('.dn-pdf-preview-page img')).toBeVisible({ timeout: 30000 });
     await page.locator('.dn-pdf-studio-controls').scrollIntoViewIfNeeded();
+    // The pinned Moment tabs must be opaque while PDF controls scroll behind:
+    // translucent rails made underlying form labels visibly bleed through.
+    const pinnedNav = page.locator('.event-workspace-nav');
+    await expect(pinnedNav).toBeVisible();
+    const navAlpha = await pinnedNav.evaluate((node) => {
+      const background = getComputedStyle(node).backgroundColor;
+      const values = background.match(/^rgba?\\((.+)\\)$/)?.[1]?.split(',').map((part) => part.trim()) || [];
+      return values.length === 4 ? Number(values[3]) : 1;
+    });
+    expect(navAlpha, `Pinned ${theme} tabs must fully mask scrolled controls`).toBe(1);
     await page.screenshot({ path: testInfo.outputPath(`12-pdf-customization-${theme}-${width}.png`),
       fullPage: false, animations: 'disabled' });
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);

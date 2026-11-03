@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-311 | Keep sticky PDF Studio navigation opaque on mobile
+- **Visual evidence:** The successful `[verify-220]` cross-page artifact at `8127e26` shows customization labels partially visible behind the pinned Moment tab strip in the 320px light and 390px dark scroll captures. This is a cosmetic layering issue, not a pagination/rendering failure.
+- **Fix:** Use fully opaque theme-aware mobile backgrounds for the existing Moment workspace tab rail. Preserve all tab states, focus, scrolling, geometry and behavior; do not change PDF canvas, original photos, records, files or Settings.
+- **Regression:** Extend the already opt-in synthetic Guest cross-page screenshot test to require fully opaque computed nav background after scrolling into the PDF controls, at 320px light and 390px dark. Existing Guest sample fixtures need no refresh because this changes only tab paint, not demo interactions or data. Fresh exact-SHA CI results must be checked before claiming verified.
+- **Scope:** `OldVersion` only, no new version, no full ~25-minute release rerun for this cosmetic correction, no Firebase/Vercel deployment, PR or main write. Manual physical iPhone Safari remains pending.
+
 ## CHG-20261103-310 | Align legacy PDF browser acceptance with collapsed content
 - **Exact-SHA evidence:** Targeted `[verify-220]` run 41573388562 on `ff94789` passed Story contrast, Activity Detail, premium dropdowns/toggles, day-versus-Activity pagination, cross-page screenshots, PDF export quality and continued-writing tests. Its final Phase 6 compatibility test failed exclusively because it expected `Completed tasks` to be visible in the now-intentionally-collapsed `Included content` disclosure.
 - **Correction:** In `e2e/pdf-studio-phase6.spec.js`, open the native `Included content` disclosure before asserting Tasks' optional controls and before changing Cover/Reflections in the Code List refresh scenario. No product implementation, user data, PDF output, original files or default setting changed. Other PDF browser test files were inspected for old visibility assumptions.
