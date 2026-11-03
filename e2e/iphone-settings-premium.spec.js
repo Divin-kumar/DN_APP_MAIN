@@ -45,7 +45,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         await testInfo.attach('Appearance-'+width+'-'+theme,{
           body:await page.screenshot({animations:'disabled'}),contentType:'image/png',
         });
-        await page.locator('.dn-appearance-back').click();
+        await page.locator('.dn-header').getByRole('link',{name:'Back to Settings'}).click();
         await expect(page).toHaveURL(/\/settings$/);
 
         await nav.getByRole('link',{name:'Open Data & Backup page'}).click();
