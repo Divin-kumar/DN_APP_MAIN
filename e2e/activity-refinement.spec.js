@@ -55,14 +55,17 @@ test('Moment-opening detail pages retain that Moment only, in its own filtered l
 });
 
 for (const viewport of [{ width: 320, height: 700 }, { width: 1440, height: 900 }]) {
-  test(`empty cover uses 20% viewport height and header metadata stays ordered at ${viewport.width}px`, async ({ page }) => {
+  test(`empty cover uses compact viewport-height rules and header metadata stays ordered at ${viewport.width}px`, async ({ page }) => {
     await page.setViewportSize(viewport);
     const errors = await seedGuest(page);
     await page.goto('/events/moment-one/activities/shared');
     const cover = page.locator('.activity-cover.is-fallback');
     await expect(cover).toBeVisible();
     const box = await cover.boundingBox();
-    expect(Math.abs(box.height - Math.min(viewport.height * .2, 220))).toBeLessThanOrEqual(2);
+    const expectedHeight = viewport.width < 768
+      ? Math.max(96, Math.min(viewport.height * .14, 144))
+      : Math.max(96, Math.min(viewport.height * .2, 220));
+    expect(Math.abs(box.height - expectedHeight)).toBeLessThanOrEqual(2);
     const heading = page.locator('.activity-detail-heading');
     await expect(heading.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
     await expect(heading.locator('h1')).toHaveText('Book a lakeside stay');
