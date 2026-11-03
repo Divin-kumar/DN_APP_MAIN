@@ -60,6 +60,27 @@ for (const [width, height, theme] of [[320, 740, 'light'], [390, 844, 'dark']]) 
     const unnumberedCover = await fingerprint();
     expect(unnumberedCover).not.toBe(original);
 
+    // Every PDF checkbox uses a real, keyboard-operable input with a premium
+    // switch surface. Optional content should not fill the screen by default.
+    const options = studio.locator('details.dn-pdf-content-options');
+    await expect(options).not.toHaveAttribute('open', '');
+    await expect(options.getByRole('checkbox', { name: /Introduction/ })).not.toBeVisible();
+    await expect(options.locator('summary')).toContainText('selected');
+    const searchable = studio.getByRole('checkbox', { name: 'Add searchable writing to PDF' });
+    const toggleStyle = await searchable.evaluate((node) => {
+      const computed = getComputedStyle(node);
+      return { appearance: computed.appearance, width: node.getBoundingClientRect().width,
+        height: node.getBoundingClientRect().height };
+    });
+    expect(toggleStyle.appearance).toBe('none');
+    expect(toggleStyle.width).toBeGreaterThanOrEqual(44);
+    expect(toggleStyle.height).toBeGreaterThanOrEqual(26);
+    await options.locator('summary').click();
+    await expect(options.getByRole('checkbox', { name: /Introduction/ })).toBeVisible();
+    await options.getByRole('checkbox', { name: /Introduction/ }).uncheck();
+    await expect(download).toBeDisabled();
+    await options.locator('summary').click();
+    await expect(options).not.toHaveAttribute('open', '');
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(source);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     expect(errors).toEqual([]);
