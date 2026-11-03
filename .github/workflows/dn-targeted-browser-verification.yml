@@ -124,6 +124,42 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  iphone-pdf-touches-230:
+    # Synthetic iPhone/coarse-pointer PDF Studio touch acceptance, no publish.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-iphone-pdf]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify iPhone PDF touch, previous preview and pagination
+        run: >-
+          npx playwright test
+          e2e/iphone-pdf-tap-targets-230.spec.js
+          e2e/pdf-preview-refine-230.spec.js
+          e2e/pdf-studio-controls-4c.spec.js
+          --workers=2
+      - name: Upload screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-iphone-pdf-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   pdf-flow-230:
     # Opt-in focused preview/controls acceptance; no publishing or main writes.
     if: >-

@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-358 | DN 2.3 iPhone-first PDF Studio tap targets
+- **Source audit:** Apple's recommended 44pt mobile targets exposed 40px preview zoom and fullscreen buttons in PDF Studio; **Use saved default** had a narrow text-only touch area. The existing dock, pagination and content disclosure already address phone layouts, so no duplicate overhaul is needed.
+- **Change:** On phone/coarse-pointer landscape widths, reserve 44px preview/Close targets, enlarge the saved-design action to 44px with legible text and provide focus-visible outlines. Retain light controls, responsive wrapping, PDF design choices and document rendering.
+- **Compatibility:** No new fields, stored records, PDF bytes, Guest/account logic, attachments, Story formatting, finances or backup changes. The Guest tour already demonstrates these controls, so no sample update or forced refresh.
+- **QA:** Added focused 320/390/430 portrait and 844x390 touch-landscape synthetic browser tests for hit sizes, fullscreen, zoom, saved-default recovery, horizontal overflow and record immutability, alongside existing PDF checks. Execution is a separate gate until exact-SHA CI confirms. Real iPhone Safari/VoiceOver and full 2.3 acceptance remain pending. Only OldVersion may change; no PR, main, version bump or deploy.
+
 ## CHG-20261104-357 | DN 2.3 universal + exact-SHA keyboard and iPhone regression acceptance
 - **Executed:** Focused synthetic Chromium [run 41695670632](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41695670632) passed **9/9 tests** at application code SHA `27041663a10a08a62737bfeac1eeaab47c1c88a1`. Three new tests exercise Enter/Space opening at 1024px/1280px, first-action focus, Tab and Escape restoration, pointer behavior and opening/cancelling a transaction with unchanged records. Six existing tests cover 320/390/430px iPhone Activity form no-auto-keyboard, tap-state stability and mobile Escape focus.
 - **Executed:** Same-SHA [governance 41695670651](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41695670651) passed Node unit tests, lint, production build, dependency advisories and documentation preservation.

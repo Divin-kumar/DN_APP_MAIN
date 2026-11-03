@@ -393,6 +393,22 @@ html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="check
 html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input[type="checkbox"]:disabled {
   opacity:.5;cursor:not-allowed;
 }
+/* Apple-style iPhone hit areas: 44 CSS px without another toolbar/card. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-pdf-preview-tools button,
+  html[data-theme] .dn-pdf-fullscreen-head button {
+    min-width:44px;min-height:44px;
+  }
+  html[data-theme] .dn-pdf-style-default button {
+    min-height:44px;padding:8px 6px;font-size:12px;
+  }
+}
+html[data-theme] .dn-pdf-preview-tools button:focus-visible,
+html[data-theme] .dn-pdf-fullscreen-head button:focus-visible,
+html[data-theme] .dn-pdf-style-default button:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:2px;
+}
+
 /* Three clear page flows fit narrow sidebars as well as 320px iPhones. */
 html[data-theme] .dn-pdf-break-choices {grid-template-columns:minmax(0,1fr);gap:9px;}
 html[data-theme] .dn-pdf-break-choice {
