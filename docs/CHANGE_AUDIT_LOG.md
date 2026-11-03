@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-356 | DN 2.3 desktop universal create keyboard access
+- **Source-derived audit:** On desktop the action menu is rendered before the + trigger. Keyboard activation previously left focus on it, so Tab moved away from actions. The desktop menu lacked the labelled group role and explicit trigger-to-menu relationship used on mobile.
+- **UI fix:** For desktop keyboard opens only, focus the first universal creation choice. Tab traverses remaining choices; Escape closes and returns focus to +. Associate the trigger and grouped menu with `aria-controls`; preserve pointer behavior without stolen focus. No new buttons or actions.
+- **Downstream protection:** Task/Moment/Activity/Transaction action routing, iPhone touch focus/colors, no-auto-keyboard forms, Guest/account separation, original attachments, Story/PDF, finances and backup remain intact. Guest tour v2026.11.03.4 already demonstrates creation; no record fixture changes or forced refresh.
+- **Verification:** Added opt-in 1024px/1280px desktop keyboard and cancelled transaction tests, plus existing iPhone universal + tap and Activity focus tests. Execution results must be attached to exact SHA; physical Safari, VoiceOver, signed-in flows and full 2.3 regression remain separate release gates. No main, PR, Firebase/Vercel deployment or version change.
+
 ## CHG-20261103-355 | DN 2.3 searchable dropdown exact-SHA acceptance
 - **Executed:** [41694163987](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41694163987) passed **14/14** synthetic Guest Chromium cases at application code SHA `f39f1056a2b9c8abc60c87571e006e738d750671`. Three new tests cover dropdown empty-result recovery, 44px touch targets, keyboard Enter, focus restoration and no saved-record changes at 320px dark, 390px light and 1280px dark. Eleven existing tests cover Task Refine/Dashboard navigation, saved-filter chips and lightweight filters on Moments, Activities, Transactions and List Defaults.
 - **Executed:** Same-SHA [governance 41694164032](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41694164032) succeeded for Node tests, lint, production build, dependency audit and documentation preservation/contracts.

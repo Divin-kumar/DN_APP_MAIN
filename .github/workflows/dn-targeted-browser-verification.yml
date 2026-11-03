@@ -53,6 +53,42 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  create-keyboard-230:
+    # Desktop universal + accessibility and existing mobile tap safety only.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-create-keyboard]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify desktop focus and mobile universal create regression
+        run: >-
+          npx playwright test
+          e2e/universal-create-desktop-keyboard-230.spec.js
+          e2e/iphone-quick-create-touch-state.spec.js
+          e2e/iphone-quick-activity-focus-phase1.spec.js
+          --workers=2
+      - name: Upload focused QA evidence and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-create-keyboard
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   dropdown-recovery-230:
     # Shared searchable dropdowns in existing Refine / Task journeys; no publish.
     if: >-

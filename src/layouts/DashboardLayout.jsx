@@ -90,6 +90,7 @@ export default function DashboardLayout() {
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const quickCreateDesktopRef = useRef(null);
   const quickCreateMobileRef = useRef(null);
+  const quickCreateKeyboardFocusRef = useRef(false);
   const [quickCreateType, setQuickCreateType] = useState(null);
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickTransaction, setQuickTransaction] = useState(null);
@@ -249,6 +250,14 @@ export default function DashboardLayout() {
     window.history.scrollRestoration = 'manual';
     return () => { window.history.scrollRestoration = previousScrollRestoration; };
   }, []);
+
+  // Desktop choices precede the + trigger in DOM order. Keyboard opens must
+  // focus the first creation action; pointer taps never steal focus.
+  useLayoutEffect(() => {
+    if (!quickCreateOpen || !quickCreateKeyboardFocusRef.current) return;
+    quickCreateKeyboardFocusRef.current = false;
+    quickCreateDesktopRef.current?.querySelector('.dn-quick-create-menu button')?.focus({ preventScroll: true });
+  }, [quickCreateOpen]);
 
   useEffect(() => {
     if (!quickCreateOpen) return undefined;
@@ -637,7 +646,8 @@ export default function DashboardLayout() {
 
       <div ref={quickCreateDesktopRef} className={`dn-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
         {quickCreateOpen ? (
-          <div className="dn-quick-create-menu" aria-label="Quick create actions">
+          <div id="dn-desktop-quick-create" className="dn-quick-create-menu"
+            role="group" aria-label="Quick create actions">
             <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} /><span>Task</span></button>
@@ -645,7 +655,13 @@ export default function DashboardLayout() {
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
         ) : null}
-        <button type="button" className="dn-quick-create-trigger" onClick={() => setQuickCreateOpen((open) => !open)} aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'} aria-expanded={quickCreateOpen}>
+        <button type="button" className="dn-quick-create-trigger"
+          onClick={(event) => {
+            quickCreateKeyboardFocusRef.current = !quickCreateOpen && event.detail === 0;
+            setQuickCreateOpen((open) => !open);
+          }}
+          aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
+          aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-desktop-quick-create' : undefined}>
           {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
         </button>
       </div>
