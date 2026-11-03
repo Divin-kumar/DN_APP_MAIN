@@ -3,6 +3,7 @@ import { RotateCcw } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import SortChips from '../common/SortChips';
 import { TASK_GROUPS } from '../../utils/independentTasks.js';
+import { filterTaskResults } from '../../utils/taskListFilters.js';
 
 export const TASK_VIEW_DEFAULTS = Object.freeze({
   search: '', status: 'all', priority: 'all', due: 'all', group: 'dueDate', field: 'dueDate', direction: 'asc',
@@ -19,20 +20,7 @@ const CONTROL_GROUPS = [
   { field: 'due', label: 'Due', values: [['all', 'Any time'], ['overdue', 'Overdue'], ['next7', 'Next 7 days'], ['undated', 'Undated']] },
 ];
 const GROUPS = [['dueDate', 'Due date'], ['moment', 'Moment'], ['activity', 'Activity'], ['status', 'Status']];
-const utcDay = (value) => {
-  const [year, month, day] = value.split('-').map(Number);
-  return Date.UTC(year, month - 1, day) / 86400000;
-};
-export const filterTaskResults = (tasks, view, today) => tasks.filter((task) => {
-  if (view.search && ![task.title, task.notes].some((text) => String(text || '').toLowerCase().includes(view.search.toLowerCase()))) return false;
-  if (view.status !== 'all' && task.status !== view.status) return false;
-  if (view.priority !== 'all' && task.priority !== view.priority) return false;
-  if (view.due === 'all') return true;
-  if (view.due === 'undated') return !task.dueDate;
-  if (!task.dueDate || task.status !== 'in-progress') return false;
-  const days = utcDay(task.dueDate) - utcDay(today);
-  return view.due === 'overdue' ? days < 0 : days >= 0 && days <= 7;
-});
+
 
 export default function TaskRefineSheet({ current, onApply, onClose, tasks, today }) {
   const [draft, setDraft] = useState(() => ({ ...current }));

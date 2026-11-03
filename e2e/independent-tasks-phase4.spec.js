@@ -54,7 +54,7 @@ test('universal + Task under Activity Detail keeps parent links but never create
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   await page.goto('/events/moment-one/activities/shared');
-  await expect(page.getByRole('heading', { name: /Book a lakeside stay/ }).first()).toBeVisible();
+  await expect(page.locator('.activity-detail-page')).toBeVisible();
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.getByRole('button', { name: 'Open quick create menu' }).click();
   await page.getByRole('button', { name: 'Task', exact: true }).click();

@@ -3,7 +3,8 @@ import { Check, Circle, ListTodo, Pencil, Plus, SlidersHorizontal, Trash2, XCirc
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import TaskEditor from '../components/tasks/TaskEditor';
-import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES, filterTaskResults } from '../components/tasks/TaskRefineSheet';
+import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
+import { filterTaskResults } from '../utils/taskListFilters.js';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
