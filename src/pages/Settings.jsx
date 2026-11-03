@@ -1099,7 +1099,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
     return <div className="settings-page feature-page dn-settings-appearance">
       <header className="dn-appearance-intro">
         <span className="dn-appearance-eyebrow">Personalize your space</span>
-        <h2>Appearance & preferences</h2>
+        <h2>Make DN yours</h2>
         <p>Theme, new-record defaults, and Story/PDF design. Only working options are shown here.</p>
       </header>
       {renderDefaultsSection()}
