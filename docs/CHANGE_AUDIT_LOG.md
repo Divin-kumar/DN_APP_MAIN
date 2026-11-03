@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-308 | Premium PDF pagination radio keyboard acceptance
+- **Finding:** The two visually premium Activity layout choices exposed radio semantics but did not implement roving keyboard focus and arrow-key navigation. This is an accessibility gap, not a data or renderer defect.
+- **Correction:** Support ArrowLeft/ArrowRight/ArrowUp/ArrowDown and Home/End, keep the selected choice as the sole Tab stop, and move focus to the new selection. The selected option remains the exact existing default-off `pageBreakBetweenActivities` boolean.
+- **Tests:** Expand the scoped 320/390px synthetic PDF Studio test to assert selection and focus through arrow/Home/End keyboard use, alongside the previously authored real-photo 40%/39% page-fit test. Check the exact final SHA via opt-in `[verify-220]`; a green prior commit is not evidence for this change.
+- **Compatibility:** No changes to PDF page content/quality, originals, local data, Settings, activity grouping, finance, Guest tour or app version. OldVersion-only code and test updates; no Firebase/Vercel publication, PR, merge, or main write.
+
 ## CHG-20261103-307 | Confirm real stored-photo pagination at the 40% A4 boundary
 - **Gap found during owner-requested final review:** Previous tests asserted the pure 40%-height threshold but did not render an owned photograph through the actual PDF painter. Source logic and the last 24 synthetic mobile screenshots looked consistent; no new visual defect was demonstrated.
 - **Test change only:** A Playwright synthetic Guest test uses a real locally saved original photo and the existing `MomentPdfPainter.photoGrid`. At 40% free writable space it must render on physical page 1; at 39% it must move to page 2. Test aspect ratio, actual rendered-page count, unchanged stored Moment data and absence of browser errors.
