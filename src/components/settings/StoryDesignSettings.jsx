@@ -1,0 +1,99 @@
+import { useEffect, useState } from 'react';
+import { BookOpenText, RotateCcw } from 'lucide-react';
+import useAppStore from '../../store/useAppStore';
+import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
+import { getActiveSampleScenario } from '../../dev/sampleData';
+import {
+  STORY_DESIGN_DEFAULTS, STORY_DESIGN_STYLES, normalizeStoryDesign,
+  saveStoryDesign, storyDesignScope,
+} from '../../utils/storyDesignPreferences';
+import './StoryDesignSettings.css';
+
+const formats = [
+  { id: 'journey', label: 'Journal', help: 'Photographs and memories together' },
+  { id: 'diary', label: 'Diary', help: 'Long-form writing and dated entries' },
+  { id: 'chronicle', label: 'Tasks', help: 'Readable, status-led progress' },
+];
+const labels = { heritage: 'Heritage', editorial: 'Editorial', minimal: 'Minimal' };
+const descriptions = {
+  heritage: 'Warm and literary',
+  editorial: 'Expressive and photographic',
+  minimal: 'Quiet and precise',
+};
+
+export default function StoryDesignSettings() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const showToast = useAppStore((state) => state.showToast);
+  const saved = useStoryDesignDefaults();
+  const uid = user?.uid || null;
+  const scope = storyDesignScope({ uid, isGuest, sample: Boolean(getActiveSampleScenario(uid)) });
+  const [draft, setDraft] = useState(() => saved);
+  useEffect(() => { setDraft(saved); }, [saved, scope]);
+  const changed = formats.some(({ id }) => draft[id] !== saved[id]);
+  const choose = (format, style) => setDraft((current) => ({ ...current, [format]: style }));
+
+  const save = () => {
+    const state = useAppStore.getState();
+    const currentUid = state.user?.uid || null;
+    const session = { uid: currentUid, isGuest: state.isGuest,
+      sample: Boolean(getActiveSampleScenario(currentUid)) };
+    if (!scope || storyDesignScope(session) !== scope) {
+      showToast('Your session changed. Reopen design settings before saving.', 'danger');
+      return;
+    }
+    try {
+      const result = saveStoryDesign(window.localStorage, session, draft);
+      if (!result.ok) throw new Error(result.reason);
+      showToast('Story and PDF designs saved', 'success');
+    } catch (error) {
+      showToast(error?.message || 'Design settings could not be saved', 'danger');
+    }
+  };
+
+  return <section className="dn-story-design-settings" id="story-pdf-appearance"
+    aria-label="Story and PDF appearance">
+    <div className="dn-story-design-heading">
+      <BookOpenText size={19} aria-hidden="true" />
+      <div><strong>Story & PDF Appearance</strong>
+        <p>Choose a design for each Story type. The design never changes your saved memories.</p>
+      </div>
+    </div>
+    {!scope ? <p className="dn-story-design-hint" role="status">
+      Explore DN uses suggested designs. Open your own Guest or account workspace to save personal choices.
+    </p> : null}
+    {formats.map((format) => <fieldset className="dn-story-design-group" key={format.id}>
+      <legend>{format.label} <small>{format.help}</small></legend>
+      <div className="dn-story-design-choices">
+        {STORY_DESIGN_STYLES.map((style) => <button type="button" key={style}
+          className={'dn-story-design-choice is-' + style + (draft[format.id] === style ? ' is-selected' : '')}
+          aria-pressed={draft[format.id] === style}
+          aria-label={format.label + ': ' + labels[style]} disabled={!scope}
+          onClick={() => choose(format.id, style)}>
+          <span className="dn-story-design-mini" aria-hidden="true">
+            <span className="dn-story-design-mini-eyebrow">{format.label}</span>
+            <span className="dn-story-design-mini-title">Our story</span>
+            <span className="dn-story-design-mini-rule" />
+            <span className="dn-story-design-mini-body">A day to remember</span>
+          </span>
+          <span className="dn-story-design-choice-name">{labels[style]}</span>
+          <span className="dn-story-design-choice-note">{descriptions[style]}</span>
+        </button>)}
+      </div>
+    </fieldset>)}
+    <div className="dn-story-design-actions">
+      <button type="button" className="settings-secondary-button" disabled={!scope}
+        onClick={() => setDraft(normalizeStoryDesign(STORY_DESIGN_DEFAULTS))}>
+        <RotateCcw size={15} aria-hidden="true" /> Suggested defaults
+      </button>
+      <button type="button" className="settings-secondary-button" disabled={!scope || !changed}
+        onClick={() => setDraft(saved)}>Cancel</button>
+      <button type="button" className="settings-primary-button" disabled={!scope || !changed}
+        onClick={save}>Save designs</button>
+    </div>
+    <p className="dn-story-design-hint">
+      These choices affect Story's appearance. PDF Studio customization is a separate upcoming 2.2.0 step.
+      Resetting designs here does not change your app theme, records or files.
+    </p>
+  </section>;
+}

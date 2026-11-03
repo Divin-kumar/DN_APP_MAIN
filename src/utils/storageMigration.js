@@ -18,7 +18,7 @@ const FIXED_SUFFIXES = Object.freeze([
   'dev_fixture_scenario',
   'dev_fixture_data',
 ]);
-const DYNAMIC_SUFFIXES = Object.freeze(['favorite_event_ids_', 'recent_event_ids_', 'list_state_', 'transactions_filters_']);
+const DYNAMIC_SUFFIXES = Object.freeze(['favorite_event_ids_', 'recent_event_ids_', 'list_state_', 'transactions_filters_', 'story_pdf_design_v1:']);
 
 const isDnKey = (key, prefix) => {
   if (!key.startsWith(prefix)) return false;

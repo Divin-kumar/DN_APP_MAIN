@@ -1,0 +1,111 @@
+/* DN 2.2.0: visual skin only. Story semantics and record structure stay unchanged. */
+html[data-theme] .dn-v2-story[data-design-style="heritage"] {
+  --dn-book-paper:#F8F3E9;--dn-book-ink:#332D28;--dn-book-muted:#746A5D;
+  --dn-book-accent:#7D6A50;--dn-book-rule:#D7CCBC;--dn-book-tint:#EDE2D2;
+  --dn-book-font:Georgia,"Times New Roman",serif;
+}
+html[data-theme] .dn-v2-story[data-design-style="editorial"] {
+  --dn-book-paper:#F8FAFA;--dn-book-ink:#203443;--dn-book-muted:#627783;
+  --dn-book-accent:#315D70;--dn-book-rule:#D6E3E6;--dn-book-tint:#DCE9ED;
+  --dn-book-font:Georgia,"Times New Roman",serif;
+}
+html[data-theme] .dn-v2-story[data-design-style="minimal"] {
+  --dn-book-paper:#FFFFFF;--dn-book-ink:#25292D;--dn-book-muted:#697179;
+  --dn-book-accent:#495660;--dn-book-rule:#E3E7EA;--dn-book-tint:#F3F5F6;
+  --dn-book-font:system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+/* Keep the DN shell dark/light; use clear light-paper surfaces only for reading. */
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group {
+  background:var(--dn-book-paper);color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page {
+  border:1px solid var(--dn-book-rule);border-radius:8px;
+  padding:clamp(17px,3vw,36px);margin-bottom:12px;
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page + .dn-journal-page {
+  border-top:1px solid var(--dn-book-rule);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook {
+  border:1px solid var(--dn-book-rule);border-radius:8px;
+  padding:clamp(18px,3vw,39px);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-entry {
+  border-bottom-color:var(--dn-book-rule);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-entry-date,
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page-date,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-month-heading,
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter .dn-story-writing-heading,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph .dn-story-writing-heading {
+  color:var(--dn-book-accent);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter h4,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph h4,
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter .dn-v2-story-entry-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph .dn-v2-story-entry-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-story-writing-legacy-title {
+  font-family:var(--dn-book-font);color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-story-writing-text,
+html[data-theme] .dn-v2-story[data-design-style] .dn-story-writing-text p {
+  color:inherit;font-family:inherit;
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter .dn-v2-story-entry-body,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph .dn-v2-story-entry-body {
+  color:var(--dn-book-ink);font-family:var(--dn-book-font);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter .dn-story-entry-aside,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph .dn-story-entry-aside {
+  color:var(--dn-book-muted);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter h4 a,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph h4 a {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-chapter h4 a:hover,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-paragraph h4 a:hover {
+  color:var(--dn-book-accent);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group {
+  border-color:var(--dn-book-rule);border-radius:9px;
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group-header {
+  background:var(--dn-book-tint);border-bottom-color:var(--dn-book-rule);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row {border-bottom-color:var(--dn-book-rule);}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group-header h4,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row-heading a,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row-heading strong {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row-when,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-files-note,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-row .dn-story-writing-text {
+  color:var(--dn-book-muted);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-status-control {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style="heritage"] .dn-journal-page-date,
+html[data-theme] .dn-v2-story[data-design-style="heritage"] .dn-diary-entry-date {
+  letter-spacing:.015em;
+}
+html[data-theme] .dn-v2-story[data-design-style="editorial"] .dn-journal-page-date {
+  font-family:system-ui,sans-serif;font-size:.9rem;text-transform:uppercase;letter-spacing:.07em;
+}
+html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-journal-page-date,
+html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-diary-month-heading,
+html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-diary-paragraph h4 {
+  font-family:system-ui,sans-serif;letter-spacing:0;
+}
+html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-journal-page,
+html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-diary-monthbook {
+  border-radius:2px;
+}
+@media(max-width:680px) {
+  html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page {padding:14px 12px;}
+  html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook {padding:18px 15px;}
+}

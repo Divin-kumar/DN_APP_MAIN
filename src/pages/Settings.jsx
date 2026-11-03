@@ -5,6 +5,7 @@ import { settingsResetContext, assertSettingsResetContext, assertSettingsResetRe
 import { dashboardConfigurationRestorePatch } from '../utils/backupDashboardConfiguration';
 import './GuestTour.css';
 import './SettingsDataPremium.css';
+import StoryDesignSettings from '../components/settings/StoryDesignSettings';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
 import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud, FileJson, LockKeyhole, BookOpen } from 'lucide-react';
@@ -29,6 +30,7 @@ import { createBackupFile, readBackupFile } from '../services/backupFileService'
 import { restoreAttachmentFiles } from '../services/attachmentService';
 import { deleteSignedInCloudRecords } from '../services/accountCloudDeletionService';
 import { CLOUD_DELETE_CONFIRMATION } from '../utils/accountCloudDeletionSafety';
+import { exportStoryDesignForBackup, restoreStoryDesignFromBackup, resetStoryDesign } from '../utils/storyDesignPreferences';
 
 const normalizeList = (value) =>
   value
@@ -279,6 +281,10 @@ export default function Settings({ dataBackupOnly = false }) {
         preferences,
         settings: {
           themeChoiceEnabled: Boolean(localStorage.getItem('dn_theme_choice')),
+          ...(!sourceScenario && (sourceUid || sourceGuest) ? {
+            storyPdfDesign: exportStoryDesignForBackup(localStorage,
+              { uid: sourceUid, isGuest: sourceGuest, sample: false }),
+          } : {}),
           ...(sourceUid || sourceGuest ? {
             listViewDefaults: exportSavedListDefaultsForScope(listStateScope(useAppStore.getState())),
           } : {}),
@@ -512,6 +518,12 @@ export default function Settings({ dataBackupOnly = false }) {
       // current baseline rather than silently replace it with built-ins.
       assertDestinationScope();
       restoreSavedListDefaultsForScope(listStateScope(useAppStore.getState()), backup.settings.listViewDefaults);
+      if (backup.settings.storyPdfDesign !== undefined) {
+        assertDestinationScope();
+        // A confirmed Guest-tour restore writes to the real Guest scope, not the demo.
+        restoreStoryDesignFromBackup(localStorage,
+          { uid: destinationUid, isGuest: destinationGuest, sample: false }, backup.settings.storyPdfDesign);
+      }
 
       // Historical backups may omit Dashboard shortcuts entirely. Never
       // interpret an omitted field as an instruction to erase this device's
@@ -641,6 +653,8 @@ export default function Settings({ dataBackupOnly = false }) {
       await resetAllSettings(referencedValues, assertCurrent);
       assertCurrent();
       resetSavedListDefaultsForScope(context.scope);
+      resetStoryDesign(localStorage, { uid: context.uid, isGuest: context.isGuest,
+        sample: Boolean(getActiveSampleScenario(context.uid)) });
       setTheme('dark');
       document.documentElement.dataset.theme = 'dark';
       setPrefForm({
@@ -803,6 +817,7 @@ export default function Settings({ dataBackupOnly = false }) {
         <button type="button" className="settings-primary-button" onClick={savePreferences}>Save preferences</button>
         <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
       </div>
+      <StoryDesignSettings />
     </div>
   );
 

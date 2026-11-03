@@ -4,7 +4,9 @@ import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import RichText from '../../../components/common/RichText';
 import { activityDateLabel, activityDetailPath, isAttachmentImage } from '../../../utils/activityDetail';
 import { buildMomentStory, groupMomentStoryTasks, STORY_PRESENTATIONS } from '../../../utils/momentStory';
+import useStoryDesignDefaults from '../../../hooks/useStoryDesignDefaults';
 import './MomentStory.css';
+import './MomentStoryDesign.css';
 
 // Existing persisted values stay "journey"/"chronicle". Only the owner-facing
 // names and their read-only Story compositions change. No backup migration.
@@ -207,6 +209,7 @@ function EarlierReflections({ reflections }) {
 // Story projection remains read-only. Task status controls dispatch through
 // scoped Event workspace actions; no secondary Activity store or saved fields.
 export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditIntro, onTaskStatusChange, taskStatusBusy = false }) {
+  const designs = useStoryDesignDefaults();
   const story = buildMomentStory(moment, { momentTypes });
   const edition = editions[story.presentation] || editions[STORY_PRESENTATIONS.JOURNEY];
   const EditionIcon = edition.icon;
@@ -216,7 +219,8 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
   const total = recorded + story.upcoming.length + story.undated.length;
   const entries = (items, key) => items.map((entry, i) => <Chapter key={entry.id || key + '-' + i} entry={entry}
     momentId={story.momentId} uid={uid} isGuest={isGuest} presentation={story.presentation} />);
-  return <div className="dn-v2-story" data-presentation={story.presentation}>
+  return <div className="dn-v2-story" data-presentation={story.presentation}
+    data-design-style={designs[story.presentation] || 'editorial'}>
     <header className="dn-v2-story-header">
       <div><span className="dn-v2-story-kicker"><EditionIcon size={16} /> {edition.label}</span>
         <h3>{edition.heading}</h3><p>{edition.description}</p></div>
