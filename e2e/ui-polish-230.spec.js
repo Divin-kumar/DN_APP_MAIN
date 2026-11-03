@@ -41,7 +41,8 @@ const assertTaskToolbarAlignment = async (page) => {
   expect(Math.abs(rects.searchTop - rects.buttonTop)).toBeLessThan(7);
   expect(rects.searchRight).toBeLessThanOrEqual(rects.buttonLeft + 1);
   expect(rects.searchWidth).toBeGreaterThan(95);
-  expect(rects.buttonHeight).toBeGreaterThanOrEqual(44);
+  // Layout engines may return 43.99997px for an intended 44px CSS target.
+  expect(Math.round(rects.buttonHeight)).toBeGreaterThanOrEqual(44);
 };
 const assertNoPageOverflow = async (page) => {
   const dimensions = await page.evaluate(() => ({
