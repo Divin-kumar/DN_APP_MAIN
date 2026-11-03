@@ -10,8 +10,7 @@ test('Story designs are independently configurable and persist without rewriting
   ];
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto('/settings');
-  await page.getByRole('button', { name: /Appearance & preferences/i }).click();
+  await page.goto('/settings/appearance');
   const editor = page.getByRole('region', { name: 'Story and PDF appearance' });
   await expect(editor).toBeVisible();
   await editor.getByRole('button', { name: 'Journal: Heritage' }).click();
@@ -30,8 +29,7 @@ test('Story designs are independently configurable and persist without rewriting
     await expect(story).toHaveAttribute('data-presentation', format);
     await expect(story).toHaveAttribute('data-design-style', style);
   }
-  await page.goto('/settings');
-  await page.getByRole('button', { name: /Appearance & preferences/i }).click();
+  await page.goto('/settings/appearance');
   await expect(editor.getByRole('button', { name: 'Journal: Heritage' })).toHaveAttribute('aria-pressed', 'true');
   await editor.getByRole('button', { name: 'Suggested defaults' }).click();
   await editor.getByRole('button', { name: 'Save designs' }).click();
