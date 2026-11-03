@@ -255,7 +255,7 @@ export default function Settings({ dataBackupOnly = false }) {
 
       const sampleData = getActiveSampleData(user?.uid || null);
       if (sampleData) {
-        ({ events, expenses, incomes } = sampleData);
+        ({ events, expenses, incomes, tasks = [] } = sampleData);
         dataSource = sampleData.scenario === GUEST_TOUR_SCENARIO ? 'guided-guest-demo' : 'development-sample';
       } else if (isGuest) {
         events = getGuestEvents();

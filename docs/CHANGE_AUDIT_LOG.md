@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-337 | DN 2.3 Phase 4F: include independent sample Tasks in Guest tour v4 export
+- **Scope:** Wire the existing versioned Guest tour's sample Tasks array through the Data & Backup export controller rather than using a default-empty Tasks collection. Development samples without Tasks remain compatible. This is an export-only correction; no Task records are created, moved or updated.
+- **Isolation:** Personal Guest Tasks are not read during a public tour export. Historical Moment Activities, Story, PDF and original attachments remain separate. New account Task writes remain disabled pending Firestore rules verification. Existing browser download test authored but this specific tour export path has not been browser-executed.
+- **Evidence:** CI on exact SHA required, browser/native Safari pending. OldVersion only, no app version bump, PR, main change or deployment.
+
 ## CHG-20261103-336 | DN 2.3 Phase 4E: repair existing Dashboard Activity test harness after Task integration
 - **Scope:** Update the preexisting fake-hook Dashboard Activity Node test harness to substitute a controlled inert Task store and the Link router element, matching the established fake Event store. Earlier eight tests failed before assertions due a real Zustand hook being invoked without a React renderer. Leave all existing Activity assertions and actual application code unchanged.
 - **Evidence:** Previous CI at CHG-334/335 exposed the harness issue. New test code authored; verify Node/lint/build at exact new SHA before claiming green. No account data, Tasks persistence, Guest samples, Story, PDF, Firestore, deployment, main or PR impact.

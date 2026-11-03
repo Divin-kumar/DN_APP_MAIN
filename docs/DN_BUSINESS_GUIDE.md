@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3.0 Guest tour backups (OldVersion only):** Exporting the versioned Guest tour includes its independent example Tasks in the v4 JSON, together with the tour's example Moments, finance and available originals. Personal Guest Tasks remain completely separate and are not included in a tour export. The examples are optional and need not be restored to your own data.
+
+
 **DN 2.3.0 Guest Task safety (OldVersion only):** Switching from Guest to a signed-in account does **not** transfer independent Tasks yet. They remain in that browser's Guest storage and DN warns about them after sign-in. Export a backup while still in Guest mode if you need a recoverable copy. Choosing Clear local data deliberately removes Guest Tasks along with other local app records; downloaded backups and stored original photos are handled separately. Signed-in Task storage is disabled until Firestore permission and lifecycle checks are approved.
 
 
