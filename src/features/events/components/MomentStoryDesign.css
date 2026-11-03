@@ -204,3 +204,14 @@ html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-diary-monthbook,
 html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-task-group {
   box-shadow:0 8px 28px rgb(0 0 0 / .17);
 }
+
+
+/* Dark shell must never leak near-white title/link tokens into light book paper. */
+html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
+  .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4,
+html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
+  .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4 a,
+html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
+  .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4 a:visited {
+  color:var(--dn-book-ink)!important;
+}
