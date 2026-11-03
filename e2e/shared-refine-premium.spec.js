@@ -9,7 +9,7 @@ for (const [route, label] of [
   ['/events/moment-one/activities', 'Activity filters'],
 ]) {
   for (const [width, height] of [[320, 640], [390, 844]]) {
-    test(`Refine opens a compact, scroll-safe sheet for ${label} at ${width}px`, async ({ page }) => {
+    test(`Refine opens a compact, scroll-safe sheet for ${label} at ${width}px on ${route}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page);
       await page.goto(route);
