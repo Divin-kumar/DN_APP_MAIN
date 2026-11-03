@@ -222,3 +222,13 @@ html[data-theme] .dn-settings-redesign .settings-reset-card { min-width:0; }
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-appearance-theme-pick { transition:none; }
 }
+
+
+html[data-theme] .dn-settings-redesign .dn-settings-overview-note {
+  margin:-7px 0 0; padding:0 2px;
+  color:var(--color-text-muted); font-size:12px; line-height:1.5;
+}
+html[data-theme] .dn-settings-redesign .dn-guest-tour-panel {
+  margin-top:0; min-width:0;
+}
+html[data-theme] .dn-settings-redesign .dn-settings-explore-header + .dn-guest-tour-panel { margin-top:0; }
