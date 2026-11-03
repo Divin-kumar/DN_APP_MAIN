@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-353 | DN 2.3 PDF Studio exact-SHA visual acceptance
+- **Executed:** GitHub Actions [41692491666](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41692491666) passed **6/6 synthetic Guest Chromium tests** at OldVersion SHA `e7daca985ad09c7ae1b6a1f7eaea5da0e2d7670a`: new 320px dark, 390px light and 1280px dark PDF preview/Update behavior, two existing page-number/dropdown checks and a Settings integration check. Initial attempt at `d0d1ad48b9b414bfa910e08b54fa092f9132468c` passed five PDF checks but failed on an obsolete Settings button locator. Corrected that test to follow the current Appearance link; no application code changed between attempts.
+- **Executed:** Same-SHA [governance 41692491401](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41692491401) passed Node unit tests, lint, build, dependency advisories and documentation governance.
+- **Scope and limits:** Preview render metadata now matches actual last-rendered options; the one accessible update action remains reachable during customization. No PDF document renderer or file bytes, original attachments, Activity/Task relationships, financial data, backup format or saved Story preferences were modified. No PR, release, main change or deployment. Physical iPhone Safari/VoiceOver and full DN 2.3 release regression remain pending.
+
 ## CHG-20261103-352 | DN 2.3 PDF preview accuracy and reachable update control
 - **Source evidence:** PDF customization's Update preview was the final control after all options, and its preview heading combined the current draft Story format with the previous rendered visual style when a PDF had pending changes. These are misleading or inconvenient on narrow phones.
 - **Implementation:** Move the one Update preview action to a minimal sticky status row below the PDF customization heading, remove the redundant bottom action, and show a simple current-preview confirmation after rendering. Derive preview-format metadata from the last rendered options until updated. Preserve pending-warning, disabled download/fullscreen, keyboard control and responsive font behavior.
