@@ -87,6 +87,12 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
     includeCancelled: flag(source?.includeCancelled, false),
   };
 };
+// Preserve a lone image on its page when at least 40% of usable A4 height is free.
+// Actual drawing still fits the remaining space without cropping or distortion.
+export const hasRoomForSinglePdfPhoto = (freeHeight, usableHeight) =>
+  Number.isFinite(freeHeight) && Number.isFinite(usableHeight)
+  && usableHeight > 0 && freeHeight >= usableHeight * .4;
+
 export const pdfStudioTaskSections = (groups = [], options = {}) =>
   groups.filter((group) => group.status === 'in-progress'
     || (group.status === 'completed' && options.includeCompleted !== false)
