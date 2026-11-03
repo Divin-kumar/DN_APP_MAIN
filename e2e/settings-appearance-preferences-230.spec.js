@@ -18,7 +18,7 @@ for (const { width, height, theme } of [
       const errors = await seedGuest(page, { theme });
       await page.setViewportSize({ width, height });
       await page.goto('/settings/appearance');
-      await expect(page.getByRole('heading', { name: 'Appearance & preferences', exact: true })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'Make DN yours', exact: true })).toBeVisible();
       const before = await page.evaluate(() => [
         'dn_guest_eventGroups', 'dn_guest_expenses', 'dn_guest_incomes', 'dn_guest_tasks',
       ].map(key => localStorage.getItem(key)));
