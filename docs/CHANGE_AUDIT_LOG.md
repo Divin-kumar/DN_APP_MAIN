@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-307 | Confirm real stored-photo pagination at the 40% A4 boundary
+- **Gap found during owner-requested final review:** Previous tests asserted the pure 40%-height threshold but did not render an owned photograph through the actual PDF painter. Source logic and the last 24 synthetic mobile screenshots looked consistent; no new visual defect was demonstrated.
+- **Test change only:** A Playwright synthetic Guest test uses a real locally saved original photo and the existing `MomentPdfPainter.photoGrid`. At 40% free writable space it must render on physical page 1; at 39% it must move to page 2. Test aspect ratio, actual rendered-page count, unchanged stored Moment data and absence of browser errors.
+- **Downstream:** All PDF styles, single/multiple-photo code, Activity associations, user data, account/guest ownership guards, downloadable bytes, settings and app version are unchanged. Existing `[verify-220]` opt-in targeted workflow includes this regression. Full pre-release suite and physical Safari remain later gates.
+- **Evidence boundary:** New test authored, not automatically passed; verify the exact final commit and record CI result before acceptance. OldVersion only, no PR, main write or Firebase/Vercel deployment.
+
 ## CHG-20261103-306 | Owner screenshot follow-up: Activity Detail and PDF layout
 - **Evidence:** Three owner-supplied iPhone screenshots showed detached vertical Attachment commands, a stranded untimed-entry edit action, unusually loose transaction/attachment list rhythm and a low-contrast pale-book Journal title under dark shell. Source inspection isolated an inherited global flex/grid conflict in the attachment heading.
 - **Direct UI changes:** Scope horizontal 44px attachment commands, original-paragraph edit alignment, calm transaction/attachment dividers and centered Activity navigation to Activity Detail. Pin the light Journal book-paper title and link color to the book palette, without changing dark navigation/photographic overlays or any stored data.
