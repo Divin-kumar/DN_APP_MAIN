@@ -32,7 +32,8 @@ const readableContrast = async (element, paper) => {
 };
 
 for (const theme of ['dark', 'light']) {
-  test(`Story book pages keep readable text in ${theme} app theme at iPhone width`, async ({ page }) => {
+  test(`Story book pages keep readable text in ${theme} app theme at iPhone width`, async ({ page }, testInfo) => {
+    test.setTimeout(120000);
     const source = fixtureMoments()[0];
     const moments = formatNames.map(({ id, type }) => ({
       ...structuredClone(source), id, name: id, type,
@@ -56,6 +57,11 @@ for (const theme of ['dark', 'light']) {
         const h = story.locator(heading).first();
         await expect(h).toBeVisible();
         expect(await readableContrast(h, paper), `${format}/${style}/${theme} title`).toBeGreaterThanOrEqual(4.5);
+        if (format === 'journey' && style === 'heritage') {
+          await testInfo.attach(`journal-heritage-${theme}-390px`, {
+            body: await page.screenshot({ fullPage: false }), contentType: 'image/png',
+          });
+        }
         if (format !== 'chronicle') {
           const prose = story.locator(paper + ' .dn-v2-story-entry-description').first();
           await expect(prose).toBeVisible();

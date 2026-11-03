@@ -1,0 +1,67 @@
+name: DN 2.2 targeted Story and PDF acceptance (opt-in)
+# Tests only. No GitHub PR, Vercel, or Firebase publication.
+# Trigger explicitly with [verify-220] in an OldVersion commit or via workflow_dispatch.
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  dn-220-story-pdf-browser:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[verify-220]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact locked dependencies
+        run: npm ci
+      - name: Install Chromium for focused QA only
+        run: npx playwright install --with-deps chromium
+      - name: Check Story contrast in dark and light, and saved visual styles
+        run: >-
+          npx playwright test
+          e2e/story-paper-contrast-220.spec.js
+          e2e/story-design-phase1.spec.js
+          --workers=1
+      - name: Check PDF Studio style, searchable download and high-resolution export
+        run: >-
+          npx playwright test
+          e2e/pdf-studio-design-220.spec.js
+          e2e/pdf-studio-searchable-220.spec.js
+          e2e/pdf-page-quality-220.spec.js
+          --workers=1
+      - name: Check Journal photo/writing and Diary/Task PDF compatibility
+        run: >-
+          npx playwright test
+          e2e/pdf-studio-phase6.spec.js
+          --grep "PDF Studio presents actual pages|Journal keeps dates, photo captions|PDF Studio prints continued writing"
+          --workers=1
+      - name: Publish sanitized synthetic screenshots and failure traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-220-story-pdf-acceptance-artifacts
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Summarize no-deploy acceptance
+        if: success()
+        run: |
+          {
+            echo "## DN 2.2 focused Story/PDF browser acceptance passed"
+            echo "- OldVersion SHA: $GITHUB_SHA"
+            echo "- 390px light/dark contrast, 3 styles x 3 Story formats, Studio and PDF paths: passed"
+            echo "- Uses synthetic Guest test data; not a real iPhone Safari result"
+            echo "- No Firebase or Vercel deployment"
+            echo "- Not a substitute for the full feature-release gate"
+          } >> "$GITHUB_STEP_SUMMARY"
