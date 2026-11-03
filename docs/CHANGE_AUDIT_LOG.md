@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-355 | DN 2.3 searchable dropdown exact-SHA acceptance
+- **Executed:** [41694163987](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41694163987) passed **14/14** synthetic Guest Chromium cases at application code SHA `f39f1056a2b9c8abc60c87571e006e738d750671`. Three new tests cover dropdown empty-result recovery, 44px touch targets, keyboard Enter, focus restoration and no saved-record changes at 320px dark, 390px light and 1280px dark. Eleven existing tests cover Task Refine/Dashboard navigation, saved-filter chips and lightweight filters on Moments, Activities, Transactions and List Defaults.
+- **Executed:** Same-SHA [governance 41694164032](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41694164032) succeeded for Node tests, lint, production build, dependency audit and documentation preservation/contracts.
+- **Scope:** Confirmation only; no further application code changes, new data fields, migrations or sample resets. This does not assert native iPhone Safari/VoiceOver, authenticated Firestore flows or full DN 2.3 release/restore acceptance. Firebase production and preview workflows skipped; no app-version change, PR or main modification.
+
 ## CHG-20261103-354 | DN 2.3 cross-form searchable dropdown recovery
 - **Audit:** The shared dropdown search had no reliable, labelled clear action on mobile. Typing a nonmatching query left an unhelpful empty list. Touch behavior and keyboard focus were inconsistent with the search recovery already implemented on main list pages.
 - **UX change:** Add one 44px, borderless Clear search button only while a dropdown query exists, retaining input focus and restoring options/scroll/highlight. Explain the no-results recovery in the menu. Preserve search-on-demand and never auto-focus the keyboard on opening the dropdown. Keep option values and selection behavior unchanged.
