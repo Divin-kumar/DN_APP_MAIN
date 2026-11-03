@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATES } from './pdfStudioOptions.js';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATES, hasRoomForSinglePdfPhoto } from './pdfStudioOptions.js';
 
 test('Phase 6 Studio chooses compatible Journal Diary and Tasks templates without altering source', () => {
   const source = { template: 'diary', density: 'compact', includeCover: true, includeCompleted: false };
@@ -29,4 +29,12 @@ test('Phase 6 Tasks PDF sections preserve required order and optional cancelled/
   assert.deepEqual(visible.map(g=>g.status),['in-progress','completed','cancelled']);
   visible[0].entries.push({id:'external'});
   assert.equal(groups[0].entries.length,1,'source groups remain unchanged');
+});
+
+test('a lone image can use a page with 40 percent of its writing height available', () => {
+  const writingHeight = 842 - 51 - 43;
+  assert.equal(hasRoomForSinglePdfPhoto(writingHeight * .4, writingHeight), true);
+  assert.equal(hasRoomForSinglePdfPhoto(writingHeight * .399, writingHeight), false);
+  assert.equal(hasRoomForSinglePdfPhoto(0, writingHeight), false);
+  assert.equal(hasRoomForSinglePdfPhoto(Number.NaN, writingHeight), false);
 });
