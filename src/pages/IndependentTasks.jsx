@@ -5,6 +5,9 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import TaskEditor from '../components/tasks/TaskEditor';
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
+import { ConditionChips } from '../components/common/ConditionBuilder';
+import { conditionCount, normalizeConditionGroup } from '../utils/conditionEngine.js';
+import { taskFilterFields, taskViewConditionGroup } from '../utils/taskConditionFields.js';
 import { filterTaskResults } from '../utils/taskListFilters.js';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
@@ -61,14 +64,31 @@ export function TaskListContent() {
   const tasks = enabled && ready && !store.error ? store.tasks : EMPTY;
   const eventReady = isRecordScopeLoaded(eventStore, 'guest:anonymous', getActiveSampleScenario(null));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
-  const matches = useMemo(() => filterTaskResults(tasks, view, today), [tasks, view, today]);
+  const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
   const displayedTasks = useMemo(() => sortIndependentTasks(matches, view.direction, view.field),
     [matches, view.direction, view.field]);
-  const appliedFilters = [
-    ...(view.status !== 'all' ? [`Status: ${statusLabel(view.status)}`] : []),
-    ...(view.priority !== 'all' ? [`Priority: ${view.priority}`] : []),
-    ...(view.due !== 'all' ? [`Due: ${({ overdue: 'Overdue', next7: 'Next 7 days', undated: 'Undated' })[view.due]}`] : []),
-  ];
+  const viewGroup = useMemo(() => taskViewConditionGroup(view), [view]);
+  const activeFilterCount = conditionCount(viewGroup);
+  const filterSchema = useMemo(() => taskFilterFields(tasks, moments, today), [tasks, moments, today]);
+  const appliedFilterControls = {
+    schema: filterSchema, state: { group: viewGroup }, editorKey: 'task-chips:' + scope,
+    activeCount: activeFilterCount,
+    setGroup: (change) => changeView({
+      group: normalizeConditionGroup(typeof change === 'function' ? change(viewGroup) : change),
+      status: 'all', priority: 'all', due: 'all',
+    }),
+  };
+  useEffect(() => {
+    if (!enabled || !ready || searchParams.has('create')) return;
+    const requested = searchParams.get('task');
+    if (!requested) return;
+    const selected = tasks.find((task) => task.id === requested);
+    if (selected) setEditor({ kind: 'edit', value: selected });
+    else setNotice('The selected Task is no longer available.');
+    const next = new URLSearchParams(searchParams);
+    next.delete('task');
+    setSearchParams(next, { replace: true });
+  }, [enabled, ready, searchParams, setSearchParams, tasks]);
   const active = tasks.filter((task) => task.status === 'in-progress').length;
   const completed = tasks.filter((task) => task.status === 'completed').length;
   const run = (change, message) => {
@@ -122,18 +142,16 @@ export function TaskListContent() {
           <input type="search" aria-label="Search Tasks" value={view.search}
             onChange={(event) => changeView({ search: event.target.value })} placeholder="Search Tasks" />
         </div>
-        <button type="button" className={`dn-list-controls-trigger${appliedFilters.length ? ' is-active' : ''}`}
+        <button type="button" className={`dn-list-controls-trigger${activeFilterCount ? ' is-active' : ''}`}
           aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
           <SlidersHorizontal size={17} aria-hidden="true" /><span>Refine</span>
-          {appliedFilters.length ? <span className="dn-list-controls-badge" aria-hidden="true">{appliedFilters.length}</span> : null}
+          {activeFilterCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeFilterCount}</span> : null}
         </button>
       </div>
       <div className="dn-task-discovery-summary">
         <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
-        {appliedFilters.length ? <div className="dn-task-applied" aria-label="Active Task filters">
-          {appliedFilters.map((label) => <button key={label} type="button" onClick={() => setRefine(true)}
-            title="Edit filters">{label}</button>)}
-        </div> : null}
+        {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
+          maxVisible={4} onShowMore={() => setRefine(true)} /> : null}
       </div>
     </div>
     {ready && !store.error && !tasks.length ? <div className="dn-task-empty" role="status">
@@ -191,7 +209,7 @@ export function TaskListContent() {
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
         moments={moments} onSave={save} error={error} onClose={() => { setEditor(null); setError(''); }} />
     </ModalDialog> : null}
-    {refine ? <TaskRefineSheet current={view} tasks={tasks} today={today} onClose={() => setRefine(false)}
+    {refine ? <TaskRefineSheet current={view} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
     {confirm ? <ConfirmDialog title={confirm.kind === 'delete' ? 'Delete Task?' : 'Cancel Task?'}
       message={confirm.kind === 'delete' ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`
