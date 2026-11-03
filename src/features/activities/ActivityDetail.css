@@ -424,3 +424,33 @@ html[data-theme] .activity-detail-page .moment-transactions .dn-transaction-card
   }
   html[data-theme] .activity-detail-page .dn-content-row.is-untimed {align-items:start;}
 }
+
+
+/* Physical iPhone acceptance: date badge and optional time share one baseline.
+   Preserve recorded values, do not invent missing dates or timestamps. */
+@media(max-width:767px) {
+  html[data-theme] .activity-detail-page .dn-content-row-meta {
+    display:flex;flex-flow:row nowrap;align-items:center;align-self:center;
+    gap:9px;min-width:0;max-width:100%;min-height:44px;white-space:nowrap;
+  }
+  html[data-theme] .activity-detail-page .dn-content-row-date,
+  html[data-theme] .activity-detail-page .dn-content-row-time {
+    display:inline-flex;align-items:center;align-self:center;justify-content:flex-start;
+    min-height:28px;line-height:1.3;white-space:nowrap;flex-shrink:0;
+    font-variant-numeric:tabular-nums;
+  }
+  html[data-theme] .activity-detail-page .dn-content-row-time {font-size:12.5px;}
+}
+@media(max-width:380px) {
+  /* On the narrowest iPhones, retain one intact date/time line even when
+     two large editing actions need their own row. */
+  html[data-theme] .activity-detail-page .dn-content-row:not(.is-untimed) .dn-content-row-meta {
+    grid-column:1/-1;grid-row:1;justify-self:start;
+  }
+  html[data-theme] .activity-detail-page .dn-content-row:not(.is-untimed) .dn-content-row-actions {
+    grid-column:2;grid-row:2;justify-self:end;
+  }
+  html[data-theme] .activity-detail-page .dn-content-row:not(.is-untimed) .dn-content-row-body {
+    grid-column:1/-1;grid-row:3;
+  }
+}
