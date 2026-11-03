@@ -55,7 +55,7 @@ const mobileDockStart = [
 ];
 const mobileDockEnd = [
   { label: 'Moments', path: '/events', icon: BookHeart },
-  { label: 'Transactions', path: '/financials/transactions', icon: Receipt },
+  { label: 'Transactions', compactLabel: 'Finance', path: '/financials/transactions', icon: Receipt },
 ];
 // Portrait iPhones and short, touch-enabled landscape iPhones share the dock.
 const MOBILE_DOCK_MEDIA = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
@@ -627,7 +627,10 @@ export default function DashboardLayout() {
             className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
             aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
             <span className="dn-dock-icon"><item.icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
-            <span className="dn-dock-label">{item.label}</span>
+            <span className="dn-dock-label">{item.compactLabel
+              ? <><span className="dn-dock-full-label">{item.label}</span>
+                <span className="dn-dock-compact-label" aria-hidden="true">{item.compactLabel}</span></>
+              : item.label}</span>
           </Link>
         ))}
       </nav>
