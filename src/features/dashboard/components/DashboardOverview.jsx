@@ -287,6 +287,35 @@ export function DashboardOverviewContent() {
     <>
       <div className="dashboard-overview dashboard-compact">
         <DashboardGreeting now={today} />
+        {isGuest && !user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
+          <header className="dashboard-section-heading">
+            <span className="dashboard-section-title">Tasks</span>
+            <div className="dashboard-section-actions">
+              <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link>
+              <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
+                aria-label={sections.tasks ? 'Hide Tasks on dashboard' : 'Show Tasks on dashboard'}
+                onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
+            </div>
+          </header>
+          {sections.tasks ? taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
+            : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
+              : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
+                {dashboardTasks.map((task) => {
+                  const overdue = task.dueDate < formatMomentDate(today);
+                  return <div className="dn-dashboard-task-row" key={task.id}>
+                    <div className="dn-dashboard-task-text">
+                      <strong>{task.title}</strong>
+                      <small>{overdue ? 'Overdue · ' : ''}{task.dueDate}
+                        {task.dueTime ? ` · ${task.dueTime}` : ''}</small>
+                    </div>
+                    <button type="button" aria-label={`Complete Task ${task.title}`}
+                      onClick={() => completeDashboardTask(task)}><Check size={16} aria-hidden="true" />Done</button>
+                  </div>;
+                })}
+              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
+          {taskError ? <p role="alert" className="dashboard-activity-action-error">{taskError}</p> : null}
+          {taskAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{taskAnnouncement}</p> : null}
+        </section> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Moments</span>
@@ -389,35 +418,6 @@ export function DashboardOverviewContent() {
           </> : null}
           <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
         </section>
-        {isGuest && !user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
-          <header className="dashboard-section-heading">
-            <span className="dashboard-section-title">Tasks</span>
-            <div className="dashboard-section-actions">
-              <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link>
-              <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
-                aria-label={sections.tasks ? 'Hide Tasks on dashboard' : 'Show Tasks on dashboard'}
-                onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
-            </div>
-          </header>
-          {sections.tasks ? taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
-            : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
-              : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
-                {dashboardTasks.map((task) => {
-                  const overdue = task.dueDate < formatMomentDate(today);
-                  return <div className="dn-dashboard-task-row" key={task.id}>
-                    <div className="dn-dashboard-task-text">
-                      <strong>{task.title}</strong>
-                      <small>{overdue ? 'Overdue · ' : ''}{task.dueDate}
-                        {task.dueTime ? ` · ${task.dueTime}` : ''}</small>
-                    </div>
-                    <button type="button" aria-label={`Complete Task ${task.title}`}
-                      onClick={() => completeDashboardTask(task)}><Check size={16} aria-hidden="true" />Done</button>
-                  </div>;
-                })}
-              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
-          {taskError ? <p role="alert" className="dashboard-activity-action-error">{taskError}</p> : null}
-          {taskAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{taskAnnouncement}</p> : null}
-        </section> : null}
       </div>
 
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
