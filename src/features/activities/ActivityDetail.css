@@ -215,3 +215,158 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
 .dn-content-row-actions button:disabled { opacity:.45; cursor:default; }
 .dn-content-empty { color:var(--color-text-muted); font-size:13px; line-height:1.6; }
 @media(max-width:380px) { .dn-content-row-main { grid-template-columns:minmax(76px,90px) minmax(0,1fr); gap:8px; } .dn-content-row { gap:3px; } }
+
+
+/* DN 2.2 Phase 4A: Activity Detail reading-first presentation.
+   Purely visual: preserves original cover transforms, scoped entry mutations,
+   source/attachment ownership and the current finance and navigation routes. */
+.activity-detail-page .activity-cover.has-photo {
+  max-height: min(360px, 43svh);
+}
+.activity-detail-page .activity-detail-content {
+  max-width: 860px;
+  padding: 18px clamp(12px, 2.5vw, 24px) 0;
+}
+.activity-detail-page .activity-detail-heading { gap: 6px; }
+.activity-detail-page .activity-detail-metadata { margin-top: 12px; }
+.activity-detail-page .activity-detail-facts {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 7px 12px;
+}
+.activity-detail-page .activity-detail-facts > .activity-status-pill,
+.activity-detail-page .activity-detail-facts > .activity-detail-priority,
+.activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
+  display: inline-flex;
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+  align-items: center;
+}
+.activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
+  font-size: 12px;
+  font-weight: 500;
+}
+.activity-detail-page .activity-detail-due { margin-top: 2px; }
+.activity-detail-page .dn-content-section {
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.activity-detail-page .dn-content-heading {
+  align-items: center;
+  margin-bottom: 2px;
+}
+.activity-detail-page .dn-content-heading h2,
+.activity-detail-page .activity-linked-transactions-title,
+.activity-detail-page .activity-attachments h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  line-height: 1.45;
+  letter-spacing: -.015em;
+}
+.activity-detail-page .dn-content-heading > span { font-size: 12.5px; }
+.activity-detail-page .dn-content-row { padding: 18px 0; }
+.activity-detail-page .dn-content-row-main {
+  grid-template-columns: minmax(100px, 122px) minmax(0, 1fr);
+  gap: 14px;
+}
+.activity-detail-page .dn-content-row-meta {
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.45;
+}
+.activity-detail-page .dn-content-row-date {
+  font-size: 12px;
+  font-weight: 650;
+  padding: 3px 6px;
+}
+.activity-detail-page .dn-content-row-body {
+  max-width: 72ch;
+  font-size: 15.5px;
+  line-height: 1.75;
+}
+.activity-detail-page .dn-content-row-actions {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 2px;
+}
+.activity-detail-page .dn-content-row-actions button {
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 11px;
+}
+.activity-detail-page .dn-content-remove { color: var(--color-text-muted); }
+.activity-detail-page .dn-content-remove:hover,
+.activity-detail-page .dn-content-remove:focus-visible {
+  color: var(--color-text);
+}
+.activity-detail-page .moment-transactions.is-minimal.has-linked-transactions {
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.activity-detail-page .activity-linked-transactions-title { margin-bottom: 10px; }
+.activity-detail-page .activity-detail-section:has(.activity-attachments) {
+  margin-top: 24px;
+  padding-top: 18px;
+}
+.activity-detail-page .activity-attachments .activity-section-heading { margin-bottom: 10px; }
+.activity-detail-page .activity-pagination { font-size: 12.5px; gap: 10px; }
+
+@media (max-width: 767px) {
+  .activity-detail-page .activity-cover.has-photo {
+    height: clamp(180px, 30svh, 290px);
+    min-height: 180px;
+    max-height: none;
+  }
+  .activity-detail-page .activity-cover.is-fallback {
+    height: clamp(96px, 14svh, 144px) !important;
+  }
+  .activity-detail-page .activity-detail-content { padding: 16px 12px 0; }
+  .activity-detail-page .activity-detail-heading { gap: 5px; }
+  .activity-detail-page .dn-content-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 8px;
+    row-gap: 6px;
+    padding: 16px 0;
+  }
+  .activity-detail-page .dn-content-row-main { display: contents; }
+  .activity-detail-page .dn-content-row-meta {
+    grid-column: 1;
+    grid-row: 1;
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+    align-self: center;
+    gap: 5px 9px;
+    min-height: 44px;
+  }
+  .activity-detail-page .dn-content-row-actions {
+    grid-column: 2;
+    grid-row: 1;
+    align-items: center;
+  }
+  .activity-detail-page .dn-content-row-body {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    max-width: none;
+  }
+  .activity-detail-page .dn-content-row.is-untimed .dn-content-row-body {
+    grid-row: 1;
+    grid-column: 1 / -1;
+  }
+  .activity-detail-page .dn-content-row.is-untimed .dn-content-row-actions {
+    grid-row: 2;
+    justify-self: end;
+  }
+  .activity-detail-page .dn-content-row-date {
+    border-radius: 7px;
+    padding: 4px 6px;
+  }
+}
+@media (max-width: 360px) {
+  .activity-detail-page .dn-content-row-actions { gap: 0; }
+  .activity-detail-page .activity-detail-facts { gap: 6px 9px; }
+}

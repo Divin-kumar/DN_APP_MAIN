@@ -43,6 +43,11 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+      - name: Check DN 2.2 Activity Detail mobile reading layout and cover gestures
+        run: >-
+          npx playwright test
+          e2e/activity-detail-premium-220.spec.js
+          --workers=1
       - name: Check PDF Studio style, searchable download and high-resolution export
         run: >-
           npx playwright test
@@ -72,7 +77,7 @@ jobs:
           {
             echo "## DN 2.2 focused Story/PDF browser acceptance passed"
             echo "- OldVersion SHA: $GITHUB_SHA"
-            echo "- 390px light/dark contrast, 3 styles x 3 Story formats, Studio and PDF paths: passed"
+            echo "- 390px light/dark contrast, 3 styles x 3 Story formats, Activity Detail and PDF paths: passed"
             echo "- Uses synthetic Guest test data; not a real iPhone Safari result"
             echo "- No Firebase or Vercel deployment"
             echo "- Not a substitute for the full feature-release gate"

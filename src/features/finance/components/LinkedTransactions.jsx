@@ -41,6 +41,7 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
     {finance.error ? <div className="financial-load-error" role="alert"><span>Transactions couldn’t be loaded.</span>
       <button type="button" className="secondaryButton" onClick={finance.retry}>Try again</button></div>
       : finance.pending ? <LoadingSkeleton rows={3} label="Loading linked transactions" /> : <>
+        {minimal && activityId && finance.transactions.length ? <h2 className="activity-linked-transactions-title">Transactions</h2> : null}
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
         {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder resultCount={filtered.length} resultLabel="transactions"
           activeCount={conditions.activeCount} chips={<ConditionChips filter={conditions} />}

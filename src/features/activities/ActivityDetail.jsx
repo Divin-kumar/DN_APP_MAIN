@@ -88,8 +88,8 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
       <div className="activity-detail-metadata" aria-busy={actions.busy}>
         <div className="activity-detail-facts">
           <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
-          <span className="activity-detail-entry-count">{contentCount} {contentCount === 1 ? 'entry' : 'entries'}</span>
           <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
+          <span className="activity-detail-entry-count">{contentCount} {contentCount === 1 ? 'entry' : 'entries'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
           otherActions={menuActions}

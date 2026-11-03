@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Pencil } from 'lucide-react';
+import { Pencil, Trash2 } from 'lucide-react';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import RichText from '../../../components/common/RichText';
 import RichTextEditor from '../../../components/common/RichTextEditor';
@@ -51,12 +51,13 @@ export default function ActivityEntryTimeline({ activity, moment, actions, targe
       const historicalOwner = row.sourceActivityId || row.legacyActivityFields
         || (moment?.attachments || []).some((file) =>
           String(file.activityId) === String(activity.id) && String(file.entryId || '') === String(row.id));
-      return <article className="dn-content-row" key={row.id}>
+      const hasStamp = differentDay || Boolean(row.time);
+      return <article className={`dn-content-row${hasStamp ? '' : ' is-untimed'}`} key={row.id}>
         <div className="dn-content-row-main">
-          <div className="dn-content-row-meta">
+          {hasStamp ? <div className="dn-content-row-meta">
             {differentDay ? <span className="dn-content-row-date">{readableDate(row.date)}</span> : null}
-            <span className="dn-content-row-time">{readableTime(row.time)}</span>
-          </div>
+            {row.time ? <span className="dn-content-row-time">{readableTime(row.time)}</span> : null}
+          </div> : null}
           <div className="dn-content-row-body">
             {!row.root && row.title ? <strong className="dn-content-legacy-title">{row.title}</strong> : null}
             {row.description ? <RichText value={row.description} className="free-text-content" /> : null}
@@ -66,10 +67,10 @@ export default function ActivityEntryTimeline({ activity, moment, actions, targe
           <button type="button" aria-label={row.root ? 'Edit original activity writing' : 'Edit entry'}
             title="Edit" disabled={actions.busy} onClick={() => row.root
               ? actions.edit(target) : setDraft({ ...row, date: row.date || activity.date })}>
-            <Pencil size={15} aria-hidden="true" />
+            <Pencil size={16} aria-hidden="true" />
           </button>
           {!row.root && !historicalOwner ? <button type="button" disabled={actions.busy} className="dn-content-remove"
-            onClick={() => setDeleting(row)} aria-label="Delete entry">Delete</button> : null}
+            onClick={() => setDeleting(row)} aria-label="Delete entry" title="Delete entry"><Trash2 size={16} aria-hidden="true" /></button> : null}
         </div>
       </article>;
     })}</div> : <p className="dn-content-empty">No entries yet. Use + and choose Add entry to write your first update.</p>}
