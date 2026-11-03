@@ -37,7 +37,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geometry.left).toBeGreaterThanOrEqual(-1);
       expect(geometry.right).toBeLessThanOrEqual(width + 1);
       expect(geometry.page).toBeLessThanOrEqual(geometry.viewport + 1);
-      expect(geometry.touchTargets.filter((target) => target.height < 44)).toEqual([]);
+      // Browser fractional layout can report 43.9999 for a CSS 44px control.
+      // Reject genuinely undersized targets while allowing subpixel rounding.
+      expect(geometry.touchTargets.filter((target) => target.height < 43.9)).toEqual([]);
 
       await controls.getByRole('button', { name: 'Clear local' }).click();
       const dialog = page.getByRole('dialog', { name: 'Clear local DN data?' });
