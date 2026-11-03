@@ -177,7 +177,15 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         reminderTime: preferences.notifications?.reminderTime ?? '09:00',
       },
     });
-  }, [preferences]);
+  }, [
+    preferences.currency, preferences.dashboardView,
+    preferences.defaultEventType, preferences.defaultIncomeType,
+    preferences.defaultExpenseCategory,
+    preferences.notifications?.eventReminders,
+    preferences.notifications?.monthlySummary,
+    preferences.notifications?.budgetAlerts,
+    preferences.notifications?.reminderTime,
+  ]);
 
   const summary = useMemo(() => ({
     eventTypes: normalizeList(eventTypes),
