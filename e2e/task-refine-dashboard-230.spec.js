@@ -77,8 +77,6 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     const errors=await seedTasks(page,theme);
     const original=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
     await page.goto('/dashboard');
-    const dashboard=page.getByRole('region',{name:'Independent Tasks'});
-    // Section is a semantic region when named through aria-label.
     const rows=page.locator('.dn-dashboard-tasks .dn-dashboard-task-row');
     await expect(rows).toHaveCount(2);
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check')).toHaveCount(2);
