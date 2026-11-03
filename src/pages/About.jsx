@@ -42,7 +42,7 @@ const guideItems = [
   { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Filters and sorting expand within the page, and each phone filter stays on one row. Completed titles stay readable; Reopen is required before editing. Diary days now support the same three-dot actions as other Activities. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
   { title: 'Writing and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Earlier Memories remain safe, read-only reflections in Story; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Story, Activity Detail and Gallery. Identical originals share one stored file. All new originals stay in this browser, separately for each account or Guest. Only filenames and reference details sync to an account. Download a backup to move or recover originals; no paid cloud file storage is used for new saves. Older file details cannot recover an original that was never stored.' },
-  { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format, spacing and included sections, then update the actual page preview and download the PDF. Original photos remain in their current browser scope. PDF pages contain rendered text and images; use a recovery backup to preserve editable records and original files.' },
+  { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format and design, page spacing, activity/day pagination and included sections, then update the actual page preview and download the PDF. Optional Searchable writing adds a text layer; image-based pages remain the visual source. Original photos stay in their current browser scope. Use a recovery backup to preserve editable records and original files.' },
   { title: 'Transactions', description: 'Use universal + to add income or expenses, optionally linked to a Moment or Activity. It presets the current Moment or Activity Detail. Edit or delete existing transactions in Transactions under Profile; Activity and Moment histories are read-only. Search or use friendly filters, then sort by Date, Amount or Title in either direction. Export CSV saves exactly the matching records in their displayed order, including search and Refine conditions. History starts newest first. Income, Expense and Balance follow all filters and search on this page and in Moment Transactions. Add your own payment choices in Settings → Code Lists → Payment Methods.' },
   { title: 'Insights', description: 'Open Insights under Profile to review counts, spending and income patterns. Its JSON report is separate from a recovery backup.' },
   { title: 'Settings and backup', description: 'Open Settings under Profile to manage theme, preferences, greeting options and Code Lists. Export a JSON backup and review the restore summary before importing it. Notifications is Coming Soon; saved preferences and Reminder Presets are retained.' },
@@ -51,6 +51,19 @@ const guideItems = [
 // Documented product milestones, not an automatic log of GitHub commits.
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
+  {
+    version: '2.2.0',
+    title: 'A more beautiful home for your memories',
+    summary: 'Refined Story reading and PDF Studio designs, pagination and export quality.',
+    changes: [
+      'Story pages have Heritage, Editorial and Minimal designs, with clearer writing in both light and dark mode.',
+      'PDF Studio has premium visual choices, searchable writing (optional), and Standard, Enhanced and experimental Print draft page quality.',
+      'Natural flow, New day, new page, and New activity, new page keep same-day writing together when selected; a continuation is never treated as a separate Activity.',
+      'Included content stays collapsed until opened, and PDF page numbers, cover numbering and long-book navigation are adjustable.',
+      'A lone original photo fits on the current PDF page when enough writable space remains; the original file is never altered.',
+      'Activity Detail presents cleaner attachments, readable writing and Date/Time aligned in a single mobile row.',
+    ],
+  },
   {
     version: '2.1.4',
     title: 'Independent Activities and a cleaner writing flow',

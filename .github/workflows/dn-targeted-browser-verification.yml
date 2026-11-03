@@ -30,12 +30,13 @@ jobs:
           e2e/activity-cover-navigation-summary.spec.js
           e2e/activity-moment.spec.js
           e2e/iphone-about-premium.spec.js
+          e2e/release-phase9.spec.js
           e2e/iphone-activity-card-readability-phase1.spec.js
           e2e/local-attachments-readonly.spec.js
           e2e/responsive.spec.js
           e2e/scope-recovery.spec.js
           e2e/story-ownership-density.spec.js
-          --grep "completed Activities require reopening|the opening filtered sequence|Activity Detail and overview share|About keeps release controls|Activity titles and inline status|Moment Activities share action menus|contextual transaction rows|long Activity, five workspace tabs|Sample Activity changes stay|archived parents remain readable|legacy completed status exposes|story ownership and compact Activity cards at 820px|Story, original preview and Activity menu remain"
+          --grep "completed Activities require reopening|the opening filtered sequence|Activity Detail and overview share|About keeps release controls|release information and refresh|Activity titles and inline status|Moment Activities share action menus|contextual transaction rows|long Activity, five workspace tabs|Sample Activity changes stay|archived parents remain readable|legacy completed status exposes|story ownership and compact Activity cards at 820px|Story, original preview and Activity menu remain"
       - name: Verify iPhone landscape Transactions and dock only
         run: >-
           npx playwright test
