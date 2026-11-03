@@ -10,7 +10,9 @@ for (const width of [320, 390, 1280]) {
     const source = await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'), localStorage.getItem('dn_guest_expenses'), localStorage.getItem('dn_guest_incomes'),
     ]);
-    await page.getByRole('button', { name: 'New Task' }).click();
+    await expect(page.getByRole('button', { name: 'New Task', exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Open quick create menu' }).click();
+    await page.getByRole('button', { name: 'Task', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'New Task' });
     await editor.getByLabel('Task title').fill('Remember the travel documents');
     await editor.getByRole('button', { name: 'Create Task' }).click();
@@ -21,6 +23,8 @@ for (const width of [320, 390, 1280]) {
 
     await page.getByRole('button', { name: 'Refine', exact: true }).click();
     const refine = page.getByRole('dialog', { name: 'Refine Tasks' });
+    await expect(refine.getByRole('heading', { name: 'Group by' })).toHaveCount(0);
+    await expect(refine.locator('.dn-refine-sheet-intro')).toBeVisible();
     await refine.getByRole('group', { name: 'Status filter' }).getByRole('button', { name: 'Completed' }).click();
     await expect(refine.getByRole('status')).toContainText('0 matching Tasks');
     await expect(page.getByText('Remember the travel documents', { exact: true })).toBeVisible();
@@ -79,5 +83,32 @@ test('independent Guest Tasks remain private and are never exposed as account Ta
   await expect(page.getByText('Account Tasks aren’t available yet')).toBeVisible();
   await expect(page.getByText('Private', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
+test('Tasks have no grouped subheadings and Dashboard orders Tasks before Moments and Activities', async ({ page }) => {
+  const errors = await seedGuest(page);
+  await page.setViewportSize({ width: 320, height: 740 });
+  await page.goto('/tasks');
+  await page.evaluate(() => localStorage.setItem('dn_guest_tasks', JSON.stringify([
+    { id: 'task-a', title: 'Task A', status: 'in-progress', priority: 'high',
+      momentId: '', activityId: '', dueDate: '2026-11-06', dueTime: '' },
+    { id: 'task-b', title: 'Task B', status: 'in-progress', priority: 'low',
+      momentId: '', activityId: '', dueDate: '2026-11-06', dueTime: '' },
+  ])));
+  await page.reload();
+  await expect(page.locator('.dn-task-row')).toHaveCount(2);
+  await expect(page.locator('.dn-task-group')).toHaveCount(0);
+  await expect(page.getByText('Task A', { exact: true })).toBeVisible();
+  await expect(page.getByText('Task B', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Refine', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Refine Tasks' });
+  await expect(sheet.getByText('Group by')).toHaveCount(0);
+  await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.goto('/dashboard');
+  await expect(page.locator('.dashboard-overview.dashboard-compact > section').first()).toBeVisible();
+  const order = await page.locator('.dashboard-overview.dashboard-compact > section').evaluateAll((sections) =>
+    sections.map((element) => element.getAttribute('aria-label')));
+  expect(order).toEqual(['Independent Tasks', 'Moments', 'Activities']);
   expect(errors).toEqual([]);
 });
