@@ -71,7 +71,7 @@ export default function ListControls({
         {search ? <div className="dn-list-controls-search"><Search className="dn-list-controls-search-icon" size={18} strokeWidth={1.8} aria-hidden="true" />{search}</div> : null}
         {hasPanel ? <button type="button" className={`dn-list-controls-trigger${activeCount ? ' is-active' : ''}`}
           aria-label={`${label}${activeCount ? `, ${activeCount} active` : ''}`}
-          ref={triggerRef} aria-controls={panelId} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
+          ref={triggerRef} aria-controls={refine ? undefined : panelId} aria-haspopup={refine ? 'dialog' : undefined} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
           <SlidersHorizontal size={17} strokeWidth={1.8} aria-hidden="true" /><span>Refine</span>
           {activeCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeCount}</span> : null}
         </button> : activeCount && onReset ? <button type="button" className="dn-list-controls-trigger"
