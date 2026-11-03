@@ -76,8 +76,12 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
     await expect(pinnedNav).toBeVisible();
     const navAlpha = await pinnedNav.evaluate((node) => {
       const background = getComputedStyle(node).backgroundColor;
-      const values = background.match(/^rgba?\\((.+)\\)$/)?.[1]?.split(',').map((part) => part.trim()) || [];
-      return values.length === 4 ? Number(values[3]) : 1;
+      if (background.startsWith('rgba(')) {
+        return Number(background.slice(5, -1).split(',').at(-1)?.trim());
+      }
+      // A computed solid rgb() surface has an implicit alpha of 1.
+      if (background.startsWith('rgb(') && !background.includes('/')) return 1;
+      return Number.NaN;
     });
     expect(navAlpha, `Pinned ${theme} tabs must fully mask scrolled controls`).toBe(1);
     await page.screenshot({ path: testInfo.outputPath(`12-pdf-customization-${theme}-${width}.png`),
