@@ -17,8 +17,9 @@ test('Moments Refine draft discards sort/filter on Cancel and Escape', async ({ 
   const chips = sheet.getByRole('group', { name: 'Sort moments' });
   await chips.getByRole('button', { name: /^Sort by Name/ }).click();
   await expect(chips.getByRole('button', { name: 'Sort by Name, ascending' })).toHaveAttribute('aria-pressed', 'true');
+  const priorRules = await sheet.locator('.dn-condition-rule').count();
   await sheet.getByRole('button', { name: 'Add filter' }).click();
-  await expect(sheet.locator('.dn-condition-rule')).toHaveCount(1);
+  await expect(sheet.locator('.dn-condition-rule')).toHaveCount(priorRules + 1);
   await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(sheet).toHaveCount(0);
   expect(await savedListState(page)).toEqual(prior);
@@ -72,8 +73,9 @@ for (const list of sharedLists) {
     await expect(sheet).toBeVisible();
     const options = sheet.getByRole('group', { name: list.sort });
     await expect(options.getByRole('button', { name: /^Sort by / }).first()).toBeVisible();
+    const priorRules = await sheet.locator('.dn-condition-rule').count();
     await sheet.getByRole('button', { name: 'Add filter' }).click();
-    await expect(sheet.locator('.dn-condition-rule')).toHaveCount(1);
+    await expect(sheet.locator('.dn-condition-rule')).toHaveCount(priorRules + 1);
     await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(sheet).toHaveCount(0);
     expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
