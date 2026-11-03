@@ -27,10 +27,22 @@ import { CODE_LIST_SCHEMA_VERSION, collectReferencedCodeListValues, getCodeListI
 import { downloadBlob } from '../utils/download';
 import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, mergeEventGroupsForRestore, mergeRecordsById } from '../services/backupService';
 import { createBackupFile, readBackupFile } from '../services/backupFileService';
+import { createGuestTaskRepository } from '../services/guestTaskService';
 import { restoreAttachmentFiles } from '../services/attachmentService';
 import { deleteSignedInCloudRecords } from '../services/accountCloudDeletionService';
 import { CLOUD_DELETE_CONFIRMATION } from '../utils/accountCloudDeletionSafety';
 import { exportStoryDesignForBackup, restoreStoryDesignFromBackup, resetStoryDesign } from '../utils/storyDesignPreferences';
+
+// Only personal Guest sessions can access independent Task storage. In a demo,
+ // backup restoration still targets the real Guest storage, never the sample.
+const guardedGuestTasks = (assertCurrent) => createGuestTaskRepository({
+  storage: localStorage,
+  assertGuest: () => {
+    assertCurrent();
+    const state = useAppStore.getState();
+    return state.isGuest === true && !state.user?.uid;
+  },
+});
 
 const normalizeList = (value) =>
   value
@@ -238,6 +250,7 @@ export default function Settings({ dataBackupOnly = false }) {
       let events;
       let expenses;
       let incomes;
+      let tasks = [];
       let dataSource;
 
       const sampleData = getActiveSampleData(user?.uid || null);
@@ -248,6 +261,7 @@ export default function Settings({ dataBackupOnly = false }) {
         events = getGuestEvents();
         expenses = getGuestExpenses();
         incomes = getGuestIncomes();
+        tasks = guardedGuestTasks(assertSourceScope).list();
         dataSource = 'guest-local';
       } else if (user?.uid) {
         [events, expenses, incomes] = await Promise.all([
@@ -276,6 +290,7 @@ export default function Settings({ dataBackupOnly = false }) {
         moments: events,
         expenses,
         incomes,
+        tasks,
         codeLists: adminValues,
         codeListSchemaVersion: CODE_LIST_SCHEMA_VERSION,
         preferences,
@@ -413,12 +428,20 @@ export default function Settings({ dataBackupOnly = false }) {
         throw new Error('Exit the isolated sample session before restoring a personal backup.');
       }
       assertDestinationScope();
+      if (backup.tasks.length && (!destinationGuest || destinationUid)) {
+        throw new Error('Independent Tasks cannot be imported into a signed-in account until account Task cloud permissions are verified. No backup records were imported.');
+      }
+      // Fail before restoring any originals, Moments or ledger records if
+      // personal Guest Task storage cannot be read safely.
+      const guestTasks = destinationGuest && !destinationUid ? guardedGuestTasks(assertDestinationScope) : null;
+      guestTasks?.list();
+      assertDestinationScope();
       setBackupMessage('Verifying and restoring original attachment files before records…');
       const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup, { originalFiles: pendingBackup.originalFiles }), backup.attachmentFiles || [], {
         uid: destinationUid, isGuest: isGuest || !destinationUid, assertCurrent: assertDestinationScope, readOriginal: pendingBackup.readOriginal,
       });
       assertDestinationScope();
-      const imported = { moments: 0, activities: 0, memories: 0, attachments: 0, expenses: 0, incomes: 0, conflicts: 0 };
+      const imported = { moments: 0, activities: 0, memories: 0, attachments: 0, expenses: 0, incomes: 0, tasks: 0, conflicts: 0 };
       let restoredGroups;
       let resultingExpenses;
       let resultingIncomes;
@@ -501,6 +524,15 @@ export default function Settings({ dataBackupOnly = false }) {
         imported.conflicts += backup.incomes.length - mergedIncomes.added;
       }
 
+      // Imported independent Tasks are merged once, after parent/ledger records.
+      // A retry never overwrites a destination Task that shares its stable ID.
+      if (guestTasks && backup.tasks.length) {
+        assertDestinationScope();
+        const taskMerge = guestTasks.merge(backup.tasks);
+        imported.tasks = taskMerge.added;
+        imported.conflicts += taskMerge.conflicts;
+      }
+
       // Configuration is restored only after record writes succeed. Existing record values win on ID conflicts.
       assertDestinationScope();
       if (backup.settings.restoreCodeLists !== false) await setAdminValues(backup.codeLists);
@@ -537,7 +569,7 @@ export default function Settings({ dataBackupOnly = false }) {
         localStorage.setItem(`dn_${storageKey}_${pickerStorageId}`, JSON.stringify(ids));
       }
 
-      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, Dashboard shortcuts, Code Lists and saved List defaults were restored where present.`;
+      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records, plus ${imported.tasks} independent Tasks added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, Dashboard shortcuts, Code Lists and saved List defaults were restored where present.`;
 
       if (restoreFromGuestTour) {
         // Only conclude the demo after all verified originals, records,
@@ -902,6 +934,7 @@ export default function Settings({ dataBackupOnly = false }) {
                   <li>{pendingBackup.backup.attachments.length} attachment records · {(pendingBackup.backup.attachmentFiles || []).length} original files</li>
                   <li>{pendingBackup.backup.expenses.length} Expenses</li>
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
+                  <li>{pendingBackup.backup.tasks.length} independent Tasks</li>
                   <li>Code Lists, preferences, dashboard configuration, and saved List defaults (when present)</li>
                 </ul>
                 <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration in the backup replaces its matching destination settings. Older backups without saved List defaults or Dashboard shortcuts leave those existing preferences unchanged. Explicit empty Dashboard shortcut lists still clear them. An interrupted restore can be retried; completed records are recognized by ID.</p>
@@ -911,6 +944,9 @@ export default function Settings({ dataBackupOnly = false }) {
                 ) : null}
               </>
             ) : <p>This legacy file contains settings only; it cannot restore Moments or financial records.</p>}
+            {pendingBackup.backup.tasks.length > 0 && (!isGuest || user?.uid) ? (
+              <p role="alert">This backup contains independent Tasks. Account Task cloud storage has not been verified, so restoration is blocked in a signed-in workspace. No records will be imported.</p>
+            ) : null}
             {pendingBackup.backup.metadata.sourceAccount?.uid ? <p>Backup source account: {pendingBackup.backup.metadata.sourceAccount.displayName || pendingBackup.backup.metadata.sourceAccount.uid}. Its authentication account is not recreated.</p> : null}
             {getActiveSampleScenario() === GUEST_TOUR_SCENARIO && isGuest && !user?.uid ? (
               <p className="dn-restore-tour-note"><strong>Restore to your own Guest workspace:</strong> Confirming will leave the demo and merge this backup into your private Guest records, preserving existing IDs. Demo records will not be included. Cancel to keep exploring the demo.</p>
@@ -918,7 +954,8 @@ export default function Settings({ dataBackupOnly = false }) {
           </div>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
-            <button type="button" className="settings-primary-button" onClick={restorePendingBackup} disabled={importingBackup || exportingBackup}>
+            <button type="button" className="settings-primary-button" onClick={restorePendingBackup}
+              disabled={importingBackup || exportingBackup || (pendingBackup.backup.tasks.length > 0 && (!isGuest || Boolean(user?.uid)))}>
               {importingBackup ? 'Restoring backup…' : 'Confirm restore'}
             </button>
           </div>

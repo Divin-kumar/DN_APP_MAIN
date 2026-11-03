@@ -44,7 +44,7 @@ test('backup v3 retains explicit times and old untimed activities without invent
   const activities=fixture();
   const backup=createBackupDocument({moments:[{id:'m',name:'Day',activities}],codeLists:DEFAULT_CODE_LISTS});
   const restored=buildEventGroupsFromBackup(JSON.parse(JSON.stringify(backup)))[0];
-  assert.equal(backup.backupVersion,3);
+  assert.equal(backup.backupVersion,4);
   assert.equal(restored.activities.find(x=>x.id==='early').time,'07:20');
   assert.equal(Object.hasOwn(restored.activities.find(x=>x.id==='unknown'),'time'),false);
 });

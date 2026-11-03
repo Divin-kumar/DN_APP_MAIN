@@ -69,6 +69,23 @@ export const createGuestTaskRepository = ({ storage, assertGuest, createId } = {
       if (next.length !== current.length) write(next);
       return current.length - next.length;
     },
+    // Merge an imported backup by stable ID, never replacing destination values.
+    // One validated write avoids partial Task imports on quota failures.
+    merge(imported = []) {
+      const current = read();
+      if (!Array.isArray(imported)) throw new Error('Imported Tasks must be an array.');
+      const normalized = imported.map((item) => normalizeIndependentTask(item));
+      const incomingIds = new Set();
+      normalized.forEach((task) => {
+        if (incomingIds.has(task.id)) throw new Error('Imported Tasks contain a duplicate ID.');
+        incomingIds.add(task.id);
+      });
+      const existing = new Set(current.map((task) => task.id));
+      const additions = normalized.filter((task) => !existing.has(task.id));
+      const conflicts = normalized.length - additions.length;
+      const items = additions.length ? write([...current, ...additions]) : current;
+      return { items, added: additions.length, conflicts };
+    },
     detachParent(parent) {
       const current = read();
       const next = detachIndependentTaskLinks(current, parent);

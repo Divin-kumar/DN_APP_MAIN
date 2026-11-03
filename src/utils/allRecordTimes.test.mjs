@@ -45,7 +45,7 @@ test('income, expense and nested mirrors preserve saved times and explicit clear
 test('backup v3 preserves Moment and transaction clocks alongside untouched untimed records', () => {
   const backup=createBackupDocument({moments:entries().map(x=>({...x,activities:[]})), expenses:entries(),incomes:[{id:'income',time:'00:00',amount:50}],codeLists:DEFAULT_CODE_LISTS});
   const restored=buildEventGroupsFromBackup(JSON.parse(JSON.stringify(backup)));
-  assert.equal(backup.backupVersion,3);
+  assert.equal(backup.backupVersion,4);
   assert.equal(restored.find(x=>x.id==='early').time,'07:20');
   assert.equal(Object.hasOwn(restored.find(x=>x.id==='untimed'),'time'),false);
   assert.equal(backup.expenses.find(x=>x.id==='late').time,'18:30');

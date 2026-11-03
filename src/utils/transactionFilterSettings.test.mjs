@@ -63,7 +63,7 @@ test('v3 backups retain custom payment choices and methods while older v3 withou
     expenses: [{ id: 'expense', amount: 50, paymentMethod: 'UPI' }],
     codeLists: { ...DEFAULT_CODE_LISTS, paymentMethods: [{ value: 'UPI', label: 'UPI', active: false }] } });
   const restored = parseBackupDocument(JSON.parse(JSON.stringify(backup)));
-  assert.equal(restored.backupVersion, 3);
+  assert.equal(restored.backupVersion, 4);
   assert.deepEqual(restored.codeLists.paymentMethods, backup.codeLists.paymentMethods);
   assert.equal(restored.expenses[0].paymentMethod, 'UPI');
   assert.equal(restored.incomes[0].paymentMethod, 'Bank transfer');

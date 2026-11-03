@@ -332,3 +332,52 @@ test('A failed original-file restore keeps the active Guest tour and its edits a
   assert.equal(harness.values.get('dn_guest_tour_declined'), undefined);
   assert.equal(harness.reloads(), 0);
 });
+
+test('Settings v4 restore merges independent Guest Tasks once without overwriting existing IDs or Activities', async (t) => {
+  const originalTask = { id: 'same', title: 'Private Task', notes: 'Destination wins',
+    status: 'in-progress', dueDate: '', dueTime: '', momentId: '', activityId: '' };
+  const incomingTask = { ...originalTask, title: 'Stale imported Task', notes: 'Should not overwrite' };
+  const newTask = { id: 'new-task', title: 'Bring documents', status: 'completed', priority: 'high',
+    momentId: 'guest-moment', activityId: 'guest-activity', dueDate: '2026-11-04', dueTime: '',
+    completedAt: '2026-11-03T12:00:00Z' };
+  const harness = await openSettings(t, { dn_guest_tasks: JSON.stringify([originalTask]),
+    dn_guest_expenses: '[]', dn_guest_incomes: '[]', dn_guest_eventGroups: JSON.stringify([moment([])]) });
+  const backup = createBackupDocument({ moments: [moment([])], tasks: [incomingTask, newTask],
+    codeLists: DEFAULT_CODE_LISTS, settings: { restoreCodeLists: false } });
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await harness.restore(backup);
+    const tasks = JSON.parse(harness.values.get('dn_guest_tasks'));
+    assert.deepEqual(tasks.map((task) => task.id), ['same', 'new-task']);
+    assert.equal(tasks[0].title, 'Private Task');
+    assert.equal(tasks[0].notes, 'Destination wins');
+    assert.equal(tasks[1].dueTime, '');
+    assert.equal(tasks[1].activityId, 'guest-activity');
+    assert.equal(harness.eventService.getGuestEvents()[0].activities.length, 1);
+    assert.equal(harness.reloads(), attempt + 1);
+  }
+});
+test('Guest v3 restore cannot erase independent Tasks that are not present in the backup', async (t) => {
+  const originalTasks = [{ id: 'existing', title: 'Keep me', status: 'in-progress', dueDate: '', dueTime: '', momentId: '', activityId: '' }];
+  const harness = await openSettings(t, { dn_guest_tasks: JSON.stringify(originalTasks),
+    dn_guest_expenses: '[]', dn_guest_eventGroups: '[]' });
+  const legacy = backupFor([]);
+  legacy.backupVersion = 3;
+  delete legacy.tasks;
+  await harness.restore(legacy);
+  assert.equal(harness.reloads(), 1);
+  assert.deepEqual(JSON.parse(harness.values.get('dn_guest_tasks')), originalTasks);
+});
+test('corrupt destination Guest Tasks aborts restore before original files or Moment writes', async (t) => {
+  const harness = await openSettings(t, { dn_guest_tasks: '{"broken":"collection"}',
+    dn_guest_eventGroups: '[]', dn_guest_expenses: '[]', dn_guest_incomes: '[]' });
+  const before = [...harness.values];
+  let originalCalls = 0;
+  harness.api.restoreOriginals = async () => { originalCalls += 1; throw new Error('Original files must not be touched'); };
+  t.mock.method(console, 'error', () => {});
+  const msg = await harness.restore(createBackupDocument({ moments: [moment([])], codeLists: DEFAULT_CODE_LISTS,
+    settings: { restoreCodeLists: false } }));
+  assert.match(msg, /Guest Task storage is invalid/);
+  assert.equal(originalCalls, 0);
+  assert.deepEqual([...harness.values], before);
+  assert.equal(harness.reloads(), 0);
+});

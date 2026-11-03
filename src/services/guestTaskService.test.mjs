@@ -96,3 +96,25 @@ test('storage failure propagates and never reports a successful Task save', () =
   assert.throws(() => repository.upsert(task('a')), /quota/);
   assert.throws(() => createGuestTaskRepository({ storage: new Map() }), /explicit storage and session guard/);
 });
+
+test('backup merge preserves destination Tasks on identity conflict and is retry-safe', () => {
+  const ctx = fixture();
+  ctx.repository.upsert(task('a', { title: 'Private destination value', notes: 'Keep' }));
+  const incoming = [task('a', { title: 'Stale backup value', notes: 'Discarded' }), task('b', { title: 'New backup Task', dueTime: '' })];
+  const first = ctx.repository.merge(incoming);
+  assert.deepEqual({ added: first.added, conflicts: first.conflicts }, { added: 1, conflicts: 1 });
+  assert.deepEqual(ctx.repository.list().map((t) => t.title), ['Private destination value', 'New backup Task']);
+  const before = ctx.records.get(GUEST_TASKS_KEY);
+  const retry = ctx.repository.merge(incoming);
+  assert.deepEqual({ added: retry.added, conflicts: retry.conflicts }, { added: 0, conflicts: 2 });
+  assert.equal(ctx.records.get(GUEST_TASKS_KEY), before);
+  assert.deepEqual(ctx.repository.merge([]), { items: ctx.repository.list(), added: 0, conflicts: 0 });
+});
+test('backup merge rejects corrupt Task imports without partial writes', () => {
+  const ctx = fixture();
+  ctx.repository.upsert(task('a'));
+  const before = ctx.records.get(GUEST_TASKS_KEY);
+  assert.throws(() => ctx.repository.merge([task('b'), task('b')]), /duplicate ID/);
+  assert.throws(() => ctx.repository.merge([task('b'), task('bad', { dueDate: '2026-02-30' })]), /valid Task due date/);
+  assert.equal(ctx.records.get(GUEST_TASKS_KEY), before);
+});
