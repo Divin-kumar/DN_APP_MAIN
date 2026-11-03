@@ -1,5 +1,6 @@
 import { useMemo, useRef, useState } from 'react';
-import { ArrowDown, ArrowUp, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
+import SortChips from './SortChips';
 import ModalDialog from './ModalDialog';
 import ConditionBuilder from './ConditionBuilder';
 import { conditionCount, emptyGroup } from '../../utils/conditionEngine';
@@ -49,18 +50,8 @@ export default function FilterSortSheet({ title, refine, onClose, onReset }) {
   return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
-      <div className="dn-refine-sort-chips" role="group" aria-label={sort.label || 'Sort by'}>
-        {sort.options.map((option) => {
-          const chosen = draft.field === option.value;
-          return <button type="button" key={option.value} className={chosen ? 'is-selected' : ''}
-            aria-pressed={chosen} aria-label={`Sort by ${option.label}${chosen ? ', ' + (draft.direction === 'asc' ? 'ascending' : 'descending') : ''}`}
-            onClick={() => pickSort(option.value)}>
-            <span>{option.label}</span>
-            {chosen ? draft.direction === 'asc'
-              ? <ArrowUp size={14} aria-hidden="true" /> : <ArrowDown size={14} aria-hidden="true" /> : null}
-          </button>;
-        })}
-      </div>
+      <SortChips field={draft.field} direction={draft.direction} options={sort.options}
+        label={sort.label || 'Sort by'} onChange={(field) => pickSort(field)} />
     </div>
     <div className="dn-refine-sheet-section">
       <h4>Filters</h4>

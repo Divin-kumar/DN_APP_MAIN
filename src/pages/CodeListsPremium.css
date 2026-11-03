@@ -299,3 +299,11 @@ html[data-theme] .dn-premium-code-lists .dn-defaults-factory:focus-visible {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-premium-code-lists .dn-defaults-factory { transition:none; }
 }
+
+/* Phase 2: the same compact sort chips are used in saved Settings defaults. */
+html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-chips {
+  flex: 1 1 auto; min-width: 0; max-width: 100%;
+}
+html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-chips > button:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 2px;
+}

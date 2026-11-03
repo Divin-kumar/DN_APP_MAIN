@@ -8,14 +8,14 @@ import useExpenseStore from '../store/useExpenseStore';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useConditionFilters from '../hooks/useConditionFilters';
 import usePersistentListState from '../hooks/usePersistentListState';
-import SortControl from '../components/common/SortControl';
+import SortChips from '../components/common/SortChips';
 import ConditionBuilder from '../components/common/ConditionBuilder';
 import { momentConditionRecord, activityEntryConditionRecord } from '../utils/listConditionMigration';
 import { projectActivities } from '../utils/activityRecords';
 import { toTransactions } from '../utils/transactionFilters';
 import { MOMENT_LIST_DEFAULTS, MOMENT_LIST_RULES, TRANSACTION_LIST_DEFAULTS, TRANSACTION_LIST_RULES, systemConditionGroup } from '../utils/listViewDefaults';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
-import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, transactionSortForField } from '../utils/userListSort';
+import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS } from '../utils/userListSort';
 
 // Settings owns independent baseline keys, not the active page's working keys.
 // Filter editing still loads real field choices only when its panel opens.
@@ -105,22 +105,19 @@ function ListOrderingPreferences() {
     <div className="settings-admin-grid dn-list-sort-settings">
       <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Moments</strong><small>Default order</small></div>
-        <SortControl label="Sort Moments in settings" field={moments.field} direction={moments.direction}
-          options={MOMENT_SORT_OPTIONS} onFieldChange={(field) => setMoments({ field, direction: 'asc' })}
-          onToggleDirection={() => setMoments({ direction: moments.direction === 'asc' ? 'desc' : 'asc' })} />
+        <SortChips label="Sort Moments in settings" field={moments.field} direction={moments.direction}
+          options={MOMENT_SORT_OPTIONS} onChange={(field, direction) => setMoments({ field, direction })} />
       </div>
       <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Activities</strong><small>Default order</small></div>
-        <SortControl label="Sort Activities in settings" field={activities.field} direction={activities.direction}
-          options={ACTIVITY_SORTS} onFieldChange={(field) => setActivities({ field, direction: 'asc' })}
-          onToggleDirection={() => setActivities({ direction: activities.direction === 'asc' ? 'desc' : 'asc' })} />
+        <SortChips label="Sort Activities in settings" field={activities.field} direction={activities.direction}
+          options={ACTIVITY_SORTS} onChange={(field, direction) => setActivities({ field, direction })} />
       </div>
       <div className="settings-input-block dn-defaults-sort-card">
         <div className="dn-defaults-sort-label"><strong>Transactions</strong><small>Default order</small></div>
-        <SortControl label="Sort Transactions in settings" field={financeField} direction={financeDirection}
+        <SortChips label="Sort Transactions in settings" field={financeField} direction={financeDirection}
           options={TRANSACTION_SORT_OPTIONS}
-          onFieldChange={(field) => setFinance({ sort: transactionSortForField(field) })}
-          onToggleDirection={() => setFinance({ sort: `${financeField}-${financeDirection === 'asc' ? 'desc' : 'asc'}` })} />
+          onChange={(field, direction) => setFinance({ sort: `${field}-${direction}` })} />
       </div>
     </div>
     <div className="dn-list-filter-preferences">

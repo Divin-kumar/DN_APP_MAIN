@@ -16,10 +16,12 @@ for (const config of lists) {
       await page.goto('/settings/list-defaults');
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)));
       const settingsOrder = page.getByRole('group', { name: config.settings });
-      await settingsOrder.getByRole('combobox').click();
-      await page.getByRole('option', { name: config.option, exact: true }).click();
-      await settingsOrder.getByRole('button', { name: 'Sort descending' }).click();
-      await expect(settingsOrder.getByRole('button', { name: 'Sort ascending' })).toBeVisible();
+      const savedSort = settingsOrder.getByRole('button', { name: 'Sort by ' + config.option, exact: true });
+      await savedSort.click(); // Changing the field always begins ascending.
+      const ascending = settingsOrder.getByRole('button', { name: 'Sort by ' + config.option + ', ascending' });
+      await expect(ascending).toHaveAttribute('aria-pressed', 'true');
+      await ascending.click(); // Tapping the selected field reverses direction.
+      await expect(settingsOrder.getByRole('button', { name: 'Sort by ' + config.option + ', descending' })).toBeVisible();
 
       await page.goto(config.path);
       await page.getByRole('button', { name: /^Filters and sort/ }).click();
@@ -37,8 +39,7 @@ for (const config of lists) {
 
       await page.goto('/settings/list-defaults');
       const saved = page.getByRole('group', { name: config.settings });
-      await expect(saved.getByRole('combobox')).toContainText(config.option);
-      await expect(saved.getByRole('button', { name: 'Sort ascending' })).toBeVisible();
+      await expect(saved.getByRole('button', { name: 'Sort by ' + config.option + ', descending' })).toHaveAttribute('aria-pressed', 'true');
       expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)))).toEqual(before);
       expect(errors).toEqual([]);
     });
