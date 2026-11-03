@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-312 | Align old full-release cover and filtered paging checks with DN 2.2
+- **Exact source evidence:** Full non-deploying release run on `2db3931` completed 616 Playwright cases: 605 passed, 11 failed. Ten tests used superseded Activity-cover height assertions; one filtered Activity gesture timed out on a missing cover because a no-pager assertion could pass before Detail mounted.
+- **Preserve approved behavior:** Phase 4A mobile photo covers use `clamp(180px, 30svh, 290px)`; mobile empty covers use `clamp(96px, 14svh, 144px)`; desktop empty covers retain `20svh` and the existing min/max. No Activity Detail UI, original files, data, filters, navigation logic or PDF exports are changed.
+- **Narrow correction:** Update only the legacy browser assertions for those cover dimensions, and assert the actual Detail URL, title and rendered fallback before trying single-result or post-completion paging. Add these three suites to existing opt-in `[verify-220]` synthetic Chromium acceptance; do not repeat all 616 cases just for stale assertions. Source implementation remains unchanged.
+- **Verification boundary:** Authored tests are not proof of a pass until exact-SHA targeted CI succeeds. The failed full check still prevents feature-release approval; real iPhone Safari and full exact-release gate remain separate. Guest tour data and version stay unchanged because this is test-only. No `main`, PR, merge, Hosting deployment or app version bump.
+
 ## CHG-20261103-311 | Keep sticky PDF Studio navigation opaque on mobile
 - **Visual evidence:** The successful `[verify-220]` cross-page artifact at `8127e26` shows customization labels partially visible behind the pinned Moment tab strip in the 320px light and 390px dark scroll captures. This is a cosmetic layering issue, not a pagination/rendering failure.
 - **Fix:** Use fully opaque theme-aware mobile backgrounds for the existing Moment workspace tab rail. Preserve all tab states, focus, scrolling, geometry and behavior; do not change PDF canvas, original photos, records, files or Settings.
