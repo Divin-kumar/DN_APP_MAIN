@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-299 | Preserve synthetic Story screenshot evidence before Playwright clears outputs
+- **Actual QA evidence:** Focused DN 2.2 browser acceptance commit `62cff35` passed all 9 Playwright tests (Story/Settings light/dark 3, PDF Studio searchable/quality/style 3, Journal/Diary/Tasks photo and writing 3). Fast CI, lint, Node, build, dependency scan and documentation also passed. These are synthetic 390px Chromium checks, not physical iPhone Safari tests or user-uploaded October Diary export tests.
+- **Artifact issue:** Three sequential `npx playwright test` invocations share `.verification/browser-results`; each resets the output directory, removing screenshots attached by the successful Story test before the final artifact upload. No Story or PDF acceptance failed on `62cff35`.
+- **Correction:** Upload the Story evidence artifact immediately after the Story/Settings step, retaining the final PDF/error artifact at the end. This does not modify user-facing app code, original memories, styling, PDF generation, tests or release settings; it only preserves CI screenshots for visual review. Retry the focused job with `[verify-220]`. Do not change app version, deploy, use `main`, or treat Chromium as Safari proof.
+
 ## CHG-20261103-298 | Correct DN 2.2 contrast-test origin setup before browser rerun
 - **Observed evidence:** Opt-in commit `3fd8557` ran Chromium. Saved appearance Settings passed (1 test). Both dark/light book-paper checks failed during test setup, before reaching Story, with `SecurityError: Failed to read localStorage ... Access is denied for this document`. The test wrote the scoped design key from Playwright's initial opaque `about:blank` page. Those failures do not establish any application rendering defect. The workflow skipped the downstream PDF tests because the Story step failed.
 - **Correction:** Navigate to the app's real `/events` origin before the test modifies `localStorage`, then run its preexisting Story appearance and WCAG contrast checks without relaxing assertions. Also scroll the synthetic Journal chapter into view before attaching dark/light 390px screenshot evidence.

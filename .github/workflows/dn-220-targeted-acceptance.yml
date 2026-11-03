@@ -31,6 +31,18 @@ jobs:
           e2e/story-paper-contrast-220.spec.js
           e2e/story-design-phase1.spec.js
           --workers=1
+      # Playwright clears its outputDir before each separate invocation. Archive
+      # Story screenshots now, before the next PDF suite overwrites them.
+      - name: Preserve synthetic Story dark/light screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-220-story-contrast-screenshots
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Check PDF Studio style, searchable download and high-resolution export
         run: >-
           npx playwright test
