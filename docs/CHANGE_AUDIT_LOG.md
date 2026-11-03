@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-292 | Focused Settings SSR test-harness compatibility correction
+- **Observed CI:** The first Phase 1 source commit `b3e77dd` passed documentation and lint, but its Node suite reported 10 failures, all from the existing Settings restore SSR harness importing the new visual picker as a real React component. That harness replaces React/JSX imports of Settings' shared components with synthetic stubs; the new picker was outside its allowlist, so a React `jsx-dev-runtime` CommonJS module failed with `module is not defined`. This does not by itself establish a real browser failure.
+- **Correction:** Explicitly stub only the new StoryDesignSettings import in `src/pages/Settings.restore.test.mjs` using the harness's existing `guest-restore-component` stub. The restore tests continue exercising the real Settings handlers, data scope guards, original-file restoration and backup paths. No application UI, original records, PDF renderer or storage behavior is changed.
+- **Verification:** Node/lint/build and affected browser paths must be judged by the new exact-SHA CI; earlier failed checks are not counted as passing. No version increment, deploy-live trigger, non-`OldVersion` write, PR or merge.
+
 ## CHG-20261103-291 | DN 2.2.0 first appearance integration: scoped Settings and Story designs
 - **Owner authorization:** After approving the three visual directions and isolated POC, owner requested proceeding with the Settings + Story integration. The scope is presentation only: no PDF renderer replacement, app-version bump, deployment, main-branch write, merge or PR.
 - **Implementation:** Add a separate Story design preference contract and React subscription for Heritage/Editorial/Minimal, with independent Journal/Diary/Tasks defaults. Add a three-style preview picker under Appearance & preferences. Story consumes the saved active-scope design as CSS-only presentation; its one-Activity-one-chapter content, continuation paragraphs, images, status actions, times and financial links are unchanged.

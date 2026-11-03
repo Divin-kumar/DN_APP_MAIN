@@ -53,6 +53,7 @@ const openSettings = async (t, initialStorage) => {
           if (source === '../firebase/config') return '\0guest-restore-db';
           if (source === '../services/accountCloudDeletionService') return '\0guest-restore-cloud-delete';
           if (source === 'lucide-react') return '\0guest-restore-icons';
+          if (source === '../components/settings/StoryDesignSettings') return '\0guest-restore-component';
           if (source.startsWith('../components/common/')) return '\0guest-restore-component';
           if (source === '../store/useAppStore') return '\0guest-restore-app';
           if (source.startsWith('../store/')) return '\0guest-restore-store';
