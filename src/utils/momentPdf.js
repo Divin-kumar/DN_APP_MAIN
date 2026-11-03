@@ -4,7 +4,7 @@ import { attachmentRepository } from '../services/attachmentService';
 import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
-import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES } from './pdfStudioOptions';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES } from './pdfStudioOptions';
 import { pdfStoryText } from './pdfStoryText';
 
 const SCALE = 1.65;
@@ -40,6 +40,8 @@ export class MomentPdfPainter {
     this.pages = [];
     this.pageNumber = 0;
     this.template = options.template || 'legacy';
+    this.visualStyle = options.visualStyle || 'legacy';
+    this.palette = PDF_STYLE_PALETTES[this.visualStyle] || palette;
     this.density = options.density || 'balanced';
     this.begin();
   }
@@ -50,24 +52,29 @@ export class MomentPdfPainter {
     this.ctx = this.canvas.getContext('2d');
     if (!this.ctx) throw new Error('PDF rendering is unavailable in this browser.');
     this.ctx.scale(SCALE, SCALE);
-    this.ctx.fillStyle = this.template === 'journey' ? '#fffcf6'
-      : this.template === 'diary' ? '#fffefa' : '#fff';
+    this.ctx.fillStyle = this.palette.paper || (this.template === 'journey' ? '#fffcf6'
+      : this.template === 'diary' ? '#fffefa' : '#fff');
     this.ctx.fillRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT);
     this.ctx.textBaseline = 'top';
     this.y = INSET;
-    this.ctx.fillStyle = palette.accent;
+    this.ctx.fillStyle = this.palette.accent;
     this.ctx.font = '700 10px system-ui, sans-serif';
-    this.ctx.fillText('DN  /  ' + (PDF_TEMPLATE_NAMES[this.template] || 'Moment summary').toUpperCase(), INSET, 23);
+    this.ctx.fillText(
+      (this.visualStyle === 'legacy' ? 'DN  /  ' : '')
+        + (PDF_TEMPLATE_NAMES[this.template] || 'Moment summary').toUpperCase(),
+      INSET, 23,
+    );
   }
   async finishPage() {
     if (!this.canvas) return;
     this.assertCurrent();
     const ctx = this.ctx;
-    ctx.fillStyle = palette.line;
+    ctx.fillStyle = this.palette.line;
     ctx.fillRect(INSET, PDF_PAGE_HEIGHT - 37, CONTENT_WIDTH, .7);
-    ctx.fillStyle = palette.muted;
+    ctx.fillStyle = this.palette.muted;
     ctx.font = '10px system-ui, sans-serif';
-    ctx.fillText('Created with DN', INSET, PDF_PAGE_HEIGHT - 28);
+    ctx.fillText(this.visualStyle === 'legacy' ? 'Created with DN' : 'DN · Personal keepsake',
+      INSET, PDF_PAGE_HEIGHT - 28);
     const num = String(this.pageNumber);
     ctx.fillText(num, PDF_PAGE_WIDTH - INSET - ctx.measureText(num).width, PDF_PAGE_HEIGHT - 28);
     this.pages.push(await jpegBytes(this.canvas));
@@ -81,7 +88,8 @@ export class MomentPdfPainter {
     this.begin();
   }
   font(size, bold) {
-    const family = this.template === 'chronicle' ? 'system-ui, sans-serif' : 'Georgia, serif';
+    const family = this.visualStyle === 'minimal' || (this.visualStyle === 'legacy' && this.template === 'chronicle')
+      ? 'system-ui, sans-serif' : 'Georgia, serif';
     this.ctx.font = `${bold ? 700 : 400} ${size}px ${family}`;
   }
   wrap(text, maxWidth) {
@@ -106,7 +114,7 @@ export class MomentPdfPainter {
     lines.push(line.trimEnd());
     return lines;
   }
-  async text(value, { size = 11, bold = false, color = palette.ink, indent = 0, leading = 1.48, after = 5 } = {}) {
+  async text(value, { size = 11, bold = false, color, indent = 0, leading = 1.48, after = 5 } = {}) {
     this.font(size, bold);
     const rows = String(value ?? '').replace(/\r\n?/g, '\n').split('\n');
     const height = size * leading * (this.density === 'airy' ? 1.17 : this.density === 'compact' ? .91 : 1);
@@ -116,7 +124,7 @@ export class MomentPdfPainter {
       for (const line of chunks) {
         await this.ensure(height);
         this.font(size, bold);
-        this.ctx.fillStyle = color;
+        this.ctx.fillStyle = color || this.palette.ink;
         this.ctx.fillText(line, INSET + indent, this.y);
         this.y += height;
       }
@@ -133,14 +141,14 @@ export class MomentPdfPainter {
     const headingHeight = this.template === 'legacy' ? 52 : 32 + lines * 15 * 1.48 * density + after;
     await this.ensure(headingHeight + keepWithNext);
     this.y += 17;
-    this.ctx.fillStyle = palette.line;
+    this.ctx.fillStyle = this.palette.line;
     this.ctx.fillRect(INSET, this.y, CONTENT_WIDTH, 1);
     this.y += 15;
-    await this.text(title, { size: 15, bold: true, color: palette.accent, after: 10 });
+    await this.text(title, { size: 15, bold: true, color: this.palette.accent, after: 10 });
   }
   async photo(attachment, context, { large = false, fitToRemaining = false, reserveAfter = 0, reportUnavailable = true } = {}) {
     if (!isAttachmentImage(attachment.type)) {
-      await this.text(`Other file: ${attachment.name || 'Attachment'}`, { size: 10, color: palette.muted });
+      await this.text(`Other file: ${attachment.name || 'Attachment'}`, { size: 10, color: this.palette.muted });
       return;
     }
     let bitmap;
@@ -187,7 +195,7 @@ export class MomentPdfPainter {
       return { page: this.pageNumber, width, height };
     } catch (error) {
       if (String(error?.message).includes('session changed')) throw error;
-      if (reportUnavailable) await this.text('Photo preview unavailable on this device.', { size: 10, color: palette.muted });
+      if (reportUnavailable) await this.text('Photo preview unavailable on this device.', { size: 10, color: this.palette.muted });
     } finally { bitmap?.close?.(); }
   }
   async attachments(attachments, context, options = {}) {
@@ -236,7 +244,7 @@ export class MomentPdfPainter {
       }
       try {
         if (!images.length) {
-          for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: palette.muted });
+          for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: this.palette.muted });
           continue;
         }
         const count = images.length;
@@ -278,7 +286,7 @@ export class MomentPdfPainter {
           top += rowHeight + (rowIndex === groups.length - 1 ? 0 : gap);
         }
         this.y = top + 14;
-        if (missing.length) for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: palette.muted });
+        if (missing.length) for (const name of missing) await this.text('Photo unavailable: ' + name, { size: 10, color: this.palette.muted });
         // Record the grouped page number for review and regression tests.
         positions.push({ kind: 'grid', count, page: startPage });
       } finally {
@@ -324,6 +332,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   });
   const options = normalizePdfStudioOptions(studioOptions, story.presentation);
   const pdf = new MomentPdfPainter(assertCurrent, options);
+  const palette = pdf.palette;
   const template = options.template;
   const layout = [];
   // A cover photo is part of the book, not another copy in the body.
@@ -335,7 +344,8 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     : [];
   let drawnCoverHero = null;
   if (options.includeCover) {
-    pdf.y += 100;
+    pdf.y += options.visualStyle === 'editorial' ? 65
+      : options.visualStyle === 'minimal' ? 115 : 90;
     await pdf.text(PDF_TEMPLATE_NAMES[template].toUpperCase(), { size: 12, bold: true, color: palette.accent, after: 26 });
     await pdf.text(event.name || 'Untitled Moment', { size: 30, bold: true, color: palette.ink, leading: 1.26, after: 22 });
     await pdf.text(template === 'journey' ? 'Photographs and memories' : template === 'diary' ? 'A month in words' : 'Tasks and progress',

@@ -1,9 +1,16 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Download, RefreshCw, SlidersHorizontal } from 'lucide-react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import {
+  ChevronLeft, ChevronRight, Download, RefreshCw, SlidersHorizontal,
+  Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw,
+} from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
 import { getActiveSampleScenario } from '../../dev/sampleData';
 import { resolveMomentStoryPresentation } from '../../utils/momentStory';
-import { PDF_DENSITIES, PDF_TEMPLATES, normalizePdfStudioOptions } from '../../utils/pdfStudioOptions';
+import {
+  PDF_DENSITIES, PDF_TEMPLATES, PDF_STYLE_NAMES, normalizePdfStudioOptions,
+} from '../../utils/pdfStudioOptions';
+import { STORY_DESIGN_STYLES } from '../../utils/storyDesignPreferences';
 import { renderMomentStudioPdf } from '../../utils/momentPdf';
 import { downloadBlob } from '../../utils/download';
 import './MomentPdfStudio.css';
@@ -16,24 +23,35 @@ const optionLabels = [
   { key: 'includeCompleted', title: 'Completed tasks', help: 'Finished items after in-progress tasks' },
   { key: 'includeCancelled', title: 'Cancelled tasks', help: 'Show cancelled entries at the end' },
 ];
+const zoomSteps = [1, 1.25, 1.5, 2];
+const windowOfPages = (total, selected) => {
+  const start = Math.min(Math.max(selected - 4, 0), Math.max(total - 9, 0));
+  return Array.from({ length: Math.min(9, total) }, (_, offset) => start + offset);
+};
 
 export default function MomentPdfStudio({ event }) {
   const momentTypes = useAppStore((state) => state.adminValues?.eventTypes || []);
+  const savedStyles = useStoryDesignDefaults();
   const originalTemplate = resolveMomentStoryPresentation(event, momentTypes);
-  const [settings, setSettings] = useState(() => normalizePdfStudioOptions({}, originalTemplate));
+  const [settings, setSettings] = useState(() => normalizePdfStudioOptions({}, originalTemplate, savedStyles));
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(true);
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(null);
   const [pageIndex, setPageIndex] = useState(0);
+  const [thumbsOpen, setThumbsOpen] = useState(false);
+  const [zoomIndex, setZoomIndex] = useState(0);
   const requestRef = useRef(0);
   const urlsRef = useRef([]);
   const settingsRef = useRef(settings);
   const customizedRef = useRef(false);
+  const styleOverrideRef = useRef(false);
+  const dialogRef = useRef(null);
 
   const renderPreview = useCallback(async (next) => {
     const id = ++requestRef.current;
     setBusy(true);
+    setDirty(true);
     setError('');
     try {
       const result = await renderMomentStudioPdf(event, next, { momentTypes });
@@ -45,7 +63,10 @@ export default function MomentPdfStudio({ event }) {
       }
       const old = urlsRef.current;
       urlsRef.current = urls;
-      setPreview({ blob: result.blob, filename: result.filename, pageUrls: urls, scope: result.scope });
+      setPreview({
+        blob: result.blob, filename: result.filename, pageUrls: urls,
+        scope: result.scope, options: result.options,
+      });
       setPageIndex(0);
       setDirty(false);
       old.forEach((url) => URL.revokeObjectURL(url));
@@ -56,12 +77,17 @@ export default function MomentPdfStudio({ event }) {
     }
   }, [event, momentTypes]);
 
-  // Opening Studio prepares real pages. A source/Code List refresh must use the
-  // same choices shown by the controls, rather than silently exporting defaults.
-  // User changes still wait for an explicit "Update preview".
+  // Refresh with the user's actual controls on source changes. Settings style
+  // defaults follow the selected format unless this export has its own override.
+  // No Moment or preference is modified by these temporary PDF controls.
   useEffect(() => {
-    const next = customizedRef.current ? settingsRef.current
-      : normalizePdfStudioOptions({}, originalTemplate);
+    const next = customizedRef.current
+      ? normalizePdfStudioOptions({
+        ...settingsRef.current,
+        visualStyle: styleOverrideRef.current ? settingsRef.current.visualStyle
+          : savedStyles[settingsRef.current.template],
+      }, originalTemplate, savedStyles)
+      : normalizePdfStudioOptions({}, originalTemplate, savedStyles);
     settingsRef.current = next;
     setSettings(next);
     void renderPreview(next);
@@ -70,7 +96,7 @@ export default function MomentPdfStudio({ event }) {
       urlsRef.current.forEach((url) => URL.revokeObjectURL(url));
       urlsRef.current = [];
     };
-  }, [renderPreview, originalTemplate]);
+  }, [renderPreview, originalTemplate, savedStyles]);
 
   const update = (key, value) => {
     requestRef.current += 1;
@@ -78,10 +104,21 @@ export default function MomentPdfStudio({ event }) {
     setDirty(true);
     setError('');
     const next = { ...settingsRef.current, [key]: value };
+    if (key === 'template' && !styleOverrideRef.current) {
+      next.visualStyle = savedStyles[value];
+    }
+    if (key === 'visualStyle') styleOverrideRef.current = true;
     customizedRef.current = true;
     settingsRef.current = next;
     setSettings(next);
   };
+
+  const restoreSavedStyle = () => {
+    styleOverrideRef.current = false;
+    update('visualStyle', savedStyles[settingsRef.current.template]);
+    styleOverrideRef.current = false;
+  };
+
   const download = () => {
     if (!preview || dirty || busy) return;
     const session = useAppStore.getState();
@@ -95,73 +132,171 @@ export default function MomentPdfStudio({ event }) {
     downloadBlob(preview.blob, preview.filename);
   };
 
+  const zoom = zoomSteps[zoomIndex];
+  const goToPage = (index) => setPageIndex(Math.max(0, Math.min((preview?.pageUrls.length || 1) - 1, index)));
+  const thumbnailPages = useMemo(() => windowOfPages(preview?.pageUrls.length || 0, pageIndex),
+    [preview?.pageUrls.length, pageIndex]);
+  const changeZoom = (direction) => setZoomIndex((current) =>
+    Math.max(0, Math.min(zoomSteps.length - 1, current + direction)));
+
+  const openFullscreen = () => {
+    if (!preview || dirty || busy || !dialogRef.current) return;
+    dialogRef.current.showModal();
+  };
+
+  const controls = (full = false) => <nav className="dn-pdf-page-nav"
+    aria-label={full ? 'Fullscreen PDF page navigation' : 'PDF page navigation'}>
+    <button type="button" disabled={!preview || pageIndex === 0} onClick={() => goToPage(pageIndex - 1)}
+      aria-label={full ? 'Previous fullscreen page' : 'Previous PDF page'}>
+      <ChevronLeft size={18} aria-hidden="true" />
+    </button>
+    <span>Page {pageIndex + 1} of {preview?.pageUrls.length || 0}</span>
+    <button type="button" disabled={!preview || pageIndex >= preview.pageUrls.length - 1}
+      onClick={() => goToPage(pageIndex + 1)}
+      aria-label={full ? 'Next fullscreen page' : 'Next PDF page'}>
+      <ChevronRight size={18} aria-hidden="true" />
+    </button>
+  </nav>;
+
   return <section className="dn-pdf-studio-page" aria-label="PDF Studio">
     <div className="dn-pdf-studio">
-      <section className="dn-pdf-studio-controls" aria-label="PDF customization">
-        <div className="dn-pdf-studio-intro">
-          <SlidersHorizontal size={19} aria-hidden="true" />
-          <div><strong>Make it yours</strong><p>Adjust the pages before saving your Moment as a PDF.</p></div>
-        </div>
-        <label className="dn-pdf-studio-field">
-          <span>Story format</span>
-          <select aria-label="PDF story format" value={settings.template} disabled={busy}
-            onChange={(eventValue) => update('template', eventValue.target.value)}>
-            {PDF_TEMPLATES.map((option) => <option value={option.value} key={option.value}>
-              {option.label} · {option.description}
-            </option>)}
-          </select>
-        </label>
-        <label className="dn-pdf-studio-field">
-          <span>Page spacing</span>
-          <select aria-label="PDF page spacing" value={settings.density} disabled={busy}
-            onChange={(eventValue) => update('density', eventValue.target.value)}>
-            {PDF_DENSITIES.map((value) => <option key={value} value={value}>
-              {value.charAt(0).toUpperCase() + value.slice(1)}
-            </option>)}
-          </select>
-        </label>
-        <fieldset className="dn-pdf-studio-sections">
-          <legend>Include in the PDF</legend>
-          {optionLabels.filter(({ key }) => settings.template === 'chronicle'
-            ? !['includeUpcoming'].includes(key) : !['includeCompleted', 'includeCancelled'].includes(key))
-            .map(({ key, title, help }) =>
-              <label key={key} className="dn-pdf-studio-toggle">
-                <input type="checkbox" checked={settings[key]} onChange={(change) => update(key, change.target.checked)} disabled={busy} />
-                <span><strong>{title}</strong><small>{help}</small></span>
-              </label>)}
-        </fieldset>
-        <button type="button" className="secondaryButton dn-pdf-update-button" onClick={() => renderPreview(settings)} disabled={busy || !dirty}>
-          <RefreshCw size={16} aria-hidden="true" /> {busy ? 'Rendering pages…' : dirty ? 'Update preview' : 'Preview is current'}
-        </button>
-      </section>
       <section className="dn-pdf-studio-preview" aria-label="PDF page preview">
         <div className="dn-pdf-studio-preview-head">
-          <div><strong>Page preview</strong><small>Actual pages used in the downloaded PDF</small></div>
-          {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length} {preview.pageUrls.length === 1 ? 'page' : 'pages'}</span> : null}
+          <div><strong>Your memory book</strong>
+            <small>{PDF_STYLE_NAMES[preview?.options.visualStyle || settings.visualStyle]}
+              {' · '}{PDF_TEMPLATES.find((item) => item.value === settings.template)?.label || 'Story'}
+              {' · '}A4 portrait</small>
+          </div>
+          {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length}
+            {preview.pageUrls.length === 1 ? ' page' : ' pages'}</span> : null}
         </div>
         {error ? <p className="dn-pdf-studio-error" role="alert">{error}</p> : null}
         {dirty && preview ? <p className="dn-pdf-studio-stale" role="status">Settings changed. Update the preview to download.</p> : null}
         {busy && !preview ? <p role="status" className="dn-pdf-studio-loading">Rendering your pages and original photos…</p> : null}
         {preview ? <>
-          <div className="dn-pdf-preview-page">
-            <img src={preview.pageUrls[pageIndex]} alt={'Rendered PDF page ' + (pageIndex + 1)} />
+          <div className="dn-pdf-preview-tools">
+            <button type="button" onClick={() => setThumbsOpen((current) => !current)}
+              aria-pressed={thumbsOpen} aria-label="Toggle PDF page thumbnails"
+              title="Page thumbnails"><Images size={17} aria-hidden="true" /> Pages</button>
+            <div className="dn-pdf-preview-zoom-controls" aria-label="PDF preview zoom">
+              <button type="button" disabled={zoomIndex === 0} onClick={() => changeZoom(-1)} aria-label="Zoom out PDF preview">
+                <ZoomOut size={17} aria-hidden="true" /></button>
+              <button type="button" onClick={() => setZoomIndex(0)} aria-label="Reset PDF preview zoom">
+                {Math.round(zoom * 100)}%</button>
+              <button type="button" disabled={zoomIndex === zoomSteps.length - 1}
+                onClick={() => changeZoom(1)} aria-label="Zoom in PDF preview">
+                <ZoomIn size={17} aria-hidden="true" /></button>
+            </div>
+            <button type="button" onClick={openFullscreen} disabled={dirty || busy}
+              aria-label="Open full-screen PDF preview" title="Full-screen preview">
+              <Maximize2 size={17} aria-hidden="true" /></button>
           </div>
-          <nav className="dn-pdf-page-nav" aria-label="PDF page navigation">
-            <button type="button" disabled={pageIndex === 0} onClick={() => setPageIndex((index) => Math.max(0, index - 1))}
-              aria-label="Previous PDF page"><ChevronLeft size={18} aria-hidden="true" /></button>
-            <span>Page {pageIndex + 1} of {preview.pageUrls.length}</span>
-            <button type="button" disabled={pageIndex >= preview.pageUrls.length - 1}
-              onClick={() => setPageIndex((index) => Math.min(preview.pageUrls.length - 1, index + 1))}
-              aria-label="Next PDF page"><ChevronRight size={18} aria-hidden="true" /></button>
-          </nav>
+          <div className="dn-pdf-preview-viewport" aria-label="PDF document page" style={{ '--dn-preview-zoom': zoom }}>
+            <div className="dn-pdf-preview-page">
+              <img src={preview.pageUrls[pageIndex]} alt={'Rendered PDF page ' + (pageIndex + 1)} />
+            </div>
+          </div>
+          {controls()}
+          {thumbsOpen ? <nav className="dn-pdf-page-thumbnails" aria-label="PDF page thumbnails">
+            {thumbnailPages.map((index) => <button type="button" key={index}
+              aria-label={'Go to PDF page ' + (index + 1)}
+              aria-current={index === pageIndex ? 'page' : undefined}
+              onClick={() => goToPage(index)}>
+              <img src={preview.pageUrls[index]} loading="lazy" alt="" />
+              <span>{index + 1}</span>
+            </button>)}
+          </nav> : null}
         </> : null}
         {!preview && !busy && !error ? <p className="dn-pdf-studio-loading">Choose Update preview to render your PDF.</p> : null}
         <div className="dn-pdf-studio-footer">
-          <small>{dirty ? 'Generate an up-to-date preview to enable download.' : 'What you see is what your PDF contains.'}</small>
+          <small>{dirty ? 'Generate an up-to-date preview to enable download.'
+            : 'Preview uses the exact pages embedded in your PDF.'}</small>
           <button type="button" className="primaryButton" disabled={!preview || dirty || busy} onClick={download}
             aria-label="Download customized PDF"><Download size={16} aria-hidden="true" /> Download PDF</button>
         </div>
       </section>
+
+      <section className="dn-pdf-studio-controls" aria-label="PDF customization">
+        <div className="dn-pdf-studio-intro">
+          <SlidersHorizontal size={19} aria-hidden="true" />
+          <div><strong>Design your PDF</strong>
+            <p>Choose the look, then inspect the actual pages before downloading.</p></div>
+        </div>
+        <label className="dn-pdf-studio-field">
+          <span>Story format</span>
+          <select aria-label="PDF story format" value={settings.template} disabled={busy}
+            onChange={(e) => update('template', e.target.value)}>
+            {PDF_TEMPLATES.map((option) => <option value={option.value} key={option.value}>
+              {option.label} · {option.description}
+            </option>)}
+          </select>
+        </label>
+        <fieldset className="dn-pdf-design-choices" disabled={busy}>
+          <legend>Book design</legend>
+          <div className="dn-pdf-style-grid">
+            {STORY_DESIGN_STYLES.map((style) => <button type="button" key={style}
+              className={'dn-pdf-style-option is-' + style + (settings.visualStyle === style ? ' is-selected' : '')}
+              aria-pressed={settings.visualStyle === style}
+              aria-label={'PDF design ' + PDF_STYLE_NAMES[style]}
+              onClick={() => update('visualStyle', style)}>
+              <span className="dn-pdf-style-swatch" aria-hidden="true">
+                <span>THE MEMORY COLLECTION</span><strong>Our Story</strong><i/>
+              </span>
+              <span>{PDF_STYLE_NAMES[style]}</span>
+            </button>)}
+          </div>
+          <div className="dn-pdf-style-default">
+            <small>Saved {PDF_TEMPLATES.find((option) => option.value === settings.template)?.label || 'Story'} default:
+              {' '}{PDF_STYLE_NAMES[savedStyles[settings.template]]}</small>
+            {styleOverrideRef.current ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
+              <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
+          </div>
+        </fieldset>
+        <label className="dn-pdf-studio-field">
+          <span>Page spacing</span>
+          <select aria-label="PDF page spacing" value={settings.density} disabled={busy}
+            onChange={(e) => update('density', e.target.value)}>
+            {PDF_DENSITIES.map((value) => <option key={value} value={value}>
+              {value.charAt(0).toUpperCase() + value.slice(1)}
+            </option>)}
+          </select>
+        </label>
+        <details className="dn-pdf-content-options" open>
+          <summary>Included content</summary>
+          <fieldset className="dn-pdf-studio-sections">
+            <legend>Include in the PDF</legend>
+            {optionLabels.filter(({ key }) => settings.template === 'chronicle'
+              ? key !== 'includeUpcoming' : !['includeCompleted', 'includeCancelled'].includes(key))
+              .map(({ key, title, help }) => <label key={key} className="dn-pdf-studio-toggle">
+                <input type="checkbox" checked={settings[key]}
+                  onChange={(e) => update(key, e.target.checked)} disabled={busy} />
+                <span><strong>{title}</strong><small>{help}</small></span>
+              </label>)}
+          </fieldset>
+        </details>
+        <button type="button" className="secondaryButton dn-pdf-update-button" onClick={() => renderPreview(settings)}
+          disabled={busy || !dirty}>
+          <RefreshCw size={16} aria-hidden="true" />
+          {busy ? 'Rendering pages…' : dirty ? 'Update preview' : 'Preview is current'}
+        </button>
+        <p className="dn-pdf-studio-format-note">These design choices affect only this PDF.
+          Your Settings defaults and original memories stay unchanged.</p>
+      </section>
     </div>
+    <dialog className="dn-pdf-fullscreen-dialog" ref={dialogRef}
+      aria-label="Full-screen PDF preview">
+      <div className="dn-pdf-fullscreen-head">
+        <strong>PDF preview</strong>
+        <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close full-screen PDF preview">
+          <X size={20} aria-hidden="true" />
+        </button>
+      </div>
+      {preview ? <>
+        <div className="dn-pdf-fullscreen-viewport">
+          <img src={preview.pageUrls[pageIndex]} alt={'Fullscreen PDF page ' + (pageIndex + 1)} />
+        </div>
+        {controls(true)}
+      </> : null}
+    </dialog>
   </section>;
 }
