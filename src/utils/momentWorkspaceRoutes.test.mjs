@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { getMomentWorkspaceKey, getMomentWorkspaceSection, getRouteTransitionKey, isSameMomentWorkspace, primaryNavigationPath } from './momentWorkspaceRoutes.js';
+import { getMomentWorkspaceKey, getMomentWorkspaceSection, getRouteTransitionKey, getShellPageTitle, shellSettingsBackPath, isSameMomentWorkspace, primaryNavigationPath } from './momentWorkspaceRoutes.js';
 
 test('Moment section links share a stable transition key, including direct aliases and trailing slashes', () => {
   for (const suffix of ['', '/story', '/gallery', '/overview', '/activities', '/transactions', '/timeline', '/memories', '/attachments', '/pdf', '/memories/']) {
@@ -50,4 +50,10 @@ test('legacy Memories links render Story but retain workspace navigation identit
   assert.equal(getMomentWorkspaceSection('/events/example/overview'), 'story');
   assert.equal(getMomentWorkspaceSection('/events/example/transactions'), 'transactions');
   assert.equal(getMomentWorkspaceKey('/events/example/memories'), getMomentWorkspaceKey('/events/example/overview'));
+});
+
+test('Appearance is a named Settings subpage with the shared back action', () => {
+  assert.equal(getShellPageTitle('/settings/appearance'), 'Appearance & preferences');
+  assert.equal(shellSettingsBackPath('/settings/appearance'), '/settings');
+  assert.equal(primaryNavigationPath('/settings/appearance'), null);
 });
