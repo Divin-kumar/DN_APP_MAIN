@@ -107,7 +107,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Capture synthetic cross-app routes and UI metrics
-        run: npx playwright test e2e/cross-app-visual-audit-230.spec.js
+        run: npx playwright test e2e/cross-app-visual-audit-230.spec.js e2e/settings-appearance-baseline-230.spec.js
       - name: Upload read-only audit evidence
         if: always()
         uses: actions/upload-artifact@v4
