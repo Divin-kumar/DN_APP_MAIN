@@ -3,14 +3,14 @@ import { RotateCcw } from 'lucide-react';
 import SortChips from './SortChips';
 import ModalDialog from './ModalDialog';
 import ConditionBuilder from './ConditionBuilder';
-import { conditionCount, emptyGroup } from '../../utils/conditionEngine';
+import { compileConditionGroup, conditionCount, emptyGroup } from '../../utils/conditionEngine';
 import './FilterSortSheet.css';
 
 // No persistent writes happen while this sheet is open. Cancel always discards
 // its draft, including nested AND/OR edits and a sort direction change.
 const cloneGroup = (value) => JSON.parse(JSON.stringify(value || emptyGroup()));
 
-export default function FilterSortSheet({ title, refine, onClose, onReset }) {
+export default function FilterSortSheet({ title, refine, resultLabel = 'results', onClose, onReset }) {
   const { conditions, sort, defaults } = refine;
   const scopeAtOpen = useRef(conditions.editorKey);
   const [draft, setDraft] = useState(() => ({
@@ -28,6 +28,9 @@ export default function FilterSortSheet({ title, refine, onClose, onReset }) {
     clear: () => setGroup(emptyGroup()),
     restore: (group) => setGroup(group),
   }), [conditions, draft.group]);
+  const draftCount = useMemo(() => Array.isArray(refine.candidates)
+    ? refine.candidates.filter(compileConditionGroup(draft.group, conditions.schema)).length : null,
+  [refine.candidates, draft.group, conditions.schema]);
   const pickSort = (field) => setDraft((current) => field === current.field
     ? { ...current, direction: current.direction === 'asc' ? 'desc' : 'asc' }
     : { ...current, field, direction: 'asc' });
@@ -57,6 +60,9 @@ export default function FilterSortSheet({ title, refine, onClose, onReset }) {
       <h4>Filters</h4>
       <ConditionBuilder filter={draftFilter} title={title + ' conditions'} immediate />
     </div>
+    {typeof draftCount === 'number' ? <p className="dn-refine-preview-count" role="status" aria-live="polite">
+      <strong>{draftCount} matching {resultLabel}</strong><span>Preview only. Your list updates after Show results.</span>
+    </p> : null}
     <div className="dn-list-controls-footer" role="group" aria-label="Apply or discard Refine changes">
       <button type="button" className="dn-refine-reset" onClick={resetDraft}><RotateCcw size={15} aria-hidden="true" />Reset</button>
       <button type="button" className="dn-refine-cancel" onClick={onClose}>Cancel</button>

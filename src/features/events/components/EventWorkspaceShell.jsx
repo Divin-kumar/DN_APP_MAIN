@@ -248,10 +248,10 @@ export function EventWorkspaceContent() {
     }
     return result ? (activitySortDirection === 'desc' ? -result : result) : dateOrder;
   });
-  const filteredActivities = activities.filter((activity) => {
-    const matchesSearch = [activity.title, activity.description, ...(activity.entries || []).flatMap((part) => [part.title, part.description])].some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase()));
-    return matchesSearch && activityConditions.matches(activityConditionRecord(activity));
-  });
+  const searchCandidates = activities.filter((activity) =>
+    [activity.title, activity.description, ...(activity.entries || []).flatMap((part) => [part.title, part.description])]
+      .some((value) => String(value || '').toLowerCase().includes(activitySearch.trim().toLowerCase())));
+  const filteredActivities = searchCandidates.filter((activity) => activityConditions.matches(activityConditionRecord(activity)));
   const totalSpent = finance.summary.expense;
   const memoryCount = (event.memories || []).length;
   const attachments = event.attachments || [];
@@ -441,7 +441,7 @@ export function EventWorkspaceContent() {
       return (
         <div className="workspace-activities">
           <ListControls title="Activity filters" builder hasSort
-            refine={{ conditions: activityConditions, sort: {
+            refine={{ conditions: activityConditions, candidates: searchCandidates.map(activityConditionRecord), sort: {
               field: activitySort, direction: activitySortDirection,
               options: [{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' },
                 { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }],

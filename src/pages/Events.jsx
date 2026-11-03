@@ -213,14 +213,14 @@ export default function Events() {
     });
     return totals;
   }, [expenses]);
-  const visibleEvents = useMemo(() => {
+  const searchCandidates = useMemo(() => {
     const query = search.trim().toLowerCase();
-    return sortMoments(events.filter((event) => {
-        const matchesSearch = !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
-          .some((value) => String(value || '').toLowerCase().includes(query));
-        return matchesSearch && conditions.matches(momentConditionRecord(event));
-      }), sortField, sortDirection);
-  }, [events, search, sortField, sortDirection, conditions.matches]);
+    return events.filter((event) => !query || [event.name, event.type, event.customType, plainRichText(event.notes)]
+      .some((value) => String(value || '').toLowerCase().includes(query)));
+  }, [events, search]);
+  const visibleEvents = useMemo(() => sortMoments(searchCandidates.filter(
+    (event) => conditions.matches(momentConditionRecord(event))), sortField, sortDirection),
+  [searchCandidates, sortField, sortDirection, conditions.matches]);
   const pickerQuery = activityEventSearch.trim().toLowerCase();
   const pickerEvents = events.filter((event) => !event.archived && (!pickerQuery || [event.name, event.type, event.customType, event.notes].some((value) => String(value || '').toLowerCase().includes(pickerQuery))));
   const pickerById = new Map(pickerEvents.map((event) => [event.id || event.firestoreId, event]));
@@ -362,7 +362,7 @@ export default function Events() {
       ) : null}
       <div className="event-discovery-bar">
         <ListControls title="Moment filters" builder
-          refine={{ conditions, sort: { field: sortField, direction: sortDirection, options: MOMENT_SORT_OPTIONS,
+          refine={{ conditions, candidates: searchCandidates.map(momentConditionRecord), sort: { field: sortField, direction: sortDirection, options: MOMENT_SORT_OPTIONS,
             label: 'Sort moments', onChange: (field, direction) => changeMomentFilters({ field, direction }) },
           defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
             direction: settingsDefaults.filters.direction } }}

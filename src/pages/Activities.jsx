@@ -83,9 +83,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     initialGroup: migrateActivityConditions(filters), contextKey: getActiveSampleScenario(uid),
     startingGroup: Object.keys(settingsDefaults.filters).every((key) => filters[key] === settingsDefaults.filters[key]) ? settingsDefaults.group : undefined,
   });
-  const selected = useMemo(() => selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
-    direction: filters.direction, parentScope: 'all', includeCancelled: true }).filter(conditions.matches),
-  [conditionRecords, filters.search, filters.field, filters.direction, conditions.matches]);
+  const searchCandidates = useMemo(() => selectActivityEntries(conditionRecords, { search: filters.search, field: filters.field,
+    direction: filters.direction, parentScope: 'all', includeCancelled: true }),
+  [conditionRecords, filters.search, filters.field, filters.direction]);
+  const selected = useMemo(() => searchCandidates.filter(conditions.matches), [searchCandidates, conditions.matches]);
   const allInScope = projection.entries;
   const allViews = useMemo(() => allInScope.map((entry) => projection.views.get(entry.key)), [allInScope, projection.views]);
   const visible = selected.map((entry) => projection.views.get(entry.key));
@@ -169,7 +170,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
     <div className="events-page life-timeline-page activities-page">
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort
-          refine={{ conditions, sort: { field: filters.field, direction: filters.direction, options: SORTS,
+          refine={{ conditions, candidates: searchCandidates, sort: { field: filters.field, direction: filters.direction, options: SORTS,
             label: 'Sort activities', onChange: (field, direction) => changeFilters({ field, direction }) },
             defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
               direction: settingsDefaults.filters.direction } }}

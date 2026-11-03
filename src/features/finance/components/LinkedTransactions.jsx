@@ -33,7 +33,8 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
   const conditions = useConditionFilters('moment-transactions:' + eventId + ':' + (activityId || 'all'), finance.transactions, usePersistentListState,
     { initialGroup: transactionConditions(filters), contextKey: finance.sample, moments: finance.events });
   const [sortField, sortDirection] = filters.sort.split('-');
-  const filtered = activityId ? finance.transactions : sortTransactions(filterTransactions(finance.transactions, { search: filters.search }).filter(conditions.matches), filters.sort);
+  const searchCandidates = filterTransactions(finance.transactions, { search: filters.search });
+  const filtered = activityId ? finance.transactions : sortTransactions(searchCandidates.filter(conditions.matches), filters.sort);
   const totals = <MomentFinanceSummary summary={summarizeTransactions(filtered)} label={activityId ? 'Totals for this Activity' : 'Totals for this Moment'}
     caption={activityId ? 'Totals for this Activity' : 'Matching transactions'} showCaption={!minimal} />;
   // Activity Detail has no transaction section, totals or placeholder when nothing is linked.
@@ -45,7 +46,7 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
         {minimal && activityId && finance.transactions.length ? <h2 className="activity-linked-transactions-title">Transactions</h2> : null}
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
         {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder
-          refine={{ conditions, sort: { field: sortField, direction: sortDirection,
+          refine={{ conditions, candidates: searchCandidates, sort: { field: sortField, direction: sortDirection,
             options: TRANSACTION_SORT_OPTIONS, label: 'Sort Moment transactions',
             onChange: (field, direction) => changeFilters({ sort: field + '-' + direction }) },
             defaults: { group: emptyGroup(), field: 'date', direction: 'desc' } }}

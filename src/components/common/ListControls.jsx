@@ -78,7 +78,7 @@ export default function ListControls({
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
       </div>
       {hasPanel && open && refine ? <FilterSortSheet key={refine.conditions.editorKey} title={title}
-        refine={refine} onReset={onReset} onClose={() => setOpen(false)} /> : null}
+        refine={refine} resultLabel={resultLabel} onReset={onReset} onClose={() => setOpen(false)} /> : null}
       {hasPanel && open && !refine ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
         {(sort || onReset) ? (
           <div className="dn-list-controls-action-line" role="group" aria-label="Sort and reset">

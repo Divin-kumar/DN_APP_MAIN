@@ -67,12 +67,14 @@ test('Activity filter baseline Reset stages conditions until Show results', asyn
   await page.getByRole('button', { name: /^Filters and sort/ }).click();
   let sheet = page.getByRole('dialog', { name: 'Activity filters' });
   await sheet.getByRole('button', { name: 'Clear all' }).click();
+  await expect(sheet.getByRole('status')).toContainText('4 matching activities');
   await expect(cards).toHaveCount(1); // Draft only.
   await sheet.getByRole('button', { name: 'Show results' }).click();
   await expect(cards).toHaveCount(4);
   await page.getByRole('button', { name: /^Filters and sort/ }).click();
   sheet = page.getByRole('dialog', { name: 'Activity filters' });
   await sheet.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(sheet.getByRole('status')).toContainText('1 matching activities');
   await expect(cards).toHaveCount(4);
   await sheet.getByRole('button', { name: 'Show results' }).click();
   await expect(cards).toHaveCount(1);

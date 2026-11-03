@@ -73,7 +73,8 @@ function FinancialsContent() {
   });
   const canResetFilters = !matchesListDefaults(filters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const restoreSavedFilters = () => { resetFilters(); conditions.restore(settingsDefaults.group); };
-  const filtered = useMemo(() => filterTransactions(allTransactions, { search: filters.search }).filter(conditions.matches), [allTransactions, filters, conditions.matches]);
+  const searchCandidates = useMemo(() => filterTransactions(allTransactions, { search: filters.search }), [allTransactions, filters.search]);
+  const filtered = useMemo(() => searchCandidates.filter(conditions.matches), [searchCandidates, conditions.matches]);
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
   // Cards and rows always describe the same cohort, including search and OR groups.
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
@@ -157,7 +158,7 @@ function FinancialsContent() {
               </div>
             </div>
           </section>
-          <TransactionHistory transactions={sorted} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
+          <TransactionHistory transactions={sorted} candidates={searchCandidates} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} />
         </section>}

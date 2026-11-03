@@ -98,7 +98,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 }
 
 export default function TransactionHistory({
-  transactions, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
+  transactions, candidates, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
   onResetDefaults, canResetDefaults = false, onExport, savedDefaults,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
@@ -107,7 +107,7 @@ export default function TransactionHistory({
   return (
     <section className="transactions-panel dn-transactions-page" aria-label="Transactions">
       <ListControls title="Transaction filters" builder
-        refine={{ conditions, sort: { field: sortField, direction: sortDirection,
+        refine={{ conditions, candidates, sort: { field: sortField, direction: sortDirection,
           options: TRANSACTION_SORT_OPTIONS, label: 'Sort transactions',
           onChange: (field, direction) => onFilters({ sort: field + '-' + direction }) },
           defaults: { group: savedDefaults?.group,
