@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-295 | Fix Story book-paper contrast in dark mode
+- **Observation:** Owner shared an actual iPhone Vercel Story screenshot: pale Journal page background with near-white Activity title “The little village.” The later 2.1 Journal `>h4` rule overrode the newer palette because of selector specificity.
+- **Scoped correction:** Stronger selectors target chapter headings/links and other text inside the three paper surfaces, including writing continuations and Tasks status controls. Preserve all layout structure, original photographs, photo captions, unboxed auxiliary sections, dark navigation and existing data. Use dark page ink with a subtle dark-shell shadow. No full renderer redesign or new user controls.
+- **QA:** Authored mobile 390px browser checks covering 3 formats × 3 designs × dark/light app themes, asserting AA 4.5:1 contrast of titles and body text. Fast CI outcomes must be recorded from the exact new SHA; browser verification has not been executed here. Guest tour sample content/version unchanged because its existing Journal exemplifies the issue without altering fixtures. No version bump, PR, deployment or `main` changes.
+
 ## CHG-20261103-294 | DN 2.2 Phase 3A: Optional Unicode-searchable PDF text layer
 - **Scope:** Owner authorized Phase 3 of the archival PDF upgrade after the passing Phase 2 fast CI. Add an opt-in searchable PDF format in Studio while preserving the current image-only PDF path by default. No package/lock changes or new remote/runtime dependencies.
 - **Implementation:** `MomentPdfPainter` captures exact strings, A4 positions and font sizes drawn onto each PDF JPEG page only when the optional switch is enabled. The binary assembler retains the identical JPEG bytes and overlays invisible text using per-page Type1 Helvetica glyph maps with `/ToUnicode` CMaps, including UTF-16 surrogate pairs. No OCR, extra or rewritten dates, source record mutations or copied photos. The final PDF preview is still the same page JPEG; a style/text-mode edit invalidates download until the new PDF is generated.

@@ -109,3 +109,98 @@ html[data-theme] .dn-v2-story[data-design-style="minimal"] .dn-diary-monthbook {
   html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page {padding:14px 12px;}
   html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook {padding:18px 15px;}
 }
+/*
+ * DN 2.2.0 Story contrast correction.
+ * The published Journal hierarchy uses a more specific late selector for
+ * > h4 than the initial paper theme. In dark mode, --color-text is nearly
+ * white; it must never color headings placed on light book paper.
+ * Scope every correction to an actual paper surface. Dark-shell chapter
+ * sections and photographic overlays retain their original theme colors.
+ */
+html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
+  .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4,
+html[data-theme] .dn-v2-story[data-presentation="journey"][data-design-style]
+  .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-body > h4 a,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook .dn-diary-paragraph h4,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-row-heading a,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-row-heading strong {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-v2-story-entry-body,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-v2-story-entry-body,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group
+  .dn-task-row-main {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-v2-story-entry-description,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-v2-story-entry-description {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-story-writing-heading,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-story-writing-heading,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group
+  .dn-story-writing-heading {
+  color:var(--dn-book-muted);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-story-writing-legacy-title,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-story-writing-legacy-title,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group
+  .dn-story-writing-legacy-title {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-story-entry-aside,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-story-entry-aside,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group
+  .dn-task-row-when,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group
+  .dn-task-group-header small {
+  color:var(--dn-book-muted);
+}
+/* The date/chapter headers use a dark-on-paper accent instead of the app's
+   bright blue selected for dark navigation. */
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page
+  .dn-journal-page-date,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-diary-entry-date,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook
+  .dn-diary-month-heading {
+  color:var(--dn-book-accent);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-status-switcher,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-status-control,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-row.is-in-progress .dn-task-status-control,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-row.is-completed .dn-task-status-control,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-row.is-cancelled .dn-task-status-control,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-status-switcher > svg {
+  color:var(--dn-book-ink);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-status-switcher:focus-within,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group .dn-task-status-switcher:hover {
+  background:var(--dn-book-tint);border-color:var(--dn-book-rule);
+}
+html[data-theme] .dn-v2-story[data-design-style] .dn-journal-page,
+html[data-theme] .dn-v2-story[data-design-style] .dn-diary-monthbook,
+html[data-theme] .dn-v2-story[data-design-style] .dn-task-group {
+  color-scheme:light;
+}
+/* Preserve dark-shell text on the unboxed Upcoming/Undated chapters outside
+   paper pages. The original CSS should not turn them dark-on-dark. */
+html[data-theme] .dn-v2-story[data-design-style] .dn-v2-story-aux
+  .dn-story-writing-legacy-title {
+  color:var(--color-text);
+}
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-journal-page,
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-diary-monthbook,
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-task-group {
+  box-shadow:0 8px 28px rgb(0 0 0 / .17);
+}
