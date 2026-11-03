@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-336 | DN 2.3 Phase 4E: repair existing Dashboard Activity test harness after Task integration
+- **Scope:** Update the preexisting fake-hook Dashboard Activity Node test harness to substitute a controlled inert Task store and the Link router element, matching the established fake Event store. Earlier eight tests failed before assertions due a real Zustand hook being invoked without a React renderer. Leave all existing Activity assertions and actual application code unchanged.
+- **Evidence:** Previous CI at CHG-334/335 exposed the harness issue. New test code authored; verify Node/lint/build at exact new SHA before claiming green. No account data, Tasks persistence, Guest samples, Story, PDF, Firestore, deployment, main or PR impact.
+
 ## CHG-20261103-335 | DN 2.3 Phase 4E: clear independent Guest Tasks only on explicit local delete; warn at sign-in
 - **Scope:** Extend the DN/legacy local-data deletion whitelist to include Guest Tasks, so explicit Clear local removes the new collection, with Node regression showing unrelated data remains. Account sign-in merge still transfers only established Firestore-safe Moments/ledger records; add Task key to change-detection snapshot, never delete it, and report retained Guest Task count so the signed-in user receives a clear warning about browser-only Tasks and backup before local clear.
 - **Safety:** No account Task cloud writes or invented Firestore permissions. Guest Tasks stay on the source browser after sign-in; possible malformed Task data stays intact for manual recovery. No Story/PDF, historical Activities, attachments, finance, other branch, PR, version bump or deployment. Browser and real sign-in manual acceptance still pending.
