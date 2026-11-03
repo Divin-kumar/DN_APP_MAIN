@@ -195,3 +195,42 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  appearance-polish-230:
+    # Synthetic Guest acceptance for the dedicated Appearance page and
+    # navigation around Settings. Does not mutate real user records or deploy.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-appearance]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify Settings navigation, Appearance, list defaults and reset safety
+        run: >-
+          npx playwright test
+          e2e/iphone-settings-premium.spec.js
+          e2e/iphone-settings-defaults-navigation.spec.js
+          e2e/iphone-settings-reset-scope.spec.js
+          e2e/iphone-settings-filter-defaults.spec.js
+          e2e/iphone-settings-cloud-delete-safety.spec.js
+          e2e/cross-app-visual-audit-230.spec.js
+      - name: Upload screenshot evidence and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-appearance-and-cross-app-ui
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
