@@ -10,7 +10,7 @@ const prepared = () => {
   activity.description = 'Original morning writing is intentionally untimed and should use the full reading width.';
   activity.entries = [
     { id: 'same-time', description: 'Saved afternoon details with enough writing to test readability on small screens.', date: '2026-11-03', time: '13:20' },
-    { id: 'different-day', description: 'A continuation written on the next day, without any invented timestamp.', date: '2026-11-04', time: '' },
+    { id: 'different-day', description: 'A continuation written on the next day with a recorded time.', date: '2026-11-04', time: '08:15' },
   ];
   return moments;
 };
@@ -26,6 +26,16 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     await expect(detail.locator('.dn-content-row')).not.toContainText(['Time not recorded']);
     await expect(detail.locator('.dn-content-row.is-untimed').first()).toContainText('Original morning writing');
     await expect(detail.locator('.dn-content-row').filter({ hasText: 'A continuation written on the next day' })).toContainText('4 Nov 2026');
+    if (width < 768) {
+      const dateTime = await detail.locator('.dn-content-row').filter({ hasText: 'A continuation written on the next day' }).evaluate((row) => {
+        const date = row.querySelector('.dn-content-row-date').getBoundingClientRect();
+        const time = row.querySelector('.dn-content-row-time').getBoundingClientRect();
+        return { delta: Math.abs(date.y + date.height / 2 - (time.y + time.height / 2)),
+          timeRight: time.right, viewport: document.documentElement.clientWidth };
+      });
+      expect(dateTime.delta).toBeLessThanOrEqual(3);
+      expect(dateTime.timeRight).toBeLessThanOrEqual(dateTime.viewport);
+    }
     await expect(detail.getByRole('heading', { name: 'Entries', exact: true })).toBeVisible();
     await expect(detail.getByRole('heading', { name: 'Attachments', exact: true })).toBeVisible();
     const attachments = await detail.evaluate((root) => {
