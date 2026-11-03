@@ -60,15 +60,16 @@ export const taskStatusPatch = (task, target, now = new Date()) => {
 };
 
 // Parent changes never delete independent Tasks or change their completion.
-export const detachIndependentTaskLinks = (tasks = [], { momentId, activityId } = {}) => {
+export const detachIndependentTaskLinks = (tasks = [], { momentId, activityId, activityIds } = {}) => {
   const parentId = recordId(momentId);
-  const childId = recordId(activityId);
-  if (!parentId) return [...tasks];
+  const childIds = new Set([activityId, ...(Array.isArray(activityIds) ? activityIds : [])]
+    .map(recordId).filter(Boolean));
+  if (!parentId || (activityIds !== undefined && !childIds.size)) return [...tasks];
   return tasks.map((task) => {
     if (recordId(task.momentId) !== parentId) return task;
-    if (!childId) return task.momentId || task.activityId
+    if (!childIds.size) return task.momentId || task.activityId
       ? { ...task, momentId: '', activityId: '' } : task;
-    if (recordId(task.activityId) !== childId) return task;
+    if (!childIds.has(recordId(task.activityId))) return task;
     return { ...task, activityId: '' };
   });
 };
