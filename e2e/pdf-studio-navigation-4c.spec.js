@@ -98,7 +98,11 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     await expect(natural).toHaveAttribute('aria-checked', 'true');
     await expect(natural).toHaveAttribute('tabindex', '0');
     await natural.focus();
+    const sameDay = activityLayout.getByRole('radio', { name: 'Start each recorded day on a new PDF page' });
     await natural.press('ArrowRight');
+    await expect(sameDay).toBeFocused();
+    await expect(sameDay).toHaveAttribute('aria-checked', 'true');
+    await sameDay.press('ArrowRight');
     await expect(newPage).toBeFocused();
     await expect(newPage).toHaveAttribute('aria-checked', 'true');
     await newPage.press('Home');
@@ -176,6 +180,66 @@ test('real original photo remains on its PDF page at 40% writable space and move
     expect(result.width).toBeGreaterThan(0);
     expect(result.height).toBeGreaterThan(0);
     expect(result.width / result.height).toBeCloseTo(680 / 940, 2);
+  }
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
+  expect(errors).toEqual([]);
+});
+
+test('new-date chapters keep separate same-day Activities together without merging stored records', async ({ page }) => {
+  const moments = fixture();
+  moments[0].activities[1].date = moments[0].activities[0].date;
+  moments[0].activities[1].entries[0].date = moments[0].activities[0].date;
+  const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
+  await page.goto('/events');
+  const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const results = await page.evaluate(async () => {
+    const { renderMomentStudioPdf } = await import('/src/utils/momentPdf.js');
+    const saved = JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0];
+    const originalDraw = CanvasRenderingContext2D.prototype.fillText;
+    const cases = [];
+    try {
+      for (const template of ['journey', 'diary']) {
+        for (const layout of ['day', 'activity']) {
+          const pageMap = new WeakMap();
+          const positions = {};
+          const continued = [];
+          let allocated = 0;
+          let activity = '';
+          CanvasRenderingContext2D.prototype.fillText = function (value, ...args) {
+            if (!pageMap.has(this.canvas)) pageMap.set(this.canvas, ++allocated);
+            const text = String(value);
+            for (const title of ['Alpha memory', 'Beta memory', 'Gamma memory']) {
+              if (text.startsWith(title)) { positions[title] = pageMap.get(this.canvas); activity = title; }
+            }
+            if (text.startsWith('Continuation belongs')) {
+              continued.push({ activity, page: pageMap.get(this.canvas) });
+            }
+            return originalDraw.call(this, value, ...args);
+          };
+          const output = await renderMomentStudioPdf(saved, {
+            template, includeCover: false, includeIntro: false, includeUpcoming: false,
+            pageBreakBetweenDays: layout === 'day',
+            pageBreakBetweenActivities: layout === 'activity',
+          });
+          cases.push({ template, layout, positions, continued, pages: output.pages.length });
+        }
+      }
+    } finally {
+      CanvasRenderingContext2D.prototype.fillText = originalDraw;
+    }
+    return cases;
+  });
+  for (const template of ['journey', 'diary']) {
+    const grouped = results.find((r) => r.template === template && r.layout === 'day');
+    const separated = results.find((r) => r.template === template && r.layout === 'activity');
+    expect(grouped.positions['Alpha memory']).toBe(grouped.positions['Beta memory']);
+    expect(grouped.positions['Gamma memory']).toBeGreaterThan(grouped.positions['Beta memory']);
+    expect(separated.positions['Beta memory']).toBeGreaterThan(separated.positions['Alpha memory']);
+    expect(grouped.pages).toBeLessThan(separated.pages);
+    expect(grouped.continued).toHaveLength(3);
+    for (const part of grouped.continued) {
+      expect(part.page).toBe(grouped.positions[part.activity]);
+    }
   }
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
   expect(errors).toEqual([]);
