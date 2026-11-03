@@ -51,6 +51,7 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
     onClose();
   };
   return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}>
+    <p className="dn-refine-sheet-intro">Choose what appears in your list. Changes apply only when you select Show results.</p>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
       <SortChips field={draft.field} direction={draft.direction} options={sort.options}
