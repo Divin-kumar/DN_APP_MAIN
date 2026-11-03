@@ -5,6 +5,7 @@ import { settingsResetContext, assertSettingsResetContext, assertSettingsResetRe
 import { dashboardConfigurationRestorePatch } from '../utils/backupDashboardConfiguration';
 import './GuestTour.css';
 import './SettingsDataPremium.css';
+import './AppearancePreferences.css';
 import StoryDesignSettings from '../components/settings/StoryDesignSettings';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
@@ -100,7 +101,7 @@ const ValueListEditor = ({ label, value, onChange }) => {
   );
 };
 
-export default function Settings({ dataBackupOnly = false }) {
+export default function Settings({ dataBackupOnly = false, appearanceOnly = false }) {
   const location = useLocation();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
@@ -142,7 +143,6 @@ export default function Settings({ dataBackupOnly = false }) {
   const [readingBackup, setReadingBackup] = useState(false);
   const backupOperationRef = useRef(null);
   useEffect(() => () => backupOperationRef.current?.abort(), []);
-  const [openSection, setOpenSection] = useState(null);
   const [confirmClearData, setConfirmClearData] = useState(false);
   const [confirmCloudDeleteUid, setConfirmCloudDeleteUid] = useState(null);
   const [cloudDeletePhrase, setCloudDeletePhrase] = useState('');
@@ -151,19 +151,13 @@ export default function Settings({ dataBackupOnly = false }) {
   const [cloudDeleteProgress, setCloudDeleteProgress] = useState(null);
   const [confirmResetSettings, setConfirmResetSettings] = useState(false);
   const [resettingSettings, setResettingSettings] = useState(false);
-  const [theme, setTheme] = useState(preferences.theme || 'light');
+  const [theme, setTheme] = useState(preferences.theme || 'dark');
+  useEffect(() => {
+    setTheme(preferences.theme === 'light' ? 'light' : 'dark');
+  }, [preferences.theme]);
   const [sampleScenario, setSampleScenario] = useState('regular');
   const [activeSampleScenario, setActiveSampleScenario] = useState(() => getActiveSampleScenario());
 
-  useEffect(() => {
-    const sectionByHash = {
-      '#profile': 'profile',
-      '#preferences': 'defaults',
-      '#theme': 'defaults',
-      '#notifications': 'notifications',
-    };
-    if (sectionByHash[location.hash]) setOpenSection(sectionByHash[location.hash]);
-  }, [location.hash]);
   useEffect(() => {
     setEventTypes(eventTypeOptions.join(', '));
     setIncomeTypes(incomeTypeOptions.join(', '));
@@ -772,9 +766,6 @@ export default function Settings({ dataBackupOnly = false }) {
     showToast('Sample data removed; your own data is unchanged', 'success');
   };
 
-  const toggleSection = (section) => {
-    setOpenSection((current) => (current === section ? null : section));
-  };
 
   const renderProfileSection = () => (
     <div className="settings-accordion-body">
@@ -782,74 +773,114 @@ export default function Settings({ dataBackupOnly = false }) {
     </div>
   );
 
+  const selectTheme = (nextTheme) => {
+    if (nextTheme !== 'light' && nextTheme !== 'dark') return;
+    setTheme(nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+    setPreferences({ ...preferences, theme: nextTheme });
+  };
+
   const renderDefaultsSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-admin-grid">
-        <label className="settings-input-block">
-          <span>Appearance</span>
-          <DropdownSelect value={theme} onChange={(event) => {
-            const nextTheme = event.target.value;
-            setTheme(nextTheme);
-            document.documentElement.dataset.theme = nextTheme;
-            setPreferences({ ...preferences, theme: nextTheme });
-          }}>
-            <option value="light">Soft light</option>
-            <option value="dark">Dark</option>
-          </DropdownSelect>
-        </label>
+    <div className="dn-appearance-body">
+      <section className="dn-appearance-section" id="appearance-theme" aria-label="App color theme">
+        <div className="dn-appearance-section-heading">
+          <div>
+            <span className="dn-appearance-section-kicker">01 · DISPLAY</span>
+            <h3>Choose your theme</h3>
+            <p>Changes instantly across DN. Your Story and PDF designs are independent.</p>
+          </div>
+        </div>
+        <div className="dn-appearance-theme-options" role="group" aria-label="Color theme">
+          {[{ value: 'light', label: 'Soft light', hint: 'Bright, calm surfaces' },
+            { value: 'dark', label: 'Dark', hint: 'Subtle contrast at night' }].map(({ value, label, hint }) =>
+            <button type="button" key={value} className={'dn-appearance-theme-pick is-' + value}
+              aria-pressed={theme === value} onClick={() => selectTheme(value)}>
+              <span className="dn-appearance-theme-preview" aria-hidden="true">
+                <span className="dn-appearance-preview-header" />
+                <span className="dn-appearance-preview-body"><i /><i /><i /></span>
+              </span>
+              <span className="dn-appearance-theme-copy"><strong>{label}</strong><small>{hint}</small></span>
+              <span className="dn-appearance-theme-indicator" aria-hidden="true">{theme === value ? '✓' : ''}</span>
+            </button>)}
+        </div>
+        <p className="dn-appearance-footnote">Theme is saved as soon as you choose it.</p>
+      </section>
 
-        <label className="settings-input-block">
-          <span>Default currency</span>
-          <DropdownSelect value={prefForm.currency} onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
-            <option value="INR">INR (₹)</option>
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-            <option value="GBP">GBP (£)</option>
-          </DropdownSelect>
-        </label>
+      <section className="dn-appearance-section" id="appearance-creation" aria-label="Defaults for new records">
+        <div className="dn-appearance-section-heading">
+          <div>
+            <span className="dn-appearance-section-kicker">02 · NEW RECORDS</span>
+            <h3>Creation defaults</h3>
+            <p>Choose the starting values for new Moments and transactions. Existing records stay unchanged.</p>
+          </div>
+        </div>
+        <div className="settings-admin-grid dn-appearance-default-fields">
+          <label className="settings-input-block">
+            <span>Currency</span>
+            <DropdownSelect aria-label="Default currency" value={prefForm.currency}
+              onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
+              <option value="INR">INR · Indian rupee (₹)</option>
+              <option value="USD">USD · US dollar ($)</option>
+              <option value="EUR">EUR · Euro (€)</option>
+              <option value="GBP">GBP · British pound (£)</option>
+            </DropdownSelect>
+          </label>
+          <label className="settings-input-block">
+            <span>New Moment type</span>
+            <DropdownSelect aria-label="Default Moment type" value={prefForm.defaultEventType}
+              onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
+              {!eventTypeOptions.includes(prefForm.defaultEventType) ?
+                <option value={prefForm.defaultEventType}>{prefForm.defaultEventType} · previously selected</option> : null}
+              {eventTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </DropdownSelect>
+          </label>
+          <label className="settings-input-block">
+            <span>New income type</span>
+            <DropdownSelect aria-label="Default income type" value={prefForm.defaultIncomeType}
+              onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
+              {!incomeTypeOptions.includes(prefForm.defaultIncomeType) ?
+                <option value={prefForm.defaultIncomeType}>{prefForm.defaultIncomeType} · previously selected</option> : null}
+              {incomeTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </DropdownSelect>
+          </label>
+          <label className="settings-input-block">
+            <span>New expense category</span>
+            <DropdownSelect aria-label="Default expense category" value={prefForm.defaultExpenseCategory}
+              onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
+              {!expenseCategoryOptions.includes(prefForm.defaultExpenseCategory) ?
+                <option value={prefForm.defaultExpenseCategory}>{prefForm.defaultExpenseCategory} · previously selected</option> : null}
+              {expenseCategoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </DropdownSelect>
+          </label>
+        </div>
+        <div className="dn-appearance-save-row">
+          <span>Save these starting values for future records.</span>
+          <div className="settings-actions">
+            <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset defaults</button>
+            <button type="button" className="settings-primary-button" onClick={savePreferences}>Save defaults</button>
+          </div>
+        </div>
+      </section>
 
-        <label className="settings-input-block">
-          <span>Default dashboard view</span>
-          <DropdownSelect value={prefForm.dashboardView} onChange={(event) => setPrefForm((current) => ({ ...current, dashboardView: event.target.value }))}>
-            <option value="overview">Overview</option>
-            <option value="events">Events</option>
-            <option value="financials">Financials</option>
-          </DropdownSelect>
-        </label>
+      <section className="dn-appearance-section dn-appearance-story" id="appearance-story">
+        <div className="dn-appearance-section-heading">
+          <div>
+            <span className="dn-appearance-section-kicker">03 · YOUR MEMORY BOOK</span>
+            <h3>Story & PDF design</h3>
+            <p>Choose a reading style for Journal, Diary and Task-style Moments.</p>
+          </div>
+        </div>
+        <StoryDesignSettings />
+      </section>
 
-        <label className="settings-input-block">
-          <span>Default event type</span>
-          <DropdownSelect value={prefForm.defaultEventType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
-            {eventTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </DropdownSelect>
-        </label>
-
-        <label className="settings-input-block">
-          <span>Default income type</span>
-          <DropdownSelect value={prefForm.defaultIncomeType} onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
-            {incomeTypeOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </DropdownSelect>
-        </label>
-
-        <label className="settings-input-block">
-          <span>Default expense category</span>
-          <DropdownSelect value={prefForm.defaultExpenseCategory} onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
-            {expenseCategoryOptions.map((option) => (
-              <option key={option} value={option}>{option}</option>
-            ))}
-          </DropdownSelect>
-        </label>
-      </div>
-
-      <div className="settings-actions">
-        <button type="button" className="settings-primary-button" onClick={savePreferences}>Save preferences</button>
-        <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset</button>
-      </div>
-      <StoryDesignSettings />
+      <nav className="dn-appearance-more" aria-label="Other personalization settings">
+        <Link to="/settings/list-defaults"><SlidersHorizontal size={18} aria-hidden="true" />
+          <span><strong>List defaults</strong><small>Saved sorting and filters for Moments, Activities and Transactions</small></span>
+          <ChevronRight size={17} aria-hidden="true" /></Link>
+        <Link to="/settings/code-lists"><Settings2 size={18} aria-hidden="true" />
+          <span><strong>Code Lists</strong><small>Manage Moment types, priorities, payment methods and categories</small></span>
+          <ChevronRight size={17} aria-hidden="true" /></Link>
+      </nav>
     </div>
   );
 
