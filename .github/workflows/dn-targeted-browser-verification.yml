@@ -224,6 +224,7 @@ jobs:
           e2e/iphone-settings-filter-defaults.spec.js
           e2e/iphone-settings-cloud-delete-safety.spec.js
           e2e/cross-app-visual-audit-230.spec.js
+          e2e/settings-appearance-baseline-230.spec.js
       - name: Upload screenshot evidence and failures
         if: always()
         uses: actions/upload-artifact@v4
