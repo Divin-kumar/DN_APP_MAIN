@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
   const clearSession = useAppStore((state) => state.clearSession);
   const setGuestMode = useAppStore((state) => state.setGuestMode);
   const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
+  const showToast = useAppStore((state) => state.showToast);
 
   useEffect(() => {
     let authChangeRevision = 0;
@@ -39,8 +40,10 @@ export function AuthProvider({ children }) {
 
           if (revision !== authChangeRevision) return;
 
+          let retainedGuestTasks = 0;
           try {
-            await mergeGuestDataIntoAccount(user.uid);
+            const merge = await mergeGuestDataIntoAccount(user.uid);
+            retainedGuestTasks = merge.tasksRetainedLocally || 0;
           } catch (error) {
             console.error('Failed to merge guest data:', error);
           }
@@ -52,6 +55,10 @@ export function AuthProvider({ children }) {
               displayName: user.displayName,
               photoURL: user.photoURL,
           });
+          if (retainedGuestTasks) showToast(
+            `${retainedGuestTasks} Guest ${retainedGuestTasks === 1 ? 'Task remains' : 'Tasks remain'} on this browser, not in your account. Export a Guest backup before clearing device data.`,
+            'danger', { label: 'Learn more', to: '/tasks', duration: 9500 },
+          );
         };
         void initializeAccount();
       } else if (localStorage.getItem('dn_guest_mode') === 'true') {
@@ -69,7 +76,7 @@ export function AuthProvider({ children }) {
       authChangeRevision += 1;
       unsubscribe?.();
     };
-  }, [beginAccountLoad, clearSession, hydrateAdminValuesForUser, setGuestMode, setUser]);
+  }, [beginAccountLoad, clearSession, hydrateAdminValuesForUser, setGuestMode, setUser, showToast]);
 
   return <AuthContext.Provider value={{}}>{children}</AuthContext.Provider>;
 }

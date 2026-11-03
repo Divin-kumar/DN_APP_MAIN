@@ -891,7 +891,7 @@ export default function Settings({ dataBackupOnly = false }) {
         <div className="dn-data-clear-options">
           <div className="dn-data-clear-option">
             <div><span className="dn-data-clear-label"><HardDrive size={15} aria-hidden="true" /> This browser</span>
-              <p>Clear local app data and preferences. Does not remove your online records or stored original files.</p></div>
+              <p>Clear local app data, including independent Guest Tasks and preferences. Does not remove online records or stored original files.</p></div>
             <button type="button" className="dn-data-outlined-button" onClick={() => setConfirmClearData(true)}
               disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords}>
               <Trash2 size={15} aria-hidden="true" /> Clear local
@@ -999,7 +999,7 @@ export default function Settings({ dataBackupOnly = false }) {
 
       {confirmClearData ? (
         <ModalDialog title="Clear local DN data?" className="dn-local-clear-modal" onClose={() => setConfirmClearData(false)}>
-          <p className="settings-helper">This removes guest records, preferences, and local record backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
+          <p className="settings-helper">This removes guest records, independent Guest Tasks, preferences, and local record backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
             <button type="button" className="dn-data-outlined-button is-danger" onClick={clearLocalData}><Trash2 size={15} aria-hidden="true" /> Clear local data</button>

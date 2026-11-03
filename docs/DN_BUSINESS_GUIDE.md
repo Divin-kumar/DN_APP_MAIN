@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3.0 Guest Task safety (OldVersion only):** Switching from Guest to a signed-in account does **not** transfer independent Tasks yet. They remain in that browser's Guest storage and DN warns about them after sign-in. Export a backup while still in Guest mode if you need a recoverable copy. Choosing Clear local data deliberately removes Guest Tasks along with other local app records; downloaded backups and stored original photos are handled separately. Signed-in Task storage is disabled until Firestore permission and lifecycle checks are approved.
+
+
 **DN 2.3.0 Tasks screen (OldVersion only, not published):** Personal Guest Tasks now have a separate Tasks page with optional due dates/times, status, priority, notes and optional links to a Moment or Activity. Use New Task, the universal + Task shortcut or the Dashboard Tasks section. Completing a Task never completes its Activity; old Task-style Activities, Stories and PDFs remain unchanged. Refine offers status/priority/due filters, sorting and grouping. The existing five-icon mobile dock is unchanged; Tasks is available from the account menu. The Guest tour includes Task examples only after an explicit Refresh demo. Signed-in Task storage remains **unavailable** until account cloud permissions are verified, so keep your Guest Tasks backed up before signing in. Responsive browser specifications are authored but real iPhone checks are still pending.
 
 

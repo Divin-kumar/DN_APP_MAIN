@@ -42,6 +42,8 @@ test('clear local data removes legacy and DN app values without deleting unrelat
   const storage = makeStorage({
     lifehub_guest_mode: 'true',
     dn_guest_mode: 'true',
+    dn_guest_tasks: '[{"id":"private-task"}]',
+    lifehub_guest_tasks: '[{"id":"legacy-task"}]',
     lifehub_recent_event_ids_guest: '["old"]',
     dn_recent_event_ids_guest: '["new"]',
     'dn_list_state_account%3Aowner_moments': '{"search":"private"}',
@@ -54,6 +56,8 @@ test('clear local data removes legacy and DN app values without deleting unrelat
   clearDnLocalData(storage);
   assert.equal(storage.getItem('lifehub_guest_mode'), null);
   assert.equal(storage.getItem('dn_guest_mode'), null);
+  assert.equal(storage.getItem('dn_guest_tasks'), null);
+  assert.equal(storage.getItem('lifehub_guest_tasks'), null);
   assert.equal(storage.getItem('lifehub_recent_event_ids_guest'), null);
   assert.equal(storage.getItem('dn_recent_event_ids_guest'), null);
   assert.equal(storage.getItem('dn_list_state_account%3Aowner_moments'), null);

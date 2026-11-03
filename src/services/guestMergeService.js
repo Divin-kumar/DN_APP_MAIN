@@ -20,12 +20,25 @@ const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
 const removeFirestoreOnlyFields = ({ firestoreId, ...item }) => item;
 
 export const mergeGuestDataIntoAccount = async (uid) => {
-  if (!uid) return { expenses: 0, incomes: 0, events: 0 };
+  if (!uid) return { expenses: 0, incomes: 0, events: 0, tasksRetainedLocally: 0 };
 
   const expenses = getGuestExpenses();
   const incomes = getGuestIncomes();
   const events = getGuestEvents();
-  const guestRecordKeys = [GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY];
+  const guestTaskRaw = localStorage.getItem('dn_guest_tasks');
+  let tasksRetainedLocally = 0;
+  if (guestTaskRaw) {
+    try {
+      const guestTasks = JSON.parse(guestTaskRaw);
+      tasksRetainedLocally = Array.isArray(guestTasks) ? guestTasks.length : 1;
+    } catch {
+      // Corrupted Guest Tasks stay on disk for manual recovery, never deleted.
+      tasksRetainedLocally = 1;
+    }
+  }
+  // Include Tasks in the scope snapshot even while they intentionally remain
+  // local. Concurrent Guest changes must not be hidden by account transfer.
+  const guestRecordKeys = [GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY, 'dn_guest_tasks'];
   const readGuestSnapshot = () => JSON.stringify(guestRecordKeys.flatMap((key) => [
     localStorage.getItem(key), localStorage.getItem(LEGACY_STORAGE_PREFIX + key.slice(DN_STORAGE_PREFIX.length)),
   ]));
@@ -77,5 +90,6 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     expenses: expenses.length,
     incomes: incomes.length,
     events: events.length,
+    tasksRetainedLocally,
   };
 };

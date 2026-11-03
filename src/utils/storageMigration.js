@@ -13,6 +13,7 @@ const FIXED_SUFFIXES = Object.freeze([
   'guest_eventGroups',
   'guest_expenses',
   'guest_incomes',
+  'guest_tasks',
   'guest_mode',
   'session_backup',
   'dev_fixture_scenario',

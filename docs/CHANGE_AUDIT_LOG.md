@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-335 | DN 2.3 Phase 4E: clear independent Guest Tasks only on explicit local delete; warn at sign-in
+- **Scope:** Extend the DN/legacy local-data deletion whitelist to include Guest Tasks, so explicit Clear local removes the new collection, with Node regression showing unrelated data remains. Account sign-in merge still transfers only established Firestore-safe Moments/ledger records; add Task key to change-detection snapshot, never delete it, and report retained Guest Task count so the signed-in user receives a clear warning about browser-only Tasks and backup before local clear.
+- **Safety:** No account Task cloud writes or invented Firestore permissions. Guest Tasks stay on the source browser after sign-in; possible malformed Task data stays intact for manual recovery. No Story/PDF, historical Activities, attachments, finance, other branch, PR, version bump or deployment. Browser and real sign-in manual acceptance still pending.
+
 ## CHG-20261103-334 | DN 2.3 Phase 4D: Task regression specs and alias-label correction
 - **Scope:** Author responsive Guest Task editing/status/filter regression tests, a context-sensitive universal + link test and an account isolation test. Correct the Dashboard Task unit expectation to match timed-first same-day ordering. Keep saved historical Activity aliases visible when Task editing without silently rewriting relationships.
 - **Evidence:** Browser checks authored, not executed. Node/lint/build and documentation CI must be checked on exact SHA, and iPhone Safari acceptance remains pending. No record migration, new Story/PDF entries, original/finance modification, cloud write, main, PR or deployment.
