@@ -279,3 +279,46 @@ html[data-theme] .dn-pdf-searchable-option legend {
 html[data-theme] .dn-pdf-searchable-option .dn-pdf-studio-toggle {
   min-height:44px;padding:8px 3px;
 }
+
+
+/* Owner iPhone review: tactile chapter layout choices without a native checkbox. */
+html[data-theme] .dn-pdf-pagination-option .dn-pdf-pagination-help,
+html[data-theme] .dn-pdf-pagination-option .dn-pdf-pagination-note {
+  margin:0;color:var(--color-text-muted);font-size:12px;line-height:1.55;
+}
+html[data-theme] .dn-pdf-break-choices {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;}
+html[data-theme] .dn-pdf-break-choice {
+  display:grid;grid-template-columns:40px minmax(0,1fr);
+  gap:9px;align-items:center;position:relative;text-align:left;min-width:0;
+  min-height:112px;padding:12px 12px 14px;border-radius:14px;
+  border:1px solid var(--color-border);background:var(--color-card);
+  color:var(--color-text);cursor:pointer;box-shadow:none;
+}
+html[data-theme] .dn-pdf-break-choice.is-selected {
+  background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
+  border-color:var(--color-primary);box-shadow:inset 0 0 0 1px var(--color-primary);
+}
+html[data-theme] .dn-pdf-break-choice:focus-visible {outline:2px solid var(--color-primary);outline-offset:3px;}
+html[data-theme] .dn-pdf-break-copy {display:grid;gap:5px;min-width:0;}
+html[data-theme] .dn-pdf-break-copy strong {font-size:12.5px;line-height:1.35;font-weight:740;}
+html[data-theme] .dn-pdf-break-copy small {font-size:11px;line-height:1.4;color:var(--color-text-muted);}
+html[data-theme] .dn-pdf-break-check {
+  position:absolute;top:7px;right:8px;display:grid;place-items:center;
+  width:19px;height:19px;border-radius:50%;background:var(--color-border);
+  color:transparent;font-size:12px;font-weight:800;
+}
+html[data-theme] .dn-pdf-break-choice.is-selected .dn-pdf-break-check {background:var(--color-primary);color:white;}
+html[data-theme] .dn-pdf-break-illustration {
+  display:flex;flex-direction:column;gap:4px;width:34px;height:46px;
+  padding:7px 6px;background:var(--color-surface);
+  border:1px solid var(--color-border);border-radius:5px;
+}
+html[data-theme] .dn-pdf-break-illustration i {height:4px;border-radius:2px;background:var(--color-text-muted);opacity:.6;}
+html[data-theme] .dn-pdf-break-illustration i:nth-child(2) {width:72%;}
+html[data-theme] .dn-pdf-break-illustration.is-chapters i:nth-child(2) {
+  margin-top:5px;border-top:2px solid var(--color-primary);height:6px;opacity:1;background:var(--color-card);
+}
+@media(max-width:420px) {
+  html[data-theme] .dn-pdf-break-choices {grid-template-columns:minmax(0,1fr);}
+  html[data-theme] .dn-pdf-break-choice {min-height:77px;grid-template-columns:38px minmax(0,1fr);padding:10px 34px 10px 11px;}
+}
