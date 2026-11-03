@@ -37,7 +37,7 @@ const fixture = () => createBackupDocument({
 
 test('v3 backup exports each visible child domain and excludes provider document IDs', () => {
   const backup = fixture();
-  assert.equal(backup.backupVersion, 3);
+  assert.equal(backup.backupVersion, 4);
   assert.equal(backup.moments[0].firestoreId, undefined);
   assert.equal(backup.activities[0].momentId, 'moment-1');
   assert.equal(backup.memories[0].momentId, 'moment-1');
@@ -63,12 +63,12 @@ test('v3 backup preserves independent Moment type Dashboard flags', () => {
   const restored = parseBackupDocument(JSON.parse(JSON.stringify(backup)));
   assert.equal(restored.codeLists.eventTypes[0].showInDashboardUpcoming, true);
   assert.equal(restored.codeLists.eventTypes[0].showActivitiesOnDashboard, false);
-  assert.equal(restored.backupVersion, 3);
+  assert.equal(restored.backupVersion, 4);
 });
 
 test('v3 validator rejects unsupported versions, duplicate IDs, and broken required relationships', () => {
   const backup = fixture();
-  assert.throws(() => parseBackupDocument({ backupVersion: 4 }), /Unsupported backup version/);
+  assert.throws(() => parseBackupDocument({ backupVersion: 5 }), /Unsupported backup version/);
   assert.throws(() => parseBackupDocument({ backupFormatVersion: 99 }), /Unsupported backup format version/);
   assert.throws(() => validateBackupDocument({ ...backup, activities: [...backup.activities, backup.activities[0]] }), /duplicate ID/);
   assert.throws(() => validateBackupDocument({ ...backup, memories: [{ id: 'orphan', momentId: 'missing' }] }), /references a missing Moment/);
@@ -93,7 +93,7 @@ test('legacy v2 backups are upgraded into the v3 restore envelope', () => {
       },
     },
   });
-  assert.equal(upgraded.backupVersion, 3);
+  assert.equal(upgraded.backupVersion, 4);
   assert.equal(upgraded.metadata.sourceFormatVersion, 2);
   assert.equal(upgraded.preferences.theme, 'light');
   assert.equal(upgraded.activities[0].momentId, 'moment-1');
@@ -392,12 +392,12 @@ test('v3 backup optionally preserves portable saved List defaults without a vers
   document.settings.listViewDefaults = listViewDefaults;
   validateBackupDocument(document);
   const parsed = parseBackupDocument(JSON.parse(JSON.stringify(document)));
-  assert.equal(parsed.backupVersion, 3);
+  assert.equal(parsed.backupVersion, 4);
   assert.deepEqual(parsed.settings.listViewDefaults, listViewDefaults);
   assert.equal(parsed.settings.listViewDefaults.activities.filters.field, 'date');
 });
 
-test('legacy v3 backup with no List defaults is still accepted as-is', () => {
+test('legacy v3 backup with no List defaults still imports without introducing Tasks', () => {
   const oldDocument = fixture();
   assert.equal(oldDocument.settings.listViewDefaults, undefined);
   validateBackupDocument(oldDocument);
@@ -418,7 +418,7 @@ test('legacy backup without Dashboard shortcut keys keeps the omission through v
     exportedAt: '2026-10-19T12:00:00.000Z',
     data: { dn_preferences: { theme: 'light' } },
   });
-  assert.equal(backup.backupVersion, 3);
+  assert.equal(backup.backupVersion, 4);
   assert.deepEqual(backup.dashboardConfiguration, {});
 });
 
@@ -438,4 +438,49 @@ test('v3 Dashboard shortcut fields are optional, but malformed present arrays fa
     edited.dashboardConfiguration = invalid;
     assert.throws(() => parseBackupDocument(edited), /Backup dashboard/);
   }
+});
+
+test('v4 backup keeps independent Tasks separate, strips provider identifiers and validates records', () => {
+  const backup = createBackupDocument({ ...{
+    moments: [{ id: 'moment-1', name: 'Trip', activities: [{ id: 'activity-1', title: 'Book hotel' }] }],
+    tasks: [{ id: 'task-a', firestoreId: 'account-provider-id', title: 'Independent checklist',
+      momentId: 'moment-1', activityId: 'activity-1', dueDate: '2026-11-04', dueTime: '', notes: 'Do not lose',
+      priority: 'high', status: 'in-progress' }],
+    codeLists: DEFAULT_CODE_LISTS,
+  } });
+  assert.equal(backup.backupVersion, 4);
+  assert.equal(backup.tasks.length, 1);
+  assert.equal(backup.tasks[0].firestoreId, undefined);
+  assert.equal(backup.activities.length, 1);
+  assert.equal(backup.tasks[0].dueTime, '');
+  assert.equal(buildEventGroupsFromBackup(backup)[0].activities.length, 1);
+  assert.deepEqual(parseBackupDocument(JSON.parse(JSON.stringify(backup))).tasks, backup.tasks);
+  assert.throws(() => validateBackupDocument({ ...backup, tasks: [...backup.tasks, backup.tasks[0]] }), /duplicate ID/);
+  assert.throws(() => validateBackupDocument({ ...backup, tasks: [{ ...backup.tasks[0], dueDate: '2026-02-30' }] }), /valid Task due date/);
+  assert.throws(() => validateBackupDocument({ ...backup, tasks: [{ ...backup.tasks[0], momentId: '', activityId: 'activity-1' }] }), /Task Moment/);
+});
+
+test('legacy v3 backup upgrades with no Tasks while retaining all original contents', () => {
+  const original = fixture();
+  const legacy = { ...original, backupVersion: 3 };
+  delete legacy.tasks;
+  const parsed = parseBackupDocument(JSON.parse(JSON.stringify(legacy)));
+  assert.equal(parsed.backupVersion, 4);
+  assert.deepEqual(parsed.tasks, []);
+  assert.deepEqual(parsed.moments, original.moments);
+  assert.deepEqual(parsed.activities, original.activities);
+  assert.deepEqual(parsed.expenses, original.expenses);
+  assert.throws(() => parseBackupDocument({ ...legacy, tasks: [] }), /Version 3 backup cannot contain independent Tasks/);
+});
+
+test('v4 backup reports unavailable Task links without losing or reassociating Tasks', () => {
+  const input = createBackupDocument({ moments: [{ id: 'm-one' }], codeLists: DEFAULT_CODE_LISTS,
+    tasks: [
+      { id: 't-one', title: 'Keep me', momentId: 'missing-moment', activityId: '' },
+      { id: 't-two', title: 'Keep this too', momentId: 'm-one', activityId: 'missing-activity' },
+    ] });
+  const warnings = collectBackupReferenceWarnings(input);
+  assert.ok(warnings.some((warning) => warning.includes('Task "t-one"')));
+  assert.ok(warnings.some((warning) => warning.includes('Task "t-two"')));
+  assert.deepEqual(input.tasks.map((task) => task.id), ['t-one', 't-two']);
 });

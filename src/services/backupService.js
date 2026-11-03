@@ -1,6 +1,7 @@
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists.js';
 import { recordId } from '../utils/recordIdentity.js';
+import { normalizeIndependentTask } from '../utils/independentTasks.js';
 import { activityOwnsLinkedId } from '../utils/activityEntries.js';
 import { financialDate } from '../utils/financialRecords.js';
 import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
@@ -8,9 +9,9 @@ import { validateSavedListDefaultsDocument } from '../utils/listViewDefaults.js'
 import { validateBackupDashboardConfiguration } from '../utils/backupDashboardConfiguration.js';
 import { validateStoryDesignBackup } from '../utils/storyDesignPreferences.js';
 
-export const CURRENT_BACKUP_VERSION = 3;
+export const CURRENT_BACKUP_VERSION = 4;
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
-const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes'];
+const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes', 'tasks'];
 const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
 const hasId = (item) => isRecord(item) && typeof item.id === 'string' && item.id.trim().length > 0;
 const ASSET_ID = /^[a-f0-9]{64}$/;
@@ -119,6 +120,7 @@ export const createBackupDocument = ({
   moments = [],
   expenses = [],
   incomes = [],
+  tasks = [],
   attachmentFiles = [],
   codeLists,
   codeListSchemaVersion = 1,
@@ -153,6 +155,8 @@ export const createBackupDocument = ({
     attachmentFiles,
     expenses: normalizedExpenses,
     incomes: incomes.map(portableRecord),
+    // Tasks use a separate collection and never become Moment Activity children.
+    tasks: tasks.map((task) => normalizeIndependentTask(task)),
     codeLists: codeLists || {},
     codeListSchemaVersion,
     settings,
@@ -211,6 +215,11 @@ export const validateBackupDocument = (backup, options = {}) => {
   uniqueById(backup.attachments, 'Attachments', true);
   uniqueById(backup.expenses, 'Expenses');
   uniqueById(backup.incomes, 'Income');
+  uniqueById(backup.tasks, 'Tasks');
+  backup.tasks.forEach((task) => {
+    // Validation must never repair, generate IDs or infer dates/links.
+    normalizeIndependentTask(task);
+  });
 
   backup.activities.forEach((activity) => {
     if (!momentIds.has(activity.momentId)) throw new Error(`Activity "${activity.id}" references a missing Moment.`);
@@ -229,6 +238,15 @@ export const validateBackupDocument = (backup, options = {}) => {
 const backedUpValue = (record, suffix) => (
   record?.[DN_STORAGE_PREFIX + suffix] ?? record?.[LEGACY_STORAGE_PREFIX + suffix]
 );
+
+// A v3 export predates standalone Tasks. Treat absence as an empty Task
+// collection without modifying its legacy collections or attachment descriptors.
+const normalizeV3Backup = (parsed, options = {}) => {
+  if (Object.prototype.hasOwnProperty.call(parsed, 'tasks')) {
+    throw new Error('Version 3 backup cannot contain independent Tasks.');
+  }
+  return validateBackupDocument({ ...parsed, backupVersion: CURRENT_BACKUP_VERSION, tasks: [] }, options);
+};
 
 const normalizeV2Backup = (parsed) => {
   const collections = parsed.data?.collections;
@@ -284,6 +302,7 @@ const normalizeLegacyBackup = (parsed) => {
 export const parseBackupDocument = (parsed, options = {}) => {
   if (!isRecord(parsed)) throw new Error('Backup root must be a JSON object.');
   if (parsed.backupVersion === CURRENT_BACKUP_VERSION) return validateBackupDocument(parsed, options);
+  if (parsed.backupVersion === 3) return normalizeV3Backup(parsed, options);
   if (parsed.backupVersion !== undefined) {
     if (parsed.backupFormatVersion === 2 || parsed.backupVersion === 2) return normalizeV2Backup(parsed);
     throw new Error(`Unsupported backup version: ${String(parsed.backupVersion)}.`);
@@ -444,7 +463,16 @@ export const collectBackupReferenceWarnings = (backup) => {
       activityOwners.get(key).push(activity.momentId);
     }
   });
-  return backup.expenses.flatMap((expense) => {
+  const taskWarnings = (backup.tasks || []).flatMap((task) => {
+    const warnings = [];
+    if (task.momentId && !momentIds.has(task.momentId)) warnings.push(`Task "${task.id}" references a Moment not included in this backup; its link will remain unavailable until the Moment is restored.`);
+    if (task.activityId && task.momentId) {
+      const owners = activityOwners.get(task.activityId) || [];
+      if (!owners.includes(task.momentId)) warnings.push(`Task "${task.id}" references an Activity not included within its linked Moment; its link will remain unavailable.`);
+    }
+    return warnings;
+  });
+  return [...taskWarnings, ...backup.expenses.flatMap((expense) => {
     const warnings = [];
     const momentId = expense.eventId || expense.momentId;
     if (momentId && !momentIds.has(momentId)) warnings.push(`Expense "${expense.id}" references a Moment not included in this backup.`);
@@ -456,5 +484,5 @@ export const collectBackupReferenceWarnings = (backup) => {
       }
     }
     return warnings;
-  });
+  })];
 };

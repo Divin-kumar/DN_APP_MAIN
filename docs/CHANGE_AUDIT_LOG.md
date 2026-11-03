@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-327 | DN 2.3 Phase 3C1: v4 portable Task backups with legacy compatibility
+- **Scope:** Bump new JSON exports to v4 and include a separate independent Tasks collection in the incremental file writer/parser. Validate stable IDs, due dates/times and link shape without rewriting sources; require unique Tasks, warn for missing Moment/Activity targets, never fold Tasks into Activity children. Safely upgrade v3 to v4 in memory with empty Tasks, retain v2/older conversion, preserve full original attachment file hashes/streaming.
+- **Impact:** Core backup schema, file reader and focused Node/browser expectations only. The app Settings controller is not yet wired to Guest Task export/restore; this is a transport milestone, not full Task backup acceptance. No account Tasks are written, no migration/deletion or data-model change to Moments, Activity entries, finance, Story, PDF or originals. No Guest demo refresh until Task flows are visible.
+- **Validation:** New Node round-trip, duplicate/malformed, v3 migration and missing-link tests authored; exact-SHA CI execution to be reported separately. No Firebase, branch other than OldVersion, PR or version bump.
+
 ## CHG-20261103-326 | DN 2.3 Phase 3B: guarded Guest Task repository without legacy mutation
 - **Scope:** Add the separate `dn_guest_tasks` persistence adapter for independent Tasks with injected browser storage and mandatory Guest session assertion. Read strictly validates the entire collection and duplicate IDs without rewriting it; create/edit/remove and explicit parent-unlink persist only the new Task collection. Partial edits preserve existing field values/IDs, and failed/invalid writes never claim success.
 - **Impact and boundaries:** Existing Guest Moment/Activity/finance keys, account data, Firestore, backups, Story/PDF, UI routes and sample fixtures are untouched. The repository is not yet called by the app. It does not reset the Guest tour; Phase 7 will integrate the comprehensive Guest sample. A signed-in cloud Task service must not be enabled until deployed account-owned Firestore rules are verified.

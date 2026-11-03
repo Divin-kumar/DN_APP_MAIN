@@ -38,7 +38,7 @@ test('incremental v3 export remains readable by the existing JSON parser with ex
   const before = JSON.stringify(source);
   const exported = await createBackupFile(source, { isGuest: true }, fixture.repository);
   const traditional = parseBackupDocument(JSON.parse(await exported.blob.text()));
-  assert.equal(traditional.backupVersion, 3);
+  assert.equal(traditional.backupVersion, 4);
   assert.equal(exported.originalFileCount, 2);
   assert.equal(traditional.attachmentFiles.length, 2);
   assert.equal(traditional.moments[0].notes, source.moments[0].notes);
@@ -107,7 +107,7 @@ test('invalid JSON, duplicate root fields, unsupported versions and broken relat
     '{"x":[}', '{"x":"unterminated}', '{"x":01}', '{"x":1 "y":2}', '{"x":1,"x":2}']) {
     await assert.rejects(readJsonBackupFile(new Blob([source]), { chunkBytes: 9 }), /valid JSON|top-level/);
   }
-  await assert.rejects(readBackupFile(new Blob(['{"backupVersion":4}'])), /Unsupported backup version/);
+  await assert.rejects(readBackupFile(new Blob(['{"backupVersion":5}'])), /Unsupported backup version/);
   const backup = createBackupDocument(input());
   backup.activities[0].momentId = 'absent';
   await assert.rejects(readBackupFile(new Blob([JSON.stringify(backup)])), /references a missing Moment/);
@@ -143,7 +143,7 @@ test('legacy v2 and settings-only JSON remain accepted without invented attachme
     eventGroups: input().moments, expenses: [], incomes: [], codeLists: DEFAULT_CODE_LISTS,
   } } };
   const upgraded = await readBackupFile(new Blob([JSON.stringify(v2)]));
-  assert.equal(upgraded.backup.backupVersion, 3);
+  assert.equal(upgraded.backup.backupVersion, 4);
   assert.equal(upgraded.backup.moments[0].id, 'kept-moment');
   assert.equal(upgraded.originalFiles.size, 0);
   const legacy = await readBackupFile(new Blob([JSON.stringify({ dn_preferences: JSON.stringify({ theme: 'light' }) })]));
@@ -175,4 +175,20 @@ test('incremental scanning agrees with JSON.parse for deterministic varied neste
     const source = JSON.stringify(expected, null, index % 2 ? 2 : 0);
     assert.deepEqual(await readJsonBackupFile(new Blob([source]), { chunkBytes: 11 + index % 13 }), JSON.parse(source));
   }
+});
+
+test('streaming v4 backup round-trip preserves independent Task records and original attachments', async () => {
+  const task = { id: 'task-v4', title: 'Standalone plan', momentId: 'kept-moment',
+    activityId: 'kept-activity', dueDate: '2026-11-04', dueTime: '', notes: 'Tamil தமிழ்', status: 'completed',
+    completedAt: '2026-11-03T12:00:00.000Z' };
+  const fixture = filesFixture(1, 21);
+  const exported = await createBackupFile({ ...input(fixture.attachments), tasks: [task] }, { isGuest: true }, fixture.repository);
+  const restored = await readBackupFile(exported.blob);
+  assert.equal(restored.backup.backupVersion, 4);
+  assert.equal(restored.backup.tasks.length, 1);
+  assert.equal(restored.backup.tasks[0].id, 'task-v4');
+  assert.equal(restored.backup.tasks[0].dueTime, '');
+  assert.equal(restored.backup.tasks[0].notes, 'Tamil தமிழ்');
+  assert.equal(restored.originalFiles.size, 1);
+  assert.equal(buildEventGroupsFromBackup(restored.backup, { originalFiles: restored.originalFiles })[0].activities.length, 1);
 });

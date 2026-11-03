@@ -29,7 +29,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     let json = '';
     for await (const chunk of stream) json += chunk.toString('utf8');
     const backup = JSON.parse(json);
-    expect(backup.backupVersion).toBe(3);
+    expect(backup.backupVersion).toBe(4);
     expect(backup.settings.listViewDefaults.activities.filters.field).toBe('title');
     expect(backup.settings.listViewDefaults.activities.group.children.some(
       (child) => child.kind === 'rule' && child.field === 'activity.priority' && child.value === 'high',
