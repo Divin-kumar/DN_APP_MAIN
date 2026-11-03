@@ -48,6 +48,13 @@ jobs:
           npx playwright test
           e2e/activity-detail-premium-220.spec.js
           --workers=1
+      - name: Check compact Activity covers, filtered paging and responsive routes
+        run: >-
+          npx playwright test
+          e2e/activity-cover-navigation-summary.spec.js
+          e2e/activity-refinement.spec.js
+          e2e/responsive.spec.js
+          --workers=1
       - name: Check 4C PDF dropdowns, pagination controls and Settings wording
         run: >-
           npx playwright test
