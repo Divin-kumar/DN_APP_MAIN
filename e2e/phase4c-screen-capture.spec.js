@@ -39,8 +39,20 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
       await page.goto(route);
       await expect(page.locator('main')).toBeVisible();
       if (heading) await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible();
-      await expect(readyContent(page, name)).toBeVisible({ timeout: 30000 });
+      const loaded = readyContent(page, name);
+      await expect(loaded).toBeVisible({ timeout: 30000 });
       await expect(page.locator('.loading-skeleton')).toHaveCount(0);
+      // Content-ready is not the same as visually ready. CSS route and card
+      // fades can compound, producing a nearly blank screenshot.
+      await expect.poll(() => loaded.evaluate((node) => {
+        let opacity = 1;
+        for (let current = node; current; current = current.parentElement) {
+          const value = Number(getComputedStyle(current).opacity);
+          if (Number.isFinite(value)) opacity *= value;
+        }
+        return opacity;
+      }), { timeout: 5000, message: name + ': content should be visually settled' })
+        .toBeGreaterThanOrEqual(.985);
       const dimensions = await page.evaluate(() => ({
         doc: document.documentElement.scrollWidth,
         viewport: document.documentElement.clientWidth,

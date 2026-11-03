@@ -24,8 +24,12 @@ jobs:
         run: npm ci
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
-      - name: Compare ready versus settled Moments and Activities
-        run: npx playwright test e2e/phase4c-fade-regression.spec.js --workers=1
+      - name: Verify immediate list readability and stable cross-page captures
+        run: >-
+          npx playwright test
+          e2e/phase4c-fade-regression.spec.js
+          e2e/phase4c-screen-capture.spec.js
+          --workers=1
       - name: Preserve synthetic settled-screen evidence
         if: always()
         uses: actions/upload-artifact@v4

@@ -73,6 +73,10 @@ for (const scenario of scenarios) {
         ancestors: after.ancestors.filter((item) => item.opacity !== '1' || item.filter !== 'none'),
         hitStack: after.hitStack, overlays: after.overlays },
     }));
+    // Loaded content must be legible immediately, before the 140ms shell
+    // animation finishes. A 0.94 shell fade is acceptable; stacked inner
+    // page/card fades that produce 0.001–0.06 effective opacity are not.
+    expect(before.effectiveOpacity, 'immediate visible content opacity').toBeGreaterThanOrEqual(.9);
     expect(after.effectiveOpacity).toBeGreaterThanOrEqual(.98);
     expect(after.hitStack[0].className).not.toContain('loading-skeleton');
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(scenario.width + 1);

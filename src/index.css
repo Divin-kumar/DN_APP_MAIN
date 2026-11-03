@@ -8992,3 +8992,14 @@ body,
 .activity-time-field { display: grid; gap: 8px; min-width: 0; }
 .activity-time-field input { padding: 10px 12px; min-width: 0; width: 100%; min-height: 44px; box-sizing: border-box; }
 .activity-time-field button { justify-self: start; min-height: 44px; }
+
+
+/* DN 2.2 Phase 4C: don't stack several entrance opacity fades on list pages.
+   The shell's 140ms route transition remains the single page-level animation.
+   Inner list/cards keep their existing hover and swipe transitions. */
+html[data-theme] .events-page.life-timeline-page,
+html[data-theme] .events-page.life-timeline-page .life-journey,
+html[data-theme] .events-page.life-timeline-page .dn-v2-moment-card,
+html[data-theme] .events-page.life-timeline-page .dn-v2-activity-card {
+  animation: none !important;
+}
