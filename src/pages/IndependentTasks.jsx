@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Circle, ListTodo, Pencil, Plus, SlidersHorizontal, Trash2, XCircle } from 'lucide-react';
+import { Check, Circle, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import SwipeActionCard from '../components/common/SwipeActionCard';
 import TaskEditor from '../components/tasks/TaskEditor';
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
 import { filterTaskResults } from '../utils/taskListFilters.js';
@@ -9,7 +10,7 @@ import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
-import { groupIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
+import { sortIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
 import { formatMomentDate } from '../utils/momentDates.js';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
@@ -60,9 +61,13 @@ export function TaskListContent() {
   const eventReady = isRecordScopeLoaded(eventStore, 'guest:anonymous', getActiveSampleScenario(null));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today), [tasks, view, today]);
-  const groups = useMemo(() => groupIndependentTasks(matches, {
-    by: view.group, direction: view.direction, sortBy: view.field, moments,
-  }), [matches, view.group, view.direction, view.field, moments]);
+  const displayedTasks = useMemo(() => sortIndependentTasks(matches, view.direction, view.field),
+    [matches, view.direction, view.field]);
+  const appliedFilters = [
+    ...(view.status !== 'all' ? [`Status: ${statusLabel(view.status)}`] : []),
+    ...(view.priority !== 'all' ? [`Priority: ${view.priority}`] : []),
+    ...(view.due !== 'all' ? [`Due: ${({ overdue: 'Overdue', next7: 'Next 7 days', undated: 'Undated' })[view.due]}`] : []),
+  ];
   const active = tasks.filter((task) => task.status === 'in-progress').length;
   const completed = tasks.filter((task) => task.status === 'completed').length;
   const run = (change, message) => {
@@ -85,7 +90,6 @@ export function TaskListContent() {
   const remove = (task) => {
     if (run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
   };
-  const openNew = () => { setError(''); setEditor({ kind: 'new', value: null }); };
   if (!enabled) return <main className="dn-tasks-page">
     <div className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent Tasks</span><h2>Tasks</h2></div></div>
     <section className="dn-task-empty" role="status"><ListTodo size={28} aria-hidden="true" />
@@ -97,66 +101,89 @@ export function TaskListContent() {
   </main>;
 
   return <main className="dn-tasks-page">
-    <header className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent · Guest Tasks</span>
-      <h2>Tasks</h2><p>Personal plans kept outside your Moment stories.</p></div>
-      <button type="button" className="dn-task-add" onClick={openNew}><Plus size={18} />New Task</button>
+    <header className="dn-task-hero">
+      <div><span className="dn-task-eyebrow">Your day, in focus</span>
+        <h2>Tasks</h2><p>Independent to-dos, with optional links to your Moments.</p>
+      </div>
     </header>
     <div className="dn-task-metrics" aria-label="Task summary">
-      <span><strong>{tasks.length}</strong> All</span><span><strong>{active}</strong> In progress</span>
+      <span><strong>{tasks.length}</strong> All Tasks</span>
+      <span><strong>{active}</strong> In progress</span>
       <span><strong>{completed}</strong> Completed</span>
     </div>
     {store.error ? <p className="dn-task-feedback" role="alert">{store.error} <button type="button" onClick={() => store.loadTasks()}>Retry</button></p> : null}
     {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     {notice ? <p className="sr-only" role="status" aria-live="polite">{notice}</p> : null}
-    <div className="dn-task-toolbar"><label className="dn-task-search">
-      <span className="sr-only">Search Tasks</span><input type="search" aria-label="Search Tasks"
-        value={view.search} onChange={(event) => changeView({ search: event.target.value })} placeholder="Search Tasks" />
-    </label>
-      <button type="button" className="dn-task-refine-trigger" onClick={() => setRefine(true)}><SlidersHorizontal size={17} />Refine</button>
+    <div className="dn-list-controls dn-task-discovery">
+      <div className="dn-list-controls-row">
+        <div className="dn-list-controls-search">
+          <Search className="dn-list-controls-search-icon" size={18} aria-hidden="true" />
+          <input type="search" aria-label="Search Tasks" value={view.search}
+            onChange={(event) => changeView({ search: event.target.value })} placeholder="Search Tasks" />
+        </div>
+        <button type="button" className={`dn-list-controls-trigger${appliedFilters.length ? ' is-active' : ''}`}
+          aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
+          <SlidersHorizontal size={17} aria-hidden="true" /><span>Refine</span>
+          {appliedFilters.length ? <span className="dn-list-controls-badge" aria-hidden="true">{appliedFilters.length}</span> : null}
+        </button>
+      </div>
+      <div className="dn-task-discovery-summary">
+        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
+        {appliedFilters.length ? <div className="dn-task-applied" aria-label="Active Task filters">
+          {appliedFilters.map((label) => <button key={label} type="button" onClick={() => setRefine(true)}
+            title="Edit filters">{label}</button>)}
+        </div> : null}
+      </div>
     </div>
-    {ready && !store.error && !tasks.length ? <div className="dn-task-empty"><ListTodo size={26} />
-      <h3>Your list is ready</h3><p>Create a standalone Task, or link it to a Moment.</p>
-      <button type="button" onClick={openNew}>Create first Task</button>
+    {ready && !store.error && !tasks.length ? <div className="dn-task-empty" role="status">
+      <ListTodo size={28} aria-hidden="true" />
+      <h3>A clear start</h3>
+      <p>Use the universal <strong>+</strong> to create a Task. Keep it standalone or link it to a Moment.</p>
     </div> : null}
-    {ready && tasks.length > 0 && matches.length === 0 ? <p className="dn-task-empty" role="status">No Tasks match your filters.</p> : null}
-    <div className="dn-task-groups">
-      {groups.map((group) => <section className="dn-task-group" key={group.key} aria-label={group.label + ' Tasks'}>
-        <h3>{view.group === 'dueDate' && group.key !== 'undated' ? formatDate(group.key) : group.label}
-          <span>{group.count}</span></h3>
-        <div className="dn-task-group-rows">{group.tasks.map((task) => {
-          const parent = resolveIndependentTaskParent(task, moments);
-          const context = parent.kind === 'activity' ? `${parent.moment.name} · ${parent.activity.title || 'Activity'}`
-            : parent.kind === 'moment' ? parent.moment.name
-              : parent.kind === 'standalone' ? 'Standalone'
-                : parent.kind === 'missing-activity' ? 'Activity unavailable' : 'Moment unavailable';
-          const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
-          return <article key={task.id} className="dn-task-row" data-status={task.status}>
-            <button className="dn-task-done" type="button" aria-pressed={task.status === 'completed'}
-              aria-label={task.status === 'completed' ? `Reopen ${task.title}` : `Complete ${task.title}`}
-              disabled={Boolean(store.error) || task.status === 'cancelled'}
-              onClick={() => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed')}>
-              {task.status === 'completed' ? <Check size={20} /> : <Circle size={20} />}
-            </button>
-            <div className="dn-task-copy"><strong>{task.title}</strong>
-              <small>{context} · {task.dueDate ? formatDate(task.dueDate) + (task.dueTime ? ' · ' + task.dueTime : '') : 'No due date'}</small>
-              <span className="dn-task-row-pills"><span data-priority={task.priority}>{task.priority} priority</span>
-                {overdue ? <span className="is-overdue">Overdue</span> : null}
-                {task.status !== 'in-progress' ? <span>{statusLabel(task.status)}</span> : null}
+    {ready && tasks.length > 0 && displayedTasks.length === 0
+      ? <div className="dn-task-empty" role="status"><Search size={24} aria-hidden="true" />
+        <h3>No matching Tasks</h3><p>Try another search or change your Refine selections.</p>
+      </div> : null}
+    <div className="dn-task-list" aria-label="Task list">
+      {displayedTasks.map((task) => {
+        const parent = resolveIndependentTaskParent(task, moments);
+        const context = parent.kind === 'activity' ? `${parent.moment.name} · ${parent.activity.title || 'Activity'}`
+          : parent.kind === 'moment' ? parent.moment.name
+            : parent.kind === 'standalone' ? 'Standalone'
+              : parent.kind === 'missing-activity' ? 'Activity unavailable' : 'Moment unavailable';
+        const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
+        const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
+        return <SwipeActionCard key={task.id} as="article" className="dn-task-row" mainClassName="dn-task-row-main"
+          label={task.title} role="group" menuButton menuLabel={`Task options for ${task.title}`}
+          otherActions={[
+            { label: 'Edit', icon: Pencil, onClick: edit },
+            task.status === 'cancelled'
+              ? { label: 'Restore', icon: RotateCcw, onClick: () => statusChange(task, 'in-progress') }
+              : { label: 'Cancel', icon: XCircle, onClick: () => { setError(''); setConfirm({ kind: 'cancel', task }); } },
+          ]}
+          onDelete={() => { setError(''); setConfirm({ kind: 'delete', task }); }}>
+          <button className="dn-task-done" type="button" data-swipe-ignore
+            aria-pressed={task.status === 'completed'}
+            aria-label={task.status === 'completed' ? `Reopen ${task.title}` : `Complete ${task.title}`}
+            disabled={Boolean(store.error) || task.status === 'cancelled'}
+            onClick={() => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed')}>
+            {task.status === 'completed' ? <Check size={20} aria-hidden="true" /> : <Circle size={20} aria-hidden="true" />}
+          </button>
+          <button type="button" data-swipe-ignore className="dn-task-copy" onClick={edit}
+            aria-label={`Edit ${task.title}`}>
+            <strong>{task.title}</strong>
+            <small className="dn-task-context">{context}</small>
+            <span className="dn-task-row-details">
+              <span className={overdue ? 'is-overdue' : ''}>
+                {task.dueDate ? formatDate(task.dueDate) + (task.dueTime ? ' · ' + task.dueTime : '') : 'No due date'}
               </span>
-            </div>
-            <div className="dn-task-actions">
-              <button type="button" title="Edit Task" aria-label={`Edit ${task.title}`}
-                onClick={() => { setError(''); setEditor({ kind: 'edit', value: task }); }}><Pencil size={17} /></button>
-              {task.status === 'cancelled'
-                ? <button type="button" aria-label={`Restore ${task.title}`} onClick={() => statusChange(task, 'in-progress')}><Check size={17} /></button>
-                : <button type="button" title="Cancel Task" aria-label={`Cancel ${task.title}`}
-                  onClick={() => { setError(''); setConfirm({ kind: 'cancel', task }); }}><XCircle size={17} /></button>}
-              <button type="button" title="Delete Task" aria-label={`Delete ${task.title}`}
-                onClick={() => { setError(''); setConfirm({ kind: 'delete', task }); }}><Trash2 size={17} /></button>
-            </div>
-          </article>;
-        })}</div>
-      </section>)}
+              <span data-priority={task.priority}>{task.priority} priority</span>
+              {overdue ? <span className="is-overdue">Overdue</span> : null}
+              {task.status !== 'in-progress' ? <span>{statusLabel(task.status)}</span> : null}
+            </span>
+          </button>
+        </SwipeActionCard>;
+      })}
     </div>
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
       onClose={() => { setEditor(null); setError(''); }}>
