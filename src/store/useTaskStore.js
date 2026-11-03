@@ -4,7 +4,7 @@ import { create } from 'zustand';
 import useAppStore from './useAppStore';
 import { getActiveSampleScenario, requireActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
 import { createGuestTaskRepository } from '../services/guestTaskService';
-import { normalizeIndependentTask, taskStatusPatch } from '../utils/independentTasks.js';
+import { detachIndependentTaskLinks, normalizeIndependentTask, taskStatusPatch } from '../utils/independentTasks.js';
 import { recordId } from '../utils/recordIdentity.js';
 
 export const taskScopeKey = ({ user, isGuest } = {}) => user?.uid ? `account:${user.uid}`
@@ -102,6 +102,25 @@ const useTaskStore = create((set, get) => ({
     assertGuestScope(scope);
     set({ tasks });
     return tasks;
+  },
+  // Called only after a Moment/Activity deletion is persisted. Detached Tasks
+  // retain their IDs, status, notes and dates; account Tasks are never touched.
+  detachParent: (parent) => {
+    const scope = taskScopeKey(useAppStore.getState());
+    if (!scope.startsWith('guest:')) return 0;
+    const demo = scope !== 'guest:private';
+    const data = demo ? requireActiveSampleData(null) : null;
+    const reader = demo ? null : repository(scope);
+    const before = demo ? sampleTasks(data) : reader.list();
+    const projected = detachIndependentTaskLinks(before, parent);
+    const detached = projected.filter((item, index) => item !== before[index]).length;
+    assertGuestScope(scope);
+    const tasks = !detached ? before : demo
+      ? (saveActiveSampleData({ ...data, tasks: projected }), projected)
+      : reader.detachParent(parent);
+    assertGuestScope(scope);
+    if (get().loadedFor === scope) set({ tasks, error: null });
+    return detached;
   },
   setTaskStatus: (id, status) => {
     const scope = taskScopeKey(useAppStore.getState());
