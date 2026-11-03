@@ -12,7 +12,7 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { BellRing, Check, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
+import { BellRing, Check, Hash, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
