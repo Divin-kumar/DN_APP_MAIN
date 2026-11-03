@@ -16,6 +16,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
   const [activityId, setActivityId] = useState(task?.activityId || '');
   const parent = moments.find((item) => (recordId(item.id) || recordId(item.firestoreId)) === momentId);
   const unresolved = task && resolveIndependentTaskParent({ ...task, momentId, activityId }, moments);
+  const savedAlias = Boolean(activityId && !(parent?.activities || []).some((item) => recordId(item.id) === activityId));
   const save = (event) => {
     event.preventDefault();
     if (title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId });
@@ -54,7 +55,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
       <DropdownSelect id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
         <option value="">Only link to Moment</option>
         {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
-        {activityId && unresolved?.kind === 'missing-activity' ? <option value={activityId}>Unavailable Activity (preserve link)</option> : null}
+        {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
+          ? 'Historical Activity link (preserved)' : 'Unavailable Activity (preserve link)'}</option> : null}
       </DropdownSelect>
     </div> : null}
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}

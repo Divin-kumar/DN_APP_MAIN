@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-334 | DN 2.3 Phase 4D: Task regression specs and alias-label correction
+- **Scope:** Author responsive Guest Task editing/status/filter regression tests, a context-sensitive universal + link test and an account isolation test. Correct the Dashboard Task unit expectation to match timed-first same-day ordering. Keep saved historical Activity aliases visible when Task editing without silently rewriting relationships.
+- **Evidence:** Browser checks authored, not executed. Node/lint/build and documentation CI must be checked on exact SHA, and iPhone Safari acceptance remains pending. No record migration, new Story/PDF entries, original/finance modification, cloud write, main, PR or deployment.
+
 ## CHG-20261103-333 | DN 2.3 Phase 4C: keep Tasks independent from Activities dashboard disclosure
 - **Scope:** Fix the first Dashboard Tasks integration's JSX placement so Tasks always renders as its own third sibling section and is not conditional on expanded Activities. Correct overdue date labels using local ISO date formatting. No Task, Moment, Activity, original file or finance data is changed.
 - **Verification:** Source-derived correction and existing Node due-window regression; exact-SHA CI/browser and physical Safari checks remain independent. OldVersion only, no deployment, PR, main write or version bump.

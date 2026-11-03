@@ -12,7 +12,7 @@ test('upcoming Task projection includes overdue first and excludes completed/und
     task('today', '2026-11-03'), task('same-day-later', '2026-11-03', 'in-progress', '18:30'),
   ];
   assert.deepEqual(selectUpcomingIndependentTasks(input, new Date(2026, 10, 3, 12)).map(item => item.id),
-    ['old', 'today', 'same-day-later', 'due-later']);
+    ['old', 'same-day-later', 'today', 'due-later']);
   assert.equal(input.length, 7);
 });
 test('30-day horizon and year rollover use local calendar dates', () => {
