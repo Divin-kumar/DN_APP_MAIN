@@ -4,7 +4,7 @@ import { attachmentRepository } from '../services/attachmentService';
 import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
-import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES } from './pdfStudioOptions';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES, pdfPageNumberLabel } from './pdfStudioOptions';
 import { pdfStoryText } from './pdfStoryText';
 
 const STANDARD_SCALE = PDF_PAGE_QUALITY_PROFILES.standard.scale;
@@ -42,6 +42,10 @@ export class MomentPdfPainter {
     this.template = options.template || 'legacy';
     this.visualStyle = options.visualStyle || 'legacy';
     this.searchableText = options.searchableText === true;
+    this.pageNumberPosition = ['right', 'center', 'none'].includes(options.pageNumberPosition)
+      ? options.pageNumberPosition : 'right';
+    this.numberCoverPage = options.numberCoverPage !== false;
+    this.includeCover = options.includeCover === true;
     const pageProfile = PDF_PAGE_QUALITY_PROFILES[options.pageQuality]
       || PDF_PAGE_QUALITY_PROFILES.standard;
     this.renderScale = pageProfile.scale;
@@ -100,8 +104,17 @@ export class MomentPdfPainter {
     ctx.font = '10px system-ui, sans-serif';
     ctx.fillText(this.visualStyle === 'legacy' ? 'Created with DN' : 'DN · Personal keepsake',
       INSET, PDF_PAGE_HEIGHT - 28);
-    const num = String(this.pageNumber);
-    ctx.fillText(num, PDF_PAGE_WIDTH - INSET - ctx.measureText(num).width, PDF_PAGE_HEIGHT - 28);
+    const num = pdfPageNumberLabel(this.pageNumber, {
+      pageNumberPosition: this.pageNumberPosition,
+      numberCoverPage: this.numberCoverPage,
+      includeCover: this.includeCover,
+    });
+    if (num) {
+      const width = ctx.measureText(num).width;
+      const x = this.pageNumberPosition === 'center'
+        ? (PDF_PAGE_WIDTH - width) / 2 : PDF_PAGE_WIDTH - INSET - width;
+      ctx.fillText(num, x, PDF_PAGE_HEIGHT - 28);
+    }
     const page = await jpegBytes(this.canvas, this.jpegQuality);
     if (this.searchableText) page.textRuns = this.pageTextRuns;
     this.pages.push(page);

@@ -1039,7 +1039,7 @@ export default function Settings({ dataBackupOnly = false }) {
 
   const sections = [
     { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
-    { key: 'defaults', heading: 'Appearance & preferences', description: 'Choose your theme, currency, and default behavior.', icon: Settings2, body: renderDefaultsSection() },
+    { key: 'defaults', heading: 'Appearance & preferences', description: 'Theme, Story & PDF designs, currency and defaults.', icon: Settings2, body: renderDefaultsSection() },
     { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
   ];
 

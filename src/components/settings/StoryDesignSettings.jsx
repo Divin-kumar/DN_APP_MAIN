@@ -92,8 +92,9 @@ export default function StoryDesignSettings() {
         onClick={save}>Save designs</button>
     </div>
     <p className="dn-story-design-hint">
-      These choices affect Story's appearance. PDF Studio customization is a separate upcoming 2.2.0 step.
-      Resetting designs here does not change your app theme, records or files.
+      These designs style Story and provide the starting look for PDF Studio.
+      Changes made inside PDF Studio affect only that export. Resetting designs here
+      does not change your app theme, records or files.
     </p>
   </section>;
 }

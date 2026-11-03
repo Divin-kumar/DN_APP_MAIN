@@ -7,7 +7,7 @@ test('PDF Studio keeps style separate from format and blocks stale exports', asy
   await page.goto('/events/moment-one/pdf');
   const studio = page.locator('.dn-pdf-studio-page');
   await expect(studio).toBeVisible();
-  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toHaveValue('journey');
+  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Journal');
   await expect(studio.getByRole('button', { name: 'PDF design Editorial' })).toHaveAttribute('aria-pressed', 'true');
   await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
   const hashPage = () => page.evaluate(async () => {
@@ -20,7 +20,7 @@ test('PDF Studio keeps style separate from format and blocks stale exports', asy
   const baselinePage = await hashPage();
   const unchangedRecords = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await studio.getByRole('button', { name: 'PDF design Heritage' }).click();
-  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toHaveValue('journey');
+  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Journal');
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeDisabled();
   await studio.getByRole('button', { name: 'Update preview' }).click();
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 20000 });

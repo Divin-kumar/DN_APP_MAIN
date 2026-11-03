@@ -48,6 +48,11 @@ jobs:
           npx playwright test
           e2e/activity-detail-premium-220.spec.js
           --workers=1
+      - name: Check 4C PDF dropdowns, pagination controls and Settings wording
+        run: >-
+          npx playwright test
+          e2e/pdf-studio-controls-4c.spec.js
+          --workers=1
       - name: Check PDF Studio style, searchable download and high-resolution export
         run: >-
           npx playwright test

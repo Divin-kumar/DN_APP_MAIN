@@ -4,12 +4,13 @@ import {
   Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw,
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import DropdownSelect from '../common/DropdownSelect';
 import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
 import { getActiveSampleScenario } from '../../dev/sampleData';
 import { resolveMomentStoryPresentation } from '../../utils/momentStory';
 import {
   PDF_DENSITIES, PDF_TEMPLATES, PDF_STYLE_NAMES, PDF_PAGE_QUALITY_OPTIONS,
-  normalizePdfStudioOptions,
+  PDF_PAGE_NUMBER_POSITIONS, normalizePdfStudioOptions,
 } from '../../utils/pdfStudioOptions';
 import { STORY_DESIGN_STYLES } from '../../utils/storyDesignPreferences';
 import { renderMomentStudioPdf } from '../../utils/momentPdf';
@@ -227,15 +228,16 @@ export default function MomentPdfStudio({ event }) {
           <div><strong>Design your PDF</strong>
             <p>Choose the look, then inspect the actual pages before downloading.</p></div>
         </div>
-        <label className="dn-pdf-studio-field">
+        <div className="dn-pdf-studio-field">
           <span>Story format</span>
-          <select aria-label="PDF story format" value={settings.template} disabled={busy}
+          <DropdownSelect aria-label="PDF story format" value={settings.template} disabled={busy}
+            searchable={false} triggerLabel={PDF_TEMPLATES.find((item) => item.value === settings.template)?.label}
             onChange={(e) => update('template', e.target.value)}>
             {PDF_TEMPLATES.map((option) => <option value={option.value} key={option.value}>
               {option.label} · {option.description}
             </option>)}
-          </select>
-        </label>
+          </DropdownSelect>
+        </div>
         <fieldset className="dn-pdf-design-choices" disabled={busy}>
           <legend>Book design</legend>
           <div className="dn-pdf-style-grid">
@@ -257,29 +259,50 @@ export default function MomentPdfStudio({ event }) {
               <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
           </div>
         </fieldset>
-        <label className="dn-pdf-studio-field">
+        <div className="dn-pdf-studio-field">
           <span>Page spacing</span>
-          <select aria-label="PDF page spacing" value={settings.density} disabled={busy}
+          <DropdownSelect aria-label="PDF page spacing" value={settings.density} disabled={busy}
+            searchable={false}
+            triggerLabel={settings.density.charAt(0).toUpperCase() + settings.density.slice(1)}
             onChange={(e) => update('density', e.target.value)}>
             {PDF_DENSITIES.map((value) => <option key={value} value={value}>
               {value.charAt(0).toUpperCase() + value.slice(1)}
             </option>)}
-          </select>
-        </label>
-        <label className="dn-pdf-studio-field">
+          </DropdownSelect>
+        </div>
+        <div className="dn-pdf-studio-field">
           <span>Page image quality</span>
-          <select aria-label="PDF page image quality" value={settings.pageQuality}
-            disabled={busy} onChange={(e) => update('pageQuality', e.target.value)}>
+          <DropdownSelect aria-label="PDF page image quality" value={settings.pageQuality}
+            disabled={busy} searchable={false}
+            triggerLabel={PDF_PAGE_QUALITY_OPTIONS.find((item) => item.value === settings.pageQuality)?.label}
+            onChange={(e) => update('pageQuality', e.target.value)}>
             {PDF_PAGE_QUALITY_OPTIONS.map((option) => <option key={option.value} value={option.value}>
               {option.label} · {option.description}
             </option>)}
-          </select>
+          </DropdownSelect>
           {settings.pageQuality !== 'standard' ? <small className="dn-pdf-quality-hint">
             Experimental high-resolution page rendering. It may use more device memory
             and create larger files. The original photo resolution still determines
             how much detail a print can show. For long books, choose Standard.
           </small> : null}
-        </label>
+        </div>
+        <fieldset className="dn-pdf-page-numbers" disabled={busy}>
+          <legend>Page numbers</legend>
+          <div className="dn-pdf-page-position-options" role="group" aria-label="PDF page numbering position">
+            {PDF_PAGE_NUMBER_POSITIONS.map(({ value, label }) => <button type="button" key={value}
+              className={settings.pageNumberPosition === value ? 'is-selected' : ''}
+              aria-pressed={settings.pageNumberPosition === value}
+              aria-label={'PDF page numbers ' + label}
+              onClick={() => update('pageNumberPosition', value)}>{label}</button>)}
+          </div>
+          {settings.includeCover && settings.pageNumberPosition !== 'none' ? <label className="dn-pdf-studio-toggle dn-pdf-number-cover">
+            <input type="checkbox" checked={settings.numberCoverPage}
+              onChange={(e) => update('numberCoverPage', e.target.checked)} />
+            <span><strong>Number the cover page</strong>
+              <small>Turn off to begin with page 1 after the cover.</small></span>
+          </label> : null}
+          <p>Changes appear on the actual PDF pages after Update preview. Existing PDFs are unchanged.</p>
+        </fieldset>
         <fieldset className="dn-pdf-searchable-option">
           <legend>PDF text</legend>
           <label className="dn-pdf-studio-toggle">

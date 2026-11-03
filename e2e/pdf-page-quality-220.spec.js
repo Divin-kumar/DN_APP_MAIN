@@ -10,13 +10,15 @@ test('experimental enhanced PDF uses larger real page JPEGs and preserves record
   const control = studio.getByRole('combobox', { name: 'PDF page image quality' });
   const download = studio.getByRole('button', { name: 'Download customized PDF' });
   await expect(studio.getByRole('img', { name: 'Rendered PDF page 1' })).toBeVisible();
-  await expect(control).toHaveValue('standard');
+  await expect(control).toContainText('Standard');
   const unchanged = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   const first = page.waitForEvent('download');
   await download.click();
   const standard = (await readFile(await (await first).path())).toString('latin1');
   expect(standard).toMatch(/\/Width 982 \/Height 1389/);
-  await control.selectOption('enhanced');
+  await control.click();
+  await page.getByRole('listbox', { name: 'PDF page image quality' })
+    .getByRole('option', { name: /^Enhanced/ }).click();
   await expect(download).toBeDisabled();
   await studio.getByRole('button', { name: 'Update preview' }).click();
   await expect(download).toBeEnabled({ timeout: 30000 });

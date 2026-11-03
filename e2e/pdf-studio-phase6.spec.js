@@ -2,6 +2,12 @@ import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
 import { addOriginal, calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
 
+const choosePdfSetting = async (page, studio, label, choice) => {
+  await studio.getByRole('combobox', { name: label }).click();
+  await page.getByRole('listbox', { name: label })
+    .getByRole('option', { name: new RegExp('^' + choice) }).click();
+};
+
 async function openStudio(page) {
   await page.goto('/events');
   const card = page.getByRole('group', { name: /Weekend in Ooty.*Swipe either direction for actions/ });
@@ -26,13 +32,13 @@ test('PDF Studio presents actual pages, requires refresh after customization and
   await addOriginal(page, { count: 2 });
   const unchanged = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   const studio = await openStudio(page);
-  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toHaveValue('journey');
+  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Journal');
   const pageImage = studio.getByRole('img', { name: 'Rendered PDF page 1' });
   await expect(pageImage).toBeVisible();
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
   const journalHash = await fingerprint(page);
 
-  await studio.getByRole('combobox', { name: 'PDF story format' }).selectOption('diary');
+  await choosePdfSetting(page, studio, 'PDF story format', 'Diary');
   await expect(studio.getByText('Settings changed. Update the preview to download.')).toBeVisible();
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeDisabled();
   await studio.getByRole('button', { name: 'Update preview' }).click();
@@ -40,7 +46,7 @@ test('PDF Studio presents actual pages, requires refresh after customization and
   const diaryHash = await fingerprint(page);
   expect(diaryHash).not.toBe(journalHash);
 
-  await studio.getByRole('combobox', { name: 'PDF story format' }).selectOption('chronicle');
+  await choosePdfSetting(page, studio, 'PDF story format', 'Tasks');
   await expect(studio.getByText('Completed tasks')).toBeVisible();
   await studio.getByLabel('Cancelled tasks').check();
   await studio.getByRole('button', { name: 'Update preview' }).click();
@@ -70,7 +76,7 @@ test('PDF Studio stays contained at 320px and page navigation remains keyboard a
   expect(overflowing).toBe(false);
   await expect(studio.getByRole('button', { name: 'Previous PDF page' })).toBeDisabled();
   await expect(studio.getByRole('combobox', { name: 'PDF page spacing' })).toBeVisible();
-  await studio.getByRole('combobox', { name: 'PDF page spacing' }).selectOption('compact');
+  await choosePdfSetting(page, studio, 'PDF page spacing', 'Compact');
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeDisabled();
   await studio.getByRole('button', { name: 'Update preview' }).click();
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 20000 });
@@ -151,8 +157,8 @@ test('a Code List refresh preserves customized controls and the actual PDF previ
   const errors = await seedGuest(page);
   const studio = await openStudio(page);
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
-  await studio.getByRole('combobox', { name: 'PDF story format' }).selectOption('diary');
-  await studio.getByRole('combobox', { name: 'PDF page spacing' }).selectOption('compact');
+  await choosePdfSetting(page, studio, 'PDF story format', 'Diary');
+  await choosePdfSetting(page, studio, 'PDF page spacing', 'Compact');
   await studio.getByRole('checkbox', { name: /^Cover page/ }).uncheck();
   await studio.getByRole('checkbox', { name: /^Earlier reflections/ }).check();
   await studio.getByRole('button', { name: 'Update preview' }).click();
@@ -167,8 +173,8 @@ test('a Code List refresh preserves customized controls and the actual PDF previ
   });
   await expect(image).not.toHaveAttribute('src', oldUrl);
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
-  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toHaveValue('diary');
-  await expect(studio.getByRole('combobox', { name: 'PDF page spacing' })).toHaveValue('compact');
+  await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Diary');
+  await expect(studio.getByRole('combobox', { name: 'PDF page spacing' })).toContainText('Compact');
   await expect(studio.getByRole('checkbox', { name: /^Cover page/ })).not.toBeChecked();
   await expect(studio.getByRole('checkbox', { name: /^Earlier reflections/ })).toBeChecked();
   expect(await fingerprint(page)).toBe(before);

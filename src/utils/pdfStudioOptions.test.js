@@ -57,3 +57,24 @@ test('paper quality profiles keep the legacy pixel size as default', () => {
   assert.ok(PDF_PAGE_QUALITY_PROFILES.print.maxPages < PDF_PAGE_QUALITY_PROFILES.standard.maxPages);
   assert.equal(PDF_PAGE_QUALITY_PROFILES.print.dpi, 300);
 });
+
+
+test('4C page-number options retain the old default and safely validate choices', () => {
+  const initial = normalizePdfStudioOptions();
+  assert.equal(initial.pageNumberPosition, 'right');
+  assert.equal(initial.numberCoverPage, true);
+  assert.equal(normalizePdfStudioOptions({ pageNumberPosition: 'center', numberCoverPage: false }).pageNumberPosition, 'center');
+  assert.equal(normalizePdfStudioOptions({ pageNumberPosition: 'none' }).pageNumberPosition, 'none');
+  assert.equal(normalizePdfStudioOptions({ pageNumberPosition: 'bogus', numberCoverPage: 'false' }).pageNumberPosition, 'right');
+  assert.equal(normalizePdfStudioOptions({ numberCoverPage: 'false' }).numberCoverPage, true);
+});
+test('4C cover numbering can be suppressed without changing physical page identity', async () => {
+  const { pdfPageNumberLabel } = await import('./pdfStudioOptions.js');
+  assert.equal(pdfPageNumberLabel(1), '1');
+  assert.equal(pdfPageNumberLabel(2, { includeCover: true, numberCoverPage: false }), '1');
+  assert.equal(pdfPageNumberLabel(1, { includeCover: true, numberCoverPage: false }), '');
+  assert.equal(pdfPageNumberLabel(3, { includeCover: true, numberCoverPage: false }), '2');
+  assert.equal(pdfPageNumberLabel(3, { pageNumberPosition: 'none' }), '');
+  assert.equal(pdfPageNumberLabel(1, { includeCover: false, numberCoverPage: false }), '1');
+  assert.equal(pdfPageNumberLabel(0), '');
+});

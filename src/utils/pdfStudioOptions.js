@@ -7,6 +7,19 @@ export const PDF_TEMPLATES = Object.freeze([
   { value: 'chronicle', label: 'Tasks', description: 'Status report' },
 ]);
 export const PDF_DENSITIES = Object.freeze(['airy', 'balanced', 'compact']);
+export const PDF_PAGE_NUMBER_POSITIONS = Object.freeze([
+  { value: 'right', label: 'Right' },
+  { value: 'center', label: 'Center' },
+  { value: 'none', label: 'Hidden' },
+]);
+// Keep the old right-aligned, cover-inclusive footer as the export default.
+export const pdfPageNumberLabel = (pageNumber, options = {}) => {
+  const position = options.pageNumberPosition || 'right';
+  if (position === 'none' || !Number.isSafeInteger(pageNumber) || pageNumber < 1) return '';
+  const skipCover = options.includeCover === true && options.numberCoverPage === false;
+  if (skipCover && pageNumber === 1) return '';
+  return String(pageNumber - (skipCover ? 1 : 0));
+};
 /*
  * Pixel density of the complete A4 paper page, not original-photo quality.
  * Print draft is experimental, bounded to avoid runaway multi-page memory use.
@@ -62,6 +75,9 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
     pageQuality: Object.hasOwn(PDF_PAGE_QUALITY_PROFILES, source?.pageQuality)
       ? source.pageQuality : 'standard',
     density: PDF_DENSITIES.includes(source?.density) ? source.density : 'balanced',
+    pageNumberPosition: PDF_PAGE_NUMBER_POSITIONS.some((item) => item.value === source?.pageNumberPosition)
+      ? source.pageNumberPosition : 'right',
+    numberCoverPage: flag(source?.numberCoverPage, true),
     includeCover: flag(source?.includeCover, template === 'journey'),
     includeIntro: flag(source?.includeIntro, true),
     includeReflections: flag(source?.includeReflections, false),
