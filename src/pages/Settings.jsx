@@ -767,12 +767,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   };
 
 
-  const renderProfileSection = () => (
-    <div className="settings-accordion-body">
-      <div className="settings-profile-row"><strong>{profileName}</strong><span>{isGuest ? 'Guest mode' : 'Authenticated mode'}</span></div>
-    </div>
-  );
-
   const selectTheme = (nextTheme) => {
     if (nextTheme !== 'light' && nextTheme !== 'dark') return;
     setTheme(nextTheme);
@@ -881,13 +875,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <span><strong>Code Lists</strong><small>Manage Moment types, priorities, payment methods and categories</small></span>
           <ChevronRight size={17} aria-hidden="true" /></Link>
       </nav>
-    </div>
-  );
-
-  const renderNotificationsSection = () => (
-    <div className="settings-accordion-body">
-      <p><strong>Coming Soon</strong></p>
-      <p>Notifications and reminders will be available in a future update.</p>
     </div>
   );
 
@@ -1102,17 +1089,89 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
     );
   }
 
-  // Preserve older links without keeping the old accordion on Settings.
-  if (location.hash === '#backup') return <Navigate to="/settings/data-backup" replace />;
+  // Legacy Settings anchors remain valid, but open the new dedicated page.
+  if (!appearanceOnly && (location.hash === '#preferences' || location.hash === '#theme')) {
+    return <Navigate to="/settings/appearance" replace />;
+  }
+  if (!appearanceOnly && location.hash === '#backup') return <Navigate to="/settings/data-backup" replace />;
 
-  const sections = [
-    { key: 'profile', heading: 'Profile', description: 'Manage account and user information.', icon: UserCircle, body: renderProfileSection() },
-    { key: 'defaults', heading: 'Appearance & preferences', description: 'Theme, Story & PDF designs, currency and defaults.', icon: Settings2, body: renderDefaultsSection() },
-    { key: 'notifications', heading: 'Notifications', description: 'Coming Soon.', icon: Bell, body: renderNotificationsSection() },
-  ];
+  if (appearanceOnly) {
+    return <div className="settings-page feature-page dn-settings-appearance">
+      <header className="dn-appearance-intro">
+        <Link to="/settings" className="dn-appearance-back">
+          <ChevronRight size={16} aria-hidden="true" style={{ transform: 'rotate(180deg)' }} /> Settings
+        </Link>
+        <span className="dn-appearance-eyebrow">Personalize your space</span>
+        <h2>Appearance & preferences</h2>
+        <p>Theme, new-record defaults, and Story/PDF design. Only working options are shown here.</p>
+      </header>
+      {renderDefaultsSection()}
+    </div>;
+  }
 
   return (
-    <div className="settings-page feature-page dn-settings-home">
+    <div className="settings-page feature-page dn-settings-home dn-settings-redesign">
+      <section className="dn-settings-account-summary" id="profile" aria-label="Current workspace">
+        <UserCircle size={22} aria-hidden="true" />
+        <span><strong>{profileName}</strong>
+          <small>{isGuest ? 'Guest workspace · stored on this device' : user?.uid ? 'Signed-in account' : 'Signed out'}</small>
+        </span>
+      </section>
+      <p className="dn-settings-overview-note">Personalize DN, manage your lists and keep your memories safe.</p>
+      <nav className="settings-navigation-hub settings-about-footer" aria-label="Settings destinations">
+        <Link to="/settings/appearance" className="settings-hub-card dn-settings-appearance-link"
+          aria-label="Open Appearance & preferences">
+          <span className="settings-hub-icon"><Settings2 size={18} aria-hidden="true" /></span>
+          <span className="settings-hub-copy">
+            <strong>Appearance & preferences</strong>
+            <small>Theme, new-record defaults and Story/PDF designs</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+        <Link to="/settings/data-backup" className="settings-hub-card dn-settings-data-link" aria-label="Open Data & Backup page">
+          <span className="settings-hub-icon"><Database size={18} aria-hidden="true" /></span>
+          <span className="settings-hub-copy">
+            <strong>Data & Backup</strong>
+            <small>Export and restore records, understand storage and manage browser or Firebase data</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/list-defaults" className="settings-hub-card dn-settings-list-defaults-link"
+          aria-label="Open List defaults">
+          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>List defaults</strong>
+            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
+          <span className="settings-hub-icon"><Settings2 size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>Code Lists</strong>
+            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+
+        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
+          <span className="settings-hub-icon"><Info size={18} /></span>
+          <span className="settings-hub-copy">
+            <strong>About</strong>
+            <small>Application overview, version, guide, and release notes</small>
+          </span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+        </Link>
+      </nav>
+
+      <section className="dn-settings-future-note" id="notifications" aria-label="Notifications availability">
+        <Bell size={18} aria-hidden="true" />
+        <span><strong>Notifications</strong>
+          <small>Coming later. No alerts or reminders are currently sent by DN.</small></span>
+      </section>
+      {isGuest && !user ? <h3 className="dn-settings-explore-header">Explore DN</h3> : null}
       {isGuest && !user ? (
         <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
           <div>
@@ -1151,68 +1210,10 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </section>
       ) : null}
 
-      {sections.map(({ key, heading, description, icon: Icon, body }) => {
-        const isOpen = openSection === key;
-        return (
-          <section key={key} className="settings-section">
-            <button type="button" className="settings-accordion-toggle" onClick={() => toggleSection(key)} aria-expanded={isOpen}>
-              <span className="settings-accordion-header-main">
-                <span className="settings-accordion-icon"><Icon size={18} /></span>
-                <span className="settings-accordion-text">
-                  <strong>{heading}</strong>
-                  <small>{description}</small>
-                </span>
-              </span>
-              <span className="settings-accordion-indicator" aria-hidden="true"><ChevronDown size={17} strokeWidth={2.1} /></span>
-            </button>
-            {isOpen ? body : null}
-          </section>
-        );
-      })}
-
-      <div className="settings-navigation-hub settings-about-footer">
-        <Link to="/settings/data-backup" className="settings-hub-card dn-settings-data-link" aria-label="Open Data & Backup page">
-          <span className="settings-hub-icon"><Database size={18} aria-hidden="true" /></span>
-          <span className="settings-hub-copy">
-            <strong>Data & Backup</strong>
-            <small>Export and restore records, understand storage and manage browser or Firebase data</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/list-defaults" className="settings-hub-card dn-settings-list-defaults-link"
-          aria-label="Open List defaults">
-          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>List defaults</strong>
-            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
-          <span className="settings-hub-icon"><Settings2 size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>Code Lists</strong>
-            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-
-        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
-          <span className="settings-hub-icon"><Info size={18} /></span>
-          <span className="settings-hub-copy">
-            <strong>About</strong>
-            <small>Application overview, version, guide, and release notes</small>
-          </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
-        </Link>
-      </div>
-
       <section className="settings-reset-card">
         <div>
           <strong>Restore default settings</strong>
-          <p>Reset appearance, preferences, reminders, greeting settings, Code Lists and saved list defaults without deleting your records.</p>
+          <p>Reset appearance, new-record defaults, Story/PDF designs, Code Lists and saved list defaults without deleting your records.</p>
         </div>
         <button type="button" className="settings-secondary-button settings-reset-button" onClick={() => setConfirmResetSettings(true)}>
           <RotateCcw size={15} /> Reset all settings
@@ -1225,8 +1226,8 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <p>This restores DN configuration only:</p>
             <ul>
               <li>Theme and appearance</li>
-              <li>Currency, dashboard view, and default moment, income, and expense selections</li>
-              <li>Saved preferences; Notifications is Coming Soon</li>
+              <li>Currency and default Moment, income, and expense selections</li>
+              <li>Saved preferences; Notifications remain a coming-soon feature</li>
               <li>Greeting types and templates</li>
               <li>All Code Lists and their system default values</li>
               <li>Saved default sorting and filters for Moments, Activities and Transactions</li>
