@@ -9,12 +9,12 @@ async function drag(page, locator, dx, dy = 0) {
   await page.mouse.move(x, y); await page.mouse.down(); await page.mouse.move(x + dx, y + dy, { steps: 8 }); await page.mouse.up();
 }
 
-test('mobile cover occupies 40% of the viewport; choose/reposition persist without changing originals or records', async ({ page }) => {
+test('compact mobile photo cover is 30svh with bounds; choose/reposition persist without changing originals or records', async ({ page }) => {
   await seedGuest(page); await addOriginal(page, { width: 600, height: 1200, count: 2 });
   await page.goto('/events/moment-one/activities/shared');
   const cover = page.locator('.activity-cover'), photo = cover.locator('img');
   await expect(photo).toHaveAttribute('alt', 'Activity photo 0.png');
-  const bounds = await cover.boundingBox(); expect(Math.abs(bounds.height - 844 * .4)).toBeLessThan(2);
+  const bounds = await cover.boundingBox(); expect(Math.abs(bounds.height - Math.max(180, Math.min(844 * .3, 290)))).toBeLessThan(2);
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.getByRole('button', { name: 'Reposition cover photo', exact: true }).click();
   await drag(page, cover, 0, 70); await expect(page).toHaveURL(/\/moment-one\/activities\/shared$/);
@@ -108,13 +108,20 @@ test('the opening filtered sequence survives completion, while single-result fil
   await seedGuest(page); await page.goto('/activities');
   await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('Book a lakeside stay');
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).locator('.event-activity-title-row > strong').click();
+  // The old no-pager assertion could pass while the Detail route was still mounting.
+  await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
+  await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
+  await expect(page.locator('.activity-cover.is-fallback')).toBeVisible();
   await expect(page.getByRole('navigation', { name: 'Activity navigation' })).toHaveCount(0);
-  await drag(page, page.locator('.activity-cover'), -150); await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
+  await drag(page, page.locator('.activity-cover.is-fallback'), -150);
+  await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
   await page.goto('/activities'); await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('');
   await setActivityStatusCondition(page, 'in-progress');
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).locator('.event-activity-title-row > strong').click();
+  await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
+  await expect(page.locator('.activity-cover.is-fallback')).toBeVisible();
   await activityDetailAction(page, 'Complete'); await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
-  await drag(page, page.locator('.activity-cover'), -150);
+  await drag(page, page.locator('.activity-cover.is-fallback'), -150);
   await expect(page).toHaveURL(/\/events\/moment-two\/activities\/shared$/);
 });
 
