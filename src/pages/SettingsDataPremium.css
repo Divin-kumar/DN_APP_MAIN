@@ -355,3 +355,10 @@ html[data-theme] .dn-data-page .dn-data-recovery-guide li strong {color:var(--co
     min-height:44px; padding-inline:8px; font-size:11px;
   }
 }
+
+
+/* DN 2.3: every Data & Backup action remains a reliable 44px touch target
+   at 320px, including outlined/secondary controls and restore file picker. */
+html[data-theme] .dn-data-page .dn-data-backup :is(button,.dn-backup-file-picker) {
+  min-height:44px;
+}
