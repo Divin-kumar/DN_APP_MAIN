@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-357 | DN 2.3 universal + exact-SHA keyboard and iPhone regression acceptance
+- **Executed:** Focused synthetic Chromium [run 41695670632](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41695670632) passed **9/9 tests** at application code SHA `27041663a10a08a62737bfeac1eeaab47c1c88a1`. Three new tests exercise Enter/Space opening at 1024px/1280px, first-action focus, Tab and Escape restoration, pointer behavior and opening/cancelling a transaction with unchanged records. Six existing tests cover 320/390/430px iPhone Activity form no-auto-keyboard, tap-state stability and mobile Escape focus.
+- **Executed:** Same-SHA [governance 41695670651](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41695670651) passed Node unit tests, lint, production build, dependency advisories and documentation preservation.
+- **Limits:** Synthetic Guest browser checks, not physical Safari, VoiceOver or authenticated account/Firestore verification. No source-record migration, duplicate add action, version bump, PR, main modification or Firebase/Vercel deployment. The follow-up ledger commit only records verified evidence.
+
 ## CHG-20261104-356 | DN 2.3 desktop universal create keyboard access
 - **Source-derived audit:** On desktop the action menu is rendered before the + trigger. Keyboard activation previously left focus on it, so Tab moved away from actions. The desktop menu lacked the labelled group role and explicit trigger-to-menu relationship used on mobile.
 - **UI fix:** For desktop keyboard opens only, focus the first universal creation choice. Tab traverses remaining choices; Escape closes and returns focus to +. Associate the trigger and grouped menu with `aria-controls`; preserve pointer behavior without stolen focus. No new buttons or actions.
