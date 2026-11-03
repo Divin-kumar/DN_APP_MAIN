@@ -28,6 +28,7 @@ import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import usePersistentListState from '../../../hooks/usePersistentListState';
 import useConditionFilters from '../../../hooks/useConditionFilters';
+import { emptyGroup } from '../../../utils/conditionEngine';
 import ConditionBuilder, { ConditionChips } from '../../../components/common/ConditionBuilder';
 import { activityConditions as migrateActivityConditions, activityConditionRecord } from '../../../utils/listConditionMigration';
 import SortControl from '../../../components/common/SortControl';
@@ -440,6 +441,12 @@ export function EventWorkspaceContent() {
       return (
         <div className="workspace-activities">
           <ListControls title="Activity filters" builder hasSort
+            refine={{ conditions: activityConditions, sort: {
+              field: activitySort, direction: activitySortDirection,
+              options: [{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' },
+                { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }],
+              label: 'Sort activities', onChange: (field, direction) => changeActivityList({ field, direction }),
+            }, defaults: { group: emptyGroup(), field: 'date', direction: 'asc' } }}
             activeCount={activityConditions.activeCount} resultCount={filteredActivities.length} resultLabel="activities"
             chips={<ConditionChips filter={activityConditions} />}
             summary={activitySort + (activitySortDirection === 'asc' ? ' ↑' : ' ↓')}

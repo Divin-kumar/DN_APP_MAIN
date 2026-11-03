@@ -99,14 +99,21 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 
 export default function TransactionHistory({
   transactions, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
-  onResetDefaults, canResetDefaults = false, onExport,
+  onResetDefaults, canResetDefaults = false, onExport, savedDefaults,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
   const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
   const resetAllFilters = () => onResetDefaults?.();
   return (
     <section className="transactions-panel dn-transactions-page" aria-label="Transactions">
-      <ListControls title="Transaction filters" builder activeCount={conditions.activeCount} resultCount={transactions.length}
+      <ListControls title="Transaction filters" builder
+        refine={{ conditions, sort: { field: sortField, direction: sortDirection,
+          options: TRANSACTION_SORT_OPTIONS, label: 'Sort transactions',
+          onChange: (field, direction) => onFilters({ sort: field + '-' + direction }) },
+          defaults: { group: savedDefaults?.group,
+            field: String(savedDefaults?.filters?.sort || 'date-desc').split('-')[0],
+            direction: String(savedDefaults?.filters?.sort || 'date-desc').split('-')[1] } }}
+        activeCount={conditions.activeCount} resultCount={transactions.length}
         resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}
         sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}

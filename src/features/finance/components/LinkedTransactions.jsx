@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import useMomentFinance from '../../../hooks/useMomentFinance';
 import usePersistentListState from '../../../hooks/usePersistentListState';
 import useConditionFilters from '../../../hooks/useConditionFilters';
+import { emptyGroup } from '../../../utils/conditionEngine';
 import ConditionBuilder, { ConditionChips } from '../../../components/common/ConditionBuilder';
 import { transactionConditions } from '../../../utils/listConditionMigration';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
@@ -43,7 +44,12 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
       : finance.pending ? <LoadingSkeleton rows={3} label="Loading linked transactions" /> : <>
         {minimal && activityId && finance.transactions.length ? <h2 className="activity-linked-transactions-title">Transactions</h2> : null}
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
-        {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder resultCount={filtered.length} resultLabel="transactions"
+        {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder
+          refine={{ conditions, sort: { field: sortField, direction: sortDirection,
+            options: TRANSACTION_SORT_OPTIONS, label: 'Sort Moment transactions',
+            onChange: (field, direction) => changeFilters({ sort: field + '-' + direction }) },
+            defaults: { group: emptyGroup(), field: 'date', direction: 'desc' } }}
+          resultCount={filtered.length} resultLabel="transactions"
           activeCount={conditions.activeCount} chips={<ConditionChips filter={conditions} />}
           summary={transactionSortSummary(filters.sort)} canReset={Boolean(conditions.activeCount || filters.search || filters.sort !== 'date-desc')} onReset={() => { resetFilters(); conditions.clear(); }}
           sort={<SortControl field={sortField} direction={sortDirection} options={TRANSACTION_SORT_OPTIONS} label="Sort Moment transactions"

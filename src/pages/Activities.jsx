@@ -168,7 +168,12 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   return (
     <div className="events-page life-timeline-page activities-page">
       <div className="event-discovery-bar">
-        <ListControls title="Activity filters" builder hasSort activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
+        <ListControls title="Activity filters" builder hasSort
+          refine={{ conditions, sort: { field: filters.field, direction: filters.direction, options: SORTS,
+            label: 'Sort activities', onChange: (field, direction) => changeFilters({ field, direction }) },
+            defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
+              direction: settingsDefaults.filters.direction } }}
+          activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}

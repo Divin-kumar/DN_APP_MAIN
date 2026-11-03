@@ -158,7 +158,7 @@ function FinancialsContent() {
             </div>
           </section>
           <TransactionHistory transactions={sorted} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
-            onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters}
+            onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} />
         </section>}
       {dialogOpen ? (
