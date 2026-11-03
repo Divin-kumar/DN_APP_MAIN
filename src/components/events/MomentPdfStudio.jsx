@@ -17,6 +17,12 @@ import { renderMomentStudioPdf } from '../../utils/momentPdf';
 import { downloadBlob } from '../../utils/download';
 import './MomentPdfStudio.css';
 
+const pageLayoutChoices = [
+  { value: 'flow', title: 'Natural flow', description: 'Continue writing without extra page breaks.' },
+  { value: 'day', title: 'New day, new page', description: 'Keep all Activities from the same date together.' },
+  { value: 'activity', title: 'New activity, new page', description: 'Separate each saved Activity, even on the same date.' },
+];
+
 const optionLabels = [
   { key: 'includeCover', title: 'Cover page', help: 'A dedicated opening page' },
   { key: 'includeIntro', title: 'Introduction', help: 'Your Moment notes and opening words' },
@@ -108,7 +114,10 @@ export default function MomentPdfStudio({ event }) {
     setBusy(false);
     setDirty(true);
     setError('');
-    const next = { ...settingsRef.current, [key]: value };
+    const next = { ...settingsRef.current, ...(key === 'pageLayout'
+      ? { pageBreakBetweenActivities: value === 'activity', pageBreakBetweenDays: value === 'day' }
+      : { [key]: value }) };
+    if (key === 'template' && value === 'chronicle') next.pageBreakBetweenDays = false;
     if (key === 'template' && !styleOverrideRef.current) {
       next.visualStyle = savedStyles[value];
     }
@@ -122,10 +131,14 @@ export default function MomentPdfStudio({ event }) {
     const key = event.key;
     if (!['ArrowRight', 'ArrowLeft', 'ArrowDown', 'ArrowUp', 'Home', 'End'].includes(key)) return;
     event.preventDefault();
-    const current = settingsRef.current.pageBreakBetweenActivities ? 1 : 0;
-    const nextIndex = key === 'Home' ? 0 : key === 'End' ? 1 : (current + 1) % 2;
-    const nextValue = nextIndex === 1;
-    if (settingsRef.current.pageBreakBetweenActivities !== nextValue) update('pageBreakBetweenActivities', nextValue);
+    const choices = pageLayoutChoices.filter((item) => item.value !== 'day'
+      || settingsRef.current.template !== 'chronicle');
+    const selected = settingsRef.current.pageBreakBetweenActivities ? 'activity'
+      : settingsRef.current.pageBreakBetweenDays ? 'day' : 'flow';
+    const current = Math.max(0, choices.findIndex((item) => item.value === selected));
+    const nextIndex = key === 'Home' ? 0 : key === 'End' ? choices.length - 1
+      : (current + (key === 'ArrowLeft' || key === 'ArrowUp' ? -1 : 1) + choices.length) % choices.length;
+    if (selected !== choices[nextIndex].value) update('pageLayout', choices[nextIndex].value);
     event.currentTarget.querySelectorAll('[role="radio"]')[nextIndex]?.focus();
   };
 
@@ -361,26 +374,30 @@ export default function MomentPdfStudio({ event }) {
         </fieldset>
         <fieldset className="dn-pdf-pagination-option" disabled={busy}>
           <legend>Activity pagination</legend>
-          <p className="dn-pdf-pagination-help">How should each complete Activity begin in the book?</p>
+          <p className="dn-pdf-pagination-help">Choose where a fresh page begins. Same-day notes can stay together without becoming new Activities.</p>
           <div className="dn-pdf-break-choices" role="radiogroup" aria-label="Activity page layout"
             onKeyDown={changeChapterLayoutByKey}>
-            {[{ value: false, title: 'Natural flow', description: 'A seamless book with less unused space.' },
-              { value: true, title: 'New activity, new page', description: 'A fresh page for each Activity, not each entry.' }]
-              .map(({ value, title, description }) => <button type="button" role="radio" key={String(value)}
-                className={'dn-pdf-break-choice' + (settings.pageBreakBetweenActivities === value ? ' is-selected' : '')}
-                aria-checked={settings.pageBreakBetweenActivities === value}
-                tabIndex={settings.pageBreakBetweenActivities === value ? 0 : -1}
-                aria-label={value ? 'Start each Activity on a new PDF page' : 'Continue Activities on the same PDF page'}
-                onClick={() => update('pageBreakBetweenActivities', value)}>
-                <span className={'dn-pdf-break-illustration' + (value ? ' is-chapters' : '')} aria-hidden="true">
+            {pageLayoutChoices.filter((item) => item.value !== 'day' || settings.template !== 'chronicle')
+              .map(({ value, title, description }) => {
+                const selected = settings.pageBreakBetweenActivities ? 'activity'
+                  : settings.pageBreakBetweenDays ? 'day' : 'flow';
+                return <button type="button" role="radio" key={value}
+                  className={'dn-pdf-break-choice' + (selected === value ? ' is-selected' : '')}
+                  aria-checked={selected === value} tabIndex={selected === value ? 0 : -1}
+                  aria-label={value === 'activity' ? 'Start each Activity on a new PDF page'
+                    : value === 'day' ? 'Start each recorded day on a new PDF page'
+                      : 'Continue Activities on the same PDF page'}
+                  onClick={() => update('pageLayout', value)}>
+                <span className={'dn-pdf-break-illustration' + (value !== 'flow' ? ' is-chapters' : '')} aria-hidden="true">
                   <i /><i /><i />
                 </span>
                 <span className="dn-pdf-break-copy"><strong>{title}</strong><small>{description}</small></span>
                 <span className="dn-pdf-break-check" aria-hidden="true">✓</span>
-              </button>)}
+              </button>;
+              })}
           </div>
-          <p className="dn-pdf-pagination-note">All dated updates stay inside their parent Activity.
-            Long writing may still continue naturally onto the next page.</p>
+          <p className="dn-pdf-pagination-note">Date-based chapters keep same-day Activities on the same page.
+            Long writing always flows onto the next page when needed.</p>
         </fieldset>
         <fieldset className="dn-pdf-searchable-option">
           <legend>PDF text</legend>
@@ -393,8 +410,12 @@ export default function MomentPdfStudio({ event }) {
                 remain image-based; this does not increase printing resolution.</small></span>
           </label>
         </fieldset>
-        <details className="dn-pdf-content-options" open>
-          <summary>Included content</summary>
+        <details className="dn-pdf-content-options">
+          <summary><span>Included content</span>
+            <small>{optionLabels.filter(({ key }) => settings.template === 'chronicle'
+              ? key !== 'includeUpcoming' : !['includeCompleted', 'includeCancelled'].includes(key))
+              .filter(({ key }) => settings[key]).length} selected · Customize</small>
+          </summary>
           <fieldset className="dn-pdf-studio-sections">
             <legend>Include in the PDF</legend>
             {optionLabels.filter(({ key }) => settings.template === 'chronicle'
