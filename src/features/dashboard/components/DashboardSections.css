@@ -213,3 +213,15 @@ html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashbo
     transition: none;
   }
 }
+
+/* Independent Task summary appears after Moments and Activities, without
+   affecting the existing photo-led Dashboard cards. */
+html[data-theme] .dashboard-compact .dn-dashboard-tasks{grid-column:1/-1}
+html[data-theme] .dn-dashboard-tasks-link{display:inline-flex;align-items:center;min-height:44px;padding:0 7px;color:var(--color-primary);font-size:12px;font-weight:700;text-decoration:none}
+html[data-theme] .dn-dashboard-tasks-rows{display:grid;gap:7px}
+html[data-theme] .dn-dashboard-task-row{display:flex;align-items:center;gap:10px;padding:8px 10px;border:1px solid var(--color-border);border-radius:12px;background:var(--color-card);min-width:0}
+html[data-theme] .dn-dashboard-task-text{flex:1;min-width:0;display:grid;gap:4px}
+html[data-theme] .dn-dashboard-task-text strong{font-size:13px;overflow-wrap:anywhere}
+html[data-theme] .dn-dashboard-task-text small{font-size:11px;color:var(--color-text-muted)}
+html[data-theme] .dn-dashboard-task-row button{display:flex;align-items:center;justify-content:center;gap:4px;flex:none;min-height:44px;padding:7px 11px;border:1px solid var(--color-border);border-radius:10px;background:var(--color-surface);color:var(--color-text);font:inherit;font-size:12px;font-weight:650;cursor:pointer}
+html[data-theme] .dn-dashboard-tasks button:focus-visible{outline:2px solid var(--color-primary);outline-offset:2px}

@@ -16,7 +16,7 @@ import { detailQuickActivityContext } from '../utils/quickActivityDetailContext'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Activity, ArrowLeft, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
+import { Activity, ArrowLeft, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, ListTodo, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -44,6 +44,7 @@ import './PremiumMobileDock.css';
 const navItems = [
   { label: 'Home', path: '/dashboard', icon: LayoutDashboard },
   { label: 'Activities', path: '/activities', icon: ListChecks },
+  { label: 'Tasks', path: '/tasks', icon: ListTodo },
   { label: 'Moments', path: '/events', icon: CalendarDays },
 ];
 // Two balanced destinations on either side of the universal create action.
@@ -305,6 +306,17 @@ export default function DashboardLayout() {
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type, activationEvent) => {
     if (transactionSaving.current || quickActivitySaving.current) return;
+    if (type === 'task') {
+      const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
+      const activity = activityDetailMatch ? openedActivityContext?.activity : null;
+      const params = new URLSearchParams({ create: '1' });
+      if (parent) params.set('moment', momentId(parent));
+      if (activity) params.set('activity', recordId(activity.id));
+      setQuickCreateOpen(false);
+      // Route-owned editor handles Guest/account permissions and session guards.
+      navigate(`/tasks?${params.toString()}`);
+      return;
+    }
     if (type === 'transaction') {
       const parent = activityDetailMatch ? activityMoments.find((moment) => momentId(moment) === activityDetailMatch.params.eventId) : workspaceMoment;
       const activity = parent?.activities?.find((item) => recordId(item.id) === activityDetailMatch?.params.activityId);
@@ -529,6 +541,7 @@ export default function DashboardLayout() {
               <div id="dn-profile-menu" className="profile-menu" role="menu" aria-label="Profile and account">
                 <div className="profile-menu-account" role="presentation"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
+                <NavLink to="/tasks" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><ListTodo size={16} /> Tasks</NavLink>
                 <NavLink to="/financials/transactions" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Receipt size={16} /> Transactions</NavLink>
                 <NavLink to="/insights" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Activity size={16} /> Insights</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
@@ -603,6 +616,7 @@ export default function DashboardLayout() {
               <span className="dn-dock-menu-title">Create new</span>
               <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
+              <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} aria-hidden="true" /><span>Task</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
               {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
@@ -623,6 +637,7 @@ export default function DashboardLayout() {
           <div className="dn-quick-create-menu" aria-label="Quick create actions">
             <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} /><span>Life moment</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
+            <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} /><span>Task</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} /><span>Transaction</span></button>
             {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>

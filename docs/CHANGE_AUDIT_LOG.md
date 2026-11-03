@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-332 | DN 2.3 Phase 4C: Guest Tasks Dashboard and universal create navigation
+- **Scope:** Add Task navigation to desktop sidebar/profile menu, preserving the existing five destination mobile dock. Add Task to universal create menus with Moment/Activity deep-link context and render a Guest-only Dashboard Tasks section after Moments and Activities. Show overdue/next-30-day pending Tasks and independently complete them without modifying Activity statuses. Use scoped Dashboard section visibility.
+- **Boundaries:** No account Task permissions/cloud writes, parent migration, new Story/PDF chapters, finance/attachment changes or app version bump. Live iPhone and browser tests pending; Node tests added for due selection/year rollover. No production deployment, PR or main write.
+
 ## CHG-20261103-331 | DN 2.3 Phase 4B: standalone Guest Task page and draft Refine
 - **Scope:** Add protected `/tasks` with separate Task create/edit/status/cancel/delete interactions, optional date/time and parent links, parent-availability labels, fast search and bottom-sheet Refine for sort, status, priority, due filters and Task-only grouping. Keep one row per Task and no changes to historical Task-type Activities, entries, Story/PDF, original images or finance. Read-only account unavailable screen until deployed cloud Tasks permissions are confirmed.
 - **Safety and testing:** Task mutations use the scoped Guest Task store; cancel/delete request confirmation; selected parents are Moment-qualified and absent links remain intact rather than silently moving. The versioned demo samples already contain Tasks. Browser acceptance and native Safari screenshots remain pending, do not treat authorship or Node lint/build as UI sign-off. No new dock destination, cloud writes, migration, PR, hosting or main write. Phase 4C will connect navigation, + and Dashboard.

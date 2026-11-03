@@ -2,10 +2,12 @@ import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
 import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
+import useTaskStore, { taskScopeKey } from '../../../store/useTaskStore';
+import { selectUpcomingIndependentTasks } from '../../../utils/dashboardTasks.js';
 import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
@@ -27,12 +29,13 @@ import useDashboardClock from '../useDashboardClock';
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
-const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true });
+const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true, tasks: true });
 const readDashboardSections = (key) => {
   try {
     const saved = JSON.parse(globalThis.localStorage?.getItem(key) || 'null');
     return { moments: typeof saved?.moments === 'boolean' ? saved.moments : true,
-      activities: typeof saved?.activities === 'boolean' ? saved.activities : true };
+      activities: typeof saved?.activities === 'boolean' ? saved.activities : true,
+      tasks: typeof saved?.tasks === 'boolean' ? saved.tasks : true };
   } catch { return { ...DASHBOARD_SECTIONS }; }
 };
 
@@ -219,6 +222,10 @@ export function DashboardOverviewContent() {
   const eventState = useEventStore();
   const { events: storedEvents, loading, error, loadedFor, activeLoadKey, loadEvents } = eventState;
   const activityActions = useActivityActions();
+  const taskStore = useTaskStore();
+  const taskScope = taskScopeKey({ user, isGuest });
+  const [taskAnnouncement, setTaskAnnouncement] = useState('');
+  const [taskError, setTaskError] = useState('');
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
   const events = ready ? storedEvents : EMPTY_EVENTS;
@@ -238,6 +245,7 @@ export function DashboardOverviewContent() {
     loadEvents(user?.uid, isGuest);
   }, [isGuest, loadEvents, user?.uid, loadedFor]);
 
+  useEffect(() => { taskStore.loadTasks(); }, [taskStore.loadTasks, taskScope]);
   const today = useDashboardClock();
   const todayKey = today.toDateString();
   const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, today, momentTypes), [events, momentTypes, todayKey]);
@@ -246,6 +254,18 @@ export function DashboardOverviewContent() {
   const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
+  const dashboardTasks = useMemo(() => isGuest && !user?.uid && taskStore.loadedFor === taskScope && !taskStore.error
+    ? selectUpcomingIndependentTasks(taskStore.tasks, today).slice(0, 6) : [],
+  [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
+  const completeDashboardTask = (task) => {
+    try {
+      taskStore.setTaskStatus(task.id, 'completed');
+      setTaskError('');
+      setTaskAnnouncement(`Completed ${task.title}`);
+    } catch (error) {
+      setTaskError(error.message || 'Task could not be completed.');
+    }
+  };
 
 
   const getMomentGreeting = (event) => {
@@ -364,6 +384,36 @@ export function DashboardOverviewContent() {
             <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
+        {isGuest && !user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
+          <header className="dashboard-section-heading">
+            <span className="dashboard-section-title">Tasks</span>
+            <div className="dashboard-section-actions">
+              <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link>
+              <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
+                aria-label={sections.tasks ? 'Hide Tasks on dashboard' : 'Show Tasks on dashboard'}
+                onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
+            </div>
+          </header>
+          {sections.tasks ? taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
+            : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
+              : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
+                {dashboardTasks.map((task) => {
+                  const overdue = task.dueDate < todayKey.slice(0, 10); // date-only string comparison
+                  return <div className="dn-dashboard-task-row" key={task.id}>
+                    <div className="dn-dashboard-task-text">
+                      <strong>{task.title}</strong>
+                      <small>{overdue ? 'Overdue · ' : ''}{task.dueDate}
+                        {task.dueTime ? ` · ${task.dueTime}` : ''}</small>
+                    </div>
+                    <button type="button" aria-label={`Complete Task ${task.title}`}
+                      onClick={() => completeDashboardTask(task)}><Check size={16} aria-hidden="true" />Done</button>
+                  </div>;
+                })}
+              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
+          {taskError ? <p role="alert" className="dashboard-activity-action-error">{taskError}</p> : null}
+          {taskAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{taskAnnouncement}</p> : null}
+        </section> : null}
+
           </> : null}
           <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
         </section>
