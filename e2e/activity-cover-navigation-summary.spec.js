@@ -107,6 +107,8 @@ test('detail swipes follow the Activities sort order across reused child IDs, wi
 test('the opening filtered sequence survives completion, while single-result filters never open unrelated Activities', async ({ page }) => {
   await seedGuest(page); await page.goto('/activities');
   await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('Book a lakeside stay');
+  // Wait for the debounced search to apply before selecting its sole result.
+  await expect(page.locator('.event-activity-card')).toHaveCount(1);
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).click();
   // Use the card's actual pointer-open surface, then prove the Detail route mounted;
   // an absent pager by itself can also be true on the still-visible list.
@@ -118,6 +120,8 @@ test('the opening filtered sequence survives completion, while single-result fil
   await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
   await page.goto('/activities'); await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('');
   await setActivityStatusCondition(page, 'in-progress');
+  // Preserve the opening two-result sequence, even after completion changes status.
+  await expect(page.locator('.event-activity-card')).toHaveCount(2);
   await page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true }).click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await expect(page.locator('.activity-cover.is-fallback')).toBeVisible();
