@@ -91,5 +91,5 @@ test('Main and Moment Transactions sort independently without changing totals or
   sheet = await openSort(page, 'Sort transactions');
   await expect(sheet.getByRole('button', { name: 'Sort by Amount, descending' })).toBeVisible();
   await sheet.getByRole('button', { name: 'Cancel' }).click();
-  expect(await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_eventGroups'].map((key) => localStorage.getItem(key))).toEqual(source);
+  expect(await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_eventGroups'].map((key) => localStorage.getItem(key)))).toEqual(source);
 });
