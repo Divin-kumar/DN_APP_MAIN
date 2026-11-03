@@ -2,24 +2,22 @@ import { useState } from 'react';
 import { RotateCcw } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import SortChips from '../common/SortChips';
-import { TASK_GROUPS } from '../../utils/independentTasks.js';
 import { filterTaskResults } from '../../utils/taskListFilters.js';
 
 export const TASK_VIEW_DEFAULTS = Object.freeze({
-  search: '', status: 'all', priority: 'all', due: 'all', group: 'dueDate', field: 'dueDate', direction: 'asc',
+  search: '', status: 'all', priority: 'all', due: 'all', field: 'dueDate', direction: 'asc',
 });
 export const TASK_VIEW_RULES = Object.freeze({
   status: ['all', 'in-progress', 'completed', 'cancelled'],
   priority: ['all', 'low', 'medium', 'high'],
   due: ['all', 'overdue', 'next7', 'undated'],
-  group: TASK_GROUPS, field: ['dueDate', 'title'], direction: ['asc', 'desc'],
+  field: ['dueDate', 'title'], direction: ['asc', 'desc'],
 });
 const CONTROL_GROUPS = [
   { field: 'status', label: 'Status', values: [['all', 'All'], ['in-progress', 'In progress'], ['completed', 'Completed'], ['cancelled', 'Cancelled']] },
   { field: 'priority', label: 'Priority', values: [['all', 'All'], ['high', 'High'], ['medium', 'Medium'], ['low', 'Low']] },
   { field: 'due', label: 'Due', values: [['all', 'Any time'], ['overdue', 'Overdue'], ['next7', 'Next 7 days'], ['undated', 'Undated']] },
 ];
-const GROUPS = [['dueDate', 'Due date'], ['moment', 'Moment'], ['activity', 'Activity'], ['status', 'Status']];
 
 
 export default function TaskRefineSheet({ current, onApply, onClose, tasks, today }) {
@@ -27,6 +25,7 @@ export default function TaskRefineSheet({ current, onApply, onClose, tasks, toda
   const change = (patch) => setDraft((value) => ({ ...value, ...patch }));
   const count = filterTaskResults(tasks, draft, today).length;
   return <ModalDialog title="Refine Tasks" className="dn-refine-sheet dn-task-refine" onClose={onClose}>
+    <p className="dn-refine-sheet-intro">Choose how your Tasks appear. Changes apply only when you select Show results.</p>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
       <SortChips field={draft.field} direction={draft.direction}
@@ -35,20 +34,13 @@ export default function TaskRefineSheet({ current, onApply, onClose, tasks, toda
     </div>
     <div className="dn-refine-sheet-section">
       <h4>Filters</h4>
-      {CONTROL_GROUPS.map(({ field, label, values }) => <div key={field} className="dn-task-refine-field">
-        <span>{label}</span>
-        <div role="group" aria-label={label + ' filter'} className="dn-task-choice-row">
+      {CONTROL_GROUPS.map(({ field, label, values }) => <fieldset key={field} className="dn-task-refine-field">
+        <legend>{label}</legend>
+        <div role="group" aria-label={label + ' filter'} className="dn-task-choice-row dn-refine-choice-row">
           {values.map(([value, caption]) => <button type="button" key={value}
             aria-pressed={draft[field] === value} onClick={() => change({ [field]: value })}>{caption}</button>)}
         </div>
-      </div>)}
-    </div>
-    <div className="dn-refine-sheet-section">
-      <h4>Group by</h4>
-      <div role="group" aria-label="Group Tasks by" className="dn-task-choice-row">
-        {GROUPS.map(([value, caption]) => <button type="button" key={value}
-          aria-pressed={draft.group === value} onClick={() => change({ group: value })}>{caption}</button>)}
-      </div>
+      </fieldset>)}
     </div>
     <p className="dn-refine-preview-count" role="status" aria-live="polite">
       <strong>{count} matching Tasks</strong><span>Preview only. Your list updates after Show results.</span>
