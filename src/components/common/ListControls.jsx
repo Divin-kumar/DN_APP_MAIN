@@ -1,11 +1,13 @@
 import { useEffect, useId, useRef, useState } from 'react';
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import './ListControls.css';
+import FilterSortSheet from './FilterSortSheet';
 
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
   title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
   summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, trailingAction, children,
+  refine,
 }) {
   const [open, setOpen] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
@@ -22,7 +24,7 @@ export default function ListControls({
     setEdges((current) => current.previous === previous && current.next === next ? current : { previous, next });
   };
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || refine) return undefined;
     if (!builder) updateEdges();
     const rail = railRef.current;
     const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(updateEdges) : null;
@@ -54,7 +56,7 @@ export default function ListControls({
       document.removeEventListener('keydown', closeOnEscape);
       document.removeEventListener('click', closeOnOutsideClick, true);
     };
-  }, [open, builder]);
+  }, [open, builder, refine]);
   const moveRail = (direction) => {
     const rail = railRef.current;
     rail?.scrollBy({ left: direction * Math.max(160, rail.clientWidth * .75),
@@ -73,7 +75,9 @@ export default function ListControls({
         </button> : activeCount && onReset ? <button type="button" className="dn-list-controls-trigger"
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
       </div>
-      {hasPanel && open ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
+      {hasPanel && open && refine ? <FilterSortSheet key={refine.conditions.editorKey} title={title}
+        refine={refine} onReset={onReset} onClose={() => setOpen(false)} /> : null}
+      {hasPanel && open && !refine ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>
         {(sort || onReset) ? (
           <div className="dn-list-controls-action-line" role="group" aria-label="Sort and reset">
             {sort ? <div className="dn-list-controls-sort-row">{sort}</div> : null}

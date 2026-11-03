@@ -66,7 +66,7 @@ function ValueEditor({ field, node, onChange, immediate = false }) {
     type={field?.type === 'date' ? 'date' : field?.type === 'number' ? 'number' : 'text'} step={field?.type === 'number' ? 'any' : undefined}
     value={node.value} onChange={onChange} />;
 }
-function RuleEditor({ node, schema, onEdit, onRemove }) {
+function RuleEditor({ node, schema, onEdit, onRemove, immediate = false }) {
   const field = schema.find((item) => item.path === node.field);
   const operators = filterEditorOperators(field, node.operator);
   return <div className="dn-condition-rule">
@@ -84,12 +84,12 @@ function RuleEditor({ node, schema, onEdit, onRemove }) {
       {operators.map(([value, label]) => <option key={value} value={value} data-short-label={conciseOperatorLabels[value] || label}>{label}</option>)}
     </DropdownSelect>
     <div className="dn-condition-value-slot">{field ? <ValueEditor key={`${node.field}:${node.operator}`} node={node} field={field}
-      onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} />
+      immediate={immediate} onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} />
       : node.field ? <span className="dn-condition-no-value">Choose another filter or remove this one.</span> : null}</div>
     <button type="button" className="dn-condition-icon" aria-label="Remove filter" onClick={onRemove}><X size={16} /></button>
   </div>;
 }
-function GroupEditor({ node, schema, update, remove, depth = 0, stackRef }) {
+function GroupEditor({ node, schema, update, remove, depth = 0, stackRef, immediate = false }) {
   const modify = (id, transform) => update((root) => mapConditions(root, id, transform));
   if (!node.children.length) return null;
   return <div className={`dn-condition-group${depth ? ' is-nested' : ''}`}>
@@ -99,8 +99,8 @@ function GroupEditor({ node, schema, update, remove, depth = 0, stackRef }) {
       <div className="dn-condition-children" ref={!depth ? stackRef : undefined}
         role="region" aria-label={`${node.join === 'OR' ? 'Any of' : 'All'} filter conditions, vertical list`}
         tabIndex={node.children.length > 1 ? 0 : undefined}>{node.children.map((child) => child.kind === 'group'
-        ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} />
-        : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} />)}</div>
+        ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} immediate={immediate} />
+        : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} immediate={immediate} />)}</div>
     </div>
   </div>;
 }
@@ -178,7 +178,7 @@ export function ConditionChips({ filter }) {
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.
-export default function ConditionBuilder({ filter, resultCount, resultLabel = 'results', title = 'Filters', showChips = false }) {
+export default function ConditionBuilder({ filter, resultCount, resultLabel = 'results', title = 'Filters', showChips = false, immediate = false }) {
   const stackRef = useRef(null);
   const editableCount = useMemo(() => {
     const count = (node) => node.kind === 'group' ? node.children.reduce((total, child) => total + count(child), 0) : 1;
@@ -194,7 +194,7 @@ export default function ConditionBuilder({ filter, resultCount, resultLabel = 'r
   const addRule = () => filter.setGroup((group) => appendFilterRule(group, blankRule()));
   return <section className="dn-conditions" aria-label={title}>
     {!filter.schema.length ? <p className="dn-condition-empty">Filter options will appear here when available.</p> : null}
-    <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove}
+    <GroupEditor key={filter.editorKey} node={filter.state.group} schema={filter.schema} update={filter.setGroup} remove={remove} immediate={immediate}
       stackRef={stackRef} />
     <div className="dn-conditions-actions"><button type="button" className="dn-conditions-add" onClick={addRule} disabled={!filter.schema.length}><Plus size={14} /> Add filter</button>
       {filter.activeCount || filter.state.group.children.length ? <button type="button" className="dn-conditions-clear" onClick={filter.clear}>Clear all</button> : null}

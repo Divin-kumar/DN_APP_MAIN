@@ -362,6 +362,10 @@ export default function Events() {
       ) : null}
       <div className="event-discovery-bar">
         <ListControls title="Moment filters" builder
+          refine={{ conditions, sort: { field: sortField, direction: sortDirection, options: MOMENT_SORT_OPTIONS,
+            label: 'Sort moments', onChange: (field, direction) => changeMomentFilters({ field, direction }) },
+          defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
+            direction: settingsDefaults.filters.direction } }}
           activeCount={conditions.activeCount} resultCount={visibleEvents.length} resultLabel="moments"
           chips={<ConditionChips filter={conditions} />}
           summary={sortSummary}
