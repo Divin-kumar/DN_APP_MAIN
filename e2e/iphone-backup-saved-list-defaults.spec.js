@@ -7,7 +7,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   test(`Guest JSON backup includes independent List defaults at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page);
-    await page.goto('/settings/code-lists#list-order');
+    await page.goto('/settings/list-defaults');
     const sort = page.getByRole('group', { name: 'Sort Activities in settings' });
     await sort.getByRole('combobox').click();
     await page.getByRole('option', { name: 'Title', exact: true }).click();

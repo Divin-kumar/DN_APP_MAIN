@@ -8,7 +8,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   test(`Reset all settings safely restores baseline without deleting Guest records at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page);
-    await page.goto('/settings/code-lists'); // Guest storage is available on the app origin only.
+    await page.goto('/settings/list-defaults'); // Guest storage is available on the app origin only.
 
     const recordsBefore = await page.evaluate(() =>
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
@@ -27,7 +27,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await expect(dialog).toHaveCount(0);
     await expect(page.getByText('Settings restored to defaults. Existing records were preserved.')).toBeVisible();
 
-    await page.goto('/settings/code-lists');
+    await page.goto('/settings/list-defaults');
     const orderAfter = page.getByRole('group', { name: 'Sort Activities in settings' });
     await expect(orderAfter.getByRole('combobox')).toContainText('Due date');
     await expect(orderAfter.getByRole('button', { name: 'Sort descending' })).toBeVisible();

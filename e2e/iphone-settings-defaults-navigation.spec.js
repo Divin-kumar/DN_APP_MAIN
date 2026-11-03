@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-// The app scrolls .dn-content, not the document. Deep links must land on
-// Settings defaults without a long manual Code Lists scroll on iPhone.
+// Filter & Sort defaults have a dedicated route. Old Code Lists bookmarks
+// must redirect to the new page without changing Guest records.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   for (const theme of ['light', 'dark']) {
     test(`Saved List defaults shortcut reaches its section at ${width}px ${theme}`, async ({ page }) => {
@@ -13,9 +13,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
           .map((key) => localStorage.getItem(key)));
       const shortcut = page.getByRole('link', { name: 'Open List defaults' });
-      await expect(shortcut).toHaveAttribute('href', '/settings/code-lists#list-order');
+      await expect(shortcut).toHaveAttribute('href', '/settings/list-defaults');
       await shortcut.click();
-      await expect(page).toHaveURL(/\/settings\/code-lists#list-order$/);
+      await expect(page).toHaveURL(/\/settings\/list-defaults$/);
       const section = page.locator('#list-order');
       await expect(section.getByRole('heading', { name: 'List sorting and filters' })).toBeVisible();
       await expect(section).toBeInViewport();
@@ -29,7 +29,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
           paneScrollTop: pane.scrollTop,
           documentWidth: document.documentElement.scrollWidth };
       });
-      expect(layout.paneScrollTop).toBeGreaterThan(200);
+      expect(layout.paneScrollTop).toBeGreaterThanOrEqual(0);
       expect(layout.top).toBeLessThan(layout.paneBottom);
       expect(layout.bottom).toBeGreaterThan(layout.paneTop);
       expect(layout.documentWidth).toBeLessThanOrEqual(width + 1);
@@ -41,10 +41,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(errors).toEqual([]);
     });
 
-    test(`Direct URL to Settings defaults retains hash scroll at ${width}px ${theme}`, async ({ page }) => {
+    test(`Old Code Lists defaults bookmark redirects to its own page at ${width}px ${theme}`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
       await page.goto('/settings/code-lists#list-order');
+      await expect(page).toHaveURL(/\/settings\/list-defaults$/);
       await expect(page.locator('#list-order')).toBeInViewport();
       await expect(page.getByRole('heading', { name: 'List sorting and filters' })).toBeVisible();
       expect(errors).toEqual([]);

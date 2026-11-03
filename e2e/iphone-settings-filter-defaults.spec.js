@@ -13,7 +13,7 @@ for (const config of lists) {
     test(config.label + ' restores independent Settings sort defaults at ' + width + 'px ' + theme, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
-      await page.goto('/settings/code-lists'); // Seed runs on navigation, not about:blank.
+      await page.goto('/settings/list-defaults'); // Seed runs on navigation, not about:blank.
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)));
       const settingsOrder = page.getByRole('group', { name: 'Sort ' + config.label + ' in settings' });
       await settingsOrder.getByRole('combobox').click();
@@ -35,7 +35,7 @@ for (const config of lists) {
       await expect(field).toContainText(config.option);
       await expect(actions.getByRole('button', { name: 'Sort ascending' })).toBeVisible();
 
-      await page.goto('/settings/code-lists');
+      await page.goto('/settings/list-defaults');
       const originalSetting = page.getByRole('group', { name: 'Sort ' + config.label + ' in settings' });
       await expect(originalSetting.getByRole('combobox')).toContainText(config.option);
       await expect(originalSetting.getByRole('button', { name: 'Sort ascending' })).toBeVisible();
@@ -48,7 +48,7 @@ for (const config of lists) {
 test('Activity filter defaults stay in Settings and Reset restores their condition', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
-  await page.goto('/settings/code-lists');
+  await page.goto('/settings/list-defaults');
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.getByRole('button', { name: /Activities filters/ }).click();
   const editor = page.locator('.dn-code-list-filter-editor .dn-conditions');
@@ -69,7 +69,7 @@ test('Activity filter defaults stay in Settings and Reset restores their conditi
   await expect(cards).toHaveCount(4);
   await page.locator('.dn-list-controls-panel .dn-list-controls-action-line').getByRole('button', { name: 'Reset', exact: true }).click();
   await expect(cards).toHaveCount(1);
-  await page.goto('/settings/code-lists');
+  await page.goto('/settings/list-defaults');
   await page.getByRole('button', { name: /Activities filters/ }).click();
   await expect(page.locator('.dn-code-list-filter-editor .dn-conditions').getByRole('region', { name: 'Active filters' })).toContainText('Priority');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);

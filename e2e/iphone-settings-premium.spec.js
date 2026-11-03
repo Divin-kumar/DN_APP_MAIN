@@ -43,7 +43,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const backupLink = home.getByRole('link', { name: 'Open Data & Backup page' });
       await expect(backupLink).toHaveAttribute('href', '/settings/data-backup');
       await expect(home.getByRole('link', { name: 'Open Code Lists page' })).toHaveAttribute('href', '/settings/code-lists');
-      await expect(home.getByRole('link', { name: 'Open List defaults' })).toHaveAttribute('href', '/settings/code-lists#list-order');
+      await expect(home.getByRole('link', { name: 'Open List defaults' })).toHaveAttribute('href', '/settings/list-defaults');
       await expect(home.getByRole('link', { name: 'Open About page' })).toHaveAttribute('href', '/settings/about');
       await backupLink.click();
       await expect(page).toHaveURL(new RegExp('/settings/data-backup$'));

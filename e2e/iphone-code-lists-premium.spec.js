@@ -12,10 +12,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
 
       const index = page.getByRole('navigation', { name: 'Code List sections' });
       const links = index.getByRole('link');
-      await expect(links).toHaveCount(7);
+      await expect(links).toHaveCount(6);
       await expect(index.getByRole('link', { name: 'Moment Types' })).toHaveAttribute('href', '#code-list-eventTypes');
       await expect(index.getByRole('link', { name: 'Payment Methods' })).toHaveAttribute('href', '#code-list-paymentMethods');
-      await expect(index.getByRole('link', { name: 'Sorting & filters' })).toHaveAttribute('href', '#list-order');
+      await expect(index.getByRole('link', { name: 'Sorting & filters' })).toHaveCount(0);
       await expect(page.locator('.dn-code-list-editor-section')).toHaveCount(6);
 
       const layout = await page.evaluate(() => {
