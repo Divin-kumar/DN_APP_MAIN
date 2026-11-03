@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-354 | DN 2.3 cross-form searchable dropdown recovery
+- **Audit:** The shared dropdown search had no reliable, labelled clear action on mobile. Typing a nonmatching query left an unhelpful empty list. Touch behavior and keyboard focus were inconsistent with the search recovery already implemented on main list pages.
+- **UX change:** Add one 44px, borderless Clear search button only while a dropdown query exists, retaining input focus and restoring options/scroll/highlight. Explain the no-results recovery in the menu. Preserve search-on-demand and never auto-focus the keyboard on opening the dropdown. Keep option values and selection behavior unchanged.
+- **Downstream:** This is a shared component; the scope includes Refine, form and Code List dropdowns. No saved filters, AND/OR semantics, sort, Task/Moment/Activity/Transaction records, Guest/account storage, attachments, Story/PDF or backup are rewritten. Guest tour v2026.11.03.4 already demonstrates these list interactions and needs no forced reset.
+- **Validation plan:** Added 320/390/1280px synthetic Guest Chromium checks for empty-result recovery, touch/keyboard search clearing, safe cancellation and no record writes, plus opt-in existing Task Refine regression. Exact-code-SHA results required before marking executed acceptance. Physical Safari, VoiceOver, signed-in cloud storage and full release checks remain pending. No main write, version change, PR or deployment.
+
 ## CHG-20261103-353 | DN 2.3 PDF Studio exact-SHA visual acceptance
 - **Executed:** GitHub Actions [41692491666](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41692491666) passed **6/6 synthetic Guest Chromium tests** at OldVersion SHA `e7daca985ad09c7ae1b6a1f7eaea5da0e2d7670a`: new 320px dark, 390px light and 1280px dark PDF preview/Update behavior, two existing page-number/dropdown checks and a Settings integration check. Initial attempt at `d0d1ad48b9b414bfa910e08b54fa092f9132468c` passed five PDF checks but failed on an obsolete Settings button locator. Corrected that test to follow the current Appearance link; no application code changed between attempts.
 - **Executed:** Same-SHA [governance 41692491401](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41692491401) passed Node unit tests, lint, build, dependency advisories and documentation governance.

@@ -2,7 +2,7 @@
 // The portal avoids clipping by cards, scroll panes, modals, and bottom navigation.
 import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, ChevronDown, Search } from 'lucide-react';
+import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
 import './DropdownSelect.css';
 
@@ -181,7 +181,7 @@ export default function DropdownSelect({
   const onKeyDown = (event) => {
     // Let an explicit Search button handle Enter/Space as a real button, not
     // as an option-selection shortcut on the parent portaled dropdown.
-    if (event.target.closest?.('.dropdown-search-reveal') && event.key !== 'Escape') return;
+    if (event.target.closest?.('.dropdown-search-reveal, .dropdown-search-clear') && event.key !== 'Escape') return;
     if (event.key === 'Escape' && open) {
       event.preventDefault();
       event.stopPropagation();
@@ -276,13 +276,21 @@ export default function DropdownSelect({
             </button>
           ) : null}
           {searchVisible ? (
-            <label className="dropdown-search-wrap">
+            <div className="dropdown-search-wrap">
               <Search size={16} aria-hidden="true" />
               <input ref={searchRef} type="search" aria-label={searchLabel}
                 aria-controls={listboxId} aria-activedescendant={shownActiveIndex >= 0 ? `${listboxId}-option-${shownActiveIndex}` : undefined}
                 value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(-1); setScrollTop(0); if (listRef.current) listRef.current.scrollTop = 0; }}
                 placeholder={allowCustom ? 'Search or type a value' : searchLabel} />
-            </label>
+              {query ? <button type="button" className="dropdown-search-clear"
+                aria-label={`Clear ${searchLabel.toLowerCase()}`} title="Clear search"
+                onPointerDown={(event) => event.preventDefault()}
+                onClick={() => {
+                  setQuery(''); setActiveIndex(-1); setScrollTop(0);
+                  if (listRef.current) listRef.current.scrollTop = 0;
+                  searchRef.current?.focus({ preventScroll: true });
+                }}><X size={17} aria-hidden="true" /></button> : null}
+            </div>
           ) : null}
           <div ref={listRef} id={listboxId} className={`dropdown-options-scroll${virtual ? ' is-virtual' : ''}`} role="listbox"
             aria-labelledby={triggerId} aria-label={accessibilityProps['aria-label'] || name || 'Options'}
@@ -303,7 +311,7 @@ export default function DropdownSelect({
               </div>;
             })}
             {virtual && virtualEnd < visibleIndices.length ? <div role="presentation" style={{ height: (visibleIndices.length - virtualEnd) * ROW_HEIGHT }} /> : null}
-            {!visibleIndices.length ? <div className="dropdown-no-results">No matching options</div> : null}
+            {!visibleIndices.length ? <div className="dropdown-no-results" role="status">No matching options. Clear search to see all choices.</div> : null}
           </div>
         </div>, document.body,
       ) : null}

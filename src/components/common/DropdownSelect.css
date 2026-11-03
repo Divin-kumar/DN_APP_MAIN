@@ -113,5 +113,24 @@ html[data-theme] .dropdown-menu-portal .dropdown-search-reveal:focus-visible {
   border-color:var(--action-border); background:var(--action-fill); color:var(--action-ink);
 }
 html[data-theme] .dropdown-menu-portal .dropdown-search-wrap input[type="search"] {
-  min-height:40px; min-width:0; font-size:16px;
+  flex:1 1 0; width:auto; min-height:44px; min-width:0; font-size:16px;
+}
+/* The search action belongs to the menu, not to any selected filter or record.
+   Keep the icon unboxed but easy to tap on compact phones. */
+html[data-theme] .dropdown-menu-portal .dropdown-search-wrap > svg {flex:0 0 auto;}
+html[data-theme] .dropdown-menu-portal .dropdown-search-clear {
+  display:inline-grid; place-items:center; flex:0 0 44px;
+  width:44px; height:44px; min-width:44px; min-height:44px;
+  padding:0; border:0; border-radius:10px;
+  background:transparent; color:var(--color-text-muted);box-shadow:none;cursor:pointer;
+}
+html[data-theme] .dropdown-menu-portal .dropdown-search-clear:hover {
+  background:var(--color-card); color:var(--color-text);
+}
+html[data-theme] .dropdown-menu-portal .dropdown-search-clear:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:-3px;
+}
+html[data-theme] .dropdown-menu-portal .dropdown-no-results {
+  padding:12px 9px; color:var(--color-text-muted);
+  font-size:12px; line-height:1.5;
 }
