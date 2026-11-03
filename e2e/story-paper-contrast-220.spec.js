@@ -43,6 +43,8 @@ for (const theme of ['dark', 'light']) {
     }));
     const errors = await seedGuest(page, { moments, theme });
     await page.setViewportSize({ width: 390, height: 844 });
+    // Establish the local DN origin before touching browser-local preferences.
+    await page.goto('/events');
     for (const style of ['heritage', 'editorial', 'minimal']) {
       await page.evaluate((visualStyle) => {
         localStorage.setItem('dn_story_pdf_design_v1:guest', JSON.stringify({
@@ -58,6 +60,7 @@ for (const theme of ['dark', 'light']) {
         await expect(h).toBeVisible();
         expect(await readableContrast(h, paper), `${format}/${style}/${theme} title`).toBeGreaterThanOrEqual(4.5);
         if (format === 'journey' && style === 'heritage') {
+          await h.scrollIntoViewIfNeeded();
           await testInfo.attach(`journal-heritage-${theme}-390px`, {
             body: await page.screenshot({ fullPage: false }), contentType: 'image/png',
           });
