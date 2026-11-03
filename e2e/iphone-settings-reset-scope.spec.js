@@ -28,8 +28,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
 
     await page.goto('/settings/list-defaults');
     const orderAfter = page.getByRole('group', { name: 'Sort Activities in settings' });
-    await expect(orderAfter.getByRole('combobox')).toContainText('Due date');
-    await expect(orderAfter.getByRole('button', { name: 'Sort descending' })).toBeVisible();
+    await expect(orderAfter.getByRole('button', { name: 'Sort by Due date, ascending' })).toHaveAttribute('aria-pressed', 'true');
     expect(await page.evaluate(() =>
       ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)))).toEqual(recordsBefore);
