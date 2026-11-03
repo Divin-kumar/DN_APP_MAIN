@@ -2988,7 +2988,7 @@ html[data-theme="dark"] {
   .event-moment-stats small { font-size:.58rem; }
   .event-moment-actions { position:relative; right:auto; bottom:auto; gap:6px; margin-top:16px; }
   .event-moment-actions button { min-height:33px; padding:0 9px; font-size:.64rem; }
-  .event-workspace-nav { position:sticky; top:2px; width:100%; gap:1px !important; padding:4px; border-radius:15px; background:#fbfcf8; }
+  .event-workspace-nav { position:sticky; top:2px; width:100%; gap:1px !important; padding:4px; border-radius:15px; background:rgba(251,252,248,.84); }
   .event-workspace-nav-item { min-height:34px; gap:5px; padding:0 9px !important; font-size:.66rem; }
   .event-workspace-nav-item > svg { width:14px; height:14px; }
   .event-section-heading { margin:0 2px 10px; }
@@ -8766,7 +8766,7 @@ html[data-theme="dark"] .event-next-step.is-complete > span { border-color: #22c
 html[data-theme="dark"] .event-moment-stat-line { color: #a7b3c8 !important; font-size: .76rem !important; }
 html[data-theme="dark"] .event-moment-stat-line strong { color: #edf3ff !important; }
 html[data-theme="dark"] .event-moment-countdown { color: #9abaff !important; }
-html[data-theme="dark"] .event-workspace-nav { border-color: rgba(151,171,205,.17) !important; background: #0b1020 !important; }
+html[data-theme="dark"] .event-workspace-nav { border-color: rgba(151,171,205,.17) !important; background: rgba(11,16,32,.94) !important; }
 html[data-theme="dark"] .event-workspace-nav-item { color: #a7b3c8 !important; }
 html[data-theme="dark"] .event-workspace-nav-item.is-active { background: rgba(79,140,255,.18) !important; color: #c1d6ff !important; }
 html[data-theme="dark"] .event-activity-complete { border-color: rgba(151,171,205,.25) !important; background: rgba(8,15,29,.78) !important; color: #a7b3c8 !important; }

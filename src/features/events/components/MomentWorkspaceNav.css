@@ -74,6 +74,11 @@ html[data-theme] .dn-moment-panel > .dn-workspace-section-heading h2 {
   overflow-wrap:anywhere;
 }
 @media(max-width:760px) {
+  /* Keep scrolling PDF form labels fully masked under the pinned section rail.
+     The theme background supplies the same palette without transparency. */
+  html[data-theme] .event-workspace-nav.dn-moment-nav {
+    background:var(--color-bg) !important;
+  }
   html[data-theme] .dn-moment-nav .event-workspace-nav-item {
     gap:6px !important; padding:0 11px !important;
     min-height:46px !important; font-size:12px !important;
