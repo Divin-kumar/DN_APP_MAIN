@@ -9,11 +9,13 @@ test('Moments Refine draft discards sort/filter on Cancel and Escape', async ({ 
   const errors = await seedGuest(page);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/events');
-  const prior = await savedListState(page);
   const refine = page.getByRole('button', { name: /^Filters and sort/ });
   await refine.click();
   const sheet = page.getByRole('dialog', { name: 'Moment filters' });
   await expect(sheet).toBeVisible();
+  // Existing saved defaults are lazily migrated on first load. Establish the
+  // baseline after the legitimate migration, before any draft-only edits.
+  const prior = await savedListState(page);
   const chips = sheet.getByRole('group', { name: 'Sort moments' });
   await chips.getByRole('button', { name: /^Sort by Name/ }).click();
   await expect(chips.getByRole('button', { name: 'Sort by Name, ascending' })).toHaveAttribute('aria-pressed', 'true');
