@@ -96,7 +96,16 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     const newPage = activityLayout.getByRole('radio', { name: 'Start each Activity on a new PDF page' });
     const natural = activityLayout.getByRole('radio', { name: 'Continue Activities on the same PDF page' });
     await expect(natural).toHaveAttribute('aria-checked', 'true');
-    await newPage.click();
+    await expect(natural).toHaveAttribute('tabindex', '0');
+    await natural.focus();
+    await natural.press('ArrowRight');
+    await expect(newPage).toBeFocused();
+    await expect(newPage).toHaveAttribute('aria-checked', 'true');
+    await newPage.press('Home');
+    await expect(natural).toBeFocused();
+    await expect(natural).toHaveAttribute('aria-checked', 'true');
+    await natural.press('End');
+    await expect(newPage).toBeFocused();
     await expect(newPage).toHaveAttribute('aria-checked', 'true');
     await expect(download).toBeDisabled();
     await studio.getByRole('button', { name: 'Update preview' }).click();
