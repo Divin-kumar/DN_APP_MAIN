@@ -107,7 +107,7 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Capture synthetic cross-app routes and UI metrics
-        run: npx playwright test e2e/cross-app-visual-audit-230.spec.js e2e/settings-appearance-baseline-230.spec.js
+        run: npx playwright test e2e/cross-app-visual-audit-230.spec.js
       - name: Upload read-only audit evidence
         if: always()
         uses: actions/upload-artifact@v4
@@ -229,6 +229,46 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: dn-230-appearance-and-cross-app-ui
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  appearance-230:
+    # In-scope settings architecture and adjacent app regression only.
+    # Synthetic Guest, no deploy, migration or real account writes.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-appearance]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify Appearance, Settings reset, Story design and adjacent filter flows
+        run: >-
+          npx playwright test
+          e2e/settings-appearance-preferences-230.spec.js
+          e2e/iphone-settings-premium.spec.js
+          e2e/story-design-phase1.spec.js
+          e2e/iphone-settings-defaults-navigation.spec.js
+          e2e/iphone-settings-reset-scope.spec.js
+          e2e/iphone-settings-cloud-delete-safety.spec.js
+          e2e/phase5-ui-audit-fixes.spec.js
+      - name: Upload synthetic screenshots and any browser failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-appearance-ui-review
           path: |
             .verification/browser-results
             .verification/browser-results.json
