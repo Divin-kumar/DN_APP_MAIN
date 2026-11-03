@@ -472,6 +472,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
 
   // A page boundary belongs to an Activity, not any of its continued entries.
   let renderedActivityCount = 0;
+  let renderedDayCount = 0;
   let lastActivityId = '';
   const activityKey = (entry) => String(entry.activityId || entry.id || '');
   const isNextActivity = (entry) => activityKey(entry) !== lastActivityId;
@@ -497,6 +498,9 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     for (const month of story.timeline) for (const day of month.days) {
       const first = day.entries[0];
       if (!first) continue;
+      // Day chapters keep separate Activities on the same recorded date together.
+      // Dated updates are paragraphs of their parent Activity, never new chapters.
+      if (options.pageBreakBetweenDays && renderedDayCount) await pdf.startActivityPage();
       await beginNextActivity(first);
       await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
       for (const entry of day.entries) {
@@ -516,12 +520,15 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         await renderJournalEntry(entry);
         finishActivity(entry);
       }
+      renderedDayCount += 1;
     }
   } else if (template === 'diary') {
     await pdf.heading(story.momentDate
       ? new Date(story.momentDate + 'T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
       : 'Monthly entries');
     for (const day of story.timeline.flatMap((month) => month.days)) {
+      if (!day.entries.length) continue;
+      if (options.pageBreakBetweenDays && renderedDayCount) await pdf.startActivityPage();
       let firstOfDay = true;
       for (const entry of day.entries) {
         await beginNextActivity(entry);
@@ -535,6 +542,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
         firstOfDay = false;
         finishActivity(entry);
       }
+      renderedDayCount += 1;
     }
   } else {
     for (const group of pdfStudioTaskSections(groupMomentStoryTasks(story), options)) {
