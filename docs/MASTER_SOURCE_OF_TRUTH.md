@@ -4,6 +4,12 @@
 
 DN organizes Moments, activities, memories, greetings, original attachments and finance for Google accounts and browser-local guests. Current OldVersion release-candidate source is **2.2.0**, retaining the owner’s version commit 159bc23 and the completed DN 2.1 iPhone-first experience. It includes optional times for every editable record date, whole-day filters with saved-time ordering, configurable payment methods, shared Code List choices, matching transaction totals and the contextual navigation, forms, writing and backup surfaces documented in About. It retains optional Activity times introduced in 2.0.2. Browser regression runs set `DN_BROWSER_TEST=1`, which disables Vite file watching and HMR because those tests use a fixed source tree; normal development keeps interactive HMR. This is the current product reference; rules are in [AGENTS.md](../AGENTS.md), commands in [README.md](../README.md), and execution/release evidence in the [change log](CHANGE_AUDIT_LOG.md).
 
+## DN 2.3 Phase 4A foundation: standalone Guest Task state and realistic demo (3 November 2026; unreleased)
+
+Independent Tasks now have an isolated Guest/sample Zustand store whose identity key distinguishes private Guest records, versioned public Guest tour and signed-in accounts. Private Guest Task writes go only to `dn_guest_tasks`, while demo edits stay inside `dn_dev_fixture_data.tasks`; stale session callbacks and signed-in Task mutations are blocked. The Guest tour version `2026.11.03.4` includes linked, standalone, timed, untimed, completed and overdue Tasks in its one approved dataset. A browser containing independent private Guest Tasks is no longer treated as an empty Guest eligible for automatic sample offer. Task sorting can optionally order by title without affecting the due-date default and legacy Activity rows.
+
+**Scope boundary:** Store and fixture only; no Tasks UI, Dashboard cards, quick-create entry or account Firestore access is enabled until the rest of Phase 4. No data migration or automatic demo refresh occurs. See CHG-20261103-330.
+
 ## DN 2.3 Phase 3C browser acceptance prepared (3 November 2026; unreleased)
 
 An end-to-end synthetic Guest regression has been authored for v4 export, review-only preview, separate-browser Guest restore, destination-wins conflict preservation and retry idempotency. Test authorship is **not** browser execution or physical iPhone acceptance. See CHG-20261103-329.

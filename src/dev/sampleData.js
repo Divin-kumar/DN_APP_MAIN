@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.03.3';
+export const GUEST_TOUR_VERSION = '2026.11.03.4';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -354,15 +354,34 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-expense-2', name: 'Coffee on the road', category: 'Food', amount: 190, time: '10:15', paymentMethod: 'Cash', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },
     { id: 'dn-tour-expense-3', name: 'Paint samples', category: 'Home', amount: 340, paymentMethod: 'Online', eventId: t, activityId: 'dn-tour-activity-t1', date: date(-4) },
   ];
+  // Independent Tasks are not any of the historical Moment Activity styles.
+  // They can be explored and edited only inside the versioned sample scope.
+  const tasks = [
+    { id: 'dn-tour-independent-1', title: 'Confirm electrician visit', notes: 'Ask for the time window.',
+      status: 'in-progress', priority: 'high', dueDate: date(2), dueTime: '09:30',
+      momentId: t, activityId: 'dn-tour-activity-t2' },
+    { id: 'dn-tour-independent-2', title: 'Pack snacks for the weekend', notes: 'A few favourites.',
+      status: 'in-progress', priority: 'medium', dueDate: date(4), dueTime: '',
+      momentId: j, activityId: '' },
+    { id: 'dn-tour-independent-3', title: 'Measure the window', notes: 'The dimensions are saved.',
+      status: 'completed', priority: 'low', dueDate: date(-2), dueTime: '',
+      momentId: t, activityId: 'dn-tour-activity-t5' },
+    { id: 'dn-tour-independent-4', title: 'Choose a new bookshelf', notes: 'No deadline yet.',
+      status: 'in-progress', priority: 'low', dueDate: '', dueTime: '',
+      momentId: '', activityId: '' },
+    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'Overdue example.',
+      status: 'in-progress', priority: 'high', dueDate: date(-3), dueTime: '16:00',
+      momentId: '', activityId: '' },
+  ];
   return { scenario: GUEST_TOUR_SCENARIO, demoVersion: GUEST_TOUR_VERSION,
     generatedAt: reference.toISOString(), anchorDate: date(0), events,
     activities: events.flatMap((event) => event.activities),
     memories: events.flatMap((event) => event.memories), attachments: [],
-    incomes, expenses, imagesReady: false };
+    incomes, expenses, tasks, imagesReady: false };
 }
 export const canOfferGuestTour = () => {
   if (typeof localStorage === 'undefined' || localStorage.getItem(TOUR_DISMISSED_KEY)) return false;
-  return ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].every((key) => {
+  return ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks'].every((key) => {
     const value = localStorage.getItem(key);
     if (value === null) return true;
     try { const records = JSON.parse(value); return Array.isArray(records) && records.length === 0; }

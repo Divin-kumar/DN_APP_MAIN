@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-330 | DN 2.3 Phase 4A: isolated Guest Task store and versioned tour examples
+- **Scope:** Introduce a new Task state store with strict Guest/private sample and account isolation; no account Task reads/writes, and no Task writes to Moment/Activity services. Add standalone, linked, untimed, overdue and completed Task samples to the existing public Guest tour, bump its version for explicit owner-driven Refresh demo, and count private Guest Tasks when deciding whether to offer the demo. Extend independent Task sorting with optional title field.
+- **Downstream impacts:** No existing Guest records, Story/PDF, finance, account/cloud, backup parser, original attachments or sample edits are reset or migrated. The UI and Dashboard are subsequent Phase 4 changes. Tests authored for sort and demo data, exact-SHA CI required. No deployment, PR, version bump or main change.
+
 ## CHG-20261103-329 | DN 2.3 Phase 3C: staged browser acceptance for independent Guest Task backups
 - **Scope:** Add browser regression for independent Guest Tasks exported in v4, Task count in restore preview, no preview mutations, destination-wins merge on a separate browser context, preservation of Activity links, optional untimed fields and a repeated import with no duplicate IDs.
 - **Boundary:** Playwright acceptance authored but not executed; the native iPhone Safari and exact-SHA full 2.3 gate remain pending. No production functionality, data-model, storage, UI, Guest tour, Story or PDF change. Documentation-only business guide alignment was committed immediately before this test. No deployment, app version bump, PR or main write.

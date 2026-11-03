@@ -92,15 +92,19 @@ const compareDue = (a, b, direction = 'asc') => {
   const sign = direction === 'desc' ? -1 : 1;
   return sign * (first.localeCompare(second) || (a.dueTime && b.dueTime ? a.dueTime.localeCompare(b.dueTime) : a.dueTime ? -1 : b.dueTime ? 1 : 0));
 };
-export const sortIndependentTasks = (tasks = [], direction = 'asc') => [...tasks].sort((a, b) =>
-  compareDue(a, b, direction) || String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' })
-  || String(a.id).localeCompare(String(b.id)));
+export const sortIndependentTasks = (tasks = [], direction = 'asc', sortBy = 'dueDate') => [...tasks].sort((a, b) => {
+  const primary = sortBy === 'title' ? String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' })
+    * (direction === 'desc' ? -1 : 1) : compareDue(a, b, direction);
+  return primary || compareDue(a, b, direction)
+    || String(a.title).localeCompare(String(b.title), undefined, { sensitivity: 'base' })
+    || String(a.id).localeCompare(String(b.id));
+});
 
 // Presentation-only grouping. Filter before calling; each independent Task
 // appears exactly once regardless of how many nested Activity entries exist.
-export const groupIndependentTasks = (tasks = [], { by = 'dueDate', moments = [], direction = 'asc' } = {}) => {
+export const groupIndependentTasks = (tasks = [], { by = 'dueDate', moments = [], direction = 'asc', sortBy = 'dueDate' } = {}) => {
   if (!TASK_GROUPS.includes(by)) throw new Error('Unknown Task grouping.');
-  const sorted = sortIndependentTasks(tasks, direction);
+  const sorted = sortIndependentTasks(tasks, direction, sortBy);
   const groups = new Map();
   for (const task of sorted) {
     const parent = resolveIndependentTaskParent(task, moments);

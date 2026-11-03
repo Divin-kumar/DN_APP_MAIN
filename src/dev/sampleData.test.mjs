@@ -36,3 +36,12 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.ok(demo.events.every((event) => !event.attachments.length));
   assert.equal(buildGuestTourDataset(new Date('2026-10-28T12:00:00Z')).events[0].id, demo.events[0].id);
 });
+
+test('Guest tour version includes standalone Tasks that never become Activity rows', () => {
+  const data = buildGuestTourDataset(new Date('2026-11-03T12:00:00Z'));
+  assert.equal(data.tasks.length, 5);
+  assert.ok(data.tasks.some(task => !task.dueDate && !task.dueTime));
+  assert.ok(data.tasks.some(task => task.momentId && task.activityId));
+  assert.ok(data.tasks.some(task => task.status === 'completed'));
+  assert.equal(data.events.flatMap(event => event.activities).some(activity => data.tasks.some(task => task.id === activity.id)), false);
+});

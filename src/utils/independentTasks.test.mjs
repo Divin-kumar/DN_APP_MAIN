@@ -102,3 +102,11 @@ test('grouping is presentation-only and counts each Task once across supported g
   assert.equal(groupIndependentTasks(tasks, { by: 'dueDate' }).at(-1).label, 'No due date');
   assert.throws(() => groupIndependentTasks(tasks, { by: 'other' }));
 });
+
+test('optional title sorting is deterministic and does not mutate Task records', () => {
+  const items = [raw({ id: 'z', title: 'Zulu' }), raw({ id: 'a', title: 'Alpha' })];
+  assert.deepEqual(sortIndependentTasks(items, 'asc', 'title').map(item => item.id), ['a', 'z']);
+  assert.deepEqual(sortIndependentTasks(items, 'desc', 'title').map(item => item.id), ['z', 'a']);
+  assert.deepEqual(groupIndependentTasks(items, { by: 'status', sortBy: 'title' })[0].tasks.map(item => item.id), ['a', 'z']);
+  assert.equal(items[0].id, 'z');
+});
