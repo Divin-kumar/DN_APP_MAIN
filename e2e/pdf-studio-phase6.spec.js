@@ -47,6 +47,8 @@ test('PDF Studio presents actual pages, requires refresh after customization and
   expect(diaryHash).not.toBe(journalHash);
 
   await choosePdfSetting(page, studio, 'PDF story format', 'Tasks');
+  // Optional content intentionally starts collapsed for a calmer Studio.
+  await studio.locator('.dn-pdf-content-options > summary').click();
   await expect(studio.getByText('Completed tasks')).toBeVisible();
   await studio.getByLabel('Cancelled tasks').check();
   await studio.getByRole('button', { name: 'Update preview' }).click();
@@ -159,6 +161,7 @@ test('a Code List refresh preserves customized controls and the actual PDF previ
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
   await choosePdfSetting(page, studio, 'PDF story format', 'Diary');
   await choosePdfSetting(page, studio, 'PDF page spacing', 'Compact');
+  await studio.locator('.dn-pdf-content-options > summary').click();
   await studio.getByRole('checkbox', { name: /^Cover page/ }).uncheck();
   await studio.getByRole('checkbox', { name: /^Earlier reflections/ }).check();
   await studio.getByRole('button', { name: 'Update preview' }).click();
