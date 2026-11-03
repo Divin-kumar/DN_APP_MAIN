@@ -112,7 +112,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   const restorePreferences = useAppStore((state) => state.restorePreferences);
   const resetAdminValues = useAppStore((state) => state.resetAdminValues);
   const setPreferences = useAppStore((state) => state.setPreferences);
-  const resetPreferences = useAppStore((state) => state.resetPreferences);
   const resetAllSettings = useAppStore((state) => state.resetAllSettings);
   const setGuestMode = useAppStore((state) => state.setGuestMode);
   const profileName = user?.displayName || user?.email || 'Guest';
@@ -206,22 +205,15 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   };
 
   const resetPreferencesForm = () => {
-    resetPreferences();
-    setTheme('dark');
-    document.documentElement.dataset.theme = 'dark';
-    setPrefForm({
+    // This button belongs to Creation defaults. Reset its draft only; never
+    // surprise-reset the independently saved theme or Story/PDF designs.
+    setPrefForm((current) => ({
+      ...current,
       currency: 'INR',
-      dashboardView: 'overview',
       defaultEventType: 'Personal',
       defaultIncomeType: 'Salary',
       defaultExpenseCategory: 'Food',
-      notifications: {
-        eventReminders: true,
-        monthlySummary: true,
-        budgetAlerts: true,
-        reminderTime: '09:00',
-      },
-    });
+    }));
   };
 
   const exportBackup = async () => {
