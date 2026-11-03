@@ -307,3 +307,42 @@ html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-c
 html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-chips > button:focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: 2px;
 }
+
+
+/* DN 2.3 cross-app audit: make all six Code List destinations discoverable on
+   narrow screens without changing anchor navigation or allowing page overflow. */
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-window {
+  position:relative; display:flex; flex:1 1 0; min-width:0; max-width:100%;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-window > .dn-code-list-index-scroll {
+  width:100%; min-width:0; max-width:100%; flex:1 1 0;
+  scroll-padding-inline:48px;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow {
+  position:absolute; z-index:2; top:0; bottom:0;
+  display:grid; place-items:center; width:44px; min-width:44px; min-height:44px;
+  padding:0; border:0; border-radius:9px;
+  background:color-mix(in srgb,var(--color-card) 93%,var(--color-bg));
+  color:var(--color-primary); box-shadow:0 0 10px color-mix(in srgb,var(--color-bg) 75%,transparent);
+  cursor:pointer;
+}
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow.is-next { right:0; }
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow.is-previous { left:0; }
+html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:-3px;
+}
+@media (max-width:410px) {
+  /* Saved sorting is configuration, not a cramped horizontal carousel.
+     Show every choice, preserve existing SortChips click semantics. */
+  html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-chips {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    overflow:visible; gap:6px; max-width:100%; width:100%;
+  }
+  html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-chips > button {
+    width:100%; max-width:100%; min-width:0; min-height:44px;
+    padding:8px 5px; white-space:normal; line-height:1.25; text-align:center;
+  }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow { transition:none; }
+}
