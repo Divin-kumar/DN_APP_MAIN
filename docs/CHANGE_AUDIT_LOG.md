@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-352 | DN 2.3 PDF preview accuracy and reachable update control
+- **Source evidence:** PDF customization's Update preview was the final control after all options, and its preview heading combined the current draft Story format with the previous rendered visual style when a PDF had pending changes. These are misleading or inconvenient on narrow phones.
+- **Implementation:** Move the one Update preview action to a minimal sticky status row below the PDF customization heading, remove the redundant bottom action, and show a simple current-preview confirmation after rendering. Derive preview-format metadata from the last rendered options until updated. Preserve pending-warning, disabled download/fullscreen, keyboard control and responsive font behavior.
+- **Downstream and tour:** PDF image/text exporter, options, page breaks, fonts, source memories, original attachments, Guest/account scope, backup bytes and settings persistence remain untouched. Existing public Guest tour already opens PDF Studio, so no sample regeneration is required.
+- **Verification boundary:** Scoped synthetic mobile/desktop browser acceptance authored for update control placement, stale metadata, refreshed output and data immutability. Exact SHA CI and full browser regression/physical iPhone testing remain separate gates. Only OldVersion changed; no PR, main modification, release or deployment.
+
 ## CHG-20261103-351 | DN 2.3 inline Task date/time and Moment form feedback
 - **Audit:** The independent Task creation/edit form still broke Date and Time into two rows at 320px and placed optional Notes before scheduling. The shared Moment form used disruptive native `alert()` windows for internal validation.
 - **UI:** Keep Task Date and optional Time aligned in a single phone row with the existing time clear control, show why Time is disabled without a date, and move Notes below schedule/priority/context. Replace Moment alerts with lightweight inline role=alert feedback, input focus on invalid name/custom type, and reveal More options on a missing date. No new fields or creation paths.

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronLeft, ChevronRight, Download, RefreshCw, SlidersHorizontal,
-  Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw,
+  Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw, CheckCircle2,
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 import DropdownSelect from '../common/DropdownSelect';
@@ -224,7 +224,7 @@ export default function MomentPdfStudio({ event }) {
         <div className="dn-pdf-studio-preview-head">
           <div><strong>Your memory book</strong>
             <small>{PDF_STYLE_NAMES[preview?.options.visualStyle || settings.visualStyle]}
-              {' · '}{PDF_TEMPLATES.find((item) => item.value === settings.template)?.label || 'Story'}
+              {' · '}{PDF_TEMPLATES.find((item) => item.value === (preview?.options.template || settings.template))?.label || 'Story'}
               {' · '}A4 portrait
               {preview?.options.pageQuality !== 'standard'
                 ? ' · ' + (PDF_PAGE_QUALITY_OPTIONS.find((item) =>
@@ -296,6 +296,18 @@ export default function MomentPdfStudio({ event }) {
           <SlidersHorizontal size={19} aria-hidden="true" />
           <div><strong>Design your PDF</strong>
             <p>Choose the look, then inspect the actual pages before downloading.</p></div>
+        </div>
+        <div className="dn-pdf-update-rail" aria-label="PDF preview update status">
+          {dirty || busy ? <>
+            <small role="status">{busy ? 'Rendering your pages…' : 'Changes pending'}</small>
+            <button type="button" className="secondaryButton dn-pdf-update-button"
+              onClick={() => renderPreview(settings)} disabled={busy}>
+              <RefreshCw size={16} aria-hidden="true" />
+              {busy ? 'Rendering…' : 'Update preview'}
+            </button>
+          </> : <span className="dn-pdf-update-current" role="status">
+            <CheckCircle2 size={17} aria-hidden="true" /> Preview is up to date
+          </span>}
         </div>
         <div className="dn-pdf-studio-field">
           <span>Story format</span>
@@ -427,11 +439,6 @@ export default function MomentPdfStudio({ event }) {
               </label>)}
           </fieldset>
         </details>
-        <button type="button" className="secondaryButton dn-pdf-update-button" onClick={() => renderPreview(settings)}
-          disabled={busy || !dirty}>
-          <RefreshCw size={16} aria-hidden="true" />
-          {busy ? 'Rendering pages…' : dirty ? 'Update preview' : 'Preview is current'}
-        </button>
         <p className="dn-pdf-studio-format-note">These design choices affect only this PDF.
           Your Settings defaults and original memories stay unchanged.</p>
       </section>
