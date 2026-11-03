@@ -1,7 +1,7 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
+import { Copy, Download, Sparkles, Pencil, BookOpen, Circle, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -302,14 +302,26 @@ export function DashboardOverviewContent() {
               : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
                 {dashboardTasks.map((task) => {
                   const overdue = task.dueDate < formatMomentDate(today);
+                  const dueToday = task.dueDate === formatMomentDate(today);
+                  const date = new Date(task.dueDate + 'T12:00:00');
+                  const dueLabel = overdue ? 'Overdue' : dueToday ? 'Today' : 'Upcoming';
                   return <div className="dn-dashboard-task-row" key={task.id}>
+                    <span className="dn-dashboard-task-date" data-overdue={overdue ? 'true' : undefined} aria-hidden="true">
+                      <strong>{date.getDate()}</strong>
+                      <small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small>
+                    </span>
                     <div className="dn-dashboard-task-text">
-                      <strong>{task.title}</strong>
-                      <small>{overdue ? 'Overdue · ' : ''}{task.dueDate}
-                        {task.dueTime ? ` · ${task.dueTime}` : ''}</small>
+                      <Link className="dn-dashboard-task-name" to={`/tasks?task=${encodeURIComponent(task.id)}`}
+                        aria-label={`Open Task ${task.title}`}>{task.title}</Link>
+                      <small><span className={overdue ? 'is-overdue' : ''}>{dueLabel}</span>
+                        {task.dueTime ? ` · ${task.dueTime}` : ''}
+                        <span className="dn-dashboard-task-separator" aria-hidden="true"> · </span>
+                        <span data-priority={task.priority}>{task.priority} priority</span>
+                      </small>
                     </div>
-                    <button type="button" aria-label={`Complete Task ${task.title}`}
-                      onClick={() => completeDashboardTask(task)}><Check size={16} aria-hidden="true" />Done</button>
+                    <button type="button" className="dn-dashboard-task-check"
+                      aria-label={`Complete Task ${task.title}`} title="Mark Task completed"
+                      onClick={() => completeDashboardTask(task)}><Circle size={21} aria-hidden="true" /></button>
                   </div>;
                 })}
               </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
