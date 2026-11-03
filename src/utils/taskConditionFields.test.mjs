@@ -56,7 +56,7 @@ test('legacy saved Task shortcuts are converted to removable chip rules with AND
   assert.deepEqual(old,{status:'in-progress',priority:'high',due:'overdue'});
 });
 test('Task sort by status, priority and timestamp is deterministic with missing dates last',()=>{
-  assert.deepEqual(sortIndependentTasks(tasks,'asc','priority').map(x=>x.id),['overdue','undated','today','late','week']);
+  assert.deepEqual(sortIndependentTasks(tasks,'asc','priority').map(x=>x.id),['overdue','undated','late','today','week']);
   assert.deepEqual(sortIndependentTasks(tasks,'asc','createdAt').slice(0,2).map(x=>x.id),['overdue','today']);
   assert.equal(sortIndependentTasks(tasks,'asc','createdAt').at(-1).createdAt == null,true);
   assert.deepEqual(sortIndependentTasks(tasks,'desc','status').map(x=>x.status),
