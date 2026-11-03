@@ -114,3 +114,49 @@ html[data-theme] .dn-refine-sheet .dn-list-controls-footer .dn-refine-apply { mi
   html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button,
   html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button { transition:none; }
 }
+
+
+/* DN 2.3: sorting/filter configuration uses typography and restrained
+   underlines across all Refine sheets, never a nested grid of boxed chips. */
+html[data-theme] .dn-refine-sheet .dn-refine-sort-chips {
+  align-items:stretch; gap:10px; padding:0; 
+}
+html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button,
+html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button {
+  min-height:44px; padding:8px 7px;
+  border:0 !important; border-bottom:2px solid transparent !important;
+  border-radius:0 !important; background:transparent !important;
+  box-shadow:none !important; color:var(--color-text-muted) !important;
+  font-size:12px; font-weight:600;
+}
+html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button:is(.is-selected,[aria-pressed="true"]),
+html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button[aria-pressed="true"] {
+  border-bottom-color:var(--color-primary) !important;
+  color:var(--color-primary) !important; font-weight:760;
+}
+html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button:hover,
+html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button:hover {
+  color:var(--color-text) !important;
+}
+html[data-theme] .dn-refine-sheet .dn-list-controls-footer > :is(.dn-refine-reset,.dn-refine-cancel) {
+  border:0; background:transparent; color:var(--color-text-muted);
+}
+html[data-theme] .dn-refine-sheet .dn-list-controls-footer > :is(.dn-refine-reset,.dn-refine-cancel):hover {
+  color:var(--color-primary);
+}
+html[data-theme] .dn-task-refine .dn-refine-sort-chips {
+  flex-wrap:wrap; overflow:visible; gap:2px 12px;
+}
+html[data-theme] .dn-task-refine .dn-refine-sort-chips > button { flex:0 1 auto; }
+html[data-theme] .dn-task-refine .dn-task-filter-heading {
+  display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
+  gap:8px;
+}
+html[data-theme] .dn-task-refine .dn-task-filter-heading h4 {
+  margin:0; font-size:13px; font-weight:740;
+}
+html[data-theme] .dn-task-refine .dn-task-filter-heading span,
+html[data-theme] .dn-task-refine .dn-task-filter-help {
+  margin:0; color:var(--color-text-muted);
+  font-size:11px; line-height:1.5;
+}
