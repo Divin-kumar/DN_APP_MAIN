@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-333 | DN 2.3 Phase 4C: keep Tasks independent from Activities dashboard disclosure
+- **Scope:** Fix the first Dashboard Tasks integration's JSX placement so Tasks always renders as its own third sibling section and is not conditional on expanded Activities. Correct overdue date labels using local ISO date formatting. No Task, Moment, Activity, original file or finance data is changed.
+- **Verification:** Source-derived correction and existing Node due-window regression; exact-SHA CI/browser and physical Safari checks remain independent. OldVersion only, no deployment, PR, main write or version bump.
+
 ## CHG-20261103-332 | DN 2.3 Phase 4C: Guest Tasks Dashboard and universal create navigation
 - **Scope:** Add Task navigation to desktop sidebar/profile menu, preserving the existing five destination mobile dock. Add Task to universal create menus with Moment/Activity deep-link context and render a Guest-only Dashboard Tasks section after Moments and Activities. Show overdue/next-30-day pending Tasks and independently complete them without modifying Activity statuses. Use scoped Dashboard section visibility.
 - **Boundaries:** No account Task permissions/cloud writes, parent migration, new Story/PDF chapters, finance/attachment changes or app version bump. Live iPhone and browser tests pending; Node tests added for due selection/year rollover. No production deployment, PR or main write.

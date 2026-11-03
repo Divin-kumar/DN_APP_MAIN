@@ -10,7 +10,7 @@ import useTaskStore, { taskScopeKey } from '../../../store/useTaskStore';
 import { selectUpcomingIndependentTasks } from '../../../utils/dashboardTasks.js';
 import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
-import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent } from '../../../utils/momentDates';
+import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent, formatMomentDate } from '../../../utils/momentDates';
 import { downloadBlob } from '../../../utils/download';
 import { plainRichText } from '../../../utils/richText';
 import GreetingCard, { buildGreetingCardHtml } from '../../../components/common/GreetingCard';
@@ -384,6 +384,11 @@ export function DashboardOverviewContent() {
             <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
+
+
+          </> : null}
+          <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
+        </section>
         {isGuest && !user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Tasks</span>
@@ -398,7 +403,7 @@ export function DashboardOverviewContent() {
             : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
               : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
                 {dashboardTasks.map((task) => {
-                  const overdue = task.dueDate < todayKey.slice(0, 10); // date-only string comparison
+                  const overdue = task.dueDate < formatMomentDate(today);
                   return <div className="dn-dashboard-task-row" key={task.id}>
                     <div className="dn-dashboard-task-text">
                       <strong>{task.title}</strong>
@@ -413,10 +418,6 @@ export function DashboardOverviewContent() {
           {taskError ? <p role="alert" className="dashboard-activity-action-error">{taskError}</p> : null}
           {taskAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{taskAnnouncement}</p> : null}
         </section> : null}
-
-          </> : null}
-          <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
-        </section>
       </div>
 
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
