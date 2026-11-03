@@ -1098,9 +1098,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   if (appearanceOnly) {
     return <div className="settings-page feature-page dn-settings-appearance">
       <header className="dn-appearance-intro">
-        <Link to="/settings" className="dn-appearance-back">
-          <ChevronRight size={16} aria-hidden="true" style={{ transform: 'rotate(180deg)' }} /> Settings
-        </Link>
         <span className="dn-appearance-eyebrow">Personalize your space</span>
         <h2>Appearance & preferences</h2>
         <p>Theme, new-record defaults, and Story/PDF design. Only working options are shown here.</p>
