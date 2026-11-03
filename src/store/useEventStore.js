@@ -18,11 +18,41 @@ import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario
 import { getStoredEventStatus } from '../utils/eventStatus';
 import { createEventLoader } from '../utils/eventLoadScope';
 import { recordId } from '../utils/recordIdentity';
+import { activityOwnsLinkedId } from '../utils/activityEntries.js';
+import useTaskStore from './useTaskStore';
 
 const sameEvent = (first, second) => Boolean(
   (first.id && second.id && first.id === second.id)
   || (first.firestoreId && second.firestoreId && first.firestoreId === second.firestoreId)
 );
+
+// Link cleanup is best-effort after successful parent persistence. A Task
+// remains safely stored even when its old Moment/Activity cannot be found;
+ // never roll back a successful Moment deletion because Task storage is full.
+const reconcileGuestTaskLinks = (before, after, isGuest) => {
+  if (!isGuest || !before) return;
+  const momentId = recordId(before.id) || recordId(before.firestoreId);
+  if (!momentId) return;
+  try {
+    if (!after) {
+      useTaskStore.getState().detachParent({ momentId });
+      return;
+    }
+    const earlier = Array.isArray(before.activities) ? before.activities : [];
+    const survivors = Array.isArray(after.activities) ? after.activities : [];
+    const formerIds = earlier.flatMap((activity) => [
+      recordId(activity.id), ...(Array.isArray(activity.mergedActivityIds)
+        ? activity.mergedActivityIds.map(recordId) : []),
+    ]).filter(Boolean);
+    const removedIds = [...new Set(formerIds)].filter((id) =>
+      !survivors.some((activity) => activityOwnsLinkedId(activity, id)));
+    if (removedIds.length) useTaskStore.getState().detachParent({ momentId, activityIds: removedIds });
+  } catch (error) {
+    // Leave all independent Tasks intact and show missing-parent labels until
+    // links can be reviewed; do not treat the completed parent write as failed.
+    console.warn('Standalone Task links were not reconciled after a parent change:', error);
+  }
+};
 
 const syncEventSampleData = (data, events) => {
   const next = { ...data, events,
@@ -120,6 +150,7 @@ const useEventStore = create((set, get) => {
 
   updateEventItem: async (uid, isGuest, event) => {
     const normalizedEvent = { ...event, status: getStoredEventStatus(event) };
+    const previousEvent = get().events.find((item) => sameEvent(item, normalizedEvent));
     const sampleData = getActiveSampleData(uid);
     if (sampleData) {
       const updated = sampleData.events.map((item) => (
@@ -127,12 +158,14 @@ const useEventStore = create((set, get) => {
       ));
       syncEventSampleData(sampleData, updated);
       set({ events: updated, error: null });
+      reconcileGuestTaskLinks(previousEvent, normalizedEvent, isGuest);
       return normalizedEvent;
     }
 
     if (isGuest) {
       const updated = saveGuestEvent(normalizedEvent);
       set({ events: updated });
+      reconcileGuestTaskLinks(previousEvent, normalizedEvent, true);
       return normalizedEvent;
     }
 
@@ -178,6 +211,7 @@ const useEventStore = create((set, get) => {
       const remaining = current.filter((item) => item.id !== eventId && item.firestoreId !== eventId);
       syncEventSampleData(sampleData, remaining);
       set({ events: remaining, error: null });
+      reconcileGuestTaskLinks(event, null, isGuest);
       return;
     }
 
@@ -187,6 +221,7 @@ const useEventStore = create((set, get) => {
     try {
       if (isGuest) {
         removeGuestEvent(eventId);
+        reconcileGuestTaskLinks(event, null, true);
         return;
       }
 
