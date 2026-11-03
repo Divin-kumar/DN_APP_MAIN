@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-313 | Wait for debounced search results before filtered Detail navigation
+- **Targeted evidence:** Run 41579611302 on `177539d` completed the new compact-cover, responsive and navigation group with 33 passed and one failed: the filtered navigation test remained at `/activities` immediately after typing and clicking. The other 10 historical full-suite failures are covered by passing updated assertions. The test was clicking before the search's 160ms debounce visibly settled; its earlier condition did not prove that a filtered result list was ready.
+- **Correction:** Require one visible Activity card after the single-result search and two in-progress cards after setting the status filter, before clicking a result. Keep explicit Detail route, heading and fallback assertions so a genuine navigation or paging regression still fails. Do not modify search/UI implementation or data under an unproven app-defect hypothesis.
+- **Verification:** Re-run the existing opt-in `[verify-220]` scoped suite only; do not repeat the 616-test full gate for this test-readiness correction. Physical iPhone, exact source full-release gate and production publication remain pending. No Guest tour, app version, user data, auth, PDF, or business logic changes; `OldVersion` only, no `main` or deployment.
+
 ## CHG-20261103-312 | Align old full-release cover and filtered paging checks with DN 2.2
 - **Exact source evidence:** Full non-deploying release run on `2db3931` completed 616 Playwright cases: 605 passed, 11 failed. Ten tests used superseded Activity-cover height assertions; one filtered Activity gesture timed out on a missing cover because a no-pager assertion could pass before Detail mounted.
 - **Preserve approved behavior:** Phase 4A mobile photo covers use `clamp(180px, 30svh, 290px)`; mobile empty covers use `clamp(96px, 14svh, 144px)`; desktop empty covers retain `20svh` and the existing min/max. No Activity Detail UI, original files, data, filters, navigation logic or PDF exports are changed.
