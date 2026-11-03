@@ -28,6 +28,24 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     await expect(detail.locator('.dn-content-row').filter({ hasText: 'A continuation written on the next day' })).toContainText('4 Nov 2026');
     await expect(detail.getByRole('heading', { name: 'Entries', exact: true })).toBeVisible();
     await expect(detail.getByRole('heading', { name: 'Attachments', exact: true })).toBeVisible();
+    const attachments = await detail.evaluate((root) => {
+      const title = root.querySelector('.activity-attachments .activity-section-heading h2').getBoundingClientRect();
+      const add = root.querySelector('.activity-attachment-actions [aria-label="Add attachment"]').getBoundingClientRect();
+      return { titleCenter: title.y + title.height / 2, addCenter: add.y + add.height / 2,
+        addWidth: add.width, addRight: add.right, viewport: document.documentElement.clientWidth };
+    });
+    expect(Math.abs(attachments.titleCenter - attachments.addCenter)).toBeLessThan(27);
+    expect(attachments.addWidth).toBeGreaterThanOrEqual(44);
+    expect(attachments.addRight).toBeLessThanOrEqual(attachments.viewport + 1);
+    if (width < 768) {
+      const originalRow = await detail.locator('.dn-content-row.is-untimed').first().evaluate((row) => {
+        const body = row.querySelector('.dn-content-row-body').getBoundingClientRect();
+        const edit = row.querySelector('.dn-content-row-actions').getBoundingClientRect();
+        return { delta: Math.abs(body.y - edit.y), overlap: body.right > edit.left };
+      });
+      expect(originalRow.delta).toBeLessThan(12);
+      expect(originalRow.overlap).toBe(false);
+    }
 
     const geometry = await detail.evaluate((root) => {
       const row = [...root.querySelectorAll('.dn-content-row')].find((node) => node.textContent.includes('Saved afternoon details'));
