@@ -214,8 +214,8 @@ html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashbo
   }
 }
 
-/* Independent Task summary appears after Moments and Activities, without
-   affecting the existing photo-led Dashboard cards. */
+/* Independent Tasks lead the Dashboard, then Moments and Activities.
+   Full-width Task summary keeps the photo-led cards paired on desktop. */
 html[data-theme] .dashboard-compact .dn-dashboard-tasks{grid-column:1/-1}
 html[data-theme] .dn-dashboard-tasks-link{display:inline-flex;align-items:center;min-height:44px;padding:0 7px;color:var(--color-primary);font-size:12px;font-weight:700;text-decoration:none}
 html[data-theme] .dn-dashboard-tasks-rows{display:grid;gap:7px}
