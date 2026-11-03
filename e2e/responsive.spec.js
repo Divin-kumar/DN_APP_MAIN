@@ -44,7 +44,10 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     await expectTextContrast(page.locator('.activity-cover-back, .activity-parent-context, .activity-status-pill'));
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     const frame = await page.locator('.activity-cover').boundingBox();
-    expect(Math.abs(frame.height - Math.max(96, Math.min(height * .2, 220)))).toBeLessThanOrEqual(2);
+    const expectedCoverHeight = width < 768
+      ? Math.max(96, Math.min(height * .14, 144))
+      : Math.max(96, Math.min(height * .2, 220));
+    expect(Math.abs(frame.height - expectedCoverHeight)).toBeLessThanOrEqual(2);
     if (width >= 768) expect(frame.width).toBeGreaterThan(frame.height);
     if (height < 500) expect(frame.height).toBeLessThanOrEqual(Math.max(96, height * .25));
     await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
