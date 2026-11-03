@@ -22,6 +22,7 @@ const LoginPage = lazy(() => import('./pages/LoginPage'));
 const DashboardHome = lazy(() => import('./pages/DashboardHome'));
 const Events = lazy(() => import('./pages/Events'));
 const Activities = lazy(() => import('./pages/Activities'));
+const IndependentTasks = lazy(() => import('./pages/IndependentTasks'));
 const ActivityDetail = lazy(() => import('./features/activities/ActivityDetail'));
 const Insights = lazy(() => import('./pages/Insights'));
 const EventWorkspaceShell = lazy(() => import('./features/events/components/EventWorkspaceShell'));
@@ -158,6 +159,7 @@ export default function App() {
             <Route path="dashboard" element={loadScreen(<DashboardHome />, 'dashboard')} />
             <Route path="events" element={loadScreen(<Events />, 'moments')} />
             <Route path="activities" element={loadScreen(<Activities />, 'activities')} />
+            <Route path="tasks" element={loadScreen(<IndependentTasks />, 'tasks')} />
             <Route path="insights" element={loadScreen(<Insights />, 'insights')} />
 
             {/* Each event has its own workspace and sub-pages for overview, activities, transactions, etc. */}

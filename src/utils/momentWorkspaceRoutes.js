@@ -40,6 +40,7 @@ export const isSameMomentWorkspace = (first, second) => {
 export const getShellPageTitle = (pathname, { momentTitle = '' } = {}) => {
   if (/^\/dashboard\/?$/.test(pathname) || pathname === '/') return 'Dashboard';
   if (/^\/activities\/?$/.test(pathname)) return 'Activities';
+  if (/^\/tasks\/?$/.test(pathname)) return 'Tasks';
   if (/^\/events\/?$/.test(pathname)) return 'Moments';
   if (isActivityDetailRoute(pathname)) return 'Activity Detail';
   if (getMomentWorkspaceKey(pathname)) return momentTitle?.trim() || 'Moment';

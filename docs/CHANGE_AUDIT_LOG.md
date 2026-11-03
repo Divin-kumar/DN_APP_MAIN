@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-331 | DN 2.3 Phase 4B: standalone Guest Task page and draft Refine
+- **Scope:** Add protected `/tasks` with separate Task create/edit/status/cancel/delete interactions, optional date/time and parent links, parent-availability labels, fast search and bottom-sheet Refine for sort, status, priority, due filters and Task-only grouping. Keep one row per Task and no changes to historical Task-type Activities, entries, Story/PDF, original images or finance. Read-only account unavailable screen until deployed cloud Tasks permissions are confirmed.
+- **Safety and testing:** Task mutations use the scoped Guest Task store; cancel/delete request confirmation; selected parents are Moment-qualified and absent links remain intact rather than silently moving. The versioned demo samples already contain Tasks. Browser acceptance and native Safari screenshots remain pending, do not treat authorship or Node lint/build as UI sign-off. No new dock destination, cloud writes, migration, PR, hosting or main write. Phase 4C will connect navigation, + and Dashboard.
+
 ## CHG-20261103-330 | DN 2.3 Phase 4A: isolated Guest Task store and versioned tour examples
 - **Scope:** Introduce a new Task state store with strict Guest/private sample and account isolation; no account Task reads/writes, and no Task writes to Moment/Activity services. Add standalone, linked, untimed, overdue and completed Task samples to the existing public Guest tour, bump its version for explicit owner-driven Refresh demo, and count private Guest Tasks when deciding whether to offer the demo. Extend independent Task sorting with optional title field.
 - **Downstream impacts:** No existing Guest records, Story/PDF, finance, account/cloud, backup parser, original attachments or sample edits are reset or migrated. The UI and Dashboard are subsequent Phase 4 changes. Tests authored for sort and demo data, exact-SHA CI required. No deployment, PR, version bump or main change.
