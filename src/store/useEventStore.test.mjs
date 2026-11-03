@@ -16,8 +16,9 @@ const openStore = async (t) => {
     deleteEvent: unexpected,
     getEventsForUser: async (uid) => { calls.push(['read', uid]); return records.get(uid) || []; },
     getGuestEvents: unexpected,
-    removeGuestEvent: unexpected,
-    saveGuestEvent: unexpected,
+    removeGuestEvent: (id) => { calls.push(['guest-delete', id]); return []; },
+    saveGuestEvent: (event) => { calls.push(['guest-update', event]); return [event]; },
+    detachParent: (parent) => { calls.push(['task-detach', parent]); return 1; },
     updateEvent: (uid, event) => {
       calls.push(['update', uid, event]);
       return new Promise((resolve, reject) => pending.push({ resolve, reject, event }));
@@ -37,12 +38,14 @@ const openStore = async (t) => {
         if (!importer?.replaceAll('\\', '/').endsWith('/src/store/useEventStore.js')) return null;
         if (source === '../services/eventService') return '\0event-store-service';
         if (source === '../dev/sampleData') return '\0event-store-samples';
+        if (source === './useTaskStore') return '\0event-store-tasks';
         return null;
       },
       load(id) {
         const fixture = `globalThis[${JSON.stringify(fixtureKey)}]`;
         if (id === '\0event-store-service') return `export const {createEvent,deleteEvent,getEventsForUser,getGuestEvents,removeGuestEvent,saveGuestEvent,updateEvent}=${fixture};`;
         if (id === '\0event-store-samples') return `export const {getActiveSampleData,saveActiveSampleData}=${fixture}; export const requireActiveSampleData=getActiveSampleData;`;
+        if (id === '\0event-store-tasks') return `export default {getState:()=>({detachParent: (...args)=>${fixture}.detachParent(...args)})};`;
         return null;
       },
     }],
@@ -136,4 +139,38 @@ test('A → B → A invalidates old completion and rollback even when the accoun
     assert.equal(store.getState(), selected);
     assert.equal(store.getState().events[0].name, 'Newly loaded A record');
   }
+});
+
+test('Guest Activity deletion detaches canonical and legacy Task links only after parent write', async (t) => {
+  const { store, calls } = await openStore(t);
+  const moment = { id: 'moment-guest', name: 'Private Guest Moment',
+    activities: [{ id: 'removed', mergedActivityIds: ['legacy-removed'] },
+      { id: 'kept', mergedActivityIds: ['legacy-kept'] }] };
+  store.setState({ events: [moment] });
+  await store.getState().updateEventItem(null, true, { ...moment,
+    activities: [{ id: 'kept', mergedActivityIds: ['legacy-kept'] }] });
+  assert.deepEqual(calls.filter(([action]) => action === 'task-detach'), [
+    ['task-detach', { momentId: 'moment-guest', activityIds: ['removed', 'legacy-removed'] }],
+  ]);
+  assert.equal(calls.findIndex(([action]) => action === 'guest-update') <
+    calls.findIndex(([action]) => action === 'task-detach'), true,
+  'independent Tasks are reconciled only after Moment persistence');
+});
+
+test('Guest Moment deletion detaches links after removal; account updates do not modify Tasks', async (t) => {
+  const { store, calls, original, pending } = await openStore(t);
+  store.setState({ events: [{ id: 'guest-moment', activities: [] }] });
+  await store.getState().deleteEventItem(null, true, 'guest-moment');
+  assert.deepEqual(calls.filter(([action]) => action === 'task-detach'), [
+    ['task-detach', { momentId: 'guest-moment' }],
+  ]);
+  assert.ok(calls.findIndex(([action]) => action === 'guest-delete') <
+    calls.findIndex(([action]) => action === 'task-detach'));
+  await store.getState().loadEvents('owner-a', false);
+  const operation = store.getState().updateEventItem('owner-a', false, { ...original,
+    activities: [] });
+  pending[0].resolve({ ...original, activities: [] });
+  await operation;
+  assert.equal(calls.filter(([action]) => action === 'task-detach').length, 1,
+    'account Activity changes never touch browser-only Guest Tasks');
 });
