@@ -4,6 +4,10 @@
 
 DN organizes Moments, activities, memories, greetings, original attachments and finance for Google accounts and browser-local guests. Current OldVersion release-candidate source is **2.2.0**, retaining the owner’s version commit 159bc23 and the completed DN 2.1 iPhone-first experience. It includes optional times for every editable record date, whole-day filters with saved-time ordering, configurable payment methods, shared Code List choices, matching transaction totals and the contextual navigation, forms, writing and backup surfaces documented in About. It retains optional Activity times introduced in 2.0.2. Browser regression runs set `DN_BROWSER_TEST=1`, which disables Vite file watching and HMR because those tests use a fixed source tree; normal development keeps interactive HMR. This is the current product reference; rules are in [AGENTS.md](../AGENTS.md), commands in [README.md](../README.md), and execution/release evidence in the [change log](CHANGE_AUDIT_LOG.md).
 
+## DN 2.3 Phase 2B friendly filter test modernization (3 November 2026; unreleased)
+
+The existing responsive five-list browser tests now target the new bottom-sheet Refine, its draft result count, and the capped applied chips with +N overflow. No app behavior or persisted record changes occur in this test-only work. Exact-SHA browser execution remains unverified and will be reported separately before phase acceptance. See CHG-20261103-324.
+
 ## DN 2.3 Phase 2B regression transition (3 November 2026; unreleased)
 
 Initial legacy browser assertions for inline filters, separate sort dropdowns, and immediate condition writes have been migrated to the draft-only Refine sheet with explicit Apply. These are authored tests and do not prove runtime browser acceptance; the full exact-SHA release gate remains mandatory. See CHG-20261103-323.

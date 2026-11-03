@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261103-324 | DN 2.3 Phase 2B: update responsive filter regression to compact draft sheet
+- **Scope:** Adapt the five-list mobile-friendly filter tests to Refine as a modal bottom sheet, sort chips and accurate draft result preview. Check that choosing fields, comparisons, search, values and long phone filter rows does not prematurely apply; only Show results commits. Rewrite the eight-active-filter test for two inline applied chips plus +N access to all eight rules, with independent chip edit/removal and persistence after reload.
+- **Safety:** Synthetic Guest data only, unchanged production code or CSS, no account records, schema, service, PDF or Story change. The browser assertions have been authored but not yet executed. The full suite and Safari/iPhone acceptance are reserved for the phase gate; no deployments, PRs, merges or main writes.
+
 ## CHG-20261103-323 | DN 2.3 Phase 2B: adapt high-value regression cases to draft-only Refine
 - **Scope:** Update preexisting synthetic Playwright assertions for the shared bottom-sheet rather than an inline list panel. Cover single-row mobile rule geometry, compact selected sort chips, saved Settings route, draft-only Apply semantics, maximum two applied chips plus overflow and unchanged Guest/account record boundaries. Refresh legacy filter integration tests so Clear All and text/range changes only affect visible results after Show results.
 - **Boundary:** Test and documentation maintenance only. No application data, business logic, UI CSS, Firebase, Guest tour, PDF, Story, backup or app version change. Broader browser cases can still need exact-SHA acceptance; changed tests are authored, not claimed passing. No merge, PR, deployment or main write.

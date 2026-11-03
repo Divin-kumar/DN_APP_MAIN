@@ -58,8 +58,8 @@ async function assertReadableRule(page, row) {
   expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
   expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
   expect((await row.boundingBox()).height).toBeLessThanOrEqual(62);
-  const panel = await page.locator('.dn-list-controls-panel').boundingBox();
-  expect(panel.height).toBeLessThanOrEqual(Math.min(480, page.viewportSize().height * .62));
+  const panel = await page.locator('.dn-refine-sheet').boundingBox();
+  expect(panel.height).toBeLessThanOrEqual(Math.min(800, page.viewportSize().height * .9));
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
 }
 
@@ -104,7 +104,7 @@ for (const width of [320, 390]) {
           await page.getByRole('option', { name: label, exact: true }).click();
           await expect(page.getByRole('combobox', { name: `Value for ${consumer.linked}`, exact: true })).toContainText(label);
           await assertReadableRule(page, row);
-          await expect(page.locator('.dn-condition-chip')).toContainText(label);
+          await expect(page.getByRole('dialog').getByRole('status')).toBeVisible(); // Draft count, no applied chip yet.
         }
 
         await select(page, 'Filter by', consumer.date);
@@ -135,6 +135,7 @@ test('friendly status and transaction type choices use readable labels while sto
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
   await select(page, 'Filter by', 'Status');
   await select(page, 'Value for Status', 'In progress');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.locator('.event-activity-card')).toHaveCount(2);
   await expect(page.locator('.dn-condition-chip')).toContainText('In progress');
   const storedStatus = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_list_state_guest_conditions%3Aactivities')).group.children[0].value);
@@ -145,6 +146,7 @@ test('friendly status and transaction type choices use readable labels while sto
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
   await select(page, 'Filter by', 'Type');
   await select(page, 'Value for Type', 'Expense');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.locator('.dn-transaction-copy strong', { hasText: 'Trip fund' })).toHaveCount(0);
   await expect(page.locator('.dn-condition-chip')).toContainText('Expense');
   const storedType = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_list_state_guest_conditions%3Atransactions')).group.children[0].value);
@@ -192,12 +194,14 @@ for (const inputMode of ['mouse', 'touch']) {
           await press(page.getByRole('option', { name: 'Is', exact: true }));
           await press(page.getByRole('combobox', { name: `Value for ${choice}`, exact: true }));
           await noTextFocus(page);
-          await expect(page.locator('.dn-list-controls-panel')).toBeVisible();
+          const sheet = page.locator('.dn-refine-sheet');
+          await expect(sheet).toBeVisible();
           await press(page.getByRole('option').first());
-          const sort = page.locator('.dn-list-controls-sort-row').getByRole('combobox');
-          await press(sort);
+          const options = sheet.locator('.dn-refine-sort-chips > button');
+          await expect(options.first()).toBeVisible();
+          await press(options.nth(1));
           await noTextFocus(page);
-          await press(page.getByRole('option').first());
+          await press(options.first());
           await noTextFocus(page);
           await expect(page.getByRole('button', { name: /Save filter|Add filter group/ })).toHaveCount(0);
           await expect(page.getByRole('tab', { name: /Saved|Recent|Favorites/ })).toHaveCount(0);
@@ -223,26 +227,29 @@ for (const inputMode of ['mouse', 'touch']) {
       await search.fill('Extra plan 17');
       await page.keyboard.press('Enter');
       await expect(value).toContainText('Extra plan 17');
-      await expect(page.locator('.event-activity-card')).toHaveCount(1);
+      await expect(page.getByRole('dialog').getByRole('status')).toContainText('1 matching activities');
+      // Still a draft: visible cards cannot update until the action is committed.
       await value.focus(); await page.keyboard.press('Space');
       await page.keyboard.type('Extra plan 18'); await page.keyboard.press('Backspace');
       await page.keyboard.type('8'); await page.keyboard.press('Enter');
       await expect(value).toContainText('Extra plan 18');
       await expect(value).toBeFocused();
+      await page.getByRole('button', { name: 'Show results', exact: true }).click();
+      await expect(page.locator('.event-activity-card')).toHaveCount(1);
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
       expect(errors).toEqual([]);
     });
   });
 }
 
-test('many phone filters stay inside a short scrollable panel with its final actions reachable', async ({ page }) => {
+test('many phone filters stay inside a scrollable bottom sheet with its final actions reachable', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await seedGuest(page); await page.goto('/financials');
   await page.getByRole('button', { name: /^Filters/ }).click();
   const add = page.getByRole('button', { name: 'Add filter', exact: true });
   for (let index = 0; index < 12; index += 1) await add.click();
-  const panel = page.locator('.dn-list-controls-panel');
-  expect((await panel.boundingBox()).height).toBeLessThanOrEqual(640 * .62);
+  const panel = page.locator('.dn-refine-sheet');
+  expect((await panel.boundingBox()).height).toBeLessThanOrEqual(640 * .9);
   await expect(page.locator('.dn-condition-rule')).toHaveCount(12);
   await page.locator('.dn-condition-rule').last().getByRole('button', { name: 'Remove filter', exact: true }).click();
   await expect(page.locator('.dn-condition-rule')).toHaveCount(11);
@@ -275,8 +282,8 @@ for (const width of [320, 390, 768, 1440]) {
     await expect.poll(()=>stack.evaluate(e=>e.scrollTop)).toBeLessThan(metrics.top);
     await expect(page.getByRole('button',{name:'Previous filter conditions'})).toHaveCount(0);
     await expect(page.getByRole('button',{name:'Next filter conditions'})).toHaveCount(0);
-    const panel=page.locator('.dn-list-controls-panel');
-    if(width<=390)expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740*.62);
+    const panel=page.locator('.dn-refine-sheet');
+    if(width<=390)expect((await panel.boundingBox()).height).toBeLessThanOrEqual(740*.9);
     await page.locator('.dn-condition-rule').last().getByRole('button',{name:'Remove filter',exact:true}).click();
     await expect(page.locator('.dn-condition-rule')).toHaveCount(5);
     await page.getByRole('button',{name:'Clear all',exact:true}).click();await expect(stack).toHaveCount(0);
@@ -285,49 +292,50 @@ for (const width of [320, 390, 768, 1440]) {
 }
 
 for (const width of [320, 390, 1280]) {
-test(`applied filters stay side by side with horizontal scrolling and independent removal at ${width}px`, async ({ page }) => {
-  await page.setViewportSize({ width, height: 740 });
-  const errors = await seedGuest(page);
-  await page.addInitScript(() => {
-    if (localStorage.getItem('dn_e2e_applied_filter_seeded')) return;
-    const group = { id: 'root', kind: 'group', join: 'AND', children: Array.from({ length: 8 }, (_, index) => ({
-      id: `existing-${index}`, kind: 'rule', field: 'name', operator: 'contains',
-      value: `Detailed saved condition ${index} with a long name that must remain fully readable even in a narrow filter column. `.repeat(3),
-    })) };
-    localStorage.setItem('dn_list_state_guest_conditions%3Atransactions', JSON.stringify({ group, migrationVersion: 1 }));
-    localStorage.setItem('dn_e2e_applied_filter_seeded', 'true');
+  test(`applied filters stay compact with +N access, independent editing and removal at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 740 });
+    const errors = await seedGuest(page);
+    await page.addInitScript(() => {
+      if (localStorage.getItem('dn_e2e_applied_filter_seeded')) return;
+      const group = { id: 'root', kind: 'group', join: 'AND', children: Array.from({ length: 8 }, (_, index) => ({
+        id: `existing-${index}`, kind: 'rule', field: 'name', operator: 'contains',
+        value: `Detailed saved condition ${index} with a long name that must remain readable. `.repeat(3),
+      })) };
+      localStorage.setItem('dn_list_state_guest_conditions%3Atransactions', JSON.stringify({ group, migrationVersion: 1 }));
+      localStorage.setItem('dn_e2e_applied_filter_seeded', 'true');
+    });
+    await page.goto('/financials');
+    const original = await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)));
+    const chips = page.getByRole('region', { name: 'Active filters' });
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
+    const overflow = page.getByRole('button', { name: 'Show 6 more active filters' });
+    await expect(overflow).toBeVisible();
+    const measurements = await chips.evaluate((element) => ({
+      tops: [...element.children].map((chip) => chip.getBoundingClientRect().top),
+      height: element.getBoundingClientRect().height,
+    }));
+    expect(Math.max(...measurements.tops) - Math.min(...measurements.tops)).toBeLessThanOrEqual(1);
+    expect(measurements.height).toBeLessThanOrEqual(56);
+    await overflow.click();
+    const refine = page.getByRole('dialog', { name: 'Transaction filters' });
+    await expect(refine.locator('.dn-condition-rule')).toHaveCount(8);
+    await refine.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(refine).toHaveCount(0);
+
+    const first = chips.locator('.dn-condition-chip').first();
+    await first.getByRole('button', { name: 'Change Title filter', exact: true }).click();
+    const editor = page.getByRole('dialog', { name: 'Change Title filter', exact: true });
+    await expect(editor.getByRole('textbox', { name: 'Value for Title', exact: true })).toHaveValue(/Detailed saved condition 0/);
+    await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
+    await chips.locator('.dn-condition-chip').last().getByRole('button', { name: /^Remove filter/ }).click();
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
+    await expect(page.getByRole('button', { name: 'Show 5 more active filters' })).toBeVisible();
+    await page.reload();
+    await expect(page.locator('.dn-condition-chip')).toHaveCount(2);
+    await expect(page.getByRole('button', { name: 'Show 5 more active filters' })).toBeVisible();
+    expect(await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)))).toEqual(original);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
   });
-  await page.goto('/financials');
-  const chips = page.getByRole('region', { name: 'Active filters' });
-  await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
-  const measurements = await chips.evaluate(element => ({
-    scrollWidth:element.scrollWidth,clientWidth:element.clientWidth,
-    tops:[...element.children].map(chip=>chip.getBoundingClientRect().top),height:element.getBoundingClientRect().height,
-  }));
-  expect(measurements.scrollWidth).toBeGreaterThan(measurements.clientWidth);
-  expect(Math.max(...measurements.tops)-Math.min(...measurements.tops)).toBeLessThanOrEqual(1);
-  expect(measurements.height).toBeLessThanOrEqual(56);
-  await chips.focus();await page.keyboard.press('ArrowRight');
-  await expect.poll(()=>chips.evaluate(e=>e.scrollLeft)).toBeGreaterThan(0);
-  await chips.evaluate(e=>e.scrollLeft=0);
-  const first=chips.locator('.dn-condition-chip').first();
-  await first.getByRole('button',{name:'Change Title filter',exact:true}).focus();await page.keyboard.press('ArrowRight');
-  await expect.poll(()=>chips.evaluate(e=>e.scrollLeft)).toBeGreaterThan(0);
-  await first.getByRole('button',{name:'Change Title filter',exact:true}).click();
-  await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
-  const editor=page.getByRole('dialog',{name:'Change Title filter',exact:true});await expect(editor).toBeVisible();
-  await expect(editor.getByRole('textbox',{name:'Value for Title',exact:true})).toHaveValue(/Detailed saved condition 0/);
-  await editor.getByRole('button',{name:'Cancel',exact:true}).click();
-  await chips.locator('.dn-condition-chip').last().getByRole('button', {name:/^Remove filter/}).click();
-  await expect(chips.locator('.dn-condition-chip')).toHaveCount(7);
-  const scrollbars=await page.evaluate(() => [document.documentElement,...document.querySelectorAll('*')].filter(element=>
-    element===document.documentElement || /auto|scroll/.test(`${getComputedStyle(element).overflowX} ${getComputedStyle(element).overflowY}`))
-    .map(element=>({standard:getComputedStyle(element).scrollbarWidth,webkit:getComputedStyle(element,'::-webkit-scrollbar').display})));
-  expect(scrollbars.length).toBeGreaterThan(1);
-  for(const bar of scrollbars){expect(bar.standard).toBe('none');expect(bar.webkit).toBe('none');}
-  await page.reload();
-  await expect(page.locator('.dn-condition-chip')).toHaveCount(7);
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
-  expect(errors).toEqual([]);
-});
 }
