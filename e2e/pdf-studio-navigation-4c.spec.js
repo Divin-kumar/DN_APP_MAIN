@@ -32,11 +32,19 @@ test('optional Activity page boundaries apply to Journal, Diary and Tasks withou
           const canvasPages = new WeakMap();
           let created = 0;
           const position = {};
+          const continuations = [];
+          let currentTitle = '';
           CanvasRenderingContext2D.prototype.fillText = function (value, ...args) {
             if (!canvasPages.has(this.canvas)) canvasPages.set(this.canvas, ++created);
             const string = String(value);
             for (const title of ['Alpha memory', 'Beta memory', 'Gamma memory']) {
-              if (string.startsWith(title)) position[title] = canvasPages.get(this.canvas);
+              if (string.startsWith(title)) {
+                position[title] = canvasPages.get(this.canvas);
+                currentTitle = title;
+              }
+            }
+            if (string.startsWith('Continuation belongs')) {
+              continuations.push({ activity: currentTitle, page: canvasPages.get(this.canvas) });
             }
             return fillText.call(this, value, ...args);
           };
@@ -46,7 +54,7 @@ test('optional Activity page boundaries apply to Journal, Diary and Tasks withou
             pageBreakBetweenActivities,
           });
           report.push({ template, pageBreakBetweenActivities, physicalPages: pdf.pages.length,
-            positions: position, renderedBytes: pdf.blob.size });
+            positions: position, continuations, renderedBytes: pdf.blob.size });
         }
       }
     } finally {
@@ -62,6 +70,10 @@ test('optional Activity page boundaries apply to Journal, Diary and Tasks withou
     expect(positions[0]).toBeLessThan(positions[1]);
     expect(positions[1]).toBeLessThan(positions[2]);
     expect(separate.physicalPages).toBeGreaterThanOrEqual(3);
+    expect(separate.continuations).toHaveLength(3);
+    for (const part of separate.continuations) {
+      expect(part.page).toBe(separate.positions[part.activity]);
+    }
     expect(separate.physicalPages).toBeGreaterThanOrEqual(normal.physicalPages);
     expect(separate.renderedBytes).toBeGreaterThan(2000);
     expect(normal.renderedBytes).toBeGreaterThan(2000);
@@ -80,8 +92,12 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     const download = studio.getByRole('button', { name: 'Download customized PDF' });
     await expect(download).toBeEnabled({ timeout: 30000 });
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-    await expect(studio.getByRole('checkbox', { name: 'Start each Activity on a new PDF page' })).not.toBeChecked();
-    await studio.getByRole('checkbox', { name: 'Start each Activity on a new PDF page' }).check();
+    const activityLayout = studio.getByRole('radiogroup', { name: 'Activity page layout' });
+    const newPage = activityLayout.getByRole('radio', { name: 'Start each Activity on a new PDF page' });
+    const natural = activityLayout.getByRole('radio', { name: 'Continue Activities on the same PDF page' });
+    await expect(natural).toHaveAttribute('aria-checked', 'true');
+    await newPage.click();
+    await expect(newPage).toHaveAttribute('aria-checked', 'true');
     await expect(download).toBeDisabled();
     await studio.getByRole('button', { name: 'Update preview' }).click();
     await expect(download).toBeEnabled({ timeout: 30000 });
