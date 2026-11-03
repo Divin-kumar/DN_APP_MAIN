@@ -346,3 +346,38 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow:focus-visible {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow { transition:none; }
 }
+
+
+/* DN 2.3: saved sort/filter configuration follows the same light Refine
+   language; the three domains are separate typographic sections, not cards. */
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-intro {
+  padding:4px 0 14px !important; border:0 !important;
+  border-radius:0 !important; background:transparent !important; box-shadow:none !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card {
+  padding:11px 0 !important; border:0 !important;
+  border-bottom:1px solid color-mix(in srgb,var(--color-border) 75%,transparent) !important;
+  border-radius:0 !important; background:transparent !important; box-shadow:none !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card .dn-refine-sort-chips > button {
+  border:0 !important; border-bottom:2px solid transparent !important;
+  border-radius:0 !important; background:transparent !important;
+  box-shadow:none !important; color:var(--color-text-muted) !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card .dn-refine-sort-chips > button.is-selected {
+  border-bottom-color:var(--color-primary) !important;
+  color:var(--color-primary) !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-list-filter-expanded {
+  border:0 !important; border-radius:0 !important;
+  background:transparent !important; box-shadow:none !important;
+  padding:10px 0 !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-list-filter-switches > button {
+  border:0 !important; border-bottom:2px solid transparent !important;
+  border-radius:0 !important; background:transparent !important;
+  box-shadow:none !important; color:var(--color-text-muted);
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-list-filter-switches > button.is-active {
+  border-bottom-color:var(--color-primary) !important; color:var(--color-primary);
+}
