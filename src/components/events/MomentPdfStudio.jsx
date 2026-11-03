@@ -41,6 +41,7 @@ export default function MomentPdfStudio({ event }) {
   const [error, setError] = useState('');
   const [preview, setPreview] = useState(null);
   const [pageIndex, setPageIndex] = useState(0);
+  const [pageJump, setPageJump] = useState('1');
   const [thumbsOpen, setThumbsOpen] = useState(false);
   const [zoomIndex, setZoomIndex] = useState(0);
   const requestRef = useRef(0);
@@ -49,6 +50,7 @@ export default function MomentPdfStudio({ event }) {
   const customizedRef = useRef(false);
   const styleOverrideRef = useRef(false);
   const dialogRef = useRef(null);
+  const thumbnailRef = useRef(null);
 
   const renderPreview = useCallback(async (next) => {
     const id = ++requestRef.current;
@@ -70,6 +72,7 @@ export default function MomentPdfStudio({ event }) {
         scope: result.scope, options: result.options,
       });
       setPageIndex(0);
+      setPageJump('1');
       setDirty(false);
       old.forEach((url) => URL.revokeObjectURL(url));
     } catch (renderError) {
@@ -135,9 +138,32 @@ export default function MomentPdfStudio({ event }) {
   };
 
   const zoom = zoomSteps[zoomIndex];
-  const goToPage = (index) => setPageIndex(Math.max(0, Math.min((preview?.pageUrls.length || 1) - 1, index)));
+  const goToPage = (index) => {
+    const next = Math.max(0, Math.min((preview?.pageUrls.length || 1) - 1, index));
+    setPageIndex(next);
+    setPageJump(String(next + 1));
+  };
+  const jumpToPage = (event) => {
+    event.preventDefault();
+    const target = Number(pageJump);
+    if (Number.isSafeInteger(target) && target >= 1 && target <= (preview?.pageUrls.length || 0)) {
+      goToPage(target - 1);
+    } else {
+      setPageJump(String(pageIndex + 1));
+    }
+  };
   const thumbnailPages = useMemo(() => windowOfPages(preview?.pageUrls.length || 0, pageIndex),
     [preview?.pageUrls.length, pageIndex]);
+  useEffect(() => {
+    if (!thumbsOpen || !thumbnailRef.current) return;
+    const row = thumbnailRef.current;
+    const selected = row.querySelector('[aria-current="page"]');
+    if (selected) {
+      const item = selected.getBoundingClientRect();
+      const viewport = row.getBoundingClientRect();
+      row.scrollLeft += (item.left + item.width / 2) - (viewport.left + viewport.width / 2);
+    }
+  }, [thumbsOpen, pageIndex, thumbnailPages]);
   const changeZoom = (direction) => setZoomIndex((current) =>
     Math.max(0, Math.min(zoomSteps.length - 1, current + direction)));
 
@@ -152,7 +178,15 @@ export default function MomentPdfStudio({ event }) {
       aria-label={full ? 'Previous fullscreen page' : 'Previous PDF page'}>
       <ChevronLeft size={18} aria-hidden="true" />
     </button>
-    <span>Page {pageIndex + 1} of {preview?.pageUrls.length || 0}</span>
+    <form className="dn-pdf-page-jump" onSubmit={jumpToPage}>
+      <label>Page <input type="number" inputMode="numeric" min="1"
+        max={preview?.pageUrls.length || 1} value={pageJump}
+        aria-label={full ? 'Jump to fullscreen PDF page' : 'Jump to PDF page'}
+        onChange={(event) => setPageJump(event.target.value)} /></label>
+      <span>of {preview?.pageUrls.length || 0}</span>
+      <button type="submit" aria-label={full ? 'Go to fullscreen PDF page' : 'Go to PDF page'}
+        disabled={!preview}>Go</button>
+    </form>
     <button type="button" disabled={!preview || pageIndex >= preview.pageUrls.length - 1}
       onClick={() => goToPage(pageIndex + 1)}
       aria-label={full ? 'Next fullscreen page' : 'Next PDF page'}>
@@ -203,7 +237,17 @@ export default function MomentPdfStudio({ event }) {
             </div>
           </div>
           {controls()}
-          {thumbsOpen ? <nav className="dn-pdf-page-thumbnails" aria-label="PDF page thumbnails">
+          {thumbsOpen ? <div className="dn-pdf-thumbnail-browser">
+            <div className="dn-pdf-thumbnail-tools">
+              <button type="button" onClick={() => goToPage(0)} disabled={pageIndex === 0}
+                aria-label="Go to first PDF page">First</button>
+              <span>Pages {thumbnailPages[0] + 1}–{thumbnailPages[thumbnailPages.length - 1] + 1}
+                {' of '}{preview.pageUrls.length}</span>
+              <button type="button" onClick={() => goToPage(preview.pageUrls.length - 1)}
+                disabled={pageIndex === preview.pageUrls.length - 1}
+                aria-label="Go to last PDF page">Last</button>
+            </div>
+            <nav ref={thumbnailRef} className="dn-pdf-page-thumbnails" aria-label="PDF page thumbnails">
             {thumbnailPages.map((index) => <button type="button" key={index}
               aria-label={'Go to PDF page ' + (index + 1)}
               aria-current={index === pageIndex ? 'page' : undefined}
@@ -211,7 +255,8 @@ export default function MomentPdfStudio({ event }) {
               <img src={preview.pageUrls[index]} loading="lazy" alt="" />
               <span>{index + 1}</span>
             </button>)}
-          </nav> : null}
+            </nav>
+          </div> : null}
         </> : null}
         {!preview && !busy && !error ? <p className="dn-pdf-studio-loading">Choose Update preview to render your PDF.</p> : null}
         <div className="dn-pdf-studio-footer">
@@ -302,6 +347,18 @@ export default function MomentPdfStudio({ event }) {
               <small>Turn off to begin with page 1 after the cover.</small></span>
           </label> : null}
           <p>Changes appear on the actual PDF pages after Update preview. Existing PDFs are unchanged.</p>
+        </fieldset>
+        <fieldset className="dn-pdf-pagination-option" disabled={busy}>
+          <legend>Activity pagination</legend>
+          <label className="dn-pdf-studio-toggle">
+            <input type="checkbox" checked={settings.pageBreakBetweenActivities}
+              aria-label="Start each Activity on a new PDF page"
+              onChange={(event) => update('pageBreakBetweenActivities', event.target.checked)} />
+            <span><strong>Start each Activity on a new page</strong>
+              <small>Optional chapter-like spacing for all three formats.
+                Each Activity remains intact, but the book may use more pages.
+                For long books or Print draft, keep this off.</small></span>
+          </label>
         </fieldset>
         <fieldset className="dn-pdf-searchable-option">
           <legend>PDF text</legend>

@@ -53,6 +53,26 @@ jobs:
           npx playwright test
           e2e/pdf-studio-controls-4c.spec.js
           --workers=1
+      - name: Check long-book Activity pagination and page navigation
+        run: >-
+          npx playwright test
+          e2e/pdf-studio-navigation-4c.spec.js
+          --workers=1
+      - name: Capture cross-page synthetic UI evidence and overflow checks
+        run: >-
+          npx playwright test
+          e2e/phase4c-screen-capture.spec.js
+          --workers=1
+      - name: Preserve cross-page UI screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-220-phase4c-cross-page-screens
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
       - name: Check PDF Studio style, searchable download and high-resolution export
         run: >-
           npx playwright test

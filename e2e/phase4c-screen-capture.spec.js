@@ -1,0 +1,50 @@
+import { test, expect } from '@playwright/test';
+import { seedGuest } from './fixtures.js';
+
+// Automated viewport/screenshot evidence, not a manual audit or native Safari.
+const screens = [
+  ['01-dashboard', '/dashboard', 'Dashboard'],
+  ['02-moments', '/events', 'Moments'],
+  ['03-activities', '/activities', 'Activities'],
+  ['04-activity-detail', '/events/moment-one/activities/shared', 'Book a lakeside stay'],
+  ['05-story', '/events/moment-one/story', null],
+  ['06-pdf-studio', '/events/moment-one/pdf', null],
+  ['07-settings', '/settings', 'Settings'],
+  ['08-data-backup', '/settings/data-backup', 'Data & Backup'],
+  ['09-code-lists', '/settings/code-lists', null],
+  ['10-about', '/settings/about', null],
+];
+for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) {
+  test(`capture 4C UI surfaces and check overflow at ${width}px ${theme}`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/dashboard');
+    const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+    for (const [name, route, heading] of screens) {
+      await page.goto(route);
+      await expect(page.locator('main')).toBeVisible();
+      if (heading) await expect(page.getByRole('heading', { name: heading, exact: true }).first()).toBeVisible();
+      if (name === '06-pdf-studio') await expect(page.locator('.dn-pdf-preview-page img')).toBeVisible({ timeout: 30000 });
+      const dimensions = await page.evaluate(() => ({
+        doc: document.documentElement.scrollWidth,
+        viewport: document.documentElement.clientWidth,
+      }));
+      expect(dimensions.doc, `${route} width overflow`).toBeLessThanOrEqual(dimensions.viewport + 1);
+      await page.screenshot({ path: testInfo.outputPath(`${name}-${theme}-${width}.png`),
+        fullPage: false, animations: 'disabled' });
+    }
+    // Settings accordion, PDF controls and an accessible dialog are also
+    // captured, without calling destructive controls or mutating records.
+    await page.goto('/settings');
+    await page.getByRole('button', { name: /Appearance & preferences/ }).click();
+    await page.screenshot({ path: testInfo.outputPath(`11-preferences-${theme}-${width}.png`),
+      fullPage: false, animations: 'disabled' });
+    await page.goto('/events/moment-one/pdf');
+    await expect(page.locator('.dn-pdf-preview-page img')).toBeVisible({ timeout: 30000 });
+    await page.locator('.dn-pdf-studio-controls').scrollIntoViewIfNeeded();
+    await page.screenshot({ path: testInfo.outputPath(`12-pdf-customization-${theme}-${width}.png`),
+      fullPage: false, animations: 'disabled' });
+    expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+    expect(errors).toEqual([]);
+  });
+}

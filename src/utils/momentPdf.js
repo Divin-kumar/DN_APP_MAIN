@@ -122,6 +122,14 @@ export class MomentPdfPainter {
     this.canvas.width = 0;
     this.canvas.height = 0;
   }
+  async startActivityPage() {
+    // Never create a wholly blank page after normal overflow has already
+    // opened the next one. The current page still owns all its existing text.
+    if (this.y <= INSET) return false;
+    await this.finishPage();
+    this.begin();
+    return true;
+  }
   async ensure(height) {
     if (this.y + height <= BOTTOM) return;
     await this.finishPage();
@@ -460,6 +468,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       photoCount: photos.length });
   };
 
+  let renderedActivityCount = 0;
   if (template === 'journey') {
     const remainingKeepsakes = story.keepsakes.filter((item) => item !== drawnCoverHero);
     if (remainingKeepsakes.length) {
@@ -472,18 +481,26 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     }
     for (const month of story.timeline) for (const day of month.days) {
       const first = day.entries[0];
+      if (!first) continue;
+      if (options.pageBreakBetweenActivities && renderedActivityCount) await pdf.startActivityPage();
       await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
       for (const entry of day.entries) {
-        // A new chapter must not leave its date/title at the page bottom.
-        // If a second same-day entry moves to a new page, repeat its real date.
         if (entry !== first) {
-          const oldPage = pdf.pageNumber;
-          await pdf.ensure(110);
-          if (pdf.pageNumber !== oldPage) {
+          if (options.pageBreakBetweenActivities) {
+            await pdf.startActivityPage();
+            // Repeat the real date for each new memory page, never a fake
+            // Activity/Entry heading or a new parent date.
             await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
+          } else {
+            const oldPage = pdf.pageNumber;
+            await pdf.ensure(110);
+            if (pdf.pageNumber !== oldPage) {
+              await pdf.heading(studioDate(day.date), { keepWithNext: 110 });
+            }
           }
         }
         await renderJournalEntry(entry);
+        renderedActivityCount += 1;
       }
     }
   } else if (template === 'diary') {
@@ -491,32 +508,47 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
       ? new Date(story.momentDate + 'T12:00:00').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })
       : 'Monthly entries');
     for (const day of story.timeline.flatMap((month) => month.days)) {
-      await pdf.ensure(74);
-      await pdf.text(studioDate(day.date), { size: 10, bold: true, color: palette.accent, after: 12 });
+      let firstOfDay = true;
       for (const entry of day.entries) {
+        if (options.pageBreakBetweenActivities && renderedActivityCount) await pdf.startActivityPage();
+        if (firstOfDay || options.pageBreakBetweenActivities) {
+          await pdf.ensure(74);
+          await pdf.text(studioDate(day.date), { size: 10, bold: true, color: palette.accent, after: 12 });
+        }
         await pdf.text(studioText(entry.title || 'Untitled activity') + (entry.displayTime ? `  |  ${entry.displayTime}` : ''), { size: 15, bold: true, after: 8 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 12, leading: 1.7, after: 20 });
         await renderContinuedWriting(entry, { size: 11.5, leading: 1.7 });
+        firstOfDay = false;
+        renderedActivityCount += 1;
       }
     }
   } else {
     for (const group of pdfStudioTaskSections(groupMomentStoryTasks(story), options)) {
-      await pdf.heading(group.status === 'in-progress' ? 'In progress' : group.status === 'completed' ? 'Completed' : 'Cancelled');
+      const groupLabel = group.status === 'in-progress' ? 'In progress'
+        : group.status === 'completed' ? 'Completed' : 'Cancelled';
+      if (!options.pageBreakBetweenActivities || !group.entries.length) await pdf.heading(groupLabel);
       if (!group.entries.length) await pdf.text('No tasks in this section.', { size: 11, color: palette.muted });
       for (const entry of group.entries) {
+        if (options.pageBreakBetweenActivities && renderedActivityCount) await pdf.startActivityPage();
+        if (options.pageBreakBetweenActivities) await pdf.heading(groupLabel);
         await pdf.ensure(43);
         await pdf.text(studioText(entry.title || 'Untitled task'), { size: 12, bold: true, after: 3 });
         const when = (entry.date ? studioDate(entry.date) : 'No date') + (entry.displayTime ? '  ' + entry.displayTime : '');
         await pdf.text(when, { size: 9, color: palette.muted, after: 5 });
         if (entry.description) await pdf.text(studioText(entry.description), { size: 10.5, after: 12 });
         await renderContinuedWriting(entry, { size: 10.5, leading: 1.55 });
+        renderedActivityCount += 1;
       }
     }
   }
   if (template !== 'chronicle') {
     if (options.includeUpcoming && story.upcoming.length) {
-      await pdf.heading('Upcoming');
+      if (!options.pageBreakBetweenActivities) await pdf.heading('Upcoming');
       for (const entry of story.upcoming) {
+        if (options.pageBreakBetweenActivities) {
+          if (renderedActivityCount) await pdf.startActivityPage();
+          await pdf.heading('Upcoming');
+        }
         if (template === 'journey') {
           await pdf.ensure(74);
           await renderJournalEntry(entry, { section: 'upcoming',
@@ -526,11 +558,16 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
           await renderContinuedWriting(entry, { size: 11, leading: 1.6 });
         }
+        renderedActivityCount += 1;
       }
     }
     if (story.undated.length) {
-      await pdf.heading('Without a recorded date');
+      if (!options.pageBreakBetweenActivities) await pdf.heading('Without a recorded date');
       for (const entry of story.undated) {
+        if (options.pageBreakBetweenActivities) {
+          if (renderedActivityCount) await pdf.startActivityPage();
+          await pdf.heading('Without a recorded date');
+        }
         if (template === 'journey') {
           await pdf.ensure(74);
           await renderJournalEntry(entry, { section: 'undated', datePage: null,
@@ -540,6 +577,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
           if (entry.description) await pdf.text(studioText(entry.description), { size: 11, after: 12 });
           await renderContinuedWriting(entry, { size: 11, leading: 1.6 });
         }
+        renderedActivityCount += 1;
       }
     }
   }

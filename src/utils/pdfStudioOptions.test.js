@@ -78,3 +78,11 @@ test('4C cover numbering can be suppressed without changing physical page identi
   assert.equal(pdfPageNumberLabel(1, { includeCover: false, numberCoverPage: false }), '1');
   assert.equal(pdfPageNumberLabel(0), '');
 });
+
+
+test('4C optional page-per-Activity pagination preserves continuous existing defaults', () => {
+  const unchanged = normalizePdfStudioOptions({});
+  assert.equal(unchanged.pageBreakBetweenActivities, false);
+  assert.equal(normalizePdfStudioOptions({ pageBreakBetweenActivities: true }).pageBreakBetweenActivities, true);
+  assert.equal(normalizePdfStudioOptions({ pageBreakBetweenActivities: 'true' }).pageBreakBetweenActivities, false);
+});

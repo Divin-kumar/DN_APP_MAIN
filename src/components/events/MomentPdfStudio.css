@@ -207,3 +207,60 @@ html[data-theme] .dn-pdf-page-numbers .dn-pdf-number-cover {
 @media(max-width:790px) {
   html[data-theme] .dn-pdf-studio-field .dropdown-trigger {font-size:16px;}
 }
+
+
+/* Phase 4C long-book navigation. Keep page numbers and actions within 320px. */
+html[data-theme] .dn-pdf-page-nav {gap:8px;min-width:0;flex-wrap:wrap;}
+html[data-theme] .dn-pdf-page-jump {
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  min-width:0;color:var(--color-text-muted);font-size:13px;font-variant-numeric:tabular-nums;
+}
+html[data-theme] .dn-pdf-page-jump label {display:flex;align-items:center;gap:5px;min-width:0;}
+html[data-theme] .dn-pdf-page-jump input {
+  width:52px;min-width:0;min-height:44px;padding:4px 5px;text-align:center;
+  border:1px solid var(--color-border);border-radius:9px;
+  background:var(--color-card);color:var(--color-text);
+  font:inherit;font-size:16px;font-variant-numeric:tabular-nums;
+}
+html[data-theme] .dn-pdf-page-jump input:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:2px;
+}
+html[data-theme] .dn-pdf-page-jump input::-webkit-inner-spin-button,
+html[data-theme] .dn-pdf-page-jump input::-webkit-outer-spin-button {
+  -webkit-appearance:none;margin:0;
+}
+html[data-theme] .dn-pdf-page-jump button {
+  width:auto;min-width:44px;height:44px;padding:0 8px;
+  font-size:12px;font-weight:700;
+}
+html[data-theme] .dn-pdf-thumbnail-browser {display:grid;gap:7px;width:100%;min-width:0;}
+html[data-theme] .dn-pdf-thumbnail-tools {
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  color:var(--color-text-muted);font-size:12px;font-variant-numeric:tabular-nums;
+}
+html[data-theme] .dn-pdf-thumbnail-tools button {
+  display:inline-flex;align-items:center;justify-content:center;min-width:55px;
+  min-height:44px;padding:6px 10px;border:1px solid var(--color-border);
+  border-radius:10px;background:var(--color-card);color:var(--color-text);
+  font-size:12px;font-weight:700;cursor:pointer;
+}
+html[data-theme] .dn-pdf-thumbnail-tools button:disabled {opacity:.45;cursor:default;}
+html[data-theme] .dn-pdf-page-thumbnails {scrollbar-width:none;}
+html[data-theme] .dn-pdf-page-thumbnails::-webkit-scrollbar {display:none;}
+html[data-theme] .dn-pdf-page-thumbnails button {min-height:102px;}
+html[data-theme] .dn-pdf-pagination-option {
+  display:grid;gap:6px;min-width:0;margin:0;padding:13px 0 0;
+  border:0;border-top:1px solid var(--color-border);
+}
+html[data-theme] .dn-pdf-pagination-option legend {
+  color:var(--color-text);font-size:13px;font-weight:750;padding:0 0 7px;
+}
+html[data-theme] .dn-pdf-pagination-option .dn-pdf-studio-toggle {
+  min-height:44px;padding:8px 3px;
+}
+@media(max-width:360px) {
+  html[data-theme] .dn-pdf-page-nav {gap:5px;}
+  html[data-theme] .dn-pdf-page-jump {gap:4px;}
+  html[data-theme] .dn-pdf-page-jump input {width:46px;}
+  html[data-theme] .dn-pdf-thumbnail-tools {gap:5px;font-size:11.5px;}
+}
