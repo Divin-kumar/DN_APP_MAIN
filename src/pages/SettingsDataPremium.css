@@ -342,3 +342,16 @@ html[data-theme] .dn-data-page .dn-data-recovery-guide li strong {color:var(--co
   html[data-theme] .dn-data-page .dn-data-location-item > svg {grid-row:1 / span 2;margin-top:1px;}
   html[data-theme] .dn-data-page .dn-data-location-item p {grid-column:2;}
 }
+
+
+/* DN 2.3: show all three Data & Backup section links on narrow phones.
+   This page has only three destinations, so a compact wrap is clearer than
+   hiding the final guide link in a scrollbar-free horizontal rail. */
+@media(max-width:390px) {
+  html[data-theme] .dn-data-page .dn-data-page-jumps {
+    flex-wrap:wrap; overflow:visible; gap:2px 4px; padding-bottom:4px;
+  }
+  html[data-theme] .dn-data-page .dn-data-page-jumps a {
+    min-height:44px; padding-inline:8px; font-size:11px;
+  }
+}
