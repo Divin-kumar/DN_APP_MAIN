@@ -38,3 +38,17 @@ test('a lone image can use a page with 40 percent of its writing height availabl
   assert.equal(hasRoomForSinglePdfPhoto(0, writingHeight), false);
   assert.equal(hasRoomForSinglePdfPhoto(Number.NaN, writingHeight), false);
 });
+
+test('date-based PDF breaks are independent from per-Activity breaks and never rewrite options', () => {
+  const source = { template: 'journey', pageBreakBetweenDays: true };
+  const before = JSON.stringify(source);
+  const journal = normalizePdfStudioOptions(source, 'journey');
+  assert.equal(journal.pageBreakBetweenDays, true);
+  assert.equal(journal.pageBreakBetweenActivities, false);
+  assert.equal(normalizePdfStudioOptions({ template: 'diary', pageBreakBetweenDays: true }).pageBreakBetweenDays, true);
+  assert.equal(normalizePdfStudioOptions({ template: 'chronicle', pageBreakBetweenDays: true }).pageBreakBetweenDays, false);
+  assert.equal(normalizePdfStudioOptions({ pageBreakBetweenDays: true, pageBreakBetweenActivities: true }).pageBreakBetweenDays, false);
+  assert.equal(normalizePdfStudioOptions({ pageBreakBetweenActivities: true }).pageBreakBetweenActivities, true);
+  assert.equal(normalizePdfStudioOptions({}).pageBreakBetweenDays, false);
+  assert.equal(JSON.stringify(source), before);
+});
