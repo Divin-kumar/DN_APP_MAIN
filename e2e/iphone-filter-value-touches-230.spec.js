@@ -45,7 +45,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932], [844, 390]]) 
       text: parseFloat(getComputedStyle(node).fontSize),
     })));
     expect(boxes).toHaveLength(2);
-    expect(boxes.every(box => box.height >= 44 && box.text >= 12)).toBe(true);
+    expect(boxes.every(box => box.height >= 44 && box.text >= 12), JSON.stringify(boxes)).toBe(true);
     await testInfo.attach(`filter-tokens-${width}`, {
       body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
     });

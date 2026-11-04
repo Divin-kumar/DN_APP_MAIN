@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-365 | DN 2.3 restore touch reachability to legacy multi-value Refine
+- **Executed QA findings:** The first synthetic suite had 12/16 passing and four new tests incorrectly attempted to create an Any of comparison that the compact filter editor intentionally no longer offers. After seeding an existing saved multi-value condition, 12/16 passed but four new touch cases exposed a real overlapping-control defect: at 320/390/430px the value-removal button was intercepted by the rule remove icon or dropdown. The short landscape case also failed a target-size assertion. No user records were changed in these synthetic runs.
+- **Correction:** Preserve older supported Any of / None of conditions. On compact portrait and short coarse-pointer landscape, only a rule containing saved multiple values uses an extra unboxed row, keeping its field/comparison and value picker/removable choices separate and its rule remove action outside the hit area. Reinforce 44px touch and 12px label floors. Ordinary rules, their compact UI, engine operators, records, settings and PDF remain unchanged.
+- **Verification:** The focused four-view legacy-filter tests and prior 12 dropdown/Refine cases run again on this exact OldVersion commit; result pending. The standard Node/lint/build/doc gates also rerun. Real Safari/VoiceOver, authenticated Firestore and full release QA remain separate. No production deployment, PR, main write or version change.
+
 ## CHG-20261104-364 | DN 2.3 shared filter value iPhone touch sizing
 - **Source-derived:** Existing selected-value removals in the shared Any of / None of filter builder were 32px high with 11px text. The on-demand Search reveal was 42px high.
 - **Change:** Raise these interactive controls to 44px minimum and selected-value text to 12px, retaining the light underline style without changing filtering, scrolling, persistent state or APIs.
