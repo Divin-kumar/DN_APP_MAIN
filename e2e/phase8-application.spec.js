@@ -60,13 +60,12 @@ test('Notifications is Coming Soon and saving appearance retains all existing no
   await page.goto('/settings');
   await page.evaluate(async (notifications) => (await import('/src/store/useAppStore.js')).default.getState().setPreferences({ notifications }), notifications);
   const before = await savedRecords(page);
-  await page.getByRole('button', { name:/^Notifications/ }).click();
-  const notificationSection = page.locator('.settings-section').filter({ has:page.getByRole('button', { name:/^Notifications/ }) });
-  await expect(notificationSection).toContainText('Coming Soon');
+  const notificationSection = page.getByRole('region', { name: 'Notifications availability' });
+  await expect(notificationSection).toContainText('Coming later');
   await expect(notificationSection.locator('input,select,[aria-pressed]')).toHaveCount(0);
   await expect(notificationSection.getByRole('button', { name:/Save/ })).toHaveCount(0);
-  await page.getByRole('button', { name:/^Appearance & preferences/ }).click();
-  await page.getByRole('button', { name:'Save preferences', exact:true }).click();
+  await page.getByRole('link', { name: 'Open Appearance & preferences' }).click();
+  await page.getByRole('button', { name:'Save defaults', exact:true }).click();
   await page.reload();
   expect(await page.evaluate(async () => (await import('/src/store/useAppStore.js')).default.getState().preferences.notifications)).toEqual(notifications);
   await page.goto('/settings/code-lists');

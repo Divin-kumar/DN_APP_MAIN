@@ -46,7 +46,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       // Return to an unfiltered working list. Search is discovery-only.
       await page.getByRole('button', { name: /Filters and sort/ }).click();
       await page.getByRole('button', { name: 'Clear all', exact: true }).click();
-      await page.getByRole('button', { name: /Filters and sort/ }).click();
+      await page.getByRole('button', { name: 'Show results', exact: true }).click();
       await expect(cards).toHaveCount(3);
       const search = page.getByRole('searchbox', { name: 'Search activities by title' });
       await search.fill('Book a lakeside stay');

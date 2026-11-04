@@ -79,7 +79,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.goto('/events/personal/overview');
   await expect(page.locator('.dn-v2-story')).toHaveAttribute('data-presentation', 'journey');
   await page.goto('/settings/code-lists');
-  await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
+  await page.getByRole('button', { name: 'Personal. Tap to open actions; swipe is optional.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const editor = page.getByRole('dialog', { name: 'Edit moment type' });
   await expect(editor.getByRole('combobox', { name: 'Activity mode (required)' })).toBeVisible();
@@ -91,7 +91,7 @@ test('Moment Type setting switches presentation without modifying any Guest reco
   await page.goto('/events/journal/overview');
   await expect(page.locator('.dn-v2-story')).toHaveAttribute('data-presentation', 'journey');
   await page.goto('/settings/code-lists');
-  await page.getByRole('button', { name: 'Personal. Tap or swipe either direction for actions.', exact: true }).click();
+  await page.getByRole('button', { name: 'Personal. Tap to open actions; swipe is optional.', exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   await expect(page.getByRole('dialog', { name: 'Edit moment type' }).getByRole('combobox', { name: 'Activity mode (required)' })).toContainText('Diary · Independent Activities');
   // Loading old Guest records adds safe defaults and Diary consolidates

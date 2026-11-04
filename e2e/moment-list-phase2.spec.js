@@ -55,11 +55,15 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const bounds = await action.boundingBox();
     const content = await copy.boundingBox();
     const surface = await card.boundingBox();
+    const heading = await card.locator('.dn-v2-moment-heading').first().boundingBox();
+    const headingPadding = await card.locator('.dn-v2-moment-heading').first().evaluate(node => parseFloat(getComputedStyle(node).paddingRight));
     // Browser geometry can differ by a fraction of a CSS pixel (CI 43.99997px).
     // CSS declares a 44px square, so allow only subpixel rasterization.
     expect(bounds.width).toBeGreaterThanOrEqual(43.95);
     expect(bounds.height).toBeGreaterThanOrEqual(43.95);
-    expect(bounds.x).toBeGreaterThanOrEqual(content.x + content.width - 1);
+    // The 44px overflow action overlays only the heading's reserved right padding.
+    expect(headingPadding).toBeGreaterThanOrEqual(43.9);
+    expect(bounds.x).toBeGreaterThanOrEqual(heading.x + heading.width - headingPadding - 3);
     expect(bounds.x + bounds.width).toBeLessThanOrEqual(surface.x + surface.width + 1);
     expect(bounds.y).toBeGreaterThanOrEqual(surface.y);
     expect(bounds.y + bounds.height).toBeLessThanOrEqual(surface.y + surface.height + 1);

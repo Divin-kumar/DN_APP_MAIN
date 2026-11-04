@@ -29,8 +29,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       // Reset restores Settings baseline. A search must also leave the full
       // completion fraction unchanged, and data must not be rewritten.
       await page.getByRole('button', { name: /^Filters and sort/ }).click();
-      await page.locator('.dn-list-controls-action-line').getByRole('button', { name: 'Reset' }).click();
-      await page.getByRole('button', { name: /^Filters and sort/ }).click();
+      await page.locator('.dn-refine-sheet').getByRole('button', { name: 'Reset' }).click();
+      await page.getByRole('button', { name: 'Show results', exact: true }).click();
       await expect(cards).toHaveCount(3);
       await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('Book a lakeside stay');
       await expect(cards).toHaveCount(1);

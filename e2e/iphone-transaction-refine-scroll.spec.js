@@ -4,7 +4,7 @@ import { seedGuest } from './fixtures.js';
 // Chromium geometry regression coverage. Native iPhone Safari still needs a
 // device pass; these checks protect the shared Refine top row and dock clearance.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
-  test('Transactions Refine actions stay at top in one row above the dock at ' + width + 'px', async ({ page }) => {
+  test('Transactions Refine stays readable and applies sorting only when confirmed at ' + width + 'px', async ({ page }) => {
     await page.setViewportSize({ width, height });
     const expenses = Array.from({ length: 24 }, (_, index) => ({
       id: 'refine-expense-' + index,
@@ -41,42 +41,46 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
 
     const refine = page.getByRole('button', { name: /^Filters and sort/ });
     await refine.click();
-    const panel = page.locator('.dn-financial-workspace .dn-list-controls-panel');
-    const actions = panel.locator('.dn-list-controls-action-line');
-    const field = actions.getByRole('combobox', { name: 'Sort transactions field' });
-    const direction = actions.getByRole('button', { name: 'Sort ascending' });
-    const reset = actions.getByRole('button', { name: 'Reset' });
-
-    await expect(actions).toBeVisible();
-    const actionAboveConditions = await panel.evaluate((node) => {
-      const actions = node.querySelector('.dn-list-controls-action-line').getBoundingClientRect();
-      const conditions = node.querySelector('.dn-list-controls-builder').getBoundingClientRect();
-      return actions.bottom <= conditions.top + 1;
+    const sheet = page.locator('.dn-refine-sheet');
+    const sort = sheet.locator('.dn-refine-sort-chips');
+    const footer = sheet.locator('.dn-list-controls-footer');
+    await expect(sheet).toBeVisible();
+    await expect(sort.getByRole('button')).toHaveCount(3);
+    await expect(sheet.getByRole('button', { name: 'Reset', exact: true })).toBeVisible();
+    await expect(footer.getByRole('button', { name: 'Show results' })).toBeVisible();
+    const positions = await sheet.evaluate((root) => {
+      const sort = root.querySelector('.dn-refine-sort-chips').getBoundingClientRect();
+      const conditions = root.querySelectorAll('.dn-refine-sheet-section')[1].getBoundingClientRect();
+      const footer = root.querySelector('.dn-list-controls-footer').getBoundingClientRect();
+      const dialog = root.getBoundingClientRect();
+      return { sortBottom:sort.bottom, conditionsTop:conditions.top, footerBottom:footer.bottom,
+        dialogBottom:dialog.bottom, dialogLeft:dialog.left, dialogRight:dialog.right,
+        pageWidth:document.documentElement.scrollWidth };
     });
-    expect(actionAboveConditions).toBe(true);
-    await expect(field).toBeVisible();
-    await expect(direction).toContainText('Desc');
-    await expect(reset).toBeVisible();
-    const boxes = await Promise.all([field, direction, reset].map((item) => item.boundingBox()));
-    expect(boxes.every(Boolean)).toBe(true);
-    expect(Math.max(...boxes.map((box) => box.y)) - Math.min(...boxes.map((box) => box.y))).toBeLessThanOrEqual(5);
-    expect(boxes[0].x + boxes[0].width).toBeLessThanOrEqual(boxes[1].x + 2);
-    expect(boxes[1].x + boxes[1].width).toBeLessThanOrEqual(boxes[2].x + 2);
-    expect(boxes[2].x + boxes[2].width).toBeLessThanOrEqual(width + 1);
-    expect(boxes.every((box) => box.height >= 43)).toBe(true);
-
-    await direction.click();
-    await expect(actions.getByRole('button', { name: 'Sort descending' })).toContainText('Asc');
-    await expect(page.locator('.dn-list-controls-summary')).toContainText('Oldest first');
-    await reset.click();
-    await expect(actions.getByRole('button', { name: 'Sort ascending' })).toContainText('Desc');
+    expect(positions.sortBottom).toBeLessThanOrEqual(positions.conditionsTop + 1);
+    expect(positions.footerBottom).toBeLessThanOrEqual(positions.dialogBottom + 1);
+    expect(positions.dialogLeft).toBeGreaterThanOrEqual(-1);
+    expect(positions.dialogRight).toBeLessThanOrEqual(width + 1);
+    expect(positions.pageWidth).toBeLessThanOrEqual(width + 1);
+    const selected = sort.locator('button[aria-pressed="true"]');
+    await expect(selected).toHaveAttribute('aria-label', /descending/);
+    await selected.click();
+    await expect(sort.locator('button[aria-pressed="true"]')).toHaveAttribute('aria-label', /ascending/);
+    // Cancel discards the entire draft, including the sort direction.
+    await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(page.locator('.dn-list-controls-summary')).toContainText('Newest first');
-
+    await refine.click();
+    await expect(sheet.locator('button[aria-pressed="true"]')).toHaveAttribute('aria-label', /descending/);
+    await sheet.locator('button[aria-pressed="true"]').click();
+    await sheet.getByRole('button', { name: 'Show results' }).click();
+    await expect(page.locator('.dn-list-controls-summary')).toContainText('Oldest first');
+    await refine.click();
+    await sheet.getByRole('button', { name: 'Reset', exact: true }).click();
+    await sheet.getByRole('button', { name: 'Show results' }).click();
+    await expect(page.locator('.dn-list-controls-summary')).toContainText('Newest first');
     geometry = await measure();
     expect(geometry.listBottom).toBeLessThanOrEqual(geometry.dockTop - 4);
     expect(geometry.documentWidth).toBeLessThanOrEqual(width + 1);
-
-    await refine.click();
     const scrolled = await results.evaluate((node) => {
       const before = node.scrollTop;
       node.scrollTop = node.scrollHeight;

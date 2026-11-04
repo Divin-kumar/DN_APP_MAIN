@@ -37,7 +37,7 @@ test('Moment Transactions waits for scoped finance, keeps the shell on error and
       loadIncomes: async () => { if (window.__dnAllowRetry) income.setState({ incomes: [], loadedFor: 'guest:anonymous', activeLoadKey: 'guest:anonymous', error: null, loading: false }); } });
   });
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
-  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Transactions');
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toContainText('Transactions');
   await expect(page.getByRole('alert')).toContainText('Transactions couldn’t be loaded.');
   await expect(page.getByText('No transactions have been recorded for this Moment.')).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Totals for this Moment' })).toHaveCount(0);
@@ -234,5 +234,5 @@ test('unreadable Guest income shows a focused finance retry while keeping the Mo
   await page.evaluate(() => localStorage.setItem('dn_guest_incomes', '[]'));
   await page.getByRole('button', { name: 'Try again', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Totals for this Moment' })).toContainText('₹120');
-  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Transactions');
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toContainText('Transactions');
 });

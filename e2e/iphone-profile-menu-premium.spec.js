@@ -59,7 +59,7 @@ test('Account menu supports Arrow keys, Home/End and Escape with focus return', 
   await expect(menu).toBeVisible();
   await expect(menu.getByRole('menuitem', { name: 'Profile' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await expect(menu.getByRole('menuitem', { name: 'Transactions' })).toBeFocused();
+  await expect(menu.getByRole('menuitem', { name: 'Tasks' })).toBeFocused();
   await page.keyboard.press('End');
   await expect(menu.getByRole('menuitem', { name: 'Logout' })).toBeFocused();
   await page.keyboard.press('Home');
