@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-360 | DN 2.3 iPhone Tasks Story status controls
+- **Audit:** The existing native Tasks Story status dropdown was visibly small on iPhone (36px touch height, ~11px text), with compact date/continuation text; a general hover highlight could latch on touch. The same control is used to save Activity statuses, so retain native semantics.
+- **Implementation:** At 320–430px and coarse-pointer short landscape, the existing status selector has a minimum 44px hit area, 13px readable text and quiet borderless appearance. Dates/continued writing reach 12–13px. Hover highlights are restricted to fine pointers; keyboard focus remains visible.
+- **Impact:** Only Story CSS and an opt-in focused browser suite change. No Task statuses, saved Activity records, status confirmation, completed restrictions, PDF bytes, attachments, Guest/account boundaries, data migration, backup, dashboard or creation flow is changed. Guest tour examples already exercise this screen, with no new fixture data.
+- **Verification plan:** Four synthetic iPhone portrait/landscape scenarios plus existing status persistence and archived-parent protection cases. Exact-SHA results pending CI; physical Safari/VoiceOver, real account flows and full 2.3 release remain unverified. OldVersion only; no PR, production, main or version update.
+
 ## CHG-20261104-359 | DN 2.3 iPhone PDF Studio exact-SHA acceptance
 - **Executed:** GitHub Actions [41697511716](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41697511716) passed **10/10 synthetic Chromium tests** at application SHA `dfcd2bce8a0c2c1dd37001adc3f0189a9efd8685`. Four new mobile/coarse-pointer cases cover 320/390/430px portrait and 844x390 landscape, 44px touch areas, zoom and full-screen actions, saved-default recovery, no horizontal overflow and unchanged Guest records. Six previous PDF preview/pagination/Settings regression checks also passed.
 - **Executed:** Same-SHA [governance 41697511500](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41697511500) passed Node unit tests, ESLint, production build, blocking dependency checks and documentation contracts.
