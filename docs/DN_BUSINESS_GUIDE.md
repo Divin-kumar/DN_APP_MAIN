@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 Task Refine and Settings follow-up (OldVersion only, unpublished):** Opening Tasks filters now hides unfinished empty rows from older sessions, without losing real saved filters. All six sorting choices stay visible in two balanced rows. List Defaults, Code Lists and Story style choices look lighter, and text is shorter. Explore DN can save PDF/Story style choices separately from your personal Guest settings. Targeted 22/22 Task browser checks and 5/5 demo Story/PDF checks passed; real iPhone testing and final release acceptance remain.
+
+
 **DN 2.3 Guest demo Story/PDF design fix (OldVersion only, unpublished):** The design choices that appeared disabled in Explore DN now work in the demo. They save only to a separate demo preference, never to your personal Guest/account styles; personal backups omit demo appearance. Story and PDF Studio can use the saved demo style. Test execution is pending; native iPhone and release acceptance remain separate.
 
 
