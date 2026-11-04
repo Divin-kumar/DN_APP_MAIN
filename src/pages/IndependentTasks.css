@@ -239,3 +239,26 @@ html[data-theme] .dn-task-flag.is-high { color:var(--color-text); }
 html[data-theme="dark"] .dn-task-flag.is-high { color:#fff; }
 html[data-theme] .dn-task-entry-actions { display:flex; gap:8px; }
 html[data-theme] .dn-task-entry-actions button { min-height:44px; flex:1; }
+
+/* Dashboard task deep links retain a visible list and focus one Task. */
+html[data-theme] .dn-task-dashboard-arrival {
+  display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
+  gap:6px 10px; padding:4px 2px; color:var(--color-text-muted); font-size:12px;
+}
+html[data-theme] .dn-task-dashboard-arrival button {
+  min-height:44px; padding:0 10px; border:0; background:transparent;
+  color:var(--color-primary); font:inherit; font-weight:650; cursor:pointer;
+}
+html[data-theme] .dn-task-list .dn-independent-task-row.is-dashboard-selected {
+  border-color:color-mix(in srgb,var(--color-primary) 65%,var(--color-border)) !important;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 17%,transparent) !important;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] .dn-task-list .dn-independent-task-row.is-dashboard-selected {
+    animation:dn-task-arrival .7s ease-out 1;
+  }
+  @keyframes dn-task-arrival {
+    from { box-shadow:0 0 0 9px color-mix(in srgb,var(--color-primary) 24%,transparent); }
+    to { box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 17%,transparent); }
+  }
+}
