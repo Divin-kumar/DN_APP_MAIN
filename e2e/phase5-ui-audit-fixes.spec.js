@@ -49,7 +49,7 @@ for (const [width, height, theme] of [
     await page.setViewportSize({ width, height });
     await page.goto('/settings/list-defaults');
     const cards = page.locator('.dn-list-defaults-page .dn-defaults-sort-card');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4);
     const geometry = await cards.evaluateAll((nodes) => nodes.map((card) => {
       const rail = card.querySelector('.dn-refine-sort-chips');
       const container = card.getBoundingClientRect();
