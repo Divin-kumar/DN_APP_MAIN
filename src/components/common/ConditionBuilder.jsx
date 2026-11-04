@@ -67,30 +67,73 @@ function ValueEditor({ field, node, onChange, immediate = false }) {
     value={node.value} onChange={onChange} />;
 }
 function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
-  const origin = useRef(null);
-  const finish = (event) => {
-    const start = origin.current;
-    origin.current = null;
-    if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) < 10) return;
-    const element = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-condition-id]');
-    const target = element?.getAttribute('data-condition-id');
-    if (target && target !== id) setGroup((group) => reorderSiblingConditions(group, id, target));
+  const gesture = useRef(null);
+  const cleanup = () => {
+    const state = gesture.current;
+    if (!state) return;
+    clearTimeout(state.timer);
+    state.source.classList.remove('is-drag-source');
+    state.source.style.transform = '';
+    state.source.style.zIndex = '';
+    state.source.style.position = '';
+    state.source.style.pointerEvents = '';
+    state.target?.classList.remove('is-drag-target');
+    gesture.current = null;
   };
-  return <button type="button" className="dn-condition-grip" aria-label="Drag to reorder filter"
-    title="Drag to reorder. Arrow keys also work."
+  useEffect(() => cleanup, []);
+  const pickup = () => {
+    const state = gesture.current;
+    if (!state || state.active || !state.source.isConnected) return;
+    state.active = true;
+    state.source.classList.add('is-drag-source');
+    state.source.style.position = 'relative';
+    state.source.style.zIndex = '1000';
+    // Pointer capture keeps move/up on the handle while hit-testing sees
+    // the landing row beneath the visually lifted source.
+    state.source.style.pointerEvents = 'none';
+  };
+  const move = (event) => {
+    const state = gesture.current;
+    if (!state || event.pointerId !== state.pointerId) return;
+    const dx = event.clientX - state.x, dy = event.clientY - state.y;
+    if (!state.active && Math.hypot(dx, dy) > 7) pickup();
+    if (!state.active) return;
+    state.source.style.transform = `translate3d(${dx}px,${dy}px,0) scale(1.035)`;
+    const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-condition-id]');
+    const target = hit !== state.source && hit?.parentElement === state.source.parentElement ? hit : null;
+    if (state.target !== target) {
+      state.target?.classList.remove('is-drag-target');
+      target?.classList.add('is-drag-target');
+      state.target = target;
+    }
+  };
+  const finish = (event) => {
+    const state = gesture.current;
+    if (!state || event.pointerId !== state.pointerId) return;
+    move(event);
+    const destination = state.active ? state.target?.getAttribute('data-condition-id') : null;
+    cleanup();
+    if (destination && destination !== id)
+      setGroup((group) => reorderSiblingConditions(group, id, destination));
+  };
+  return <button type="button" className="dn-condition-grip"
+    aria-label="Drag to reorder filter" title="Hold or drag to lift a filter. Arrow keys also reorder."
     onPointerDown={(event) => {
       if (event.button !== 0) return;
-      origin.current = { x: event.clientX, y: event.clientY };
+      const source = event.currentTarget.closest('[data-condition-id]');
+      if (!source) return;
+      cleanup();
+      gesture.current = { source, pointerId: event.pointerId, x: event.clientX,
+        y: event.clientY, active: false, target: null, timer: setTimeout(pickup, 175) };
       event.currentTarget.setPointerCapture?.(event.pointerId);
     }}
-    onPointerUp={finish} onPointerCancel={() => { origin.current = null; }}
+    onPointerMove={move} onPointerUp={finish} onPointerCancel={cleanup}
     onKeyDown={(event) => {
-      const backwards = axis === 'vertical' ? 'ArrowUp' : 'ArrowLeft';
-      const forwards = axis === 'vertical' ? 'ArrowDown' : 'ArrowRight';
-      if (event.key !== backwards && event.key !== forwards) return;
-      event.preventDefault();
-      event.stopPropagation();
-      setGroup((group) => shiftSiblingCondition(group, id, event.key === backwards ? -1 : 1));
+      const back = axis === 'vertical' ? 'ArrowUp' : 'ArrowLeft';
+      const forward = axis === 'vertical' ? 'ArrowDown' : 'ArrowRight';
+      if (event.key !== back && event.key !== forward) return;
+      event.preventDefault(); event.stopPropagation();
+      setGroup((group) => shiftSiblingCondition(group, id, event.key === back ? -1 : 1));
     }}><GripVertical size={15} aria-hidden="true" /></button>;
 }
 function RuleEditor({ node, schema, onEdit, onRemove, setGroup, immediate = false }) {
