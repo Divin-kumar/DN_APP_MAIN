@@ -23,6 +23,10 @@ for(const [width,height] of [[320,740],[390,844],[430,932]]){
     const save=region.getByRole('button',{name:'Save designs'});
     await expect(save).toBeEnabled();
     await expect(region.getByText('All designs saved.')).toBeVisible();
+    const unchangedDemoStyle=await page.evaluate(()=>localStorage.getItem('dn_story_pdf_design_v1:guest-demo'));
+    await save.tap();
+    expect(await page.evaluate(()=>localStorage.getItem('dn_story_pdf_design_v1:guest-demo')))
+      .toBe(unchangedDemoStyle);
     await heritage.tap();
     await expect(region.getByText(/Unsaved changes/)).toBeVisible();
     await save.tap();
