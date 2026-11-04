@@ -407,12 +407,30 @@ html[data-theme] .dn-conditions .dn-condition-rule input { text-align:center; }
   }
 }
 
-/* Keep the +N disclosure reachable even when two long applied chips overflow.
-   The rail alone scrolls; its disclosure stays pinned above chip content. */
-html[data-theme] .dn-condition-chips .dn-condition-more {
-  position: sticky;
-  inset-inline-end: 0;
-  z-index: 2;
-  background: var(--color-card);
-  box-shadow: -8px 0 12px -10px var(--color-text-muted);
+/* The +N disclosure gets its own 44px column, not an overlay over
+   another selected chip's Remove target. This also makes long phone labels
+   readable in stacked lightweight rows without horizontal scrolling. */
+html[data-theme] .dn-condition-chips:has(> .dn-condition-more) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 44px;
+  grid-auto-rows: minmax(44px, auto);
+  align-items: center;
+  gap: 4px 8px;
+  height: auto;
+  overflow: visible;
+  scroll-snap-type: none;
+}
+html[data-theme] .dn-condition-chips:has(> .dn-condition-more) > .dn-condition-chip {
+  grid-column: 1;
+  width: 100%;
+  max-width: 100%;
+}
+html[data-theme] .dn-condition-chips:has(> .dn-condition-more) > .dn-condition-more {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  position: static;
+  justify-self: stretch;
+  align-self: center;
+  margin: 0;
+  padding-inline: 0;
 }
