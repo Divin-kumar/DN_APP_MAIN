@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-406 | Update screenshot test's saved-list count after Tasks is added
+- **Evidence:** The Settings screenshot regression workflow on 0821138 failed its four device cases because the test still asserted exactly three List defaults sections. The actual four sections are the requested behavior: Moments, Activities, Transactions and Tasks. Other screenshot assertions were not reached in that run.
+- **Correction:** Update the stale Playwright section count from 3 to 4, without changing application behavior or any records. The separate legacy multi-choice filter accessibility fix in CHG-20261104-405 is still being verified on the latest OldVersion commit. No main edits, PR or production publication.
+
 ## CHG-20261104-405 | iPhone Dashboard Task and filter experience; Task saved defaults
 - **Owner evidence:** 4 November iPhone screenshots of Dashboard, Activities, Refine and Settings identify Dashboard Done/priority text, applied-filter wrapping/+N, two-line filter rule editors and missing Task defaults.
 - **Change:** Dashboard Task row now navigates to the exact Task; show days until/overdue and matching red/high flag, with no Dashboard status mutation. Applied filter chips remain a horizontal rail, +N reveals hidden chips inline, and their chevrons are hidden. Shared condition rows get touch/keyboard drag grips to reorder within the same AND/OR group. Ordinary rules stay in one row. The legacy multiple-selected-values condition receives a distinct second value lane as a measured exception because targeted browser evidence found the X/remove button intercepting a 44px selection target in the forced single-row version.

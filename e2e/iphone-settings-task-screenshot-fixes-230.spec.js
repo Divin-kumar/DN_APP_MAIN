@@ -14,7 +14,7 @@ for(const [width,height,theme] of [
     const before=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map(key=>localStorage.getItem(key)));
     const cards=page.locator('.dn-list-defaults-page .dn-defaults-sort-card');
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4); // Tasks joined the three existing lists.
     for(const card of await cards.all()){
       const bounds=await card.evaluate(node=>{
         const buttons=[...node.querySelectorAll('.dn-refine-sort-chips button')];
