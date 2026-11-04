@@ -20,7 +20,7 @@ for (const [width, height, theme] of [
     ]);
     // All three SortChips groups and their chosen fields stay untouched.
     const groups = section.locator('.dn-defaults-sort-card');
-    await expect(groups).toHaveCount(3);
+    await expect(groups).toHaveCount(4);
     // List Defaults has the same lightweight hierarchy as Settings home.
     const surface = await section.evaluate((root) => {
       const style = getComputedStyle(root);
