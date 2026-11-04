@@ -69,6 +69,7 @@ for (const width of [320,390,1280]) {
     await page.getByRole('option',{name:'Is',exact:true}).click();
     await page.getByRole('combobox',{name:'Value for Time',exact:true}).click();
     await page.getByRole('option',{name:'18:30',exact:true}).click();
+    await page.getByRole('button',{name:'Show results',exact:true}).click();
     await expect(page.locator('.event-activity-title-row strong')).toHaveText(['Evening chapter']);
     await page.reload();
     await expect(page.locator('.event-activity-title-row strong')).toHaveText(['Evening chapter']);

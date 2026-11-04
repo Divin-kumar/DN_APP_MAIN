@@ -96,7 +96,7 @@ test('independent Guest Tasks remain private and are never exposed as account Ta
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_tasks'));
   await accountScope(page, 'synthetic-account', []);
   await expect(page.getByRole('main')).toHaveCount(1);
-  await expect(page.getByText('Account Tasks aren’t available yet')).toBeVisible();
+  await expect(page.getByText('Account Tasks aren’t available yet')).toHaveCount(0);
   await expect(page.getByText('Private', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toEqual(before);
   expect(errors).toEqual([]);

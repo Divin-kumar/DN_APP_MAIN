@@ -39,7 +39,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932],[844,390]]) {
           height:node.getBoundingClientRect().height,
         })),left:box.left,right:box.right};
     });
-    expect(positions.columns).toBe(3);
+    expect(positions.columns).toBe(width <= 580 ? 2 : 3);
     expect(positions.overflow).toBeLessThanOrEqual(1);
     for(const p of positions.links){
       expect(p.left).toBeGreaterThanOrEqual(positions.left-1);

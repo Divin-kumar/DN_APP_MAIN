@@ -15,7 +15,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         localStorage.getItem('dn_guest_expenses'),
       ]);
       const home = page.locator('.dn-settings-home');
-      await expect(home.locator('.settings-section')).toHaveCount(3);
+      await expect(home.locator('.settings-hub-card')).toHaveCount(5);
       await expect(home.getByRole('button', { name: /Data & Backup/ })).toHaveCount(0);
       const link = home.getByRole('link', { name: 'Open Data & Backup page' });
       await expect(link).toHaveAttribute('href', '/settings/data-backup');
@@ -67,7 +67,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(dialog).toHaveCount(0);
       await page.locator('.dn-header').getByRole('link', { name: 'Back to Settings' }).click();
       await expect(page).toHaveURL(new RegExp('/settings$'));
-      await expect(page.locator('.settings-section')).toHaveCount(3);
+      await expect(page.locator('.dn-settings-home .settings-hub-card')).toHaveCount(5);
       expect(await page.evaluate(() => [
         localStorage.getItem('dn_guest_eventGroups'),
         localStorage.getItem('dn_guest_incomes'),

@@ -9,8 +9,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     const errors = await seedGuest(page);
     await page.goto('/settings/list-defaults');
     const sort = page.getByRole('group', { name: 'Sort Activities in settings' });
-    await sort.getByRole('combobox').click();
-    await page.getByRole('option', { name: 'Title', exact: true }).click();
+    await sort.getByRole('button', { name: 'Sort by Title', exact: true }).click();
     await page.getByRole('button', { name: /Activities filters/ }).click();
     const conditions = page.locator('.dn-code-list-filter-editor .dn-conditions');
     await conditions.getByRole('button', { name: 'Add filter' }).click();

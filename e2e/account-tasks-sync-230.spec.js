@@ -13,7 +13,7 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
     export const listAccountTasks=async()=>[...rows.values()];export const mergeAccountTasks=async()=>({added:0,conflicts:0});export const detachAccountTaskLinks=async()=>{};
   ` }));
   await seedGuest(page); await page.goto('/tasks');
-  await expect(page.getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible();
+  await expect(page.locator('.dn-header').getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible();
   await page.evaluate(async () => {
     const app = (await import('/src/store/useAppStore.js')).default;
     const events = (await import('/src/store/useEventStore.js')).default;

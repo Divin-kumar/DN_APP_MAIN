@@ -50,6 +50,7 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await expect(page.locator('.event-story-main')).toHaveCount(3);
   await page.getByRole('button',{name:'Add filter',exact:true}).click();
   await choose(page,'Filter by','Time');await choose(page,'Value for Time','12:15');
+  await page.getByRole('button',{name:'Show results',exact:true}).click();
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   await page.getByRole('button',{name:'Actions for A timed Moment',exact:true}).click();
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
