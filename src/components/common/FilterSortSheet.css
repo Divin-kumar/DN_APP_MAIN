@@ -177,3 +177,11 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
     font-size:12px; line-height:1.5;
   }
 }
+
+/* Short touch landscape can render 44 CSS px as ~42.8 physical layout px
+   under fractional viewport scaling. Reserve extra room for actual 44px taps. */
+@media (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
+    min-height:47px;
+  }
+}
