@@ -4,7 +4,7 @@ import { seedGuest } from './fixtures.js';
 // Chromium layout/route coverage; installed iPhone Safari remains unverified.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   for (const theme of ['light', 'dark']) {
-    test(`Moment workspace keeps one elegant, usable tab rail at ${width}px ${theme}`, async ({ page }) => {
+    test(`Moment workspace keeps one elegant, usable tab rail at ${width}px ${theme}`, async ({ page }, testInfo) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page, { theme });
       await page.goto('/events/moment-one/story');
@@ -51,6 +51,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(initial.topBorder).toBe(0);
       expect(initial.radius).toBe(0);
       expect(initial.pageWidth).toBeLessThanOrEqual(width + 1);
+      await testInfo.attach(`moment-five-tabs-${width}-${theme}`, {
+        body: await page.screenshot({ animations:'disabled', fullPage:false }), contentType:'image/png',
+      });
 
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
