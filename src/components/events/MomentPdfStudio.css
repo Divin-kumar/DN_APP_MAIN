@@ -455,3 +455,54 @@ html[data-theme] .dn-pdf-content-options .dn-pdf-studio-sections legend {
   html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input,
   html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle input::after {transition:none;}
 }
+
+/* DN 2.3 iPhone reading-first PDF Studio: the page preview stays a paper
+   surface, but editing controls use the same unboxed rhythm as Settings.
+   Do not alter selectable values, PDF page bytes or form disabled semantics. */
+@container (max-width:790px) {
+  html[data-theme] .dn-pdf-studio-controls {
+    padding:0;border:0;border-radius:0;background:transparent;gap:15px;
+  }
+  html[data-theme] .dn-pdf-style-option {
+    min-height:44px;padding:7px 4px 9px;border:0;
+    border-bottom:2px solid transparent;border-radius:0;
+    background:transparent;box-shadow:none;
+    font-size:13px;line-height:1.4;
+  }
+  html[data-theme] .dn-pdf-style-option.is-selected {
+    border-bottom-color:var(--color-primary);
+    background:color-mix(in srgb,var(--color-primary) 5%,transparent);
+    box-shadow:none;
+  }
+  html[data-theme] .dn-pdf-style-default small,
+  html[data-theme] .dn-pdf-update-rail > small,
+  html[data-theme] .dn-pdf-content-options > summary small,
+  html[data-theme] .dn-pdf-break-copy small,
+  html[data-theme] .dn-pdf-studio-toggle small {font-size:12px;line-height:1.5;}
+  html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle {
+    min-height:64px;padding:9px 4px;
+    border:0;border-bottom:1px solid var(--color-border);
+    border-radius:0;background:transparent;box-shadow:none;
+  }
+  html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:has(input:checked) {
+    border-color:var(--color-border);background:transparent;
+  }
+  html[data-theme] .dn-pdf-content-options {
+    border:0;border-top:1px solid var(--color-border);
+    border-radius:0;background:transparent;overflow:visible;
+  }
+  html[data-theme] .dn-pdf-content-options > summary {
+    min-height:56px;padding:11px 36px 11px 3px;border-radius:0;
+  }
+  html[data-theme] .dn-pdf-content-options > summary::after {right:10px;}
+  html[data-theme] .dn-pdf-content-options .dn-pdf-studio-sections {padding:8px 0;}
+  html[data-theme] .dn-pdf-break-choice {
+    border:0;border-bottom:1px solid var(--color-border);
+    border-radius:0;background:transparent;box-shadow:none;
+  }
+  html[data-theme] .dn-pdf-break-choice.is-selected {
+    border-color:var(--color-primary);
+    background:color-mix(in srgb,var(--color-primary) 5%,transparent);
+    box-shadow:none;
+  }
+}
