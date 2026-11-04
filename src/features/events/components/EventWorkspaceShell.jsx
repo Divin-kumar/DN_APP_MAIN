@@ -541,10 +541,14 @@ export function EventWorkspaceContent() {
             key={section.label}
             to={section.path}
             className={`event-workspace-nav-item${activeSection.label === section.label ? ' is-active' : ''}`}
+            aria-label={section.label}
             aria-current={activeSection.label === section.label ? 'page' : undefined}
           >
             <section.icon size={16} aria-hidden="true" />
-            <span>{section.label}</span>
+            <span className="dn-moment-nav-label">{section.label}</span>
+            <span className="dn-moment-nav-short" aria-hidden="true">
+              {section.key === 'transactions' ? 'Finance' : section.key === 'pdf' ? 'PDF' : section.label}
+            </span>
             {section.label === 'Activities' && activities.length ? <small>{activities.length}</small> : null}
           </Link>
         ))}
