@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-377 | DN 2.3 combined cross-app screenshot acceptance
+- **Executed:** On the combined OldVersion UI SHA `7601b61a5012f76d86cc864d453a65a6271359de`, [GitHub Actions 41770225802](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41770225802) passed **4/4** synthetic Chromium cross-app audits. Each visits 18 routes from Dashboard, Tasks, Moments, Activities, Story/Gallery/PDF, Finance, Settings/Appearance/List Defaults/Code Lists, Data & Backup and About at 320px dark, 390px dark/light and 1280px light. All four audit finding lists were empty; the document viewport had no horizontal overflow or script exceptions in these runs.
+- **Standard QA:** Same-SHA [governance 41770225811](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41770225811) passed documentation preservation, Node unit tests, lint, Vite build and blocking dependency checks. This entry documents results only and does not alter application source, records or published site.
+- **Unverified:** Physical iPhone Safari, VoiceOver/Dynamic Type, signed-in cloud, backup recovery, complete interactive regression of all routes and full 2.3 release. No production deploy, PR, version bump or main branch write.
+
 ## CHG-20261104-376 | DN 2.3 Creation Defaults and Task list layout acceptance
 - **Owner iPhone/UI evidence:** Appearance new-record defaults remained a tall one-column form even on 430px phones; Tasks repeated their header and extra tagline, using inconsistent vertical spacing.
 - **Change:** Responsive 400–580px Creation Defaults pairs Moment type/Income type while Currency and Expense category stay full-width; 320/390px remain single column. Shorten Settings Appearance, Story/PDF and Task introductions. Compact mobile Task title/metrics; preserve all interactions, statuses, record IDs, filter/sort behavior, saved preferences, photos, PDF output and backups.
