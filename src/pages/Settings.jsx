@@ -1222,7 +1222,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div className="settings-reset-warning">
             <p>This restores DN configuration only:</p>
             <ul>
-              <li>Theme and appearance</li>
+              <li>Theme and appearance, including Story and PDF designs</li>
               <li>Currency and default Moment, income, and expense selections</li>
               <li>Saved preferences; Notifications remain a coming-soon feature</li>
               <li>Greeting types and templates</li>
