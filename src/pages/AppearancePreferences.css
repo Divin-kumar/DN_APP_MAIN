@@ -276,3 +276,18 @@ html[data-theme] .dn-appearance-default-fields {
     min-height:46px;
   }
 }
+
+/* DN 2.3 follow-up: short descriptions must stay legible without enlarging
+   the lightweight Settings navigation or adding another card layer. */
+@media(max-width:580px) {
+  html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy small,
+  html[data-theme] .dn-settings-account-summary small,
+  html[data-theme] .dn-settings-future-note small,
+  html[data-theme] .dn-appearance-more > a small {
+    font-size:12px;line-height:1.5;
+  }
+  html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong,
+  html[data-theme] .dn-appearance-more > a strong {font-size:14px;line-height:1.4;}
+  html[data-theme] .dn-settings-redesign .dn-settings-explore-header,
+  html[data-theme] .dn-appearance-section-kicker {font-size:11px;}
+}
