@@ -218,6 +218,7 @@ jobs:
         run: >-
           npx playwright test
           e2e/iphone-pdf-tap-targets-230.spec.js
+          e2e/iphone-ui-consistency-230.spec.js
           e2e/pdf-preview-refine-230.spec.js
           e2e/pdf-studio-controls-4c.spec.js
           --workers=2
