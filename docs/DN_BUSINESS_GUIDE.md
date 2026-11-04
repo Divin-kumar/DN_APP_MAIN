@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 screenshot-driven polish verification (OldVersion only, unpublished):** On your phone, Code Lists sections are lighter and their shortcuts stay accessible, Task sort choices are arranged neatly instead of leaving one alone on another line, and old incomplete Task filter rows no longer clutter a new Refine draft. iPhone 15 Plus Story/PDF design previews are less bulky. Previously saved active filter logic and personal records stay unchanged. Focused synthetic checks passed 29/29 (Settings and Tasks), 5/5 (Guest demo design saving) and 22/22 (Task Refine). Physical iPhone and full-release verification are still outstanding.
+
+
 **DN 2.3 Task Refine and Settings follow-up (OldVersion only, unpublished):** Opening Tasks filters now hides unfinished empty rows from older sessions, without losing real saved filters. All six sorting choices stay visible in two balanced rows. List Defaults, Code Lists and Story style choices look lighter, and text is shorter. Explore DN can save PDF/Story style choices separately from your personal Guest settings. Targeted 22/22 Task browser checks and 5/5 demo Story/PDF checks passed; real iPhone testing and final release acceptance remain.
 
 
