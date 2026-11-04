@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-362 | DN 2.3 iPhone Appearance/Story design readability
+- **Source-derived:** At 320px the Appearance theme hints were reduced to 10px. At <=390px three cramped design cards reduced informative notes to ~10px and obscured the distinction between designs.
+- **UI improvement:** Keep both theme selections and all three Journal/Diary/Tasks design selections. Raise mobile theme titles/hints to 14px/12px, redesign 320–390px style previews as unboxed 84px selectable rows with swatches and 14px/12px labels/descriptions, and improve 391–760px plus short-landscape text sizing. Hover effects only apply to fine pointers, while aria-pressed and keyboard focus remain.
+- **Downstream:** Appearance and Story-design CSS only; no forms, preferences save/reset semantics, source record fields, Story/PDF content, Guest/account isolation, independent Tasks, finance, photos, backups or app configuration rewritten. Existing Guest sample already exercises Appearance and does not require a fixture bump.
+- **QA:** Opt-in Chromium at 320/390/430px and 844px short landscape for theme/card sizes, selection persistence, no overflow and record immutability; existing Settings and Story design regression included. Exact-code-SHA evidence pending; real iPhone Safari/VoiceOver and full 2.3 testing remain separate. No main/PR/deploy/version bump.
+
 ## CHG-20261104-361 | DN 2.3 iPhone Tasks Story exact-SHA acceptance
 - **Executed:** [Focused synthetic Chromium run 41750499789](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41750499789) passed **6/6** browser checks at application code SHA `6d66e7f390544049056faf30be0579eb49966d8b`. Four new touch/mobile scenarios at 320/390/430px portrait and 844px short landscape checked 44px status select, readable notes/date/entry text, no overflow, saved completed state and preserved original entries. Two existing tests covered confirmation-based cancellation, regrouping and archived-Moment restrictions.
 - **Executed:** Same-SHA [governance 41750499790](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41750499790) passed Node unit tests, ESLint, production build, blocking dependency advisories and documentation contracts.

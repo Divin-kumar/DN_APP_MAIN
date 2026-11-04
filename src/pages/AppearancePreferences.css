@@ -61,8 +61,11 @@ html[data-theme] .dn-appearance-theme-pick[aria-pressed="true"] {
   border-color:color-mix(in srgb,var(--color-primary) 55%,var(--color-border));
   background:color-mix(in srgb,var(--color-primary) 5%,var(--color-card));
 }
-html[data-theme] .dn-appearance-theme-pick:hover {
-  border-color:color-mix(in srgb,var(--color-primary) 40%,var(--color-border));
+/* iPhone Safari may latch a hover appearance after tapping. */
+@media(hover:hover) and (pointer:fine) {
+  html[data-theme] .dn-appearance-theme-pick:hover {
+    border-color:color-mix(in srgb,var(--color-primary) 40%,var(--color-border));
+  }
 }
 html[data-theme] .dn-appearance-theme-preview {
   display:grid; align-content:start; gap:7px; width:68px; height:61px;
@@ -210,14 +213,23 @@ html[data-theme] .dn-settings-redesign .settings-reset-card { min-width:0; }
   }
   html[data-theme] .dn-appearance-theme-copy { grid-column:1; grid-row:2; }
   html[data-theme] .dn-appearance-theme-indicator { grid-column:2; grid-row:1; align-self:start; }
+  /* Keep the text in the two theme choices comfortable at 320px. */
+  html[data-theme] .dn-appearance-theme-copy strong { font-size:14px; line-height:1.35; }
+  html[data-theme] .dn-appearance-theme-copy small { font-size:12px; line-height:1.45; }
+  html[data-theme] .dn-appearance-intro p,
+  html[data-theme] .dn-appearance-section-heading p { font-size:13px; line-height:1.55; }
+  html[data-theme] .dn-appearance-footnote { font-size:12px; line-height:1.5; }
   html[data-theme] .dn-appearance-default-fields { grid-template-columns:minmax(0,1fr); gap:15px; }
   html[data-theme] .dn-appearance-save-row { align-items:stretch; flex-direction:column; }
   html[data-theme] .dn-appearance-save-row .settings-actions { justify-content:flex-end; width:100%; }
 }
 @media(max-width:350px) {
   html[data-theme] .dn-appearance-theme-pick { padding:8px; }
-  html[data-theme] .dn-appearance-theme-copy strong { font-size:12px; }
-  html[data-theme] .dn-appearance-theme-copy small { font-size:10px; }
+}
+/* Short landscape iPhones have ample width but still need legible theme hints. */
+@media(orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-appearance-theme-copy strong { font-size:14px; line-height:1.35; }
+  html[data-theme] .dn-appearance-theme-copy small { font-size:12px; line-height:1.45; }
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-appearance-theme-pick { transition:none; }
