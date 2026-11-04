@@ -253,11 +253,15 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
   useEffect(() => {
     if (expanded && railRef.current) railRef.current.scrollLeft = railRef.current.scrollWidth;
   }, [expanded, chips.length]);
-  return chips.length ? <div ref={railRef} className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{visible.map((chip) =>
-    <AppliedCondition key={`${filter.editorKey}:${chip.id}`} filter={filter} chip={chip} node={nodes.get(chip.id)} />)}
+  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters">
+    <div ref={railRef} className="dn-condition-chip-rail" tabIndex={chips.length > 1 ? 0 : undefined}>
+      {visible.map((chip) => <AppliedCondition key={`${filter.editorKey}:${chip.id}`}
+        filter={filter} chip={chip} node={nodes.get(chip.id)} />)}
+    </div>
     {overflow > 0 ? <button type="button" className="dn-condition-more" aria-label={`Show ${overflow} more active filters`}
       onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"
-        onClick={onShowLess}>Less</button> : null}</div> : null;
+        onClick={onShowLess}>Less</button> : null}
+  </div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.
