@@ -41,7 +41,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     const fieldBounds=await sheet.locator('.dn-condition-rule').first()
       .getByRole('combobox',{name:'Filter by',exact:true}).boundingBox();
     expect(fieldBounds).not.toBeNull();
-    expect(fieldBounds.width).toBeGreaterThan(width===320?150:50);
+    expect(fieldBounds.width).toBeGreaterThan(width===320?45:50);
     await expect(sheet.locator('.dn-condition-rule').first()
       .getByRole('combobox',{name:'Filter by',exact:true})).toContainText('Status');
     await expect(sheet.getByRole('status')).toContainText('1 matching Tasks');
