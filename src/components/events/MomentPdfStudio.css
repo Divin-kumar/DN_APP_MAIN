@@ -66,12 +66,12 @@ html[data-theme] .dn-pdf-update-button {display:inline-flex;align-items:center;j
 html[data-theme] .dn-pdf-update-rail {
   position:sticky; top:calc(env(safe-area-inset-top,0px) + 68px); z-index:3;
   display:flex;align-items:center;justify-content:space-between;gap:8px;
-  min-width:0;min-height:54px;padding:7px 0 11px;
+  min-width:0;min-height:54px;padding:10px 12px; border-radius:12px;
   border-bottom:1px solid var(--color-border);
   background:var(--color-card);
 }
 html[data-theme] .dn-pdf-update-rail > small {
-  color:var(--color-text-muted);font-size:11px;line-height:1.35;
+  color:var(--color-text-muted);font-size:12px;line-height:1.4; min-width:0;
 }
 html[data-theme] .dn-pdf-update-rail .dn-pdf-update-button {
   flex:0 0 auto;max-width:100%;padding:8px 11px;
@@ -523,3 +523,8 @@ html[data-theme] .dn-pdf-color-options button[aria-pressed="true"] {
   border-color:var(--color-primary); color:var(--color-primary); background:var(--color-surface);
 }
 html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-text-muted); line-height:1.5; }
+
+@media(max-width:360px) {
+  html[data-theme] .dn-pdf-update-rail { flex-wrap:wrap; }
+  html[data-theme] .dn-pdf-update-rail .dn-pdf-update-button { margin-left:auto; }
+}

@@ -40,7 +40,7 @@ for (const width of [320, 390]) {
         priority: 'medium', momentId: '', activityId: '', dueDate: '', dueTime: '' },
     ])));
     await page.reload();
-    await expect(page.locator('.dn-task-row')).toHaveCount(1);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_tasks'));
     const input = page.getByRole('searchbox', { name: 'Search Tasks' });
     await input.fill('no-match-search-recovery-999');
@@ -48,14 +48,14 @@ for (const width of [320, 390]) {
     const emptyAction = page.locator('.dn-task-empty-actions').getByRole('button', { name: 'Clear search' });
     await expect(emptyAction).toBeVisible();
     await emptyAction.click();
-    await expect(page.locator('.dn-task-row')).toHaveCount(1);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
     await input.fill('another-unmatched-query');
     const inline = page.getByRole('button', { name: 'Clear Task search' });
     await expect(inline).toBeVisible();
     expect((await inline.boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await inline.click();
     await expect(input).toHaveValue('');
-    await expect(page.locator('.dn-task-row')).toHaveCount(1);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toBe(before);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     expect(errors).toEqual([]);

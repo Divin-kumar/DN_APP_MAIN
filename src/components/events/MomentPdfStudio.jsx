@@ -299,7 +299,7 @@ export default function MomentPdfStudio({ event }) {
         </div>
         <div className="dn-pdf-update-rail" aria-label="PDF preview update status">
           {dirty || busy ? <>
-            <small role="status">{busy ? 'Rendering your pages…' : 'Changes pending'}</small>
+            <small role="status">{busy ? 'Rendering your pages…' : 'Preview needs updating'}</small>
             <button type="button" className="secondaryButton dn-pdf-update-button"
               onClick={() => renderPreview(settings)} disabled={busy}>
               <RefreshCw size={16} aria-hidden="true" />

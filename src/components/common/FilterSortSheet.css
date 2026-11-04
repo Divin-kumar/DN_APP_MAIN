@@ -186,9 +186,10 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
   }
 }
 
-/* Keep the label itself centered; the direction marker has its own space. */
-html[data-theme] .dn-refine-sort-chips > button {
-  position:relative; justify-content:center; text-align:center; padding-inline:24px;
+/* Reserve a real track for direction so it cannot overlap the label. */
+html[data-theme] .dn-refine-sort-chips > button .dn-sort-choice-content {
+  display:grid; grid-template-columns:14px minmax(0,1fr) 14px;
+  gap:4px; align-items:center; width:100%; text-align:center;
 }
-html[data-theme] .dn-refine-sort-chips > button > span { width:100%; text-align:center; }
-html[data-theme] .dn-refine-sort-chips > button > svg { position:absolute; right:7px; }
+html[data-theme] .dn-sort-choice-content > span { grid-column:2; }
+html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static; width:14px; height:14px; }

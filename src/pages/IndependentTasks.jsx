@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { CalendarDays, Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
+import { Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
@@ -90,8 +90,8 @@ export function TaskListContent() {
     next.delete('task');
     setSearchParams(next, { replace: true });
   }, [enabled, ready, searchParams, setSearchParams, tasks]);
-  const active = tasks.filter((task) => task.status === 'in-progress').length;
-  const completed = tasks.filter((task) => task.status === 'completed').length;
+  const active = matches.filter((task) => task.status === 'in-progress').length;
+  const completed = matches.filter((task) => task.status === 'completed').length;
   const run = (change, message) => {
     try {
       const result = change();
@@ -128,7 +128,7 @@ export function TaskListContent() {
       </div>
     </header>
     <div className="dn-task-metrics" aria-label="Task summary">
-      <span><strong>{tasks.length}</strong> All Tasks</span>
+      <span><strong>{matches.length}</strong> All Tasks</span>
       <span><strong>{active}</strong> In progress</span>
       <span><strong>{completed}</strong> Completed</span>
     </div>
@@ -181,7 +181,7 @@ export function TaskListContent() {
               : parent.kind === 'missing-activity' ? 'Activity unavailable' : 'Moment unavailable';
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
-        return <SwipeActionCard key={task.id} as="article" className="dn-task-row" mainClassName="dn-task-row-main"
+        return <SwipeActionCard key={task.id} as="article" className="dn-independent-task-row" mainClassName="dn-independent-task-row-main"
           label={task.title} role="button" openOnTap disabled={Boolean(store.error)}
           otherActions={[
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
@@ -194,19 +194,20 @@ export function TaskListContent() {
           onDelete={() => { setError(''); setConfirm({ kind: 'delete', task }); }}>
           <span className={`dn-task-calendar${overdue ? ' is-overdue' : ''}`} role="img"
             aria-label={`${overdue ? 'Overdue, ' : ''}${formatDate(task.dueDate)}${task.dueTime ? ', ' + task.dueTime : ''}`}>
-            <CalendarDays size={15} aria-hidden="true" />
-            <strong aria-hidden="true">{task.dueDate ? Number(task.dueDate.slice(8)) : '—'}</strong>
-            <small aria-hidden="true">{task.dueDate ? formatDate(task.dueDate).split(' ')[1] : 'No date'}</small>
+            <strong aria-hidden="true">{task.dueDate ? task.dueDate.slice(8) : '—'}</strong>
+            <small aria-hidden="true">{task.dueDate ? formatDate(task.dueDate).split(' ')[1].toUpperCase() : 'No date'}</small>
+            {task.dueTime ? <small className="dn-task-calendar-time" aria-hidden="true">{task.dueTime}</small> : null}
           </span>
           <div className="dn-task-copy">
             <strong>{task.title}</strong>
             {parent.kind !== 'standalone' ? <small className="dn-task-context">{parent.moment?.name || context}</small> : null}
-            {task.dueTime ? <small className="dn-task-context">{task.dueTime}</small> : null}
           </div>
           <span className="dn-task-signals">
-            <span role="img" aria-label={`${task.priority} priority`} title={`${task.priority} priority`}>
-              <Flag size={14} data-priority={task.priority} aria-hidden="true" />
-            </span>
+            {overdue || task.priority === 'high' ? <span role="img"
+              className={overdue ? 'dn-task-flag is-overdue' : 'dn-task-flag is-high'}
+              aria-label={overdue ? 'Overdue' : 'High priority'} title={overdue ? 'Overdue' : 'High priority'}>
+              <Flag size={15} aria-hidden="true" />
+            </span> : null}
             {task.status !== 'in-progress' ? <span role="img" aria-label={statusLabel(task.status)} title={statusLabel(task.status)}>
               {task.status === 'completed' ? <Check size={16} aria-hidden="true" /> : <XCircle size={16} aria-hidden="true" />}
             </span> : null}

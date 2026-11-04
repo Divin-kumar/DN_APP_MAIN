@@ -12,9 +12,9 @@ export default function SortChips({ field, direction, options, onChange, label =
       return <button type="button" key={option.value} className={selected ? 'is-selected' : ''}
         aria-pressed={selected} aria-label={`Sort by ${option.label}${selected ? ', ' + (ascending ? 'ascending' : 'descending') : ''}`}
         onClick={() => pick(option.value)}>
-        <span>{option.label}</span>
+        <span className="dn-sort-choice-content"><span>{option.label}</span>
         {selected ? ascending ? <ArrowUp size={14} aria-hidden="true" />
-          : <ArrowDown size={14} aria-hidden="true" /> : null}
+          : <ArrowDown size={14} aria-hidden="true" /> : null}</span>
       </button>;
     })}
   </div>;

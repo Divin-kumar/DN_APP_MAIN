@@ -54,7 +54,7 @@ for (const [width, height, theme] of [
     expect(await size(studio.locator('.dn-pdf-style-default small'))).toBeGreaterThanOrEqual(12);
     const toggle = studio.locator('.dn-pdf-searchable-option .dn-pdf-studio-toggle');
     expect(await toggle.evaluate((el) => getComputedStyle(el).borderTopWidth)).toBe('0px');
-    await expect(studio.getByText('Changes pending')).toBeVisible();
+    await expect(studio.getByText('Preview needs updating')).toBeVisible();
     await studio.getByRole('button', { name: 'Update preview' }).tap();
     await expect(studio.getByRole('button', { name: 'Download customized PDF' }))
       .toBeEnabled({ timeout: 30000 });

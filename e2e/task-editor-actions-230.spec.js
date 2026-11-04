@@ -14,7 +14,7 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'light'],[430,93
     const tasks = () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
     const original = await tasks();
     const baseline = await records();
-    await page.locator('.dn-task-row').filter({ hasText: 'Keep travel originals' }).click();
+    await page.locator('.dn-independent-task-row').filter({ hasText: 'Keep travel originals' }).click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Edit Task' });
     await editor.getByLabel('Notes (optional)').fill('Unsaved draft stays here');
@@ -37,13 +37,13 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'light'],[430,93
     await editor.getByRole('button', { name: 'Cancel Task', exact: true }).click();
     await expect(editor).toBeHidden();
     expect((await tasks())[0]).toMatchObject({ status: 'cancelled', notes: '', momentId: 'moment-one', activityId: 'shared' });
-    await page.locator('.dn-task-row').filter({ hasText: 'Keep travel originals' }).click();
+    await page.locator('.dn-independent-task-row').filter({ hasText: 'Keep travel originals' }).click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     await editor.getByRole('button', { name: 'Restore Task…', exact: true }).click();
     await editor.getByRole('button', { name: 'Restore Task', exact: true }).click();
     await expect(editor).toBeHidden();
     expect((await tasks())[0].status).toBe('in-progress');
-    await page.locator('.dn-task-row').filter({ hasText: 'Keep travel originals' }).click();
+    await page.locator('.dn-independent-task-row').filter({ hasText: 'Keep travel originals' }).click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     await editor.getByRole('button', { name: 'Delete Task…', exact: true }).click();
     await editor.getByRole('button', { name: 'Delete Task', exact: true }).click();

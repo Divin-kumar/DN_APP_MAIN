@@ -61,7 +61,7 @@ for (const width of [320, 390, 1280]) {
       await page.evaluate((items) => localStorage.setItem('dn_guest_tasks', JSON.stringify(items)), sampleTasks);
       await page.reload();
       await setSavedTheme(page, theme);
-      await expect(page.locator('.dn-task-row')).toHaveCount(2);
+      await expect(page.locator('.dn-independent-task-row')).toHaveCount(2);
       await expect(page.locator('.dn-task-group')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'New Task', exact: true })).toHaveCount(0);
       await waitForReadableSurface(page, '.dn-tasks-page');

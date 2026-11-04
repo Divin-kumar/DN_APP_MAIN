@@ -24,8 +24,8 @@ html[data-theme] .dn-task-applied button {
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;
 }
 html[data-theme] .dn-task-list { display:grid; gap:9px; min-width:0; }
-html[data-theme] .dn-task-row[data-status="completed"] { opacity:.82; }
-html[data-theme] .dn-task-row .dn-task-done {
+html[data-theme] .dn-independent-task-row[data-status="completed"] { opacity:.82; }
+html[data-theme] .dn-independent-task-row .dn-task-done {
   display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto;
   width:auto; min-width:64px; min-height:44px; padding:0 11px;
   border:1px solid color-mix(in srgb,var(--color-primary) 22%,var(--color-border));
@@ -33,24 +33,24 @@ html[data-theme] .dn-task-row .dn-task-done {
   color:var(--color-primary); box-shadow:none; cursor:pointer;
   font:inherit; font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
 }
-html[data-theme] .dn-task-row .dn-task-done[aria-pressed="true"] { color:var(--color-text-muted); background:var(--color-surface); }
-html[data-theme] .dn-task-row .dn-task-done:disabled { opacity:.58; cursor:default; }
-html[data-theme] .dn-task-row .dn-task-copy {
+html[data-theme] .dn-independent-task-row .dn-task-done[aria-pressed="true"] { color:var(--color-text-muted); background:var(--color-surface); }
+html[data-theme] .dn-independent-task-row .dn-task-done:disabled { opacity:.58; cursor:default; }
+html[data-theme] .dn-independent-task-row .dn-task-copy {
   display:grid; align-content:center; justify-items:start; gap:5px; min-width:0;
   min-height:62px; padding:3px 1px; border:0; border-radius:9px;
   background:transparent; color:var(--color-text); font:inherit; text-align:left; cursor:pointer;
 }
-html[data-theme] .dn-task-row .dn-task-copy strong { display:block; font-size:15px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
-html[data-theme] .dn-task-row .dn-task-context { font-size:11px; line-height:1.4; color:var(--color-text-muted); overflow-wrap:anywhere; }
-html[data-theme] .dn-task-row-details { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; color:var(--color-text-muted); font-size:11px; line-height:1.4; }
-html[data-theme] .dn-task-row-details > span { white-space:normal; overflow-wrap:anywhere; }
-html[data-theme] .dn-task-row-details > [data-priority] { text-transform:capitalize; }
-html[data-theme] .dn-task-row-details > [data-priority="high"],
-html[data-theme] .dn-task-row-details .is-overdue { color:var(--color-danger,#b34344); }
-html[data-theme] .dn-task-list .dn-task-row:has(.dn-task-done[aria-pressed="true"]) .dn-task-copy strong {
+html[data-theme] .dn-independent-task-row .dn-task-copy strong { display:block; font-size:15px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
+html[data-theme] .dn-independent-task-row .dn-task-context { font-size:11px; line-height:1.4; color:var(--color-text-muted); overflow-wrap:anywhere; }
+html[data-theme] .dn-independent-task-row-details { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; color:var(--color-text-muted); font-size:11px; line-height:1.4; }
+html[data-theme] .dn-independent-task-row-details > span { white-space:normal; overflow-wrap:anywhere; }
+html[data-theme] .dn-independent-task-row-details > [data-priority] { text-transform:capitalize; }
+html[data-theme] .dn-independent-task-row-details > [data-priority="high"],
+html[data-theme] .dn-independent-task-row-details .is-overdue { color:var(--color-danger,#b34344); }
+html[data-theme] .dn-task-list .dn-independent-task-row:has(.dn-task-done[aria-pressed="true"]) .dn-task-copy strong {
   text-decoration:line-through; text-decoration-thickness:1px; color:var(--color-text-muted);
 }
-html[data-theme] .dn-task-row :is(button):focus-visible,
+html[data-theme] .dn-independent-task-row :is(button):focus-visible,
 html[data-theme] .dn-task-discovery button:focus-visible,
 html[data-theme] .dn-task-editor :is(input,textarea,button):focus-visible,
 html[data-theme] .dn-refine-sheet .dn-refine-choice-row button:focus-visible {
@@ -118,7 +118,7 @@ html[data-theme] .dn-task-action-confirm button { min-height:44px; }
   html[data-theme] .dn-task-metrics { gap:6px; }
   html[data-theme] .dn-task-metrics span { padding:9px; font-size:10px; min-height:62px; }
   html[data-theme] .dn-task-metrics strong { font-size:19px; }
-  html[data-theme] .dn-task-row .dn-task-copy strong { font-size:13px; }
+  html[data-theme] .dn-independent-task-row .dn-task-copy strong { font-size:13px; }
 }
 @media(max-width:360px) {
   html[data-theme] .dn-task-date-row { grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:6px; }
@@ -127,50 +127,50 @@ html[data-theme] .dn-task-action-confirm button { min-height:44px; }
   html[data-theme] .dn-task-fields-row { grid-template-columns:minmax(0,1fr); }
 }
 @media(prefers-reduced-motion:reduce) {
-  html[data-theme] .dn-task-list .dn-task-row { transition:none; }
+  html[data-theme] .dn-task-list .dn-independent-task-row { transition:none; }
 }
 
 /* Independent Tasks are separate, softly rounded rows; swipe action layers
   stay available without a permanent trailing ellipsis control. */
-html[data-theme] .dn-task-list .dn-task-row {
+html[data-theme] .dn-task-list .dn-independent-task-row {
   border:1px solid color-mix(in srgb,var(--color-border) 82%,transparent);
   border-radius:17px; background:color-mix(in srgb,var(--color-card) 94%,var(--color-surface));
   box-shadow:0 3px 14px color-mix(in srgb,var(--color-bg) 9%,transparent);
 }
-html[data-theme] .dn-task-list .dn-task-row > .dn-swipe-main {
+html[data-theme] .dn-task-list .dn-independent-task-row > .dn-swipe-main {
   display:block; border-radius:inherit; background:transparent !important;
 }
-html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main {
+html[data-theme] .dn-task-list .dn-independent-task-row.dn-swipe-surface > .dn-independent-task-row-main {
   display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
   gap:10px; padding:11px 12px;
 }
-html[data-theme] .dn-task-row .dn-task-copy { gap:4px; min-height:62px; }
-html[data-theme] .dn-task-row .dn-task-copy strong {
+html[data-theme] .dn-independent-task-row .dn-task-copy { gap:4px; min-height:62px; }
+html[data-theme] .dn-independent-task-row .dn-task-copy strong {
   font-size:15px; font-weight:700; line-height:1.45;
 }
-html[data-theme] .dn-task-row .dn-task-context { font-size:12px; line-height:1.4; }
-html[data-theme] .dn-task-row-details { font-size:12px; line-height:1.45; gap:4px 10px; }
+html[data-theme] .dn-independent-task-row .dn-task-context { font-size:12px; line-height:1.4; }
+html[data-theme] .dn-independent-task-row-details { font-size:12px; line-height:1.45; gap:4px 10px; }
 html[data-theme] .dn-task-metrics span { font-size:12px; }
 @media(hover:hover) and (pointer:fine) {
-  html[data-theme] .dn-task-list .dn-task-row:hover {
+  html[data-theme] .dn-task-list .dn-independent-task-row:hover {
     border-color:color-mix(in srgb,var(--color-primary) 22%,var(--color-border));
     box-shadow:0 5px 18px color-mix(in srgb,var(--color-bg) 13%,transparent);
   }
-  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done):hover {
+  html[data-theme] .dn-independent-task-row :is(.dn-task-copy,.dn-task-done):hover {
     background:var(--color-surface);
   }
-  html[data-theme] .dn-task-row .dn-task-done:hover {
+  html[data-theme] .dn-independent-task-row .dn-task-done:hover {
     border-color:color-mix(in srgb,var(--color-primary) 42%,var(--color-border));
     background:color-mix(in srgb,var(--color-primary) 14%,var(--color-card));
   }
 }
 @media(hover:none), (pointer:coarse) {
-  html[data-theme] .dn-task-row .dn-task-copy:hover { background:transparent; }
+  html[data-theme] .dn-independent-task-row .dn-task-copy:hover { background:transparent; }
 }
 @media(max-width:430px) {
   html[data-theme] .dn-tasks-page { gap:11px; }
-  html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main { padding:10px; gap:8px; }
-  html[data-theme] .dn-task-row .dn-task-copy strong { font-size:15px; }
+  html[data-theme] .dn-task-list .dn-independent-task-row.dn-swipe-surface > .dn-independent-task-row-main { padding:10px; gap:8px; }
+  html[data-theme] .dn-independent-task-row .dn-task-copy strong { font-size:15px; }
   html[data-theme] .dn-task-metrics span { font-size:11.5px; }
 }
 
@@ -215,25 +215,27 @@ html[data-theme] .dn-task-metrics span { font-size:12px; }
   }
 }
 
-html[data-theme] .dn-task-list .dn-task-row .dn-task-done {
+html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-done {
   border:0; background:transparent; box-shadow:none; border-radius:10px;
   min-width:44px; padding-inline:4px; gap:4px; font-size:12px;
 }
-html[data-theme] .dn-task-list .dn-task-row .dn-task-done[aria-pressed="true"] { background:transparent; }
+html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-done[aria-pressed="true"] { background:transparent; }
 
 /* Calendar-led rows: the entire record opens actions, never the editor. */
-html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main {
-  grid-template-columns:48px minmax(0,1fr) 18px; align-items:center; gap:12px;
+html[data-theme] .dn-task-list .dn-independent-task-row.dn-swipe-surface > .dn-independent-task-row-main {
+  grid-template-columns:58px minmax(0,1fr) 18px; align-items:center; gap:12px;
 }
-html[data-theme] .dn-task-row .dn-task-copy { padding:0; background:transparent; }
+html[data-theme] .dn-independent-task-row .dn-task-copy { padding:0; background:transparent; }
 html[data-theme] .dn-task-calendar {
-  display:grid; justify-items:center; gap:1px; padding:6px 2px; border-radius:10px;
+  display:grid; align-content:center; justify-items:center; gap:1px; width:58px; height:58px; box-sizing:border-box; padding:3px; border-radius:10px;
   color:var(--color-text-secondary); background:color-mix(in srgb,var(--color-primary) 6%,transparent);
 }
 html[data-theme] .dn-task-calendar strong { font-size:20px; line-height:1.1; }
 html[data-theme] .dn-task-calendar small { font-size:10px; }
-html[data-theme] .dn-task-calendar.is-overdue { color:var(--color-danger,#dc4545); }
+html[data-theme] .dn-task-calendar-time { font-size:10px; font-variant-numeric:tabular-nums; }
 html[data-theme] .dn-task-signals { display:grid; gap:7px; align-self:start; padding-top:4px; color:var(--color-text-secondary); }
-html[data-theme] .dn-task-signals [data-priority="high"] { color:var(--color-danger,#dc4545); }
+html[data-theme] .dn-task-flag.is-overdue { color:var(--color-danger,#dc4545); }
+html[data-theme] .dn-task-flag.is-high { color:var(--color-text); }
+html[data-theme="dark"] .dn-task-flag.is-high { color:#fff; }
 html[data-theme] .dn-task-entry-actions { display:flex; gap:8px; }
 html[data-theme] .dn-task-entry-actions button { min-height:44px; flex:1; }

@@ -8,7 +8,7 @@ for (const width of [320,430,1280]) {
     const editor=page.getByRole('dialog',{name:'New Task'});
     await editor.getByLabel('Task title').fill('Return library book');
     await editor.getByRole('button',{name:'Create Task'}).click();
-    const row=page.locator('.dn-task-row').filter({hasText:'Return library book'});
+    const row=page.locator('.dn-independent-task-row').filter({hasText:'Return library book'});
     await expect(row.locator('.dn-task-done')).toHaveCount(0);
     await expect(row.locator('.dn-task-calendar')).toBeVisible();
     const original=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));

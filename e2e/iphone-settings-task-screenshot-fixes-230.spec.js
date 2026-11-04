@@ -48,16 +48,16 @@ for(const [width,height,theme] of [
     const taskForm=page.getByRole('dialog',{name:'New Task'});
     await taskForm.getByLabel('Task title').fill('Review screenshot layout');
     await taskForm.getByRole('button',{name:'Create Task'}).click();
-    const row=page.locator('.dn-task-list .dn-task-row').first();
+    const row=page.locator('.dn-task-list .dn-independent-task-row').first();
     await expect(row).toBeVisible();
     const appearance=await row.evaluate(el=>({
       border:getComputedStyle(el).borderTopWidth,radius:getComputedStyle(el).borderTopLeftRadius,
       heading:parseFloat(getComputedStyle(el.querySelector('.dn-task-copy strong')).fontSize),
-      detail:parseFloat(getComputedStyle(el.querySelector('.dn-task-row-details')).fontSize),
+      detail:el.querySelector('.dn-task-calendar').getBoundingClientRect().width,
       right:el.getBoundingClientRect().right,
     }));
-    expect(appearance.border).toBe('0px');
-    expect(appearance.radius).toBe('0px');
+    expect(appearance.border).toBe('1px');
+    expect(parseFloat(appearance.radius)).toBeGreaterThanOrEqual(14);
     expect(appearance.heading).toBeGreaterThanOrEqual(15);
     expect(appearance.detail).toBeGreaterThanOrEqual(12);
     expect(appearance.right).toBeLessThanOrEqual(width+1);

@@ -21,12 +21,12 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     const form=page.getByRole('dialog',{name:'New Task'});
     await form.getByLabel('Task title').fill('One tidy list row');
     await form.getByRole('button',{name:'Create Task'}).tap();
-    const row=taskPage.locator('.dn-task-list .dn-task-row');
+    const row=taskPage.locator('.dn-task-list .dn-independent-task-row');
     await expect(row).toHaveCount(1);
     expect(await row.evaluate(el => el.getBoundingClientRect().right)).toBeLessThanOrEqual(width+1);
     await expect(row.locator('.dn-task-calendar')).toBeVisible();
     await expect(row.locator('.dn-task-done')).toHaveCount(0);
-    const swipeRow=taskPage.locator('.dn-task-list .dn-task-row').first();
+    const swipeRow=taskPage.locator('.dn-task-list .dn-independent-task-row').first();
     const swipeTarget=await swipeRow.locator('.dn-task-copy').boundingBox();
     const startX=swipeTarget.x+Math.min(30,swipeTarget.width/4);
     const startY=swipeTarget.y+swipeTarget.height/2;

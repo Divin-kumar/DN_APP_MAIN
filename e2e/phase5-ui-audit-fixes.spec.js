@@ -24,18 +24,15 @@ for (const [width, height, theme] of [
     const nav = page.getByRole('navigation', { name: 'Code List sections' });
     const rail = nav.locator('.dn-code-list-index-scroll');
     await expect(rail.locator('a')).toHaveCount(6);
-    await expect(nav.getByRole('button', { name: 'More Code List sections' })).toBeVisible();
+    await expect(nav.getByRole('button')).toHaveCount(0);
     await waitForReadablePage(page, '.dn-premium-code-lists');
     await testInfo.attach('CodeListsNav-' + width + '-' + theme,
       { body: await page.screenshot(), contentType: 'image/png' });
     const before = await rail.evaluate((node) => node.scrollLeft);
-    await nav.getByRole('button', { name: 'More Code List sections' }).click();
+    await rail.focus();
+    await page.keyboard.press('ArrowRight');
     await expect.poll(() => rail.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before + 10);
-    await expect(nav.getByRole('button', { name: 'Previous Code List sections' })).toBeVisible();
-    const control = nav.getByRole('button', { name: 'Previous Code List sections' });
-    const box = await control.boundingBox();
-    expect(box).not.toBeNull();
-    expect(Math.round(box.height)).toBeGreaterThanOrEqual(44);
+    await expect(nav.getByRole('button')).toHaveCount(0);
     await nav.getByRole('link', { name: 'Payment Methods' }).click();
     await expect(page).toHaveURL(/#code-list-paymentMethods$/);
     await expect(page.locator('#code-list-paymentMethods')).toBeVisible();

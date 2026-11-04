@@ -15,7 +15,7 @@ async function seedTasks(page,theme){
   await page.goto('/tasks');
   await page.evaluate((entries)=>localStorage.setItem('dn_guest_tasks',JSON.stringify(entries)),tasks);
   await page.reload();
-  await expect(page.locator('.dn-task-row')).toHaveCount(3);
+  await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
   return errors;
 }
 async function selectOption(page,name,value){
@@ -45,7 +45,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     await expect(sheet.locator('.dn-condition-rule').first()
       .getByRole('combobox',{name:'Filter by',exact:true})).toContainText('Status');
     await expect(sheet.getByRole('status')).toContainText('1 matching Tasks');
-    await expect(page.locator('.dn-task-row')).toHaveCount(3);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
     const selected=sheet.getByRole('group',{name:'Sort Tasks'}).getByRole('button',{name:/Sort by Priority/});
     await selected.click();
     const looks=await sheet.evaluate((el)=>{
@@ -59,20 +59,21 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     expect(looks.ruleBorder).toBe('0px');
     await testInfo.attach('TaskRefine-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await sheet.getByRole('button',{name:'Cancel',exact:true}).click();
-    await expect(page.locator('.dn-task-row')).toHaveCount(3);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
     await page.getByRole('button',{name:'Refine',exact:true}).click();
     await sheet.getByRole('button',{name:'Add filter',exact:true}).click();
     await selectOption(page,'Filter by','Due timing');
     await selectOption(page,'Value for Due timing','Overdue');
     await expect(sheet.getByRole('status')).toContainText('1 matching Tasks');
     await sheet.getByRole('button',{name:'Show results'}).click();
-    await expect(page.locator('.dn-task-row')).toHaveCount(1);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
     await expect(page.getByText('Book return tickets',{exact:true})).toBeVisible();
+    await expect(page.locator('.dn-task-metrics strong')).toHaveText(['1','1','0']);
     const chips=page.getByRole('region',{name:'Active filters'});
     await expect(chips).toBeVisible();
     await expect(chips.getByRole('button',{name:/Remove filter/})).toHaveCount(1);
     await chips.getByRole('button',{name:/Remove filter/}).click();
-    await expect(page.locator('.dn-task-row')).toHaveCount(3);
+    await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
     expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(before);
     const geometry=await page.evaluate(()=>({scroll:document.documentElement.scrollWidth,width:document.documentElement.clientWidth}));
     expect(geometry.scroll).toBeLessThanOrEqual(geometry.width+1);
@@ -124,7 +125,7 @@ test('old Task filters become visible chips and are removable without modifying 
     search:'',status:'in-progress',priority:'high',due:'all',field:'dueDate',direction:'asc',
   })));
   await page.reload();
-  await expect(page.locator('.dn-task-row')).toHaveCount(1);
+  await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
   await expect(page.getByRole('region',{name:'Active filters'})).toBeVisible();
   await page.getByRole('button',{name:'Refine',exact:true}).click();
   const sheet=page.getByRole('dialog',{name:'Refine Tasks'});
@@ -132,7 +133,7 @@ test('old Task filters become visible chips and are removable without modifying 
   await sheet.getByRole('button',{name:'Reset',exact:true}).click();
   await expect(sheet.getByRole('status')).toContainText('3 matching Tasks');
   await sheet.getByRole('button',{name:'Cancel',exact:true}).click();
-  await expect(page.locator('.dn-task-row')).toHaveCount(1);
+  await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
   expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(records);
   expect(errors).toEqual([]);
 });

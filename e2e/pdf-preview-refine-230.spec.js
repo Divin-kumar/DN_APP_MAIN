@@ -26,7 +26,7 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
       .getByRole('option', { name: /^Diary/ }).click();
     await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Diary');
     await expect(download).toBeDisabled();
-    await expect(rail.getByText('Changes pending')).toBeVisible();
+    await expect(rail.getByText('Preview needs updating')).toBeVisible();
     await expect(header).toContainText('Journal');
     await expect(header).not.toContainText('Diary');
     const update = rail.getByRole('button', { name: 'Update preview' });

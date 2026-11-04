@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.04.2';
+export const GUEST_TOUR_VERSION = '2026.11.04.3';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -369,7 +369,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-independent-4', title: 'Choose a new bookshelf', notes: 'No deadline yet.',
       status: 'in-progress', priority: 'low', dueDate: '', dueTime: '',
       momentId: '', activityId: '' },
-    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'Tap or swipe a Task to open actions. Choose Done or Reopen there; choose Edit only when you want to change details.',
+    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'The square shows date and optional time. A red flag means overdue; a neutral flag means high priority. Summary counts follow your filters. Tap or swipe a Task to open actions. Choose Done or Reopen there; choose Edit only when you want to change details.',
       status: 'in-progress', priority: 'high', dueDate: date(-3), dueTime: '16:00',
       momentId: '', activityId: '' },
   ];

@@ -18,9 +18,8 @@ for (const width of [320,430]) {
     const sectionRect=await page.locator('#code-list-eventTypes').boundingBox();
     expect(rect.x+rect.width).toBeLessThanOrEqual(sectionRect.x+sectionRect.width+1);
     const rail=page.locator('.dn-code-list-index-scroll');
-    const arrow=page.getByRole('button',{name:'More Code List sections'});
-    const a=await arrow.boundingBox(),r=await rail.boundingBox();
-    expect(r.x+r.width).toBeLessThanOrEqual(a.x+1);
+    await expect(page.locator('.dn-code-list-nav-arrow')).toHaveCount(0);
+    expect(await rail.evaluate(el=>el.clientWidth)).toBeGreaterThan(150);
     expect(await page.locator('.code-list-item').first().evaluate(el=>parseFloat(getComputedStyle(el).borderRadius))).toBe(14);
     await testInfo.attach(`rounded-code-lists-${width}`, {body:await page.screenshot(),contentType:'image/png'});
     await page.goto('/settings/appearance');
