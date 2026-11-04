@@ -82,17 +82,15 @@ for (const viewport of [{ width: 320, height: 700 }, { width: 1440, height: 900 
   });
 }
 
-test('Code Lists owns sorting and live filter preferences without a duplicate Settings shortcut', async ({ page }) => {
+test('dedicated List defaults controls sorting and filter baselines without altering active lists', async ({ page }) => {
   const errors = await seedGuest(page);
   await page.goto('/settings');
-  await expect(page.getByRole('link', { name: 'Open List sorting preferences' })).toHaveCount(0);
-  await page.getByRole('link', { name: 'Open Code Lists page' }).click();
-  await expect(page).toHaveURL(/\/settings\/code-lists$/);
+  await page.getByRole('link', { name: 'Open List defaults' }).click();
+  await expect(page).toHaveURL(/\/settings\/list-defaults$/);
   const section = page.getByRole('region', { name: 'List sorting and filters preferences' });
   await expect(section).toBeVisible();
-  const sorter = section.getByRole('combobox', { name: 'Sort Activities in settings field' });
-  await sorter.click();
-  await page.getByRole('option', { name: 'Title', exact: true }).click();
+  const sorter = section.getByRole('group', { name: 'Sort Activities in settings' });
+  await sorter.getByRole('button', { name: 'Sort by Title', exact: true }).click();
 
   const originalRecords = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await section.getByRole('button', { name: /Activities filters/ }).click();
@@ -106,13 +104,16 @@ test('Code Lists owns sorting and live filter preferences without a duplicate Se
 
   await page.goto('/activities');
   await page.getByRole('button', { name: /^Filters/ }).click();
-  await expect(page.getByRole('combobox', { name: 'Sort activities field' })).toContainText('Title');
+  await page.locator('.dn-refine-sheet').getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(page.locator('.dn-refine-sheet').getByRole('button', { name: /Sort by Title/ })).toHaveAttribute('aria-pressed', 'true');
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Choose the train', exact: true })).toBeVisible();
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toHaveCount(0);
 
-  await page.goto('/settings/code-lists');
+  await page.goto('/settings/list-defaults');
   const preferences = page.getByRole('region', { name: 'List sorting and filters preferences' });
-  await expect(preferences.getByRole('combobox', { name: 'Sort Activities in settings field' })).toContainText('Title');
+  await expect(preferences.getByRole('group', { name: 'Sort Activities in settings' })
+    .getByRole('button', { name: /Sort by Title/ })).toHaveAttribute('aria-pressed', 'true');
   await preferences.getByRole('button', { name: /Activities filters/ }).click();
   const reopened = preferences.getByRole('region', { name: 'activities filters' });
   await expect(reopened.locator('.dn-condition-chip').filter({ hasText: 'Completed' })).toBeVisible();
@@ -128,7 +129,8 @@ test('Code Lists owns sorting and live filter preferences without a duplicate Se
   await page.goto('/activities');
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toHaveCount(0);
   await page.getByRole('button', { name: /^Filters/ }).click();
-  await page.locator('.dn-list-controls-action-line').getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.locator('.dn-refine-sheet').getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.locator('.dn-refine-sheet').getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(originalRecords);
   expect(errors).toEqual([]);
