@@ -295,7 +295,7 @@ export default function MomentPdfStudio({ event }) {
         <div className="dn-pdf-studio-intro">
           <SlidersHorizontal size={19} aria-hidden="true" />
           <div><strong>Design your PDF</strong>
-            <p>Choose the look, then inspect the actual pages before downloading.</p></div>
+            <p>Customize the book. Preview before downloading.</p></div>
         </div>
         <div className="dn-pdf-update-rail" aria-label="PDF preview update status">
           {dirty || busy ? <>
@@ -334,8 +334,7 @@ export default function MomentPdfStudio({ event }) {
             </button>)}
           </div>
           <div className="dn-pdf-style-default">
-            <small>Saved {PDF_TEMPLATES.find((option) => option.value === settings.template)?.label || 'Story'} default:
-              {' '}{PDF_STYLE_NAMES[savedStyles[settings.template]]}</small>
+            <small>Saved default: {PDF_STYLE_NAMES[savedStyles[settings.template]]}</small>
             {styleOverrideRef.current ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
               <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
           </div>
