@@ -180,3 +180,18 @@ html[data-theme] .dn-task-metrics span { font-size:12px; }
     margin-top:0;
   }
 }
+
+/* Compact iPhone Tasks: keep readable summary labels and a clear separation
+   between the result count and interactive applied-filter controls. */
+@media(max-width:580px) {
+  html[data-theme] .dn-tasks-page .dn-task-discovery-summary {
+    display:grid;grid-template-columns:minmax(0,1fr);gap:3px;
+    align-items:start;
+  }
+  html[data-theme] .dn-tasks-page .dn-task-discovery-summary .dn-condition-chips {
+    max-width:100%;padding:0 0 3px;
+  }
+  html[data-theme] .dn-tasks-page .dn-task-metrics span {
+    min-height:56px;font-size:12px;line-height:1.45;
+  }
+}
