@@ -26,6 +26,9 @@ export default function DropdownSelect({
   const listRef = useRef(null);
   const searchRef = useRef(null);
   const typeahead = useRef({ text: '', time: 0 });
+  // A rapid typeahead + Enter can precede React's highlighted-state render.
+  // Keep the selected option synchronous with keyboard events.
+  const keyboardChoiceRef = useRef(-1);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(-1);
   const [query, setQuery] = useState('');
@@ -70,6 +73,7 @@ export default function DropdownSelect({
     setSearchOpen(false);
     setScrollTop(0);
     setPlacement(null);
+    keyboardChoiceRef.current = -1;
     if (restoreFocus) triggerRef.current?.focus({ preventScroll: true });
   }, []);
 
@@ -204,6 +208,7 @@ export default function DropdownSelect({
     }
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
+      keyboardChoiceRef.current = -1;
       if (!open) { setOpen(true); setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); }
       else moveActive(event.key === 'ArrowDown' ? 1 : -1);
       return;
@@ -211,12 +216,16 @@ export default function DropdownSelect({
     if (event.key === 'Home' || event.key === 'End') {
       if (!open) return;
       event.preventDefault();
+      keyboardChoiceRef.current = -1;
       if (enabledIndices.length) setActiveIndex(event.key === 'Home' ? enabledIndices[0] : enabledIndices[enabledIndices.length - 1]);
       return;
     }
     if (event.key === 'Enter' || (event.key === ' ' && event.target !== searchRef.current && !(searchable && open && query))) {
       event.preventDefault();
-      if (open) commitOption(shownActiveIndex);
+      if (open) {
+        const pending = keyboardChoiceRef.current;
+        commitOption(pending >= 0 && enabledIndices.includes(pending) ? pending : shownActiveIndex);
+      }
       else { setOpen(true); setQuery(''); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); }
       return;
     }
@@ -233,7 +242,7 @@ export default function DropdownSelect({
         const match = find(prefix);
         typeahead.current = { text: match >= 0 ? prefix : event.key, time: now };
         const next = match >= 0 ? match : find(event.key);
-        if (next >= 0) setActiveIndex(next);
+        if (next >= 0) { keyboardChoiceRef.current = next; setActiveIndex(next); }
       }
       setOpen(true);
     } else if (searchable && open && event.target === triggerRef.current && event.key === 'Backspace' && query) {
@@ -251,6 +260,7 @@ export default function DropdownSelect({
         aria-activedescendant={open && shownActiveIndex >= 0 && placement ? `${listboxId}-option-${shownActiveIndex}` : undefined}
         aria-required={required || undefined} disabled={disabled}
         onClick={() => {
+          keyboardChoiceRef.current = -1;
           // Opening choices must not summon the mobile keyboard. Searching is
           // available only when the user explicitly focuses the search input.
           triggerRef.current?.focus({ preventScroll: true });
@@ -304,7 +314,7 @@ export default function DropdownSelect({
                 aria-setsize={visibleIndices.length} aria-posinset={visibleIndices.indexOf(index) + 1}
                 aria-disabled={option.disabled || undefined}
                 className={`dropdown-option${index === selectedIndex ? ' is-selected' : ''}${index === shownActiveIndex ? ' is-active' : ''}`}
-                onMouseEnter={() => setActiveIndex(index)}
+                onMouseEnter={() => { keyboardChoiceRef.current = -1; setActiveIndex(index); }}
                 onClick={() => commitOption(index)}>
                 <span title={option.label}>{option.custom ? `Use “${option.label}”` : option.label}</span>
                 {index === selectedIndex ? <Check size={15} aria-hidden="true" /> : null}
