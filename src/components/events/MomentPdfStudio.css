@@ -463,6 +463,11 @@ html[data-theme] .dn-pdf-content-options .dn-pdf-studio-sections legend {
   html[data-theme] .dn-pdf-studio-controls {
     padding:0;border:0;border-radius:0;background:transparent;gap:15px;
   }
+  /* A current preview needs a quiet acknowledgement, not a sticky filled bar.
+     Pending edits keep the sticky Update preview action within reach. */
+  html[data-theme] .dn-pdf-update-rail:has(.dn-pdf-update-current) {
+    position:static;min-height:44px;padding:0;background:transparent;
+  }
   html[data-theme] .dn-pdf-style-option {
     min-height:44px;padding:7px 4px 9px;border:0;
     border-bottom:2px solid transparent;border-radius:0;
