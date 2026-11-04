@@ -136,6 +136,8 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy > str
   overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 2;
   color: var(--color-text); font-size: clamp(.88rem,1.15vw,1.04rem);
   font-weight: 780; line-height: 1.23; letter-spacing: -.025em;
+  /* Override legacy global single-line ellipsis; the title is a book label. */
+  white-space:normal; text-overflow:clip; overflow-wrap:anywhere;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-date {
   display: inline-flex; align-items: center; gap: 5px; margin: 0;
@@ -252,5 +254,8 @@ html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-tim
   }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-heading {
     min-height:44px;padding-right:44px;align-content:start;
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy > strong {
+    -webkit-line-clamp:3;
   }
 }
