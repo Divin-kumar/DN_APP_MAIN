@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 more iPhone compactness (OldVersion only, unpublished):** Appearance now shows new Moment and income defaults side by side on larger phones without shortening Currency or Expense values. Tasks has a shorter header, neater counters and the same complete/edit/Refine controls. Story/PDF design explanations are clearer. All 14 focused Appearance and 21 focused Task mobile-browser checks passed, with routine code/build checks. Your records and PDFs are untouched. iPhone Safari and full release testing are still separate.
+
+
 **DN 2.3 further iPhone UI cleanup (OldVersion only, unpublished):** The Filter & Sort Defaults page no longer sits inside a bulky card; all saved choices remain visible and behave as before. A screenshot audit visited 18 app routes in four browser layouts and found no page-level horizontal overflow or JavaScript errors. All 14 focused List Defaults checks and normal build/lint checks passed. Real iPhone Safari, VoiceOver and complete release testing are still pending.
 
 

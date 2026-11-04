@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-376 | DN 2.3 Creation Defaults and Task list layout acceptance
+- **Owner iPhone/UI evidence:** Appearance new-record defaults remained a tall one-column form even on 430px phones; Tasks repeated their header and extra tagline, using inconsistent vertical spacing.
+- **Change:** Responsive 400–580px Creation Defaults pairs Moment type/Income type while Currency and Expense category stay full-width; 320/390px remain single column. Shorten Settings Appearance, Story/PDF and Task introductions. Compact mobile Task title/metrics; preserve all interactions, statuses, record IDs, filter/sort behavior, saved preferences, photos, PDF output and backups.
+- **Executed:** [Actions 41769636715](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41769636715) passed **14/14** synthetic mobile Settings/Story checks at source SHA `d9d570039ad646da3cc8846558f9053cc820e1b2` plus [governance 41769636699](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41769636699). [Actions 41769948156](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41769948156) passed **21/21** synthetic Task interaction/layout tests at source SHA `b21d0029331017675cb23424caf4b1ecd48938a5` plus [governance 41769948011](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41769948011). Both branches exact OldVersion; no main, PR or deploy.
+- **Remaining:** New combined cross-app screenshot audit is opt-in and pending. Native iPhone Safari/VoiceOver/Dynamic Type, cloud account, original-photo restore, backup/upgrade and complete release acceptance are open. Existing Guest tour includes these UI surfaces; no sample reset is appropriate.
+
 ## CHG-20261104-375 | DN 2.3 audited unboxed List Defaults surface
 - **Evidence:** 18-route synthetic Chromium screenshot audit on 320px dark, 390px light/dark and 1280px light passed 4/4 with no page document overflow or JS errors (GitHub Actions 41768282825). Human inspection of captured List Defaults image revealed the inherited Settings section card contradicting the agreed unboxed Refine language.
 - **Change:** Remove the large outer List Defaults frame and tighten introduction/list spacing, without removing any option, filter, saved configuration, Reset, keyboard control or page heading. No record, attachment, Story/PDF, backup, user scope or server writes.
