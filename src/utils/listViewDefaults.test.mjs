@@ -111,3 +111,32 @@ test('a saved-default backup is not exported or restored without a workspace sco
   assert.equal(exportSavedListDefaultsForScope('signed-out'), null);
   assert.equal(restoreSavedListDefaultsForScope('signed-out', {}), false);
 });
+
+// Tasks entered Settings after the original three-list backup shape.
+test('Task sorting and filters are saved independently, with backward-compatible restores', () => {
+  const source = 'test:tasks-source';
+  const target = 'test:tasks-target';
+  const config = LIST_DOMAINS.tasks;
+  assert.deepEqual(systemConditionGroup('tasks'), emptyGroup());
+  const group = { ...emptyGroup(), children: [
+    { id: 'task-priority', kind: 'rule', field: 'priority', operator: 'eq', value: 'high' },
+  ] };
+  listStateMemory.update(listStateKey(source, 'defaults:tasks'), config.defaults, config.rules,
+    { field: 'priority', direction: 'desc' });
+  listStateMemory.update(listStateKey(source, 'conditions:defaults:tasks'),
+    LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES, { group, migrationVersion: 1 });
+  const portable = exportSavedListDefaultsForScope(source);
+  assert.equal(portable.tasks.filters.field, 'priority');
+  assert.equal(portable.tasks.group.children[0].value, 'high');
+  assert.deepEqual(validateSavedListDefaultsDocument(portable), portable);
+  assert.equal(restoreSavedListDefaultsForScope(target, portable), true);
+  assert.deepEqual(exportSavedListDefaultsForScope(target), portable);
+  const legacy = structuredClone(portable);
+  delete legacy.tasks;
+  listStateMemory.update(listStateKey(target, 'defaults:tasks'), config.defaults, config.rules, { field: 'title' });
+  assert.equal(restoreSavedListDefaultsForScope(target, legacy), true);
+  assert.equal(listStateMemory.read(listStateKey(target, 'defaults:tasks'), config.defaults, config.rules).field, 'title');
+  assert.deepEqual(validateSavedListDefaultsDocument(legacy), legacy);
+  resetSavedListDefaultsForScope(target);
+  assert.deepEqual(listStateMemory.read(listStateKey(target, 'defaults:tasks'), config.defaults, config.rules), config.defaults);
+});

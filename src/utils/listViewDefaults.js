@@ -4,6 +4,7 @@ import { emptyGroup, normalizeConditionGroup } from './conditionEngine.js';
 import { normalizeUserFilterGroup } from './userFilterSchema.js';
 import { momentConditions, activityConditions, transactionConditions } from './listConditionMigration.js';
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES } from './activityListState.js';
+import { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from './taskViewDefaults.js';
 import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_VALUES } from './userListSort.js';
 import { listStateKey, listStateMemory, normalizeListState } from './listStateMemory.js';
 
@@ -24,12 +25,14 @@ export const LIST_DOMAINS = Object.freeze({
   moments: { defaults: MOMENT_LIST_DEFAULTS, rules: MOMENT_LIST_RULES },
   activities: { defaults: ACTIVITY_LIST_DEFAULTS, rules: ACTIVITY_LIST_RULES },
   transactions: { defaults: TRANSACTION_LIST_DEFAULTS, rules: TRANSACTION_LIST_RULES },
+  tasks: { defaults: TASK_VIEW_DEFAULTS, rules: TASK_VIEW_RULES },
 });
 export const systemConditionGroup = (domain) => {
   const filters = LIST_DOMAINS[domain]?.defaults;
   if (!filters) throw new Error('Unknown list defaults domain.');
   return domain === 'moments' ? momentConditions(filters)
-    : domain === 'activities' ? activityConditions(filters) : transactionConditions(filters);
+    : domain === 'activities' ? activityConditions(filters)
+      : domain === 'transactions' ? transactionConditions(filters) : emptyGroup();
 };
 export const configuredConditionGroup = (domain, stored) => normalizeUserFilterGroup(domain,
   normalizeConditionGroup(stored?.migrationVersion >= 1 ? stored.group : systemConditionGroup(domain)));
@@ -67,8 +70,13 @@ export const exportSavedListDefaultsForScope = (scope) => {
 };
 
 export const validateSavedListDefaultsDocument = (document) => {
-  if (!document || typeof document !== 'object' || Array.isArray(document)
-    || Object.keys(document).sort().join(',') !== Object.keys(LIST_DOMAINS).sort().join(',')) {
+  // Tasks preferences were added after the original three-domain v3 format.
+  // Old backups remain valid; missing Tasks must not erase a newer device's settings.
+  const required = ['moments', 'activities', 'transactions'];
+  const keys = document && typeof document === 'object' && !Array.isArray(document)
+    ? Object.keys(document) : [];
+  if (required.some((domain) => !keys.includes(domain))
+    || keys.some((domain) => !LIST_DOMAINS[domain])) {
     throw new Error('Backup saved List defaults are incomplete or invalid.');
   }
   // Bound user-supplied filter trees before record restoration, including
@@ -76,7 +84,8 @@ export const validateSavedListDefaultsDocument = (document) => {
   let encoded;
   try { encoded = JSON.stringify(document); } catch { /* Cyclic objects are invalid. */ }
   if (!encoded || encoded.length > 60000) throw new Error('Backup saved List defaults exceed the supported size.');
-  for (const [domain, config] of Object.entries(LIST_DOMAINS)) {
+  for (const domain of keys) {
+    const config = LIST_DOMAINS[domain];
     const entry = document[domain];
     const filters = entry?.filters;
     if (!entry || typeof entry !== 'object' || Array.isArray(entry)
@@ -86,7 +95,8 @@ export const validateSavedListDefaultsDocument = (document) => {
       throw new Error(`Backup saved ${domain} preferences are invalid.`);
     }
     const normalizedFilters = normalizeListState(filters, config.defaults, config.rules);
-    if (Object.keys(config.defaults).some((key) => normalizedFilters[key] !== filters[key])) {
+    if (Object.keys(config.defaults).some((key) =>
+      JSON.stringify(normalizedFilters[key]) !== JSON.stringify(filters[key]))) {
       throw new Error(`Backup saved ${domain} sorting or search has an invalid value.`);
     }
     const group = entry.group;
@@ -104,8 +114,8 @@ export const validateSavedListDefaultsDocument = (document) => {
 export const restoreSavedListDefaultsForScope = (scope, document) => {
   if (!scope || scope === 'signed-out' || document === undefined) return false;
   validateSavedListDefaultsDocument(document);
-  for (const [domain, config] of Object.entries(LIST_DOMAINS)) {
-    const { filters, group } = document[domain];
+  for (const [domain, { filters, group }] of Object.entries(document)) {
+    const config = LIST_DOMAINS[domain];
     listStateMemory.update(listStateKey(scope, `defaults:${domain}`), config.defaults, config.rules, filters);
     listStateMemory.update(listStateKey(scope, `conditions:defaults:${domain}`),
       LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES, { group, migrationVersion: 1 });

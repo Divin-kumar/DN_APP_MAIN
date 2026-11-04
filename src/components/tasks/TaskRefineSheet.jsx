@@ -6,31 +6,11 @@ import ConditionBuilder from '../common/ConditionBuilder';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../../utils/conditionEngine.js';
 import { compactTaskRefineGroup, taskFilterFields, taskViewConditionGroup } from '../../utils/taskConditionFields.js';
 import { filterTaskResults } from '../../utils/taskListFilters.js';
+import { TASK_VIEW_DEFAULTS, TASK_SORT_OPTIONS } from '../../utils/taskViewDefaults.js';
 
-const EMPTY_GROUP = emptyGroup();
-export const TASK_VIEW_DEFAULTS = Object.freeze({
-  search: '', status: 'all', priority: 'all', due: 'all',
-  group: EMPTY_GROUP, field: 'dueDate', direction: 'asc',
-});
-export const TASK_VIEW_RULES = Object.freeze({
-  status: ['all', 'in-progress', 'completed', 'cancelled'],
-  priority: ['all', 'low', 'medium', 'high'],
-  due: ['all', 'overdue', 'next7', 'undated'],
-  group: (value) => value?.kind === 'group' && Array.isArray(value.children)
-    && JSON.stringify(value).length < 30000,
-  field: ['dueDate', 'title', 'priority', 'status', 'createdAt', 'updatedAt'],
-  direction: ['asc', 'desc'],
-});
-export const TASK_SORT_OPTIONS = Object.freeze([
-  { value: 'dueDate', label: 'Due date' },
-  { value: 'title', label: 'Title' },
-  { value: 'priority', label: 'Priority' },
-  { value: 'status', label: 'Status' },
-  { value: 'createdAt', label: 'Created' },
-  { value: 'updatedAt', label: 'Updated' },
-]);
+export { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES, TASK_SORT_OPTIONS } from '../../utils/taskViewDefaults.js';
 
-export default function TaskRefineSheet({ current, onApply, onClose, tasks, moments = [], today }) {
+export default function TaskRefineSheet({ current, resetDefaults = TASK_VIEW_DEFAULTS, onApply, onClose, tasks, moments = [], today }) {
   const [draft, setDraft] = useState(() => ({ ...current, group: compactTaskRefineGroup(taskViewConditionGroup(current)),
     // Legacy choices become real rules only when Show results is selected.
     status: 'all', priority: 'all', due: 'all' }));
@@ -68,7 +48,9 @@ export default function TaskRefineSheet({ current, onApply, onClose, tasks, mome
     </p>
     <div className="dn-list-controls-footer" role="group" aria-label="Apply or discard Task Refine changes">
       <button type="button" className="dn-refine-reset"
-        onClick={() => setDraft({ ...TASK_VIEW_DEFAULTS, search: current.search, group: emptyGroup() })}>
+        onClick={() => setDraft({ ...TASK_VIEW_DEFAULTS, ...resetDefaults, search: current.search,
+          group: compactTaskRefineGroup(taskViewConditionGroup(resetDefaults)),
+          status: 'all', priority: 'all', due: 'all' })}>
         <RotateCcw size={15} aria-hidden="true" />Reset
       </button>
       <button type="button" className="dn-refine-cancel" onClick={onClose}>Cancel</button>

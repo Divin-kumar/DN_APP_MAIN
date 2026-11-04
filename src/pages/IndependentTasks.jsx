@@ -9,6 +9,7 @@ import { ConditionChips } from '../components/common/ConditionBuilder';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine.js';
 import { taskFilterFields, taskViewConditionGroup } from '../utils/taskConditionFields.js';
 import { filterTaskResults } from '../utils/taskListFilters.js';
+import { configuredConditionGroup, LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES } from '../utils/listViewDefaults.js';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -45,6 +46,10 @@ export function TaskListContent() {
   const [busy, setBusy] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, changeView] = usePersistentListState('tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
+  const [savedTaskSort] = usePersistentListState('defaults:tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
+  const [savedTaskFilters] = usePersistentListState('conditions:defaults:tasks', LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES);
+  const resetDefaults = useMemo(() => ({ ...savedTaskSort,
+    group: configuredConditionGroup('tasks', savedTaskFilters) }), [savedTaskSort, savedTaskFilters]);
   const [editor, setEditor] = useState(null);
   const [requestedTask, setRequestedTask] = useState(null);
   const [refine, setRefine] = useState(false);
@@ -248,7 +253,7 @@ export function TaskListContent() {
         }}
         moments={moments} onSave={save} error={error} onClose={() => { if (!busy) { setEditor(null); setError(''); } }} />
     </ModalDialog> : null}
-    {refine ? <TaskRefineSheet current={view} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
+    {refine ? <TaskRefineSheet current={view} resetDefaults={resetDefaults} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
     {confirm ? <ConfirmDialog title={confirm.kind === 'delete' ? 'Delete Task?' : 'Cancel Task?'}
       message={confirm.kind === 'delete' ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`

@@ -134,7 +134,7 @@ for(const route of ['/events','/activities','/financials/transactions','/setting
     await page.goto(route);
     if(route.includes('list-defaults')){
       const cards=page.locator('.dn-defaults-sort-card');
-      await expect(cards).toHaveCount(3);
+      await expect(cards).toHaveCount(4);
       const styles=await cards.first().evaluate(node=>({background:getComputedStyle(node).backgroundColor,
         border:getComputedStyle(node).borderTopWidth}));
       expect(styles.border).toBe('0px');
@@ -150,3 +150,35 @@ for(const route of ['/events','/activities','/financials/transactions','/setting
     expect(errors).toEqual([]);
   });
 }
+
+test('Tasks saved sorting/filter defaults stage on Reset, without mutating Tasks', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedTasks(page, 'dark');
+  const originalTasks = await page.evaluate(() => localStorage.getItem('dn_guest_tasks'));
+  await page.goto('/settings/list-defaults');
+  const savedSort = page.getByRole('group', { name: 'Sort Tasks in settings' });
+  await savedSort.getByRole('button', { name: 'Sort by Priority', exact: true }).click();
+  await page.getByRole('button', { name: 'Tasks filters' }).click();
+  const editor = page.getByRole('region', { name: 'tasks filters' });
+  await editor.getByRole('button', { name: 'Add filter' }).click();
+  await selectOption(page, 'Filter by', 'Status');
+  await selectOption(page, 'Value for Status', 'In progress');
+  await expect(editor.getByRole('region', { name: 'Active filters' })).toContainText('Status');
+  await page.goto('/tasks');
+  await page.getByRole('button', { name: 'Refine', exact: true }).click();
+  const sheet = page.getByRole('dialog', { name: 'Refine Tasks' });
+  await sheet.getByRole('group', { name: 'Sort Tasks' })
+    .getByRole('button', { name: 'Sort by Title', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Reset', exact: true }).click();
+  await expect(sheet.getByRole('group', { name: 'Sort Tasks' })
+    .getByRole('button', { name: /Sort by Priority, ascending/ })).toHaveAttribute('aria-pressed', 'true');
+  await expect(sheet.getByRole('status')).toContainText('2 matching Tasks');
+  await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Refine', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Refine Tasks' }).getByRole('button', { name: 'Reset', exact: true }).click();
+  await page.getByRole('dialog', { name: 'Refine Tasks' }).getByRole('button', { name: 'Show results' }).click();
+  await expect(page.locator('.dn-independent-task-row')).toHaveCount(2);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toBe(originalTasks);
+  expect(errors).toEqual([]);
+});

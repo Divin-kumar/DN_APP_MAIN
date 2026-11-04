@@ -6,6 +6,7 @@ import './ListDefaults.css';
 import useAppStore from '../store/useAppStore';
 import useIncomeStore from '../store/useIncomeStore';
 import useExpenseStore from '../store/useExpenseStore';
+import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useConditionFilters from '../hooks/useConditionFilters';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -18,7 +19,10 @@ import { MOMENT_LIST_DEFAULTS, MOMENT_LIST_RULES, TRANSACTION_LIST_DEFAULTS, TRA
 import { ACTIVITY_LIST_DEFAULTS, ACTIVITY_LIST_RULES, ACTIVITY_SORTS } from '../utils/activityListState';
 import { MOMENT_SORT_OPTIONS, TRANSACTION_SORT_OPTIONS, momentSortSummary, transactionSortSummary } from '../utils/userListSort';
 
-import { conditionCount } from '../utils/conditionEngine';
+import { conditionCount, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine';
+import { taskFilterFields } from '../utils/taskConditionFields.js';
+import { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES, TASK_SORT_OPTIONS } from '../utils/taskViewDefaults.js';
+import { formatMomentDate } from '../utils/momentDates.js';
 
 // Settings owns independent baseline keys, not the active page's working keys.
 // Filter editing still loads real field choices only when its panel opens.
@@ -73,10 +77,47 @@ function ListFilterPreferences({ domain }) {
   </div>;
 }
 
+// Task defaults use Task-only fields (due timing and links), never Activity fields.
+const EMPTY = Object.freeze([]);
+function TaskDefaultFilterPreferences() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  const scope = taskScopeKey({ user, isGuest });
+  const taskStore = useTaskStore();
+  const scoped = useScopedMoments();
+  const [saved, setSaved, , editorKey] = usePersistentListState(
+    'conditions:defaults:tasks', LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES);
+  useEffect(() => { if (isGuest || user?.uid) taskStore.loadTasks(); }, [isGuest, user?.uid, scope, taskStore.loadTasks]);
+  const ready = taskStore.loadedFor === scope && scoped.ready;
+  const tasks = taskStore.loadedFor === scope && !taskStore.error ? taskStore.tasks : EMPTY;
+  const moments = scoped.ready ? scoped.events : EMPTY;
+  const schema = useMemo(() => taskFilterFields(tasks, moments, formatMomentDate(new Date())), [tasks, moments]);
+  const group = configuredConditionGroup('tasks', saved);
+  const setGroup = (transform) => setSaved((current) => ({
+    group: normalizeConditionGroup(typeof transform === 'function'
+      ? transform(configuredConditionGroup('tasks', current)) : transform),
+    migrationVersion: Math.max(1, current.migrationVersion),
+  }));
+  const filter = {
+    state: { group }, schema, editorKey,
+    activeCount: conditionCount(group), setGroup,
+    clear: () => setGroup(emptyGroup()),
+  };
+  return <div className="dn-code-list-filter-editor" role="region" aria-label="tasks filters">
+    {!isGuest && !user?.uid ? <p className="settings-helper">Open a Guest or account workspace to configure Task filters.</p>
+      : taskStore.error || scoped.loadError ? <p className="settings-helper" role="alert">
+        Task filter choices are saved, but some records could not be loaded.
+        <button type="button" onClick={() => { taskStore.loadTasks(); scoped.retry(); }}>Retry loading filters</button>
+      </p> : !ready ? <p className="settings-helper" role="status">Loading Task filter choices…</p>
+        : <ConditionBuilder filter={filter} title="Tasks default filters" showChips />}
+  </div>;
+}
+
 const LISTS = [
   { domain: 'moments', label: 'Moments', defaults: MOMENT_LIST_DEFAULTS, rules: MOMENT_LIST_RULES, options: MOMENT_SORT_OPTIONS },
   { domain: 'activities', label: 'Activities', defaults: ACTIVITY_LIST_DEFAULTS, rules: ACTIVITY_LIST_RULES, options: ACTIVITY_SORTS },
   { domain: 'transactions', label: 'Transactions', defaults: TRANSACTION_LIST_DEFAULTS, rules: TRANSACTION_LIST_RULES, options: TRANSACTION_SORT_OPTIONS },
+  { domain: 'tasks', label: 'Tasks', defaults: TASK_VIEW_DEFAULTS, rules: TASK_VIEW_RULES, options: TASK_SORT_OPTIONS },
 ];
 
 function ListPreferences({ config, expanded, onToggle }) {
@@ -112,7 +153,8 @@ function ListPreferences({ config, expanded, onToggle }) {
       <ChevronDown size={16} aria-hidden="true" className="dn-defaults-chevron" />
     </button>
     <div className="dn-list-filter-expanded" id={`dn-filter-editor-${domain}`} hidden={!expanded}>
-      {expanded ? <ListFilterPreferences key={`${domain}:${revision}`} domain={domain} /> : null}
+      {expanded ? domain === 'tasks' ? <TaskDefaultFilterPreferences key={`${domain}:${revision}`} />
+        : <ListFilterPreferences key={`${domain}:${revision}`} domain={domain} /> : null}
     </div>
     <button type="button" className="dn-defaults-factory" aria-label={`Restore built-in defaults for ${label}`}
       onClick={restore}>Restore built-in sorting and filters</button>
