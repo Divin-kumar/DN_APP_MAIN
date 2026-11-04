@@ -127,7 +127,7 @@ test('either direction reveals same menu and Delete remains a separate click', (
   assert.match(swipe, /showMenu\(isTouch\)/);
   assert.match(swipe, /onClick=\{\(\) => perform\(onClick\)\}/);
   assert.match(swipe, /aria-label=\{`Actions for/);
-  assert.match(read('../pages/CodeLists.jsx'), /Tap or swipe either direction for actions/);
+  assert.match(read('../pages/CodeLists.jsx'), /Tap to open actions; swipe is optional/);
   const transactions = read('../components/financials/TransactionHistory.jsx');
   assert.match(transactions, /className="transactions-panel dn-transactions-page"/);
   assert.doesNotMatch(transactions, /dn-transaction-add|dn-transactions-heading-description/);
