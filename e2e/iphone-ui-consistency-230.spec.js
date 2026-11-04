@@ -58,6 +58,13 @@ for (const [width, height, theme] of [
     await studio.getByRole('button', { name: 'Update preview' }).tap();
     await expect(studio.getByRole('button', { name: 'Download customized PDF' }))
       .toBeEnabled({ timeout: 30000 });
+    await expect(studio.getByText('Saved default: Editorial')).toBeVisible();
+    const currentRail = await studio.locator('.dn-pdf-update-rail').evaluate((el) => ({
+      position: getComputedStyle(el).position,
+      background: getComputedStyle(el).backgroundColor,
+    }));
+    expect(currentRail.position).toBe('static');
+    expect(currentRail.background).toBe('rgba(0, 0, 0, 0)');
     await testInfo.attach(`dn-230-settings-tasks-pdf-${width}-${theme}`, {
       body: await page.screenshot({ animations: 'disabled', fullPage: false }),
       contentType: 'image/png',
