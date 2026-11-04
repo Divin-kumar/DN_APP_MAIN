@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-363 | DN 2.3 iPhone Appearance exact-SHA acceptance
+- **Executed:** [Focused Chromium run 41759112690](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41759112690) passed **10/10** tests at application code SHA `630cf6414d744bb8b759dd87a0f40ed186f662fc`. Four new 320/390/430px touch portrait and 844px landscape scenarios verified theme hints and Story-style labels are readable, three visible design choices, tap target bounds, saving/reloading preferences and no horizontal overflow or source-record mutation. Six prior Settings navigation/persistence, Moment type default and Story design tests passed too.
+- **Executed:** [Same-SHA governance 41759112748](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41759112748) passed Node unit tests, lint, production build, dependency advisory and documentation checks. Firebase production workflow was skipped.
+- **Limits:** Synthetic Guest Chromium, not physical Safari, VoiceOver, larger iPhone accessibility font settings, signed-in cloud or the entire DN 2.3 regression suite. Only new source CSS and tests were changed in the tested commit; the follow-up is a documentation ledger update. No main write, PR, version bump or deploy.
+
 ## CHG-20261104-362 | DN 2.3 iPhone Appearance/Story design readability
 - **Source-derived:** At 320px the Appearance theme hints were reduced to 10px. At <=390px three cramped design cards reduced informative notes to ~10px and obscured the distinction between designs.
 - **UI improvement:** Keep both theme selections and all three Journal/Diary/Tasks design selections. Raise mobile theme titles/hints to 14px/12px, redesign 320–390px style previews as unboxed 84px selectable rows with swatches and 14px/12px labels/descriptions, and improve 391–760px plus short-landscape text sizing. Hover effects only apply to fine pointers, while aria-pressed and keyboard focus remain.
