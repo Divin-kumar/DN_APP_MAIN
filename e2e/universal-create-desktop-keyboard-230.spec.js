@@ -62,6 +62,8 @@ test('desktop keyboard action opens a transaction form without record writes', a
   await page.setViewportSize({ width: 1280, height: 900 });
   const errors = await seedGuest(page);
   await page.goto('/activities');
+  // Finish Guest Moment hydration before capturing the revision-guarded form session.
+  await expect(page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true })).toBeVisible();
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_expenses'));
   const plus = page.locator('.dn-quick-create-trigger');
   await plus.focus();

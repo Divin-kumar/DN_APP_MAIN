@@ -932,3 +932,41 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  release-failure-recheck-230:
+    # Exact four failures from full gate 41853976918; no long-suite repeat or publishing.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-four-failures]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Recheck only the four failed browser journeys
+        run: >-
+          npx playwright test
+          e2e/activity-moment.spec.js
+          e2e/iphone-route-header-density.spec.js
+          e2e/phase8-application.spec.js
+          e2e/universal-create-desktop-keyboard-230.spec.js
+          --grep "Moment Transactions has five reachable tabs|Insights Export shares the search toolbar|encoded Moment and Activity IDs retain|desktop keyboard action opens a transaction form"
+          --workers=2
+      - name: Preserve focused browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-four-release-failures
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore

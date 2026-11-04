@@ -170,6 +170,8 @@ test('Moment Transactions has five reachable tabs, matching totals, independent 
   await page.reload(); await expect(totals.locator('dd')).toHaveText(['₹0', '₹20', '-₹20']);
   await page.getByRole('button', { name: /^Filters and sort/ }).click();
   await page.getByRole('button', { name: 'Reset', exact: true }).click();
+  // Reset changes the Refine draft; Show results commits it and clears search.
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(totals.locator('dd')).toHaveText(['₹1,000', '₹170', '₹830']);
   await page.getByRole('link', { name: 'Story', exact: true }).click();
   await expect(page.getByRole('navigation', { name: 'Moment contents' })).toContainText('Transactions');

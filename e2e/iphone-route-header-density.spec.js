@@ -94,5 +94,6 @@ test('Insights Export shares the search toolbar without changing export behavior
     return { inputTop: r1.top, buttonTop: r2.top, buttonHeight: r2.height };
   });
   expect(Math.abs(alignment.inputTop - alignment.buttonTop)).toBeLessThanOrEqual(3);
-  expect(alignment.buttonHeight).toBeGreaterThanOrEqual(44);
+  // Chrome's fractional layout can report 43.99999 for a 44px touch target.
+  expect(alignment.buttonHeight).toBeGreaterThanOrEqual(43.99);
 });

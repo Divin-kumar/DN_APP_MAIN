@@ -22,7 +22,8 @@ test('encoded Moment and Activity IDs retain their exact identity through Story 
   await page.reload();
   await expect(page.locator('.activity-detail-content h1')).toHaveText('Keep the exact booking');
   await page.goto(`${base}/gallery`);
-  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Gallery');
+  // The nav renders full + compact responsive labels; accessible name is singular.
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveAttribute('aria-label', 'Gallery');
   expect(await savedRecords(page)).toEqual(before);
   expect(errors).toEqual([]);
 });
