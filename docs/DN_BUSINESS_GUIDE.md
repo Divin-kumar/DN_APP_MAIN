@@ -1,5 +1,7 @@
 # DN — Your App and Improvement Checklist
 
+**About release notes:** The 2.2.0 → 2.3.0 changes are grouped into a single expandable Version History entry. What's New shows only three highlights. Full details stay hidden until opened; the app identifies releases as Installed or In development using its actual build version.
+
 **DN 2.3 signed-in Tasks and readable phone filters (OldVersion only, unpublished):** Independent Tasks now support account storage and live updates. Creating/editing Tasks waits for the save; failures retain your draft. Switching accounts clears the previous Task list. Account backups include Tasks, and restore/sign-in transfer preserves existing Tasks with matching IDs. Failed transfer keeps Guest Tasks locally. Deleting a linked Moment retains the independent Task. Phone filters wrap across two lines with a separate remove column. Automated and simulated-account checks passed; real signed-in cross-device verification is still required before release. Nothing has been deployed to production.
 
 **DN 2.3 phone sorting and recovery (OldVersion only, unpublished):** Phone filter sheets now show every sort choice in two centered columns. If a Task status change cannot save from its actions dialog, the dialog stays open with an error so you can retry. Existing records and filter behavior are preserved. Focused checks passed; physical iPhone verification and deployment remain separate.

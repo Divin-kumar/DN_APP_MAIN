@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-394 | Concise About notes for 2.2.0 to 2.3.0
+- **Request / impact:** Owner wants the full release delta documented without crowding About. Reviewed the current release history, installed-version selection, guide copy and recorded 2.3 changes before editing.
+- **Changes:** Added a 2.3.0 entry with seven grouped user-facing notes and three short highlights. What's New is limited to three items; all detailed history remains collapsed until opened. Corrected current Task/filter/Settings/PDF guide copy. Historical notes and build-based Installed/In development labels are preserved.
+- **Executed:** Lint and production build passed. Three temporary browser reviews passed at 320, 430 and 1280px: collapsed initial state, expand/collapse, seven release details, three highlights, In development label on the 2.2.0 build and no horizontal document overflow. Reviewed the 320px screenshot. Guest tour reviewed; no changed demo behavior or fixture refresh needed.
+- **Limits / publication:** Content-only OldVersion update based on 089119d; no version bump or deployment. No new claim of physical iPhone or live two-device account acceptance. Data, originals, sync and approved interactions are unchanged.
+
 ## CHG-20261104-393 | Complete signed-in independent Task integration
 - **Request / evidence:** Owner requires existing Tasks to sync in signed-in accounts. Owner screenshots confirm Standard default Firestore in expense-tracker-divin and owner-only recursive users/{userId} rules. This resolves CHG-392's missing rules/edition evidence; no rule replacement or deployment.
 - **Impact analysis / implementation:** Traced Task route, Dashboard, universal creation, Guest/account stores, auth changes, Task editor/actions, backup/restore, Guest transfer, parent-link cleanup and account deletion inventory. Added live account Task transport with stable document IDs, owner checks, guarded async errors, session invalidation, conflict detection and deletion-resurrection prevention. Guest persistence remains unchanged. Backup/transfer preserve destination IDs and retain Guest Tasks on failed transfer; account deletion includes Tasks. Parent cleanup preserves all independent Task content.
