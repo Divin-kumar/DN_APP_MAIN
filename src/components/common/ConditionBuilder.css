@@ -568,3 +568,35 @@ html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger > span {
     flex:1 1 0; min-width:0; width:100%; overflow-x:auto !important;
   }
 }
+
+/* DN 2.3.2: lift the actual condition card under a long press or drag.
+   Sibling target is highlighted; AND/OR state moves only after release. */
+html[data-theme] .dn-condition-chip,
+html[data-theme] .dn-conditions .dn-condition-rule {
+  transition:transform .18s ease, box-shadow .18s ease, background-color .18s ease,
+    opacity .18s ease, border-color .18s ease;
+}
+html[data-theme] :is(.dn-condition-chip,.dn-condition-rule).is-drag-source {
+  opacity:.97 !important;
+  background:var(--color-card) !important;
+  outline:1px solid color-mix(in srgb,var(--color-primary) 55%,var(--color-border));
+  border-radius:10px !important;
+  box-shadow:0 17px 36px color-mix(in srgb,#000 36%,transparent),
+    0 0 0 2px color-mix(in srgb,var(--color-primary) 26%,transparent) !important;
+  transition:transform 45ms linear, box-shadow .15s ease !important;
+}
+html[data-theme] :is(.dn-condition-chip,.dn-condition-rule).is-drag-target {
+  background:color-mix(in srgb,var(--color-primary) 13%,var(--color-card)) !important;
+  box-shadow:inset 0 0 0 2px var(--color-primary) !important;
+  transform:scale(.985);
+}
+html[data-theme] .dn-condition-grip { touch-action:none !important; }
+html[data-theme] .is-drag-source .dn-condition-grip { color:var(--color-primary) !important; }
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] :is(.dn-condition-chip,.dn-condition-rule) {
+    transition:none !important;
+  }
+  html[data-theme] :is(.dn-condition-chip,.dn-condition-rule).is-drag-target {
+    transform:none;
+  }
+}
