@@ -51,7 +51,7 @@ export function TaskListContent() {
   const resetDefaults = useMemo(() => ({ ...savedTaskSort,
     group: configuredConditionGroup('tasks', savedTaskFilters) }), [savedTaskSort, savedTaskFilters]);
   const [editor, setEditor] = useState(null);
-  const [requestedTask, setRequestedTask] = useState(null);
+  const [dashboardTaskId, setDashboardTaskId] = useState('');
   const [refine, setRefine] = useState(false);
   const [showAllTaskFilters, setShowAllTaskFilters] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -74,8 +74,13 @@ export function TaskListContent() {
   const eventReady = isRecordScopeLoaded(eventStore, `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`, getActiveSampleScenario(user?.uid));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
-  const displayedTasks = useMemo(() => sortIndependentTasks(matches, view.direction, view.field),
-    [matches, view.direction, view.field]);
+  const displayedTasks = useMemo(() => {
+    const sorted = sortIndependentTasks(matches, view.direction, view.field);
+    const selected = dashboardTaskId && tasks.find((task) => task.id === dashboardTaskId);
+    return selected && !sorted.some((task) => task.id === selected.id) ? [selected, ...sorted] : sorted;
+  }, [matches, view.direction, view.field, dashboardTaskId, tasks]);
+  const highlightedOutsideFilters = Boolean(dashboardTaskId && tasks.some((task) => task.id === dashboardTaskId)
+    && !matches.some((task) => task.id === dashboardTaskId));
   const viewGroup = useMemo(() => taskViewConditionGroup(view), [view]);
   const activeFilterCount = conditionCount(viewGroup);
   const filterSchema = useMemo(() => taskFilterFields(tasks, moments, today), [tasks, moments, today]);
@@ -92,12 +97,23 @@ export function TaskListContent() {
     const requested = searchParams.get('task');
     if (!requested) return;
     const selected = tasks.find((task) => task.id === requested);
-    if (selected) setRequestedTask(selected);
+    if (selected) setDashboardTaskId(selected.id);
     else setNotice('The selected Task is no longer available.');
     const next = new URLSearchParams(searchParams);
     next.delete('task');
     setSearchParams(next, { replace: true });
   }, [enabled, ready, searchParams, setSearchParams, tasks]);
+  useEffect(() => {
+    if (!dashboardTaskId || !ready || !displayedTasks.some((task) => task.id === dashboardTaskId)) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const row = [...document.querySelectorAll('.dn-independent-task-row[data-task-id]')]
+        .find((item) => item.dataset.taskId === dashboardTaskId);
+      if (!row) return;
+      row.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
+      row.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [dashboardTaskId, ready, displayedTasks]);
   const active = matches.filter((task) => task.status === 'in-progress').length;
   const completed = matches.filter((task) => task.status === 'completed').length;
   const run = async (change, message) => {
@@ -145,7 +161,7 @@ export function TaskListContent() {
       <span><strong>{completed}</strong> Completed</span>
     </div>
     {store.error ? <p className="dn-task-feedback" role="alert">{store.error} <button type="button" onClick={() => store.loadTasks()}>Retry</button></p> : null}
-    {error && !editor && !confirm && !requestedTask ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
+    {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     {notice ? <p className="sr-only" role="status" aria-live="polite">{notice}</p> : null}
     <div className="dn-list-controls dn-task-discovery">
       <div className="dn-list-controls-row">
@@ -187,6 +203,10 @@ export function TaskListContent() {
           })}>Clear filters</button> : null}
         </div>
       </div> : null}
+    {dashboardTaskId ? <div className="dn-task-dashboard-arrival" role="status">
+      <span>{highlightedOutsideFilters ? 'Selected Task is shown outside your current filters.' : 'Selected Task highlighted. Tap it for actions.'}</span>
+      <button type="button" onClick={() => setDashboardTaskId('')}>Dismiss</button>
+    </div> : null}
     <div className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {
         const parent = resolveIndependentTaskParent(task, moments);
@@ -196,7 +216,9 @@ export function TaskListContent() {
               : parent.kind === 'missing-activity' ? 'Activity unavailable' : 'Moment unavailable';
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
-        return <SwipeActionCard key={task.id} as="article" className="dn-independent-task-row" mainClassName="dn-independent-task-row-main"
+        return <SwipeActionCard key={task.id} as="article" taskId={task.id}
+          className={`dn-independent-task-row${dashboardTaskId === task.id ? ' is-dashboard-selected' : ''}`}
+          mainClassName="dn-independent-task-row-main"
           label={task.title} role="button" openOnTap disabled={Boolean(store.error)}
           otherActions={[
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
@@ -230,17 +252,6 @@ export function TaskListContent() {
         </SwipeActionCard>;
       })}
     </div>
-    {requestedTask ? <ModalDialog title="Task actions" onClose={() => { setRequestedTask(null); setError(''); }}>
-      <p>{requestedTask.title}</p>
-      {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
-      <div className="dn-task-entry-actions">
-        <button type="button" disabled={busy} onClick={async () => {
-          if (await statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress')) setRequestedTask(null);
-        }}>{requestedTask.status === 'completed' ? 'Reopen' : requestedTask.status === 'cancelled' ? 'Restore' : 'Done'}</button>
-        <button type="button" onClick={() => { setError(''); setEditor({ kind: 'edit', value: requestedTask }); setRequestedTask(null); }}>Edit</button>
-        <button type="button" onClick={() => { setRequestedTask(null); setError(''); }}>Close</button>
-      </div>
-    </ModalDialog> : null}
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
       onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
