@@ -44,7 +44,8 @@ html[data-theme] .dn-story-design-mini-rule {width:45%;height:1px;background:var
 html[data-theme] .dn-story-design-mini-body {font-size:.59rem;line-height:1.2;opacity:.8;}
 html[data-theme] .dn-story-design-choice-name {font-size:.78rem;font-weight:740;line-height:1.3;}
 html[data-theme] .dn-story-design-choice-note {font-size:.67rem;line-height:1.3;color:var(--color-text-muted);}
-html[data-theme] .dn-story-design-actions {display:flex;flex-wrap:wrap;gap:9px;justify-content:flex-end;}
+html[data-theme] .dn-story-design-actions {display:flex;flex-wrap:wrap;align-items:center;gap:9px;justify-content:flex-end;}
+html[data-theme] .dn-story-design-save-status {margin-right:auto;color:var(--color-text-muted);font-size:12px;line-height:1.45;flex:1 1 190px;}
 html[data-theme] .dn-story-design-actions button {display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;}
 html[data-theme] .dn-story-design-hint {margin:0;color:var(--color-text-muted);font-size:.76rem;line-height:1.55;}
 /* The narrow three-column previews made style descriptions barely 10px.
