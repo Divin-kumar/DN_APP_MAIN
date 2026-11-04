@@ -20,8 +20,13 @@ for(const [width,height] of [[320,740],[390,844],[430,932]]){
     }));
     const heritage=region.getByRole('button',{name:'Journal: Heritage'});
     await expect(heritage).toBeEnabled();
+    const save=region.getByRole('button',{name:'Save designs'});
+    await expect(save).toBeEnabled();
+    await expect(region.getByText('All designs saved.')).toBeVisible();
     await heritage.tap();
-    await region.getByRole('button',{name:'Save designs'}).tap();
+    await expect(region.getByText(/Unsaved changes/)).toBeVisible();
+    await save.tap();
+    await expect(region.getByText('All designs saved.')).toBeVisible();
     const demoKey='dn_story_pdf_design_v1:guest-demo';
     await expect.poll(()=>page.evaluate(key=>
       JSON.parse(localStorage.getItem(key)||'{}')?.styles?.journey,demoKey)).toBe('heritage');
