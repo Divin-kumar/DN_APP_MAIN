@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-369 | DN 2.3 iPhone List Defaults exact-SHA acceptance
+- **Executed:** [Focused GitHub Actions 41764140289](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41764140289) passed **14/14** tests (17.4s) at source commit `57d342ed01535a9c74b3055ee0fd7452585a7616`. New 320/390/430px portrait and 844x390 coarse-pointer landscape cases verified readable saved-sort/filter instructions, unboxed controls, working filter disclosure, no horizontal overflow, and unchanged Guest source records. Ten existing saved-baseline tests passed for Moments, Activities, Transactions and Reset.
+- **Executed:** [Same-SHA documentation/governance 41764140228](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41764140228) passed unit tests, ESLint, Vite build, blocking dependency advisory checks and documentation preservation.
+- **Limits:** Synthetic Chromium only; native Safari/VoiceOver, authenticated account data, full PDF/Story/restore/offline/upgrade acceptance and owner-authorized production publication remain open. This follow-up only documents results; no version bump, PR, main or deployment.
+
 ## CHG-20261104-368 | DN 2.3 phone readability for saved List Defaults
 - **Source-derived:** Settings > List Defaults still used 10–11px sort hint, save-state and filter Reset explanation text despite its approved unboxed page structure. Important secondary instructions are harder to read on compact iPhones.
 - **Change:** Scope 12px supporting labels and 13px instructional text, 14px section titles, and an unfilled 12px saved-state note to the existing List Defaults page at mobile/short touch-landscape sizes. Do not alter controls, sort options, filter operators, records, state keys, default recovery, Code Lists or desktop screens.
