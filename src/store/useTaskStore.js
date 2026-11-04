@@ -1,5 +1,4 @@
-// Independent Tasks store. Cloud account CRUD remains forbidden until
-// deployed users/{uid}/tasks rules and account deletion are verified.
+import { watchAccountTasks, writeAccountTask, removeAccountTask } from '../services/accountTaskService';
 import { create } from 'zustand';
 import useAppStore from './useAppStore';
 import { getActiveSampleScenario, requireActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
@@ -32,10 +31,33 @@ const repository = (expected) => createGuestTaskRepository({
   createId: () => crypto.randomUUID(),
 });
 
+let unsubscribe = null;
+let accountEpoch = 0;
+let watchedScope = null;
+const accountGuard = (scope, epoch) => () => {
+  if (accountEpoch !== epoch || taskScopeKey(useAppStore.getState()) !== scope) throw new Error('Task session changed. Reopen Tasks.');
+};
 const useTaskStore = create((set, get) => ({
   tasks: [], loadedFor: null, error: null,
   loadTasks: () => {
     const scope = taskScopeKey(useAppStore.getState());
+    if (scope.startsWith('account:')) {
+      if (watchedScope === scope && unsubscribe && !get().error) return;
+      unsubscribe?.(); unsubscribe = null;
+      const epoch = ++accountEpoch;
+      watchedScope = scope;
+      set({ tasks: [], loadedFor: null, error: null });
+      const guard = accountGuard(scope, epoch);
+      const fail = (error) => {
+        if (epoch === accountEpoch && taskScopeKey(useAppStore.getState()) === scope) set({ tasks: [], loadedFor: null, error: error.message || 'Tasks could not sync.' });
+      };
+      try {
+        unsubscribe = watchAccountTasks(scope.slice(8), guard,
+          (tasks) => set({ tasks, loadedFor: scope, error: null }), fail);
+      } catch (error) { fail(error); }
+      return;
+    }
+    unsubscribe?.(); unsubscribe = null; watchedScope = null; accountEpoch++;
     if (!scope.startsWith('guest:')) {
       set({ tasks: [], loadedFor: scope, error: null });
       return [];
@@ -52,8 +74,16 @@ const useTaskStore = create((set, get) => ({
       return [];
     }
   },
-  saveTask: (input) => {
+  saveTask: (input, options = {}) => {
     const scope = taskScopeKey(useAppStore.getState());
+    if (scope.startsWith('account:')) {
+      if (get().loadedFor !== scope || get().error) throw new Error('Tasks are not ready. Reload and try again.');
+      const previous = get().tasks.find((task) => task.id === recordId(input?.id));
+      const now = new Date().toISOString();
+      return writeAccountTask(scope.slice(8), { ...previous, ...input,
+        id: recordId(input?.id) || crypto.randomUUID(), createdAt: previous?.createdAt || now, updatedAt: now,
+      }, { mode: input?.id ? 'edit' : 'create', expectedUpdatedAt: options.expectedUpdatedAt !== undefined ? options.expectedUpdatedAt : input?.updatedAt || previous?.updatedAt || null, assertCurrent: accountGuard(scope, accountEpoch) });
+    }
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace. Reload Tasks and try again.');
     }
@@ -84,6 +114,7 @@ const useTaskStore = create((set, get) => ({
   },
   removeTask: (id) => {
     const scope = taskScopeKey(useAppStore.getState());
+    if (scope.startsWith('account:')) return removeAccountTask(scope.slice(8), recordId(id), accountGuard(scope, accountEpoch));
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace.');
     }
@@ -124,13 +155,19 @@ const useTaskStore = create((set, get) => ({
   },
   setTaskStatus: (id, status) => {
     const scope = taskScopeKey(useAppStore.getState());
-    if (get().loadedFor !== scope || !scope.startsWith('guest:')) {
+    if (get().loadedFor !== scope || scope === 'signed-out') {
       throw new Error('Task session changed. Reload Tasks.');
     }
     const task = get().tasks.find((item) => item.id === recordId(id));
     if (!task) throw new Error('Task not found in this workspace.');
     const patch = taskStatusPatch(task, status);
-    return patch ? get().saveTask({ ...task, ...patch }) : task;
+    return patch ? get().saveTask({ ...task, ...patch }, { expectedUpdatedAt: task.updatedAt }) : task;
   },
 }));
+// Invalidate immediately on every session transition, including A → B → A.
+useAppStore.subscribe((state, previous) => {
+  if (state.user?.uid === previous.user?.uid && state.isGuest === previous.isGuest) return;
+  accountEpoch++; unsubscribe?.(); unsubscribe = null; watchedScope = null;
+  useTaskStore.setState({ tasks: [], loadedFor: null, error: null });
+});
 export default useTaskStore;

@@ -1,3 +1,4 @@
+import { detachAccountTaskLinks } from '../services/accountTaskService';
 /*
   Event state actions coordinate persistence and the Events workspace.
 
@@ -186,6 +187,14 @@ const useEventStore = create((set, get) => {
           sameEvent(item, normalizedEvent) ? { ...item, ...updated } : item
         ),
       });
+      try {
+        await detachAccountTaskLinks(uid, { momentId: recordId(previousEvent?.id) || recordId(previousEvent?.firestoreId),
+          activityIds: (previousEvent?.activities || []).flatMap((item) => [item.id, ...(item.mergedActivityIds || [])])
+            .filter((id) => !(normalizedEvent.activities || []).some((item) => activityOwnsLinkedId(item, id))),
+        }, () => {
+          if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
+        });
+      } catch (error) { console.warn('Task links retained after parent change:', error); }
       return updated;
     } catch (error) {
       console.error('Failed to update event:', error);
@@ -225,7 +234,14 @@ const useEventStore = create((set, get) => {
         return;
       }
 
+      const deletionScope = get().activeLoadKey;
+      const deletionRevision = get().scopeRevision;
       await deleteEvent(uid, event);
+      try {
+        await detachAccountTaskLinks(uid, { momentId: recordId(event.id) || recordId(event.firestoreId) }, () => {
+          if (get().activeLoadKey !== deletionScope || get().scopeRevision !== deletionRevision) throw new Error('Account changed.');
+        });
+      } catch (error) { console.warn('Task links retained after parent deletion:', error); }
     } catch (error) {
       console.error('Failed to delete event:', error);
       set({

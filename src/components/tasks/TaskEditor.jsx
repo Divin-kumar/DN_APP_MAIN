@@ -6,7 +6,7 @@ import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
-export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, error = '' }) {
+export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
   const [pendingAction, setPendingAction] = useState(null);
   const confirmationRef = useRef(null);
   const actionGroupRef = useRef(null);
@@ -28,7 +28,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const savedAlias = Boolean(activityId && !(parent?.activities || []).some((item) => recordId(item.id) === activityId));
   const save = (event) => {
     event.preventDefault();
-    if (title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId });
+    if (!busy && title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId });
   };
 
   if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
@@ -40,8 +40,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     <p>Unsaved edits will not be saved.</p>
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="dn-task-form-actions">
-      <button type="button" className="secondaryButton" onClick={() => setPendingAction(null)}>Keep editing</button>
-      <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'} onClick={() => onTaskAction(pendingAction)}>
+      <button type="button" className="secondaryButton" disabled={busy} onClick={() => setPendingAction(null)}>Keep editing</button>
+      <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'} disabled={busy} onClick={() => onTaskAction(pendingAction)}>
         {pendingAction === 'delete' ? 'Delete Task' : pendingAction === 'restore' ? 'Restore Task' : 'Cancel Task'}
       </button>
     </div>
@@ -93,8 +93,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     </div> : null}
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">
-      <button type="button" className="secondaryButton" onClick={onClose}>Cancel</button>
-      <button type="submit" className="primaryButton" disabled={!title.trim()}>{task?.id ? 'Save Task' : 'Create Task'}</button>
+      <button type="button" className="secondaryButton" disabled={busy} onClick={onClose}>Cancel</button>
+      <button type="submit" className="primaryButton" disabled={busy || !title.trim()}>{busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}</button>
     </div>
   </form>;
 }

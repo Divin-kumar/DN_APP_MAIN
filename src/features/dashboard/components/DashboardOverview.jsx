@@ -1,6 +1,6 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
@@ -226,6 +226,8 @@ export function DashboardOverviewContent() {
   const taskScope = taskScopeKey({ user, isGuest });
   const [taskAnnouncement, setTaskAnnouncement] = useState('');
   const [taskError, setTaskError] = useState('');
+  const taskWritePending = useRef(false);
+  const [taskBusy, setTaskBusy] = useState(false);
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
   const events = ready ? storedEvents : EMPTY_EVENTS;
@@ -254,17 +256,19 @@ export function DashboardOverviewContent() {
   const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
-  const dashboardTasks = useMemo(() => isGuest && !user?.uid && taskStore.loadedFor === taskScope && !taskStore.error
+  const dashboardTasks = useMemo(() => (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
     ? selectUpcomingIndependentTasks(taskStore.tasks, today).slice(0, 6) : [],
   [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
-  const completeDashboardTask = (task) => {
+  const completeDashboardTask = async (task) => {
+    if (taskWritePending.current) return;
+    taskWritePending.current = true; setTaskBusy(true);
     try {
-      taskStore.setTaskStatus(task.id, 'completed');
+      await taskStore.setTaskStatus(task.id, 'completed');
       setTaskError('');
       setTaskAnnouncement(`Completed ${task.title}`);
     } catch (error) {
       setTaskError(error.message || 'Task could not be completed.');
-    }
+    } finally { taskWritePending.current = false; setTaskBusy(false); }
   };
 
 
@@ -287,7 +291,7 @@ export function DashboardOverviewContent() {
     <>
       <div className="dashboard-overview dashboard-compact">
         <DashboardGreeting now={today} />
-        {isGuest && !user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
+        {isGuest || user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Tasks</span>
             <div className="dashboard-section-actions">
@@ -321,7 +325,7 @@ export function DashboardOverviewContent() {
                     </div>
                     <button type="button" className="dn-dashboard-task-check"
                       aria-label={`Complete Task ${task.title}`} title="Mark Task completed"
-                      onClick={() => completeDashboardTask(task)}><Check size={15} aria-hidden="true" /><span>Done</span></button>
+                      disabled={taskBusy} onClick={() => completeDashboardTask(task)}><Check size={15} aria-hidden="true" /><span>Done</span></button>
                   </div>;
                 })}
               </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}

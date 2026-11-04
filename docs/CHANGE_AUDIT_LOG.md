@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-393 | Complete signed-in independent Task integration
+- **Request / evidence:** Owner requires existing Tasks to sync in signed-in accounts. Owner screenshots confirm Standard default Firestore in expense-tracker-divin and owner-only recursive users/{userId} rules. This resolves CHG-392's missing rules/edition evidence; no rule replacement or deployment.
+- **Impact analysis / implementation:** Traced Task route, Dashboard, universal creation, Guest/account stores, auth changes, Task editor/actions, backup/restore, Guest transfer, parent-link cleanup and account deletion inventory. Added live account Task transport with stable document IDs, owner checks, guarded async errors, session invalidation, conflict detection and deletion-resurrection prevention. Guest persistence remains unchanged. Backup/transfer preserve destination IDs and retain Guest Tasks on failed transfer; account deletion includes Tasks. Parent cleanup preserves all independent Task content.
+- **Executed:** 614 unit tests passed during integration; final cloud/Dashboard subset 12 passed including the newly added Guest transfer test. 18 existing Task browser checks plus 1 simulated-account browser integration passed. Lint, build and diff checks passed. Guest tour v2026.11.04.3 reviewed; no changed Guest instructions/fixtures or reset required.
+- **Unverified / release gates:** Tests use injected cloud transport, not the deployed Firebase project. Real two-device signed-in CRUD, owner-denial checks, real account backup/restore/cleanup and physical iPhone acceptance remain pending. Offline transactions report failure; no successful sync claim without server acknowledgement. Best-effort parent cleanup can retain unavailable-parent references if offline.
+- **Publication:** OldVersion only, based on 46d7402. No Firebase/Vercel deployment, rules changes, version bump, PR, main write or production-data mutation.
+
 ## CHG-20261104-392 | Readable phone filter controls; account sync blocker recorded
 - **Request / impact analysis:** Owner authorized fixing filter truncation/remove overlap and completing signed-in Task sync. Traced ConditionBuilder control placement, shared dropdown labels, phone overrides and Task account/storage/backup/merge/deletion boundaries.
 - **Implemented:** Shared phone filters use two readable lines and a separate remove column. Wrapping replaces truncation for dropdown labels; the remove target no longer overlays values. Existing rule choices, persisted conditions and draft/apply semantics are unchanged.

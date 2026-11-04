@@ -45,7 +45,7 @@ test('removes every known current and legacy collection without touching another
   assert.deepEqual(result, { deleted: CLOUD_RECORD_COLLECTIONS.length * 3 });
   assert.equal(cloud.batches.length, 1);
   assert.ok([...cloud.db.values()].every(docs => docs.length === 0));
-  assert.deepEqual(progress.at(-1), { stage: 'deleting', deleted: 18, total: 18 });
+  assert.deepEqual(progress.at(-1), { stage: 'deleting', deleted: CLOUD_RECORD_COLLECTIONS.length * 3, total: CLOUD_RECORD_COLLECTIONS.length * 3 });
 });
 
 test('permission failure during inventory performs zero deletes', async () => {

@@ -1,7 +1,7 @@
 // Only known DN account-owned Firestore collections can be cleared.
 // Legacy events and unified transactions are included to avoid silent leftovers.
 export const CLOUD_RECORD_COLLECTIONS = Object.freeze([
-  'eventGroups', 'events', 'expenses', 'incomes', 'transactions', 'settings',
+  'eventGroups', 'events', 'expenses', 'incomes', 'transactions', 'settings', 'tasks',
 ]);
 
 export const CLOUD_DELETE_CONFIRMATION = 'DELETE MY CLOUD DATA';

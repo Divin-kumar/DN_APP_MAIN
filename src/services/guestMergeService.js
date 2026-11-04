@@ -1,3 +1,5 @@
+import { mergeAccountTasks } from './accountTaskService';
+import { normalizeIndependentTask } from '../utils/independentTasks.js';
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration';
 /*
   Migrates guest-local records into the signed-in user's Firestore account.
@@ -27,17 +29,18 @@ export const mergeGuestDataIntoAccount = async (uid) => {
   const events = getGuestEvents();
   const guestTaskRaw = localStorage.getItem('dn_guest_tasks');
   let tasksRetainedLocally = 0;
+  let tasks = [];
   if (guestTaskRaw) {
     try {
       const guestTasks = JSON.parse(guestTaskRaw);
-      tasksRetainedLocally = Array.isArray(guestTasks) ? guestTasks.length : 1;
+      if (!Array.isArray(guestTasks)) throw new Error('Invalid Guest Tasks');
+      tasks = guestTasks.map((item) => normalizeIndependentTask(item));
     } catch {
       // Corrupted Guest Tasks stay on disk for manual recovery, never deleted.
       tasksRetainedLocally = 1;
     }
   }
-  // Include Tasks in the scope snapshot even while they intentionally remain
-  // local. Concurrent Guest changes must not be hidden by account transfer.
+  // Concurrent Guest changes must not be hidden by account transfer.
   const guestRecordKeys = [GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY, 'dn_guest_tasks'];
   const readGuestSnapshot = () => JSON.stringify(guestRecordKeys.flatMap((key) => [
     localStorage.getItem(key), localStorage.getItem(LEGACY_STORAGE_PREFIX + key.slice(DN_STORAGE_PREFIX.length)),
@@ -79,6 +82,20 @@ export const mergeGuestDataIntoAccount = async (uid) => {
   }
   assertMergeScope();
 
+  // Preserve IDs and destination edits. On failure retain local Tasks for retry.
+  let taskMerge = { added: 0 };
+  try {
+    taskMerge = await mergeAccountTasks(uid, tasks, assertMergeScope);
+  } catch (error) {
+    tasksRetainedLocally = tasks.length || tasksRetainedLocally;
+    console.warn('Guest Tasks were retained for retry:', error);
+  }
+  assertMergeScope();
+  if (!tasksRetainedLocally && guestTaskRaw) {
+    localStorage.removeItem('dn_guest_tasks');
+    localStorage.removeItem(LEGACY_STORAGE_PREFIX + 'guest_tasks');
+  }
+
   // Clear both naming generations after the batch commits. Otherwise a later
   // startup migration could resurrect old guest records and reimport duplicates.
   [GUEST_MODE_KEY, GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY].forEach((key) => {
@@ -90,6 +107,7 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     expenses: expenses.length,
     incomes: incomes.length,
     events: events.length,
+    tasks: taskMerge.added,
     tasksRetainedLocally,
   };
 };

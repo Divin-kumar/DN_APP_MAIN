@@ -1,3 +1,4 @@
+import { listAccountTasks, mergeAccountTasks } from '../services/accountTaskService';
 import { clearDnLocalData } from '../utils/storageMigration';
 import { listStateScope } from '../utils/listStateMemory';
 import { exportSavedListDefaultsForScope, resetSavedListDefaultsForScope, restoreSavedListDefaultsForScope } from '../utils/listViewDefaults';
@@ -258,10 +259,11 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         tasks = guardedGuestTasks(assertSourceScope).list();
         dataSource = 'guest-local';
       } else if (user?.uid) {
-        [events, expenses, incomes] = await Promise.all([
+        [events, expenses, incomes, tasks] = await Promise.all([
           getEventsForUser(user.uid),
           getExpensesForUser(user.uid),
           getIncomesForUser(user.uid),
+          listAccountTasks(user.uid, assertSourceScope),
         ]);
         dataSource = 'firebase-account';
       } else {
@@ -422,13 +424,12 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         throw new Error('Exit the isolated sample session before restoring a personal backup.');
       }
       assertDestinationScope();
-      if (backup.tasks.length && (!destinationGuest || destinationUid)) {
-        throw new Error('Independent Tasks cannot be imported into a signed-in account until account Task cloud permissions are verified. No backup records were imported.');
-      }
+
       // Fail before restoring any originals, Moments or ledger records if
       // personal Guest Task storage cannot be read safely.
       const guestTasks = destinationGuest && !destinationUid ? guardedGuestTasks(assertDestinationScope) : null;
       guestTasks?.list();
+      if (destinationUid) await listAccountTasks(destinationUid, assertDestinationScope);
       assertDestinationScope();
       setBackupMessage('Verifying and restoring original attachment files before records…');
       const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup, { originalFiles: pendingBackup.originalFiles }), backup.attachmentFiles || [], {
@@ -523,6 +524,10 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       if (guestTasks && backup.tasks.length) {
         assertDestinationScope();
         const taskMerge = guestTasks.merge(backup.tasks);
+        imported.tasks = taskMerge.added;
+        imported.conflicts += taskMerge.conflicts;
+      } else if (destinationUid && backup.tasks.length) {
+        const taskMerge = await mergeAccountTasks(destinationUid, backup.tasks, assertDestinationScope);
         imported.tasks = taskMerge.added;
         imported.conflicts += taskMerge.conflicts;
       }
@@ -962,9 +967,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
                 ) : null}
               </>
             ) : <p>This legacy file contains settings only; it cannot restore Moments or financial records.</p>}
-            {pendingBackup.backup.tasks.length > 0 && (!isGuest || user?.uid) ? (
-              <p role="alert">This backup contains independent Tasks. Account Task cloud storage has not been verified, so restoration is blocked in a signed-in workspace. No records will be imported.</p>
-            ) : null}
             {pendingBackup.backup.metadata.sourceAccount?.uid ? <p>Backup source account: {pendingBackup.backup.metadata.sourceAccount.displayName || pendingBackup.backup.metadata.sourceAccount.uid}. Its authentication account is not recreated.</p> : null}
             {getActiveSampleScenario() === GUEST_TOUR_SCENARIO && isGuest && !user?.uid ? (
               <p className="dn-restore-tour-note"><strong>Restore to your own Guest workspace:</strong> Confirming will leave the demo and merge this backup into your private Guest records, preserving existing IDs. Demo records will not be included. Cancel to keep exploring the demo.</p>
@@ -973,7 +975,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setPendingBackup(null)} disabled={importingBackup}>Cancel</button>
             <button type="button" className="settings-primary-button" onClick={restorePendingBackup}
-              disabled={importingBackup || exportingBackup || (pendingBackup.backup.tasks.length > 0 && (!isGuest || Boolean(user?.uid)))}>
+              disabled={importingBackup || exportingBackup}>
               {importingBackup ? 'Restoring backup…' : 'Confirm restore'}
             </button>
           </div>

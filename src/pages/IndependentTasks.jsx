@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -40,7 +40,9 @@ export function TaskListContent() {
   const store = useTaskStore();
   const eventStore = useEventStore();
   const scope = taskScopeKey({ user, isGuest });
-  const enabled = isGuest && !user?.uid;
+  const enabled = isGuest || Boolean(user?.uid);
+  const pendingRef = useRef(false);
+  const [busy, setBusy] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, changeView] = usePersistentListState('tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
   const [editor, setEditor] = useState(null);
@@ -52,7 +54,7 @@ export function TaskListContent() {
   const today = formatMomentDate(new Date());
 
   useEffect(() => { store.loadTasks(); }, [store.loadTasks, scope]);
-  useEffect(() => { if (enabled) eventStore.loadEvents(null, true); }, [enabled, eventStore.loadEvents, scope]);
+  useEffect(() => { if (enabled) eventStore.loadEvents(user?.uid, isGuest); }, [enabled, eventStore.loadEvents, scope, user?.uid, isGuest]);
   useEffect(() => {
     if (!enabled || searchParams.get('create') !== '1') return;
     setEditor({ kind: 'new', value: { momentId: searchParams.get('moment') || '', activityId: searchParams.get('activity') || '' } });
@@ -63,7 +65,7 @@ export function TaskListContent() {
 
   const ready = store.loadedFor === scope;
   const tasks = enabled && ready && !store.error ? store.tasks : EMPTY;
-  const eventReady = isRecordScopeLoaded(eventStore, 'guest:anonymous', getActiveSampleScenario(null));
+  const eventReady = isRecordScopeLoaded(eventStore, `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`, getActiveSampleScenario(user?.uid));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
   const displayedTasks = useMemo(() => sortIndependentTasks(matches, view.direction, view.field),
@@ -92,33 +94,35 @@ export function TaskListContent() {
   }, [enabled, ready, searchParams, setSearchParams, tasks]);
   const active = matches.filter((task) => task.status === 'in-progress').length;
   const completed = matches.filter((task) => task.status === 'completed').length;
-  const run = (change, message) => {
+  const run = async (change, message) => {
+    if (pendingRef.current) return null;
+    pendingRef.current = true; setBusy(true);
     try {
-      const result = change();
+      const result = await change();
       setError(''); setNotice(message);
       return result;
     } catch (cause) {
       setError(cause?.message || 'Task could not be saved.');
       return null;
-    }
+    } finally { pendingRef.current = false; setBusy(false); }
   };
-  const save = (patch) => {
-    const item = run(() => store.saveTask(patch), patch.id ? 'Task saved' : 'Task created');
+  const save = async (patch) => {
+    const item = await run(() => store.saveTask(patch), patch.id ? 'Task saved' : 'Task created');
     if (item) { setEditor(null); toast(patch.id ? 'Task updated' : 'Task created', 'success'); }
   };
-  const statusChange = (task, status) => {
-    const saved = run(() => store.setTaskStatus(task.id, status), status === 'completed' ? 'Task completed' : 'Task status updated');
+  const statusChange = async (task, status) => {
+    const saved = await run(() => store.setTaskStatus(task.id, status), status === 'completed' ? 'Task completed' : 'Task status updated');
     if (saved) setConfirm(null);
     return Boolean(saved);
   };
-  const remove = (task) => {
-    if (run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
+  const remove = async (task) => {
+    if (await run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
   };
   if (!enabled) return <div className="dn-tasks-page">
     <div className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent Tasks</span><h2>Tasks</h2></div></div>
     <section className="dn-task-empty" role="status"><ListTodo size={28} aria-hidden="true" />
-      <h3>Account Tasks aren’t available yet</h3>
-      <p>Signed-in Task storage will be enabled after cloud permissions are verified. Your existing Task-style Activities and Moments are unchanged.</p>
+      <h3>Open a workspace to use Tasks</h3>
+      <p>Sign in to sync your Tasks, or continue as Guest to keep them on this device.</p>
       <p>Guest Tasks remain on the original device. Export a backup before changing sessions.</p>
       <Link to="/activities">Open Activities</Link>
     </section>
@@ -159,6 +163,7 @@ export function TaskListContent() {
           maxVisible={4} onShowMore={() => setRefine(true)} /> : null}
       </div>
     </div>
+    {!ready && !store.error ? <p role="status">Loading Tasks…</p> : null}
     {ready && !store.error && !tasks.length ? <div className="dn-task-empty" role="status">
       <ListTodo size={28} aria-hidden="true" />
       <h3>A clear start</h3>
@@ -221,24 +226,24 @@ export function TaskListContent() {
       <p>{requestedTask.title}</p>
       {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
       <div className="dn-task-entry-actions">
-        <button type="button" onClick={() => {
-          if (statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress')) setRequestedTask(null);
+        <button type="button" disabled={busy} onClick={async () => {
+          if (await statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress')) setRequestedTask(null);
         }}>{requestedTask.status === 'completed' ? 'Reopen' : requestedTask.status === 'cancelled' ? 'Restore' : 'Done'}</button>
         <button type="button" onClick={() => { setError(''); setEditor({ kind: 'edit', value: requestedTask }); setRequestedTask(null); }}>Edit</button>
         <button type="button" onClick={() => { setRequestedTask(null); setError(''); }}>Close</button>
       </div>
     </ModalDialog> : null}
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
-      onClose={() => { setEditor(null); setError(''); }}>
+      onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
-        onTaskAction={(action) => {
+        busy={busy} onTaskAction={async (action) => {
           const task = editor.value;
-          const result = run(() => action === 'delete' ? store.removeTask(task.id)
+          const result = await run(() => action === 'delete' ? store.removeTask(task.id)
             : store.setTaskStatus(task.id, action === 'restore' ? 'in-progress' : 'cancelled'),
           action === 'delete' ? 'Task deleted' : 'Task status updated');
           if (result) setEditor(null);
         }}
-        moments={moments} onSave={save} error={error} onClose={() => { setEditor(null); setError(''); }} />
+        moments={moments} onSave={save} error={error} onClose={() => { if (!busy) { setEditor(null); setError(''); } }} />
     </ModalDialog> : null}
     {refine ? <TaskRefineSheet current={view} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
@@ -246,7 +251,7 @@ export function TaskListContent() {
       message={confirm.kind === 'delete' ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`
         : `Mark "${confirm.task.title}" as cancelled? You can restore it later.`}
       confirmLabel={confirm.kind === 'delete' ? 'Delete Task' : 'Cancel Task'}
-      error={error} onCancel={() => { setConfirm(null); setError(''); }}
+      busy={busy} error={error} onCancel={() => { setConfirm(null); setError(''); }}
       onConfirm={() => confirm.kind === 'delete' ? remove(confirm.task) : statusChange(confirm.task, 'cancelled')} /> : null}
   </div>;
 }
