@@ -27,7 +27,8 @@ export default function StoryDesignSettings() {
   const showToast = useAppStore((state) => state.showToast);
   const saved = useStoryDesignDefaults();
   const uid = user?.uid || null;
-  const scope = storyDesignScope({ uid, isGuest, sample: Boolean(getActiveSampleScenario(uid)) });
+  const isDemo = Boolean(getActiveSampleScenario(uid));
+  const scope = storyDesignScope({ uid, isGuest, sample: isDemo });
   const [draft, setDraft] = useState(() => saved);
   useEffect(() => { setDraft(saved); }, [saved, scope]);
   const changed = formats.some(({ id }) => draft[id] !== saved[id]);
@@ -59,8 +60,11 @@ export default function StoryDesignSettings() {
         <p>Choose a design for each Story type. The design never changes your saved memories.</p>
       </div>
     </div>
+    {isDemo && scope ? <p className="dn-story-design-hint" role="status">
+      Exploring the demo? Designs you save here stay separate from your personal Guest settings and backups.
+    </p> : null}
     {!scope ? <p className="dn-story-design-hint" role="status">
-      Explore DN uses suggested designs. Open your own Guest or account workspace to save personal choices.
+      Sign in or enter your own Guest workspace to save designs.
     </p> : null}
     {formats.map((format) => <fieldset className="dn-story-design-group" key={format.id}>
       <legend>{format.label} <small>{format.help}</small></legend>

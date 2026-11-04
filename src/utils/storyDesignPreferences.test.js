@@ -43,11 +43,19 @@ test('Guest and independent accounts never share appearance settings', () => {
   assert.equal(readStoryDesign(store, guest).journey, 'minimal');
 });
 
-test('demo and anonymous contexts cannot write appearance choices', () => {
-  const store = storage();
-  assert.equal(saveStoryDesign(store, { isGuest: true, sample: true }, {}).ok, false);
+test('demo designs work independently and anonymous contexts remain read-only', () => {
+  const store = storage(), guest = { isGuest: true }, demo = { isGuest: true, sample: true };
+  assert.equal(saveStoryDesign(store, guest, { journey: 'minimal' }).ok, true);
+  assert.equal(saveStoryDesign(store, demo, { journey: 'heritage' }).ok, true);
+  assert.notEqual(storyDesignScope(demo), storyDesignScope(guest));
+  assert.equal(readStoryDesign(store, guest).journey, 'minimal');
+  assert.equal(readStoryDesign(store, demo).journey, 'heritage');
+  assert.equal(exportStoryDesignForBackup(store, demo), null);
+  assert.throws(() => restoreStoryDesignFromBackup(store, demo, { version: 1, styles: {} }), /Exit Explore DN/);
+  resetStoryDesign(store, demo);
+  assert.equal(readStoryDesign(store, demo).journey, 'editorial');
+  assert.equal(readStoryDesign(store, guest).journey, 'minimal');
   assert.equal(saveStoryDesign(store, {}, {}).ok, false);
-  assert.equal(store.keys().length, 0);
 });
 
 test('backup preserves old omissions and validates optional scoped appearance', () => {

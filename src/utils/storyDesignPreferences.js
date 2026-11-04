@@ -16,9 +16,10 @@ export const normalizeStoryDesign = (value) => {
   ]));
 };
 
-// A demo never writes to a real Guest's settings. Anonymous contexts are read-only.
+// Demo designs use an independent key, never the personal Guest key.
+// Anonymous non-Guest sessions stay read-only.
 export const storyDesignScope = ({ uid, isGuest = false, sample = false } = {}) => {
-  if (sample) return null;
+  if (sample) return isGuest && !uid ? PREFIX + ':guest-demo' : null;
   if (isGuest && !uid) return PREFIX + ':guest';
   if (typeof uid === 'string' && uid.trim() && !isGuest) return PREFIX + ':user:' + encodeURIComponent(uid);
   return null;
@@ -57,7 +58,8 @@ export const resetStoryDesign = (storage, session) => {
 };
 
 export const exportStoryDesignForBackup = (storage, session) => {
-  if (!storyDesignScope(session)) return null;
+  // Demo style choices are for exploration, not part of personal backups.
+  if (session?.sample || !storyDesignScope(session)) return null;
   return { version: 1, styles: readStoryDesign(storage, session) };
 };
 
@@ -73,6 +75,7 @@ export const validateStoryDesignBackup = (value) => {
 export const restoreStoryDesignFromBackup = (storage, session, value) => {
   if (value === undefined) return { changed: false };
   validateStoryDesignBackup(value);
+  if (session?.sample) throw new Error('Exit Explore DN before restoring personal design settings.');
   const result = saveStoryDesign(storage, session, value.styles);
   if (!result.ok) throw new Error(result.reason);
   return { changed: true, styles: result.styles };
