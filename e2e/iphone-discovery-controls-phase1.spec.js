@@ -94,14 +94,15 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const geometry = await rule.evaluate((node) => {
       const parts = [...node.children].map((child) => child.getBoundingClientRect());
       const box = node.getBoundingClientRect();
-      return { fieldBottom:parts[0].bottom, comparisonTop:parts[1].top, valueTop:parts[2].top,
+      return { fieldTop:parts[0].top, fieldRight:parts[0].right, comparisonLeft:parts[1].left, comparisonTop:parts[1].top, valueTop:parts[2].top,
         comparisonRight:parts[1].right, valueLeft:parts[2].left,
         valueRight:parts[2].right, removeLeft:parts[3].left,
         removeWidth:parts[3].width, removeHeight:parts[3].height,
         removeRight:parts[3].right, ruleRight:box.right,
         pageWidth:document.documentElement.scrollWidth };
     });
-    expect(geometry.fieldBottom).toBeLessThanOrEqual(geometry.comparisonTop + 3);
+    expect(Math.abs(geometry.fieldTop - geometry.comparisonTop)).toBeLessThanOrEqual(5);
+    expect(geometry.fieldRight).toBeLessThanOrEqual(geometry.comparisonLeft + 2);
     expect(Math.abs(geometry.comparisonTop - geometry.valueTop)).toBeLessThanOrEqual(4);
     expect(geometry.comparisonRight).toBeLessThanOrEqual(geometry.valueLeft + 2);
     expect(geometry.valueRight).toBeLessThanOrEqual(geometry.removeLeft + 2);
