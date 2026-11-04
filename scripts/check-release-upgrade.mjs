@@ -102,7 +102,9 @@ try {
       await page.goto('/events/moment-one/story');
       await expect(page.locator('.dn-v2-story')).toContainText('Book a lakeside stay');
       const promptCount = await page.evaluate(() => Number(sessionStorage.getItem('dn_verify_upgrade_prompts') || 0));
-      const repeatPrompt = promptCount - (mode === 'fresh-navigation' ? 1 : 0);
+      // Fresh navigation may show zero or one initial update prompt; only repeats fail.
+      // Never treat an absent prompt as a negative number of repeated prompts.
+      const repeatPrompt = Math.max(0, promptCount - (mode === 'fresh-navigation' ? 1 : 0));
       expect(repeatPrompt).toBe(0);
       expect(await snapshot(page)).toEqual(before);
       expect(errors).toEqual([]);
