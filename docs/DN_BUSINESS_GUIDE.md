@@ -1,5 +1,7 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 phone sorting and recovery (OldVersion only, unpublished):** Phone filter sheets now show every sort choice in two centered columns. If a Task status change cannot save from its actions dialog, the dialog stays open with an error so you can retry. Existing records and filter behavior are preserved. Focused checks passed; physical iPhone verification and deployment remain separate.
+
 **DN 2.3 screenshot corrections (OldVersion only, unpublished):** Task date and time now fit inside one square without a calendar icon. Red flags mean overdue; white flags in dark mode mean high priority; other priorities have no flag. Summary counts follow the applied filters and search. A Story stylesheet collision that could squeeze Task titles into a narrow column is fixed. Code List navigation has no arrow buttons, sort arrows have separate space, and PDF Studio says Preview needs updating with clearer spacing. Your data is unchanged; physical iPhone acceptance and deployment remain pending.
 
 **DN 2.3 Task interaction refinement (OldVersion only, unpublished):** Tap or swipe a Task for actions; Edit opens only when chosen. Done and Reopen live in the menu, and a compact calendar date replaces the crowded date line. Priority/status symbols retain readable accessibility labels. Dashboard Task links first show actions. Sort/filter choices are centered, and Appearance has Defaults, Cancel and Save on one row. Existing data and relationships are unchanged. Physical iPhone acceptance and deployment are still pending.

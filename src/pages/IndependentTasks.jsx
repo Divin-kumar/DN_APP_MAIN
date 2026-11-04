@@ -107,7 +107,9 @@ export function TaskListContent() {
     if (item) { setEditor(null); toast(patch.id ? 'Task updated' : 'Task created', 'success'); }
   };
   const statusChange = (task, status) => {
-    if (run(() => store.setTaskStatus(task.id, status), status === 'completed' ? 'Task completed' : 'Task status updated')) setConfirm(null);
+    const saved = run(() => store.setTaskStatus(task.id, status), status === 'completed' ? 'Task completed' : 'Task status updated');
+    if (saved) setConfirm(null);
+    return Boolean(saved);
   };
   const remove = (task) => {
     if (run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
@@ -133,7 +135,7 @@ export function TaskListContent() {
       <span><strong>{completed}</strong> Completed</span>
     </div>
     {store.error ? <p className="dn-task-feedback" role="alert">{store.error} <button type="button" onClick={() => store.loadTasks()}>Retry</button></p> : null}
-    {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
+    {error && !editor && !confirm && !requestedTask ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     {notice ? <p className="sr-only" role="status" aria-live="polite">{notice}</p> : null}
     <div className="dn-list-controls dn-task-discovery">
       <div className="dn-list-controls-row">
@@ -215,15 +217,15 @@ export function TaskListContent() {
         </SwipeActionCard>;
       })}
     </div>
-    {requestedTask ? <ModalDialog title="Task actions" onClose={() => setRequestedTask(null)}>
+    {requestedTask ? <ModalDialog title="Task actions" onClose={() => { setRequestedTask(null); setError(''); }}>
       <p>{requestedTask.title}</p>
+      {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
       <div className="dn-task-entry-actions">
         <button type="button" onClick={() => {
-          statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress');
-          setRequestedTask(null);
+          if (statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress')) setRequestedTask(null);
         }}>{requestedTask.status === 'completed' ? 'Reopen' : requestedTask.status === 'cancelled' ? 'Restore' : 'Done'}</button>
         <button type="button" onClick={() => { setError(''); setEditor({ kind: 'edit', value: requestedTask }); setRequestedTask(null); }}>Edit</button>
-        <button type="button" onClick={() => setRequestedTask(null)}>Close</button>
+        <button type="button" onClick={() => { setRequestedTask(null); setError(''); }}>Close</button>
       </div>
     </ModalDialog> : null}
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"

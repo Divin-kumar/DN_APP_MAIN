@@ -193,3 +193,17 @@ html[data-theme] .dn-refine-sort-chips > button .dn-sort-choice-content {
 }
 html[data-theme] .dn-sort-choice-content > span { grid-column:2; }
 html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static; width:14px; height:14px; }
+
+/* All phone Refine sheets expose every sort without sideways discovery. */
+@media(max-width:580px) {
+  html[data-theme] .dn-refine-sheet .dn-refine-sort-chips {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
+    width:100%; gap:2px 8px; overflow:visible;
+  }
+  html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button {
+    width:100%; min-width:0; white-space:normal; padding:8px 4px;
+  }
+  html[data-theme] .dn-refine-sheet .dn-sort-choice-content > span {
+    min-width:0; overflow-wrap:anywhere; line-height:1.4;
+  }
+}
