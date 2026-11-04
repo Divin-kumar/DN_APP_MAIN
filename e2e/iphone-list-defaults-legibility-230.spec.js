@@ -21,6 +21,16 @@ for (const [width, height, theme] of [
     // All three SortChips groups and their chosen fields stay untouched.
     const groups = section.locator('.dn-defaults-sort-card');
     await expect(groups).toHaveCount(3);
+    // List Defaults has the same lightweight hierarchy as Settings home.
+    const surface = await section.evaluate((root) => {
+      const style = getComputedStyle(root);
+      return { border: style.borderTopWidth, shadow: style.boxShadow,
+        gap: Number.parseFloat(style.rowGap), padding: Number.parseFloat(style.paddingTop) };
+    });
+    expect(surface.border).toBe('0px');
+    expect(surface.shadow).toBe('none');
+    expect(surface.padding).toBe(0);
+    expect(surface.gap).toBeLessThanOrEqual(12);
     const typography = await section.evaluate((root) => {
       const font = (sel) => [...root.querySelectorAll(sel)].map((node) =>
         parseFloat(getComputedStyle(node).fontSize));

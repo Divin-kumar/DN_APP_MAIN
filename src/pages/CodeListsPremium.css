@@ -475,3 +475,30 @@ html[data-theme] .code-lists-page .code-list-rows .code-list-row {
     font-size:13px; line-height:1.55;
   }
 }
+
+/* Owner screenshot + synthetic capture: the saved Filter & Sort page still
+   inherited a giant Settings card around otherwise unboxed choices.
+   Remove only that outer frame and preserve all existing filter controls. */
+html[data-theme] .dn-list-defaults-page #list-order.settings-section.code-list-section {
+  padding:0 !important;
+  gap:9px !important;
+  border:0 !important; border-radius:0 !important;
+  box-shadow:none !important; background:transparent !important;
+  overflow:visible !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order > .settings-section-heading {
+  padding:0 0 2px; align-items:center;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-intro {
+  margin:0 0 2px !important; padding:5px 0 8px !important;
+  gap:4px;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-list-sort-settings {
+  margin:0 0 7px !important; gap:0;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card {
+  padding-block:8px !important;
+}
+html[data-theme] .dn-list-defaults-page #list-order .dn-list-filter-preferences {
+  margin:0; padding-top:12px;
+}
