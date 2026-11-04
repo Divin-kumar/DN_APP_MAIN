@@ -93,8 +93,13 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     const originalTasks=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
     await testInfo.attach('DashboardTasks-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();
-    await expect(page.getByRole('dialog',{name:'Task actions'})).toBeVisible();
-    await page.getByRole('dialog',{name:'Task actions'}).getByRole('button',{name:'Edit',exact:true}).click();
+    await expect(page).toHaveURL(/\/tasks(?:\?|$)/);
+    await expect(page.getByRole('dialog',{name:'Task actions'})).toHaveCount(0);
+    const highlighted = page.locator('.dn-independent-task-row.is-dashboard-selected');
+    await expect(highlighted).toHaveCount(1);
+    await expect(highlighted).toContainText('Review travel documents');
+    await highlighted.click();
+    await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
     await expect(page.getByRole('dialog',{name:'Edit Task'}).getByLabel('Task title')).toHaveValue('Review travel documents');
     await page.getByRole('dialog',{name:'Edit Task'}).getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto('/dashboard');
