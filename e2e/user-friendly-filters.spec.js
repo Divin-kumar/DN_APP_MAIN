@@ -290,6 +290,13 @@ for (const width of [320, 390, 1280]) {
     await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
     const overflow = page.getByRole('button', { name: 'Show 6 more active filters' });
     await expect(overflow).toBeVisible();
+    const disclosure = await overflow.evaluate((button) => {
+      const outer = button.closest('.dn-condition-chips').getBoundingClientRect();
+      const inner = button.getBoundingClientRect();
+      return { left: inner.left, right: inner.right, railLeft: outer.left, railRight: outer.right };
+    });
+    expect(disclosure.left).toBeGreaterThanOrEqual(disclosure.railLeft - 1);
+    expect(disclosure.right).toBeLessThanOrEqual(disclosure.railRight + 1);
     const measurements = await chips.evaluate((element) => ({
       tops: [...element.children].map((chip) => chip.getBoundingClientRect().top),
       height: element.getBoundingClientRect().height,
