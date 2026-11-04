@@ -52,3 +52,9 @@ test('date-based PDF breaks are independent from per-Activity breaks and never r
   assert.equal(normalizePdfStudioOptions({}).pageBreakBetweenDays, false);
   assert.equal(JSON.stringify(source), before);
 });
+
+test('PDF page theme is explicit and defaults safely to light', () => {
+  assert.equal(normalizePdfStudioOptions({ colorMode:'dark' }).colorMode,'dark');
+  assert.equal(normalizePdfStudioOptions({}).colorMode,'light');
+  assert.equal(normalizePdfStudioOptions({ colorMode:'unknown' }).colorMode,'light');
+});

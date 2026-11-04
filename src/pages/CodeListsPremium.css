@@ -511,3 +511,29 @@ html[data-theme] .code-list-save-error {
 html[data-theme] .dn-premium-code-lists .code-list-add-row button:disabled {
   opacity:.55; cursor:default;
 }
+
+/* Reserve real space for arrows so they never cover category labels. */
+html[data-theme] .code-lists-page .dn-code-list-nav-window { gap:4px; }
+html[data-theme] .code-lists-page .dn-code-list-nav-arrow {
+  position:static; flex:0 0 44px; box-shadow:none; border-radius:14px;
+}
+html[data-theme] .code-lists-page .dn-code-list-nav-window > .dn-code-list-index-scroll {
+  width:0; scroll-padding-inline:4px;
+}
+html[data-theme] .code-lists-page .settings-section-heading { min-width:0; flex-wrap:wrap; }
+html[data-theme] .code-lists-page .settings-section-heading > div { min-width:0; flex:1 1 130px; }
+html[data-theme] .code-lists-page .moment-type-add-button { margin-left:auto; flex:0 0 auto; max-width:100%; }
+html[data-theme] .code-lists-page .code-list-rows .code-list-item {
+  border:1px solid var(--color-border) !important; border-radius:14px !important;
+  overflow:hidden; background:var(--color-card) !important;
+}
+html[data-theme] .code-lists-page .code-list-rows .code-list-item > .dn-swipe-main {
+  border-radius:inherit; background:transparent !important;
+}
+html[data-theme] .code-lists-page .code-list-rows .code-list-row { padding-inline:12px !important; }
+html[data-theme] .code-lists-page .code-list-section.has-modal-add > .settings-section-heading {
+  width:100%; box-sizing:border-box; grid-template-columns:auto minmax(0,1fr) auto; gap:8px;
+}
+html[data-theme] .code-lists-page .code-list-section.has-modal-add .moment-type-add-button {
+  margin:0 !important; min-width:68px; width:auto; justify-self:end;
+}

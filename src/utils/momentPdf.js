@@ -4,7 +4,7 @@ import { attachmentRepository } from '../services/attachmentService';
 import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
-import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES, pdfPageNumberLabel, hasRoomForSinglePdfPhoto } from './pdfStudioOptions';
+import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_DARK_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES, pdfPageNumberLabel, hasRoomForSinglePdfPhoto } from './pdfStudioOptions';
 import { pdfStoryText } from './pdfStoryText';
 
 const STANDARD_SCALE = PDF_PAGE_QUALITY_PROFILES.standard.scale;
@@ -52,7 +52,7 @@ export class MomentPdfPainter {
     this.jpegQuality = pageProfile.jpegQuality;
     this.maxPages = pageProfile.maxPages;
     this.pageQuality = options.pageQuality || 'standard';
-    this.palette = PDF_STYLE_PALETTES[this.visualStyle] || palette;
+    this.palette = (options.colorMode === 'dark' ? PDF_DARK_STYLE_PALETTES : PDF_STYLE_PALETTES)[this.visualStyle] || palette;
     this.density = options.density || 'balanced';
     this.begin();
   }

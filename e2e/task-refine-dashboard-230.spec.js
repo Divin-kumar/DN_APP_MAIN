@@ -97,7 +97,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     // Chromium can report 43.9999847 for a 44 CSS-pixel target.
     expect(Math.round(actionGeometry.height * 100) / 100).toBeGreaterThanOrEqual(44);
     expect(actionGeometry.width).toBeGreaterThan(44);
-    expect(actionGeometry.radius).toBe('999px');
+    expect(actionGeometry.radius).toBe('10px');
     expect(actionGeometry.text).toBe('Done');
     await testInfo.attach('DashboardTasks-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();

@@ -43,7 +43,7 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     expect(a.background).not.toBe('rgba(0, 0, 0, 0)');
     expect(a.doneHeight).toBeGreaterThanOrEqual(44);
     expect(a.doneWidth).toBeGreaterThan(44);
-    expect(a.doneRadius).toBe('999px');
+    expect(a.doneRadius).toBe('10px');
     expect(a.doneText).toBe('Done');
     expect(a.visibleMenuCount).toBe(0);
     expect(a.titleFont).toBeGreaterThanOrEqual(15);

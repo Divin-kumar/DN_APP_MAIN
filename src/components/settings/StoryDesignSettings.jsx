@@ -92,7 +92,7 @@ export default function StoryDesignSettings() {
     <div className="dn-story-design-actions">
       <span className="dn-story-design-save-status" role="status" aria-live="polite">
         {!scope ? 'Choose a Guest or signed-in workspace to edit designs.'
-          : changed ? 'Unsaved changes. Save to use this design in Story and PDF.'
+          : changed ? 'Unsaved changes. Save to apply.'
             : 'All designs saved.'}
       </span>
       <button type="button" className="settings-secondary-button" disabled={!scope}
@@ -105,8 +105,7 @@ export default function StoryDesignSettings() {
         onClick={save}>Save designs</button>
     </div>
     <p className="dn-story-design-hint">
-      Story and PDF Studio start with these styles. PDF Studio can customize each export;
-      your app theme, records and original files stay unchanged.
+      Default styles for Story and PDF. Customize individual exports in PDF Studio.
     </p>
   </section>;
 }

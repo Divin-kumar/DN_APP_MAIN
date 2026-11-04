@@ -94,7 +94,7 @@ test('Settings correctly describes Story defaults and PDF-only customization wit
   await page.getByRole('link', { name: 'Open Appearance & preferences' }).click();
   await expect(page).toHaveURL(/\/settings\/appearance$/);
   await expect(page.getByRole('region', { name: 'Story and PDF appearance' })
-    .getByText(/Story and PDF Studio start with these styles/)).toBeVisible();
+    .getByText(/Default styles for Story and PDF/)).toBeVisible();
   await expect(page.getByText('PDF Studio customization is a separate upcoming 2.2.0 step.')).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(source);
   expect(errors).toEqual([]);

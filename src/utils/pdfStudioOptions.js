@@ -58,6 +58,11 @@ export const PDF_STYLE_PALETTES = Object.freeze({
     accent: '#495660', line: '#E3E7EA', surface: '#F3F5F6',
   }),
 });
+export const PDF_DARK_STYLE_PALETTES = Object.freeze({
+  heritage: Object.freeze({ paper:'#211F1D', ink:'#F1E9DD', muted:'#C0B5A5', accent:'#D8BE98', line:'#49433B', surface:'#302B26' }),
+  editorial: Object.freeze({ paper:'#15232D', ink:'#E6F0F5', muted:'#ACC1CD', accent:'#9ACDDD', line:'#354C5A', surface:'#223541' }),
+  minimal: Object.freeze({ paper:'#191E25', ink:'#EDF1F6', muted:'#B1BBC8', accent:'#B6C8DB', line:'#39434F', surface:'#252D37' }),
+});
 export const PDF_TEMPLATE_NAMES = Object.freeze({
   journey: 'Journal', diary: 'Diary', chronicle: 'Tasks',
 });
@@ -71,6 +76,7 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
   return {
     template,
     visualStyle,
+    colorMode: source?.colorMode === 'dark' ? 'dark' : 'light',
     searchableText: flag(source?.searchableText, false),
     pageQuality: Object.hasOwn(PDF_PAGE_QUALITY_PROFILES, source?.pageQuality)
       ? source.pageQuality : 'standard',

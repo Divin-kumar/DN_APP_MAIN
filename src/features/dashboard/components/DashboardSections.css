@@ -278,7 +278,7 @@ html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check {
   color:var(--color-primary); box-shadow:none; cursor:pointer;
   font:inherit; font-size:12px; font-weight:700; white-space:nowrap;
 }
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check:is(:hover,:focus-visible) {
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check:focus-visible {
   border-color:color-mix(in srgb,var(--color-primary) 46%,var(--color-border));
   background:color-mix(in srgb,var(--color-primary) 14%,var(--color-card));
 }
@@ -292,4 +292,10 @@ html[data-theme] .dn-dashboard-tasks :is(button,a):focus-visible {
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-dashboard-task-row { transition:none; }
+}
+
+/* Quiet action text with a full touch target, without a repeated pill. */
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check {
+  border:0; background:transparent; box-shadow:none; border-radius:10px;
+  min-width:44px; padding-inline:4px; gap:4px; font-size:12px;
 }

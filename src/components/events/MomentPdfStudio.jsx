@@ -339,6 +339,16 @@ export default function MomentPdfStudio({ event }) {
               <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
           </div>
         </fieldset>
+        <fieldset className="dn-pdf-color-options" disabled={busy}>
+          <legend>Page theme</legend>
+          <div role="group" aria-label="PDF page theme">
+            {['light', 'dark'].map((mode) => <button type="button" key={mode}
+              aria-pressed={settings.colorMode === mode} onClick={() => update('colorMode', mode)}>
+              {mode === 'light' ? 'Light' : 'Dark'}
+            </button>)}
+          </div>
+          <p>Applies to the preview and downloaded PDF.</p>
+        </fieldset>
         <div className="dn-pdf-studio-field">
           <span>Page spacing</span>
           <DropdownSelect aria-label="PDF page spacing" value={settings.density} disabled={busy}

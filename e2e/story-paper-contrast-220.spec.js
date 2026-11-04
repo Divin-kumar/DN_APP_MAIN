@@ -56,6 +56,8 @@ for (const theme of ['dark', 'light']) {
         const story = page.locator('.dn-v2-story');
         await expect(story).toHaveAttribute('data-presentation', format);
         await expect(story).toHaveAttribute('data-design-style', style);
+        const paperRgb = await story.locator(paper).first().evaluate(el => getComputedStyle(el).backgroundColor.match(/\d+/g).slice(0,3).map(Number));
+        expect(paperRgb.every(channel => theme === 'dark' ? channel < 65 : channel > 230)).toBe(true);
         const h = story.locator(heading).first();
         await expect(h).toBeVisible();
         expect(await readableContrast(h, paper), `${format}/${style}/${theme} title`).toBeGreaterThanOrEqual(4.5);

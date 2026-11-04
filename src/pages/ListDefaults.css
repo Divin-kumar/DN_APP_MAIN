@@ -23,8 +23,8 @@ html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card .dn-r
   width: 100%; min-width: 0; padding: 0; overflow: visible;
 }
 html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card .dn-refine-sort-chips > button {
-  min-height: 46px; width: 100%; min-width: 0; justify-content: flex-start;
-  white-space: normal; overflow-wrap: anywhere; text-align: left; padding: 8px 3px; font-size: 13px;
+  min-height: 46px; width: 100%; min-width: 0; justify-content: center;
+  white-space: normal; overflow-wrap: anywhere; text-align: center; padding: 8px 3px; font-size: 13px;
 }
 html[data-theme] .dn-list-defaults-page .dn-defaults-domain > .dn-list-filter-switch {
   display: flex; align-items: center; gap: 8px; width: 100%; min-width: 0; min-height: 46px;
@@ -55,7 +55,7 @@ html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-help {
 }
 
 html[data-theme] .dn-list-defaults-page #list-order [data-sort-count="3"] .dn-refine-sort-chips {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-saved {
   color: var(--color-text-muted); font-weight: 500;
