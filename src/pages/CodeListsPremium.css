@@ -502,3 +502,12 @@ html[data-theme] .dn-list-defaults-page #list-order .dn-defaults-sort-card {
 html[data-theme] .dn-list-defaults-page #list-order .dn-list-filter-preferences {
   margin:0; padding-top:12px;
 }
+
+/* Save failures remain beside the draft, without a transient-toast dependency. */
+html[data-theme] .code-list-save-error {
+  margin:6px 0; color:var(--color-danger,#b34344); font-size:13px;
+  line-height:1.5; overflow-wrap:anywhere;
+}
+html[data-theme] .dn-premium-code-lists .code-list-add-row button:disabled {
+  opacity:.55; cursor:default;
+}

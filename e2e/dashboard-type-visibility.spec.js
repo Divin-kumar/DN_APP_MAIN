@@ -34,7 +34,7 @@ async function seedTypeSettings(page) {
 
 async function editType(page, name) {
   await page.goto('/settings/code-lists');
-  await page.getByRole('button', { name: `${name}. Tap or swipe either direction for actions.`, exact: true }).click();
+  await page.getByRole('button', { name: `${name}. Tap to open actions; swipe is optional.`, exact: true }).click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   return page.getByRole('dialog', { name: 'Edit moment type', exact: true });
 }

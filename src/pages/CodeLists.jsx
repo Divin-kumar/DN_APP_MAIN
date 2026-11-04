@@ -53,6 +53,8 @@ const getRecordUsageCount = (listKey, value, state) => {
 };
 
 function CodeListSection({ title, description, listKey, placeholder, allowLabels = false }) {
+  const accountError = useAppStore((state) => state.adminValuesError);
+  const accountLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValues = useAppStore((state) => state.adminValues);
   const preferences = useAppStore((state) => state.preferences);
   const setAdminValues = useAppStore((state) => state.setAdminValues);
@@ -63,9 +65,23 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const incomes = useIncomeStore((state) => state.incomes);
   const [draft, setDraft] = useState('');
   const [draftLabel, setDraftLabel] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
+  const savingRef = useRef(false);
   const [editingValue, setEditingValue] = useState(null);
   const [warningValue, setWarningValue] = useState(null);
   const [momentTypeEditor, setMomentTypeEditor] = useState(null);
+  const retryAccount = async () => {
+    const state = useAppStore.getState();
+    if (!state.user?.uid) return;
+    try { await state.hydrateAdminValuesForUser(state.user.uid); setSaveError(''); }
+    catch { /* Keep the draft and the existing account error visible. */ }
+  };
+  const saveFeedback = <>
+    {saveError ? <p className="code-list-save-error" role="alert">{saveError}</p> : null}
+    {accountError || accountLoading ? <button type="button" className="settings-secondary-button"
+      disabled={accountLoading} onClick={retryAccount}>{accountLoading ? 'Reloading Code Lists…' : 'Reload Code Lists to retry'}</button> : null}
+  </>;
   const isMomentTypeEditorOpen = Boolean(momentTypeEditor);
   const momentTypeTitleRef = useRef(null);
 
@@ -89,18 +105,26 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   ), [entries, events, expenses, incomes, preferences, listKey]);
 
   const updateEntries = async (nextEntries) => {
+    if (savingRef.current) return false;
+    savingRef.current = true;
+    setSaving(true);
+    setSaveError('');
     try {
       await setAdminValues({ [listKey]: nextEntries });
       showToast(isGuest ? 'Code List saved on this device' : 'Code List saved to your account', 'success');
       return true;
     } catch (error) {
       console.error('Unable to save Code List:', error);
+      setSaveError(error.message || 'Code List could not be saved. Try again.');
       showToast(error.message || 'Code List could not be saved', 'danger');
       return false;
+    } finally {
+      savingRef.current = false;
+      setSaving(false);
     }
   };
 
-  const upsertEntry = (nextValue, nextLabel) => {
+  const upsertEntry = async (nextValue, nextLabel) => {
     const normalizedValue = nextValue.trim();
     if (!normalizedValue) return;
     const createdEntry = {
@@ -113,12 +137,15 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       ? entries.map((entry) => (entry.value === normalizedValue ? { ...entry, label: createdEntry.label, active: true, isActive: true } : entry))
       : [...entries, createdEntry];
 
-    updateEntries(nextEntries);
-    setDraft('');
-    setDraftLabel('');
+    if (await updateEntries(nextEntries)) {
+      setDraft('');
+      setDraftLabel('');
+    }
   };
 
   const openMomentTypeEditor = (entry = null) => {
+    if (savingRef.current) return;
+    setSaveError('');
     const baseEntry = entry || { value: '', label: '', canGenerateGreetingCards: true, greetingTemplate: '', showInDashboardUpcoming: true, showActivitiesOnDashboard: true };
     setMomentTypeEditor({
       existingValue: baseEntry.value || null,
@@ -186,7 +213,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   };
 
   const handleDisable = (entry) => {
-    updateEntries(entries.map((item) => (item.value === entry.value ? { ...item, active: false, isActive: false } : item)));
+    return updateEntries(entries.map((item) => (item.value === entry.value ? { ...item, active: false, isActive: false } : item)));
   };
 
   const handleActivate = (entry) => {
@@ -194,11 +221,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
     updateEntries(nextEntries);
   };
 
-  const handleRename = (entry, nextValue) => {
+  const handleRename = async (entry, nextValue) => {
     const trimmed = nextValue.trim();
     if (!trimmed) return;
 
-    updateEntries(entries.map((item) => {
+    const saved = await updateEntries(entries.map((item) => {
       if (item.value !== entry.value) return item;
       if (listKey === 'eventTypes') {
         return {
@@ -213,7 +240,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       }
       return { ...item, value: trimmed, label: trimmed };
     }));
-    setEditingValue(null);
+    if (saved) setEditingValue(null);
   };
 
   const renderEntry = (entry) => {
@@ -227,6 +254,8 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         mainClassName="code-list-swipe-content" label={entry.label} openOnTap
         otherActions={[
           { label: 'Edit', icon: PencilLine, onClick: () => {
+            if (savingRef.current) return;
+            setSaveError('');
             if (listKey === 'eventTypes') openMomentTypeEditor(entry);
             else setEditingValue(entry);
           } },
@@ -264,18 +293,20 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       <p className="code-list-description">{description}</p>
 
       {listKey !== 'eventTypes' ? (
-        <div className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}>
+        <form className={`code-list-add-row ${allowLabels ? 'has-labels' : ''}`}
+          onSubmit={(event) => { event.preventDefault(); upsertEntry(draft, allowLabels ? draftLabel : undefined); }}>
           {allowLabels ? (
             <>
-              <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
-              <input value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Label" aria-label="Label" />
+              <input disabled={saving} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+              <input disabled={saving} value={draftLabel} onChange={(event) => setDraftLabel(event.target.value)} placeholder="Label" aria-label="Label" />
             </>
           ) : (
-            <input value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
+            <input disabled={saving} value={draft} onChange={(event) => setDraft(event.target.value)} placeholder={placeholder} aria-label={placeholder} />
           )}
-          <button type="button" className="settings-tag-add" onClick={() => upsertEntry(draft, allowLabels ? draftLabel : undefined)}><Plus size={15} aria-hidden="true" /> Add</button>
-        </div>
+          <button type="submit" className="settings-tag-add" disabled={saving || accountLoading || Boolean(accountError) || !draft.trim()}><Plus size={15} aria-hidden="true" /> {saving ? 'Saving…' : 'Add'}</button>
+        </form>
       ) : null}
+      {saveError && !editingValue && !momentTypeEditor && !warningValue ? <p className="code-list-save-error" role="alert">{saveError}</p> : null}
 
       <div className="code-list-groups">
         <section className="code-list-group" aria-label="Active values">
@@ -296,21 +327,23 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       </div>
 
       {editingValue ? (
-        <ModalDialog title="Edit value" className="code-list-rename-dialog" onClose={() => setEditingValue(null)}>
+        <ModalDialog title="Edit value" className="code-list-rename-dialog" onClose={() => { if (!savingRef.current) setEditingValue(null); }}>
           <div className="code-list-editor-modal">
             <label className="settings-input-block">
               <span>Value</span>
               <input
                 className="code-list-rename-input"
                 autoFocus
+                disabled={saving}
                 value={editingValue.label}
                 onChange={(event) => setEditingValue({ ...editingValue, label: event.target.value })}
                 placeholder="Enter a value"
               />
             </label>
+            {saveFeedback}
             <div className="settings-actions">
-              <button type="button" className="settings-secondary-button" onClick={() => setEditingValue(null)}>Cancel</button>
-              <button type="button" className="settings-primary-button" onClick={() => handleRename(editingValue, editingValue.label)}>Save changes</button>
+              <button type="button" className="settings-secondary-button" disabled={saving} onClick={() => setEditingValue(null)}>Cancel</button>
+              <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !editingValue.label.trim()} onClick={() => handleRename(editingValue, editingValue.label)}>{saving ? 'Saving…' : 'Save changes'}</button>
             </div>
           </div>
         </ModalDialog>
@@ -383,21 +416,23 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
 
             <div className="settings-actions">
               <button type="button" className="settings-secondary-button" onClick={() => setMomentTypeEditor(null)}>Cancel</button>
-              <button type="button" className="settings-primary-button" disabled={!momentTypeEditor.title.trim() || !momentTypeEditor.storyPresentation} onClick={saveMomentTypeEditor}>Save moment type</button>
+              <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !momentTypeEditor.title.trim() || !momentTypeEditor.storyPresentation} onClick={saveMomentTypeEditor}>{saving ? 'Saving…' : 'Save moment type'}</button>
             </div>
+            {saveFeedback}
           </div>
         </ModalDialog>
       ) : null}
 
       {warningValue ? (
-        <ModalDialog title="Value is currently in use" onClose={() => setWarningValue(null)}>
+        <ModalDialog title="Value is currently in use" onClose={() => { if (!savingRef.current) setWarningValue(null); }}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>
             {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : listKey === 'paymentMethods' ? 'transaction' : listKey === 'activityPriorities' ? 'activity record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
             Deleting this value may affect existing records and reporting.
           </div>
+          {saveFeedback}
           <div className="settings-actions">
-            <button type="button" className="settings-secondary-button" onClick={() => setWarningValue(null)}>Cancel</button>
-            <button type="button" className="settings-primary-button" onClick={() => { handleDisable(warningValue.entry); setWarningValue(null); }}>Disable Value</button>
+            <button type="button" className="settings-secondary-button" disabled={saving} onClick={() => setWarningValue(null)}>Cancel</button>
+            <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError)} onClick={async () => { if (await handleDisable(warningValue.entry)) setWarningValue(null); }}>{saving ? 'Saving…' : 'Disable Value'}</button>
           </div>
         </ModalDialog>
       ) : null}
@@ -430,11 +465,23 @@ function PaymentMethodsSection() {
 
 
 export default function CodeLists() {
+  const user = useAppStore((state) => state.user);
+  const isGuest = useAppStore((state) => state.isGuest);
+  return <CodeListsContent key={user?.uid || (isGuest ? 'guest' : 'signed-out')} />;
+}
+
+function CodeListsContent() {
   const location = useLocation();
   const user = useAppStore((state) => state.user);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
   const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
+  // A failed account save/reload must not unmount editors and discard drafts.
+  // The outer scope key still clears them when the session changes.
+  const [hasLoaded, setHasLoaded] = useState(false);
+  useEffect(() => {
+    if (!adminValuesLoading && !adminValuesError) setHasLoaded(true);
+  }, [adminValuesLoading, adminValuesError]);
   // Keep section links reachable and discoverable on compact iPhones without
   // moving the document or changing any Code List values.
   const sectionRailRef = useRef(null);
@@ -494,7 +541,7 @@ export default function CodeLists() {
           </button>
         </section>
       ) : null}
-      {!adminValuesLoading && !adminValuesError ? <>
+      {hasLoaded || (!adminValuesLoading && !adminValuesError) ? <>
         <nav className="dn-code-list-index" aria-label="Code List sections">
           <span className="dn-code-list-index-label">Browse</span>
           <div className="dn-code-list-nav-window">
