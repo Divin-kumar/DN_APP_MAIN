@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import DropdownSelect from '../common/DropdownSelect';
@@ -6,7 +6,16 @@ import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
-export default function TaskEditor({ task, moments = [], onSave, onClose, error = '' }) {
+export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, error = '' }) {
+  const [pendingAction, setPendingAction] = useState(null);
+  const confirmationRef = useRef(null);
+  const actionGroupRef = useRef(null);
+  const previousActionRef = useRef(null);
+  useLayoutEffect(() => {
+    if (pendingAction) confirmationRef.current?.focus();
+    else if (previousActionRef.current) actionGroupRef.current?.querySelector(`[data-task-action="${previousActionRef.current}"]`)?.focus();
+    previousActionRef.current = pendingAction;
+  }, [pendingAction]);
   const [title, setTitle] = useState(task?.title || '');
   const [notes, setNotes] = useState(task?.notes || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
@@ -21,6 +30,22 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
     event.preventDefault();
     if (title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId });
   };
+
+  if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
+    <h4 ref={confirmationRef} tabIndex={-1}>{pendingAction === 'delete' ? 'Delete Task?' : pendingAction === 'restore' ? 'Restore Task?' : 'Cancel Task?'}</h4>
+    <p>{pendingAction === 'delete'
+      ? `Remove “${task.title}”? Its Moment and Activities will not be changed.`
+      : pendingAction === 'restore' ? `Move “${task.title}” back to In progress?`
+        : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>
+    <p>Unsaved edits will not be saved.</p>
+    {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
+    <div className="dn-task-form-actions">
+      <button type="button" className="secondaryButton" onClick={() => setPendingAction(null)}>Keep editing</button>
+      <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'} onClick={() => onTaskAction(pendingAction)}>
+        {pendingAction === 'delete' ? 'Delete Task' : pendingAction === 'restore' ? 'Restore Task' : 'Cancel Task'}
+      </button>
+    </div>
+  </div>;
 
   return <form className="dn-task-editor" onSubmit={save}>
     <label className="dn-task-field">Task title
@@ -60,6 +85,12 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, error 
       <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
         placeholder="Helpful details" />
     </label>
+    {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
+      {task.status === 'cancelled'
+        ? <button type="button" data-task-action="restore" onClick={() => setPendingAction('restore')}>Restore Task…</button>
+        : <button type="button" data-task-action="cancel" onClick={() => setPendingAction('cancel')}>Cancel Task…</button>}
+      <button type="button" data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
+    </div> : null}
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">
       <button type="button" className="secondaryButton" onClick={onClose}>Cancel</button>

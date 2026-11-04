@@ -101,6 +101,18 @@ html[data-theme] .dn-task-editor .dn-task-date-row :is(input[type="date"],input[
   width:100%; min-width:0; min-height:44px; font-size:16px;
 }
 html[data-theme] .dn-task-form-actions { display:flex; justify-content:flex-end; gap:8px; }
+html[data-theme] .dn-task-editor-actions {
+  display:flex; flex-wrap:wrap; gap:4px 18px; border-top:1px solid var(--color-border); padding-top:8px;
+}
+html[data-theme] .dn-task-editor-actions button {
+  min-height:44px; padding:8px 2px; border:0; background:transparent; color:var(--color-primary);
+  font:inherit; font-size:14px; font-weight:600; cursor:pointer;
+}
+html[data-theme] .dn-task-editor-actions .is-destructive { color:var(--color-danger,#b34344); }
+html[data-theme] .dn-task-action-confirm :is(h4,p) { margin:0; overflow-wrap:anywhere; }
+html[data-theme] .dn-task-action-confirm p { font-size:14px; line-height:1.6; }
+html[data-theme] .dn-task-action-confirm .dn-task-form-actions { flex-wrap:wrap; }
+html[data-theme] .dn-task-action-confirm button { min-height:44px; }
 @media(max-width:430px) {
   html[data-theme] .dn-tasks-page { padding:12px; gap:13px; }
   html[data-theme] .dn-task-metrics { gap:6px; }

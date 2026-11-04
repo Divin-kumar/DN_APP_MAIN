@@ -94,7 +94,8 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
       radius:getComputedStyle(el).borderTopLeftRadius,
       text:el.textContent.trim(),
     }));
-    expect(actionGeometry.height).toBeGreaterThanOrEqual(44);
+    // Chromium can report 43.9999847 for a 44 CSS-pixel target.
+    expect(Math.round(actionGeometry.height * 100) / 100).toBeGreaterThanOrEqual(44);
     expect(actionGeometry.width).toBeGreaterThan(44);
     expect(actionGeometry.radius).toBe('999px');
     expect(actionGeometry.text).toBe('Done');
@@ -102,7 +103,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();
     await expect(page.getByRole('dialog',{name:'Edit Task'})).toBeVisible();
     await expect(page.getByRole('dialog',{name:'Edit Task'}).getByLabel('Task title')).toHaveValue('Review travel documents');
-    await page.getByRole('dialog',{name:'Edit Task'}).getByRole('button',{name:'Cancel'}).click();
+    await page.getByRole('dialog',{name:'Edit Task'}).getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto('/dashboard');
     await page.getByRole('button',{name:'Complete Task Review travel documents'}).click();
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-row')).toHaveCount(1);

@@ -216,6 +216,13 @@ export function TaskListContent() {
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
       onClose={() => { setEditor(null); setError(''); }}>
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
+        onTaskAction={(action) => {
+          const task = editor.value;
+          const result = run(() => action === 'delete' ? store.removeTask(task.id)
+            : store.setTaskStatus(task.id, action === 'restore' ? 'in-progress' : 'cancelled'),
+          action === 'delete' ? 'Task deleted' : 'Task status updated');
+          if (result) setEditor(null);
+        }}
         moments={moments} onSave={save} error={error} onClose={() => { setEditor(null); setError(''); }} />
     </ModalDialog> : null}
     {refine ? <TaskRefineSheet current={view} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
