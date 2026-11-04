@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-366 | DN 2.3 fractional landscape multi-value touch floor
+- **Executed evidence:** With the compact multi-value two-row layout, 15/16 targeted synthetic Chromium checks passed. All three portrait sizes passed genuine taps and Cancel immutability, but 844x390 touch landscape measured the 44px CSS removal buttons at 43.4915 rendered pixels due to fractional viewport scaling. Only its strict 44px touch-size check failed.
+- **Change:** For short coarse-pointer landscape only, reserve 46 CSS pixels for each selected-value removal action so effective touch size remains at least 44px. Portrait layouts, filter semantics and data remain unchanged.
+- **Verification:** Repeat existing 16 focused synthetic tests on the new exact OldVersion SHA, plus standard Node/lint/build/docs. Results pending. No deployment, PR, main modification or version change.
+
 ## CHG-20261104-365 | DN 2.3 restore touch reachability to legacy multi-value Refine
 - **Executed QA findings:** The first synthetic suite had 12/16 passing and four new tests incorrectly attempted to create an Any of comparison that the compact filter editor intentionally no longer offers. After seeding an existing saved multi-value condition, 12/16 passed but four new touch cases exposed a real overlapping-control defect: at 320/390/430px the value-removal button was intercepted by the rule remove icon or dropdown. The short landscape case also failed a target-size assertion. No user records were changed in these synthetic runs.
 - **Correction:** Preserve older supported Any of / None of conditions. On compact portrait and short coarse-pointer landscape, only a rule containing saved multiple values uses an extra unboxed row, keeping its field/comparison and value picker/removable choices separate and its rule remove action outside the hit area. Reinforce 44px touch and 12px label floors. Ordinary rules, their compact UI, engine operators, records, settings and PDF remain unchanged.

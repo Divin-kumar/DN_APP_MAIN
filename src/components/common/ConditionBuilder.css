@@ -361,3 +361,12 @@ html[data-theme] .dn-conditions .dn-condition-selected-values > button {
     min-height: 44px !important; font-size: 12px !important;
   }
 }
+
+/* Short coarse-pointer landscape can apply fractional viewport scaling:
+   44 CSS pixels measured 43.49 physical layout pixels in Chromium's mobile
+   emulation. Reserve 46px here so the actual hit area clears 44px. */
+@media (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) .dn-condition-selected-values > button {
+    min-height: 46px !important;
+  }
+}
