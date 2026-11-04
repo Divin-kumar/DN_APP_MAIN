@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-379 | DN 2.3 Story/PDF settings same-source acceptance
+- **Executed:** At exact OldVersion source SHA `9d4936460f7f822b4678dd164f09b879f757950a`, [focused GitHub Actions 41771825091](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41771825091) passed **5/5** synthetic Chromium cases including iPhone Guest demo unchanged Save, changed style Save/reload, personal Guest isolation, PDF Studio style inheritance, and established Story/PDF design regression. [Governance 41771825174](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41771825174) passed Node tests, ESLint, Vite production build, dependency audit and documentation contracts.
+- **No deployment:** The production and preview publishing workflows on this SHA were skipped; this documentation-only follow-up is not a release. Physical iPhone Safari, VoiceOver, signed-in cloud, full release matrix and real local backup/restore remain unverified. `main` untouched, no PR or app version change.
+
 ## CHG-20261104-378 | Clarify Story/PDF Settings Save state and reset summary
 - **Owner issue:** Story/PDF Appearance controls still look grey on the currently published site. Latest OldVersion source already enables design editing for the Guest tour, personal Guest and signed-in sessions, but those fixes are unpublished. On writable sessions, Save designs was separately grey whenever there was no unsaved draft, giving no explanation.
 - **Implementation:** Keep Save designs tappable in writable contexts, show explicit saved/unsaved status and acknowledge a no-change Save without writing preference data. Retain disabled editing in genuinely read-only contexts with explanatory status. Correct the Reset all settings confirmation to mention Story/PDF designs. Add real Guest-tour browser assertions for Save activation and feedback.
