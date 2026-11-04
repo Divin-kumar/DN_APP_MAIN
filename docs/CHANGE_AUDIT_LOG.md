@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-374 | DN 2.3 documentation governance collision repair
+- **Correction:** Separate concurrent Guest-demo Story/PDF and Task Refine evidence entries accidentally reused CHG-20261104-371. Audit identifier for Task Refine is now 373; Guest demo retains 371 and intervening owner UI note retains 372, with original text preserved.
+- **Verification:** This documentation-only follow-up repeats the strict audit-log ordering/history checks from a clean nonduplicate parent. The screenshot-driven application code and tests remain identical. Cross-app screenshot audit for the tested UI code runs independently. No app records, Firebase data, stored preferences, PR, main branch or deployment touched.
+
 ## CHG-20261104-373 | DN 2.3 Task Refine and compact Settings follow-up
 - **Screenshot and source issue:** Empty old filter rules cluttered Task Refine and six sort choices wrapped unevenly on iPhone. Other Settings helper descriptions were too long; 391-580px Story design choices and Code List category sections remained visually heavy.
 - **Implementation:** Prune inactive initial Task Refine draft rows only; retain saved state until explicit Show results, existing AND/OR/legacy filters and Cancel. Six sort options form two balanced rows of three; short touch landscape reserves 47px to compensate fractional scaling. Shorten List Defaults and Code Lists copy and lighten existing Code List sections and Story design previews.
