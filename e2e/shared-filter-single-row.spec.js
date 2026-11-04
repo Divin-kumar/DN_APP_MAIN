@@ -23,10 +23,11 @@ async function assertReadablePhoneRule(page) {
       pageWidth:document.documentElement.scrollWidth };
   });
   const { field, comparison, value, remove, box } = measurement;
-  // DN 2.3: full-width field above operator/value, with a separate Remove column.
-  expect(field.bottom).toBeLessThanOrEqual(comparison.top + 3);
-  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(4);
-  expect(field.right).toBeLessThanOrEqual(remove.left + 2);
+  // DN 2.3.2: one compact line with an independent drag grip and
+  // dedicated Remove target. No part of the rule escapes the modal.
+  expect(Math.abs(field.top - comparison.top)).toBeLessThanOrEqual(5);
+  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(5);
+  expect(field.right).toBeLessThanOrEqual(comparison.left + 2);
   expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
   expect(value.right).toBeLessThanOrEqual(remove.left + 2);
   expect(remove.left).toBeGreaterThanOrEqual(box.left - 1);
@@ -35,14 +36,14 @@ async function assertReadablePhoneRule(page) {
   expect(remove.bottom).toBeLessThanOrEqual(box.bottom + 1);
   expect(remove.width).toBeGreaterThanOrEqual(43.9);
   expect(remove.height).toBeGreaterThanOrEqual(43.9);
-  expect(box.height).toBeGreaterThanOrEqual(88);
+  expect(box.height).toBeGreaterThanOrEqual(44);
   expect(box.height).toBeLessThanOrEqual(220);
   expect(measurement.pageWidth).toBeLessThanOrEqual(page.viewportSize().width + 1);
 }
 
 for (const [route, label] of routes) {
   for (const [width, height] of [[320, 640], [390, 844]]) {
-    test(`${label}: filter field, comparison, value and remove stay readable on two rows at ${width}px`, async ({ page }) => {
+    test(`${label}: filter field, comparison, value and remove stay readable on one row at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page);
       await page.goto(route);
