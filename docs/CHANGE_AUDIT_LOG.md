@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-361 | DN 2.3 iPhone Tasks Story exact-SHA acceptance
+- **Executed:** [Focused synthetic Chromium run 41750499789](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41750499789) passed **6/6** browser checks at application code SHA `6d66e7f390544049056faf30be0579eb49966d8b`. Four new touch/mobile scenarios at 320/390/430px portrait and 844px short landscape checked 44px status select, readable notes/date/entry text, no overflow, saved completed state and preserved original entries. Two existing tests covered confirmation-based cancellation, regrouping and archived-Moment restrictions.
+- **Executed:** Same-SHA [governance 41750499790](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41750499790) passed Node unit tests, ESLint, production build, blocking dependency advisories and documentation contracts.
+- **Limits:** Simulated iPhone Chromium, not physical Safari, VoiceOver, signed-in Firestore or full 2.3 regression. No data migration, status logic change, user-record update, PDF change, PR, release, main write or deploy. Documentation-only follow-up records measured evidence.
+
 ## CHG-20261104-360 | DN 2.3 iPhone Tasks Story status controls
 - **Audit:** The existing native Tasks Story status dropdown was visibly small on iPhone (36px touch height, ~11px text), with compact date/continuation text; a general hover highlight could latch on touch. The same control is used to save Activity statuses, so retain native semantics.
 - **Implementation:** At 320–430px and coarse-pointer short landscape, the existing status selector has a minimum 44px hit area, 13px readable text and quiet borderless appearance. Dates/continued writing reach 12–13px. Hover highlights are restricted to fine pointers; keyboard focus remains visible.
