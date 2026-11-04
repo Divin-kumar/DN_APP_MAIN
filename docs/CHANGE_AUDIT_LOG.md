@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-368 | DN 2.3 phone readability for saved List Defaults
+- **Source-derived:** Settings > List Defaults still used 10–11px sort hint, save-state and filter Reset explanation text despite its approved unboxed page structure. Important secondary instructions are harder to read on compact iPhones.
+- **Change:** Scope 12px supporting labels and 13px instructional text, 14px section titles, and an unfilled 12px saved-state note to the existing List Defaults page at mobile/short touch-landscape sizes. Do not alter controls, sort options, filter operators, records, state keys, default recovery, Code Lists or desktop screens.
+- **Downstream impact:** Existing sort and filter preference UI only. Review Guest tour coverage: Settings and List Defaults already exist, and typography-only changes do not require altering sample records/version. No impact to Activity/Task/Moment/Finance data, Story/PDF, attachments or backup.
+- **Verification authored (pending):** Four synthetic mobile type/layout cases at 320/390/430 portrait and 844x390 landscape, plus existing settings saved-baseline acceptance in a focused opt-in workflow; normal Node/lint/build/dependency/docs CI on OldVersion. Physical iOS Safari/VoiceOver, signed-in Firestore and full 2.3 regression remain release gates. No production, main, PR or version change.
+
 ## CHG-20261104-367 | DN 2.3 filter touch QA acceptance evidence
 - **Confirmed on exact OldVersion SHA e26120dffa614d4b13158103f23c265d5c3b62a5:** Focused GitHub Actions run 41762552491 passed **16/16** synthetic Chromium checks in 17.1s: four iPhone-sized portrait/landscape saved-value tap checks, three dropdown recovery checks and nine shared Refine checks. These scenarios verify draft Cancel preservation and document overflow without modifying source records.
 - **Standard verification:** Documentation governance and application smoke jobs in GitHub Actions run 41762552522 passed, including Node unit tests, lint, production build and dependency audit. These are evidence for the same tested source SHA. This follow-up edits documentation only.

@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 List Defaults readability (OldVersion only, unpublished):** Saved sorting and filter preferences keep their lightweight, unboxed layout. Explanations and small labels are easier to read on iPhone, especially the difference between temporary Refine choices and saved Reset defaults. Saved options and personal records do not change. Focused synthetic browser verification is pending; physical Safari and full release testing are separate.
+
+
 **DN 2.3 shared Refine touch polish (OldVersion only, unpublished):** Previously saved multi-value filter choices are easier to remove on iPhone, with 44px touch actions, readable labels and an unobstructed second row only where needed. Ordinary filters stay on one lightweight line. The dropdown Search action also reaches 44px. This does not change matches, saved filters or your records. Focused 16/16 simulated mobile browser checks, including actual touch taps, have passed on OldVersion commit e26120d. Real-device Safari/VoiceOver and full release QA remain pending.
 
 **DN 2.3 iPhone Appearance readability (OldVersion only, unpublished):** Theme descriptions and Story/PDF design labels are easier to read. On compact iPhones, Heritage, Editorial and Minimal appear as tidy, unboxed rows with the same paper previews and selected indication instead of squeezed three-column cards. Nothing changes about saving themes or design defaults, your existing moments, original photos, or the PDF pages. All 10 focused simulated iPhone/Settings browser checks and routine code/build checks passed. Physical Safari/VoiceOver and full-release verification remain separate.
