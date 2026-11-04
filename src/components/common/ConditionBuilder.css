@@ -406,3 +406,13 @@ html[data-theme] .dn-conditions .dn-condition-rule input { text-align:center; }
     height:auto; min-height:44px; padding-block:7px !important;
   }
 }
+
+/* Keep the +N disclosure reachable even when two long applied chips overflow.
+   The rail alone scrolls; its disclosure stays pinned above chip content. */
+html[data-theme] .dn-condition-chips .dn-condition-more {
+  position: sticky;
+  inset-inline-end: 0;
+  z-index: 2;
+  background: var(--color-card);
+  box-shadow: -8px 0 12px -10px var(--color-text-muted);
+}
