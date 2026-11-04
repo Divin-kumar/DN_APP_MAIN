@@ -56,10 +56,12 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
     await filter.click();
-    await expect(root.locator('.dn-list-controls-panel')).toBeVisible();
-    await expect(root.getByRole('button', { name:'Add filter' })).toBeVisible();
+    const sheet = page.locator('.dn-refine-sheet');
+    await expect(sheet).toBeVisible();
+    await expect(sheet.getByRole('button', { name:'Add filter' })).toBeVisible();
+    await sheet.getByRole('button', { name:'Cancel', exact:true }).click();
+    await expect(sheet).toHaveCount(0);
     await field.click();
-    await expect(root.locator('.dn-list-controls-panel')).toHaveCount(0);
     await field.fill(item.sample);
     await expect(field).toHaveValue(item.sample);
     await expect(root.locator('.dn-list-controls-context')).toContainText('1 ');
@@ -82,7 +84,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const refine = page.locator('.dn-transactions-page').getByRole('button', { name:/Filters and sort/ });
     await refine.click();
     await page.getByRole('button', { name:'Add filter', exact:true }).click();
-    const rule = page.locator('.dn-transactions-page .dn-condition-rule').last();
+    const rule = page.locator('.dn-refine-sheet .dn-condition-rule').last();
     await expect(rule).toBeVisible();
     // A brand-new rule has no value control yet. Choose a real field before
     // checking the shared single-line alignment of all four controls.
@@ -92,29 +94,23 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const geometry = await rule.evaluate((node) => {
       const parts = [...node.children].map((child) => child.getBoundingClientRect());
       const box = node.getBoundingClientRect();
-      return { fieldTop: parts[0].top, comparisonTop: parts[1].top,
-        valueTop: parts[2].top, removeTop: parts[3].top,
-        removeWidth: parts[3].width, removeHeight: parts[3].height,
-        inside:parts.every((part) => part.left >= box.left-1 && part.right <= box.right+1),
+      return { fieldBottom:parts[0].bottom, comparisonTop:parts[1].top, valueTop:parts[2].top,
+        comparisonRight:parts[1].right, valueLeft:parts[2].left,
+        valueRight:parts[2].right, removeLeft:parts[3].left,
+        removeWidth:parts[3].width, removeHeight:parts[3].height,
+        removeRight:parts[3].right, ruleRight:box.right,
         pageWidth:document.documentElement.scrollWidth };
     });
-    expect(Math.max(geometry.fieldTop, geometry.comparisonTop, geometry.valueTop, geometry.removeTop) -
-      Math.min(geometry.fieldTop, geometry.comparisonTop, geometry.valueTop, geometry.removeTop)).toBeLessThanOrEqual(4);
+    expect(geometry.fieldBottom).toBeLessThanOrEqual(geometry.comparisonTop + 3);
+    expect(Math.abs(geometry.comparisonTop - geometry.valueTop)).toBeLessThanOrEqual(4);
+    expect(geometry.comparisonRight).toBeLessThanOrEqual(geometry.valueLeft + 2);
+    expect(geometry.valueRight).toBeLessThanOrEqual(geometry.removeLeft + 2);
+    expect(geometry.removeRight).toBeLessThanOrEqual(geometry.ruleRight + 1);
     expect(geometry.removeWidth).toBeGreaterThanOrEqual(43.9);
     expect(geometry.removeHeight).toBeGreaterThanOrEqual(43.9);
-    // A horizontally scrolling value cell may extend under the pinned
-    // remove action. Only the page and remove target must stay in view.
-    const removePin = await rule.evaluate((node) => {
-      node.scrollLeft = node.scrollWidth;
-      const bounds = node.getBoundingClientRect();
-      const button = node.querySelector('.dn-condition-icon').getBoundingClientRect();
-      return { left: bounds.left, right: bounds.right, pinLeft: button.left, pinRight: button.right };
-    });
-    expect(removePin.pinLeft).toBeGreaterThanOrEqual(removePin.left - 1);
-    expect(removePin.pinRight).toBeLessThanOrEqual(removePin.right + 1);
-    expect(geometry.pageWidth).toBeLessThanOrEqual(width+1);
+    expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
     await page.getByRole('button', { name:'Remove filter', exact:true }).click();
-    await refine.click();
+    await page.locator('.dn-refine-sheet').getByRole('button', { name:'Cancel', exact:true }).click();
     const quickCreate = page.getByRole('button', { name:'Open quick create menu' });
     await expect(quickCreate).toBeVisible();
     await quickCreate.click();

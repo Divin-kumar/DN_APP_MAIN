@@ -18,7 +18,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(menu).toBeVisible();
       await expect(menu.getByText('Guest account')).toBeVisible();
       const choices = menu.getByRole('menuitem');
-      await expect(choices).toHaveCount(5);
+      await expect(choices).toHaveCount(6);
       const sizes = await menu.evaluate((element) => {
         const rect = element.getBoundingClientRect();
         const items = [...element.querySelectorAll('[role="menuitem"]')]

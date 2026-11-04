@@ -16,6 +16,15 @@ export default function ListControls({
   const railRef = useRef(null);
   const triggerRef = useRef(null);
   const label = hasSort || sort ? 'Filters and sort' : 'Filters';
+  // A pending Refine draft is strictly scoped to the Guest/account editor key.
+  // Dismiss rather than rehydrate it when account identity changes.
+  const editorKey = refine?.conditions?.editorKey;
+  const priorEditorKey = useRef(editorKey);
+  useEffect(() => {
+    if (priorEditorKey.current === editorKey) return;
+    priorEditorKey.current = editorKey;
+    setOpen(false);
+  }, [editorKey]);
   const displayChips = refine && isValidElement(chips)
     ? cloneElement(chips, { maxVisible: 2, onShowMore: () => setOpen(true) }) : chips;
   const updateEdges = () => {

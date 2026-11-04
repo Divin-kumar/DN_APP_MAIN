@@ -18,53 +18,33 @@ async function select(page, name, label) {
 
 async function assertReadableRule(page, row) {
   await row.scrollIntoViewIfNeeded();
-  // Previous checks may leave this one-row editor horizontally scrolled.
-  // Re-measure its logical order from the start without scrolling the page.
-  await row.evaluate((element) => { element.scrollLeft = 0; });
-  const controls = [row.getByRole('combobox', { name: 'Filter by', exact: true }),
-    row.getByRole('combobox', { name: 'Comparison', exact: true }), row.locator('.dn-condition-value-slot'),
-    row.getByRole('button', { name: 'Remove filter', exact: true })];
-  const bounds = await Promise.all(controls.map((control) => control.boundingBox()));
-  const centers = bounds.map((bound) => bound.y + bound.height / 2);
-  for (const bound of bounds) {
-    expect(bound.width).toBeGreaterThan(0);
-    // At 320px the value slot may be clipped by the intentionally
-    // horizontally scrollable rule; offscreen content is not page overflow.
-  }
-  // Field, comparison, value and 44px removal remain on the SAME line,
-  // without sacrificing tap size or creating horizontal page overflow.
-  expect(Math.max(...centers) - Math.min(...centers)).toBeLessThanOrEqual(4);
-  expect(bounds[0].x + bounds[0].width).toBeLessThanOrEqual(bounds[1].x + 2);
-  expect(bounds[1].x + bounds[1].width).toBeLessThanOrEqual(bounds[2].x + 2);
-  // Values may extend into the horizontally scrollable part of a one-row
-  // editor, while the 44px Remove control remains pinned on the right.
-  const pinned = await row.evaluate((element) => {
-    const scrollable = element.scrollWidth > element.clientWidth + 1;
-    const overflow = getComputedStyle(element).overflowX;
-    element.scrollLeft = element.scrollWidth;
-    const rowRect = element.getBoundingClientRect();
-    const removeRect = element.querySelector('.dn-condition-icon').getBoundingClientRect();
-    return { scrollable, overflow, left: rowRect.left, right: rowRect.right,
-      removeLeft: removeRect.left, removeRight: removeRect.right };
+  const measured = await row.evaluate((node) => {
+    const rect = (item) => {
+      const r = item.getBoundingClientRect();
+      return { left:r.left, right:r.right, top:r.top, bottom:r.bottom, width:r.width, height:r.height };
+    };
+    const [field, comparison, value, remove] = [...node.children].map(rect);
+    return { field, comparison, value, remove, rule:rect(node), pageWidth:document.documentElement.scrollWidth };
   });
-  if (pinned.scrollable) {
-    expect(pinned.overflow).toBe('auto');
-    expect(pinned.removeLeft).toBeGreaterThanOrEqual(pinned.left - 1);
-    expect(pinned.removeRight).toBeLessThanOrEqual(pinned.right + 1);
-  }
-  // The pinned remove action must remain onscreen regardless of scroll.
-  expect(bounds[3].x).toBeGreaterThanOrEqual(-1);
-  expect(bounds[3].x + bounds[3].width).toBeLessThanOrEqual(page.viewportSize().width + 1);
-  expect(bounds[3].width).toBeGreaterThanOrEqual(43.9);
-  expect(bounds[3].height).toBeGreaterThanOrEqual(43.9);
-  expect((await row.boundingBox()).height).toBeLessThanOrEqual(62);
+  const { field, comparison, value, remove, rule } = measured;
+  expect(field.bottom).toBeLessThanOrEqual(comparison.top + 3);
+  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(4);
+  expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
+  expect(field.right).toBeLessThanOrEqual(remove.left + 2);
+  expect(value.right).toBeLessThanOrEqual(remove.left + 2);
+  expect(remove.left).toBeGreaterThanOrEqual(rule.left - 1);
+  expect(remove.right).toBeLessThanOrEqual(rule.right + 1);
+  expect(remove.width).toBeGreaterThanOrEqual(43.9);
+  expect(remove.height).toBeGreaterThanOrEqual(43.9);
+  expect(rule.height).toBeGreaterThanOrEqual(88);
+  expect(rule.height).toBeLessThanOrEqual(220);
   const panel = await page.locator('.dn-refine-sheet').boundingBox();
-  expect(panel.height).toBeLessThanOrEqual(Math.min(800, page.viewportSize().height * .9));
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+  expect(panel.height).toBeLessThanOrEqual(page.viewportSize().height + 1);
+  expect(measured.pageWidth).toBeLessThanOrEqual(page.viewportSize().width + 1);
 }
 
 for (const width of [320, 390]) {
-  test(`all five lists offer friendly filters and readable single-row mobile rules at ${width}px`, async ({ page }) => {
+  test(`all five lists offer friendly filters and readable two-row mobile rules at ${width}px`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 844 });
     const moments = fixtureMoments();

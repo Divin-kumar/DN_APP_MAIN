@@ -11,46 +11,38 @@ const routes = [
   ['/events/moment-one/transactions', 'Moment Transactions'],
 ];
 
-async function assertOneRow(page) {
+async function assertReadablePhoneRule(page) {
   const measurement = await page.locator('.dn-refine-sheet .dn-condition-rule').first().evaluate((rule) => {
     const [field, comparison, value, remove] = [...rule.children].map((node) => {
-      const rect = node.getBoundingClientRect();
-      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, height: rect.height };
+      const r = node.getBoundingClientRect();
+      return { left:r.left, right:r.right, top:r.top, bottom:r.bottom, height:r.height, width:r.width };
     });
-    const rect = rule.getBoundingClientRect();
-    return { field, comparison, value, remove, rowHeight: rect.height, rowLeft: rect.left, rowRight: rect.right,
-      pageWidth: document.documentElement.scrollWidth };
-  });
-  const { field, comparison, value, remove } = measurement;
-  expect(Math.max(field.top, comparison.top, value.top, remove.top) -
-    Math.min(field.top, comparison.top, value.top, remove.top)).toBeLessThanOrEqual(3);
-  expect(field.right).toBeLessThanOrEqual(comparison.left + 2);
-  expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
-  // On small iPhones the value may scroll beneath a pinned remove control.
-  // Measure reachable geometry after scrolling, not the offscreen scroll area.
-  expect(remove.right).toBeLessThanOrEqual(measurement.rowRight + 1);
-  const pin = await page.locator('.dn-refine-sheet .dn-condition-rule').first().evaluate((rule) => {
-    const overflow = getComputedStyle(rule).overflowX;
-    const scrollable = rule.scrollWidth > rule.clientWidth + 1;
-    rule.scrollLeft = rule.scrollWidth;
     const box = rule.getBoundingClientRect();
-    const icon = rule.querySelector('.dn-condition-icon').getBoundingClientRect();
-    return { overflow, scrollable, left: box.left, right: box.right,
-      iconLeft: icon.left, iconRight: icon.right };
+    return { field, comparison, value, remove,
+      box:{ left:box.left, right:box.right, top:box.top, bottom:box.bottom, height:box.height },
+      pageWidth:document.documentElement.scrollWidth };
   });
-  if (pin.scrollable) {
-    expect(pin.overflow).toBe('auto');
-    expect(pin.iconLeft).toBeGreaterThanOrEqual(pin.left - 1);
-    expect(pin.iconRight).toBeLessThanOrEqual(pin.right + 1);
-  }
-  expect(remove.height).toBeGreaterThanOrEqual(44);
-  expect(measurement.rowHeight).toBeLessThanOrEqual(62);
+  const { field, comparison, value, remove, box } = measurement;
+  // DN 2.3: full-width field above operator/value, with a separate Remove column.
+  expect(field.bottom).toBeLessThanOrEqual(comparison.top + 3);
+  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(4);
+  expect(field.right).toBeLessThanOrEqual(remove.left + 2);
+  expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
+  expect(value.right).toBeLessThanOrEqual(remove.left + 2);
+  expect(remove.left).toBeGreaterThanOrEqual(box.left - 1);
+  expect(remove.right).toBeLessThanOrEqual(box.right + 1);
+  expect(remove.top).toBeGreaterThanOrEqual(box.top - 1);
+  expect(remove.bottom).toBeLessThanOrEqual(box.bottom + 1);
+  expect(remove.width).toBeGreaterThanOrEqual(43.9);
+  expect(remove.height).toBeGreaterThanOrEqual(43.9);
+  expect(box.height).toBeGreaterThanOrEqual(88);
+  expect(box.height).toBeLessThanOrEqual(220);
   expect(measurement.pageWidth).toBeLessThanOrEqual(page.viewportSize().width + 1);
 }
 
 for (const [route, label] of routes) {
   for (const [width, height] of [[320, 640], [390, 844]]) {
-    test(`${label}: filter field, comparison, value and remove remain on one row at ${width}px`, async ({ page }) => {
+    test(`${label}: filter field, comparison, value and remove stay readable on two rows at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height });
       const errors = await seedGuest(page);
       await page.goto(route);
@@ -64,14 +56,14 @@ for (const [route, label] of routes) {
       await rule.getByRole('combobox', { name: 'Filter by' }).click();
       await page.locator('.dropdown-menu-portal [role="option"]').first().click();
       await expect(rule.getByRole('combobox', { name: 'Comparison' })).toBeEnabled();
-      await assertOneRow(page);
+      await assertReadablePhoneRule(page);
       await expect(rule.getByRole('button', { name: 'Remove filter' })).toBeVisible();
       expect(errors).toEqual([]);
     });
   }
 }
 
-test('numeric range remains inside one row without horizontal page overflow', async ({ page }) => {
+test('numeric range stays within a readable phone rule without horizontal page overflow', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   const errors = await seedGuest(page);
   await page.goto('/financials/transactions');
@@ -83,6 +75,6 @@ test('numeric range remains inside one row without horizontal page overflow', as
   await rule.getByRole('combobox', { name: 'Comparison' }).click();
   await page.getByRole('option', { name: 'Between', exact: true }).click();
   await expect(rule.locator('.dn-condition-range input')).toHaveCount(2);
-  await assertOneRow(page);
+  await assertReadablePhoneRule(page);
   expect(errors).toEqual([]);
 });
