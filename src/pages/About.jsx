@@ -37,7 +37,7 @@ const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
 
 const guideItems = [
   { title: 'Home', description: 'A short personal greeting welcomes you. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
-  { title: 'Tasks', description: 'Use universal + → Task for a standalone or Moment-linked Task. Tap or swipe for actions; Edit opens only when chosen. Dashboard Task rows show days away or overdue and open Task actions without completing anything. Counts follow your filters. Sign in for account sync or keep Guest Tasks on this device. Task defaults live in Settings → List defaults, and backups include independent Tasks.' },
+  { title: 'Tasks', description: 'Use universal + → Task for a standalone or Moment-linked Task. Tap or swipe Task rows for actions; Edit opens only when chosen. Dashboard Task rows show days away or overdue and highlight the matching Task in its regular list without automatically opening actions. Counts follow your filters. Sign in for account sync or keep Guest Tasks on this device. Task defaults live in Settings → List defaults, and backups include independent Tasks.' },
   { title: 'Moments', description: 'Create and search your Moments in one list. The compact Filters panel remembers your last choices automatically. Choose a field, a simple comparison and a value; add another filter when needed. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Reset restores the defaults. Use a Moment’s actions for Edit, PDF Studio, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Story, Activities, Transactions, Gallery and PDF Studio using one compact section row. Story presents your Moment as a Journal, Diary or Tasks view. Moment Activity cards share the same three-dot actions as global Activities; open Detail to edit individual Diary and Journal entries. Moment Transactions shows existing income and expenses with totals for the matching filtered rows. Manage existing records from Transactions under Profile. Use the universal + to add items; Attachment is available there while a Moment is open.' },
   { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Open Refine for sorting and filters; ordinary filter rules use one row while older multi-choice filters retain a touch-safe value lane. Completed titles stay readable; Reopen is required before editing. Diary days now support the same three-dot actions as other Activities. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
@@ -52,6 +52,23 @@ const guideItems = [
 // Documented product milestones, not an automatic log of GitHub commits.
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
+  {
+    version: '2.3.2',
+    title: 'Clearer Task navigation and tactile filters',
+    summary: 'A focused iPhone fix for Task deep links and visibly draggable filter cards.',
+    highlights: [
+      'Dashboard Tasks open the Task list instead of a full-screen action sheet.',
+      'The selected Task is highlighted, without changing your saved filters.',
+      'Hold or drag a filter to lift it, move it and see its drop target.',
+    ],
+    changes: [
+      'Dashboard navigation — Tapping a Task takes you to its highlighted row in the Task module. No large Task actions overlay or Done, Edit, Close controls appear automatically.',
+      'Filtered Task links — If your current Refine settings hide that Task, it is temporarily featured in the list with an explanation. Saved filter choices are unchanged.',
+      'Filter drag and drop — Hold or move the grip to visually lift the condition card, slide it across its siblings and release over a highlighted destination. The change applies only on drop.',
+      'Accessibility — Keyboard arrow reordering, reduced-motion settings, readable filter values and touch-safe legacy multi-choice rules remain supported.',
+      'Data safety — Task statuses, other records, links, personal photos, finance and PDF exports are unaffected.',
+    ],
+  },
   {
     version: '2.3.1',
     title: 'Smoother Tasks and filters',
