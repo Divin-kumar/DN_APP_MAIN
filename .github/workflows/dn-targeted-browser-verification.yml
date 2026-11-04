@@ -878,3 +878,57 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  remaining-release-repair-230:
+    # Opt-in, non-deploying regression check for the remaining 2.3 release failures.
+    # Focused on tests excluded from release-failure-repair-230, not the long full suite.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-remaining-fixes]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Install Chromium test browser
+        run: npx playwright install --with-deps chromium
+      - name: Verify remaining original failure families without a full suite rerun
+        run: >-
+          npx playwright test
+          e2e/iphone-activity-progress-stability.spec.js
+          e2e/iphone-apple-premium-coherence.spec.js
+          e2e/iphone-moment-activity-progress-scope.spec.js
+          e2e/moment-list-phase2.spec.js
+          e2e/activity-time.spec.js
+          e2e/all-date-times.spec.js
+          e2e/iphone-backup-saved-list-defaults.spec.js
+          e2e/story-ownership-density.spec.js
+          e2e/activity-cover-navigation-summary.spec.js
+          e2e/phase4c-screen-capture.spec.js
+          e2e/phase8-application.spec.js
+          e2e/release-phase9.spec.js
+          e2e/scope-recovery.spec.js
+          e2e/activity-detail-layout.spec.js
+          e2e/activity-moment.spec.js
+          e2e/activity-refinement.spec.js
+          e2e/filter-integration.spec.js
+          e2e/local-attachments-readonly.spec.js
+          e2e/moment-story-phase4.spec.js
+          e2e/overhaul-stories-filters.spec.js
+          --workers=4
+      - name: Preserve scoped browser failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-remaining-release-failure-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
