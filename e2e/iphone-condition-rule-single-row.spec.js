@@ -4,7 +4,7 @@ import { seedGuest } from './fixtures.js';
 // Visual geometry catches the very small-screen regression where Field,
 // Comparison, and Value formerly became illegible yet still occupied one row.
 // CSS is shared by Moments, Activities, nested Activities, Transactions and
-// the saved Settings default editor. Only the rule scrolls horizontally.
+// the saved Settings default editor. Phone controls wrap without overlapping.
 const pages = [
   { path: '/events', label: 'Moments', field: 'Status', value: 'In progress' },
   { path: '/activities', label: 'Activities', field: 'Priority', value: 'High priority' },
@@ -38,29 +38,16 @@ async function exerciseRule(page, fieldName, valueName, width) {
       documentWidth: document.documentElement.scrollWidth };
   });
   expect(metrics.entries).toHaveLength(4);
-  expect(Math.max(...metrics.entries.map(item => item.top))
-    - Math.min(...metrics.entries.map(item => item.top))).toBeLessThanOrEqual(4);
   expect(metrics.entries.every(item => item.height >= 43.5)).toBe(true);
   expect(metrics.documentWidth).toBeLessThanOrEqual(width + 1);
-  expect(metrics.rule.left).toBeGreaterThanOrEqual(-1);
-  expect(metrics.rule.right).toBeLessThanOrEqual(width + 1);
-  expect(metrics.remove.left).toBeGreaterThanOrEqual(metrics.rule.left - 1);
-  expect(metrics.remove.right).toBeLessThanOrEqual(metrics.rule.right + 1);
-  if (width === 320) {
-    expect(metrics.overflowX).toBe('auto');
-    expect(metrics.scrollWidth).toBeGreaterThan(metrics.clientWidth);
-    expect(metrics.entries[0].width).toBeGreaterThanOrEqual(91);
-    expect(metrics.entries[1].width).toBeGreaterThanOrEqual(63);
+  expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
+  expect(metrics.entries[0].width).toBeGreaterThan(150);
+  expect(metrics.entries[1].top).toBeGreaterThanOrEqual(metrics.entries[0].bottom);
+  expect(metrics.entries[2].right).toBeLessThanOrEqual(metrics.remove.left);
+  for (const trigger of await rule.locator('.dropdown-trigger').all()) {
+    expect(await trigger.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   }
-  if (width <= 390) {
-    await rule.evaluate(node => { node.scrollLeft = node.scrollWidth; });
-    const pinned = await rule.evaluate(node => {
-      const box = node.getBoundingClientRect(), remove = node.querySelector('.dn-condition-icon').getBoundingClientRect();
-      return { left: remove.left, right: remove.right, outerLeft: box.left, outerRight: box.right };
-    });
-    expect(pinned.left).toBeGreaterThanOrEqual(pinned.outerLeft - 1);
-    expect(pinned.right).toBeLessThanOrEqual(pinned.outerRight + 1);
-  }
+  await page.screenshot({ path: `.verification/readable-filter-${width}.png` });
   await rule.getByRole('button', { name: 'Remove filter' }).click();
   await expect(builder.getByRole('button', { name: 'Add filter' })).toBeVisible();
 }
@@ -68,7 +55,7 @@ async function exerciseRule(page, fieldName, valueName, width) {
 for (const { path, label, field, value } of pages) {
   for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     for (const theme of ['dark', 'light']) {
-      test(`${label} keeps each Refine rule on one readable row at ${width}px ${theme}`, async ({ page }) => {
+      test(`${label} keeps each Refine rule on readable rows without overlap at ${width}px ${theme}`, async ({ page }) => {
         await page.setViewportSize({ width, height });
         const errors = await seedGuest(page, { theme });
         await page.goto(path);
@@ -87,7 +74,7 @@ for (const { path, label, field, value } of pages) {
 }
 
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
-  test(`Settings default filter editor inherits the same one-row layout at ${width}px`, async ({ page }) => {
+  test(`Settings default filter editor inherits the same readable layout at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page);
     await page.goto('/settings/code-lists#list-order');

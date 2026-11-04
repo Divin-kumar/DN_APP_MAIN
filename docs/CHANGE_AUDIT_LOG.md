@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-392 | Readable phone filter controls; account sync blocker recorded
+- **Request / impact analysis:** Owner authorized fixing filter truncation/remove overlap and completing signed-in Task sync. Traced ConditionBuilder control placement, shared dropdown labels, phone overrides and Task account/storage/backup/merge/deletion boundaries.
+- **Implemented:** Shared phone filters use two readable lines and a separate remove column. Wrapping replaces truncation for dropdown labels; the remove target no longer overlays values. Existing rule choices, persisted conditions and draft/apply semantics are unchanged.
+- **Executed:** 38 focused Chromium checks passed across Moments, Activities, nested Activities, Transactions, Settings defaults and Tasks at phone/desktop widths, including containment, control geometry, removal, draft cancellation, filtered counts and record preservation. Lint, production build and documentation checks passed. Guest tour reviewed; existing v2026.11.04.3 fixtures/instructions remain valid.
+- **Account sync not completed:** Read-only Firebase CLI database inspection for configured project expense-tracker-divin failed authentication. Deployed rules are not versioned here; edition/security scope cannot yet be verified. Signed-in Tasks remain blocked, and are an explicit release blocker per the owner. Master records all traced integration paths needed next. No account writes, rule changes, deployment or app-version bump occurred.
+- **Limits:** Physical iPhone Safari/VoiceOver and complete release acceptance remain unverified. Base cf13b74b339fd5eb597ba8ef0e830f6ce7a6d29c; this entry accompanies the scoped OldVersion filter fix.
+
 ## CHG-20261104-391 | Show phone sorts and retain failed Task actions
 - **Impact analysis:** Reviewed narrow-screen filter screenshots, shared SortChips/Refine CSS, Dashboard Task entry and status-write/error paths. Horizontal sort discovery remained inconsistent with the owner's two-per-row preference; the Task entry dialog dismissed itself even when the existing store rejected a write.
 - **Changes:** Phone Refine sort groups use two centered columns, with all options visible and arrows in their reserved tracks. Task entry status actions retain their dialog and expose an inline error on failure; success alone dismisses, with retry and Close available.

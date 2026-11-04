@@ -1,5 +1,7 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 readable phone filters (OldVersion only, unpublished):** Filter names have their own line; comparison and value sit below, with a separate remove button that cannot cover the value. Signed-in Task sync is now a required release item at your request, but it is not enabled yet. Firebase project authentication and the deployed access rules must be available to finish and verify it safely. Guest Tasks and all existing records remain unchanged.
+
 **DN 2.3 phone sorting and recovery (OldVersion only, unpublished):** Phone filter sheets now show every sort choice in two centered columns. If a Task status change cannot save from its actions dialog, the dialog stays open with an error so you can retry. Existing records and filter behavior are preserved. Focused checks passed; physical iPhone verification and deployment remain separate.
 
 **DN 2.3 screenshot corrections (OldVersion only, unpublished):** Task date and time now fit inside one square without a calendar icon. Red flags mean overdue; white flags in dark mode mean high priority; other priorities have no flag. Summary counts follow the applied filters and search. A Story stylesheet collision that could squeeze Task titles into a narrow column is fixed. Code List navigation has no arrow buttons, sort arrows have separate space, and PDF Studio says Preview needs updating with clearer spacing. Your data is unchanged; physical iPhone acceptance and deployment remain pending.
