@@ -27,16 +27,16 @@ async function assertReadableRule(page, row) {
     return { field, comparison, value, remove, rule:rect(node), pageWidth:document.documentElement.scrollWidth };
   });
   const { field, comparison, value, remove, rule } = measured;
-  expect(field.bottom).toBeLessThanOrEqual(comparison.top + 3);
-  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(4);
+  expect(Math.abs(field.top - comparison.top)).toBeLessThanOrEqual(5);
+  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(5);
+  expect(field.right).toBeLessThanOrEqual(comparison.left + 2);
   expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
-  expect(field.right).toBeLessThanOrEqual(remove.left + 2);
   expect(value.right).toBeLessThanOrEqual(remove.left + 2);
   expect(remove.left).toBeGreaterThanOrEqual(rule.left - 1);
   expect(remove.right).toBeLessThanOrEqual(rule.right + 1);
   expect(remove.width).toBeGreaterThanOrEqual(43.9);
   expect(remove.height).toBeGreaterThanOrEqual(43.9);
-  expect(rule.height).toBeGreaterThanOrEqual(88);
+  expect(rule.height).toBeGreaterThanOrEqual(44);
   expect(rule.height).toBeLessThanOrEqual(220);
   const panel = await page.locator('.dn-refine-sheet').boundingBox();
   expect(panel.height).toBeLessThanOrEqual(Math.min(800, page.viewportSize().height * .9));
@@ -44,7 +44,7 @@ async function assertReadableRule(page, row) {
 }
 
 for (const width of [320, 390]) {
-  test(`all five lists offer friendly filters and readable two-row mobile rules at ${width}px`, async ({ page }) => {
+  test(`all five lists offer friendly filters and readable single-row mobile rules at ${width}px`, async ({ page }) => {
     test.setTimeout(120_000);
     await page.setViewportSize({ width, height: 844 });
     const moments = fixtureMoments();
@@ -297,25 +297,22 @@ for (const width of [320, 390, 1280]) {
     });
     expect(disclosure.left).toBeGreaterThanOrEqual(disclosure.railLeft - 1);
     expect(disclosure.right).toBeLessThanOrEqual(disclosure.railRight + 1);
-    const measurements = await chips.evaluate((element) => {
-      const [first, second, more] = [...element.children].map((chip) => chip.getBoundingClientRect());
-      return {
-        firstTop:first.top, firstBottom:first.bottom, firstRight:first.right,
-        secondTop:second.top, secondRight:second.right, moreLeft:more.left,
-        height:element.getBoundingClientRect().height,
-      };
+    const geometry = await chips.evaluate((element) => {
+      const rail = element.querySelector('.dn-condition-chip-rail').getBoundingClientRect();
+      const more = element.querySelector('.dn-condition-more').getBoundingClientRect();
+      const bounds = element.getBoundingClientRect();
+      return { railRight:rail.right, moreLeft:more.left, sameRow:Math.abs(rail.top-more.top),
+        moreRight:more.right, right:bounds.right, height:bounds.height };
     });
-    // Each selected filter has its own readable row; +N has a separate column.
-    expect(measurements.secondTop).toBeGreaterThanOrEqual(measurements.firstBottom - 1);
-    expect(measurements.firstRight).toBeLessThanOrEqual(measurements.moreLeft + 1);
-    expect(measurements.secondRight).toBeLessThanOrEqual(measurements.moreLeft + 1);
-    expect(measurements.height).toBeGreaterThanOrEqual(88);
-    expect(measurements.height).toBeLessThanOrEqual(170);
+    expect(geometry.railRight).toBeLessThanOrEqual(geometry.moreLeft + 2);
+    expect(geometry.sameRow).toBeLessThanOrEqual(5);
+    expect(geometry.moreRight).toBeLessThanOrEqual(geometry.right + 1);
+    expect(geometry.height).toBeGreaterThanOrEqual(44);
+    expect(geometry.height).toBeLessThanOrEqual(60);
     await overflow.click();
-    const refine = page.getByRole('dialog', { name: 'Transaction filters' });
-    await expect(refine.locator('.dn-condition-rule')).toHaveCount(8);
-    await refine.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await expect(refine).toHaveCount(0);
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
+    await chips.getByRole('button', { name: 'Show fewer active filters' }).click();
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
 
     const first = chips.locator('.dn-condition-chip').first();
     await first.getByRole('button', { name: 'Change Title filter', exact: true }).click();
