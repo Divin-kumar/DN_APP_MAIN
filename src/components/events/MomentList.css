@@ -239,3 +239,18 @@ html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-tim
   html[data-theme] .events-page .dn-guest-tour-notice { padding:10px 12px; margin:0; gap:7px 10px; }
   html[data-theme] .events-page .dn-guest-tour-notice button { width:auto; min-height:40px; padding:0 11px; }
 }
+
+/* DN 2.3 small-phone card: the 44px overflow menu occupies the top corner
+   only. Previously every row surrendered that width, clipping the Moment
+   name and activity preview unnecessarily. Keep heading space for the menu. */
+@media(max-width:580px) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
+    padding-right:0 !important;
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy {
+    padding-right:10px;
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-heading {
+    min-height:44px;padding-right:44px;align-content:start;
+  }
+}
