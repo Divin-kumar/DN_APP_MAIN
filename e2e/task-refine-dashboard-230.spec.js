@@ -187,3 +187,31 @@ test('Tasks saved sorting/filter defaults stage on Reset, without mutating Tasks
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toBe(originalTasks);
   expect(errors).toEqual([]);
 });
+
+test('filter long press visibly lifts and moves a rule without changing records', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/activities');
+  const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  await page.getByRole('button', { name: /^Filters and sort/ }).first().click();
+  const sheet = page.getByRole('dialog', { name: 'Activity filters' });
+  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
+  const rules = sheet.locator('.dn-condition-rule');
+  await expect(rules).toHaveCount(2);
+  const ids = await rules.evaluateAll((rows) => rows.map((row) => row.dataset.conditionId));
+  const handle = rules.first().getByRole('button', { name: 'Drag to reorder filter' });
+  const handleRect = await handle.boundingBox(), targetRect = await rules.nth(1).boundingBox();
+  await page.mouse.move(handleRect.x + handleRect.width / 2, handleRect.y + handleRect.height / 2);
+  await page.mouse.down();
+  await expect(rules.first()).toHaveClass(/is-drag-source/, { timeout: 1500 });
+  await page.mouse.move(targetRect.x + targetRect.width / 2, targetRect.y + targetRect.height / 2, { steps: 6 });
+  await expect(rules.nth(1)).toHaveClass(/is-drag-target/);
+  await page.mouse.up();
+  await expect(rules.first()).toHaveAttribute('data-condition-id', ids[1]);
+  await expect(rules.nth(1)).toHaveAttribute('data-condition-id', ids[0]);
+  await expect(sheet.locator('.is-drag-source, .is-drag-target')).toHaveCount(0);
+  await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
+  expect(errors).toEqual([]);
+});
