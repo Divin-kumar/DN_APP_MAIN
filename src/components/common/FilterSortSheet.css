@@ -185,3 +185,11 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
     min-height:47px;
   }
 }
+
+/* Short coarse-pointer landscape can fractional-scale 44 CSS px to ~42.76
+   rendered px. Reserve 46 CSS px for a genuine 44px+ effective tap area. */
+@media(orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
+    min-height:46px;
+  }
+}
