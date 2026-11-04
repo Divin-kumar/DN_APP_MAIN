@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-403 | Align production-upgrade test to existing Refresh app label
+- **Source-confirmed root cause:** The release-upgrade test's fresh-navigation path required an exact `Refresh` button that does not exist. Both the historical 1.0.35 About source at dfe40bbc and current 2.3.0 About use the accessible label `Refresh app`.
+- **Change:** Update the upgrade test selector to the actual shared label. Preserve both upgrade paths, old/new version readback, the service-worker transition, saved filter search, original exact-byte download, offline Story, and immutable local records. This corrects a test harness regression only; it does not alter application UI, behavior, data or service workers.
+- **Verification:** A full independent upgrade test has not passed yet; the new opt-in four-stage GitHub Actions check will run with [verify-230-release-remainder] at the updated SHA. Both historical and current labels were inspected directly. No Firebase/Vercel deployment, PR or main write. Guest tour remains unaffected.
+
 ## CHG-20261104-402 | Execute four previously skipped DN 2.3 release stages separately
 - **Source of work:** The full release verification at 69ee741 halted at four browser assertion failures (778 passed). Targeted action 41859772218 on e07eb1f subsequently passed all four formerly failing browser journeys, and the documentation/smoke job 41859772315 passed. Build, production shell, historical upgrade fixture and upgrade preservation have not yet executed at the corrected source.
 - **Change and rationale:** Add an opt-in GitHub Actions-only job [verify-230-release-remainder] to run the four blocked stages independently without repeating 23+ minutes of Chromium browser journeys. It uses the same Node 22, locked npm, Chromium, exact historical base SHA and command lines as the full gate. It writes no real application data and never publishes Hosting.

@@ -73,7 +73,7 @@ try {
       if (mode === 'fresh-navigation') {
         await page.reload();
         await expect(aboutVersion).toHaveText(`v${version}`);
-        await page.getByRole('button', { name:'Refresh', exact:true }).click({ timeout:20000 });
+        // Both the previous 1.0.35 shell and current 2.3.0 expose "Refresh app".\n        await page.getByRole('button', { name:'Refresh app', exact:true }).click({ timeout:20000 });
       } else {
         await page.evaluate(async () => (await navigator.serviceWorker.getRegistration()).update());
         await page.waitForFunction(async () => Boolean((await navigator.serviceWorker.getRegistration())?.waiting));
