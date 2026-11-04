@@ -12,7 +12,7 @@
  * - track whether a value is still in use before deleting it
  * - keep the app aligned with each user's terminology and personal setup
  */
-import { BellRing, Check, ChevronLeft, ChevronRight, Hash, PencilLine, Plus, MoreHorizontal, ShieldOff, Trash2 } from 'lucide-react';
+import { BellRing, Check, ChevronLeft, ChevronRight, Hash, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
@@ -238,12 +238,11 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         ]}
         onDelete={() => handleDelete(entry)}>
         <button type="button" className="code-list-row"
-          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap or swipe either direction for actions.`}>
+          aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap to open actions; swipe is optional.`}>
           <span className="code-list-main">
             <span className="code-list-text">{entry.label}</span>
             {isInactive ? <span className="code-list-status">Inactive</span> : null}
           </span>
-          <MoreHorizontal size={18} strokeWidth={1.9} className="dn-code-list-row-more" aria-hidden="true" />
         </button>
       </SwipeActionCard>
     );
@@ -520,7 +519,7 @@ export default function CodeLists() {
             </button> : null}
           </div>
         </nav>
-        <CodeListSection title="Moment Types" description="Used for birthdays, anniversaries, celebrations, and other life moments. Each type must use Daily, Journal, or Tasks creation mode. Configure greeting generation and Dashboard visibility separately." listKey="eventTypes" placeholder="Add moment type" />
+        <CodeListSection title="Moment Types" description="Manage Moment types and choose their Daily, Journal, or Tasks mode, greetings, and Dashboard options." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <PaymentMethodsSection />

@@ -122,3 +122,35 @@ html[data-theme] .dn-task-form-actions { display:flex; justify-content:flex-end;
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-task-list .dn-task-row { transition:none; }
 }
+
+/* Tasks use the same linear reading rhythm as Activities; no status or menu
+   handler changes, and all complete/edit/delete hit areas remain intact. */
+html[data-theme] .dn-task-list { gap:0; }
+html[data-theme] .dn-task-list .dn-task-row {
+  border:0; border-bottom:1px solid var(--color-border);
+  border-radius:0; background:transparent; box-shadow:none;
+}
+html[data-theme] .dn-task-row-main { padding:10px 2px; gap:5px; }
+html[data-theme] .dn-task-row .dn-task-copy { gap:4px; min-height:62px; }
+html[data-theme] .dn-task-row .dn-task-copy strong {
+  font-size:15px; font-weight:700; line-height:1.45;
+}
+html[data-theme] .dn-task-row .dn-task-context { font-size:12px; line-height:1.4; }
+html[data-theme] .dn-task-row-details { font-size:12px; line-height:1.45; gap:4px 10px; }
+html[data-theme] .dn-task-metrics span { font-size:12px; }
+@media(hover:hover) and (pointer:fine) {
+  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done,.dn-record-menu-trigger):hover {
+    background:var(--color-surface);
+  }
+}
+@media(hover:none), (pointer:coarse) {
+  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done,.dn-record-menu-trigger):hover {
+    background:transparent;
+  }
+}
+@media(max-width:430px) {
+  html[data-theme] .dn-tasks-page { gap:11px; }
+  html[data-theme] .dn-task-row-main { padding:11px 0; gap:3px; }
+  html[data-theme] .dn-task-row .dn-task-copy strong { font-size:15px; }
+  html[data-theme] .dn-task-metrics span { font-size:11.5px; }
+}

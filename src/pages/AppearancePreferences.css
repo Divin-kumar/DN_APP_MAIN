@@ -244,3 +244,18 @@ html[data-theme] .dn-settings-redesign .dn-guest-tour-panel {
   margin-top:0; min-width:0;
 }
 html[data-theme] .dn-settings-redesign .dn-settings-explore-header + .dn-guest-tour-panel { margin-top:0; }
+
+/* Keep Creation defaults and Save actions together instead of stretching
+   unused CSS grid tracks across the entire iPhone section. */
+html[data-theme] .dn-appearance-body,
+html[data-theme] .dn-appearance-section,
+html[data-theme] .dn-appearance-default-fields {
+  align-content:start; grid-auto-rows:max-content;
+}
+@media(max-width:580px) {
+  html[data-theme] .dn-appearance-body { gap:16px; }
+  html[data-theme] .dn-appearance-section { gap:10px; padding-bottom:16px; }
+  html[data-theme] .dn-appearance-default-fields { gap:8px; }
+  html[data-theme] .dn-appearance-save-row { gap:7px; }
+  html[data-theme] .dn-appearance-save-row > span { flex:0 1 auto; font-size:12px; }
+}
