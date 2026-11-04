@@ -28,9 +28,10 @@ for (const width of [320,430,1280]) {
     await testInfo.attach(`calendar-tasks-${width}`,{body:await page.screenshot(),contentType:'image/png'});
     const id=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_tasks'))[0].id);
     await page.goto(`/tasks?task=${id}`);
-    await expect(page.getByRole('dialog',{name:'Task actions'})).toBeVisible();
+    await expect(page.getByRole('dialog',{name:'Task actions'})).toHaveCount(0);
+    await expect(page.locator('.dn-independent-task-row.is-dashboard-selected')).toContainText('Return library book');
     await expect(page.getByRole('dialog',{name:'Edit Task'})).toHaveCount(0);
-    await page.getByRole('button',{name:'Close',exact:true}).last().click();
+    await page.getByRole('button',{name:'Dismiss',exact:true}).click();
     await page.goto('/settings/appearance');
     const footer=page.locator('.dn-story-design-actions');
     await footer.scrollIntoViewIfNeeded();
