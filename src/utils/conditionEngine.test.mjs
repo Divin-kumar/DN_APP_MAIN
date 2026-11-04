@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { discoverConditionFields, emptyGroup, matchesConditionGroup, mapConditions, removeCondition, conditionCount, testCondition, compileConditionGroup, normalizeConditionGroup, conditionChipEntries } from './conditionEngine.js';
+import { discoverConditionFields, emptyGroup, matchesConditionGroup, mapConditions, removeCondition, conditionCount, testCondition, compileConditionGroup, normalizeConditionGroup, conditionChipEntries, reorderSiblingConditions, shiftSiblingCondition } from './conditionEngine.js';
 
 const records = [
   { title: 'First journey', completed: false, price: 125, date: '2026-02-10', type: 'Personal', meta: { person: 'Alice' } },
@@ -135,4 +135,20 @@ test('Representative discovery samples retain mixed types while ignoring empty o
   assert.deepEqual(types, { bool: 'boolean', date: 'date', generic: 'text', invalid: 'text', mixed: 'text', number: 'number', 'tags[]': 'text' });
   assert.deepEqual(fields.find((field) => field.path === 'mixed').values, ['2', 'other']);
   assert.equal(fields.some((field) => 'sampleSignatures' in field), false);
+});
+
+// Order changes affect only the visible arrangement, never the filter logic.
+test('reorders only siblings and preserves nested condition groups', () => {
+  const root = { id:'root', kind:'group', join:'AND', children:[
+    { id:'one', kind:'rule', field:'status', operator:'eq', value:'completed' },
+    { id:'sub', kind:'group', join:'OR', children:[
+      { id:'two',kind:'rule',field:'priority',operator:'eq',value:'high' },
+      { id:'three',kind:'rule',field:'priority',operator:'eq',value:'low' },
+    ] },
+  ]};
+  const moved = reorderSiblingConditions(root, 'two', 'three');
+  assert.deepEqual(moved.children[1].children.map((n)=>n.id), ['three','two']);
+  assert.equal(reorderSiblingConditions(root,'one','two'),root);
+  assert.deepEqual(shiftSiblingCondition(root,'two',1).children[1].children.map((n)=>n.id),['three','two']);
+  assert.deepEqual(root.children[1].children.map((n)=>n.id),['two','three']);
 });

@@ -434,3 +434,95 @@ html[data-theme] .dn-condition-chips:has(> .dn-condition-more) > .dn-condition-m
   margin: 0;
   padding-inline: 0;
 }
+
+/* Screenshot acceptance: applied conditions occupy a single swipeable line.
+   +N reveals the remaining chips inline, never opens an unrelated sheet. */
+html[data-theme] .dn-condition-chips,
+html[data-theme] .dn-condition-chips:has(> .dn-condition-more) {
+  display:flex !important; flex-flow:row nowrap !important; align-items:center !important;
+  gap:7px !important; min-width:0; max-width:100%; width:100%;
+  overflow-x:auto !important; overflow-y:hidden !important;
+  scroll-snap-type:x proximity; scrollbar-width:none; white-space:nowrap;
+  overscroll-behavior-x:contain; -webkit-overflow-scrolling:touch;
+}
+html[data-theme] .dn-condition-chips::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-condition-chips > .dn-condition-chip {
+  display:inline-flex; flex:0 0 auto !important; align-items:center;
+  width:max-content !important; max-width:min(85vw,440px) !important;
+  grid-column:auto !important;
+}
+html[data-theme] .dn-condition-chips .dn-condition-more {
+  grid-column:auto !important; grid-row:auto !important;
+  flex:0 0 auto; position:static; min-height:44px; margin:0;
+}
+html[data-theme] .dn-condition-chips .dn-condition-chip .dropdown-trigger > svg { display:none !important; }
+html[data-theme] .dn-condition-chips .dn-condition-chip-edit > svg { display:none !important; }
+html[data-theme] .dn-condition-grip {
+  display:flex; flex:0 0 28px; align-items:center; justify-content:center;
+  width:28px; height:44px; min-height:44px; padding:0;
+  border:0; border-radius:7px; background:transparent;
+  color:var(--color-text-muted); cursor:grab; touch-action:none;
+  user-select:none; -webkit-user-select:none;
+}
+html[data-theme] .dn-condition-grip:active { cursor:grabbing; color:var(--color-primary); }
+html[data-theme] .dn-condition-grip:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
+html[data-theme] .dn-condition-chips .dn-condition-chip .dn-condition-chip-label { white-space:nowrap; }
+html[data-theme] .dn-condition-chips .dn-condition-chip .dn-condition-chip-picker { flex:0 1 auto; min-width:0; }
+
+/* One rule = one horizontal row at every phone width, with a dedicated
+   non-overlapping remove target and a native drag grip. Extra-long values
+   scroll inside their own slot rather than expanding the page or sheet. */
+html[data-theme] .dn-conditions .dn-condition-rule,
+html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule,
+html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule,
+html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) {
+  display:grid; grid-template-columns:28px minmax(0,1.12fr) minmax(0,.74fr) minmax(0,1.1fr) 44px !important;
+  grid-template-rows:minmax(44px,auto) !important;
+  gap:3px !important; align-items:center; min-width:0; padding:5px 0;
+  overflow:visible !important;
+}
+html[data-theme] .dn-conditions .dn-condition-rule > :first-child,
+html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule > :first-child,
+html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) > :first-child {
+  grid-column:2 !important; grid-row:1 !important;
+}
+html[data-theme] .dn-conditions .dn-condition-rule > :nth-child(2),
+html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule > :nth-child(2),
+html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) > :nth-child(2) {
+  grid-column:3 !important; grid-row:1 !important;
+}
+html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-value-slot,
+html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule > .dn-condition-value-slot,
+html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) > .dn-condition-value-slot {
+  grid-column:4 !important; grid-row:1 !important;
+  max-width:100%; min-width:0; overflow-x:auto !important; overflow-y:hidden !important;
+  scrollbar-width:none;
+}
+html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-value-slot::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon,
+html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule > .dn-condition-icon,
+html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) > .dn-condition-icon {
+  grid-column:5 !important; grid-row:1 !important;
+  position:static !important; align-self:center; box-shadow:none !important;
+}
+html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-grip {
+  grid-column:1 !important; grid-row:1 !important;
+}
+html[data-theme] .dn-conditions .dn-condition-rule :is(.dropdown-field,.dropdown-trigger,.dn-condition-value) {
+  min-width:0; max-width:100%;
+}
+html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger > span {
+  white-space:normal !important; overflow-wrap:anywhere; text-align:center;
+}
+@media(max-width:580px) {
+  html[data-theme] .dn-conditions .dn-condition-rule,
+  html[data-theme] .dn-task-refine .dn-conditions .dn-condition-rule,
+  html[data-theme] .dn-list-controls-panel .dn-conditions .dn-condition-rule,
+  html[data-theme] .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) {
+    grid-template-columns:24px minmax(0,1.05fr) minmax(0,.7fr) minmax(0,1.05fr) 44px !important;
+    grid-template-rows:minmax(44px,auto) !important; gap:2px !important;
+    overflow:visible !important;
+  }
+  html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-grip { width:24px; }
+  html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger { padding:5px 2px !important; font-size:11px !important; }
+}

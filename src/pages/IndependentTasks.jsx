@@ -48,6 +48,7 @@ export function TaskListContent() {
   const [editor, setEditor] = useState(null);
   const [requestedTask, setRequestedTask] = useState(null);
   const [refine, setRefine] = useState(false);
+  const [showAllTaskFilters, setShowAllTaskFilters] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
@@ -160,7 +161,9 @@ export function TaskListContent() {
       <div className="dn-task-discovery-summary">
         <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown · Tap or swipe for actions</span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
-          maxVisible={4} onShowMore={() => setRefine(true)} /> : null}
+          maxVisible={showAllTaskFilters ? undefined : 2}
+          onShowMore={() => setShowAllTaskFilters(true)}
+          onShowLess={showAllTaskFilters ? () => setShowAllTaskFilters(false) : undefined} /> : null}
       </div>
     </div>
     {!ready && !store.error ? <p role="status">Loading Tasks…</p> : null}

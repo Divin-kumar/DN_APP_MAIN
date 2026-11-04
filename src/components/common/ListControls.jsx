@@ -10,6 +10,7 @@ export default function ListControls({
   refine,
 }) {
   const [open, setOpen] = useState(false);
+  const [showAllChips, setShowAllChips] = useState(false);
   const [edges, setEdges] = useState({ previous: false, next: false });
   const panelId = useId();
   const panelRef = useRef(null);
@@ -24,9 +25,12 @@ export default function ListControls({
     if (priorEditorKey.current === editorKey) return;
     priorEditorKey.current = editorKey;
     setOpen(false);
+    setShowAllChips(false);
   }, [editorKey]);
+  useEffect(() => { if (activeCount <= 2) setShowAllChips(false); }, [activeCount]);
   const displayChips = refine && isValidElement(chips)
-    ? cloneElement(chips, { maxVisible: 2, onShowMore: () => setOpen(true) }) : chips;
+    ? cloneElement(chips, { maxVisible: showAllChips ? undefined : 2,
+      onShowMore: () => setShowAllChips(true), onShowLess: showAllChips ? () => setShowAllChips(false) : undefined }) : chips;
   const updateEdges = () => {
     const rail = railRef.current;
     if (!rail) return;

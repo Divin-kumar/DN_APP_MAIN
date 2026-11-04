@@ -1,13 +1,13 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal, Flag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../../../store/useTaskStore';
-import { selectUpcomingIndependentTasks } from '../../../utils/dashboardTasks.js';
+import { selectUpcomingIndependentTasks, dashboardTaskDueLabel } from '../../../utils/dashboardTasks.js';
 import { getOnThisDayDashboardEvents, getUpcomingDashboardEvents, getMomentTypeGreetingTemplate } from '../../../utils/dashboardVisibility';
 import { getOnThisDayDashboardActivities, getUpcomingDashboardActivities } from '../../../utils/dashboardActivities';
 import { getCalendarDaysRemaining, getEventDate, getNextOccurrenceDate, isRecurringEvent, formatMomentDate } from '../../../utils/momentDates';
@@ -224,10 +224,6 @@ export function DashboardOverviewContent() {
   const activityActions = useActivityActions();
   const taskStore = useTaskStore();
   const taskScope = taskScopeKey({ user, isGuest });
-  const [taskAnnouncement, setTaskAnnouncement] = useState('');
-  const [taskError, setTaskError] = useState('');
-  const taskWritePending = useRef(false);
-  const [taskBusy, setTaskBusy] = useState(false);
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
   const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
   const events = ready ? storedEvents : EMPTY_EVENTS;
@@ -259,19 +255,6 @@ export function DashboardOverviewContent() {
   const dashboardTasks = useMemo(() => (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
     ? selectUpcomingIndependentTasks(taskStore.tasks, today).slice(0, 6) : [],
   [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
-  const completeDashboardTask = async (task) => {
-    if (taskWritePending.current) return;
-    taskWritePending.current = true; setTaskBusy(true);
-    try {
-      await taskStore.setTaskStatus(task.id, 'completed');
-      setTaskError('');
-      setTaskAnnouncement(`Completed ${task.title}`);
-    } catch (error) {
-      setTaskError(error.message || 'Task could not be completed.');
-    } finally { taskWritePending.current = false; setTaskBusy(false); }
-  };
-
-
   const getMomentGreeting = (event) => {
     const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;
     return event.greetingCard?.title ? event.greetingCard : getGreetingMessage(greetingSource, greetingTemplates, momentTypes);
@@ -306,31 +289,27 @@ export function DashboardOverviewContent() {
               : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
                 {dashboardTasks.map((task) => {
                   const overdue = task.dueDate < formatMomentDate(today);
-                  const dueToday = task.dueDate === formatMomentDate(today);
                   const date = new Date(task.dueDate + 'T12:00:00');
-                  const dueLabel = overdue ? 'Overdue' : dueToday ? 'Today' : 'Upcoming';
-                  return <div className="dn-dashboard-task-row" key={task.id}>
+                  const dueLabel = dashboardTaskDueLabel(task.dueDate, today);
+                  return <Link className="dn-dashboard-task-row" to={`/tasks?task=${encodeURIComponent(task.id)}`}
+                    aria-label={`Open Task ${task.title}`} key={task.id}>
                     <span className="dn-dashboard-task-date" data-overdue={overdue ? 'true' : undefined} aria-hidden="true">
                       <strong>{date.getDate()}</strong>
                       <small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small>
                     </span>
-                    <div className="dn-dashboard-task-text">
-                      <Link className="dn-dashboard-task-name" to={`/tasks?task=${encodeURIComponent(task.id)}`}
-                        aria-label={`Open Task ${task.title}`}>{task.title}</Link>
+                    <span className="dn-dashboard-task-text">
+                      <strong className="dn-dashboard-task-name">{task.title}</strong>
                       <small><span className={overdue ? 'is-overdue' : ''}>{dueLabel}</span>
                         {task.dueTime ? ` · ${task.dueTime}` : ''}
-                        <span className="dn-dashboard-task-separator" aria-hidden="true"> · </span>
-                        <span data-priority={task.priority}>{task.priority} priority</span>
                       </small>
-                    </div>
-                    <button type="button" className="dn-dashboard-task-check"
-                      aria-label={`Complete Task ${task.title}`} title="Mark Task completed"
-                      disabled={taskBusy} onClick={() => completeDashboardTask(task)}><Check size={15} aria-hidden="true" /><span>Done</span></button>
-                  </div>;
+                    </span>
+                    {overdue || task.priority === 'high' ? <span className={`dn-dashboard-task-flag${overdue ? ' is-overdue' : ' is-high'}`}
+                      role="img" aria-label={overdue ? 'Overdue' : 'High priority'}>
+                      <Flag size={17} aria-hidden="true" />
+                    </span> : <span aria-hidden="true" />}
+                  </Link>;
                 })}
               </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
-          {taskError ? <p role="alert" className="dashboard-activity-action-error">{taskError}</p> : null}
-          {taskAnnouncement ? <p className="sr-only" role="status" aria-live="polite">{taskAnnouncement}</p> : null}
         </section> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header className="dashboard-section-heading">

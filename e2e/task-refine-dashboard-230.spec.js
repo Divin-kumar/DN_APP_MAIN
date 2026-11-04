@@ -79,27 +79,18 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     expect(geometry.scroll).toBeLessThanOrEqual(geometry.width+1);
     expect(errors).toEqual([]);
   });
-  test('Dashboard Task rows open the exact Task and complete without changing Moments at '+width+'px '+theme,async({page},testInfo)=>{
+  test('Dashboard Task rows navigate without mutating Task or Moment records at '+width+'px '+theme,async({page},testInfo)=>{
     await page.setViewportSize({width,height:width<700?790:900});
     const errors=await seedTasks(page,theme);
     const original=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
     await page.goto('/dashboard');
     const rows=page.locator('.dn-dashboard-tasks .dn-dashboard-task-row');
     await expect(rows).toHaveCount(2);
-    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check')).toHaveCount(2);
-    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check').filter({hasText:'Done'})).toHaveCount(2);
+    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check')).toHaveCount(0);
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-date')).toHaveCount(2);
-    const actionGeometry=await page.locator('.dn-dashboard-task-check').first().evaluate((el)=>({
-      height:el.getBoundingClientRect().height,
-      width:el.getBoundingClientRect().width,
-      radius:getComputedStyle(el).borderTopLeftRadius,
-      text:el.textContent.trim(),
-    }));
-    // Chromium can report 43.9999847 for a 44 CSS-pixel target.
-    expect(Math.round(actionGeometry.height * 100) / 100).toBeGreaterThanOrEqual(44);
-    expect(actionGeometry.width).toBeGreaterThan(44);
-    expect(actionGeometry.radius).toBe('10px');
-    expect(actionGeometry.text).toBe('Done');
+    await expect(rows.first()).toContainText(/days? (away|overdue)|Due today/);
+    await expect(rows.first().locator('[data-priority]')).toHaveCount(0);
+    const originalTasks=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
     await testInfo.attach('DashboardTasks-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();
     await expect(page.getByRole('dialog',{name:'Task actions'})).toBeVisible();
@@ -107,10 +98,8 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     await expect(page.getByRole('dialog',{name:'Edit Task'}).getByLabel('Task title')).toHaveValue('Review travel documents');
     await page.getByRole('dialog',{name:'Edit Task'}).getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto('/dashboard');
-    await page.getByRole('button',{name:'Complete Task Review travel documents'}).click();
-    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-row')).toHaveCount(1);
-    const updated=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_tasks')));
-    expect(updated.find((task)=>task.id==='focused-task').status).toBe('completed');
+    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-row')).toHaveCount(2);
+    expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(originalTasks);
     expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     expect(errors).toEqual([]);

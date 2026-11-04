@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { selectUpcomingIndependentTasks } from './dashboardTasks.js';
+import { selectUpcomingIndependentTasks, dashboardTaskDueLabel } from './dashboardTasks.js';
 
 const task = (id, dueDate, status = 'in-progress', dueTime = '') =>
   ({ id, title: id, dueDate, dueTime, status });
@@ -19,4 +19,13 @@ test('30-day horizon and year rollover use local calendar dates', () => {
   assert.deepEqual(selectUpcomingIndependentTasks([
     task('in', '2027-01-30'), task('out', '2027-01-31'),
   ], new Date(2026, 11, 31, 12)).map(item => item.id), ['in']);
+});
+
+test('Dashboard due countdown uses calendar days and distinguishes overdue and today', () => {
+  const today = new Date(2026, 10, 4, 22, 30);
+  assert.equal(dashboardTaskDueLabel('2026-11-07', today), '3 days away');
+  assert.equal(dashboardTaskDueLabel('2026-11-05', today), '1 day away');
+  assert.equal(dashboardTaskDueLabel('2026-11-04', today), 'Due today');
+  assert.equal(dashboardTaskDueLabel('2026-11-03', today), '1 day overdue');
+  assert.equal(dashboardTaskDueLabel('2026-10-30', today), '5 days overdue');
 });

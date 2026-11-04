@@ -299,3 +299,23 @@ html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check {
   border:0; background:transparent; box-shadow:none; border-radius:10px;
   min-width:44px; padding-inline:4px; gap:4px; font-size:12px;
 }
+
+/* Owner-approved Dashboard Task preview is a read-only navigation row.
+   Priority matches the Task module's red-overdue / high-priority flag system. */
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row {
+  grid-template-columns:45px minmax(0,1fr) 24px;
+  color:var(--color-text); text-decoration:none; cursor:pointer;
+}
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row:hover .dn-dashboard-task-name { color:var(--color-primary); }
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:10px;
+}
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag {
+  display:flex; align-items:center; justify-content:center;
+  color:var(--color-text-muted);
+}
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag.is-overdue { color:var(--color-danger,#cb4848); }
+html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag.is-high { color:var(--color-text); }
+@media(max-width:360px) {
+  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row { grid-template-columns:42px minmax(0,1fr) 24px; }
+}

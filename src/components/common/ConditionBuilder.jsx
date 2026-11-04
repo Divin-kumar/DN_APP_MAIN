@@ -1,8 +1,8 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
-import { ChevronDown, Plus, X } from 'lucide-react';
+import { GripVertical, Plus, X } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
 import ModalDialog from './ModalDialog';
-import { conditionChipEntries, isActiveCondition, mapConditions, noValueOperators, operatorsFor, removeCondition } from '../../utils/conditionEngine';
+import { conditionChipEntries, isActiveCondition, mapConditions, noValueOperators, operatorsFor, removeCondition, reorderSiblingConditions, shiftSiblingCondition } from '../../utils/conditionEngine';
 import { appendFilterRule, filterEditorOperators } from '../../utils/conditionEditor';
 import './ConditionBuilder.css';
 
@@ -66,10 +66,37 @@ function ValueEditor({ field, node, onChange, immediate = false }) {
     type={field?.type === 'date' ? 'date' : field?.type === 'number' ? 'number' : 'text'} step={field?.type === 'number' ? 'any' : undefined}
     value={node.value} onChange={onChange} />;
 }
-function RuleEditor({ node, schema, onEdit, onRemove, immediate = false }) {
+function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
+  const origin = useRef(null);
+  const finish = (event) => {
+    const start = origin.current;
+    origin.current = null;
+    if (!start || Math.hypot(event.clientX - start.x, event.clientY - start.y) < 10) return;
+    const element = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-condition-id]');
+    const target = element?.getAttribute('data-condition-id');
+    if (target && target !== id) setGroup((group) => reorderSiblingConditions(group, id, target));
+  };
+  return <button type="button" className="dn-condition-grip" aria-label="Drag to reorder filter"
+    title="Drag to reorder. Arrow keys also work."
+    onPointerDown={(event) => {
+      if (event.button !== 0) return;
+      origin.current = { x: event.clientX, y: event.clientY };
+      event.currentTarget.setPointerCapture?.(event.pointerId);
+    }}
+    onPointerUp={finish} onPointerCancel={() => { origin.current = null; }}
+    onKeyDown={(event) => {
+      const backwards = axis === 'vertical' ? 'ArrowUp' : 'ArrowLeft';
+      const forwards = axis === 'vertical' ? 'ArrowDown' : 'ArrowRight';
+      if (event.key !== backwards && event.key !== forwards) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setGroup((group) => shiftSiblingCondition(group, id, event.key === backwards ? -1 : 1));
+    }}><GripVertical size={15} aria-hidden="true" /></button>;
+}
+function RuleEditor({ node, schema, onEdit, onRemove, setGroup, immediate = false }) {
   const field = schema.find((item) => item.path === node.field);
   const operators = filterEditorOperators(field, node.operator);
-  return <div className="dn-condition-rule">
+  return <div className="dn-condition-rule" data-condition-id={node.id}>
     <DropdownSelect aria-label="Filter by" value={node.field || ''} placeholder="Filter by" searchLabel="Search filters"
       onChange={(event) => {
         const next = schema.find((item) => item.path === event.target.value);
@@ -87,6 +114,7 @@ function RuleEditor({ node, schema, onEdit, onRemove, immediate = false }) {
       immediate={immediate} onChange={(value) => onEdit((current) => ({ ...current, value: typeof value === 'function' ? value(current.value) : value }))} />
       : node.field ? <span className="dn-condition-no-value">Choose another filter or remove this one.</span> : null}</div>
     <button type="button" className="dn-condition-icon" aria-label="Remove filter" onClick={onRemove}><X size={16} /></button>
+    <ConditionDragHandle id={node.id} setGroup={setGroup} />
   </div>;
 }
 function GroupEditor({ node, schema, update, remove, depth = 0, stackRef, immediate = false }) {
@@ -100,7 +128,7 @@ function GroupEditor({ node, schema, update, remove, depth = 0, stackRef, immedi
         role="region" aria-label={`${node.join === 'OR' ? 'Any of' : 'All'} filter conditions, vertical list`}
         tabIndex={node.children.length > 1 ? 0 : undefined}>{node.children.map((child) => child.kind === 'group'
         ? <GroupEditor key={child.id} node={child} schema={schema} update={update} remove={remove} depth={depth + 1} immediate={immediate} />
-        : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} immediate={immediate} />)}</div>
+        : <RuleEditor key={child.id} node={child} schema={schema} onEdit={(next) => modify(child.id, (current) => typeof next === 'function' ? next(current) : next)} onRemove={() => remove(child.id)} setGroup={update} immediate={immediate} />)}</div>
     </div>
   </div>;
 }
@@ -134,7 +162,8 @@ function AppliedCondition({ filter, chip, node }) {
     },
   };
   const label = <span className="dn-condition-chip-label" title={chip.label}>{chip.label}</span>;
-  return <div className="dn-condition-chip">
+  return <div className="dn-condition-chip" data-condition-id={node.id}>
+    <ConditionDragHandle id={node.id} setGroup={filter.setGroup} axis="horizontal" />
     {singleChoice ? <DropdownSelect className="dn-condition-chip-picker" aria-label={`Change ${field.label} filter`}
       value={node.value} triggerLabel={label} allowCustom={allowCustom} searchOnDemand {...panHandlers}
       onChange={(event) => update({ value: event.target.value })}>
@@ -143,7 +172,7 @@ function AppliedCondition({ filter, chip, node }) {
       {choices.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
     </DropdownSelect> : <button type="button" className="dn-condition-chip-edit" aria-label={`Change ${field?.label || 'unavailable'} filter`}
       disabled={!field} aria-haspopup="dialog" aria-expanded={editing} {...panHandlers}
-      onClick={() => { setDraft({ ...node }); setEditing(true); }}>{label}<ChevronDown size={14} aria-hidden="true" /></button>}
+      onClick={() => { setDraft({ ...node }); setEditing(true); }}>{label}</button>}
     <button type="button" className="dn-condition-chip-remove" aria-label={`Remove filter ${chip.label}`}
       onClick={() => filter.setGroup((group) => removeCondition(group, chip.id) || group)}><X size={13} aria-hidden="true" /></button>
     {editing && field ? <ModalDialog title={`Change ${field.label} filter`} className="dn-applied-filter-editor" onClose={() => setEditing(false)}>
@@ -166,7 +195,8 @@ function AppliedCondition({ filter, chip, node }) {
     </ModalDialog> : null}
   </div>;
 }
-export function ConditionChips({ filter, maxVisible, onShowMore }) {
+export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
+  const railRef = useRef(null);
   const chips = conditionChipEntries(filter.state.group, filter.schema);
   const nodes = useMemo(() => {
     const byId = new Map();
@@ -176,10 +206,15 @@ export function ConditionChips({ filter, maxVisible, onShowMore }) {
   const compact = Number.isInteger(maxVisible) && maxVisible > 0;
   const visible = compact ? chips.slice(0, maxVisible) : chips;
   const overflow = chips.length - visible.length;
-  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{visible.map((chip) =>
+  const expanded = !compact && Boolean(onShowLess);
+  useEffect(() => {
+    if (expanded && railRef.current) railRef.current.scrollLeft = railRef.current.scrollWidth;
+  }, [expanded, chips.length]);
+  return chips.length ? <div ref={railRef} className="dn-condition-chips" role="region" aria-label="Active filters" tabIndex={chips.length > 1 ? 0 : undefined}>{visible.map((chip) =>
     <AppliedCondition key={`${filter.editorKey}:${chip.id}`} filter={filter} chip={chip} node={nodes.get(chip.id)} />)}
     {overflow > 0 ? <button type="button" className="dn-condition-more" aria-label={`Show ${overflow} more active filters`}
-      onClick={onShowMore}>+{overflow}</button> : null}</div> : null;
+      onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"
+        onClick={onShowLess}>Less</button> : null}</div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately
 // provides no second toggle or separate filtering surface.

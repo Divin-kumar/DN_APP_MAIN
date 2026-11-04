@@ -227,3 +227,41 @@ export const conditionChipEntries = (group, schema = []) => {
   return group ? visit(group) : [];
 };
 export const conditionChips = (group, schema = []) => conditionChipEntries(group, schema).map((entry) => entry.label);
+
+/** Reorder within a single AND/OR group only; nested expression ownership is preserved. */
+export const reorderSiblingConditions = (root, sourceId, targetId) => {
+  if (root?.kind !== 'group' || !sourceId || !targetId || sourceId === targetId) return root;
+  const from = root.children.findIndex((node) => node.id === sourceId);
+  const to = root.children.findIndex((node) => node.id === targetId);
+  if (from >= 0 && to >= 0) {
+    const children = [...root.children];
+    const [moved] = children.splice(from, 1);
+    children.splice(to, 0, moved);
+    return { ...root, children };
+  }
+  let changed = false;
+  const children = root.children.map((node) => {
+    if (node.kind !== 'group') return node;
+    const next = reorderSiblingConditions(node, sourceId, targetId);
+    if (next !== node) changed = true;
+    return next;
+  });
+  return changed ? { ...root, children } : root;
+};
+export const shiftSiblingCondition = (root, sourceId, offset) => {
+  if (root?.kind !== 'group' || !Number.isInteger(offset) || !offset) return root;
+  const from = root.children.findIndex((node) => node.id === sourceId);
+  if (from >= 0) {
+    const to = from + offset;
+    return to >= 0 && to < root.children.length
+      ? reorderSiblingConditions(root, sourceId, root.children[to].id) : root;
+  }
+  let changed = false;
+  const children = root.children.map((node) => {
+    if (node.kind !== 'group') return node;
+    const next = shiftSiblingCondition(node, sourceId, offset);
+    if (next !== node) changed = true;
+    return next;
+  });
+  return changed ? { ...root, children } : root;
+};
