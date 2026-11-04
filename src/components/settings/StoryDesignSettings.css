@@ -92,3 +92,24 @@ html[data-theme] .dn-story-design-hint {margin:0;color:var(--color-text-muted);f
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-story-design-choice {transition:none;}
 }
+
+/* At 391-580px (including iPhone 15 Plus), avoid nine stacked bulky
+   miniature cards. Keep the meaningful paper previews as lightweight tabs. */
+@media(min-width:391px) and (max-width:580px) {
+  html[data-theme] .dn-story-design-choices { gap:5px; }
+  html[data-theme] .dn-story-design-choice {
+    padding:6px 4px 9px; gap:5px; min-height:44px;
+    border:0; border-bottom:2px solid transparent; border-radius:0;
+    background:transparent; box-shadow:none;
+  }
+  html[data-theme] .dn-story-design-choice.is-selected {
+    border-color:var(--color-primary);
+    background:color-mix(in srgb,var(--color-primary) 4%,transparent);
+    box-shadow:none;
+  }
+  html[data-theme] .dn-story-design-mini {
+    min-height:71px; aspect-ratio:1.55; padding:6px 4px; gap:4px;
+  }
+  html[data-theme] .dn-story-design-choice-name { font-size:14px; }
+  html[data-theme] .dn-story-design-choice-note { font-size:12px; line-height:1.4; }
+}

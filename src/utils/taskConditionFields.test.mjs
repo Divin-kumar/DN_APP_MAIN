@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { compileConditionGroup, emptyGroup } from './conditionEngine.js';
-import { taskDueWindow, taskFilterFields, taskViewConditionGroup } from './taskConditionFields.js';
+import { compactTaskRefineGroup, taskDueWindow, taskFilterFields, taskViewConditionGroup } from './taskConditionFields.js';
 import { filterTaskResults } from './taskListFilters.js';
 import { sortIndependentTasks } from './independentTasks.js';
 
@@ -55,6 +55,26 @@ test('legacy saved Task shortcuts are converted to removable chip rules with AND
   assert.deepEqual(select(withOr),['today']);
   assert.deepEqual(old,{status:'in-progress',priority:'high',due:'overdue'});
 });
+test('Refine draft hides only incomplete saved rules while preserving valid AND/OR choices',()=>{
+  const saved={...emptyGroup(),join:'AND',children:[
+    {id:'blank-one',kind:'rule',field:'',operator:'contains',value:''},
+    {id:'incomplete',kind:'rule',field:'status',operator:'eq',value:''},
+    {...emptyGroup(),id:'nested',join:'OR',children:[
+      rule('priority','high'),rule('status','completed'),
+      {id:'blank-two',kind:'rule',field:'',operator:'contains',value:''},
+    ]},
+  ]};
+  const before=JSON.stringify(saved);
+  const compact=compactTaskRefineGroup(saved);
+  assert.equal(compact.join,'AND');
+  assert.equal(compact.children.length,1);
+  assert.equal(compact.children[0].join,'OR');
+  assert.equal(compact.children[0].children.length,2);
+  assert.deepEqual(select(compact),select(saved));
+  assert.equal(JSON.stringify(saved),before);
+  assert.equal(compactTaskRefineGroup(emptyGroup()).children.length,0);
+});
+
 test('Task sort by status, priority and timestamp is deterministic with missing dates last',()=>{
   assert.deepEqual(sortIndependentTasks(tasks,'asc','priority').map(x=>x.id),['overdue','undated','late','today','week']);
   assert.deepEqual(sortIndependentTasks(tasks,'asc','createdAt').slice(0,2).map(x=>x.id),['overdue','today']);
