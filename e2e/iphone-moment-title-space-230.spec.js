@@ -26,7 +26,9 @@ for (const [width, height, theme] of [
       return {
         paddingRight: getComputedStyle(button).paddingRight,
         headingHeight: heading.getBoundingClientRect().height,
-        titleWidth: name.width,
+        titleWidth: name.width, titleHeight: name.height,
+        titleLineHeight: parseFloat(getComputedStyle(node.querySelector('.dn-v2-moment-copy > strong')).lineHeight),
+        titleWhiteSpace: getComputedStyle(node.querySelector('.dn-v2-moment-copy > strong')).whiteSpace,
         titleTop: name.top, menuBottom: menu.bottom,
         menuWidth: menu.width, menuHeight: menu.height,
         coverRight: cover.right, copyLeft: copy.left, copyRight: copy.right,
@@ -38,6 +40,8 @@ for (const [width, height, theme] of [
     expect(measure.headingHeight).toBeGreaterThanOrEqual(43.9);
     expect(measure.titleTop).toBeGreaterThanOrEqual(measure.menuBottom - 2);
     expect(measure.titleWidth).toBeGreaterThan(140);
+    expect(measure.titleWhiteSpace).toBe('normal');
+    expect(measure.titleHeight).toBeGreaterThan(measure.titleLineHeight * 1.6);
     expect(measure.menuWidth).toBeGreaterThanOrEqual(43.9);
     expect(measure.menuHeight).toBeGreaterThanOrEqual(43.9);
     expect(measure.copyLeft).toBeGreaterThanOrEqual(measure.coverRight - 1);
