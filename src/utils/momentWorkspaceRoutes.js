@@ -50,7 +50,7 @@ export const getShellPageTitle = (pathname, { momentTitle = '' } = {}) => {
   if (/^\/settings\/appearance\/?$/.test(pathname)) return 'Appearance';
   if (/^\/settings\/data-backup\/?$/.test(pathname)) return 'Data & Backup';
   if (/^\/settings\/code-lists\/?$/.test(pathname)) return 'Code Lists';
-  if (/^\/settings\/list-defaults\/?$/.test(pathname)) return 'Filter & Sort Defaults';
+  if (/^\/settings\/list-defaults\/?$/.test(pathname)) return 'List defaults';
   if (/^\/settings\/about\/?$/.test(pathname)) return 'About DN';
   if (/^\/settings\/?$/.test(pathname)) return 'Settings';
   return 'DN';

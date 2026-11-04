@@ -17,7 +17,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await shortcut.click();
       await expect(page).toHaveURL(/\/settings\/list-defaults$/);
       const section = page.locator('#list-order');
-      await expect(section.getByRole('heading', { name: 'List sorting and filters' })).toBeVisible();
+      await expect(section.getByRole('heading', { name: 'List defaults' })).toBeVisible();
       await expect(section).toBeInViewport();
       const layout = await page.evaluate(() => {
         const pane = document.querySelector('.dn-content');
@@ -47,7 +47,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await page.goto('/settings/code-lists#list-order');
       await expect(page).toHaveURL(/\/settings\/list-defaults$/);
       await expect(page.locator('#list-order')).toBeInViewport();
-      await expect(page.getByRole('heading', { name: 'List sorting and filters' })).toBeVisible();
+      await expect(page.getByRole('heading', { name: 'List defaults', level: 1 })).toBeVisible();
       expect(errors).toEqual([]);
     });
   }

@@ -73,6 +73,7 @@ for (const width of [320, 1280]) test(`payment filters and search reconcile both
     await page.goto(route);
     await openFilters(page);
     await addFilter(page, 'Payment method', 'Cash');
+    await page.getByRole('button', { name: 'Show results', exact: true }).click();
     await totals(page, isMoment, ['₹1,000', '₹250', '₹750']);
     await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(2);
     await page.reload();
@@ -82,6 +83,7 @@ for (const width of [320, 1280]) test(`payment filters and search reconcile both
     await totals(page, isMoment, ['₹500', '₹100', '₹400']);
     await openFilters(page);
     await addFilter(page, 'Type', 'Expense');
+    await page.getByRole('button', { name: 'Show results', exact: true }).click();
     await totals(page, isMoment, ['₹0', '₹100', '-₹100']);
     const search = page.getByRole('searchbox', { name: isMoment ? 'Search Moment transactions' : 'Search transactions', exact: true });
     await search.fill('No matching title');
@@ -89,11 +91,15 @@ for (const width of [320, 1280]) test(`payment filters and search reconcile both
     await totals(page, isMoment, ['₹0', '₹0', '₹0']);
     await search.fill('');
     await search.press('Enter');
+    await openFilters(page);
     await page.getByRole('button', { name: 'Clear all', exact: true }).click();
     await addFilter(page, 'Payment method', null, 'Not specified');
+    await page.getByRole('button', { name: 'Show results', exact: true }).click();
     await totals(page, isMoment, ['₹0', '₹75', '-₹75']);
     await expect(page.locator('.dn-transactions-results .dn-transaction-card')).toHaveCount(1);
+    await openFilters(page);
     await page.getByRole('button', { name: 'Clear all', exact: true }).click();
+    await page.getByRole('button', { name: 'Show results', exact: true }).click();
     await totals(page, isMoment, ['₹1,500', '₹425', '₹1,075']);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
   }
@@ -110,6 +116,7 @@ for (const width of [320, 1280]) test(`Settings payment choices reach forms, fil
   await section.getByRole('textbox', { name: 'Add payment method' }).fill('UPI');
   await section.getByRole('button', { name: 'Add', exact: true }).click();
   await expect(section.getByRole('button', { name: /^UPI\. Tap/ })).toBeVisible();
+  await page.goto('/settings/list-defaults');
   const preferences = page.getByRole('region', { name: 'List sorting and filters preferences' });
   await preferences.getByRole('button', { name: /Transactions filters/ }).click();
   await addFilter(page, 'Payment method', 'UPI');
