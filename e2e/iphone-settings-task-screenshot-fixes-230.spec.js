@@ -11,7 +11,7 @@ for(const [width,height,theme] of [
     await page.setViewportSize({width,height});
     const errors=await seedGuest(page,{theme});
     await page.goto('/settings/list-defaults');
-    const before=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses','dn_guest_tasks']
+    const before=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map(key=>localStorage.getItem(key)));
     const cards=page.locator('.dn-list-defaults-page .dn-defaults-sort-card');
     await expect(cards).toHaveCount(3);
@@ -41,6 +41,13 @@ for(const [width,height,theme] of [
     });
     expect(gap).toBeLessThanOrEqual(45);
     await page.goto('/tasks');
+    // The base Guest fixture intentionally has no independent Tasks. Create one
+    // through the real universal + before measuring the Task row.
+    await page.getByRole('button',{name:'Open quick create menu'}).click();
+    await page.getByRole('button',{name:'Task',exact:true}).click();
+    const taskForm=page.getByRole('dialog',{name:'New Task'});
+    await taskForm.getByLabel('Task title').fill('Review screenshot layout');
+    await taskForm.getByRole('button',{name:'Create Task'}).click();
     const row=page.locator('.dn-task-list .dn-task-row').first();
     await expect(row).toBeVisible();
     const appearance=await row.evaluate(el=>({
@@ -55,7 +62,7 @@ for(const [width,height,theme] of [
     expect(appearance.detail).toBeGreaterThanOrEqual(12);
     expect(appearance.right).toBeLessThanOrEqual(width+1);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
-    expect(await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses','dn_guest_tasks']
+    expect(await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map(key=>localStorage.getItem(key)))).toEqual(before);
     expect(errors).toEqual([]);
   });
