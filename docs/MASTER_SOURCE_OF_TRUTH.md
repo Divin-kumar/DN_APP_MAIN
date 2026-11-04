@@ -10,6 +10,9 @@ A release job at d086dc10b5be293ded960c63cd2b019429eb3c4a stopped safely after 1
 
 The corrective commits are **not** a production release. Do not mark the full browser suite or iPhone Safari verified without fresh evidence at the final SHA; real multi-device account sync also requires separate acceptance. The GitHub Actions production gate remains fail-closed.
 
+## DN 2.3 applied filter overflow actions (4 November 2026; testing pending)
+Phone applied filters with more than two active conditions show the first two as light, individually editable/removable rows, with the remaining +N disclosure in its own adjacent 44px column. The original horizontal rail could place +N out of reach; a temporary sticky treatment obscured the second Remove target. The distinct-column layout avoids both touch conflicts without changing filter semantics, saved conditions, Guest/account scope, total calculations, or backup format. Two focused runs each passed 81/83 journeys but exposed these successive UI defects; the next source-sha run is pending. Refer to CHG-20261104-398.
+
 ## DN 2.3 mobile Refine viewport repair (4 November 2026; testing pending)
 The 4 November 2.3 full verification at d086dc1 failed 128 of 782 browser journeys (654 passed), blocking automatic production publishing. Later OldVersion commits updated multiple superseded UI assertions and scoped filter drafts. The shared mobile ModalDialog CSS was overriding Refine's height limit, allowing a panel to consume almost the entire phone viewport. Mobile Refine now has an explicit higher-specificity 88dvh maximum without altering keyboard-open viewport behavior, stored filter rules, session data, or account Tasks. The phone Refine regression check again requires at most 90% viewport height. These changes are unverified until GitHub Actions runs tests on the new source SHA; do not claim the release is published or fully accepted. See CHG-20261104-397.
 
