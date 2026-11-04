@@ -797,3 +797,39 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  moment-navigation-230:
+    # Screenshot-driven iPhone Moment tabs + list card text-space acceptance.
+    # Synthetic Guest only, no account write, Firebase publish or main change.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-moment-navigation]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Check five visible Moment destinations and readable card action geometry
+        run: >-
+          npx playwright test
+          e2e/iphone-moment-nav-premium.spec.js
+          e2e/iphone-moment-title-space-230.spec.js
+          e2e/iphone-moment-card-hover-stability.spec.js
+          e2e/iphone-moment-activity-photo-card.spec.js
+          --workers=2
+      - name: Keep route screenshots and browser failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-moment-navigation-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
