@@ -297,12 +297,20 @@ for (const width of [320, 390, 1280]) {
     });
     expect(disclosure.left).toBeGreaterThanOrEqual(disclosure.railLeft - 1);
     expect(disclosure.right).toBeLessThanOrEqual(disclosure.railRight + 1);
-    const measurements = await chips.evaluate((element) => ({
-      tops: [...element.children].map((chip) => chip.getBoundingClientRect().top),
-      height: element.getBoundingClientRect().height,
-    }));
-    expect(Math.max(...measurements.tops) - Math.min(...measurements.tops)).toBeLessThanOrEqual(1);
-    expect(measurements.height).toBeLessThanOrEqual(56);
+    const measurements = await chips.evaluate((element) => {
+      const [first, second, more] = [...element.children].map((chip) => chip.getBoundingClientRect());
+      return {
+        firstTop:first.top, firstBottom:first.bottom, firstRight:first.right,
+        secondTop:second.top, secondRight:second.right, moreLeft:more.left,
+        height:element.getBoundingClientRect().height,
+      };
+    });
+    // Each selected filter has its own readable row; +N has a separate column.
+    expect(measurements.secondTop).toBeGreaterThanOrEqual(measurements.firstBottom - 1);
+    expect(measurements.firstRight).toBeLessThanOrEqual(measurements.moreLeft + 1);
+    expect(measurements.secondRight).toBeLessThanOrEqual(measurements.moreLeft + 1);
+    expect(measurements.height).toBeGreaterThanOrEqual(88);
+    expect(measurements.height).toBeLessThanOrEqual(170);
     await overflow.click();
     const refine = page.getByRole('dialog', { name: 'Transaction filters' });
     await expect(refine.locator('.dn-condition-rule')).toHaveCount(8);
