@@ -287,6 +287,11 @@ html[data-theme] .dn-conditions .dn-condition-selected-values > button {
   border:0; border-bottom:1px solid var(--color-border);
   border-radius:0; background:transparent;
 }
+/* A chosen Any of / None of value is a touch action, not a tiny status chip. */
+html[data-theme] .dn-conditions .dn-condition-selected-values > button {
+  min-height:44px; padding:8px 9px; font-size:12px; line-height:1.25;
+  touch-action:manipulation;
+}
 
 
 /* Compact Task Refine cannot fit long field names, operators, values and

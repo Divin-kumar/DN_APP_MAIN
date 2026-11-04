@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-364 | DN 2.3 shared filter value iPhone touch sizing
+- **Source-derived:** Existing selected-value removals in the shared Any of / None of filter builder were 32px high with 11px text. The on-demand Search reveal was 42px high.
+- **Change:** Raise these interactive controls to 44px minimum and selected-value text to 12px, retaining the light underline style without changing filtering, scrolling, persistent state or APIs.
+- **Downstream:** Shared Moments/Activities/Transactions/Task Refine presentations where multi-value conditions are available; Guest/account data, AND/OR matching, saved filter defaults, PDFs, source media and backup records untouched. Existing Guest tour covers this screen and needs no refresh.
+- **QA planned:** Four synthetic mobile Chromium cases plus existing shared Refine/dropdown recovery in an opt-in workflow, and push-triggered lint/Node/build/governance. Results pending; physical Safari, VoiceOver, signed-in flows and complete 2.3 QA remain unverified. Only OldVersion changed; no PR, main, release or deployment.
+
 ## CHG-20261104-363 | DN 2.3 iPhone Appearance exact-SHA acceptance
 - **Executed:** [Focused Chromium run 41759112690](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41759112690) passed **10/10** tests at application code SHA `630cf6414d744bb8b759dd87a0f40ed186f662fc`. Four new 320/390/430px touch portrait and 844px landscape scenarios verified theme hints and Story-style labels are readable, three visible design choices, tap target bounds, saving/reloading preferences and no horizontal overflow or source-record mutation. Six prior Settings navigation/persistence, Moment type default and Story design tests passed too.
 - **Executed:** [Same-SHA governance 41759112748](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41759112748) passed Node unit tests, lint, production build, dependency advisory and documentation checks. Firebase production workflow was skipped.
