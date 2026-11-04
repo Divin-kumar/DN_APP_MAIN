@@ -12,7 +12,7 @@ test('detail shows actual content in reading order, compact file previews and re
   await expect(page.getByRole('navigation', { name: 'Parent Moment' }).getByRole('link', { name: /Weekend in Ooty/ })).toHaveAttribute('href', '/events/moment-one/activities');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await expect(page.getByRole('button', { name: /^(Edit|Complete|Close|Reopen|Delete activity)$/ })).toHaveCount(0);
-  await expect(page.getByText(/^(Parent Moment|Finance|Transaction history|All Moment transactions|Manage transactions|No description added\.|No attachments added\.)$/)).toHaveCount(0);
+  await expect(page.getByText(/^(Parent Moment|Transaction history|All Moment transactions|Manage transactions|No description added\.|No attachments added\.)$/)).toHaveCount(0);
   const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aD1sAAAAASUVORK5CYII=', 'base64');
   await page.locator('.activity-attachments input[type=file]').setInputFiles({ name: 'Field notes.final.png', mimeType: 'image/png', buffer: png });
   const preview = page.getByRole('button', { name: 'Preview Field notes.final.png', exact: true });

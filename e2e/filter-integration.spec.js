@@ -145,7 +145,7 @@ test('Finance totals follow the same AND and OR conditions as the transaction ro
   await selectOption(page, 'Comparison', 'Custom range');
   await page.getByLabel('From Date', { exact: true }).fill('2026-10-01');
   await page.getByLabel('To Date', { exact: true }).fill('2026-10-31');
-  await expect(page.locator('.dn-condition-chip')).toHaveCount(1);
+  await expect(page.locator('.dn-refine-sheet .dn-condition-rule')).toHaveCount(1);
   await page.getByRole('button', { name: 'Add filter', exact: true }).click();
   await selectOption(page, 'Filter by', 'Type');
   await selectOption(page, 'Comparison', 'Is');

@@ -66,11 +66,11 @@ for (const width of [320, 390, 1280]) {
       await expect(page.getByRole('button', { name: 'New Task', exact: true })).toHaveCount(0);
       await waitForReadableSurface(page, '.dn-tasks-page');
       await assertTaskToolbarAlignment(page);
-      await page.getByRole('button', { name: 'Task options for Pack travel documents' }).click();
-      await expect(page.getByRole('menu', { name: 'Actions for Pack travel documents' })
-        .getByRole('menuitem', { name: 'Edit' })).toBeVisible();
-      await page.keyboard.press('Escape');
-      await expect(page.getByRole('menu', { name: 'Actions for Pack travel documents' })).toHaveCount(0);
+      await page.locator('.dn-independent-task-row').filter({ hasText: 'Pack travel documents' }).click();
+      const actions = page.getByRole('dialog', { name: 'Task actions' });
+      await expect(actions.getByRole('button', { name: 'Edit', exact: true })).toBeVisible();
+      await actions.getByRole('button', { name: 'Close', exact: true }).click();
+      await expect(actions).toHaveCount(0);
       await assertNoPageOverflow(page);
       await testInfo.attach(`Tasks-${width}-${theme}`, { body: await page.screenshot({ fullPage: true }), contentType: 'image/png' });
 

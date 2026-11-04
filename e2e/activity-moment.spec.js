@@ -132,7 +132,10 @@ test('Moment Transactions has five reachable tabs, matching totals, independent 
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
   await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Moments');
   const tabs = page.locator('.event-workspace-nav a');
-  expect(await tabs.allTextContents()).toEqual(['Story', 'Activities3', 'Transactions', 'Gallery', 'PDF Studio']);
+  await expect(tabs).toHaveCount(5);
+  expect(await tabs.evaluateAll((links) => links.map((link) =>
+    link.getAttribute('aria-label') || link.textContent.trim())))
+    .toEqual(['Story', 'Activities', 'Transactions', 'Gallery', 'PDF Studio']);
   const bounds = await tabs.evaluateAll((links) => links.map((link) => Math.round(link.getBoundingClientRect().top)));
   expect(new Set(bounds).size).toBe(1);
   const totals = page.getByRole('group', { name: 'Totals for this Moment' });
@@ -146,6 +149,7 @@ test('Moment Transactions has five reachable tabs, matching totals, independent 
   await page.getByRole('option', { name: 'Is', exact: true }).click();
   await page.getByRole('combobox', { name: 'Value for Type', exact: true }).click();
   await page.getByRole('option', { name: 'Expense', exact: true }).click();
+  await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await page.getByRole('searchbox', { name: 'Search Moment transactions' }).fill('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).toContainText('Parking');
   await expect(page.getByRole('list', { name: 'Linked transactions' })).not.toContainText('Trip fund');

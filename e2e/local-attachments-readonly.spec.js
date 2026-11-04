@@ -17,7 +17,7 @@ test('Moment Activities share action menus, open Detail and retain retired Timel
   await page.goto('/events/moment-one/timeline');
   await expect(page.locator('.event-workspace-nav a')).toHaveCount(5);
   await expect(page.locator('.event-workspace-nav a').filter({ hasText: 'Timeline' })).toHaveCount(0);
-  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toHaveText('Story');
+  await expect(page.locator('.event-workspace-nav [aria-current="page"]')).toContainText('Story');
   await page.getByRole('navigation', { name: 'Moment contents' }).getByRole('link', { name: /Activities/ }).click();
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);

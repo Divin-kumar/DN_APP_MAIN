@@ -69,6 +69,7 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     await page.getByRole('button', { name:/^Filters and sort/ }).click();
     await page.getByRole('button', { name:'Clear all', exact:true }).click();
+    await page.getByRole('button', { name:'Show results', exact:true }).click();
     await expect(page.getByRole('group', { name:'Open A cancelled plan', exact:true })).toBeAttached();
     await expect(page.locator('.event-activity-card')).toHaveCount(4);
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);

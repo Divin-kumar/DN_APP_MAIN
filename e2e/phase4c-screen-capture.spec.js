@@ -22,7 +22,7 @@ const readyContent = (page, name) => {
     case '04-activity-detail': return page.locator('.dn-content-row').first();
     case '05-story': return page.locator('[data-story-layout]').first();
     case '06-pdf-studio': return page.locator('.dn-pdf-preview-page img');
-    case '07-settings': return page.locator('.settings-accordion-toggle').first();
+    case '07-settings': return page.locator('.settings-hub-card').first();
     case '08-data-backup': return page.getByRole('button', { name: 'Export backup' });
     case '09-code-lists': return page.getByText('Moment Types', { exact: true }).first();
     case '10-about': return page.getByText('Version Information', { exact: true }).first();
@@ -64,7 +64,7 @@ for (const [width, height, theme] of [[390, 844, 'dark'], [320, 740, 'light']]) 
     // Settings accordion, PDF controls and an accessible dialog are also
     // captured, without calling destructive controls or mutating records.
     await page.goto('/settings');
-    await page.getByRole('button', { name: /Appearance & preferences/ }).click();
+    await page.getByRole('link', { name: /Open Appearance & preferences/ }).click();
     await page.screenshot({ path: testInfo.outputPath(`11-preferences-${theme}-${width}.png`),
       fullPage: false, animations: 'disabled' });
     await page.goto('/events/moment-one/pdf');
