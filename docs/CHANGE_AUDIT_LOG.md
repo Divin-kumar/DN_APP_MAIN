@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-400 | Verify corrected 2.3 browser regressions and open independent release gate
+- **Executed:** GitHub Actions targeted verification run 41853482636 passed all 83 Chromium checks on 35769d1, including account Tasks, Settings/Data & Backup, mobile Refine geometry and applied-filter +N/Remove interactions, About, profile menus, Transactions and rapid keyboard typeahead. Documentation governance also passed on that source.
+- **Scope:** No new runtime change; the repaired source changes are documented in CHG-396 through CHG-399. No saved records, Task sync rules, originals, backups, finance, Story or PDF content were migrated. Guest tour v2026.11.04.3 remains correct.
+- **Release policy:** Request a fresh independent exact-SHA full pre-release GitHub Actions run with [verify-full] only. It must pass browser, Node, lint, audit, build, PDF/offline, upgrade and docs before any further production authorization. This is not a publication and does not authorize [deploy-live]. Physical Safari and real signed-in multi-device checks remain pending.
+
 ## CHG-20261104-399 | Stabilize rapid keyboard selection in shared dropdown
 - **Executed evidence:** Source 9dfcb82 targeted browser run 41852628110 passed 82/83 journeys, including applied-chip disclosure and independent 44px Remove controls on 320px/390px phones. One intermittent remaining failure typed Status then Enter immediately, but the shared field committed Date because keyboard state had not rendered its highlighted option.
 - **Change and impact:** Shared DropdownSelect now stores the latest non-searchable typeahead highlight synchronously in a ref, consults it on rapid Enter, and clears it on close, pointer selection and arrow/home navigation. This preserves the existing option data, accessible active descendant and deliberate search behavior. No account records, filter predicates, backups, Task sync, finance, Story or PDF are modified.
