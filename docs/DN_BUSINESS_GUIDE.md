@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 further iPhone UI cleanup (OldVersion only, unpublished):** The Filter & Sort Defaults page no longer sits inside a bulky card; all saved choices remain visible and behave as before. A screenshot audit visited 18 app routes in four browser layouts and found no page-level horizontal overflow or JavaScript errors. All 14 focused List Defaults checks and normal build/lint checks passed. Real iPhone Safari, VoiceOver and complete release testing are still pending.
+
+
 **DN 2.3 screenshot-driven polish verification (OldVersion only, unpublished):** On your phone, Code Lists sections are lighter and their shortcuts stay accessible, Task sort choices are arranged neatly instead of leaving one alone on another line, and old incomplete Task filter rows no longer clutter a new Refine draft. iPhone 15 Plus Story/PDF design previews are less bulky. Previously saved active filter logic and personal records stay unchanged. Focused synthetic checks passed 29/29 (Settings and Tasks), 5/5 (Guest demo design saving) and 22/22 (Task Refine). Physical iPhone and full-release verification are still outstanding.
 
 

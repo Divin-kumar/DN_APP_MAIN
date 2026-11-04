@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-375 | DN 2.3 audited unboxed List Defaults surface
+- **Evidence:** 18-route synthetic Chromium screenshot audit on 320px dark, 390px light/dark and 1280px light passed 4/4 with no page document overflow or JS errors (GitHub Actions 41768282825). Human inspection of captured List Defaults image revealed the inherited Settings section card contradicting the agreed unboxed Refine language.
+- **Change:** Remove the large outer List Defaults frame and tighten introduction/list spacing, without removing any option, filter, saved configuration, Reset, keyboard control or page heading. No record, attachment, Story/PDF, backup, user scope or server writes.
+- **Executed:** App source commit ef1d86c8b9f5060c7df2907fccee584b12b757cb passed 14/14 focused Chromium mobile saved-configuration tests on GitHub Actions 41769183677 and standard unit/lint/build/dependency/docs checks on 41769183661. Guest tour already exercises this screen and does not need refresh.
+- **Release boundaries:** Cross-app screenshot audit is not proof of Safari/VoiceOver or full functional/production workflows. No deployment, PR, main or version change.
+
 ## CHG-20261104-374 | DN 2.3 documentation governance collision repair
 - **Correction:** Separate concurrent Guest-demo Story/PDF and Task Refine evidence entries accidentally reused CHG-20261104-371. Audit identifier for Task Refine is now 373; Guest demo retains 371 and intervening owner UI note retains 372, with original text preserved.
 - **Verification:** This documentation-only follow-up repeats the strict audit-log ordering/history checks from a clean nonduplicate parent. The screenshot-driven application code and tests remain identical. Cross-app screenshot audit for the tested UI code runs independently. No app records, Firebase data, stored preferences, PR, main branch or deployment touched.
