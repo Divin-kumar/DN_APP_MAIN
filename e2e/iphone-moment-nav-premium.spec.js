@@ -12,7 +12,12 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const nav = page.locator('.event-workspace-nav.dn-moment-nav');
       const items = nav.locator('a');
       await expect(items).toHaveCount(5);
-      expect(await items.allTextContents()).toEqual(['Story', 'Activities3', 'Transactions', 'Gallery', 'PDF Studio']);
+      expect(await nav.locator('.dn-moment-nav-label').allTextContents())
+        .toEqual(['Story', 'Activities', 'Transactions', 'Gallery', 'PDF Studio']);
+      await expect(nav.locator('.dn-moment-nav-short:visible')).toHaveText(['Story', 'Activities', 'Finance', 'Gallery', 'PDF']);
+      for (const [index, label] of ['Story', 'Activities', 'Transactions', 'Gallery', 'PDF Studio'].entries()) {
+        await expect(items.nth(index)).toHaveAttribute('aria-label', label);
+      }
       await expect(nav.locator('a[aria-current="page"]')).toHaveAttribute('href', '/events/moment-one/story');
       await expect(page.locator('.dn-moment-panel #dn-moment-panel-title')).toHaveText('Your Moment Story');
       await expect(page.locator('.dn-moment-panel .dn-workspace-section-heading')).toHaveCount(0);
@@ -29,6 +34,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
           topBorder:parseFloat(style.borderTopWidth),
           radius:parseFloat(style.borderTopLeftRadius),
           scrollWidth:element.scrollWidth, clientWidth:element.clientWidth,
+          links:links.map((link) => ({ left: link.getBoundingClientRect().left, right: link.getBoundingClientRect().right })),
           pageWidth:document.documentElement.scrollWidth,
         };
       });
@@ -36,6 +42,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(initial.right).toBeLessThanOrEqual(width + 1);
       expect(new Set(initial.rows).size).toBe(1);
       expect(initial.targets.every((height) => height >= 44)).toBe(true);
+      expect(initial.scrollWidth).toBeLessThanOrEqual(initial.clientWidth + 1);
+      for (const link of initial.links) {
+        expect(link.left).toBeGreaterThanOrEqual(initial.left - 1);
+        expect(link.right).toBeLessThanOrEqual(initial.right + 1);
+      }
       expect(initial.iconVisibility.every((display) => display !== 'none')).toBe(true);
       expect(initial.topBorder).toBe(0);
       expect(initial.radius).toBe(0);
