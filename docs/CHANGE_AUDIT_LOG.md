@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-367 | DN 2.3 filter touch QA acceptance evidence
+- **Confirmed on exact OldVersion SHA e26120dffa614d4b13158103f23c265d5c3b62a5:** Focused GitHub Actions run 41762552491 passed **16/16** synthetic Chromium checks in 17.1s: four iPhone-sized portrait/landscape saved-value tap checks, three dropdown recovery checks and nine shared Refine checks. These scenarios verify draft Cancel preservation and document overflow without modifying source records.
+- **Standard verification:** Documentation governance and application smoke jobs in GitHub Actions run 41762552522 passed, including Node unit tests, lint, production build and dependency audit. These are evidence for the same tested source SHA. This follow-up edits documentation only.
+- **Still outstanding:** Real iOS Safari/VoiceOver, signed-in account data, full release/upgrade/offline/Story/PDF acceptance and any production publication. Only OldVersion documentation is updated; no PR, main, deployment, version bump or source code alteration.
+
 ## CHG-20261104-366 | DN 2.3 fractional landscape multi-value touch floor
 - **Executed evidence:** With the compact multi-value two-row layout, 15/16 targeted synthetic Chromium checks passed. All three portrait sizes passed genuine taps and Cancel immutability, but 844x390 touch landscape measured the 44px CSS removal buttons at 43.4915 rendered pixels due to fractional viewport scaling. Only its strict 44px touch-size check failed.
 - **Change:** For short coarse-pointer landscape only, reserve 46 CSS pixels for each selected-value removal action so effective touch size remains at least 44px. Portrait layouts, filter semantics and data remain unchanged.
