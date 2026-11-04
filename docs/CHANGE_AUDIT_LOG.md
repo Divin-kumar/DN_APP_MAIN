@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-397 | Restore mobile Refine viewport safeguard after 2.3 CI failure
+- **Evidence and impact:** OldVersion full pre-release run 41815964469 (d086dc1) passed 654 browser checks but failed 128; the exact-SHA production workflow correctly blocked deployment. Later OldVersion commits revised superseded 2.3 browser checks and dismissed drafts after scope switches. Reviewed shared ModalDialog and FilterSortSheet CSS specificity and retained phone Refine behavior.
+- **Change:** Mobile Refine now overrides the shared dialog's height rule at maximum 88dvh/800px when no keyboard is open; the focused E2E assertion again requires height no more than 90% of a phone viewport. Existing touch targets, independently scrollable content, field/value choices, pending/applied filters and keyboard-visible dialog sizing are preserved. No changes to real records, account Task transport, original files, transactions, Story, PDF, backup or version number.
+- **Validation / limitations:** Source inspection and commits only; GitHub browser tests and full verification remain to be executed on a subsequent exact SHA. Physical iPhone Safari, live two-device account CRUD and protected restore remain unverified. Guest tour v2026.11.04.3 reviewed; no sample behavior or instructions changed, so no reset/version bump. Production not deployed, no PR, no changes to main.
+
 ## CHG-20261104-396 | Correct DN 2.3 release browser failures and isolate filter drafts
 - **Failure evidence:** Exact-SHA pre-release run 41815964469 reported 128 browser failures and 654 passes. A separate production run, 41815964315, correctly stopped at the independent verification gate without publishing to Firebase. Earlier Node tests, lint, build and documentation checks cannot be claimed as passing at these corrective commits.
 - **Root causes:** Older browser tests still required a one-line mobile filter rule, the removed inline filter panel, instant changes while Refine is open, removed settings accordions, older Task menus, missing signed-in Tasks, the former Code Lists sorting page, and pre-2.3 About counts. One real data-safety regression allowed an old Guest/account Refine draft to stay open across scope changes. The 11px mobile Moment section label needed greater legibility.
@@ -12,11 +17,6 @@
 - **Guest tour review:** Existing Guest tour and fixtures already describe the new UI; no sample reset, tour version bump or invented example records. Tests use synthetic Guest/account data only.
 - **Production safety:** No direct Firebase/Vercel deployment. Require a successful independent full pre-release run at the final exact source SHA before using the GitHub Actions-only production approval gate.
 
-
-## CHG-20261104-396 | Restore mobile Refine viewport safeguard after 2.3 CI failure
-- **Evidence and impact:** OldVersion full pre-release run 41815964469 (d086dc1) passed 654 browser checks but failed 128; the exact-SHA production workflow correctly blocked deployment. Later OldVersion commits revised superseded 2.3 browser checks and dismissed drafts after scope switches. Reviewed shared ModalDialog and FilterSortSheet CSS specificity and retained phone Refine behavior.
-- **Change:** Mobile Refine now overrides the shared dialog's height rule at maximum 88dvh/800px when no keyboard is open; the focused E2E assertion again requires height no more than 90% of a phone viewport. Existing touch targets, independently scrollable content, field/value choices, pending/applied filters and keyboard-visible dialog sizing are preserved. No changes to real records, account Task transport, original files, transactions, Story, PDF, backup or version number.
-- **Validation / limitations:** Source inspection and commits only; GitHub browser tests and full verification remain to be executed on a subsequent exact SHA. Physical iPhone Safari, live two-device account CRUD and protected restore remain unverified. Guest tour v2026.11.04.3 reviewed; no sample behavior or instructions changed, so no reset/version bump. Production not deployed, no PR, no changes to main.
 
 ## CHG-20261104-395 | Prepare 2.3.0 GitHub Actions-only gated production release
 - **Owner request / scope:** Publish the existing 2.3 changes and seven grouped About notes to permanent Firebase Hosting using GitHub Actions exclusively. Scope is the authorized `OldVersion` branch; no direct Firebase command, PR or `main` change.
