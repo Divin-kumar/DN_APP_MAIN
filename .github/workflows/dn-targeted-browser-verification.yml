@@ -833,3 +833,48 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+
+  release-failure-repair-230:
+    # Opt-in. Recheck the DN 2.3 failures after correcting outdated assertions
+    # and the mobile Refine viewport rule. Never publishes to Firebase.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-release-fixes]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install exact dependencies
+        run: npm ci
+      - name: Install Chromium test browser
+        run: npx playwright install --with-deps chromium
+      - name: Recheck failed phone Refine, Settings, account Tasks and navigation
+        run: >-
+          npx playwright test
+          e2e/shared-filter-single-row.spec.js
+          e2e/user-friendly-filters.spec.js
+          e2e/iphone-discovery-controls-phase1.spec.js
+          e2e/iphone-transaction-refine-scroll.spec.js
+          e2e/account-tasks-sync-230.spec.js
+          e2e/independent-tasks-phase4.spec.js
+          e2e/iphone-task-refine-clean-230.spec.js
+          e2e/iphone-about-premium.spec.js
+          e2e/iphone-profile-menu-premium.spec.js
+          e2e/iphone-data-backup-subpage.spec.js
+          --workers=4
+      - name: Preserve repair evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-release-failure-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
