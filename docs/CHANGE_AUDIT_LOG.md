@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-371 | DN 2.3 Guest demo Story/PDF save isolation
+- **Owner screenshot and source diagnosis:** The appearance design editor was visibly disabled in Explore DN; its `storyDesignScope(sample)` intentionally had no writable scope, even for a public demo intended to preview Story and PDF features.
+- **Change:** Enable design choice/save for Guest demo into a **separate** `dn_story_pdf_design_v1:guest-demo` key and explain that demo preferences never overwrite personal Guest settings. Reuse existing style hook in Story and PDF Studio. Exclude demo preferences from backups and reject restoring personal preferences while in demo.
+- **Impact:** A new isolated demo-only appearance preference, no change to real Guest/account keys, original records, Task/Moment relationships, attachments, PDF renderer/file bytes, real backup scope or customizations. Guest tour already covers Journey/Diary/Tasks and PDF; existing sample records remain valid without refresh.
+- **Validation authored, pending:** Unit isolation tests plus real Guest demo 320/390/430px synthetic browser journeys and prior PDF/Story settings checks. Native iPhone Safari, VoiceOver, account/cloud and full release remain unverified. OldVersion only; no PR/main/release/deploy.
+
 ## CHG-20261104-370 | DN 2.3 Settings and Tasks owner screenshot corrections
 - **Owner screenshot and source evidence:** The saved sort rail clips options; Code Lists had redundant three-dot hint while tapping already opens Edit/Disable/Delete; category navigation disappears on scroll; Appearance creation fields contain excessive whitespace; Tasks are still visually boxed.
 - **Changes:** Keep all saved sort choices visible in two lightweight mobile columns, remove Code List dots without changing tap/swipe/action handlers, make six Code List shortcuts sticky, shorten Moment type help, top-align Creation defaults, and simplify Task rows with readable labels. Preserve all saved records, control semantics, original files, Story/PDF, backup and Guest/account isolation.

@@ -659,3 +659,37 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  demo-story-pdf-design-230:
+    # Owner's disabled PDF settings screenshot: check Guest demo isolation.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-demo-pdf-settings]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 23
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify isolated demo design saving and existing PDF/Story design
+        run: >-
+          npx playwright test
+          e2e/iphone-demo-story-pdf-design-230.spec.js
+          e2e/story-design-phase1.spec.js
+          e2e/pdf-studio-design-220.spec.js
+          --workers=2
+      - name: Keep mobile verification screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-demo-story-pdf-settings
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore

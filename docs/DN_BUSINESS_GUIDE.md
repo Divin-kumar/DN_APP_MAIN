@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 Guest demo Story/PDF design fix (OldVersion only, unpublished):** The design choices that appeared disabled in Explore DN now work in the demo. They save only to a separate demo preference, never to your personal Guest/account styles; personal backups omit demo appearance. Story and PDF Studio can use the saved demo style. Test execution is pending; native iPhone and release acceptance remain separate.
+
+
 **DN 2.3 screenshot-driven Settings and Tasks corrections (OldVersion only, unpublished):** Saved sort choices on iPhone no longer disappear offscreen. Code List rows open their existing Edit/Disable/Delete options by tapping the value, without decorative three dots; their shortcut strip stays visible while scrolling. Creation defaults are more compact, and Tasks use readable, restrained rows. This is a presentation-only update, not a change to filters or personal records. Focused browser verification is pending.
 
 
