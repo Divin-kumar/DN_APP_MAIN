@@ -8,11 +8,12 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     await page.setViewportSize({width,height});
     const errors=await seedGuest(page,{theme});
     await page.goto('/tasks');
-    const main=page.locator('main.dn-tasks-page');
-    await expect(main.getByRole('heading',{name:'Tasks',exact:true})).toBeVisible();
-    await expect(main.getByText('Standalone and Moment-linked Tasks.')).toBeVisible();
-    await expect(main.locator('.dn-task-eyebrow')).toHaveCount(0);
-    const metrics=main.locator('.dn-task-metrics span');
+    const taskPage=page.locator('.dn-tasks-page');
+    await expect(page.getByRole('main')).toHaveCount(1);
+    await expect(taskPage.getByRole('heading',{name:'Tasks',exact:true})).toBeVisible();
+    await expect(taskPage.getByText('Standalone and Moment-linked Tasks.')).toBeVisible();
+    await expect(taskPage.locator('.dn-task-eyebrow')).toHaveCount(0);
+    const metrics=taskPage.locator('.dn-task-metrics span');
     await expect(metrics).toHaveCount(3);
     const baseline=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes'].map(key=>localStorage.getItem(key)));
     await page.getByRole('button',{name:'Open quick create menu'}).tap();
@@ -20,7 +21,7 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     const form=page.getByRole('dialog',{name:'New Task'});
     await form.getByLabel('Task title').fill('One tidy list row');
     await form.getByRole('button',{name:'Create Task'}).tap();
-    const row=main.locator('.dn-task-list .dn-task-row');
+    const row=taskPage.locator('.dn-task-list .dn-task-row');
     await expect(row).toHaveCount(1);
     const a=await row.evaluate(el=>{
       const style=getComputedStyle(el),done=el.querySelector('.dn-task-done'),menu=el.querySelector('.dn-record-menu-trigger');

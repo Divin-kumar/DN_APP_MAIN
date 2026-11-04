@@ -18,7 +18,8 @@ for (const width of [320, 390, 1280]) {
     await page.setViewportSize({ width, height: width < 700 ? 780 : 900 });
     const errors = await seedGuest(page);
     await page.goto('/tasks');
-    await expect(page.locator('main.dn-tasks-page h2').filter({ hasText: 'Tasks' })).toBeVisible();
+    await expect(page.getByRole('main')).toHaveCount(1);
+    await expect(page.locator('.dn-tasks-page h2').filter({ hasText: 'Tasks' })).toBeVisible();
     const source = await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'), localStorage.getItem('dn_guest_expenses'), localStorage.getItem('dn_guest_incomes'),
     ]);
@@ -92,6 +93,7 @@ test('independent Guest Tasks remain private and are never exposed as account Ta
   ])));
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_tasks'));
   await accountScope(page, 'synthetic-account', []);
+  await expect(page.getByRole('main')).toHaveCount(1);
   await expect(page.getByText('Account Tasks aren’t available yet')).toBeVisible();
   await expect(page.getByText('Private', { exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toEqual(before);

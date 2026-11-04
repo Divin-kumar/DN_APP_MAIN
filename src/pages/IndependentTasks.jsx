@@ -111,7 +111,7 @@ export function TaskListContent() {
   const remove = (task) => {
     if (run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
   };
-  if (!enabled) return <main className="dn-tasks-page">
+  if (!enabled) return <div className="dn-tasks-page">
     <div className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent Tasks</span><h2>Tasks</h2></div></div>
     <section className="dn-task-empty" role="status"><ListTodo size={28} aria-hidden="true" />
       <h3>Account Tasks aren’t available yet</h3>
@@ -119,9 +119,9 @@ export function TaskListContent() {
       <p>Guest Tasks remain on the original device. Export a backup before changing sessions.</p>
       <Link to="/activities">Open Activities</Link>
     </section>
-  </main>;
+  </div>;
 
-  return <main className="dn-tasks-page">
+  return <div className="dn-tasks-page">
     <header className="dn-task-hero">
       <div><h2>Tasks</h2><p>Standalone and Moment-linked Tasks.</p>
       </div>
@@ -225,5 +225,5 @@ export function TaskListContent() {
       confirmLabel={confirm.kind === 'delete' ? 'Delete Task' : 'Cancel Task'}
       error={error} onCancel={() => { setConfirm(null); setError(''); }}
       onConfirm={() => confirm.kind === 'delete' ? remove(confirm.task) : statusChange(confirm.task, 'cancelled')} /> : null}
-  </main>;
+  </div>;
 }
