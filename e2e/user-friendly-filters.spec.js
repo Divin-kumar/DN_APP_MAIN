@@ -39,7 +39,7 @@ async function assertReadableRule(page, row) {
   expect(rule.height).toBeGreaterThanOrEqual(88);
   expect(rule.height).toBeLessThanOrEqual(220);
   const panel = await page.locator('.dn-refine-sheet').boundingBox();
-  expect(panel.height).toBeLessThanOrEqual(page.viewportSize().height + 1);
+  expect(panel.height).toBeLessThanOrEqual(Math.min(800, page.viewportSize().height * .9));
   expect(measured.pageWidth).toBeLessThanOrEqual(page.viewportSize().width + 1);
 }
 
