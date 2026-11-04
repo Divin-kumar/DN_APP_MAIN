@@ -28,7 +28,7 @@ jobs:
       (github.event_name == 'workflow_dispatch' ||
        contains(github.event.head_commit.message, '[deploy-live]'))
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 80
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -83,14 +83,30 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          # Fail closed if the independent check has not finished successfully.
-          runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/dn-oldversion-full-pre-release.yml/runs?head_sha=${GITHUB_SHA}&per_page=100")"
-          if ! jq -e --arg sha "$GITHUB_SHA" '.workflow_runs | any(.[]; .head_sha == $sha and .head_branch == "OldVersion" and .status == "completed" and .conclusion == "success")' <<< "$runs" > /dev/null; then
-            echo "::error::Full pre-release checks must pass for this exact OldVersion commit before production may publish."
-            echo "::error::Run the separate DN full pre-release verification workflow, then launch this release after it passes."
-            exit 1
-          fi
-          echo "Verified completed full pre-release checks for $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+          # If this authorized push launches both workflows, wait until the independent
+          # exact-SHA full check succeeds. Otherwise fail closed immediately.
+          release_message="$(git log -1 --format=%B)"
+          wait_for_triggered_full=false
+          if [[ "$release_message" == *'[verify-full]'* ]]; then wait_for_triggered_full=true; fi
+          for attempt in $(seq 1 195); do
+            runs="$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/dn-oldversion-full-pre-release.yml/runs?head_sha=${GITHUB_SHA}&per_page=100")"
+            if jq -e --arg sha "$GITHUB_SHA" '.workflow_runs | any(.[]; .head_sha == $sha and .head_branch == "OldVersion" and .status == "completed" and .conclusion == "success")' <<< "$runs" > /dev/null; then
+              echo "Verified completed independent full pre-release checks for $GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            if jq -e --arg sha "$GITHUB_SHA" '.workflow_runs | any(.[]; .head_sha == $sha and .head_branch == "OldVersion" and .status == "completed" and (.conclusion == "failure" or .conclusion == "cancelled" or .conclusion == "timed_out" or .conclusion == "action_required"))' <<< "$runs" > /dev/null; then
+              echo "::error::Independent full pre-release verification failed for this exact source SHA. No deployment."
+              exit 1
+            fi
+            if [[ "$wait_for_triggered_full" != true ]]; then
+              echo "::error::No completed successful full pre-release verification exists for this exact SHA. No deployment."
+              exit 1
+            fi
+            echo "Waiting for independent exact-SHA verification ($attempt/195); Firebase has not been published."
+            sleep 20
+          done
+          echo "::error::Timed out waiting for exact-SHA full pre-release verification. No deployment."
+          exit 1
       - name: Block duplicate or downgraded live version
         run: node scripts/check-hosting-release-version.mjs
       - name: Require configured Firebase service account
