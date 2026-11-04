@@ -37,13 +37,21 @@ async function exerciseRule(page, fieldName, valueName, width) {
       overflowX: css.overflowX, columns: css.gridTemplateColumns,
       documentWidth: document.documentElement.scrollWidth };
   });
-  expect(metrics.entries).toHaveLength(4);
-  expect(metrics.entries.every(item => item.height >= 43.5)).toBe(true);
+  // Five controls now share one row: drag grip + Field / Comparison /
+  // Value / Remove. The underlying data is unchanged.
+  expect(metrics.entries).toHaveLength(5);
+  const [field, comparison, value, remove, grip] = metrics.entries;
   expect(metrics.documentWidth).toBeLessThanOrEqual(width + 1);
   expect(metrics.scrollWidth).toBeLessThanOrEqual(metrics.clientWidth + 1);
-  expect(metrics.entries[0].width).toBeGreaterThan(150);
-  expect(metrics.entries[1].top).toBeGreaterThanOrEqual(metrics.entries[0].bottom);
-  expect(metrics.entries[2].right).toBeLessThanOrEqual(metrics.remove.left);
+  expect(Math.abs(field.top - comparison.top)).toBeLessThanOrEqual(5);
+  expect(Math.abs(comparison.top - value.top)).toBeLessThanOrEqual(5);
+  expect(grip.right).toBeLessThanOrEqual(field.left + 2);
+  expect(field.right).toBeLessThanOrEqual(comparison.left + 2);
+  expect(comparison.right).toBeLessThanOrEqual(value.left + 2);
+  expect(value.right).toBeLessThanOrEqual(remove.left + 2);
+  expect(remove.right).toBeLessThanOrEqual(metrics.rule.right + 1);
+  expect(remove.width).toBeGreaterThanOrEqual(43.9);
+  expect(grip.height).toBeGreaterThanOrEqual(43.9);
   for (const trigger of await rule.locator('.dropdown-trigger').all()) {
     expect(await trigger.evaluate(el=>el.scrollWidth<=el.clientWidth+1)).toBe(true);
   }
