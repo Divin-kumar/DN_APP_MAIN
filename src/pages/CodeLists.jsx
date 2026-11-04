@@ -532,7 +532,7 @@ export default function CodeLists() {
           <span className="settings-accordion-icon"><BellRing size={18} /></span>
           <div>
             <h3>Notes</h3>
-            <p>Add your own choices to the lists above. Active choices appear in their forms and filters; saved records keep their original values. Status and visibility follow the app’s actions, while Moment, Activity and time choices come from your records. Adding a new field requires an app update; its choices can be managed here once supported.</p>
+            <p>Active choices appear in forms and filters. Existing records keep their saved values. New fields require an app update.</p>
           </div>
         </div>
       </section>

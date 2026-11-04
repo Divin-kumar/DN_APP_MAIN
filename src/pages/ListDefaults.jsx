@@ -76,7 +76,7 @@ function ListFilterPreferences({ domain }) {
             </div>
             <ConditionBuilder filter={conditions} title={`${domain} default filters`} showChips />
             <div className="dn-defaults-filter-footer">
-              <p>Reset on {domain === 'moments' ? 'Moments' : domain === 'activities' ? 'Activities' : 'Transactions'} restores these conditions and the saved sort order. Changes on the list do not change this baseline.</p>
+              <p>Reset restores the saved filters and sort order. Browsing changes stay separate.</p>
               <button type="button" className="dn-defaults-factory" onClick={() => {
                 resetSavedSort();
                 conditions.restore(systemConditionGroup(domain));
@@ -99,7 +99,7 @@ function ListOrderingPreferences() {
     </div>
     <div className="dn-defaults-intro">
       <span className="dn-defaults-kicker">YOUR LIST DEFAULTS</span>
-      <p>Set the starting order and filters for each main list. Changes on a list stay temporary to that list; its <strong>Reset</strong> restores what you save here.</p>
+      <p>Choose saved sorting and filters. <strong>Reset</strong> on each list restores these choices.</p>
       <span className="dn-defaults-saved">Saved automatically · This device</span>
     </div>
     <div className="settings-admin-grid dn-list-sort-settings">
@@ -123,7 +123,7 @@ function ListOrderingPreferences() {
     <div className="dn-list-filter-preferences">
       <div className="dn-list-filter-intro">
         <h4>Default filters</h4>
-        <p className="code-list-description">Choose the conditions Reset should restore. These settings no longer mirror what you are browsing on the page.</p>
+        <p className="code-list-description">Choose what each list restores when you tap Reset.</p>
       </div>
       <div className="dn-list-filter-switches" role="group" aria-label="Choose list filters to edit">
         {[

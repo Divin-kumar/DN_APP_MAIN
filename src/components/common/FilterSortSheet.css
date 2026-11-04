@@ -160,3 +160,20 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
   margin:0; color:var(--color-text-muted);
   font-size:11px; line-height:1.5;
 }
+
+/* Screenshot review: six Task sorting options must all be visible and
+   evenly grouped, not five above a stranded Updated choice. No boxes. */
+@media (max-width:760px), (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-task-refine .dn-refine-sort-chips {
+    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    gap:2px 8px; width:100%; overflow:visible;
+  }
+  html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
+    display:inline-flex; width:100%; min-width:0;
+    justify-content:center; padding:8px 2px;
+    min-height:44px; line-height:1.35; white-space:normal;
+  }
+  html[data-theme] .dn-task-refine .dn-task-filter-help {
+    font-size:12px; line-height:1.5;
+  }
+}

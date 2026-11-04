@@ -4,7 +4,7 @@ import ModalDialog from '../common/ModalDialog';
 import SortChips from '../common/SortChips';
 import ConditionBuilder from '../common/ConditionBuilder';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../../utils/conditionEngine.js';
-import { taskFilterFields, taskViewConditionGroup } from '../../utils/taskConditionFields.js';
+import { compactTaskRefineGroup, taskFilterFields, taskViewConditionGroup } from '../../utils/taskConditionFields.js';
 import { filterTaskResults } from '../../utils/taskListFilters.js';
 
 const EMPTY_GROUP = emptyGroup();
@@ -31,7 +31,7 @@ export const TASK_SORT_OPTIONS = Object.freeze([
 ]);
 
 export default function TaskRefineSheet({ current, onApply, onClose, tasks, moments = [], today }) {
-  const [draft, setDraft] = useState(() => ({ ...current, group: taskViewConditionGroup(current),
+  const [draft, setDraft] = useState(() => ({ ...current, group: compactTaskRefineGroup(taskViewConditionGroup(current)),
     // Legacy choices become real rules only when Show results is selected.
     status: 'all', priority: 'all', due: 'all' }));
   const change = (patch) => setDraft((value) => ({ ...value, ...patch }));

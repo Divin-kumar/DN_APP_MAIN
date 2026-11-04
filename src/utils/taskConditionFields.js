@@ -1,7 +1,7 @@
 // Independent Task filtering reuses the same ConditionBuilder engine as other lists.
 // Derived values exist only for presentation; original Task/Activity data never changes.
 import { recordId } from './recordIdentity.js';
-import { emptyGroup, normalizeConditionGroup } from './conditionEngine.js';
+import { emptyGroup, isActiveCondition, normalizeConditionGroup } from './conditionEngine.js';
 
 const option = (value, label) => ({ value, label });
 const dayNumber = (value) => {
@@ -71,4 +71,17 @@ export const taskViewConditionGroup = (view = {}) => {
   return original.join === 'OR' && original.children.length
     ? { ...emptyGroup(), children: [{ ...original, id: 'legacy-previous' }, ...legacy] }
     : { ...original, join: 'AND', children: [...original.children, ...legacy] };
+};
+
+// A saved Refine state can retain unfinished Filter by rows from older UI.
+// Those rows never match anything and should not appear on the next opening.
+// Only the initial editing draft is compacted; saved state stays untouched
+// until the user explicitly chooses Show results.
+export const compactTaskRefineGroup = (value) => {
+  const prune = (node) => {
+    if (node.kind !== 'group') return isActiveCondition(node) ? node : null;
+    const children = node.children.map(prune).filter(Boolean);
+    return children.length ? { ...node, children } : null;
+  };
+  return prune(normalizeConditionGroup(value)) || emptyGroup();
 };
