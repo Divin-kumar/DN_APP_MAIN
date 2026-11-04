@@ -43,6 +43,10 @@ export default function StoryDesignSettings() {
       showToast('Your session changed. Reopen design settings before saving.', 'danger');
       return;
     }
+    if (!changed) {
+      showToast('These designs are already saved', 'success');
+      return;
+    }
     try {
       const result = saveStoryDesign(window.localStorage, session, draft);
       if (!result.ok) throw new Error(result.reason);
@@ -86,13 +90,18 @@ export default function StoryDesignSettings() {
       </div>
     </fieldset>)}
     <div className="dn-story-design-actions">
+      <span className="dn-story-design-save-status" role="status" aria-live="polite">
+        {!scope ? 'Choose a Guest or signed-in workspace to edit designs.'
+          : changed ? 'Unsaved changes. Save to use this design in Story and PDF.'
+            : 'All designs saved.'}
+      </span>
       <button type="button" className="settings-secondary-button" disabled={!scope}
         onClick={() => setDraft(normalizeStoryDesign(STORY_DESIGN_DEFAULTS))}>
         <RotateCcw size={15} aria-hidden="true" /> Suggested defaults
       </button>
       <button type="button" className="settings-secondary-button" disabled={!scope || !changed}
         onClick={() => setDraft(saved)}>Cancel</button>
-      <button type="button" className="settings-primary-button" disabled={!scope || !changed}
+      <button type="button" className="settings-primary-button" disabled={!scope}
         onClick={save}>Save designs</button>
     </div>
     <p className="dn-story-design-hint">
