@@ -57,7 +57,7 @@ export default function StoryDesignSettings() {
     <div className="dn-story-design-heading">
       <BookOpenText size={19} aria-hidden="true" />
       <div><strong>Story & PDF Appearance</strong>
-        <p>Choose a design for each Story type. The design never changes your saved memories.</p>
+        <p>Set the style for each Story type. Your records stay unchanged.</p>
       </div>
     </div>
     {isDemo && scope ? <p className="dn-story-design-hint" role="status">
@@ -96,9 +96,8 @@ export default function StoryDesignSettings() {
         onClick={save}>Save designs</button>
     </div>
     <p className="dn-story-design-hint">
-      These designs style Story and provide the starting look for PDF Studio.
-      Changes made inside PDF Studio affect only that export. Resetting designs here
-      does not change your app theme, records or files.
+      Story and PDF Studio start with these styles. PDF Studio can customize each export;
+      your app theme, records and original files stay unchanged.
     </p>
   </section>;
 }

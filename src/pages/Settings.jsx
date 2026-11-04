@@ -781,7 +781,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div>
             <span className="dn-appearance-section-kicker">01 · DISPLAY</span>
             <h3>Choose your theme</h3>
-            <p>Changes instantly across DN. Your Story and PDF designs are independent.</p>
+            <p>Choose light or dark. Story and PDF styles stay separate.</p>
           </div>
         </div>
         <div className="dn-appearance-theme-options" role="group" aria-label="Color theme">
@@ -797,7 +797,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
               <span className="dn-appearance-theme-indicator" aria-hidden="true">{theme === value ? '✓' : ''}</span>
             </button>)}
         </div>
-        <p className="dn-appearance-footnote">Theme is saved as soon as you choose it.</p>
+        <p className="dn-appearance-footnote">Saved instantly.</p>
       </section>
 
       <section className="dn-appearance-section" id="appearance-creation" aria-label="Defaults for new records">
@@ -805,7 +805,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div>
             <span className="dn-appearance-section-kicker">02 · NEW RECORDS</span>
             <h3>Creation defaults</h3>
-            <p>Choose the starting values for new Moments and transactions. Existing records stay unchanged.</p>
+            <p>Defaults for new records. Your existing records stay unchanged.</p>
           </div>
         </div>
         <div className="settings-admin-grid dn-appearance-default-fields">
@@ -848,7 +848,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           </label>
         </div>
         <div className="dn-appearance-save-row">
-          <span>Save these starting values for future records.</span>
+          <span>Applies to new records only.</span>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset defaults</button>
             <button type="button" className="settings-primary-button" onClick={savePreferences}>Save defaults</button>
@@ -861,7 +861,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div>
             <span className="dn-appearance-section-kicker">03 · YOUR MEMORY BOOK</span>
             <h3>Story & PDF design</h3>
-            <p>Choose a reading style for Journal, Diary and Task-style Moments.</p>
+            <p>Choose a style for each Story type.</p>
           </div>
         </div>
         <StoryDesignSettings />
@@ -1100,7 +1100,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       <header className="dn-appearance-intro">
         <span className="dn-appearance-eyebrow">Personalize your space</span>
         <h2>Make DN yours</h2>
-        <p>Theme, new-record defaults, and Story/PDF design. Only working options are shown here.</p>
+        <p>Theme, new-record defaults and Story/PDF styles.</p>
       </header>
       {renderDefaultsSection()}
     </div>;

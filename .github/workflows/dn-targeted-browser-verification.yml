@@ -727,3 +727,38 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  creation-defaults-compact-230:
+    # iPhone Settings compactness, preference persistence and Story/PDF scope
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-creation-compact]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Check iPhone Creation Defaults and Story designs
+        run: >-
+          npx playwright test
+          e2e/iphone-creation-defaults-compact-230.spec.js
+          e2e/settings-appearance-preferences-230.spec.js
+          e2e/iphone-appearance-legibility-230.spec.js
+          e2e/story-design-phase1.spec.js
+          --workers=2
+      - name: Upload screenshots and any focused failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-creation-compact
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore

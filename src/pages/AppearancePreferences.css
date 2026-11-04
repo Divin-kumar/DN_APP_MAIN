@@ -259,3 +259,20 @@ html[data-theme] .dn-appearance-default-fields {
   html[data-theme] .dn-appearance-save-row { gap:7px; }
   html[data-theme] .dn-appearance-save-row > span { flex:0 1 auto; font-size:12px; }
 }
+
+/* DN 2.3: compact Creation Defaults on large-screen iPhones.
+   Currency and the longer expense category retain full-width readable names;
+   Moment and Income choices share a row without changing their saved values. */
+@media (min-width:400px) and (max-width:580px) {
+  html[data-theme] .dn-settings-appearance .dn-appearance-default-fields {
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap:9px 14px;
+  }
+  html[data-theme] .dn-settings-appearance .dn-appearance-default-fields > .settings-input-block:first-child,
+  html[data-theme] .dn-settings-appearance .dn-appearance-default-fields > .settings-input-block:last-child {
+    grid-column:1 / -1;
+  }
+  html[data-theme] .dn-settings-appearance .dn-appearance-default-fields .dropdown-trigger {
+    min-height:46px;
+  }
+}
