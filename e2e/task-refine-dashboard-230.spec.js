@@ -101,7 +101,8 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     expect(actionGeometry.text).toBe('Done');
     await testInfo.attach('DashboardTasks-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();
-    await expect(page.getByRole('dialog',{name:'Edit Task'})).toBeVisible();
+    await expect(page.getByRole('dialog',{name:'Task actions'})).toBeVisible();
+    await page.getByRole('dialog',{name:'Task actions'}).getByRole('button',{name:'Edit',exact:true}).click();
     await expect(page.getByRole('dialog',{name:'Edit Task'}).getByLabel('Task title')).toHaveValue('Review travel documents');
     await page.getByRole('dialog',{name:'Edit Task'}).getByRole('button',{name:'Cancel',exact:true}).click();
     await page.goto('/dashboard');

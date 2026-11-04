@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
+import { CalendarDays, Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
@@ -44,6 +44,7 @@ export function TaskListContent() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, changeView] = usePersistentListState('tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
   const [editor, setEditor] = useState(null);
+  const [requestedTask, setRequestedTask] = useState(null);
   const [refine, setRefine] = useState(false);
   const [confirm, setConfirm] = useState(null);
   const [error, setError] = useState('');
@@ -83,7 +84,7 @@ export function TaskListContent() {
     const requested = searchParams.get('task');
     if (!requested) return;
     const selected = tasks.find((task) => task.id === requested);
-    if (selected) setEditor({ kind: 'edit', value: selected });
+    if (selected) setRequestedTask(selected);
     else setNotice('The selected Task is no longer available.');
     const next = new URLSearchParams(searchParams);
     next.delete('task');
@@ -151,7 +152,7 @@ export function TaskListContent() {
         </button>
       </div>
       <div className="dn-task-discovery-summary">
-        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
+        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown · Tap or swipe for actions</span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
           maxVisible={4} onShowMore={() => setRefine(true)} /> : null}
       </div>
@@ -181,38 +182,49 @@ export function TaskListContent() {
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
         return <SwipeActionCard key={task.id} as="article" className="dn-task-row" mainClassName="dn-task-row-main"
-          label={task.title} role="group"
+          label={task.title} role="button" openOnTap disabled={Boolean(store.error)}
           otherActions={[
+            ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
+              onClick: () => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed') }]),
             { label: 'Edit', icon: Pencil, onClick: edit },
             task.status === 'cancelled'
               ? { label: 'Restore', icon: RotateCcw, onClick: () => statusChange(task, 'in-progress') }
               : { label: 'Cancel', icon: XCircle, onClick: () => { setError(''); setConfirm({ kind: 'cancel', task }); } },
           ]}
           onDelete={() => { setError(''); setConfirm({ kind: 'delete', task }); }}>
-          <button type="button" className="dn-task-copy" onClick={edit}
-            aria-label={`Edit ${task.title}`}>
+          <span className={`dn-task-calendar${overdue ? ' is-overdue' : ''}`} role="img"
+            aria-label={`${overdue ? 'Overdue, ' : ''}${formatDate(task.dueDate)}${task.dueTime ? ', ' + task.dueTime : ''}`}>
+            <CalendarDays size={15} aria-hidden="true" />
+            <strong aria-hidden="true">{task.dueDate ? Number(task.dueDate.slice(8)) : '—'}</strong>
+            <small aria-hidden="true">{task.dueDate ? formatDate(task.dueDate).split(' ')[1] : 'No date'}</small>
+          </span>
+          <div className="dn-task-copy">
             <strong>{task.title}</strong>
-            <small className="dn-task-context">{context}</small>
-            <span className="dn-task-row-details">
-              <span className={overdue ? 'is-overdue' : ''}>
-                {task.dueDate ? formatDate(task.dueDate) + (task.dueTime ? ' · ' + task.dueTime : '') : 'No due date'}
-              </span>
-              <span data-priority={task.priority}>{task.priority} priority</span>
-              {overdue ? <span className="is-overdue">Overdue</span> : null}
-              {task.status !== 'in-progress' ? <span>{statusLabel(task.status)}</span> : null}
+            {parent.kind !== 'standalone' ? <small className="dn-task-context">{parent.moment?.name || context}</small> : null}
+            {task.dueTime ? <small className="dn-task-context">{task.dueTime}</small> : null}
+          </div>
+          <span className="dn-task-signals">
+            <span role="img" aria-label={`${task.priority} priority`} title={`${task.priority} priority`}>
+              <Flag size={14} data-priority={task.priority} aria-hidden="true" />
             </span>
-          </button>
-          <button className="dn-task-done" type="button" data-swipe-ignore
-            aria-pressed={task.status === 'completed'}
-            aria-label={task.status === 'completed' ? `Reopen ${task.title}` : task.status === 'cancelled' ? `Cancelled ${task.title}` : `Complete ${task.title}`}
-            disabled={Boolean(store.error) || task.status === 'cancelled'}
-            onClick={() => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed')}>
-            {task.status === 'completed' ? <RotateCcw size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />}
-            <span>{task.status === 'completed' ? 'Reopen' : task.status === 'cancelled' ? 'Cancelled' : 'Done'}</span>
-          </button>
+            {task.status !== 'in-progress' ? <span role="img" aria-label={statusLabel(task.status)} title={statusLabel(task.status)}>
+              {task.status === 'completed' ? <Check size={16} aria-hidden="true" /> : <XCircle size={16} aria-hidden="true" />}
+            </span> : null}
+          </span>
         </SwipeActionCard>;
       })}
     </div>
+    {requestedTask ? <ModalDialog title="Task actions" onClose={() => setRequestedTask(null)}>
+      <p>{requestedTask.title}</p>
+      <div className="dn-task-entry-actions">
+        <button type="button" onClick={() => {
+          statusChange(requestedTask, requestedTask.status === 'in-progress' ? 'completed' : 'in-progress');
+          setRequestedTask(null);
+        }}>{requestedTask.status === 'completed' ? 'Reopen' : requestedTask.status === 'cancelled' ? 'Restore' : 'Done'}</button>
+        <button type="button" onClick={() => { setError(''); setEditor({ kind: 'edit', value: requestedTask }); setRequestedTask(null); }}>Edit</button>
+        <button type="button" onClick={() => setRequestedTask(null)}>Close</button>
+      </div>
+    </ModalDialog> : null}
     {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
       onClose={() => { setEditor(null); setError(''); }}>
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}

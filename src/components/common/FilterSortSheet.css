@@ -185,3 +185,10 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
     min-height:47px;
   }
 }
+
+/* Keep the label itself centered; the direction marker has its own space. */
+html[data-theme] .dn-refine-sort-chips > button {
+  position:relative; justify-content:center; text-align:center; padding-inline:24px;
+}
+html[data-theme] .dn-refine-sort-chips > button > span { width:100%; text-align:center; }
+html[data-theme] .dn-refine-sort-chips > button > svg { position:absolute; right:7px; }

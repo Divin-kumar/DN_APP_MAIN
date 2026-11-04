@@ -44,9 +44,11 @@ for (const width of [320, 390, 1280]) {
     await refine.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(page.getByText('Remember the travel documents', { exact: true })).toBeVisible();
 
-    await page.getByRole('button', { name: 'Complete Remember the travel documents' }).click();
-    await expect(page.getByRole('button', { name: 'Reopen Remember the travel documents' })).toBeVisible();
-    await page.getByRole('button', { name: 'Edit Remember the travel documents' }).click();
+    await page.locator('.dn-task-row').filter({hasText:'Remember the travel documents'}).click();
+    await page.getByRole('menuitem', { name: 'Done', exact:true }).click();
+    await expect(page.getByRole('img', {name:'Completed',exact:true})).toBeVisible();
+    await page.locator('.dn-task-row').filter({hasText:'Remember the travel documents'}).click();
+    await page.getByRole('menuitem', { name: 'Edit', exact:true }).click();
     await page.getByRole('dialog', { name: 'Edit Task' }).getByLabel('Notes (optional)').fill('Keep the originals');
     await page.getByRole('dialog', { name: 'Edit Task' }).getByRole('button', { name: 'Save Task' }).click();
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));

@@ -220,3 +220,20 @@ html[data-theme] .dn-task-list .dn-task-row .dn-task-done {
   min-width:44px; padding-inline:4px; gap:4px; font-size:12px;
 }
 html[data-theme] .dn-task-list .dn-task-row .dn-task-done[aria-pressed="true"] { background:transparent; }
+
+/* Calendar-led rows: the entire record opens actions, never the editor. */
+html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main {
+  grid-template-columns:48px minmax(0,1fr) 18px; align-items:center; gap:12px;
+}
+html[data-theme] .dn-task-row .dn-task-copy { padding:0; background:transparent; }
+html[data-theme] .dn-task-calendar {
+  display:grid; justify-items:center; gap:1px; padding:6px 2px; border-radius:10px;
+  color:var(--color-text-secondary); background:color-mix(in srgb,var(--color-primary) 6%,transparent);
+}
+html[data-theme] .dn-task-calendar strong { font-size:20px; line-height:1.1; }
+html[data-theme] .dn-task-calendar small { font-size:10px; }
+html[data-theme] .dn-task-calendar.is-overdue { color:var(--color-danger,#dc4545); }
+html[data-theme] .dn-task-signals { display:grid; gap:7px; align-self:start; padding-top:4px; color:var(--color-text-secondary); }
+html[data-theme] .dn-task-signals [data-priority="high"] { color:var(--color-danger,#dc4545); }
+html[data-theme] .dn-task-entry-actions { display:flex; gap:8px; }
+html[data-theme] .dn-task-entry-actions button { min-height:44px; flex:1; }

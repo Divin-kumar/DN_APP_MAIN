@@ -370,3 +370,8 @@ html[data-theme] .dn-conditions .dn-condition-selected-values > button {
     min-height: 46px !important;
   }
 }
+
+html[data-theme] .dn-conditions .dn-condition-rule .dropdown-trigger > span {
+  flex:1; text-align:center;
+}
+html[data-theme] .dn-conditions .dn-condition-rule input { text-align:center; }

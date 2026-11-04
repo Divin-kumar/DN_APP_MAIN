@@ -95,14 +95,14 @@ export default function StoryDesignSettings() {
           : changed ? 'Unsaved changes. Save to apply.'
             : 'All designs saved.'}
       </span>
-      <button type="button" className="settings-secondary-button" disabled={!scope}
+      <button type="button" className="settings-secondary-button" aria-label="Suggested defaults" disabled={!scope}
         onClick={() => setDraft(normalizeStoryDesign(STORY_DESIGN_DEFAULTS))}>
-        <RotateCcw size={15} aria-hidden="true" /> Suggested defaults
+        <RotateCcw size={15} aria-hidden="true" /> Defaults
       </button>
       <button type="button" className="settings-secondary-button" disabled={!scope || !changed}
         onClick={() => setDraft(saved)}>Cancel</button>
       <button type="button" className="settings-primary-button" disabled={!scope}
-        onClick={save}>Save designs</button>
+        aria-label="Save designs" onClick={save}>Save</button>
     </div>
     <p className="dn-story-design-hint">
       Default styles for Story and PDF. Customize individual exports in PDF Studio.

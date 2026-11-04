@@ -1,0 +1,42 @@
+import { test, expect } from '@playwright/test';
+import { seedGuest } from './fixtures.js';
+for (const width of [320,430,1280]) {
+  test(`Task calendar and deliberate actions ${width}`, async ({page},testInfo) => {
+    await page.setViewportSize({width,height:900});
+    const errors=await seedGuest(page);
+    await page.goto('/tasks?create=1');
+    const editor=page.getByRole('dialog',{name:'New Task'});
+    await editor.getByLabel('Task title').fill('Return library book');
+    await editor.getByRole('button',{name:'Create Task'}).click();
+    const row=page.locator('.dn-task-row').filter({hasText:'Return library book'});
+    await expect(row.locator('.dn-task-done')).toHaveCount(0);
+    await expect(row.locator('.dn-task-calendar')).toBeVisible();
+    const original=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
+    await row.click();
+    await expect(page.getByRole('menu')).toBeVisible();
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(original);
+    await page.getByRole('menuitem',{name:'Done',exact:true}).click();
+    await expect(row.getByRole('img',{name:'Completed',exact:true})).toBeVisible();
+    await row.focus(); await page.keyboard.press('Enter');
+    await page.getByRole('menuitem',{name:'Reopen',exact:true}).click();
+    await row.click();
+    await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
+    await expect(page.getByRole('dialog',{name:'Edit Task'})).toBeVisible();
+    await expect(page.getByRole('menu')).toHaveCount(0);
+    await page.getByRole('dialog').getByRole('button',{name:'Cancel',exact:true}).click();
+    await testInfo.attach(`calendar-tasks-${width}`,{body:await page.screenshot(),contentType:'image/png'});
+    const id=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_tasks'))[0].id);
+    await page.goto(`/tasks?task=${id}`);
+    await expect(page.getByRole('dialog',{name:'Task actions'})).toBeVisible();
+    await expect(page.getByRole('dialog',{name:'Edit Task'})).toHaveCount(0);
+    await page.getByRole('button',{name:'Close',exact:true}).last().click();
+    await page.goto('/settings/appearance');
+    const footer=page.locator('.dn-story-design-actions');
+    await footer.scrollIntoViewIfNeeded();
+    const boxes=await Promise.all(['Suggested defaults','Cancel','Save designs'].map(name=>footer.getByRole('button',{name,exact:true}).boundingBox()));
+    expect(Math.max(...boxes.map(b=>b.y))-Math.min(...boxes.map(b=>b.y))).toBeLessThan(2);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}
