@@ -123,8 +123,7 @@ export function TaskListContent() {
 
   return <main className="dn-tasks-page">
     <header className="dn-task-hero">
-      <div><span className="dn-task-eyebrow">Your day, in focus</span>
-        <h2>Tasks</h2><p>Independent to-dos, with optional links to your Moments.</p>
+      <div><h2>Tasks</h2><p>Standalone and Moment-linked Tasks.</p>
       </div>
     </header>
     <div className="dn-task-metrics" aria-label="Task summary">

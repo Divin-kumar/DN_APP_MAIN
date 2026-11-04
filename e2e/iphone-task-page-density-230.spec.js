@@ -1,0 +1,54 @@
+import { test, expect } from '@playwright/test';
+import { seedGuest } from './fixtures.js';
+
+// iPhone-size Chromium checks, not native iOS Safari or VoiceOver.
+test.use({hasTouch:true,isMobile:true});
+for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'dark'],[844,390,'light']]){
+  test(`Task page density, list row controls and scope ${width}x${height}`,async({page},testInfo)=>{
+    await page.setViewportSize({width,height});
+    const errors=await seedGuest(page,{theme});
+    await page.goto('/tasks');
+    const main=page.locator('main.dn-tasks-page');
+    await expect(main.getByRole('heading',{name:'Tasks',exact:true})).toBeVisible();
+    await expect(main.getByText('Standalone and Moment-linked Tasks.')).toBeVisible();
+    await expect(main.locator('.dn-task-eyebrow')).toHaveCount(0);
+    const metrics=main.locator('.dn-task-metrics span');
+    await expect(metrics).toHaveCount(3);
+    const baseline=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes'].map(key=>localStorage.getItem(key)));
+    await page.getByRole('button',{name:'Open quick create menu'}).tap();
+    await page.getByRole('button',{name:'Task',exact:true}).tap();
+    const form=page.getByRole('dialog',{name:'New Task'});
+    await form.getByLabel('Task title').fill('One tidy list row');
+    await form.getByRole('button',{name:'Create Task'}).tap();
+    const row=main.locator('.dn-task-list .dn-task-row');
+    await expect(row).toHaveCount(1);
+    const a=await row.evaluate(el=>{
+      const style=getComputedStyle(el),done=el.querySelector('.dn-task-done'),menu=el.querySelector('.dn-record-menu-trigger');
+      const text=el.querySelector('.dn-task-copy strong');
+      const context=el.querySelector('.dn-task-context');
+      return {
+        radius:style.borderTopLeftRadius,background:style.backgroundColor,
+        doneHeight:done.getBoundingClientRect().height,
+        doneWidth:done.getBoundingClientRect().width,
+        menuWidth:menu?.getBoundingClientRect().width||0,
+        titleFont:parseFloat(getComputedStyle(text).fontSize),
+        contextFont:parseFloat(getComputedStyle(context).fontSize),
+        bounds:el.getBoundingClientRect().right,
+      };
+    });
+    expect(a.radius).toBe('0px');
+    expect(a.doneHeight).toBeGreaterThanOrEqual(44);
+    expect(a.doneWidth).toBeGreaterThanOrEqual(44);
+    expect(a.menuWidth).toBeGreaterThanOrEqual(44);
+    expect(a.titleFont).toBeGreaterThanOrEqual(15);
+    expect(a.contextFont).toBeGreaterThanOrEqual(12);
+    expect(a.bounds).toBeLessThanOrEqual(width+1);
+    await testInfo.attach(`tasks-${width}-${theme}`,{
+      body:await page.screenshot({animations:'disabled'}),contentType:'image/png'
+    });
+    await page.getByRole('button',{name:'Complete One tidy list row'}).tap();
+    await expect(page.getByRole('button',{name:'Reopen One tidy list row'})).toBeVisible();
+    expect(await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes'].map(key=>localStorage.getItem(key)))).toEqual(baseline);
+    expect(errors).toEqual([]);
+  });
+}
