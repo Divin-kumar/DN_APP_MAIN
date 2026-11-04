@@ -1019,3 +1019,43 @@ jobs:
             .verification/release-upgrade/
           retention-days: 7
           if-no-files-found: ignore
+
+  release-232-four-browser-failures:
+    # Focused recovery of exactly the 2.3.2 failed browser specs and
+    # their nearby single-row / legacy multi-value mobile regressions.
+    # Never verifies a full release or deploys Hosting.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-232-four-failures]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Recheck the four failures and adjacent filter accessibility
+        run: >-
+          npx playwright test
+          e2e/refine-task-recovery-230.spec.js
+          e2e/task-refine-dashboard-230.spec.js
+          e2e/user-friendly-filters.spec.js
+          e2e/shared-filter-single-row.spec.js
+          e2e/iphone-filter-value-touches-230.spec.js
+          --workers=3
+      - name: Preserve browser failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-232-four-browser-failure-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore

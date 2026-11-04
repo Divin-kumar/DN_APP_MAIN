@@ -195,9 +195,13 @@ test('filter long press visibly lifts and moves a rule without changing records'
   const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.getByRole('button', { name: /^Filters and sort/ }).first().click();
   const sheet = page.getByRole('dialog', { name: 'Activity filters' });
-  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
-  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
+  // Guest's current saved default conditions are not a fixed empty baseline.
+  // Clear only the Refine draft, then create two deterministic sibling rules.
   const rules = sheet.locator('.dn-condition-rule');
+  await sheet.getByRole('button', { name: 'Clear all', exact: true }).click();
+  await expect(rules).toHaveCount(0);
+  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();
   await expect(rules).toHaveCount(2);
   const ids = await rules.evaluateAll((rows) => rows.map((row) => row.dataset.conditionId));
   const handle = rules.first().getByRole('button', { name: 'Drag to reorder filter' });

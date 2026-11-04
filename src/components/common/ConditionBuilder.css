@@ -633,7 +633,11 @@ html[data-theme] .dn-condition-chip-rail .dn-condition-chip .dropdown-trigger > 
 
 /* Exactly five explicit tracks: grip / field / operator / value / remove.
    Prevent the implicit fifth track from escaping the narrow Refine sheet. */
-html[data-theme] body .dn-conditions .dn-condition-rule {
+/* The list panel and Task Refine wrappers have older, more specific mobile
+   two-row rules. Override them as well: ordinary rules stay in one row. */
+html[data-theme] body .dn-conditions .dn-condition-rule,
+html[data-theme] body .dn-list-controls-panel .dn-conditions .dn-condition-rule,
+html[data-theme] body .dn-task-refine .dn-conditions .dn-condition-rule {
   display:grid !important;
   width:100%; min-width:0; max-width:100%;
   grid-template-columns:24px minmax(0,1.1fr) minmax(0,.72fr) minmax(0,1.05fr) 44px !important;

@@ -25,20 +25,27 @@ test('Task status failure stays visible and can be retried without data loss',as
  await page.getByRole('button',{name:'Create Task'}).click();
  const baseline=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
  const id=JSON.parse(baseline)[0].id;await page.goto(`/tasks?task=${id}`);
- const dialog=page.getByRole('dialog',{name:'Task actions'});await expect(dialog).toBeVisible();
+ // A deep link highlights the ordinary Task row; actions open only on tap.
+ const row=page.locator('.dn-independent-task-row.is-dashboard-selected');
+ await expect(row).toContainText('Retry safely');
+ await expect(page.getByRole('dialog',{name:'Task actions'})).toHaveCount(0);
  await page.evaluate(async()=>{
   const store=(await import('/src/store/useTaskStore.js')).default;
   window.__savedTaskStatus=store.getState().setTaskStatus;
   store.setState({setTaskStatus:()=>{throw new Error('Storage unavailable. Try again.');}});
  });
- await dialog.getByRole('button',{name:'Done',exact:true}).click();
- await expect(dialog.getByRole('alert')).toHaveText('Storage unavailable. Try again.');
+ await row.click();
+ await page.getByRole('menuitem',{name:'Done',exact:true}).click();
+ await expect(page.locator('.dn-task-feedback[role="alert"]')).toHaveText('Storage unavailable. Try again.');
+ await expect(page.getByRole('menu')).toHaveCount(0);
  expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(baseline);
  await page.evaluate(async()=>{
   const store=(await import('/src/store/useTaskStore.js')).default;
   store.setState({setTaskStatus:window.__savedTaskStatus});
  });
- await dialog.getByRole('button',{name:'Done',exact:true}).click();
- await expect(dialog).toHaveCount(0);
+ await row.click();
+ await page.getByRole('menuitem',{name:'Done',exact:true}).click();
+ await expect(page.locator('.dn-task-feedback[role="alert"]')).toHaveCount(0);
+ await expect(row.getByRole('img',{name:'Completed',exact:true})).toBeVisible();
  expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_tasks'))[0].status)).toBe('completed');
 });
