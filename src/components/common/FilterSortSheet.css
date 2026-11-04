@@ -207,3 +207,10 @@ html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static;
     min-width:0; overflow-wrap:anywhere; line-height:1.4;
   }
 }
+
+/* Refine stays below the phone viewport, overriding generic dialog sizing. */
+@media (max-width: 760px) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open="false"] > .dn-modal.dn-refine-sheet {
+    max-height: min(88dvh, 800px) !important;
+  }
+}
