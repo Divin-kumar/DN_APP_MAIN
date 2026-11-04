@@ -970,3 +970,52 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  release-remainder-230:
+    # Four release stages blocked behind the earlier browser failure.
+    # This is an isolated, opt-in, NO-DEPLOY check before the full exact-SHA gate.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-release-remainder]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium for offline and upgrade checks
+        run: npx playwright install --with-deps chromium
+      - name: Build 2.3 release candidate
+        env:
+          VITE_DEPLOY_ENV: Production
+        run: npm run build
+      - name: Check offline shell, original file bytes and PDF download
+        run: npm run test:production
+      - name: Build previous release fixture
+        env:
+          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+        run: |
+          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
+          mkdir -p .verification/phase9/previous
+          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
+          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
+          npm --prefix .verification/phase9/previous run build
+      - name: Check upgrade preserves saved data, originals and offline Story
+        run: npm run test:upgrade
+      - name: Retain offline and upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-remaining-release-gates
+          path: |
+            .verification/production-shell/
+            .verification/release-upgrade/
+          retention-days: 7
+          if-no-files-found: ignore
