@@ -24,26 +24,54 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     const row=taskPage.locator('.dn-task-list .dn-task-row');
     await expect(row).toHaveCount(1);
     const a=await row.evaluate(el=>{
-      const style=getComputedStyle(el),done=el.querySelector('.dn-task-done'),menu=el.querySelector('.dn-record-menu-trigger');
+      const style=getComputedStyle(el),done=el.querySelector('.dn-task-done');
       const text=el.querySelector('.dn-task-copy strong');
       const context=el.querySelector('.dn-task-context');
       return {
         radius:style.borderTopLeftRadius,background:style.backgroundColor,
         doneHeight:done.getBoundingClientRect().height,
         doneWidth:done.getBoundingClientRect().width,
-        menuWidth:menu?.getBoundingClientRect().width||0,
+        doneRadius:getComputedStyle(done).borderTopLeftRadius,
+        doneText:done.textContent.trim(),
+        visibleMenuCount:el.querySelectorAll('.dn-record-menu-trigger').length,
         titleFont:parseFloat(getComputedStyle(text).fontSize),
         contextFont:parseFloat(getComputedStyle(context).fontSize),
         bounds:el.getBoundingClientRect().right,
       };
     });
-    expect(a.radius).toBe('0px');
+    expect(parseFloat(a.radius)).toBeGreaterThanOrEqual(14);
+    expect(a.background).not.toBe('rgba(0, 0, 0, 0)');
     expect(a.doneHeight).toBeGreaterThanOrEqual(44);
-    expect(a.doneWidth).toBeGreaterThanOrEqual(44);
-    expect(a.menuWidth).toBeGreaterThanOrEqual(44);
+    expect(a.doneWidth).toBeGreaterThan(44);
+    expect(a.doneRadius).toBe('999px');
+    expect(a.doneText).toBe('Done');
+    expect(a.visibleMenuCount).toBe(0);
     expect(a.titleFont).toBeGreaterThanOrEqual(15);
     expect(a.contextFont).toBeGreaterThanOrEqual(12);
     expect(a.bounds).toBeLessThanOrEqual(width+1);
+    const swipeRow=taskPage.locator('.dn-task-list .dn-task-row').first();
+    const swipeTarget=await swipeRow.locator('.dn-task-copy').boundingBox();
+    const startX=swipeTarget.x+Math.min(30,swipeTarget.width/4);
+    const startY=swipeTarget.y+swipeTarget.height/2;
+    await page.mouse.move(startX,startY);
+    await page.mouse.down();
+    await page.mouse.move(startX+52,startY,{steps:4});
+    await page.mouse.up();
+    const actionMenu=page.getByRole('menu').filter({hasText:'Edit'});
+    await expect(actionMenu).toBeVisible();
+    await expect(actionMenu.getByRole('menuitem',{name:'Cancel'})).toBeVisible();
+    await expect(actionMenu.getByRole('menuitem',{name:'Delete'})).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(actionMenu).toBeHidden();
+    await swipeRow.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(actionMenu).toBeVisible();
+    await expect(actionMenu.getByRole('menuitem',{name:'Edit'})).toBeVisible();
+    await expect(actionMenu.getByRole('menuitem',{name:'Cancel'})).toBeVisible();
+    await expect(actionMenu.getByRole('menuitem',{name:'Delete'})).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(actionMenu).toBeHidden();
+    await expect(swipeRow).toBeFocused();
     await testInfo.attach(`tasks-${width}-${theme}`,{
       body:await page.screenshot({animations:'disabled'}),contentType:'image/png'
     });

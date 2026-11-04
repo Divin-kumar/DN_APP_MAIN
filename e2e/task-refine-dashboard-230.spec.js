@@ -86,8 +86,18 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     const rows=page.locator('.dn-dashboard-tasks .dn-dashboard-task-row');
     await expect(rows).toHaveCount(2);
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check')).toHaveCount(2);
-    await expect(page.locator('.dn-dashboard-tasks button').filter({hasText:'Done'})).toHaveCount(0);
+    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check').filter({hasText:'Done'})).toHaveCount(2);
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-date')).toHaveCount(2);
+    const actionGeometry=await page.locator('.dn-dashboard-task-check').first().evaluate((el)=>({
+      height:el.getBoundingClientRect().height,
+      width:el.getBoundingClientRect().width,
+      radius:getComputedStyle(el).borderTopLeftRadius,
+      text:el.textContent.trim(),
+    }));
+    expect(actionGeometry.height).toBeGreaterThanOrEqual(44);
+    expect(actionGeometry.width).toBeGreaterThan(44);
+    expect(actionGeometry.radius).toBe('999px');
+    expect(actionGeometry.text).toBe('Done');
     await testInfo.attach('DashboardTasks-'+width+'-'+theme,{body:await page.screenshot(),contentType:'image/png'});
     await page.getByRole('link',{name:'Open Task Review travel documents'}).click();
     await expect(page.getByRole('dialog',{name:'Edit Task'})).toBeVisible();

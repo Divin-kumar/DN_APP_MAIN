@@ -23,27 +23,24 @@ html[data-theme] .dn-task-applied button {
   background:var(--action-fill); color:var(--action-ink); font:inherit; font-size:11px; font-weight:650;
   white-space:nowrap; overflow:hidden; text-overflow:ellipsis; cursor:pointer;
 }
-html[data-theme] .dn-task-list { display:grid; gap:8px; min-width:0; }
-html[data-theme] .dn-task-list .dn-task-row {
-  display:block; min-width:0; border:1px solid color-mix(in srgb,var(--color-border) 78%,transparent);
-  border-radius:16px; background:var(--color-card); box-shadow:0 2px 11px rgb(0 0 0 / 2%);
-}
+html[data-theme] .dn-task-list { display:grid; gap:9px; min-width:0; }
 html[data-theme] .dn-task-row[data-status="completed"] { opacity:.82; }
-html[data-theme] .dn-task-row-main { display:flex; align-items:center; min-width:0; gap:4px; padding:7px 8px; }
-html[data-theme] .dn-task-row .dn-task-done,
-html[data-theme] .dn-task-row .dn-record-menu-trigger {
-  display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; min-height:44px;
-  padding:0; border:0; border-radius:11px; background:transparent; color:var(--color-text-muted);
-  box-shadow:none; cursor:pointer;
+html[data-theme] .dn-task-row .dn-task-done {
+  display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:0 0 auto;
+  width:auto; min-width:64px; min-height:44px; padding:0 11px;
+  border:1px solid color-mix(in srgb,var(--color-primary) 22%,var(--color-border));
+  border-radius:999px; background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
+  color:var(--color-primary); box-shadow:none; cursor:pointer;
+  font:inherit; font-size:12px; font-weight:700; line-height:1; white-space:nowrap;
 }
-html[data-theme] .dn-task-row .dn-task-done[aria-pressed="true"] { color:var(--color-primary); }
-html[data-theme] .dn-task-row .dn-task-done:disabled { opacity:.4; cursor:default; }
+html[data-theme] .dn-task-row .dn-task-done[aria-pressed="true"] { color:var(--color-text-muted); background:var(--color-surface); }
+html[data-theme] .dn-task-row .dn-task-done:disabled { opacity:.58; cursor:default; }
 html[data-theme] .dn-task-row .dn-task-copy {
-  display:grid; align-content:center; justify-items:start; flex:1 1 0; gap:5px; min-width:0;
-  min-height:56px; padding:5px 2px; border:0; border-radius:9px;
+  display:grid; align-content:center; justify-items:start; gap:5px; min-width:0;
+  min-height:62px; padding:3px 1px; border:0; border-radius:9px;
   background:transparent; color:var(--color-text); font:inherit; text-align:left; cursor:pointer;
 }
-html[data-theme] .dn-task-row .dn-task-copy strong { display:block; font-size:14px; font-weight:690; line-height:1.4; overflow-wrap:anywhere; }
+html[data-theme] .dn-task-row .dn-task-copy strong { display:block; font-size:15px; font-weight:700; line-height:1.4; overflow-wrap:anywhere; }
 html[data-theme] .dn-task-row .dn-task-context { font-size:11px; line-height:1.4; color:var(--color-text-muted); overflow-wrap:anywhere; }
 html[data-theme] .dn-task-row-details { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; color:var(--color-text-muted); font-size:11px; line-height:1.4; }
 html[data-theme] .dn-task-row-details > span { white-space:normal; overflow-wrap:anywhere; }
@@ -53,7 +50,6 @@ html[data-theme] .dn-task-row-details .is-overdue { color:var(--color-danger,#b3
 html[data-theme] .dn-task-list .dn-task-row:has(.dn-task-done[aria-pressed="true"]) .dn-task-copy strong {
   text-decoration:line-through; text-decoration-thickness:1px; color:var(--color-text-muted);
 }
-html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done,.dn-record-menu-trigger):hover { background:var(--color-surface); }
 html[data-theme] .dn-task-row :is(button):focus-visible,
 html[data-theme] .dn-task-discovery button:focus-visible,
 html[data-theme] .dn-task-editor :is(input,textarea,button):focus-visible,
@@ -110,7 +106,6 @@ html[data-theme] .dn-task-form-actions { display:flex; justify-content:flex-end;
   html[data-theme] .dn-task-metrics { gap:6px; }
   html[data-theme] .dn-task-metrics span { padding:9px; font-size:10px; min-height:62px; }
   html[data-theme] .dn-task-metrics strong { font-size:19px; }
-  html[data-theme] .dn-task-row-main { padding:6px 3px; gap:1px; }
   html[data-theme] .dn-task-row .dn-task-copy strong { font-size:13px; }
 }
 @media(max-width:360px) {
@@ -123,14 +118,20 @@ html[data-theme] .dn-task-form-actions { display:flex; justify-content:flex-end;
   html[data-theme] .dn-task-list .dn-task-row { transition:none; }
 }
 
-/* Tasks use the same linear reading rhythm as Activities; no status or menu
-   handler changes, and all complete/edit/delete hit areas remain intact. */
-html[data-theme] .dn-task-list { gap:0; }
+/* Independent Tasks are separate, softly rounded rows; swipe action layers
+  stay available without a permanent trailing ellipsis control. */
 html[data-theme] .dn-task-list .dn-task-row {
-  border:0; border-bottom:1px solid var(--color-border);
-  border-radius:0; background:transparent; box-shadow:none;
+  border:1px solid color-mix(in srgb,var(--color-border) 82%,transparent);
+  border-radius:17px; background:color-mix(in srgb,var(--color-card) 94%,var(--color-surface));
+  box-shadow:0 3px 14px color-mix(in srgb,var(--color-bg) 9%,transparent);
 }
-html[data-theme] .dn-task-row-main { padding:10px 2px; gap:5px; }
+html[data-theme] .dn-task-list .dn-task-row > .dn-swipe-main {
+  display:block; border-radius:inherit; background:transparent !important;
+}
+html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center;
+  gap:10px; padding:11px 12px;
+}
 html[data-theme] .dn-task-row .dn-task-copy { gap:4px; min-height:62px; }
 html[data-theme] .dn-task-row .dn-task-copy strong {
   font-size:15px; font-weight:700; line-height:1.45;
@@ -139,18 +140,24 @@ html[data-theme] .dn-task-row .dn-task-context { font-size:12px; line-height:1.4
 html[data-theme] .dn-task-row-details { font-size:12px; line-height:1.45; gap:4px 10px; }
 html[data-theme] .dn-task-metrics span { font-size:12px; }
 @media(hover:hover) and (pointer:fine) {
-  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done,.dn-record-menu-trigger):hover {
+  html[data-theme] .dn-task-list .dn-task-row:hover {
+    border-color:color-mix(in srgb,var(--color-primary) 22%,var(--color-border));
+    box-shadow:0 5px 18px color-mix(in srgb,var(--color-bg) 13%,transparent);
+  }
+  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done):hover {
     background:var(--color-surface);
+  }
+  html[data-theme] .dn-task-row .dn-task-done:hover {
+    border-color:color-mix(in srgb,var(--color-primary) 42%,var(--color-border));
+    background:color-mix(in srgb,var(--color-primary) 14%,var(--color-card));
   }
 }
 @media(hover:none), (pointer:coarse) {
-  html[data-theme] .dn-task-row :is(.dn-task-copy,.dn-task-done,.dn-record-menu-trigger):hover {
-    background:transparent;
-  }
+  html[data-theme] .dn-task-row .dn-task-copy:hover { background:transparent; }
 }
 @media(max-width:430px) {
   html[data-theme] .dn-tasks-page { gap:11px; }
-  html[data-theme] .dn-task-row-main { padding:11px 0; gap:3px; }
+  html[data-theme] .dn-task-list .dn-task-row.dn-swipe-surface > .dn-task-row-main { padding:10px; gap:8px; }
   html[data-theme] .dn-task-row .dn-task-copy strong { font-size:15px; }
   html[data-theme] .dn-task-metrics span { font-size:11.5px; }
 }

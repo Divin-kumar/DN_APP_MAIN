@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, Circle, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
+import { Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
@@ -181,7 +181,7 @@ export function TaskListContent() {
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
         return <SwipeActionCard key={task.id} as="article" className="dn-task-row" mainClassName="dn-task-row-main"
-          label={task.title} role="group" menuButton menuLabel={`Task options for ${task.title}`}
+          label={task.title} role="group"
           otherActions={[
             { label: 'Edit', icon: Pencil, onClick: edit },
             task.status === 'cancelled'
@@ -189,14 +189,7 @@ export function TaskListContent() {
               : { label: 'Cancel', icon: XCircle, onClick: () => { setError(''); setConfirm({ kind: 'cancel', task }); } },
           ]}
           onDelete={() => { setError(''); setConfirm({ kind: 'delete', task }); }}>
-          <button className="dn-task-done" type="button" data-swipe-ignore
-            aria-pressed={task.status === 'completed'}
-            aria-label={task.status === 'completed' ? `Reopen ${task.title}` : `Complete ${task.title}`}
-            disabled={Boolean(store.error) || task.status === 'cancelled'}
-            onClick={() => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed')}>
-            {task.status === 'completed' ? <Check size={20} aria-hidden="true" /> : <Circle size={20} aria-hidden="true" />}
-          </button>
-          <button type="button" data-swipe-ignore className="dn-task-copy" onClick={edit}
+          <button type="button" className="dn-task-copy" onClick={edit}
             aria-label={`Edit ${task.title}`}>
             <strong>{task.title}</strong>
             <small className="dn-task-context">{context}</small>
@@ -208,6 +201,14 @@ export function TaskListContent() {
               {overdue ? <span className="is-overdue">Overdue</span> : null}
               {task.status !== 'in-progress' ? <span>{statusLabel(task.status)}</span> : null}
             </span>
+          </button>
+          <button className="dn-task-done" type="button" data-swipe-ignore
+            aria-pressed={task.status === 'completed'}
+            aria-label={task.status === 'completed' ? `Reopen ${task.title}` : task.status === 'cancelled' ? `Cancelled ${task.title}` : `Complete ${task.title}`}
+            disabled={Boolean(store.error) || task.status === 'cancelled'}
+            onClick={() => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed')}>
+            {task.status === 'completed' ? <RotateCcw size={14} aria-hidden="true" /> : <Check size={14} aria-hidden="true" />}
+            <span>{task.status === 'completed' ? 'Reopen' : task.status === 'cancelled' ? 'Cancelled' : 'Done'}</span>
           </button>
         </SwipeActionCard>;
       })}

@@ -1,7 +1,7 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
-import { Copy, Download, Sparkles, Pencil, BookOpen, Circle, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
+import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -321,7 +321,7 @@ export function DashboardOverviewContent() {
                     </div>
                     <button type="button" className="dn-dashboard-task-check"
                       aria-label={`Complete Task ${task.title}`} title="Mark Task completed"
-                      onClick={() => completeDashboardTask(task)}><Circle size={21} aria-hidden="true" /></button>
+                      onClick={() => completeDashboardTask(task)}><Check size={15} aria-hidden="true" /><span>Done</span></button>
                   </div>;
                 })}
               </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
