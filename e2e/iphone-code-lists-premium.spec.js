@@ -58,7 +58,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         expect(Math.abs(row.label.y - row.button.y)).toBeLessThanOrEqual(2);
       }
       expect(layout.actions.length).toBeGreaterThan(0);
-      expect(layout.actions.every(({ hint, height }) => hint && height >= 44)).toBe(true);
+      expect(layout.actions.every(({ hint, height }) => !hint && height >= 44)).toBe(true);
 
       const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));

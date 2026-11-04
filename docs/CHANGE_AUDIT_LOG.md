@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261104-370 | DN 2.3 Settings and Tasks owner screenshot corrections
+- **Owner screenshot and source evidence:** The saved sort rail clips options; Code Lists had redundant three-dot hint while tapping already opens Edit/Disable/Delete; category navigation disappears on scroll; Appearance creation fields contain excessive whitespace; Tasks are still visually boxed.
+- **Changes:** Keep all saved sort choices visible in two lightweight mobile columns, remove Code List dots without changing tap/swipe/action handlers, make six Code List shortcuts sticky, shorten Moment type help, top-align Creation defaults, and simplify Task rows with readable labels. Preserve all saved records, control semantics, original files, Story/PDF, backup and Guest/account isolation.
+- **Compatibility:** No data migration, filter operator/sort field change, new navigation or button, or Guest tour fixture reset. Existing demo sample exercises relevant pages.
+- **QA:** Opt-in screenshot-driven 320/390/430 portrait and 844x390 landscape browser verification plus prior Code Lists, saved defaults and Task regression authored, pending execution. Native Safari/VoiceOver/account/cloud/offline and 2.3 full acceptance remain outstanding. OldVersion-only, no production/main/PR/version update.
+
 ## CHG-20261104-369 | DN 2.3 iPhone List Defaults exact-SHA acceptance
 - **Executed:** [Focused GitHub Actions 41764140289](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41764140289) passed **14/14** tests (17.4s) at source commit `57d342ed01535a9c74b3055ee0fd7452585a7616`. New 320/390/430px portrait and 844x390 coarse-pointer landscape cases verified readable saved-sort/filter instructions, unboxed controls, working filter disclosure, no horizontal overflow, and unchanged Guest source records. Ten existing saved-baseline tests passed for Moments, Activities, Transactions and Reset.
 - **Executed:** [Same-SHA documentation/governance 41764140228](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/41764140228) passed unit tests, ESLint, Vite build, blocking dependency advisory checks and documentation preservation.

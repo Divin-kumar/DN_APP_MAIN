@@ -624,3 +624,38 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  settings-task-screenshot-230:
+    # Screenshot-driven Settings/Tasks mobile checks and retained behavior.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-230-screenshot-settings]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Check screenshot fixes and saved sorting/filtering
+        run: >-
+          npx playwright test
+          e2e/iphone-settings-task-screenshot-fixes-230.spec.js
+          e2e/iphone-code-lists-premium.spec.js
+          e2e/iphone-settings-filter-defaults.spec.js
+          e2e/independent-tasks-phase4.spec.js
+          --workers=2
+      - name: Upload browser screenshots and failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-230-owner-screenshot-acceptance
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore

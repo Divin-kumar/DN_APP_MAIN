@@ -1,5 +1,8 @@
 # DN — Your App and Improvement Checklist
 
+**DN 2.3 screenshot-driven Settings and Tasks corrections (OldVersion only, unpublished):** Saved sort choices on iPhone no longer disappear offscreen. Code List rows open their existing Edit/Disable/Delete options by tapping the value, without decorative three dots; their shortcut strip stays visible while scrolling. Creation defaults are more compact, and Tasks use readable, restrained rows. This is a presentation-only update, not a change to filters or personal records. Focused browser verification is pending.
+
+
 **DN 2.3 List Defaults readability (OldVersion only, unpublished):** Saved sorting and filter preferences keep their lightweight, unboxed layout. Explanations and small labels are easier to read on iPhone, especially the difference between temporary Refine choices and saved Reset defaults. Saved options and personal records do not change. All 14 focused synthetic mobile/settings checks and routine unit/lint/build checks passed on the tested application commit. Physical Safari/VoiceOver and full release testing remain separate.
 
 
