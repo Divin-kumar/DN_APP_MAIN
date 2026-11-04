@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.04.4';
+export const GUEST_TOUR_VERSION = '2026.11.04.5';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -369,7 +369,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-independent-4', title: 'Choose a new bookshelf', notes: 'No deadline yet.',
       status: 'in-progress', priority: 'low', dueDate: '', dueTime: '',
       momentId: '', activityId: '' },
-    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'The square shows date and optional time. A red flag means overdue; a neutral flag means high priority. Dashboard Tasks show days away or overdue and open the Task module without completing a Task. Summary counts follow your filters. Tap or swipe a Task to open actions. Choose Done or Reopen there; choose Edit only when you want to change details. Settings → List defaults also configures Task sorting and filters. Drag the filter grip to reorder rules; tap +N to reveal remaining applied filters in one horizontal row.',
+    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'The square shows date and optional time. A red flag means overdue; a neutral flag means high priority. Dashboard Tasks show days away or overdue and highlight the matching Task in its list, without opening an awkward action sheet or completing a Task. Summary counts follow your filters. Tap or swipe a Task to open actions. Choose Done or Reopen there; choose Edit only when you want to change details. Settings → List defaults also configures Task sorting and filters. Hold or move the filter grip to lift the filter card, drag over its landing spot and release to reorder; tap +N to reveal remaining applied filters in one horizontal row.',
       status: 'in-progress', priority: 'high', dueDate: date(-3), dueTime: '16:00',
       momentId: '', activityId: '' },
   ];
