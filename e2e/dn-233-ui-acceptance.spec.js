@@ -35,6 +35,11 @@ test('Dashboard Tasks begin hidden, show four rows and scroll without chrome', a
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   await page.goto('/tasks');
+  await expect(page.locator('.dn-tasks-page')).toBeVisible();
+  await expect.poll(() => page.evaluate(async () => {
+    const app = (await import('/src/store/useAppStore.js')).default;
+    return app.getState().isGuest;
+  })).toBe(true);
   const dates = Array.from({ length: 7 }, (_, index) => calendarDate(index + 1));
   await page.evaluate(async (dates) => {
     const store = (await import('/src/store/useTaskStore.js')).default;

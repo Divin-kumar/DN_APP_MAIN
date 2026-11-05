@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261105-412 | Reconcile focused UI browser test setup and accessible swipe-state assertions
+- **Observed check:** DN 2.3.3 focused Chromium run 41994137769 finished with 34 passes and five failures. The same-page universal Task creation with View toast, direct Activity attachment, and floating filter visual scenarios passed. Four failures were caused by a nested activity-form locator that incorrectly scoped the Description summary or a Task seed launched before Guest session hydration; the fifth was an obsolete expectation that swipe-enabled Activity cards have no `aria-expanded` attribute. The actual card correctly exposes `aria-expanded="false"` when its menu is closed.
+- **Test-only correction:** Wait for active Guest auth before seeding Tasks, scope the Description summary by its own native details wrapper, and assert the genuine accessible swipe menu state. No component, business logic, original bytes, status, schema, sync or design behavior is changed in this correction. The next focused check remains the authority for completion, not this source edit.
+- **Release control:** OldVersion only, no preview/production deployment or main mutation. Do not infer real-device or signed-in cross-device acceptance from synthetic Guest Chromium checks.
+
 ## CHG-20261105-411 | DN compact forms, nonnavigating Task create, swipe-only cards and floating filters
 - **Owner request:** Ten small DN refinements across Tasks, attachments, Activity writing, dashboard density, Moment/Activity status, drag animation and optional further polish; no new record types.
 - **Task/Activity forms:** Newly created Tasks default to the current local day (existing Task edit dates stay unchanged), while priority/links/notes fold under More options. Writing Activity descriptions begin closed in a dedicated section without dropping saved data. Task creation from universal + stays on the originating route; the standard successful toast offers a View link to the specific Task. Old Tasks direct-create and deep-link routes are retained.

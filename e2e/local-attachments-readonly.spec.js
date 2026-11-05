@@ -7,7 +7,7 @@ test('Moment Activities share action menus, open Detail and retain retired Timel
   await seedGuest(page); await page.goto('/events/moment-one/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
-  await expect(card).not.toHaveAttribute('aria-expanded');
+  await expect(card).toHaveAttribute('aria-expanded', 'false');
   await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
   await expect(page.locator('.workspace-activities .dn-swipe-complete')).toHaveCount(0);
   await expect(page.locator('.workspace-activities').getByRole('button', { name: /Edit|Delete|Complete|Reopen|Add transaction|Link existing/ })).toHaveCount(0);
