@@ -63,7 +63,8 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
 });
 test('Moments use the flat list without a grid mode or redundant view toggle', () => {
   const page = read('../pages/Events.jsx');
-  assert.match(page, /className="life-journey"/);
+  assert.match(page, /className="life-journey(?: dn-motion-loaded)?"/);
+  // A content-ready fade does not introduce a gallery/grid view or change the list contract.
   assert.doesNotMatch(page, /viewMode|setViewMode|event-view-toggle|life-journey-cards|event-story-card-grid|GalleryIcon/);
   assert.match(read('../design-system.css'), /border-left:0 !important/);
   assert.match(read('../design-system.css'), /event-story-card::before \{ display:none !important/);
