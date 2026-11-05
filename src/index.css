@@ -9013,3 +9013,14 @@ html[data-theme] .events-page.life-timeline-page .dn-v2-activity-card {
 @media (prefers-reduced-motion:reduce) {
   .app-toast[data-tone="success"] { animation:none; }
 }
+
+/* Progressive native shared-element motion; the app still works without it. */
+::view-transition-old(root), ::view-transition-new(root) {
+  animation-duration:160ms; animation-timing-function:ease-out;
+}
+::view-transition-group(*) {
+  animation-duration:320ms; animation-timing-function:cubic-bezier(.22,.8,.25,1);
+}
+@media (prefers-reduced-motion:reduce) {
+  ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(*) { animation-duration:0.01ms !important; }
+}

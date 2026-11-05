@@ -45,6 +45,8 @@ import MomentStory from './MomentStory';
 import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
+import { motion, useReducedMotion } from 'framer-motion';
+import { momentVisualName } from '../../../utils/visualTransitions';
 import './MomentWorkspaceNav.css';
 
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
@@ -68,6 +70,7 @@ export function EventWorkspaceContent() {
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+  const reducedMotion = useReducedMotion();
   const workspaceNavRef = useRef(null);
   const attachmentInputRef = useRef(null);
   const attachmentContextRef = useRef(null);
@@ -504,7 +507,7 @@ export function EventWorkspaceContent() {
           { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
           { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: archiveMoment },
         ]} onDelete={() => setPendingDeleteEvent(true)}>
-      <header className={`event-moment-hero mood-${eventMood}`}>
+      <header className={`event-moment-hero mood-${eventMood}`} style={{ viewTransitionName: momentVisualName(eventId) }}>
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
           <Link to="/events" className="event-moment-back" data-swipe-ignore
@@ -550,6 +553,9 @@ export function EventWorkspaceContent() {
               {section.key === 'transactions' ? 'Finance' : section.key === 'pdf' ? 'PDF' : section.label}
             </span>
             {section.label === 'Activities' && activities.length ? <small>{activities.length}</small> : null}
+            {activeSection.key === section.key ? <motion.span aria-hidden="true"
+              className="dn-moment-nav-motion-underline" layoutId={`dn-moment-underline-${eventId}`}
+              transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 460, damping: 37, mass: .75 }} /> : null}
           </Link>
         ))}
       </nav>

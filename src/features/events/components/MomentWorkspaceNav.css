@@ -168,3 +168,10 @@ html[data-theme] .dn-moment-nav .dn-moment-nav-short {display:none;}
     left:7px;right:7px;
   }
 }
+
+/* Sliding section underline, without replacing accessible active-tab state. */
+html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"]::after { display:none; }
+html[data-theme] .dn-moment-nav .dn-moment-nav-motion-underline {
+  position:absolute; left:11px; right:11px; height:2px; bottom:0;
+  border-radius:2px 2px 0 0; background:var(--color-primary); pointer-events:none;
+}

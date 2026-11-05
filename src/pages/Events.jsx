@@ -21,6 +21,7 @@ import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
+import { momentVisualName, runVisualTransition } from '../utils/visualTransitions';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import CompletionCheck from '../components/common/CompletionCheck';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -102,6 +103,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
       <button type="button" className="event-story-main dn-v2-moment-open" onClick={onOpen}
+        style={{ viewTransitionName: momentVisualName(event.id || event.firestoreId) }}
         aria-label={'Open ' + (event.name || 'event')}>
         <MomentCardCover attachment={cover} uid={uid} isGuest={isGuest} date={date} />
         <span className="event-story-copy dn-v2-moment-copy">
@@ -344,7 +346,7 @@ export default function Events() {
       uid={user?.uid}
       isGuest={isGuest}
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
-      onOpen={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}
+      onOpen={() => runVisualTransition(() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`))}
       onPdf={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/pdf`)}
       onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
       onArchive={() => archiveMoment(event)}
