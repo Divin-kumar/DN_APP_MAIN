@@ -6,6 +6,8 @@
 
 # DN — Your App and Improvement Checklist
 
+**DN 2.3.4 verification (6 November 2026):** The current iPhone Story and Moment polish has passed 25/25 simulated mobile browser checks, along with routine code checks. This confirms responsive behavior in the tested browser but not on a physical iPhone. DN 2.3.3 remains the published release; no production update or app-version change is included.
+
 **DN 2.3.4 iPhone consistency follow-up (6 November 2026, not yet released):** Existing Story Activity titles now have larger touch areas. The three Moment figures retain their numbers and arrangement, with more readable labels on narrow phones. Decorative Journal date stars are not read aloud by assistive technology. The same destinations, records and Story layout remain. Browser regression verification is pending; production is unchanged.
 
 **DN 2.3.4 Story polish QA verified (5 November 2026; not published):** The 13/13 focused synthetic browser cases passed for narrow-phone Story text, light/dark reading colors, existing Task Story status, 44px file links and Moment form guidance. Routine source checks also passed. Personal records, PDF output and original photos are unchanged. Actual iPhone Safari, VoiceOver and a separate production release still need explicit acceptance.
