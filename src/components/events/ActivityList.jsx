@@ -48,7 +48,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
             icon: cancelled ? RotateCcw : XCircle, onClick: () => onToggleCancelled(activity.id, activity) }] : []),
         ];
         const card = <SwipeActionCard key={key} as="article" className={`event-activity-card${visualCards && parentMoment ? ' dn-v2-activity-card' : ''}${readOnly ? ' is-readonly' : ''}${completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${cancelled ? ' is-cancelled' : ''}`}
-          label={activity.title || 'Untitled activity'} menuButton={!readOnly && (actions.length > 0 || Boolean(onDelete))}
+          label={activity.title || 'Untitled activity'}
           onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={!readOnly && (actions.length > 0 || Boolean(onDelete))}
           disabled={disabled} otherActions={actions} onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
           <div className="event-activity-main">
@@ -57,7 +57,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
               onOpen={onOpen ? () => onOpen(activity) : undefined} disabled={disabled} /> : null}
             <div className="event-activity-copy">
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
-              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</span>
+              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}>{completed ? <><Check size={16} aria-hidden="true" /><span className="sr-only">Completed</span></> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
             </div>
             <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
           </div></div>

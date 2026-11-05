@@ -73,24 +73,29 @@ function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
     if (!state) return;
     clearTimeout(state.timer);
     state.source.classList.remove('is-drag-source');
-    state.source.style.transform = '';
-    state.source.style.zIndex = '';
-    state.source.style.position = '';
-    state.source.style.pointerEvents = '';
     state.target?.classList.remove('is-drag-target');
+    state.layer?.remove();
     gesture.current = null;
   };
   useEffect(() => cleanup, []);
   const pickup = () => {
     const state = gesture.current;
     if (!state || state.active || !state.source.isConnected) return;
+    const rect = state.source.getBoundingClientRect();
+    const layer = document.createElement('div');
+    // A fixed body-level copy escapes scroll clipping while the original holds its place.
+    layer.className = 'dn-condition-drag-float ' + (axis === 'horizontal' ? 'dn-condition-chips' : 'dn-conditions');
+    layer.setAttribute('aria-hidden', 'true');
+    layer.inert = true;
+    const clone = state.source.cloneNode(true);
+    clone.querySelectorAll('[id]').forEach((node) => node.removeAttribute('id'));
+    layer.appendChild(clone);
+    Object.assign(layer.style, { position: 'fixed', left: rect.left + 'px', top: rect.top + 'px',
+      width: rect.width + 'px', height: rect.height + 'px', pointerEvents: 'none', zIndex: '2147483000' });
+    document.body.appendChild(layer);
+    state.layer = layer;
     state.active = true;
     state.source.classList.add('is-drag-source');
-    state.source.style.position = 'relative';
-    state.source.style.zIndex = '1000';
-    // Pointer capture keeps move/up on the handle while hit-testing sees
-    // the landing row beneath the visually lifted source.
-    state.source.style.pointerEvents = 'none';
   };
   const move = (event) => {
     const state = gesture.current;
@@ -98,7 +103,7 @@ function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
     const dx = event.clientX - state.x, dy = event.clientY - state.y;
     if (!state.active && Math.hypot(dx, dy) > 7) pickup();
     if (!state.active) return;
-    state.source.style.transform = `translate3d(${dx}px,${dy}px,0) scale(1.035)`;
+    state.layer.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
     const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-condition-id]');
     const target = hit !== state.source && hit?.parentElement === state.source.parentElement ? hit : null;
     if (state.target !== target) {

@@ -691,3 +691,21 @@ html[data-theme] body .dn-conditions .dn-condition-rule .dropdown-trigger :is(.d
   overflow:hidden !important;
   text-overflow:ellipsis !important;
 }
+
+/* Floating pointer ghost is attached to document.body, outside clipping rails. */
+html[data-theme] .dn-condition-drag-float {
+  position:fixed !important; display:block !important; overflow:visible !important;
+  max-height:none !important; max-width:none !important; padding:0 !important;
+  margin:0 !important; border:0 !important; pointer-events:none !important;
+  z-index:2147483000 !important; contain:layout style; will-change:transform;
+}
+html[data-theme] .dn-condition-drag-float > [data-condition-id] {
+  opacity:1 !important; width:100%; min-height:100%; transform:scale(1.035);
+  transform-origin:center; border-radius:13px; background:var(--color-card) !important;
+  box-shadow:0 15px 34px rgba(0,0,0,.20) !important;
+  pointer-events:none !important;
+}
+html[data-theme] :is(.dn-condition-chip,.dn-condition-rule).is-drag-source { opacity:.28 !important; }
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-condition-drag-float > [data-condition-id] { transform:none; }
+}

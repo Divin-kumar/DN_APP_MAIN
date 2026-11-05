@@ -14,7 +14,7 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, Check, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -93,7 +93,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
     <>
     <SwipeActionCard className="event-story-card dn-v2-moment-card"
       mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
-      menuButton menuLabel={'Actions for ' + (event.name || 'Moment')}
+      
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
         ...(onPdf ? [{ label: 'PDF Studio', icon: ClipboardList, onClick: onPdf }] : []),
@@ -106,7 +106,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
         <span className="event-story-copy dn-v2-moment-copy">
           <span className="dn-v2-moment-heading">
             <span className="event-story-meta">{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
-            <span className={'event-story-status status-' + status} aria-label={'Status: ' + statusLabel}>{statusLabel}</span>
+            <span className={'event-story-status status-' + status + (status === 'completed' ? ' is-completion-tick' : '')} aria-label={'Status: ' + statusLabel}>{status === 'completed' ? <><Check size={17} aria-hidden="true" /><span className="sr-only">Completed</span></> : statusLabel}</span>
           </span>
           <strong>{event.name || 'A life moment'}</strong>
           <span className="event-story-date"><CalendarDays size={13} aria-hidden="true" />{date ? dateLabel(date) : 'Date to be decided'}{savedRecordTime(event) ? ` · ${savedRecordTime(event)}` : ''}</span>

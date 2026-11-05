@@ -225,3 +225,11 @@ html[data-theme] :is(.activities-page, .workspace-activities) .dn-v2-activity-co
     flex-wrap:nowrap; white-space:nowrap;
   }
 }
+
+/* Completion is an accessible green check in the top-right corner. */
+html[data-theme] :is(.activities-page,.workspace-activities) .event-activity-content .event-activity-card .event-activity-status.complete {
+  display:inline-flex; min-width:25px; width:25px; height:25px; min-height:25px;
+  padding:0 !important; justify-content:center; align-items:center;
+  border:0 !important; background:transparent !important;
+  color:var(--color-success) !important;
+}
