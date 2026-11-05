@@ -72,18 +72,66 @@ function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
     const state = gesture.current;
     if (!state) return;
     clearTimeout(state.timer);
+    if (state.scrollFrame) cancelAnimationFrame(state.scrollFrame);
     state.source.classList.remove('is-drag-source');
     state.target?.classList.remove('is-drag-target');
     state.layer?.remove();
     gesture.current = null;
   };
   useEffect(() => cleanup, []);
+  const updateTarget = (state) => {
+    const hit = document.elementFromPoint(state.lastX, state.lastY)?.closest('[data-condition-id]');
+    const target = hit !== state.source && hit?.parentElement === state.source.parentElement ? hit : null;
+    if (state.target !== target) {
+      state.target?.classList.remove('is-drag-target');
+      target?.classList.add('is-drag-target');
+      state.target = target;
+    }
+  };
+  const autoScroll = () => {
+    const state = gesture.current;
+    if (!state?.active) return;
+    state.scrollFrame = 0;
+    const horizontal = axis === 'horizontal';
+    const property = horizontal ? 'scrollLeft' : 'scrollTop';
+    const distance = horizontal ? 'scrollWidth' : 'scrollHeight';
+    const viewport = horizontal ? 'clientWidth' : 'clientHeight';
+    const containers = [];
+    for (let node = state.source.parentElement; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (/auto|scroll/.test(horizontal ? style.overflowX : style.overflowY) && node[distance] > node[viewport] + 1)
+        containers.push(node);
+    }
+    const root = document.scrollingElement;
+    if (root && !containers.includes(root) && root[distance] > root[viewport] + 1) containers.push(root);
+    for (const container of containers) {
+      const rect = container === root ? { left: 0, top: 0, right: innerWidth, bottom: innerHeight } : container.getBoundingClientRect();
+      const coordinate = horizontal ? state.lastX : state.lastY;
+      const cross = horizontal ? state.lastY : state.lastX;
+      const near = horizontal ? rect.left : rect.top;
+      const far = horizontal ? rect.right : rect.bottom;
+      const crossStart = horizontal ? rect.top : rect.left;
+      const crossEnd = horizontal ? rect.bottom : rect.right;
+      if (cross < crossStart - 8 || cross > crossEnd + 8 || coordinate < near - 8 || coordinate > far + 8) continue;
+      const margin = 36;
+      const delta = coordinate < near + margin ? -Math.max(2, Math.round((near + margin - coordinate) / 4))
+        : coordinate > far - margin ? Math.max(2, Math.round((coordinate - far + margin) / 4)) : 0;
+      if (!delta) continue;
+      const before = container[property];
+      container[property] += delta;
+      if (Math.abs(container[property] - before) > 0.5) {
+        updateTarget(state);
+        state.scrollFrame = requestAnimationFrame(autoScroll);
+        break;
+      }
+    }
+  };
   const pickup = () => {
     const state = gesture.current;
     if (!state || state.active || !state.source.isConnected) return;
     const rect = state.source.getBoundingClientRect();
     const layer = document.createElement('div');
-    // A fixed body-level copy escapes scroll clipping while the original holds its place.
+    // Body-level visual escapes clipping; the original remains the drop placeholder.
     layer.className = 'dn-condition-drag-float ' + (axis === 'horizontal' ? 'dn-condition-chips' : 'dn-conditions');
     layer.setAttribute('aria-hidden', 'true');
     layer.inert = true;
@@ -101,25 +149,40 @@ function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
     const state = gesture.current;
     if (!state || event.pointerId !== state.pointerId) return;
     const dx = event.clientX - state.x, dy = event.clientY - state.y;
+    state.lastX = event.clientX;
+    state.lastY = event.clientY;
     if (!state.active && Math.hypot(dx, dy) > 7) pickup();
     if (!state.active) return;
     state.layer.style.transform = 'translate3d(' + dx + 'px,' + dy + 'px,0)';
-    const hit = document.elementFromPoint(event.clientX, event.clientY)?.closest('[data-condition-id]');
-    const target = hit !== state.source && hit?.parentElement === state.source.parentElement ? hit : null;
-    if (state.target !== target) {
-      state.target?.classList.remove('is-drag-target');
-      target?.classList.add('is-drag-target');
-      state.target = target;
-    }
+    updateTarget(state);
+    if (!state.scrollFrame) state.scrollFrame = requestAnimationFrame(autoScroll);
   };
   const finish = (event) => {
     const state = gesture.current;
     if (!state || event.pointerId !== state.pointerId) return;
     move(event);
     const destination = state.active ? state.target?.getAttribute('data-condition-id') : null;
+    const parent = state.source.parentElement;
+    // Capture sibling positions before changing the real React condition order.
+    const before = new Map([...parent.children].filter((item) => item.hasAttribute('data-condition-id'))
+      .map((item) => [item.getAttribute('data-condition-id'), item.getBoundingClientRect()]));
     cleanup();
-    if (destination && destination !== id)
-      setGroup((group) => reorderSiblingConditions(group, id, destination));
+    if (!destination || destination === id) return;
+    setGroup((group) => reorderSiblingConditions(group, id, destination));
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    requestAnimationFrame(() => {
+      if (!parent.isConnected) return;
+      for (const item of parent.children) {
+        const original = before.get(item.getAttribute('data-condition-id'));
+        if (!original || typeof item.animate !== 'function') continue;
+        const current = item.getBoundingClientRect();
+        const dx = original.left - current.left, dy = original.top - current.top;
+        if (Math.hypot(dx, dy) < 1) continue;
+        item.animate([{ transform: 'translate3d(' + dx + 'px,' + dy + 'px,0)' },
+          { transform: 'translate3d(0,0,0)' }],
+        { duration: 210, easing: 'cubic-bezier(.22,.8,.25,1)' });
+      }
+    });
   };
   return <button type="button" className="dn-condition-grip"
     aria-label="Drag to reorder filter" title="Hold or drag to lift a filter. Arrow keys also reorder."
@@ -129,7 +192,8 @@ function ConditionDragHandle({ id, setGroup, axis = 'vertical' }) {
       if (!source) return;
       cleanup();
       gesture.current = { source, pointerId: event.pointerId, x: event.clientX,
-        y: event.clientY, active: false, target: null, timer: setTimeout(pickup, 175) };
+        y: event.clientY, lastX: event.clientX, lastY: event.clientY,
+        active: false, target: null, scrollFrame: 0, timer: setTimeout(pickup, 175) };
       event.currentTarget.setPointerCapture?.(event.pointerId);
     }}
     onPointerMove={move} onPointerUp={finish} onPointerCancel={cleanup}

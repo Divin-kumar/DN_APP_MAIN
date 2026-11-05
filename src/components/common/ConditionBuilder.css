@@ -709,3 +709,16 @@ html[data-theme] :is(.dn-condition-chip,.dn-condition-rule).is-drag-source { opa
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-condition-drag-float > [data-condition-id] { transform:none; }
 }
+
+/* Lift immediately, then animate the real siblings into their saved position.
+   The drag ghost stays pointer-transparent above all page/modal clipping. */
+html[data-theme] .dn-condition-drag-float > [data-condition-id] {
+  animation:dn-filter-lift-in .14s cubic-bezier(.2,.82,.22,1) both;
+}
+@keyframes dn-filter-lift-in {
+  from { opacity:.9; transform:scale(1); }
+  to { opacity:1; transform:scale(1.035); }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-condition-drag-float > [data-condition-id] { animation:none !important; transform:none !important; }
+}
