@@ -454,3 +454,10 @@ html[data-theme] .activity-detail-page .moment-transactions .dn-transaction-card
     grid-column:1/-1;grid-row:3;
   }
 }
+
+/* The Activity detail attachment toolbar now points to the universal creation action. */
+html[data-theme] .activity-attachment-hint {
+  display:inline-flex; align-items:center; min-height:32px;
+  padding:0 4px; color:var(--color-text-muted);
+  font-size:12px; font-weight:500; letter-spacing:.01em;
+}

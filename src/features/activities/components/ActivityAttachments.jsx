@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link2, Plus } from 'lucide-react';
+import { Link2 } from 'lucide-react';
 import AttachmentGallery from '../../../components/common/AttachmentGallery';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
 import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/attachmentService';
@@ -17,6 +17,18 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
   const attachments = activityAttachments(moment, activityId);
   const available = (moment.attachments || []).filter((item) => !item.activityId
     && (isGuest || context.sample || (item.assetId && ['local', 'firebase'].includes(item.storage))));
+  // The universal + dispatches a synchronous gesture to the matching Activity.
+  // The hidden input remains the sole file picker and retains attachment ownership.
+  useEffect(() => {
+    const receiveCreate = (request) => {
+      const detail = request.detail;
+      if (detail?.kind !== 'attachment' || detail.eventId !== eventId
+        || detail.activityId !== activityId || detail.scope !== context.scope) return;
+      input.current?.click();
+    };
+    window.addEventListener('dn:moment-create', receiveCreate);
+    return () => window.removeEventListener('dn:moment-create', receiveCreate);
+  }, [eventId, activityId, context.scope]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [linking, setLinking] = useState(false);
@@ -67,7 +79,7 @@ export default function ActivityAttachments({ moment, activityId, uid, isGuest }
     <div className="activity-section-heading"><h2>Attachments</h2>
       <div className="activity-attachment-actions">
         {available.length ? <button type="button" className="dn-record-menu-trigger" aria-label="Link a Moment attachment" title="Link a Moment attachment" disabled={busy} onClick={() => setLinking(true)}><Link2 size={17} aria-hidden="true" /></button> : null}
-        <button type="button" className="dn-record-menu-trigger" aria-label="Add attachment" title="Add attachment (saved on this device)" disabled={busy} onClick={() => input.current?.click()}><Plus size={18} aria-hidden="true" /></button>
+        <span className="activity-attachment-hint">Add using +</span>
       </div></div>
     <input ref={input} hidden type="file" aria-label="Add Activity attachment" onChange={addFile} />
     {busy ? <p role="status">Saving attachment…</p> : null}

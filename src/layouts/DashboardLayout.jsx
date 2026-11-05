@@ -22,6 +22,8 @@ import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 import ModalDialog from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
+import TaskEditor from '../components/tasks/TaskEditor';
+import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
 import DropdownSelect from '../components/common/DropdownSelect';
 import TransactionForm from '../components/financials/TransactionForm';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -70,6 +72,7 @@ export default function DashboardLayout() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const eventState = useEventStore();
+  const taskStore = useTaskStore();
   const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent } = eventState;
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
@@ -92,6 +95,10 @@ export default function DashboardLayout() {
   const quickCreateMobileRef = useRef(null);
   const quickCreateKeyboardFocusRef = useRef(false);
   const [quickCreateType, setQuickCreateType] = useState(null);
+  const [quickTaskPreset, setQuickTaskPreset] = useState(null);
+  const quickTaskScopeRef = useRef(null);
+  const quickTaskSaving = useRef(false);
+  const [quickTaskBusy, setQuickTaskBusy] = useState(false);
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickTransaction, setQuickTransaction] = useState(null);
   const [transactionBusy, setTransactionBusy] = useState(false);
@@ -111,6 +118,7 @@ export default function DashboardLayout() {
   const quickActivitySaving = useRef(false);
   const [quickActivityBusy, setQuickActivityBusy] = useState(false);
   const eventScope = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
+  const quickTaskScope = taskScopeKey({ user, isGuest });
   const activityMoments = isRecordScopeLoaded(eventState, eventScope, getActiveSampleScenario(user?.uid)) ? events : [];
   const activityDetailMatch = useMatch('/events/:eventId/activities/:activityId');
   const workspaceKey = getMomentWorkspaceKey(location.pathname);
@@ -318,12 +326,14 @@ export default function DashboardLayout() {
     if (type === 'task') {
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
       const activity = activityDetailMatch ? openedActivityContext?.activity : null;
-      const params = new URLSearchParams({ create: '1' });
-      if (parent) params.set('moment', momentId(parent));
-      if (activity) params.set('activity', recordId(activity.id));
+      setQuickTaskPreset({ momentId: momentId(parent), activityId: recordId(activity?.id) });
+      quickTaskScopeRef.current = taskScopeKey(useAppStore.getState());
+      setQuickCreateError('');
+      setQuickTaskBusy(false);
+      taskStore.loadTasks();
       setQuickCreateOpen(false);
-      // Route-owned editor handles Guest/account permissions and session guards.
-      navigate(`/tasks?${params.toString()}`);
+      // Universal Task creation stays on the invoking screen until View is selected.
+      setQuickCreateType('task');
       return;
     }
     if (type === 'transaction') {
@@ -361,12 +371,14 @@ export default function DashboardLayout() {
   };
 
   const beginMomentCreate = (kind) => {
-    if (!workspaceMoment || kind !== 'attachment') return;
+    const targetMoment = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
+    if (!targetMoment || kind !== 'attachment') return;
     setQuickCreateOpen(false);
-    // Keep file selection inside this click; navigating or deferring it can
-    // discard the user gesture required by mobile browsers.
+    // Preserve the synchronous file-picker gesture; Activity Detail can also
+    // attach directly via the universal + while retaining its Activity link.
     window.dispatchEvent(new CustomEvent('dn:moment-create', {
-      detail: { eventId: momentId(workspaceMoment), scope: eventScope, kind },
+      detail: { eventId: momentId(targetMoment), activityId: recordId(openedActivityContext?.activity?.id),
+        scope: eventScope, kind },
     }));
   };
 
@@ -381,6 +393,26 @@ export default function DashboardLayout() {
     }
   };
 
+  // Task persistence remains scoped to the existing Guest/account store.
+  const saveQuickTask = async (draft) => {
+    if (quickTaskSaving.current) return;
+    const openingScope = quickTaskScopeRef.current;
+    if (!openingScope || openingScope !== taskScopeKey(useAppStore.getState())
+      || useTaskStore.getState().loadedFor !== openingScope) {
+      setQuickCreateError('Tasks are not ready in this session. Reopen + to create a Task.');
+      return;
+    }
+    quickTaskSaving.current = true; setQuickTaskBusy(true); setQuickCreateError('');
+    try {
+      const saved = await useTaskStore.getState().saveTask(draft);
+      if (openingScope !== taskScopeKey(useAppStore.getState())) return;
+      setQuickCreateType(null);
+      showToast('Task added successfully', 'success', { label: 'View', to: '/tasks?task=' + encodeURIComponent(saved.id) });
+    } catch (error) {
+      if (openingScope === taskScopeKey(useAppStore.getState()))
+        setQuickCreateError(error?.message || 'Could not save this Task. Please try again.');
+    } finally { quickTaskSaving.current = false; setQuickTaskBusy(false); }
+  };
   // Use the same transaction pathway as the Financials screen.
   const closeQuickTransaction = () => {
     if (!transactionSaving.current) { setQuickCreateType(null); setQuickTransaction(null); setQuickCreateError(''); }
@@ -627,7 +659,7 @@ export default function DashboardLayout() {
               <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} aria-hidden="true" /><span>Task</span></button>
               <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
-              {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
+              {(workspaceMoment || openedActivityContext?.moment) ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
             </div>
           ) : null}
         </div>
@@ -652,7 +684,7 @@ export default function DashboardLayout() {
             <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} /><span>Task</span></button>
             <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} /><span>Transaction</span></button>
-            {workspaceMoment ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
+            {(workspaceMoment || openedActivityContext?.moment) ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} /><span>Attachment</span></button> : null}
           </div>
         ) : null}
         <button type="button" className="dn-quick-create-trigger"
@@ -670,6 +702,15 @@ export default function DashboardLayout() {
         <ModalDialog title="Create a life moment" onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
+        </ModalDialog>
+      ) : null}
+      {quickCreateType === 'task' ? (
+        <ModalDialog title="New Task" className="dn-task-dialog"
+          onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
+          <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
+            busy={quickTaskBusy || taskStore.loadedFor !== quickTaskScope}
+            error={quickCreateError || taskStore.error || ''}
+            onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
