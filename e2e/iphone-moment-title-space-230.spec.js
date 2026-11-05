@@ -20,7 +20,7 @@ for (const [width, height, theme] of [
       const button = node.querySelector('.dn-v2-moment-open');
       const heading = node.querySelector('.dn-v2-moment-heading');
       const name = rect('.dn-v2-moment-copy > strong');
-      const menu = rect('.dn-record-menu-trigger');
+      const noMenu = !node.querySelector('.dn-record-menu-trigger');
       const cover = rect('.dn-v2-moment-cover');
       const copy = rect('.dn-v2-moment-copy');
       return {
@@ -29,8 +29,7 @@ for (const [width, height, theme] of [
         titleWidth: name.width, titleHeight: name.height,
         titleLineHeight: parseFloat(getComputedStyle(node.querySelector('.dn-v2-moment-copy > strong')).lineHeight),
         titleWhiteSpace: getComputedStyle(node.querySelector('.dn-v2-moment-copy > strong')).whiteSpace,
-        titleTop: name.top, menuBottom: menu.bottom,
-        menuWidth: menu.width, menuHeight: menu.height,
+        titleTop: name.top, noMenu,
         coverRight: cover.right, copyLeft: copy.left, copyRight: copy.right,
         cardRight: node.getBoundingClientRect().right,
         pageWidth: document.documentElement.scrollWidth,
@@ -38,12 +37,11 @@ for (const [width, height, theme] of [
     });
     expect(measure.paddingRight).toBe('0px');
     expect(measure.headingHeight).toBeGreaterThanOrEqual(43.9);
-    expect(measure.titleTop).toBeGreaterThanOrEqual(measure.menuBottom - 2);
+    expect(measure.noMenu).toBe(true);
     expect(measure.titleWidth).toBeGreaterThan(140);
     expect(measure.titleWhiteSpace).toBe('normal');
     expect(measure.titleHeight).toBeGreaterThan(measure.titleLineHeight * 1.6);
-    expect(measure.menuWidth).toBeGreaterThanOrEqual(43.9);
-    expect(measure.menuHeight).toBeGreaterThanOrEqual(43.9);
+
     expect(measure.copyLeft).toBeGreaterThanOrEqual(measure.coverRight - 1);
     expect(measure.copyRight).toBeLessThanOrEqual(measure.cardRight + 1);
     expect(measure.pageWidth).toBeLessThanOrEqual(width + 1);
@@ -51,7 +49,8 @@ for (const [width, height, theme] of [
     await testInfo.attach(`moment-title-recovery-${width}-${theme}`, {
       body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
     });
-    await card.locator('.dn-record-menu-trigger').tap();
+    await card.focus();
+    await page.keyboard.press('ArrowRight');
     await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
