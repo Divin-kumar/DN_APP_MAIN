@@ -117,7 +117,7 @@ test('friendly status and transaction type choices use readable labels while sto
   await select(page, 'Value for Status', 'In progress');
   await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.locator('.event-activity-card')).toHaveCount(2);
-  await expect(page.locator('.dn-condition-chip')).toContainText('In progress');
+  await expect(page.locator('.dn-condition-chip').filter({ hasText: 'In progress' })).toHaveCount(1);
   const storedStatus = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_list_state_guest_conditions%3Aactivities')).group.children[0].value);
   expect(storedStatus).toBe('in-progress');
 
@@ -128,7 +128,7 @@ test('friendly status and transaction type choices use readable labels while sto
   await select(page, 'Value for Type', 'Expense');
   await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.locator('.dn-transaction-copy strong', { hasText: 'Trip fund' })).toHaveCount(0);
-  await expect(page.locator('.dn-condition-chip')).toContainText('Expense');
+  await expect(page.locator('.dn-condition-chip').filter({ hasText: 'Expense' })).toHaveCount(1);
   const storedType = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_list_state_guest_conditions%3Atransactions')).group.children[0].value);
   expect(storedType).toBe('expense');
 });
