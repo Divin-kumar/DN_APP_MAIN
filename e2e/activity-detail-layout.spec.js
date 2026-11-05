@@ -88,6 +88,7 @@ test('empty sections stay quiet and absent legacy metadata does not invent dates
   await expect(page.getByText(/^(No description added\.|No attachments added\.|No transactions have been recorded for this Activity\.)$/)).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Totals for this Activity' })).toHaveCount(0);
   await expect(page.getByRole('heading', { name: 'Attachments', exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Add attachment', exact: true })).toBeVisible();
+  await expect(page.getByText('Add using +', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Add attachment', exact: true })).toHaveCount(0);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
 });
