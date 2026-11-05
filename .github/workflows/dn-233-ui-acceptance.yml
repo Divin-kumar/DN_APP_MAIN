@@ -27,6 +27,7 @@ jobs:
         run: >-
           npx playwright test
           e2e/dn-233-ui-acceptance.spec.js
+          e2e/dn-233-motion-acceptance.spec.js
           e2e/form-polish-230.spec.js
           e2e/iphone-oldversion-activity-form-polish.spec.js
           e2e/local-attachments-readonly.spec.js

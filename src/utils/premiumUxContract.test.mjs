@@ -55,7 +55,11 @@ test('Moments, Activities, Transactions, Code Lists use one compact portaled pop
   assert.match(surface, /onClickCapture=/);
   assert.match(surface, /!resolveSwipeGesture\(start, \{ x, y \}\)\.action/);
   assert.match(surface, /\.\.\.\(onDelete \? \[\{ label: 'Delete'/);
-  assert.doesNotMatch(surface, /dn-swipe-tray-(other|delete)|animate=\{/);
+  // A spring may animate the *portaled popup* only. The record surface never slides.
+  assert.doesNotMatch(surface, /dn-swipe-tray-(other|delete)/);
+  assert.match(surface, /data-dn-motion="swipe-spring"/);
+  assert.match(surface, /<motion\.div id=\{menuId\}/);
+  assert.match(surface, /useReducedMotion/);
 });
 test('Moments use the flat list without a grid mode or redundant view toggle', () => {
   const page = read('../pages/Events.jsx');
