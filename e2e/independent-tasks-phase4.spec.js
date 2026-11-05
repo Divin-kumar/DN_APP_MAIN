@@ -32,7 +32,8 @@ for (const width of [320, 390, 1280]) {
     await expect(page.getByText('Remember the travel documents', { exact: true })).toBeVisible();
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
     expect(saved).toHaveLength(1);
-    expect(saved[0]).toMatchObject({ title: 'Remember the travel documents', momentId: '', activityId: '', dueDate: '', dueTime: '' });
+    const today = await page.evaluate(async () => (await import('/src/utils/momentDates.js')).formatMomentDate(new Date()));
+    expect(saved[0]).toMatchObject({ title: 'Remember the travel documents', momentId: '', activityId: '', dueDate: today, dueTime: '' });
 
     await page.getByRole('button', { name: 'Refine', exact: true }).click();
     const refine = page.getByRole('dialog', { name: 'Refine Tasks' });
@@ -49,7 +50,9 @@ for (const width of [320, 390, 1280]) {
     await expect(page.getByRole('img', {name:'Completed',exact:true})).toBeVisible();
     await page.locator('.dn-independent-task-row').filter({hasText:'Remember the travel documents'}).click();
     await page.getByRole('menuitem', { name: 'Edit', exact:true }).click();
-    await page.getByRole('dialog', { name: 'Edit Task' }).getByLabel('Notes (optional)').fill('Keep the originals');
+    const edit = page.getByRole('dialog', { name: 'Edit Task' });
+    await edit.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
+    await edit.getByLabel('Notes (optional)').fill('Keep the originals');
     await page.getByRole('dialog', { name: 'Edit Task' }).getByRole('button', { name: 'Save Task' }).click();
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
     expect(saved[0].status).toBe('completed');
