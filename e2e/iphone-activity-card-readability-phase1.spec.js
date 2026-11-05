@@ -17,11 +17,14 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     await expect(card.locator('.event-activity-moment-name')).toContainText('Weekend in Ooty');
     await expect(card.locator('.event-activity-context > span:last-child')).toContainText(/Journal · \d{1,2} [A-Za-z]{3}/);
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
-    const options = card.getByRole('button', { name: 'Activity options', exact: true });
-    await expect(options).toBeVisible();
-    const menuBounds = await options.boundingBox();
-    expect(menuBounds.width).toBeGreaterThanOrEqual(43.9);
-    expect(menuBounds.height).toBeGreaterThanOrEqual(43.9);
+    await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+    const touchBounds = await card.boundingBox();
+    expect(touchBounds.width).toBeGreaterThanOrEqual(43.9);
+    expect(touchBounds.height).toBeGreaterThanOrEqual(43.9);
+    await card.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('menu', { name: /Actions for Book a lakeside weekend/ })).toBeVisible();
+    await page.keyboard.press('Escape');
     const metrics = await card.evaluate((node) => {
       const title = node.querySelector('.event-activity-title-row > strong');
       const status = node.querySelector('.event-activity-status');
