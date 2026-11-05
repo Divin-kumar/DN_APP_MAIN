@@ -32,6 +32,7 @@ for (const [width, theme] of [[390, 'light'], [320, 'dark']]) {
     await page.getByRole('button', { name: 'Edit original activity writing' }).click();
     const activityEditor = page.getByRole('dialog', { name: 'Edit activity' });
     await expect(activityEditor.getByRole('textbox', { name: 'Activity title' })).toHaveValue('Morning thoughts');
+    await activityEditor.locator('.dn-form-disclosure > summary').filter({ hasText: 'Description' }).click();
     await activityEditor.getByRole('textbox', { name: 'Description (optional)' }).fill('A revised fresh start');
     await activityEditor.getByRole('button', { name: 'Save activity' }).click();
     await expect(activityEditor).toHaveCount(0);
