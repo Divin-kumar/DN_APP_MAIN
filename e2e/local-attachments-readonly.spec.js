@@ -8,7 +8,7 @@ test('Moment Activities share action menus, open Detail and retain retired Timel
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
   await expect(card).not.toHaveAttribute('aria-expanded');
-  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
   await expect(page.locator('.workspace-activities .dn-swipe-complete')).toHaveCount(0);
   await expect(page.locator('.workspace-activities').getByRole('button', { name: /Edit|Delete|Complete|Reopen|Add transaction|Link existing/ })).toHaveCount(0);
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
@@ -52,7 +52,7 @@ test('contextual transaction rows have no edit, delete, swipe or Add controls; m
   await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
   await card.locator('.event-activity-title-row > strong').click();
   await expect(page).toHaveURL(/moment-one\/activities\/shared$/);
   await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();

@@ -84,6 +84,8 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     const errors=await seedTasks(page,theme);
     const original=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
     await page.goto('/dashboard');
+    await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-row')).toHaveCount(0);
+    await page.getByRole('button',{name:'Show Tasks on dashboard'}).click();
     const rows=page.locator('.dn-dashboard-tasks .dn-dashboard-task-row');
     await expect(rows).toHaveCount(2);
     await expect(page.locator('.dn-dashboard-tasks .dn-dashboard-task-check')).toHaveCount(0);

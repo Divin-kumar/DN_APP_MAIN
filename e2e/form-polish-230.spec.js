@@ -19,10 +19,18 @@ for (const width of [320, 390, 430]) {
       const time = row.locator('input[type="time"]');
       await expect(date).toBeVisible();
       await expect(time).toBeVisible();
-      await expect(time).toBeDisabled();
-      await expect(dialog.getByText('Choose a due date to set a time.')).toBeVisible();
+      const localToday = await page.evaluate(() => {
+        const now = new Date();
+        return [now.getFullYear(), String(now.getMonth() + 1).padStart(2, '0'), String(now.getDate()).padStart(2, '0')].join('-');
+      });
+      await expect(date).toHaveValue(localToday);
+      await expect(time).toBeEnabled();
+      await expect(dialog.getByText('Choose a due date to set a time.')).toHaveCount(0);
       const title = dialog.getByRole('textbox', { name: 'Task title' });
-      const notes = dialog.getByRole('textbox', { name: 'Notes (optional)' });
+      const notes = dialog.locator('.dn-form-disclosure textarea');
+      await expect(notes).toBeHidden();
+      await dialog.getByText('More options', { exact: true }).click();
+      await expect(notes).toBeVisible();
       const fields = await dialog.evaluate((element) => ({
         title: element.querySelector('.dn-task-field input').getBoundingClientRect().top,
         date: element.querySelector('.dn-task-date-row').getBoundingClientRect().top,
