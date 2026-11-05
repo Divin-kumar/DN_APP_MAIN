@@ -634,7 +634,12 @@ export default function DashboardLayout() {
           <Link key={item.path} to={item.path}
             className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
             aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
-            <span className="dn-dock-icon"><item.icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="dn-dock-icon">
+              {activeNavigationPath === item.path ? <motion.span aria-hidden="true"
+                className="dn-dock-motion-indicator" layoutId="dn-primary-nav-indicator"
+                transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 450, damping: 37, mass: .75 }} /> : null}
+              <item.icon size={20} strokeWidth={1.8} aria-hidden="true" />
+            </span>
             <span className="dn-dock-label">{item.label}</span>
           </Link>
         ))}
@@ -650,7 +655,7 @@ export default function DashboardLayout() {
             }}
             aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
             aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-mobile-quick-create' : undefined}>
-            {quickCreateOpen ? <X size={24} aria-hidden="true" /> : <Plus size={24} aria-hidden="true" />}
+            <Plus size={24} aria-hidden="true" className="dn-create-glyph" />
           </button>
           {quickCreateOpen ? (
             <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
@@ -667,7 +672,12 @@ export default function DashboardLayout() {
           <Link key={item.path} to={item.path}
             className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
             aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
-            <span className="dn-dock-icon"><item.icon size={20} strokeWidth={1.8} aria-hidden="true" /></span>
+            <span className="dn-dock-icon">
+              {activeNavigationPath === item.path ? <motion.span aria-hidden="true"
+                className="dn-dock-motion-indicator" layoutId="dn-primary-nav-indicator"
+                transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 450, damping: 37, mass: .75 }} /> : null}
+              <item.icon size={20} strokeWidth={1.8} aria-hidden="true" />
+            </span>
             <span className="dn-dock-label">{item.compactLabel
               ? <><span className="dn-dock-full-label">{item.label}</span>
                 <span className="dn-dock-compact-label" aria-hidden="true">{item.compactLabel}</span></>
@@ -694,7 +704,7 @@ export default function DashboardLayout() {
           }}
           aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
           aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-desktop-quick-create' : undefined}>
-          {quickCreateOpen ? <X size={21} /> : <Plus size={22} />}
+          <Plus size={22} aria-hidden="true" className="dn-create-glyph" />
         </button>
       </div>
 

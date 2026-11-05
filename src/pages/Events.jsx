@@ -383,7 +383,7 @@ export default function Events() {
 
       {error ? <p style={styles.errorText}>{error}</p> : null}
       {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
-        <div className="life-journey">
+        <div className="life-journey dn-motion-loaded">
           <section className="life-journey-section" aria-label={`Moments ordered by ${sortSummary}`}>
             <div className="life-journey-items">{visibleEvents.map(renderEventCard)}</div>
           </section>

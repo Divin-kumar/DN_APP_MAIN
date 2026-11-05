@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { GripVertical, Plus, X } from 'lucide-react';
 import DropdownSelect from './DropdownSelect';
 import ModalDialog from './ModalDialog';
@@ -244,7 +245,7 @@ function GroupEditor({ node, schema, update, remove, depth = 0, stackRef, immedi
     </div>
   </div>;
 }
-function AppliedCondition({ filter, chip, node }) {
+function AppliedCondition({ filter, chip, node, reducedMotion }) {
   const field = filter.schema.find((item) => item.path === node.field);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(node);
@@ -274,7 +275,12 @@ function AppliedCondition({ filter, chip, node }) {
     },
   };
   const label = <span className="dn-condition-chip-label" title={chip.label}>{chip.label}</span>;
-  return <div className="dn-condition-chip" data-condition-id={node.id}>
+  return <motion.div className="dn-condition-chip" data-condition-id={node.id}
+    layout={reducedMotion ? false : 'position'}
+    initial={reducedMotion ? false : { opacity: 0, scale: .95 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: .96 }}
+    transition={reducedMotion ? { duration: 0 } : { layout: { type: 'spring', stiffness: 510, damping: 41 }, opacity: { duration: .13 }, scale: { duration: .16 } }}>
     <ConditionDragHandle id={node.id} setGroup={filter.setGroup} axis="horizontal" />
     {singleChoice ? <DropdownSelect className="dn-condition-chip-picker" aria-label={`Change ${field.label} filter`}
       value={node.value} triggerLabel={label} allowCustom={allowCustom} searchOnDemand {...panHandlers}
@@ -305,9 +311,10 @@ function AppliedCondition({ filter, chip, node }) {
           <button type="submit" className="primaryButton" disabled={!isActiveCondition(draft)}>Apply filter</button></div>
       </form>
     </ModalDialog> : null}
-  </div>;
+  </motion.div>;
 }
 export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
+  const reducedMotion = useReducedMotion();
   const railRef = useRef(null);
   const chips = conditionChipEntries(filter.state.group, filter.schema);
   const nodes = useMemo(() => {
@@ -324,8 +331,10 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
   }, [expanded, chips.length]);
   return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters">
     <div ref={railRef} className="dn-condition-chip-rail" tabIndex={chips.length > 1 ? 0 : undefined}>
-      {visible.map((chip) => <AppliedCondition key={`${filter.editorKey}:${chip.id}`}
-        filter={filter} chip={chip} node={nodes.get(chip.id)} />)}
+      <AnimatePresence initial={false}>
+        {visible.map((chip) => <AppliedCondition key={`${filter.editorKey}:${chip.id}`}
+          filter={filter} chip={chip} node={nodes.get(chip.id)} reducedMotion={reducedMotion} />)}
+      </AnimatePresence>
     </div>
     {overflow > 0 ? <button type="button" className="dn-condition-more" aria-label={`Show ${overflow} more active filters`}
       onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"

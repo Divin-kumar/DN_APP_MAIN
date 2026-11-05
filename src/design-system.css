@@ -3501,3 +3501,10 @@ html[data-theme] .dn-settings-home .dn-settings-list-defaults-link {
 html[data-theme] .dn-settings-home .dn-settings-list-defaults-link:is(:hover,:focus-visible) {
   border-color:color-mix(in srgb,var(--color-primary) 42%,var(--color-border)) !important;
 }
+
+/* Content follows the skeleton through opacity only: no layout shifts. */
+html[data-theme] .dn-motion-loaded { animation:dn-motion-content-ready 180ms ease-out both; }
+@keyframes dn-motion-content-ready { from { opacity:.55; } to { opacity:1; } }
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-motion-loaded { animation:none; }
+}

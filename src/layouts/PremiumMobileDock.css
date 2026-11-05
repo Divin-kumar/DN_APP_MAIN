@@ -395,3 +395,28 @@ html[data-theme] .dn-premium-dock .dn-dock-compact-label { display:none; }
   html[data-theme] .dn-premium-dock .dn-dock-full-label { display:none; }
   html[data-theme] .dn-premium-dock .dn-dock-compact-label { display:inline; }
 }
+
+/* Animated active dock position and stable plus-to-close glyph. */
+html[data-theme] .dn-premium-dock .dn-dock-destination.mobile-tab-active .dn-dock-icon {
+  background:transparent !important; box-shadow:none !important;
+}
+html[data-theme] .dn-premium-dock .dn-dock-icon > .dn-dock-motion-indicator {
+  position:absolute; inset:0; z-index:0; border-radius:12px; pointer-events:none;
+  background:color-mix(in srgb,var(--color-primary) 13%,var(--color-card));
+  box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--color-primary) 12%,transparent);
+}
+html[data-theme] .dn-premium-dock .dn-dock-icon > svg { position:relative; z-index:1; }
+html[data-theme] .mobile-dock-create-trigger .dn-create-glyph,
+html[data-theme] .dn-quick-create-trigger .dn-create-glyph {
+  transition:transform 220ms cubic-bezier(.2,.82,.22,1) !important;
+  transform-origin:center;
+}
+html[data-theme] .dn-premium-dock .dn-dock-center.is-open .mobile-dock-create-trigger .dn-create-glyph,
+html[data-theme] .mobile-dock-create-trigger[aria-expanded="true"] .dn-create-glyph,
+html[data-theme] .dn-quick-create-trigger[aria-expanded="true"] .dn-create-glyph {
+  transform:rotate(45deg) !important;
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .mobile-dock-create-trigger .dn-create-glyph,
+  html[data-theme] .dn-quick-create-trigger .dn-create-glyph { transition:none !important; }
+}

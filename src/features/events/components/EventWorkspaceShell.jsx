@@ -563,7 +563,7 @@ export function EventWorkspaceContent() {
       {activityBusy ? <p role="status">Saving activity…</p> : null}
       {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
-      <section className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel`} aria-labelledby="dn-moment-panel-title">
+      <section className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel dn-motion-loaded`} aria-labelledby="dn-moment-panel-title">
         <h2 id="dn-moment-panel-title" className="sr-only">{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
