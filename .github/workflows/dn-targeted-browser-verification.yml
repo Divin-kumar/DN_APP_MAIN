@@ -7,6 +7,69 @@ on:
 permissions:
   contents: read
 jobs:
+  repair-233-regression:
+    # Dedicated follow-up to full gate 42042647692: run changed failing spec
+    # families, not the 801-case pre-release suite. Never deploy or open PRs.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-233-repair]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install supported Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Recheck all revised DN 2.3.3 failing browser spec families
+        run: >-
+          npx playwright test
+          e2e/activity-cover-navigation-summary.spec.js
+          e2e/activity-detail-layout.spec.js
+          e2e/activity-detail-premium-220.spec.js
+          e2e/activity-moment.spec.js
+          e2e/activity-refinement.spec.js
+          e2e/activity-time.spec.js
+          e2e/all-date-times.spec.js
+          e2e/applied-filter-edit.spec.js
+          e2e/entry-time-default.spec.js
+          e2e/independent-tasks-phase4.spec.js
+          e2e/iphone-about-premium.spec.js
+          e2e/iphone-activity-card-readability-phase1.spec.js
+          e2e/iphone-activity-entry-modes.spec.js
+          e2e/iphone-diary-journal-actions-211.spec.js
+          e2e/iphone-forms-phase1.spec.js
+          e2e/iphone-moment-activity-chooser-phase1.spec.js
+          e2e/iphone-moment-activity-photo-card.spec.js
+          e2e/iphone-moment-card-hover-stability.spec.js
+          e2e/iphone-moment-title-space-230.spec.js
+          e2e/iphone-quick-activity-focus-phase1.spec.js
+          e2e/iphone-toast-feedback.spec.js
+          e2e/moment-list-phase2.spec.js
+          e2e/moment-type-first.spec.js
+          e2e/release-phase9.spec.js
+          e2e/responsive.spec.js
+          e2e/scope-recovery.spec.js
+          e2e/story-ownership-density.spec.js
+          e2e/task-editor-actions-230.spec.js
+          e2e/user-friendly-filters.spec.js
+          --workers=4
+      - name: Upload exact failure artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-233-repair-regression-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   targeted-browser:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&
