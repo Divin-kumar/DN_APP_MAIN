@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261105-417 | DN progressive motion acceptance: 52/52 focused browser checks pass
+- **Executed evidence:** Nondeploying OldVersion focused Chromium run **42014898453** passed **52/52** scenarios at the application source SHA `6eee51286a4e2258c7bff4b08ed0ea562349e19e`, including seven additional Moment shared-element, original Gallery, universal plus, tab, applied-chip and reduced-motion checks alongside 45 previous UI/motion regressions. Documentation governance run **42014898560** passed Node tests, lint, production build, npm security audit and approved documentation checks on the same source SHA.
+- **Scope:** Only documented test outcomes are changed in this audit entry; app source and the versioned Guest tour remain unchanged after passing. Photo originals, backup, user records and filtering semantics are unaffected. A previous smoke failure at SHA 6388a7c was traced to a new hook outside isolated workspace test context; the hook was removed and a flat-list contract assertion updated to allow the new content-ready class before final green checks.
+- **Release boundary:** Physical iPhone/Safari/VoiceOver, real two-device signed-in account sync, and the full exact-SHA prerelease/PDF gate are not proven by these targeted synthetic Chromium tests. No Firebase or Vercel deployment, PR, main modification or release version bump. OldVersion only.
+
 ## CHG-20261105-416 | Six optional visual transitions with existing DN interactions
 - **User authorization:** The owner approved implementing the previously proposed Moment navigation, Gallery zoom, universal + morph, applied filter chip, selected tab and skeleton-to-content motion improvements after CHG-415.
 - **Source change:** Native CSS View Transitions connect Moment list card to illustrated Story hero and original-image thumbnail to its existing Gallery preview, guarded by browser capability and Reduce Motion. Existing Framer Motion provides sliding active navigation markers and applied-filter chip reflow; CSS provides one stable + glyph rotation and a small content-ready opacity fade.
