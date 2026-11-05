@@ -32,7 +32,9 @@ test('Default New/Edit Moment shows Name then Type without opening More options'
   expect(added?.recurrence).toBe('none');
 
   await page.goto('/events');
-  await page.getByRole('button', { name: 'Actions for Baseline Moment' }).click();
+  const card = page.locator('.dn-v2-moment-card').filter({ hasText: 'Baseline Moment' });
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Baseline Moment' });
   await expect(edit.getByLabel('Moment name')).toBeVisible();
@@ -78,7 +80,9 @@ test('Configured custom Moment Type stays accessible without opening More option
   expect(created?.customType).toBe('Family milestone');
 
   await page.goto('/events');
-  await page.getByRole('button', { name: 'Actions for Visible Type example' }).click();
+  const card = page.locator('.dn-v2-moment-card').filter({ hasText: 'Visible Type example' });
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const editDialog = page.getByRole('dialog', { name: 'Visible Type example' });
   await expect(editDialog.getByRole('combobox', { name: 'Moment type' })).toBeVisible();
