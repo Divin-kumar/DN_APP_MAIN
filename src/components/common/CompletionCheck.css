@@ -1,0 +1,9 @@
+/* Deliberate 180ms completion acknowledgement, never a looping celebration. */
+.dn-completion-check { display:block; flex:0 0 auto; }
+.dn-completion-check.is-just-completed { animation:dn-completion-tick-in 180ms cubic-bezier(.2,.85,.22,1) both; }
+@keyframes dn-completion-tick-in {
+  0% { opacity:.4; transform:scale(.76); }
+  65% { opacity:1; transform:scale(1.09); }
+  100% { opacity:1; transform:scale(1); }
+}
+@media (prefers-reduced-motion:reduce) { .dn-completion-check.is-just-completed { animation:none; } }

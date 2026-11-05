@@ -1,6 +1,7 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
+import DashboardReveal from './DashboardReveal';
 import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal, Flag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
@@ -284,7 +285,7 @@ export function DashboardOverviewContent() {
                 onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
             </div>
           </header>
-          {sections.tasks ? taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
+          <DashboardReveal open={sections.tasks}>{taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
             : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
               : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows" role="region" aria-label="Dashboard Tasks, scroll for more" tabIndex={dashboardTasks.length > 4 ? 0 : undefined}>
                 {dashboardTasks.map((task) => {
@@ -309,7 +310,8 @@ export function DashboardOverviewContent() {
                     </span> : <span aria-hidden="true" />}
                   </Link>;
                 })}
-              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p> : null}
+              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p>}
+          </DashboardReveal>
         </section> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header className="dashboard-section-heading">
@@ -324,7 +326,7 @@ export function DashboardOverviewContent() {
               onClick={() => changeSections({ moments: !sections.moments })}>{sections.moments ? 'Hide' : 'Show'}</button>
             </div>
           </header>
-          {sections.moments ? <>
+          <DashboardReveal open={sections.moments}><>
           {error === 'Unable to load events.' ? (
             <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
           ) : !ready || loading ? (
@@ -354,7 +356,7 @@ export function DashboardOverviewContent() {
           ) : (
             <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p>
           )}
-          </> : null}
+          </></DashboardReveal>
         </section>
         <section className="dashboard-upcoming-card" aria-label="Activities">
           <header className="dashboard-section-heading">
@@ -369,7 +371,7 @@ export function DashboardOverviewContent() {
               onClick={() => changeSections({ activities: !sections.activities })}>{sections.activities ? 'Hide' : 'Show'}</button>
             </div>
           </header>
-          {sections.activities ? <>
+          <DashboardReveal open={sections.activities}><>
           {error === 'Unable to load events.' ? (
             <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div>
           ) : !ready || loading ? (
@@ -410,7 +412,7 @@ export function DashboardOverviewContent() {
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
 
 
-          </> : null}
+          </></DashboardReveal>
           <p className="sr-only" role="status" aria-live="polite">{activityActions.announcement}</p>
         </section>
       </div>

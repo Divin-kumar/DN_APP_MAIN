@@ -14,7 +14,7 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, Check, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
+import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -22,6 +22,7 @@ import useExpenseStore from '../store/useExpenseStore';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import SwipeActionCard from '../components/common/SwipeActionCard';
+import CompletionCheck from '../components/common/CompletionCheck';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
 import { matchesListDefaults } from '../utils/listViewDefaults';
@@ -106,7 +107,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
         <span className="event-story-copy dn-v2-moment-copy">
           <span className="dn-v2-moment-heading">
             <span className="event-story-meta">{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'}</span>
-            <span className={'event-story-status status-' + status + (status === 'completed' ? ' is-completion-tick' : '')} aria-label={'Status: ' + statusLabel}>{status === 'completed' ? <><Check size={17} aria-hidden="true" /><span className="sr-only">Completed</span></> : statusLabel}</span>
+            <span className={'event-story-status status-' + status + (status === 'completed' ? ' is-completion-tick' : '')} aria-label={'Status: ' + statusLabel}><CompletionCheck active={status === 'completed'} size={17} />{status === 'completed' ? <span className="sr-only">Completed</span> : statusLabel}</span>
           </span>
           <strong>{event.name || 'A life moment'}</strong>
           <span className="event-story-date"><CalendarDays size={13} aria-hidden="true" />{date ? dateLabel(date) : 'Date to be decided'}{savedRecordTime(event) ? ` · ${savedRecordTime(event)}` : ''}</span>

@@ -1,6 +1,7 @@
 import { activityTime } from '../../utils/activityTime.js';
 import { Check, Circle, Pencil, RotateCcw, Sparkles, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
+import CompletionCheck from '../common/CompletionCheck';
 import ActivityCardCover from './ActivityCardCover';
 import { activityStatus, activityStatusLabel } from '../../utils/activityDetail';
 import { parseMomentDate } from '../../utils/momentDates';
@@ -57,7 +58,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
               onOpen={onOpen ? () => onOpen(activity) : undefined} disabled={disabled} /> : null}
             <div className="event-activity-copy">
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
-              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}>{completed ? <><Check size={16} aria-hidden="true" /><span className="sr-only">Completed</span></> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
+              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}><CompletionCheck active={completed} size={16} />{completed ? <span className="sr-only">Completed</span> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
             </div>
             <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
           </div></div>

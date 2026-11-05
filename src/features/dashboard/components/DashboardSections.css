@@ -336,3 +336,11 @@ html[data-theme] .dn-dashboard-tasks-rows:focus-visible {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-dashboard-tasks-rows { scroll-behavior:auto; }
 }
+
+/* Expanded panels only: the header and surrounding cards never translate. */
+html[data-theme] .dashboard-compact .dn-dashboard-reveal {
+  min-width:0; width:100%; overflow:hidden; transform-origin:top center;
+}
+html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
+  display:grid; min-width:0; gap:7px;
+}

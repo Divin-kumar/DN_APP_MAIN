@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Ellipsis, Trash2 } from 'lucide-react';
 import { resolveSwipeGesture } from '../../utils/swipeGestures';
 import { getVisibleViewport } from '../../utils/overlayPosition';
@@ -13,6 +14,7 @@ export default function SwipeActionCard({
   onOpen, menuButton = false, menuLabel = 'Activity options', swipeEnabled = true, disabled = false, taskId,
 }) {
   const [open, setOpen] = useState(false);
+  const reducedMotion = useReducedMotion();
   const [position, setPosition] = useState(null);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
@@ -233,8 +235,13 @@ export default function SwipeActionCard({
           </button> : null}
         </div>
       </Root>
-      {open && position && createPortal(
-        <div id={menuId} ref={popupRef} role="menu" data-swipe-ignore
+      {createPortal(<AnimatePresence>
+        {open && position ? <motion.div id={menuId} ref={popupRef} role="menu" data-swipe-ignore
+          data-dn-motion="swipe-spring"
+          initial={reducedMotion ? false : { opacity: 0, y: 7, scale: 0.985 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.992 }}
+          transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 410, damping: 33, mass: 0.8 }}
           className="dn-swipe-popup" aria-label={`Actions for ${label}`}
           style={{
             position: 'fixed', top: position.top, left: position.left,
@@ -250,7 +257,8 @@ export default function SwipeActionCard({
               <span>{actionLabel}</span>
             </button>
           ))}
-        </div>, document.body)}
+        </motion.div> : null}
+        </AnimatePresence>, document.body)}
     </>
   );
 }
