@@ -319,3 +319,20 @@ html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag.is-high { color:var
 @media(max-width:360px) {
   html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row { grid-template-columns:42px minmax(0,1fr) 24px; }
 }
+
+/* Four Tasks visible; remaining items scroll inside this region, without chrome. */
+html[data-theme] .dn-dashboard-tasks-rows {
+  max-height:272px; overflow-y:auto; overflow-x:hidden;
+  overscroll-behavior-y:contain; -webkit-overflow-scrolling:touch;
+  scrollbar-width:none; scroll-behavior:smooth;
+}
+html[data-theme] .dn-dashboard-tasks-rows::-webkit-scrollbar { display:none; }
+html[data-theme] .dn-dashboard-tasks-rows .dn-dashboard-task-row {
+  height:68px; min-height:68px; box-sizing:border-box;
+}
+html[data-theme] .dn-dashboard-tasks-rows:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:10px;
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-dashboard-tasks-rows { scroll-behavior:auto; }
+}

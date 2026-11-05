@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
+import FormDisclosure from '../common/FormDisclosure';
+import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
@@ -19,7 +21,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [title, setTitle] = useState(task?.title || '');
   const [notes, setNotes] = useState(task?.notes || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
-  const [dueDate, setDueDate] = useState(task?.dueDate || '');
+  const [dueDate, setDueDate] = useState(task?.id ? (task.dueDate || '') : (task?.dueDate || formatMomentDate(new Date())));
   const [dueTime, setDueTime] = useState(task?.dueTime || '');
   const [momentId, setMomentId] = useState(task?.momentId || '');
   const [activityId, setActivityId] = useState(task?.activityId || '');
@@ -58,6 +60,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={!dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
+    <FormDisclosure label="More options" hint={momentId ? "Linked Moment · priority and notes" : "Priority, links and notes"}>
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
         <DropdownSelect id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
@@ -85,6 +88,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
         placeholder="Helpful details" />
     </label>
+    </FormDisclosure>
     {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
       {task.status === 'cancelled'
         ? <button type="button" data-task-action="restore" onClick={() => setPendingAction('restore')}>Restore Task…</button>

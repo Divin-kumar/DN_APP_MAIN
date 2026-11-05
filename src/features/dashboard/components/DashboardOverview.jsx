@@ -29,13 +29,13 @@ import useDashboardClock from '../useDashboardClock';
 const EMPTY_GREETING_TEMPLATES = Object.freeze({});
 const EMPTY_MOMENT_TYPES = Object.freeze([]);
 const EMPTY_EVENTS = Object.freeze([]);
-const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true, tasks: true });
+const DASHBOARD_SECTIONS = Object.freeze({ moments: true, activities: true, tasks: false });
 const readDashboardSections = (key) => {
   try {
     const saved = JSON.parse(globalThis.localStorage?.getItem(key) || 'null');
     return { moments: typeof saved?.moments === 'boolean' ? saved.moments : true,
       activities: typeof saved?.activities === 'boolean' ? saved.activities : true,
-      tasks: typeof saved?.tasks === 'boolean' ? saved.tasks : true };
+      tasks: typeof saved?.tasks === 'boolean' ? saved.tasks : false };
   } catch { return { ...DASHBOARD_SECTIONS }; }
 };
 
@@ -253,7 +253,7 @@ export function DashboardOverviewContent() {
   const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
   const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
   const dashboardTasks = useMemo(() => (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
-    ? selectUpcomingIndependentTasks(taskStore.tasks, today).slice(0, 6) : [],
+    ? selectUpcomingIndependentTasks(taskStore.tasks, today) : [],
   [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
   const getMomentGreeting = (event) => {
     const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;
@@ -286,7 +286,7 @@ export function DashboardOverviewContent() {
           </header>
           {sections.tasks ? taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
             : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
-              : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows">
+              : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows" role="region" aria-label="Dashboard Tasks, scroll for more" tabIndex={dashboardTasks.length > 4 ? 0 : undefined}>
                 {dashboardTasks.map((task) => {
                   const overdue = task.dueDate < formatMomentDate(today);
                   const date = new Date(task.dueDate + 'T12:00:00');

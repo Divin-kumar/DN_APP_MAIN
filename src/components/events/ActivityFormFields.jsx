@@ -32,10 +32,12 @@ export default function ActivityFormFields({
         placeholder={titleLabel} autoFocus={autoFocus && typeof window !== 'undefined'
           && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
     </label>
-    {isWriting ? <RichTextEditor label={notesLabel || 'Description (optional)'}
-      value={value.description || ''} disabled={disabled}
-      onChange={(description) => onChange({ description })}
-      placeholder="Write what you want to remember" rows={4} /> : null}
+    {isWriting ? <FormDisclosure label="Description" hint={value.description ? 'Added' : 'Optional'}>
+      <RichTextEditor label={notesLabel || 'Description (optional)'}
+        value={value.description || ''} disabled={disabled}
+        onChange={(description) => onChange({ description })}
+        placeholder="Write what you want to remember" rows={4} />
+    </FormDisclosure> : null}
     <FormDisclosure label="More options" hint={metadata}>
       <div className="activity-date-time-row">
         {showDate ? <DateField label="Date" name={`${namePrefix}-date`} value={value.date || ''}
