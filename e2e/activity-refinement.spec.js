@@ -9,7 +9,11 @@ test('compact Activities list shows status and actions but no priority or Moment
   await expect(card).toBeVisible();
   await expect(card.locator('.event-activity-status')).toHaveText('In progress');
   await expect(card.locator('.event-activity-priority')).toHaveCount(0);
-  await expect(card.getByRole('button', { name: 'Activity options' })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('menu', { name: /Actions for Book a lakeside stay/ })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(card.locator('.event-activity-context a')).toHaveCount(0);
   const momentName = card.locator('.event-activity-moment-name');
   await expect(momentName).toContainText('Weekend in Ooty');
