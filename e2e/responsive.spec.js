@@ -71,11 +71,14 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     await page.goto('/activities');
     const card = page.getByRole('group', { name: `Open ${moments[0].activities[0].title}`, exact: true });
     await expect(card).toBeVisible();
-    const options = card.getByRole('button', { name: 'Activity options', exact: true });
-    await expect(options).toBeVisible();
-    const hit = await options.boundingBox();
+    await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+    const hit = await card.boundingBox();
     expect(hit.width).toBeGreaterThanOrEqual(43.9);
     expect(hit.height).toBeGreaterThanOrEqual(43.9);
+    await card.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('menu', { name: /^Actions for / })).toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     await expectTextContrast(page.locator('.event-activity-title-row > strong, .event-activity-status, .event-activity-context > span'));
     expect(errors).toEqual([]);
