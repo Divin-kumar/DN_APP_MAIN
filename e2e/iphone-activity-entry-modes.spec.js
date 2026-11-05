@@ -54,7 +54,7 @@ test('Diary Journal and Tasks create independent Activities; prior Journal links
     const dialog = page.getByRole('dialog', { name: 'Add activity' });
     await expect(dialog).toBeVisible();
     await dialog.getByRole('textbox', { name: 'Activity title' }).fill(title);
-    await dialog.locator('.dn-form-disclosure > summary').click();
+    await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
     await dialog.locator('input[type="date"]').fill('2026-10-31');
     await dialog.getByRole('button', { name: 'Add activity' }).click();
     await expect(dialog).toHaveCount(0);
