@@ -26,7 +26,8 @@ test.describe('premium Moment cards on fine-pointer screens', () => {
       expect(layout.innerRight).toBeLessThanOrEqual(layout.outerRight + 1);
       expect(layout.pageWidth).toBeLessThanOrEqual(layout.viewportWidth + 1);
       const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-      await card.locator('.dn-record-menu-trigger').click();
+      await card.focus();
+      await page.keyboard.press('ArrowRight');
       await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
       await page.keyboard.press('Escape');
       await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
@@ -51,7 +52,7 @@ test.describe('premium Moment cards on touch iPhones', () => {
       const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
       // The menu shares the swipe action handler, but must not adopt a
       // touch-sticky hover elevation from older card styles.
-      await card.locator('.dn-record-menu-trigger').tap();
+      await swipe(page, card, { distance: 140 });
       await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
       await page.locator('.dn-header .dn-shell-page-title').tap();
       await expect(page.getByRole('menu', { name: /Actions for/ })).toHaveCount(0);
