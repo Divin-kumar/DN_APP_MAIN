@@ -47,6 +47,17 @@ for (const { width, theme } of [
       const paper = story.locator(variant.paper).first();
       await expect(paper).toBeVisible();
       expect(await paper.evaluate((node) => getComputedStyle(node).colorScheme)).toBe(theme);
+      const kicker = story.locator('.dn-v2-story-kicker');
+      const summary = story.locator('.dn-v2-story-stats span').first();
+      const introAction = story.getByRole('region', { name: 'Moment introduction' }).getByRole('button', { name: /introduction/ });
+      for (const element of [kicker, summary, introAction]) {
+        await expect(element).toBeVisible();
+        expect(await element.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
+          .toBeGreaterThanOrEqual(12);
+      }
+      expect(await summary.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
+      expect(await introAction.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
+      expect(await summary.evaluate((node) => getComputedStyle(node).borderTopWidth)).toBe('0px');
       const caption = story.locator('.dn-v2-story-header p');
       await expect(caption).toBeVisible();
       expect(await caption.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
@@ -72,6 +83,17 @@ for (const { width, theme } of [
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     }
+    // The same iPhone text hierarchy should apply to shared form guidance.
+    await page.goto('/events');
+    await page.getByRole('button', { name: 'Open quick create menu' }).click();
+    await page.getByRole('button', { name: 'Life moment', exact: true }).click();
+    const modal = page.getByRole('dialog', { name: 'Create a life moment' });
+    const guidance = modal.locator('.event-form-intro');
+    await expect(guidance).toBeVisible();
+    expect(await guidance.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
+      .toBeGreaterThanOrEqual(12.95);
+    await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await expect(modal).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
     expect(errors).toEqual([]);
   });

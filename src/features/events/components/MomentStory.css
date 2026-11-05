@@ -413,3 +413,28 @@ html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-story-writing-par
 html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-story-writing-part {
   gap:8px;
 }
+
+/* DN 2.3.4 iPhone polish: calm, readable metadata across the three existing
+   Story editions. Flatten only the phone summary counters, not the book pages. */
+@media (max-width:680px) {
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-kicker {
+    font-size:12px;line-height:1.45;
+  }
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-stats span {
+    padding:4px 10px 4px 0;border:0;border-radius:0;
+    background:transparent;font-size:13px;line-height:1.45;
+  }
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-stats span + span {
+    padding-left:10px;border-left:1px solid var(--color-border);
+  }
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-intro-head button {
+    font-size:13px;line-height:1.4;
+  }
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-reflections-help,
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-reflections .free-text-content,
+  html[data-theme] .dn-v2-story[data-presentation] .dn-task-group-header small,
+  html[data-theme] .dn-v2-story[data-presentation] .dn-task-files-note,
+  html[data-theme] .dn-v2-story[data-presentation] .dn-task-group-empty {
+    font-size:13px;line-height:1.55;
+  }
+}
