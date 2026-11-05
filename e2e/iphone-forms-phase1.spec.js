@@ -165,8 +165,8 @@ test('Journal Activity Detail edit prioritizes writing without changing its stor
   await activityDetailAction(page, 'Edit');
   const editor = page.getByRole('dialog', { name: 'Edit activity' });
   await expect(editor.getByRole('textbox', { name: 'Activity title' })).toBeVisible();
-  await expect(editor.getByText('Description (optional)')).toBeVisible();
-  await expect(editor.locator('.dn-form-disclosure > summary')).toContainText('More options');
+  await expect(editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'Description' })).toBeVisible();
+  await expect(editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' })).toBeVisible();
   await editor.getByRole('button', { name: 'Cancel' }).click();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
   expect(errors).toEqual([]);
