@@ -19,11 +19,12 @@ test('Phase 2 Moment discovery is responsive, readable and action-safe', async (
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   }
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-  await card.getByRole('button', { name: /Actions for Weekend in Ooty/ }).click();
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('menuitem', { name: 'Archive', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   await card.focus();
-  await page.keyboard.press('Enter');
+  await page.keyboard.press('ArrowLeft');
   await expect(page.getByRole('menuitem', { name: 'PDF Studio', exact: true })).toBeVisible();
   await page.keyboard.press('Escape');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
@@ -40,36 +41,25 @@ test('Phase 2 optional local photo cover uses an actual saved original', async (
   expect(errors).toEqual([]);
 });
 
-// DN 2.1 phone QA: Moment card's action button must not shrink below a
-// 44px tappable square or overlap the open-card title and metadata.
+// DN 2.3.3: swipe-only Moment cards have no ellipsis button. Their whole
+// focusable surface remains accessible, with a keyboard alternative.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const theme of ['dark', 'light']) {
   test('Moment card action target and adjacent text at ' + width + 'px ' + theme, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto('/events');
     const card = page.getByRole('group', { name: /Weekend in Ooty/ });
-    const action = card.getByRole('button', { name: /Actions for Weekend in Ooty/ });
-    const copy = card.locator('.dn-v2-moment-copy');
-    await expect(action).toBeVisible();
+    await expect(card.locator('.dn-record-menu-trigger')).toHaveCount(0);
     await expect(card.getByRole('button', { name: /Open Weekend in Ooty/ })).toBeVisible();
-    const bounds = await action.boundingBox();
-    const content = await copy.boundingBox();
-    const surface = await card.boundingBox();
-    const heading = await card.locator('.dn-v2-moment-heading').first().boundingBox();
-    const headingPadding = await card.locator('.dn-v2-moment-heading').first().evaluate(node => parseFloat(getComputedStyle(node).paddingRight));
-    // Browser geometry can differ by a fraction of a CSS pixel (CI 43.99997px).
-    // CSS declares a 44px square, so allow only subpixel rasterization.
-    expect(bounds.width).toBeGreaterThanOrEqual(43.95);
-    expect(bounds.height).toBeGreaterThanOrEqual(43.95);
-    // The 44px overflow action overlays only the heading's reserved right padding.
-    expect(headingPadding).toBeGreaterThanOrEqual(43.9);
-    expect(bounds.x).toBeGreaterThanOrEqual(heading.x + heading.width - headingPadding - 3);
-    expect(bounds.x + bounds.width).toBeLessThanOrEqual(surface.x + surface.width + 1);
-    expect(bounds.y).toBeGreaterThanOrEqual(surface.y);
-    expect(bounds.y + bounds.height).toBeLessThanOrEqual(surface.y + surface.height + 1);
+    const bounds = await card.boundingBox();
+    expect(bounds.width).toBeGreaterThan(160);
+    expect(bounds.height).toBeGreaterThanOrEqual(44);
+    expect(bounds.x).toBeGreaterThanOrEqual(-1);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(width + 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
     const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-    await action.click();
+    await card.focus();
+    await page.keyboard.press('ArrowRight');
     await expect(page.getByRole('menuitem', { name: 'Archive', exact: true })).toBeVisible();
     await expect(page.getByRole('menuitem', { name: 'PDF Studio', exact: true })).toBeVisible();
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(original);
@@ -197,7 +187,8 @@ test('Moment card cover selection uses an existing original and leaves records u
   await page.goto('/events');
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   const card = page.getByRole('group', { name: /Weekend in Ooty/ });
-  await card.getByRole('button', { name: /Actions for Weekend in Ooty/ }).click();
+  await card.focus();
+  await page.keyboard.press('ArrowRight');
   await page.getByRole('menuitem', { name: 'Cover photo', exact: true }).click();
   const picker = page.getByRole('dialog', { name: 'Choose Moment cover' });
   const option = picker.getByRole('button', { name: 'Use as cover: Activity photo 0.png' });
