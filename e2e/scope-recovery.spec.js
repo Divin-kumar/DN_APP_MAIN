@@ -190,7 +190,7 @@ test('legacy completed status exposes Reopen consistently in the list and detail
   await seedGuest(page, { moments }); await page.goto('/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card.locator('.event-activity-status')).toHaveText('Completed');
-  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
   await card.focus(); await page.keyboard.press('Enter');
   await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
   await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
