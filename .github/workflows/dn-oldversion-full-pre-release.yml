@@ -13,7 +13,8 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       (github.event_name == 'workflow_dispatch' ||
        contains(github.event.head_commit.message, '[verify-full]'))
-    runs-on: ubuntu-latest
+    # Locked Playwright 1.56 Chromium installs on Ubuntu 24.04, not 26.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4

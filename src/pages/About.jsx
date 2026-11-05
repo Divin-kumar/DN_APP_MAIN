@@ -53,6 +53,24 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.3',
+    title: 'Everyday refinements and gentle motion',
+    summary: 'Quicker Task entry, calmer cards and thoughtful transitions across Moments, Gallery and filters.',
+    highlights: [
+      'Create Tasks from + without leaving your page, with a suggested due date.',
+      'Cleaner Dashboard, Moment and Activity cards with swipe actions.',
+      'Gentle Gallery, navigation and filter animations that respect Reduce Motion.',
+    ],
+    changes: [
+      'Tasks — New Tasks suggest today as a due date. Additional priority, notes and links are under More options; universal + saves without leaving the current page and offers View.',
+      'Dashboard — Tasks are hidden initially unless you previously chose Show. When shown, four Task rows are visible and the rest scroll within their own area.',
+      'Moments & Activities — Completed cards use a light green tick and swipe actions instead of extra three-dot buttons. Activity descriptions start collapsed without changing saved writing.',
+      'Attachments — Use universal + to add original files from Activity Detail and Moment workspaces, preserving original bytes and Activity links.',
+      'Motion — Moment cards flow into Story headers, Gallery photos expand into previews, + rotates to close, navigation indicators glide, filter chips settle, and successful loads and saves enter gently.',
+      'Accessibility & data — Reduce Motion is respected. Existing records, original attachments, account sync, backup, finance, Story/PDF outputs and keyboard controls are preserved.',
+    ],
+  },
+  {
     version: '2.3.2',
     title: 'Clearer Task navigation and tactile filters',
     summary: 'A focused iPhone fix for Task deep links and visibly draggable filter cards.',
