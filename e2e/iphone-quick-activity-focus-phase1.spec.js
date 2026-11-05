@@ -17,9 +17,9 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'dark'],[430,932
     expect(await dialog.evaluate(node=>Boolean(node.querySelector('input:focus,textarea:focus,[contenteditable=true]:focus')))).toBe(false);
     await expect(dialog.getByRole('combobox',{name:'Life moment',exact:true})).toBeVisible();
     await expect(dialog.locator('input[type="date"]')).toBeHidden();
-    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
+    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary:has-text("More options")').click();
     await expect(dialog.locator('input[type="date"]')).toBeVisible();
-    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary').click();
+    await dialog.locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary:has-text("More options")').click();
     await title.click();
     await expect(title).toBeFocused();
     await title.fill('Unsaved phone draft');
