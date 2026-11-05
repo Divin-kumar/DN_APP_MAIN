@@ -45,7 +45,7 @@ import MomentStory from './MomentStory';
 import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { momentVisualName } from '../../../utils/visualTransitions';
 import './MomentWorkspaceNav.css';
 
@@ -70,7 +70,9 @@ export function EventWorkspaceContent() {
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const reducedMotion = useReducedMotion();
+  // A synchronous preference read also keeps the isolated workspace contract
+  // renderer independent from Framer Motion's React hook dispatcher.
+  const reducedMotion = typeof window !== 'undefined' && Boolean(window.matchMedia?.('(prefers-reduced-motion: reduce)').matches);
   const workspaceNavRef = useRef(null);
   const attachmentInputRef = useRef(null);
   const attachmentContextRef = useRef(null);
