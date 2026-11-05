@@ -53,16 +53,18 @@ for (const viewport of [{ width:390, height:844 }, { width:820, height:900 }, { 
     await page.goto('/activities');
     const card = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
     await expect(card).toBeVisible();
-    // At two columns the 44px menu, three-line title and two-line Moment
-    // context need more space than the previous menu-free 150px limit.
+    // A swipe-only card must fit the title, status and Moment context
+    // without a redundant permanent menu button.
     const size = await card.boundingBox();
     expect(size.height).toBeLessThan(180);
-    const trigger = await card.getByRole('button', { name:'Activity options', exact:true }).boundingBox();
-    expect(trigger.width).toBeGreaterThanOrEqual(43.9);
-    expect(trigger.height).toBeGreaterThanOrEqual(43.9);
-    expect(trigger.x + trigger.width).toBeLessThanOrEqual(size.x + size.width + 1);
+    expect(size.width).toBeGreaterThanOrEqual(43.9);
+    expect(size.height).toBeGreaterThanOrEqual(43.9);
     await expect(card.locator('.event-activity-status')).toHaveCSS('font-size', '11px');
-    await expect(card.getByRole('button', { name:'Activity options', exact:true })).toBeVisible();
+    await expect(card.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+    await card.focus();
+    await page.keyboard.press('ArrowRight');
+    await expect(page.getByRole('menu', { name: /Actions for Book a lakeside stay/ })).toBeVisible();
+    await page.keyboard.press('Escape');
     await expect(card.locator('.event-activity-priority, .event-activity-context a')).toHaveCount(0);
     const columns = await page.locator('.event-activity-list').evaluate((node) => getComputedStyle(node).gridTemplateColumns.split(' ').length);
     expect(columns).toBe(viewport.width < 768 ? 1 : viewport.width < 1440 ? 2 : 3);
@@ -123,7 +125,10 @@ test('Story, original preview and Activity menu remain within a reduced viewport
   await page.keyboard.press('Escape');
   await page.goto('/activities');
   const activityCard = page.getByRole('group', { name:'Open Book a lakeside stay', exact:true });
-  await expect(activityCard.getByRole('button', { name:'Activity options', exact:true })).toBeVisible();
+  await expect(activityCard.getByRole('button', { name:'Activity options', exact:true })).toHaveCount(0);
+  await activityCard.focus(); await page.keyboard.press('ArrowRight');
+  await assertViewport(page, page.getByRole('menu'));
+  await page.keyboard.press('Escape');
   await activityCard.locator('.event-activity-title-row > strong').click();
   await expect(page).toHaveURL(/moment-one\/activities\/shared$/);
   await page.locator('.activity-detail-more').getByRole('button', { name:'Activity options', exact:true }).click();
