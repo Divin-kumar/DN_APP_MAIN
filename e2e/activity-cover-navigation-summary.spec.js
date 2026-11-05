@@ -130,6 +130,11 @@ test('the opening filtered sequence survives completion, while single-result fil
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await expect(page.locator('.activity-cover.is-fallback')).toBeVisible();
   await activityDetailAction(page, 'Complete'); await expect(page.locator('.activity-status-pill')).toHaveText('Completed');
+  // The old menu has an exit animation; pagination intentionally ignores
+  // gestures while a role=menu overlay is still mounted. Confirm the popup
+  // has actually closed before testing the next deliberate swipe.
+  await expect(page.getByRole('menu')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Next activity', exact: true })).toBeEnabled();
   await drag(page, page.locator('.activity-cover.is-fallback'), -150);
   await expect(page).toHaveURL(/\/events\/moment-two\/activities\/shared$/);
 });
