@@ -29,6 +29,8 @@ jobs:
           e2e/iphone-story-polish-234.spec.js
           e2e/story-paper-contrast-220.spec.js
           e2e/iphone-task-story-status-230.spec.js
+          e2e/iphone-moment-header-metrics.spec.js
+          e2e/iphone-moment-nav-premium.spec.js
           --workers=2
       - name: Preserve synthetic visual evidence
         if: always()
