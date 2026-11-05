@@ -1,0 +1,49 @@
+name: DN 2.3.3 focused UI acceptance (opt-in, no deployment)
+on:
+  push:
+    branches: [OldVersion]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ui-acceptance:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      (github.event_name == 'workflow_dispatch' ||
+       contains(github.event.head_commit.message, '[verify-233-ui]'))
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium for focused acceptance only
+        run: npx playwright install --with-deps chromium
+      - name: Verify compact forms, universal attachment, Task navigation and floating drag
+        run: >-
+          npx playwright test
+          e2e/dn-233-ui-acceptance.spec.js
+          e2e/form-polish-230.spec.js
+          e2e/iphone-oldversion-activity-form-polish.spec.js
+          e2e/local-attachments-readonly.spec.js
+          e2e/task-refine-dashboard-230.spec.js
+          --workers=2
+      - name: Upload focused browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-233-ui-focused-browser
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+      - name: Summarize nondeployment check
+        if: success()
+        run: |
+          echo '## DN 2.3.3 UI acceptance passed' >> "$GITHUB_STEP_SUMMARY"
+          echo 'OldVersion focused Chromium only; no release or Firebase deployment.' >> "$GITHUB_STEP_SUMMARY"
