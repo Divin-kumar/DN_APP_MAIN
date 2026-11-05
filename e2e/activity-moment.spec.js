@@ -31,7 +31,10 @@ test('clean cards open detail by pointer/keyboard, and menus never navigate', as
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
   await expect(card).toBeVisible();
   await expect(page.locator('.event-activity-complete, .event-activity-complete-static')).toHaveCount(0);
-  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toBeVisible();
+  await expect(card.getByRole('button', { name: 'Activity options', exact: true })).toHaveCount(0);
+  await card.focus(); await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('menu', { name: /Actions for Book a lakeside stay/ })).toBeVisible();
+  await page.keyboard.press('Escape');
   await expect(card.locator('.event-activity-priority')).toHaveCount(0);
   await expect(card.locator('.event-activity-context a')).toHaveCount(0);
   await expect(card).toContainText('Weekend in Ooty');
@@ -103,7 +106,10 @@ test('Activity Detail and overview share the same accessible Activity actions', 
   await page.setViewportSize({ width:390, height:844 });
   await seedGuest(page); await page.goto('/activities');
   const first = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });
-  await expect(first.getByRole('button', { name: 'Activity options' })).toBeVisible();
+  await expect(first.getByRole('button', { name: 'Activity options' })).toHaveCount(0);
+  await first.focus(); await page.keyboard.press('ArrowRight');
+  await expect(page.getByRole('menu', { name: /Actions for Book a lakeside stay/ })).toBeVisible();
+  await page.keyboard.press('Escape');
   await first.click();
   await expect(page).toHaveURL(/\/events\/moment-one\/activities\/shared$/);
   await page.locator('.activity-detail-more').getByRole('button', { name: 'Activity options', exact: true }).click();
