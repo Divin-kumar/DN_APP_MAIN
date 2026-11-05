@@ -13,7 +13,7 @@ Dashboard Tasks start hidden only when a user has not chosen a saved visibility 
 
 Activity Detail's redundant Add attachment button is replaced by a small **Add using +** hint. Universal + exposes Attachment on both Moment workspaces and Activity Detail, where a direct file picker retains the Activity link, original-byte storage and existing scoped mutation protections. The original hidden file inputs, file size guard, deletion confirmation, linking actions, and Gallery remain intact.
 
-All edits are on `OldVersion`; no main/PR, production/preview deployment, schema migration, Task/Activity/Moment status changes, export, PDF or original-photo transformation is authorized. Guest demonstration content and data schema remain unchanged, so a tour reset is unwarranted. Repository npm/lint/build/documentation smoke was green for the initial patch commits; focused browser and physical iPhone/Safari acceptance remain separate release gates. See CHG-20261105-411.
+All edits are on `OldVersion`; no main/PR, production/preview deployment, schema migration, Task/Activity/Moment status changes, export, PDF or original-photo transformation is authorized. Guest demonstration content and data schema remain unchanged, so a tour reset is unwarranted. Repository npm/lint/build/documentation smoke was green for the initial patch commits; the independent 2.3.3 focused Chromium run 41994600412 passed all 39 checks at source SHA 49c400f, including Activity attachment, route-preserving Task create and global filter ghost. Physical iPhone/Safari and real signed-in multi-device verification remain unperformed and production is unchanged. See CHG-20261105-413.
 
 ## DN 2.3.2 long linked filter values (5 November 2026; narrow phone regression pending)
 
