@@ -9,7 +9,7 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   const errors=await seedGuest(page);
   await page.goto('/events?create=event');
   const dialog=page.getByRole('dialog');
-  await dialog.locator('.dn-form-disclosure > summary').click();
+  await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(dialog.getByLabel('Moment time',{exact:true})).toHaveValue('10:15');
   await dialog.getByRole('button',{name:'Clear moment time',exact:true}).click();
   await dialog.getByRole('textbox',{name:'Moment name',exact:true}).fill('Manually untimed Moment');
@@ -21,7 +21,7 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find(x=>x.name==='Manually untimed Moment').time||'')).toBe('');
   await page.goto('/financials/transactions?create=expense');
-  await dialog.locator('.dn-form-disclosure > summary').click();
+  await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(dialog.getByLabel('Transaction time',{exact:true})).toHaveValue('10:20');
   await dialog.getByRole('button',{name:'Clear transaction time',exact:true}).click();
   await dialog.getByRole('textbox',{name:'Title *',exact:true}).fill('Manually untimed purchase');
@@ -34,7 +34,7 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_expenses')).find(x=>x.name==='Manually untimed purchase').time||'')).toBe('');
   await page.goto('/events/moment-one/activities?create=activity');
-  await dialog.locator('.dn-form-disclosure > summary').click();
+  await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(dialog.getByLabel('Activity time',{exact:true})).toHaveValue('10:20');
   await dialog.getByRole('button',{name:'Clear activity time',exact:true}).click();
   await dialog.getByPlaceholder('Activity title',{exact:true}).fill('Manually untimed activity');
