@@ -98,24 +98,7 @@ for (const { width, theme } of [
       }
       if (variant.presentation === 'diary') {
         await chapterLink.click();
-        await expect(page).toHaveURL(new RegExp('/events/' + variant.id + '/activities/' + variant.id + '-chapter
-    }
-    // The same iPhone text hierarchy should apply to shared form guidance.
-    await page.goto('/events');
-    await page.getByRole('button', { name: 'Open quick create menu' }).click();
-    await page.getByRole('button', { name: 'Life moment', exact: true }).click();
-    const modal = page.getByRole('dialog', { name: 'Create a life moment' });
-    const guidance = modal.locator('.event-form-intro');
-    await expect(guidance).toBeVisible();
-    expect(await guidance.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
-      .toBeGreaterThanOrEqual(12.95);
-    await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await expect(modal).toHaveCount(0);
-    expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
-    expect(errors).toEqual([]);
-  });
-}
-));
+        await expect(page).toHaveURL(new RegExp('/events/' + variant.id + '/activities/' + variant.id + '-chapter'));
         await page.goto('/events/' + variant.id + '/story');
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
