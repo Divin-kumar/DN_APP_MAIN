@@ -6,6 +6,8 @@
 
 # DN — Your App and Improvement Checklist
 
+**DN 2.3.4 Story polish QA verified (5 November 2026; not published):** The 13/13 focused synthetic browser cases passed for narrow-phone Story text, light/dark reading colors, existing Task Story status, 44px file links and Moment form guidance. Routine source checks also passed. Personal records, PDF output and original photos are unchanged. Actual iPhone Safari, VoiceOver and a separate production release still need explicit acceptance.
+
 **DN 2.3.4 phone Story consistency follow-up (5 November 2026; unpublished):** Small Journal/Diary/Task labels, Story totals and introduction actions have clearer type. Story totals lose nested borders on phones; the regular Moment creation sheet's guidance text matches this legibility. The previous Story visual test needed a test-only browser-origin correction, and exact-SHA acceptance is still pending. No data, content order, PDF or original photos change.
 
 **DN 2.3.4 iPhone Story polish in development (5 November 2026; OldVersion only):** A first visual pass improves the readability of dates, captions and continued-writing headings in Story on narrow iPhones; existing Activity-file links get a safer touch area, and dark Story reading surfaces use matching native controls. Journal, Diary and Tasks keep their current layouts and records. This is not a new feature or a production deployment. Browser and physical iPhone acceptance are separate steps.
