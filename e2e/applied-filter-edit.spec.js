@@ -30,7 +30,7 @@ for(const width of [320,390,1280]) {
       await page.goto(consumer.route);await add(page,consumer.field,consumer.from);
       await page.getByRole('button',{name:'Show results',exact:true}).click();
       const before=await saved(page,consumer.key);expect(rules(before)).toHaveLength(1);
-      const chip=page.locator('.dn-condition-chip');
+      const chip=page.locator('.dn-condition-chip-rail .dn-condition-chip').last();
       const style=await chip.evaluate(e=>({border:getComputedStyle(e).borderWidth,background:getComputedStyle(e).backgroundColor}));
       expect(style).toEqual({border:'0px',background:'rgba(0, 0, 0, 0)'});
       await choice(page,`Change ${consumer.field} filter`,consumer.to);
@@ -40,9 +40,9 @@ for(const width of [320,390,1280]) {
       expect({...newRule,value:oldRule.value}).toEqual(oldRule);expect(newRule.value).not.toBe(oldRule.value);
       expect(await page.locator('.dn-list-controls-panel').count()).toBe(0);
       await page.screenshot({path:`.verification/applied-edit-${width}-${consumer.key.replaceAll(':','-')}.png`});
-      await page.reload();await expect(page.locator('.dn-condition-chip')).toContainText(consumer.to);
-      await page.locator('.dn-condition-chip').getByRole('button',{name:/^Remove filter /}).click();
-      await expect(page.locator('.dn-condition-chip')).toHaveCount(0);expect(rules(await saved(page,consumer.key))).toHaveLength(0);
+      await page.reload();await expect(page.locator('.dn-condition-chip-rail .dn-condition-chip').last()).toContainText(consumer.to);
+      await page.locator('.dn-condition-chip-rail .dn-condition-chip').last().getByRole('button',{name:/^Remove filter /}).click();
+      await expect(page.locator('.dn-condition-chip-rail .dn-condition-chip')).toHaveCount(0);expect(rules(await saved(page,consumer.key))).toHaveLength(0);
     }
     expect(await records(page)).toEqual(original);expect(errors).toEqual([]);
   });
