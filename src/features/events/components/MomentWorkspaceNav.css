@@ -175,3 +175,12 @@ html[data-theme] .dn-moment-nav .dn-moment-nav-motion-underline {
   position:absolute; left:11px; right:11px; height:2px; bottom:0;
   border-radius:2px 2px 0 0; background:var(--color-primary); pointer-events:none;
 }
+
+/* DN 2.3.4 iPhone readability: keep all three Moment metrics, with captions
+   matching the Story's supporting text instead of the older 11px labels. */
+@media (max-width:580px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric small {
+    font-size:12px !important;line-height:1.4;
+    white-space:normal;overflow-wrap:anywhere;
+  }
+}
