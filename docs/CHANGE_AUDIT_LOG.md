@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261105-416 | Six optional visual transitions with existing DN interactions
+- **User authorization:** The owner approved implementing the previously proposed Moment navigation, Gallery zoom, universal + morph, applied filter chip, selected tab and skeleton-to-content motion improvements after CHG-415.
+- **Source change:** Native CSS View Transitions connect Moment list card to illustrated Story hero and original-image thumbnail to its existing Gallery preview, guarded by browser capability and Reduce Motion. Existing Framer Motion provides sliding active navigation markers and applied-filter chip reflow; CSS provides one stable + glyph rotation and a small content-ready opacity fade.
+- **Impact:** Presentation only. Original attachment source/byte and download workflows, Moment/Activity/Task links, route destinations, filter AND/OR, Guest/account boundary, data/backup schema, Story/PDF outputs, old-timed and untimed items are not altered. Existing Guest tour remains accurate; do not reset personal/demo records for visual-only motion.
+- **Validation:** GitHub focused responsive browser test suite and usual smoke and documentation checks must pass on final code SHA. Native iPhone/Safari, real accounts and full release gate are outside this targeted check. No main/PR or production/preview deployment, no app version bump.
+
 ## CHG-20261105-415 | Verify five DN motion animations (45/45) and pin focused browser runner
 - **Executed evidence:** Focused UI + motion GitHub Actions run **42003718392** on OldVersion code SHA `49e2e948a986c5f3044e84f7156d17c27561b5cd` completed successfully with **45/45** Chromium checks, including legacy form/attachment/filter flows and new 320px, 390px and desktop animation acceptance. Same SHA documentation/smoke run **42003718026** passed unit tests, lint, production build, dependency audit and document governance.
 - **Runner compatibility:** First motion browser run 42003510533 could not start Chromium tests because `ubuntu-latest` moved to Ubuntu 26.04, unsupported by locked Playwright 1.56. The *nondeploying UI test workflow only* now uses `ubuntu-24.04`. No application source, Playwright dependency version or production job infrastructure was changed in that correction.
