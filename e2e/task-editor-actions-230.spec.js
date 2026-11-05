@@ -17,6 +17,7 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'light'],[430,93
     await page.locator('.dn-independent-task-row').filter({ hasText: 'Keep travel originals' }).click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Edit Task' });
+    await editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await editor.getByLabel('Notes (optional)').fill('Unsaved draft stays here');
     const actions = editor.getByRole('group', { name: 'Task actions' });
     await actions.scrollIntoViewIfNeeded();
