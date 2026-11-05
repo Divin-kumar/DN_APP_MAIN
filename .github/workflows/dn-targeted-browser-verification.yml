@@ -12,7 +12,8 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       (github.event_name == 'workflow_dispatch' ||
        contains(github.event.head_commit.message, '[verify-211]'))
-    runs-on: ubuntu-latest
+    # Playwright 1.56 Chromium dependency installer is supported on Ubuntu 24.04.
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
