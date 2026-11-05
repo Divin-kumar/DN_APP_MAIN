@@ -58,13 +58,16 @@ test('editing existing untimed Moments, Activities and transactions does not ins
   await page.clock.install({time:new Date('2026-10-29T04:45:00Z')});
   const errors=await seedGuest(page);
   await page.goto('/events');
-  await page.getByRole('button',{name:/Actions for Weekend in Ooty/}).click();
+  const momentCard = page.locator('.dn-v2-moment-card').filter({hasText:'Weekend in Ooty'});
+  await momentCard.focus();
+  await page.keyboard.press('ArrowRight');
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
   const dialog=page.getByRole('dialog');
   await expect(dialog.getByLabel('Moment time',{exact:true})).toHaveValue('');
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.goto('/events/moment-one/activities/shared');
   await activityDetailAction(page,'Edit');
+  await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(dialog.getByLabel('Activity time',{exact:true})).toHaveValue('');
   await dialog.getByRole('button',{name:'Cancel',exact:true}).click();
   await page.goto('/financials');
