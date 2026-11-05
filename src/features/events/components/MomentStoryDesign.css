@@ -269,3 +269,11 @@ html[data-theme] .dn-v2-story[data-design-style] .dn-task-row-end .dn-task-statu
   color:var(--dn-book-ink) !important; min-height:44px; border-radius:10px;
   padding:8px 25px 8px 8px; font-size:13px;
 }
+
+/* DN 2.3.4: a dark Story page needs dark native input/popover chrome, too.
+   The PDF export's independently selected paper theme is not affected. */
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-journal-page,
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-diary-monthbook,
+html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-task-group {
+  color-scheme:dark;
+}

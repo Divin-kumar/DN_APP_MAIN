@@ -383,3 +383,33 @@ html[data-theme] .dn-task-writing-continuation {gap:12px;}
 html[data-theme] .dn-task-writing-continuation .dn-story-writing-text {
   font-size:.73rem;line-height:1.55;color:var(--color-text-muted);
 }
+
+/* DN 2.3.4: iPhone Story hierarchy. Secondary text remains legible without
+   adding cards, changing content order, or increasing the density of controls. */
+@media (max-width:680px) {
+  html[data-theme] .dn-v2-story[data-presentation] .dn-v2-story-header {
+    align-items:flex-start;gap:12px;padding:clamp(16px,4vw,19px);border-radius:16px;
+  }
+  html[data-theme] .dn-v2-story-header > div:first-child {min-width:0;}
+  html[data-theme] .dn-v2-story-header p,
+  html[data-theme] .dn-v2-story .dn-v2-story-section-head small,
+  html[data-theme] .dn-v2-story .dn-diary-entry-date,
+  html[data-theme] .dn-v2-story .dn-story-entry-aside,
+  html[data-theme] .dn-v2-story .dn-story-writing-heading {
+    font-size:.8125rem;line-height:1.55;
+  }
+  html[data-theme] .dn-v2-story-intro > p {font-size:.875rem;line-height:1.65;}
+  html[data-theme] .dn-v2-story-intro-head h4 {min-width:0;overflow-wrap:anywhere;}
+  html[data-theme] .dn-v2-story .dn-story-entry-files {
+    min-width:0;max-width:100%;min-height:44px;
+    padding-block:9px;font-size:.8125rem;line-height:1.5;
+    overflow-wrap:anywhere;
+  }
+  html[data-theme] .dn-v2-story .dn-story-entry-files > svg {flex:0 0 auto;}
+}
+/* Follow-on writing remains continuous prose, with a clear but quiet
+   breathing space after a dated subheading. */
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-story-writing-part,
+html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-story-writing-part {
+  gap:8px;
+}
