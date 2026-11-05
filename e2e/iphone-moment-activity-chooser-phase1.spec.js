@@ -20,9 +20,9 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     await expect(title).not.toBeFocused();
     expect(await title.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(16);
     await expect(dialog.locator('input[type="date"]')).toBeHidden();
-    await dialog.locator('.dn-form-disclosure > summary').click();
+    await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
     await expect(dialog.locator('input[type="date"]')).toBeVisible();
-    await dialog.locator('.dn-form-disclosure > summary').click();
+    await dialog.locator('.dn-form-disclosure > summary:has-text("More options")').click();
 
     await title.click();
     await expect(title).toBeFocused();
