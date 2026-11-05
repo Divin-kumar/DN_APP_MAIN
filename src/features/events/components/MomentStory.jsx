@@ -112,7 +112,7 @@ function RecordedJournal({ story, entries }) {
     {story.timeline.map((month) => <section key={month.key} className="dn-journal-month" aria-label={'Activities in ' + month.key}>
       <p className="dn-journal-month-caption">{monthLabel(month.key)}</p>
       {month.days.map((day) => <section key={day.date} className="dn-journal-page">
-        <header className="dn-journal-page-date"><span>✦</span><time dateTime={day.date}>{fullDate(day.date)}</time><span>✦</span></header>
+        <header className="dn-journal-page-date"><span aria-hidden="true">✦</span><time dateTime={day.date}>{fullDate(day.date)}</time><span aria-hidden="true">✦</span></header>
         <div className="dn-journal-page-entries">{entries(day.entries, day.date)}</div>
       </section>)}
     </section>)}
