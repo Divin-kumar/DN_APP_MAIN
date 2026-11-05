@@ -23,6 +23,11 @@ test.describe('Moment hero premium three-metric strip', () => {
         const metrics = strip.locator(':scope > .dn-moment-metric');
         await expect(metrics).toHaveCount(3);
         await expect(metrics.locator('small')).toHaveText(['Steps', 'Reflections', 'Spent']);
+        // The Moment hero and Story use a consistent readable iPhone caption size.
+        for (const caption of await metrics.locator('small').all()) {
+          expect(await caption.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
+            .toBeGreaterThanOrEqual(11.95);
+        }
         await expect(metrics.nth(0).locator('strong')).toHaveText('3');
         await expect(metrics.nth(1).locator('strong')).toHaveText('1');
         const expectedMoney = new Intl.NumberFormat('en-IN', {
