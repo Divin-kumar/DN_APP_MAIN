@@ -9004,11 +9004,11 @@ html[data-theme] .events-page.life-timeline-page .dn-v2-activity-card {
   animation: none !important;
 }
 
-/* Save feedback rises into place. Error/warning entrance remains unchanged. */
+/* Save feedback rises without scaling 44px touch targets. Error/warning entrance remains unchanged. */
 .app-toast[data-tone="success"] { animation:dn-toast-rise-in .22s cubic-bezier(.2,.82,.23,1) both; }
 @keyframes dn-toast-rise-in {
-  from { opacity:0; transform:translateX(-50%) translateY(10px) scale(.98); }
-  to { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+  from { opacity:0; transform:translateX(-50%) translateY(10px); }
+  to { opacity:1; transform:translateX(-50%) translateY(0); }
 }
 @media (prefers-reduced-motion:reduce) {
   .app-toast[data-tone="success"] { animation:none; }

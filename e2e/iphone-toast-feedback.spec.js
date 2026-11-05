@@ -52,6 +52,38 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   }
 }
 
+test('Animated success feedback keeps its 44px action target during the entire entrance', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  const errors = await seedGuest(page, { theme: 'light' });
+  await page.goto('/dashboard');
+
+  const measurements = await page.evaluate(async () => {
+    const { default: useAppStore } = await import('/src/store/useAppStore.js');
+    useAppStore.getState().showToast('Moment saved', 'success', { label: 'View', to: '/events' });
+    const nextFrame = () => new Promise((resolve) => requestAnimationFrame(resolve));
+    let action = null;
+    for (let attempt = 0; attempt < 6 && !action; attempt += 1) {
+      await nextFrame();
+      action = document.querySelector('.app-toast-action');
+    }
+    if (!action) throw new Error('The animated success action was not rendered');
+    const toast = action.closest('.app-toast');
+    const animation = getComputedStyle(toast).animationName;
+    const heights = [action.getBoundingClientRect().height];
+    for (let frame = 0; frame < 16; frame += 1) {
+      await nextFrame();
+      heights.push(action.getBoundingClientRect().height);
+    }
+    return { animation, heights };
+  });
+
+  expect(measurements.animation).toContain('dn-toast-rise-in');
+  expect(measurements.heights).toHaveLength(17);
+  expect(Math.min(...measurements.heights)).toBeGreaterThanOrEqual(43.9);
+  expect(errors).toEqual([]);
+});
+
 test('Error feedback is announced as an alert and does not change saved records', async ({ page }) => {
   const errors = await seedGuest(page, { theme: 'dark' });
   await page.goto('/dashboard');

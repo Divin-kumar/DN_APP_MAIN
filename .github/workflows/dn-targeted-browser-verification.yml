@@ -70,6 +70,38 @@ jobs:
           retention-days: 7
           if-no-files-found: ignore
 
+  toast-hit-target-233:
+    # Focused follow-up for exact-SHA full browser failure 42059931537.
+    # No full-suite rerun, Firebase publication or production version change.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-233-toast]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install supported Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Check toast action geometry during actual animation and reduced motion
+        run: npx playwright test e2e/iphone-toast-feedback.spec.js --workers=2
+      - name: Upload focused failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-233-toast-action-evidence
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   targeted-browser:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&
