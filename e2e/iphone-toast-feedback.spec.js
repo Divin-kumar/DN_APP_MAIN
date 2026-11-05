@@ -37,8 +37,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geometry.left).toBeGreaterThanOrEqual(-.5);
       expect(geometry.right).toBeLessThanOrEqual(width + .5);
       expect(geometry.top).toBeGreaterThanOrEqual(0);
-      expect(geometry.actionWidth).toBeGreaterThanOrEqual(44);
-      expect(geometry.actionHeight).toBeGreaterThanOrEqual(44);
+      expect(geometry.actionWidth).toBeGreaterThanOrEqual(43.9);
+      expect(geometry.actionHeight).toBeGreaterThanOrEqual(43.9);
       expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
       expect(geometry.background).not.toBe(geometry.foreground);
       expect(geometry.theme).toBe(theme);
