@@ -37,6 +37,8 @@ for (const { width, theme } of [
       moments: variants.map(({ id, type }) => makeMoment(id, type)), theme,
       incomes: [], expenses: [],
     });
+    // Establish the DN origin before reading localStorage; seedGuest registers an init script.
+    await page.goto('/events');
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     for (const variant of variants) {
       await page.goto(`/events/${variant.id}/story`);
