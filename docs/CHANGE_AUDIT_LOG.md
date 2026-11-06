@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-489 | Owner-authorized full-gate v2.3.9 DN production publication
+
+**Authorization:** Owner requested deploy to production now after Development stabilized the iPhone Search/+ alignment, swipe-to-close mobile sheets and shared Moments/Activities/Tasks/Transactions action-menu animation. This is an explicitly approved DN permanent Firebase Hosting release, not consent to modify Lifehub, overwrite the separate ExpenseTracker dev site, change the main branch or migrate data.
+
+**Packaging:** Advance package and root lock versions from 2.3.8 to **2.3.9**. In `src/pages/About.jsx`, add three concise v2.3.9 highlights and expandable source-grounded details for mobile Search/Refine, bare draggable +, sheet gestures, shared swipe menu motion and dev-only unreleased change ledger. Production never displays development's pending commit list. Update the exact-version browser preflight release expectations. Retain `GUEST_TOUR_VERSION=2026.11.06.5`: its existing current guide already teaches the changed phone interactions. No user-visible data reset or new user function.
+
+**Safety and publication contract:** Commit with `[verify-full] [release-full] [deploy-live]` on `OldVersion`. The independent browser/offline/PDF/upgrade full workflow must finish success for this exact SHA before the production workflow can deploy. Production independently requires audit, Node/lint, build, increased live version, credentials and exact index readback. No success is claimed before those workflow results. Only a verified production publication causes a development About pending-ledger refresh. All personal Guest/account data, storage, photos, PDFs, filters, finance, task sync and backups stay in place. Physical iPhone Safari acceptance remains unverified until actual device testing; previous development builds alone are not E2E evidence.
+
 ## CHG-20261106-488 | Fix blinking swipe action menus in Moments Activities Tasks and Transactions
 
 **Owner observation:** An iPhone screenshot of the Moment card actions shows a popup that appears abruptly; owner explicitly extends the animation requirement to all swipe actions in Moments, Activities, Tasks and Transactions.

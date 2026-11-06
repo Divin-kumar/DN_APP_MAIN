@@ -63,6 +63,23 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.9',
+    title: 'Smoother iPhone navigation and actions',
+    summary: 'Clearer Search, a lighter universal + and natural motion across forms and action menus.',
+    highlights: [
+      'Search and Refine sit higher with larger touch targets and the transparent + stays aligned.',
+      'Pull a mobile navigation or creation sheet down from its handle or header to close smoothly.',
+      'Moment, Activity, Task and Transaction action menus now enter and leave with coordinated motion.',
+    ],
+    changes: [
+      'Search & creation — Enlarged the glass Search/Refine controls to 50px, moved the complete dock row higher, and aligned its visible +. The draggable creator is a bare + in a transparent 52px touch area rather than a large blue tile.',
+      'Mobile sheets — Navigation and creation forms use a full-height transition. Pull the top handle or header down to close; short drags return the sheet to place. Input scrolling, Cancel, Escape and unsaved-data boundaries stay unchanged.',
+      'Swipe actions — Removed competing CSS and Framer Motion animations across Moments, Activities, independent Tasks and editable Transactions. Menus animate as anchored popups while record cards remain stationary.',
+      'Preview & accountability — DN Development now lives on the separate ExpenseTracker Hosting site and records every unreleased OldVersion commit in Settings → About. Production displays released highlights only; development resets its pending ledger after this published release.',
+      'Data safety — Existing records, original photos and files, account synchronization, payment totals, Story and PDF exports, filter preferences and recovery backups are preserved. Reduced Motion is respected.',
+    ],
+  },
+  {
     version: '2.3.8',
     title: 'Full-height mobile pages',
     summary: 'The final blank strip left by the old mobile navigation is removed.',
