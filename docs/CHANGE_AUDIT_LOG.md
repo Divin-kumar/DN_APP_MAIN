@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-435 | Prepare DN 2.3.4 candidate and full nondeploying verification
+- **Owner instruction:** Proceed with release preparation after the verified Story/Settings/Tasks batch. Align package/root lock to 2.3.4; add three concise About highlights with expandable details; correct stale three-dot Activity guidance to swipe actions.
+- **Evidence before full gate:** Tasks/Settings source 20bcf6b passed 44/44 focused browser checks and 618 Node tests plus governance. Story source e40f691 passed its focused browser gate. These do not establish final candidate release acceptance.
+- **Requested validation:** [verify-full] triggers complete responsive browser, Node/lint/docs/security, build, offline/PDF/original and upgrade-preservation verification on the candidate commit. Release-note regression now checks 2.3.4 content. Results remain pending until jobs finish.
+- **Boundary:** Preparation only, no deployment marker, Firebase/Vercel write, main write, record/schema migration or original-file change. Production approval follows a passing full gate. Existing Guest tour remains accurate without reset. Physical iPhone Safari/VoiceOver and real two-device account sync remain unverified.
+
 ## CHG-20261106-434 | Verify Tasks and Settings refinement: 44/44 focused browser checks
 - **Executed:** [Focused Chromium run 42158297479](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42158297479) passed **44/44** at source `20bcf6b181e1b7640069c8dbfa3bc9beeb16d45f`. Coverage includes Task arrival focus, search, linked Activity context, alternate Moment ID preservation, edit cancellation, deletion feedback, creation defaults, status actions, Dashboard/Refine, backup, simulated-account integration and Settings layouts.
 - **Same-source governance:** [Run 42158297416](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42158297416) passed Node tests (618), lint, production build, dependency audit and documentation contracts. Prior intermediate failures and their corrections remain documented in CHG-432/433.
