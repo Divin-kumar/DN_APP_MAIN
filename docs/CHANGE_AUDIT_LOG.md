@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-438 | Verify all six release-history failures and remaining preservation checks
+- **Executed:** At source fcfa3fa732595a4de1afb6abef07d061ff029b29, [run 42166790632](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42166790632) passed 8/8 About/release browser tests, production build, offline Story, offline PDF (94,781 bytes), exact synthetic original bytes and unchanged records. Fresh-navigation and in-app-refresh upgrade paths from fixture 1.0.35 both preserved records/preferences, original bytes and offline Story with no page errors or repeated prompts. Artifact 13478404846 retains evidence.
+- **Same-source governance:** Run 42166790461 passed application smoke and documentation contracts. The preceding diagnostic source passed the other 806 browser cases; this focused run repairs all six recorded failures without rerunning the full suite. Application runtime did not change in this repair.
+- **Release boundary:** These are synthetic focused/preservation results, not a green full exact-SHA production gate. No Firebase/Vercel deployment or main write. Physical iPhone/VoiceOver and real two-device sync remain unverified. Guest fixtures remain accurate without reset.
+
 ## CHG-20261106-437 | Repair release-history regression and verify remaining preservation stages
 - **Executed:** Diagnostic full run 42164390346 at bf789a8 passed 806/812 Chromium cases. All six failures are the same obsolete About assertion: 14 release entries expected, 15 correctly rendered after adding 2.3.4. Retained artifact 13479216464 establishes the cause; this is not a Task or Story runtime defect.
 - **Correction:** Require all documented versions, uniqueness, newest-first order and exactly one installed version instead of a fixed history count. Existing phone geometry, keyboard, disclosure, refresh and data-preservation checks stay intact. Add a nondeploying focused About/release check followed by the previously blocked production offline/PDF/original and upgrade checks.
