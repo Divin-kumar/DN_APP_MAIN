@@ -63,6 +63,7 @@ export default function MomentPdfStudio({ event }) {
   const settingsRef = useRef(settings);
   const customizedRef = useRef(false);
   const styleOverrideRef = useRef(false);
+  const [styleOverridden, setStyleOverridden] = useState(false);
   const dialogRef = useRef(null);
   const thumbnailRef = useRef(null);
 
@@ -129,7 +130,10 @@ export default function MomentPdfStudio({ event }) {
     if (key === 'template' && !styleOverrideRef.current) {
       next.visualStyle = savedStyles[value];
     }
-    if (key === 'visualStyle') styleOverrideRef.current = true;
+    if (key === 'visualStyle') {
+      styleOverrideRef.current = true;
+      setStyleOverridden(true);
+    }
     customizedRef.current = true;
     settingsRef.current = next;
     setSettings(next);
@@ -154,6 +158,7 @@ export default function MomentPdfStudio({ event }) {
     styleOverrideRef.current = false;
     update('visualStyle', savedStyles[settingsRef.current.template]);
     styleOverrideRef.current = false;
+    setStyleOverridden(false);
   };
 
   const download = () => {
@@ -343,7 +348,7 @@ export default function MomentPdfStudio({ event }) {
           </div>
           <div className="dn-pdf-style-default">
             <small>Saved default: {PDF_STYLE_NAMES[savedStyles[settings.template]]}</small>
-            {styleOverrideRef.current ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
+            {styleOverridden ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
               <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
           </div>
         </fieldset>
