@@ -41,7 +41,7 @@ test('desktop controls and navigation remain in-page',async({page})=>{
 for (const width of [320,390,430]) for(const theme of ['light','dark']){
  test(`no-search routes show only the detached + ${width} ${theme}`,async({page})=>{
   await page.setViewportSize({width,height:844});const errors=await seedGuest(page,{theme});
-  for(const route of ['/dashboard','/settings']){
+  for(const route of ['/dashboard','/settings','/settings/about','/settings/appearance']){
    await page.goto(route);
    const bar=page.locator('.dn-command-bar');
    await expect(page.locator('.dn-command-controls > *')).toHaveCount(0);
