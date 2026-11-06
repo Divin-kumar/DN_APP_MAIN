@@ -13,7 +13,9 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     const release = page.locator('.settings-section').filter({ has:page.getByRole('heading', { name:`What's New in v${version}`, exact:true }) });
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
-    for (const text of (version === '2.3.5'
+    for (const text of (version === '2.3.6'
+      ? ['Search-free screens', 'blank toolbar', 'Search and Refine', 'frosted controls']
+      : version === '2.3.5'
       ? ['cancelled activities', 'Journal', 'Diary', 'Tasks']
       : version === '2.3.4'
       ? ['Story', 'Settings', 'Tasks', 'Dashboard']
