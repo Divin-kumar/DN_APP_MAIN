@@ -131,3 +131,15 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
 @media (prefers-reduced-motion:reduce) {
  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search { transition:none; }
 }
+
+/* v2.3.7: a search-free page uses its full scrolling canvas. The old dock-wide
+   padding kept a blank strip even after the command bar became only a +.
+   Searchable screens retain their larger clearance; focus scrolling still
+   keeps the last control reachable beside the independently draggable +. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-shell:has(> .dn-command-root .dn-command-controls:empty)
+    .dn-content:not(:has(.dn-financial-workspace)) {
+    padding-bottom:max(20px,var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px))) !important;
+    scroll-padding-bottom:calc(68px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
+  }
+}

@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-468 | Restore full-height search-free mobile pages (v2.3.7 candidate)
+
+Search-free routes retained dock-sized content bottom padding even after the visual Search rail collapsed to the standalone +. Conditional mobile styling now gives those routes normal safe-area padding and scroll-focus clearance; routes with actual Search and Refine retain their established dock clearance. Added 320/390/430px light/dark geometry assertions for both route types, preserved navigation, drag/redock, 44px controls and existing data handlers. Version 2.3.7 package/lock and concise About notes updated for the production version guard. Guest tour v2026.11.06.2 already covers these unchanged interactions and needs no reset. This is source-derived; focused CI and Firebase live readback remain pending. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261106-467 | DN 2.3.6 standalone + and compact glass Search
 
 Owner-approved presentation refinement: the mobile command rail no longer draws a capsule around +. Dashboard, Settings and other search-free screens reserve no blank discovery block; list screens receive 44px frosted Search and separate translucent Refine. Keeps navigation and creation, drag/redock, portal ownership, saved filters, account boundaries, finance totals, 44px targets and desktop unchanged. Added multi-module, theme and narrow-device browser coverage and adapted the prior underline expectation to the new border. Guest tour v2026.11.06.2 already teaches the unchanged actions; it is not reset or bumped. Candidate version 2.3.6 has synchronized package/lock and concise About notes. Exact-SHA full browser, production gating and readback are pending, not asserted complete. Physical Safari and VoiceOver remain unverified.

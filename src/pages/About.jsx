@@ -53,6 +53,13 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.7',
+    title: 'No blank search space on mobile',
+    summary: 'Search-free screens reclaim the unused dock spacing.',
+    highlights: ['Pages without Search now use the full available scrolling area.', 'The floating + remains accessible while Search and Refine stay unchanged on list pages.'],
+    changes: ['This is a mobile layout correction only; saved data, navigation, filters, PDFs and desktop behavior are unchanged.'],
+  },
+  {
     version: '2.3.6',
     title: 'Lighter navigation and glass search',
     summary: 'Compact mobile discovery, a clean floating + and full-flow pages.',

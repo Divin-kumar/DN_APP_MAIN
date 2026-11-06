@@ -49,6 +49,13 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    expect(visual.w).toBeLessThanOrEqual(49);expect(visual.b).toBe('0px');
    expect(visual.bg).toBe('rgba(0, 0, 0, 0)');
    await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
+   // No permanently reserved search dock on search-free screens.
+   const flow=await page.locator('.dn-content').evaluate(node=>{
+     const style=getComputedStyle(node);
+     return {bottom:parseFloat(style.paddingBottom),focusClearance:parseFloat(style.scrollPaddingBottom)};
+   });
+   expect(flow.bottom).toBeLessThanOrEqual(50);
+   expect(flow.focusClearance).toBeGreaterThanOrEqual(68);
   }
   await page.getByRole('button',{name:'Open quick create menu'}).click();
   await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link')).toHaveCount(5);
@@ -74,6 +81,9 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    expect(box.plus).toBeGreaterThanOrEqual(47);
    expect(box.refine).toBeGreaterThanOrEqual(44);
    expect(box.width).toBeLessThanOrEqual(width+1);
+   // Searchable routes still leave enough room for the entire dock.
+   const bottom=await page.locator('.dn-content').evaluate(node=>parseFloat(getComputedStyle(node).paddingBottom));
+   expect(bottom).toBeGreaterThanOrEqual(90);
   }
   expect(errors).toEqual([]);
  });
