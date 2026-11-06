@@ -34,10 +34,32 @@ jobs:
         run: npm run check:docs
       - name: Install Chromium for pre-release tests only
         run: npx playwright install --with-deps chromium
-      - name: Verify responsive browser journeys
-        run: npm run test:e2e > .verification-full-browser.log 2>&1
-      - name: Preserve browser failure evidence
+      # Catch version/About regressions before spending time on the broad suite.
+      - name: Check release information first
+        run: npx playwright test e2e/iphone-about-premium.spec.js e2e/release-phase9.spec.js --workers=2 > .verification-release-preflight.log 2>&1
+      - name: Retain release preflight evidence
         if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-preflight-${{ github.sha }}
+          retention-days: 7
+          include-hidden-files: true
+          path: |
+            .verification-release-preflight.log
+            .verification/browser-results.json
+            .verification/browser-results
+      - name: Print release preflight result
+        if: always()
+        run: |
+          if test -f .verification-release-preflight.log; then
+            tail -n 100 .verification-release-preflight.log
+          fi
+      # Two workers match the verified focused suites; retain all full-suite cases.
+      - name: Verify responsive browser journeys
+        id: browser
+        run: npm run test:e2e -- --workers=2 > .verification-full-browser.log 2>&1
+      - name: Preserve browser failure evidence
+        if: always() && (steps.browser.outcome == 'success' || steps.browser.outcome == 'failure')
         uses: actions/upload-artifact@v4
         with:
           name: full-browser-evidence-${{ github.sha }}
@@ -49,7 +71,10 @@ jobs:
             .verification/browser-results
       - name: Print concise browser results
         if: always()
-        run: tail -n 180 .verification-full-browser.log
+        run: |
+          if test -f .verification-full-browser.log; then
+            tail -n 180 .verification-full-browser.log
+          fi
       - name: Build release candidate
         env:
           VITE_DEPLOY_ENV: Production

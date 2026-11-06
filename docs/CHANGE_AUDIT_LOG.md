@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-439 | Use existing verification evidence and shorten future release checks
+- **Owner instruction:** Continue while considering completed E2E runs to avoid unnecessary delays. Retain the 806-case diagnostic pass and 8-case repair/preservation evidence, with their actual source SHAs and limits.
+- **Change:** Add fast About/release preflight before the full browser suite; preserve its log/report separately. Use two workers for the complete suite and avoid misleading missing-log errors when preflight blocks later stages. All full-suite cases and exact-SHA production safeguards remain intact.
+- **Validation:** Executed: workflow parsing and blocking-preflight structure checks passed; discovery confirmed 8 preflight cases and all 812 full-suite cases; documentation/diff checks passed. Runtime speed improvement remains unverified; no new full browser run is requested by this commit. A final frozen release candidate still needs its exact-SHA full gate. No app/data/Guest fixture/version/deployment change.
+
 ## CHG-20261106-438 | Verify all six release-history failures and remaining preservation checks
 - **Executed:** At source fcfa3fa732595a4de1afb6abef07d061ff029b29, [run 42166790632](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42166790632) passed 8/8 About/release browser tests, production build, offline Story, offline PDF (94,781 bytes), exact synthetic original bytes and unchanged records. Fresh-navigation and in-app-refresh upgrade paths from fixture 1.0.35 both preserved records/preferences, original bytes and offline Story with no page errors or repeated prompts. Artifact 13478404846 retains evidence.
 - **Same-source governance:** Run 42166790461 passed application smoke and documentation contracts. The preceding diagnostic source passed the other 806 browser cases; this focused run repairs all six recorded failures without rerunning the full suite. Application runtime did not change in this repair.
