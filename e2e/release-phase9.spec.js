@@ -14,7 +14,7 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
     for (const text of (version === '2.3.7'
-      ? ['Search-free screens', 'full available scrolling area', 'floating +']
+      ? ['Pages without Search', 'full available scrolling area', 'floating +']
       : version === '2.3.6'
       ? ['Search-free screens', 'blank toolbar', 'Search and Refine', 'frosted controls']
       : version === '2.3.5'
