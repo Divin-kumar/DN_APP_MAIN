@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-434 | Verify Tasks and Settings refinement: 44/44 focused browser checks
+- **Executed:** [Focused Chromium run 42158297479](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42158297479) passed **44/44** at source `20bcf6b181e1b7640069c8dbfa3bc9beeb16d45f`. Coverage includes Task arrival focus, search, linked Activity context, alternate Moment ID preservation, edit cancellation, deletion feedback, creation defaults, status actions, Dashboard/Refine, backup, simulated-account integration and Settings layouts.
+- **Same-source governance:** [Run 42158297416](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42158297416) passed Node tests (618), lint, production build, dependency audit and documentation contracts. Prior intermediate failures and their corrections remain documented in CHG-432/433.
+- **Release ledger:** Verified code SHA above; this follow-up changes evidence only. No version bump or Firebase/Vercel deployment. Physical iPhone Safari/VoiceOver and real-account two-device sync remain unverified; simulated transport is not production sync proof. Guest data, originals, backup schema and PDF behavior remain unchanged.
+
 ## CHG-20261106-433 | Consolidate Settings section typography after Task checks pass
 - **Executed:** Retry run 42157972330 at 640dcfd passed 42/44 focused Chromium cases. Task arrival/search/edit/delete, historical Moment alias preservation and all prior affected flows passed. Only two Settings cases failed because the existing PremiumUX global important rule forced 16.8px headings instead of the intended 17px.
 - **Correction:** Update the authoritative shared Settings section-heading rule, including Appearance; remove the redundant newer heading rule. Keep the narrow-phone typography assertions and improve their route labels. No Task logic/data changes. The final focused rerun is pending; this is not a release.
