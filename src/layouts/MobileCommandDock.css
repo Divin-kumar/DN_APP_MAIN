@@ -11,13 +11,13 @@
   }
   html[data-theme] .dn-command-bar:not(:has(.dn-command-controls > *)) { left:auto; width:68px; }
   html[data-theme] .dn-command-root.is-floating .dn-command-button-slot { width:0; height:0; flex-basis:0; }
-  html[data-theme] .dn-command-root.is-floating .dn-command-bar { gap:0; }
+  html[data-theme] .dn-command-root.is-floating .dn-command-bar { gap:0; backdrop-filter:none; -webkit-backdrop-filter:none; }
   html[data-theme] .dn-command-root.is-floating .dn-command-bar:not(:has(.dn-command-controls > *)) { width:0; min-height:0; padding:0; border:0; background:transparent; box-shadow:none; }
   html[data-theme] .dn-command-controls { flex:1; min-width:0; }
   html[data-theme] .dn-command-controls:empty { display:none; }
   html[data-theme] .dn-command-controls .dn-list-controls-row { display:flex!important; align-items:center; gap:6px; padding:0!important; border:0!important; margin:0!important; }
   html[data-theme] .dn-command-controls .dn-list-controls-search { flex:1; min-width:0; margin:0; }
-  html[data-theme] .dn-command-controls .dn-list-controls-row .dn-list-controls-search { border-bottom:0; }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row .dn-list-controls-search { border-bottom:0; }
   html[data-theme] .dn-command-controls input { min-width:0; width:100%; min-height:44px; padding-right:28px; font-size:16px!important; }
   html[data-theme] .dn-command-controls .dn-list-controls-trigger { width:44px!important; min-width:44px!important; height:44px; padding:0!important; justify-content:center; flex-shrink:0; border:0!important; border-radius:50%!important; background:transparent; }
   html[data-theme] .dn-command-controls .dn-list-controls-trigger > span:not(.dn-list-controls-badge) { display:none; }
@@ -69,7 +69,7 @@ html[data-theme] .dn-command-actions > div { display:grid;grid-template-columns:
 html[data-theme] .dn-command-actions button, html[data-theme] .dn-command-redock {
   display:flex;align-items:center;gap:9px;min-height:56px;padding:8px 4px!important;border:0!important;
   border-radius:14px;background:transparent!important;box-shadow:none!important;
-  color:var(--color-text)!important;font-size:13px;font-weight:550;text-align:left;
+  color:var(--color-text)!important;font-size:13px!important;font-weight:550!important;line-height:1.35;text-align:left;
 }
 html[data-theme] .dn-command-actions button svg {
   flex:0 0 auto;box-sizing:content-box;padding:8px;border-radius:12px;
@@ -80,3 +80,9 @@ html[data-theme] .dn-command-redock { margin-top:14px;width:100%;justify-content
 html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:center;color:var(--color-text-muted);margin:16px 0 0; }
 @media (min-width:375px) { html[data-theme] .dn-command-destinations a { font-size:12px; } }
 @media (prefers-reduced-motion:reduce) { html[data-theme] .dn-command-destination-icon,html[data-theme] .dn-command-destinations a { transition:none; } }
+
+@media (max-width:360px) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-modal.dn-command-dialog { padding-inline:12px!important; }
+  html[data-theme] .dn-command-destinations { margin-inline:-3px; }
+}
+html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;letter-spacing:-.15px;white-space:nowrap; }

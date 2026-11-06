@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-465 | Keep refined search and floating coordinates stable
+
+The mobile search underline override now outranks lazily loaded list styles. Floating removes backdrop-filter from the dock because CSS filters establish a containing block for fixed descendants; this keeps the dragged button positioned relative to the viewport while the docked state retains its translucent finish. Narrow sheets also gain a little horizontal space and explicit creation typography after screenshot review found crowded labels at 320px. These are source-derived fixes from visual-refinement review, with browser validation pending. Existing drag/rotation/reload/redock and borderless-search tests cover both contracts. No desktop, data, version or deployment changes.
+
 ## CHG-20261106-464 | Refine the mobile command visual hierarchy
 
 Owner feedback requested a more current premium treatment. The mobile bar is now a softly translucent capsule with integrated borderless search, a circular Refine control and a stronger accent +. The command sheet has a single row of five destinations, readable labels and selected icon treatment, followed by lightweight two-column creation actions. Scoped typography, spacing, close control and short guidance replace the earlier tile-heavy appearance. Desktop and business handlers are unchanged. A cancelled drag also clears click suppression so keyboard activation is not lost. Guest tour v2026.11.06.2 still describes the same actions and needs no refresh.
