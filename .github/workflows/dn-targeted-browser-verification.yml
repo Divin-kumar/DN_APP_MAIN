@@ -155,7 +155,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-iphone-appearance]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -191,7 +191,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-iphone-task-story]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -227,7 +227,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-create-keyboard]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -263,7 +263,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-dropdown-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -298,7 +298,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-iphone-pdf]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -335,7 +335,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-pdf-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -370,7 +370,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-form-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -401,7 +401,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-search-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
@@ -432,7 +432,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -467,7 +467,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[audit-230-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -498,7 +498,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-phase5]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -538,7 +538,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-task-ui]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -576,7 +576,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-appearance]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -616,7 +616,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-appearance]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -656,7 +656,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-filter-touch]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
@@ -693,7 +693,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-list-legibility]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -728,7 +728,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-screenshot-settings]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
@@ -763,7 +763,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-demo-pdf-settings]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 23
     steps:
       - uses: actions/checkout@v4
@@ -797,7 +797,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-task-refine-clean]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
@@ -831,7 +831,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-creation-compact]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -866,7 +866,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-task-density]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
@@ -901,7 +901,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-moment-navigation]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 22
     steps:
       - uses: actions/checkout@v4
@@ -938,7 +938,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-release-fixes]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -982,7 +982,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-remaining-fixes]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 23
     steps:
       - uses: actions/checkout@v4
@@ -1035,7 +1035,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-four-failures]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
@@ -1074,7 +1074,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-release-remainder]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -1124,7 +1124,7 @@ jobs:
       github.ref == 'refs/heads/OldVersion' &&
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-232-four-failures]')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
