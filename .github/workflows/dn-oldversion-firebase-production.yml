@@ -17,7 +17,7 @@ on:
           - fast
 permissions:
   contents: read
-  actions: read
+  actions: write # Dispatch the development ledger refresh only after verified prod publication
 concurrency:
   group: dn-firebase-hosting-production
   cancel-in-progress: false
@@ -139,6 +139,16 @@ jobs:
           done
           echo "::error::Firebase Hosting returned an index that does not match the release build. Investigate the published site."
           exit 1
+      - name: Refresh development ledger after verified production publication
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          # Release already passed the exact live readback. Refresh ExpenseTracker
+          # with the newly published SHA without changing any Git branch.
+          if ! gh workflow run dn-oldversion-firebase-preview.yml --ref OldVersion -f production_sha="$GITHUB_SHA"; then
+            echo "::warning::Development ledger refresh dispatch failed; the next OldVersion push will recompute the production baseline."
+          fi
       - name: Publication summary
         shell: bash
         run: |

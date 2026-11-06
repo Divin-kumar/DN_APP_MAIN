@@ -7,6 +7,11 @@ on:
   push:
     branches: [OldVersion]
   workflow_dispatch:
+    inputs:
+      production_sha:
+        description: 'SHA of a just-verified DN production release'
+        required: false
+        type: string
 permissions:
   contents: read
 concurrency:
@@ -25,6 +30,11 @@ jobs:
           cache: npm
       - name: Install locked dependencies (without audit)
         run: npm ci --no-audit --no-fund
+      - name: Generate pending About release ledger
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DN_RELEASE_BASELINE_SHA: ${{ inputs.production_sha }}
+        run: node scripts/generate-development-ledger.mjs
       - name: Build DN for development preview
         env:
           VITE_DEPLOY_ENV: Firebase development

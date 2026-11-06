@@ -385,3 +385,53 @@ html[data-theme] .dn-premium-about .dn-about-release-body > p {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-premium-about .dn-about-release-entry > summary > svg { transition:none; }
 }
+
+
+/* Development-only About ledger: restrained until the full commit trail expands. */
+html[data-theme] .dn-premium-about .dn-about-pending-meta {
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;padding:0 1px 12px;
+  color:var(--color-text-muted);font-size:11px;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-meta > span:last-child {
+  margin-left:auto;color:var(--color-primary);font-weight:650;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-meta code {
+  font:inherit;font-variant-numeric:tabular-nums;background:var(--color-surface);
+  padding:3px 7px;border-radius:8px;color:var(--color-text);
+}
+html[data-theme] .dn-premium-about .dn-about-pending-details {
+  margin:12px 0 4px;border-block:1px solid var(--color-border);
+}
+html[data-theme] .dn-premium-about .dn-about-pending-details > summary {
+  min-height:48px;display:flex;justify-content:space-between;align-items:center;
+  gap:12px;cursor:pointer;list-style:none;color:var(--color-text);
+  font-size:12px;font-weight:650;padding:9px 2px;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-details > summary::-webkit-details-marker {display:none;}
+html[data-theme] .dn-premium-about .dn-about-pending-details > summary::marker {content:'';}
+html[data-theme] .dn-premium-about .dn-about-pending-details > summary svg {transition:transform .18s ease;}
+html[data-theme] .dn-premium-about .dn-about-pending-details[open] > summary svg {transform:rotate(180deg);}
+html[data-theme] .dn-premium-about .dn-about-pending-details > summary:focus-visible {
+ outline:2px solid var(--color-primary);outline-offset:2px;border-radius:8px;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-list {padding:2px 2px 8px;}
+html[data-theme] .dn-premium-about .dn-about-pending-commit {
+ padding:12px 0;border-top:1px solid var(--color-border);min-width:0;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-commit > strong {
+ display:block;font-size:12px;line-height:1.5;font-weight:650;color:var(--color-text);overflow-wrap:anywhere;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-commit-meta {
+ display:flex;align-items:center;gap:12px;margin-top:4px;
+ font-size:11px;color:var(--color-text-muted);
+}
+html[data-theme] .dn-premium-about .dn-about-pending-commit-meta a {
+ color:var(--color-primary);font-variant-numeric:tabular-nums;
+}
+html[data-theme] .dn-premium-about .dn-about-pending-commit > p {
+ margin:8px 0 0;font-size:11px;line-height:1.55;color:var(--color-text-muted);
+ white-space:pre-wrap;overflow-wrap:anywhere;
+}
+@media(prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-premium-about .dn-about-pending-details > summary svg {transition:none;}
+}

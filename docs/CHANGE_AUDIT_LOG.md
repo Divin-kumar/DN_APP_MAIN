@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-485 | Show all pending changes in Development About until production release
+
+**Owner direction:** Show every unreleased DN change in the ExpenseTracker development About page, beginning with the last actual production deployment. After a future production deployment passes, reset that **pending** ledger and start collecting new changes; preserve the released Version History and personal data.
+
+**Implementation:** Development-only Settings → About gains a calm Pending production section displaying base production version and SHA, a concise highlight list of actual active pending features, and a full expandable commit trail with all commit subjects, message bodies, dates and GitHub links. A fast build-time script, `scripts/generate-development-ledger.mjs`, uses GitHub Actions' most recent successful OldVersion production run and commit comparison to create a JSON asset in the runner. The initial verified baseline is v2.3.8 at `15b487e` (run 42226175568), with 12 newer commits before this change. Documentation-only and superseded intermediate commits appear in the complete trace, while highlighted summaries reflect current UI. Production builds never generate or display the pending ledger. Once a future production workflow passes its existing gates and exact live index readback, it dispatches an ExpenseTracker development refresh using the newly released SHA. Subsequent development commits automatically repopulate the ledger from the newest successful release. If GitHub metadata is unavailable, the About page explains that the log is unavailable; fast development deployment is not blocked.
+
+**Data/verification boundaries:** This is static public commit metadata. No signed-in/Guest record changes, original attachment migration, Story/PDF output, Firebase rules/storage/backend, Lifehub, production deployment, app-version bump or automatic main/PR write. Owner's fast development workflow still has no E2E, unit, lint or audit gate; production remains separately approved and verified. Existing versioned Guest tour accurately explains unchanged app functionality, so no automatic Guest reset is appropriate. **Source-derived:** Code and workflow guards reviewed; exact new build/deployed ledger must be checked after this OldVersion commit. Historical CHG records are preserved unchanged.
+
 ## CHG-20261106-484 | Restore mobile + and make command sheets slide instead of blink
 
 **Owner evidence:** A real iPhone screenshot of DN development showed a tiny unreadable cartoon inside the universal creator; the command menu and forms still appeared to blink. Owner requested a plain + and reliable opening/closing movement.

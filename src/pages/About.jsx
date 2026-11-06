@@ -13,7 +13,7 @@
  * - support quick refresh and update checks for the PWA shell
  */
 import { BookOpen, ChevronDown, Info, RefreshCw, Sparkles } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import './AboutPremium.css';
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
@@ -34,6 +34,15 @@ const buildDate = Number.isNaN(deployedAt.getTime())
       return `${part('day')} ${part('month')} ${part('year')} · ${part('hour')}:${part('minute')} IST`;
     })();
 const deployEnvironment = import.meta.env.VITE_DEPLOY_ENV || 'Test';
+const isDevelopmentHosting = deployEnvironment === 'Firebase development';
+
+// Curated highlights display only while their underlying commits remain unreleased.
+const pendingHighlights = [
+  { commit: '7a2292e27952854cfd4caff2e0708f02de57b065', text: 'Mobile Search stays in place above the iPhone keyboard, with consistent focus styling and fewer duplicate profile links.' },
+  { commit: '29eaececbaf20fb5a22df3690a981951be6ca497', text: 'The floating universal creator is a clear + again, and creation sheets use full-height opening and closing transitions.' },
+  { commit: '965373228b12d279d99b9ff8b41914904ae2a78e', text: 'ExpenseTracker is now DN Development, separately from the protected production site.' },
+  { commit: 'fe96c679c0a812f72633ee5dfb632c0dac6c161e', text: 'OldVersion builds publish automatically to Development without blocking E2E, unit, lint or audit steps.' },
+];
 
 const guideItems = [
   { title: 'Home', description: 'A short personal greeting welcomes you. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
@@ -310,6 +319,23 @@ const dataInfo = [
 
 export default function About() {
   const [refreshing, setRefreshing] = useState(false);
+  const [pendingLedger, setPendingLedger] = useState(null);
+
+  useEffect(() => {
+    if (!isDevelopmentHosting) return undefined;
+    const controller = new AbortController();
+    fetch('/dn-pending-release.json', { cache: 'no-store', signal: controller.signal })
+      .then(response => {
+        if (!response.ok) throw new Error('Development release log unavailable');
+        return response.json();
+      })
+      .then(result => { if (!controller.signal.aborted) setPendingLedger(result); })
+      .catch(() => { if (!controller.signal.aborted) setPendingLedger({ status: 'unavailable' }); });
+    return () => controller.abort();
+  }, []);
+
+  const pendingCommits = pendingLedger?.status === 'ready' ? pendingLedger.commits || [] : [];
+  const activeHighlights = pendingHighlights.filter(item => pendingCommits.some(commit => commit.sha === item.commit));
 
   const refreshApp = async () => {
     if (refreshing) return;
@@ -412,11 +438,63 @@ export default function About() {
         </div>
       </section>
 
+      {isDevelopmentHosting ? (
+        <section className="settings-section dn-about-pending" aria-labelledby="dn-about-pending-title">
+          <div className="settings-section-heading">
+            <span className="settings-accordion-icon"><BookOpen size={18} /></span>
+            <div>
+              <h3 id="dn-about-pending-title">Pending production</h3>
+              <p>Development changes since the last published DN release</p>
+            </div>
+          </div>
+          {pendingLedger === null ? (
+            <p className="settings-helper" role="status">Reading the development release log…</p>
+          ) : pendingLedger.status !== 'ready' ? (
+            <p className="settings-helper" role="status">The commit log could not be verified for this build. Development is available, but release notes are temporarily unavailable.</p>
+          ) : (
+            <>
+              <div className="dn-about-pending-meta">
+                <span>Production {pendingLedger.production?.version ? 'v' + pendingLedger.production.version : ''}</span>
+                <code>{pendingLedger.production?.sha?.slice(0, 7)}</code>
+                <span>{pendingCommits.length} pending {pendingCommits.length === 1 ? 'commit' : 'commits'}</span>
+              </div>
+              {pendingCommits.length === 0 ? (
+                <p className="settings-helper">Everything recorded here is now in production. New development commits will appear automatically.</p>
+              ) : (
+                <>
+                  {activeHighlights.length ? (
+                    <ul className="about-list compact-list">
+                      {activeHighlights.map(item => <li key={item.commit}>{item.text}</li>)}
+                    </ul>
+                  ) : null}
+                  <details className="dn-about-pending-details">
+                    <summary><span>All {pendingCommits.length} commits and details</span><ChevronDown size={17} aria-hidden="true" /></summary>
+                    <div className="dn-about-pending-list">
+                      {pendingCommits.map(commit => (
+                        <article className="dn-about-pending-commit" key={commit.sha}>
+                          <strong>{commit.title}</strong>
+                          <div className="dn-about-pending-commit-meta">
+                            <time dateTime={commit.date}>{commit.date ? new Date(commit.date).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' }) : 'Date unavailable'}</time>
+                            <a href={commit.url} target="_blank" rel="noopener noreferrer" aria-label={'View commit ' + commit.sha.slice(0, 7) + ' on GitHub'}>{commit.sha.slice(0, 7)}</a>
+                          </div>
+                          {commit.details ? <p>{commit.details}</p> : null}
+                        </article>
+                      ))}
+                    </div>
+                  </details>
+                </>
+              )}
+              <p className="settings-helper">After a verified production deployment, this development-only ledger resets to that release. Saved records and completed release history are never cleared.</p>
+            </>
+          )}
+        </section>
+      ) : null}
+
       <section className="settings-section">
         <div className="settings-section-heading">
           <span className="settings-accordion-icon"><Sparkles size={18} /></span>
           <div>
-            <h3>What&apos;s New in v{documentedRelease.version}</h3>
+            <h3>{isDevelopmentHosting ? 'Last production highlights' : `What's New in v${documentedRelease.version}`}</h3>
             <p>{documentedRelease.version === appVersion ? 'Changes in your installed version' : 'Latest documented highlights for this version range'}</p>
           </div>
         </div>
