@@ -277,3 +277,21 @@ html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-diary-monthbook,
 html[data-theme="dark"] .dn-v2-story[data-design-style] .dn-task-group {
   color-scheme:dark;
 }
+
+/* Keep formatted writing and keyboard focus on the selected reading paper.
+   Scope to book surfaces: introductions and undated chapters use shell colors. */
+html[data-theme] .dn-v2-story[data-design-style]
+  :is(.dn-journal-page,.dn-diary-monthbook,.dn-task-group) .dn-rich-text blockquote {
+  color:var(--dn-book-ink);border-left-color:var(--dn-book-accent);
+}
+html[data-theme] .dn-v2-story[data-design-style]
+  :is(.dn-journal-page,.dn-diary-monthbook,.dn-task-group) .dn-rich-text code {
+  color:var(--dn-book-ink);background:var(--dn-book-tint);
+  box-decoration-break:clone;-webkit-box-decoration-break:clone;
+}
+html[data-theme] .dn-v2-story[data-design-style]
+  :is(.dn-journal-page,.dn-diary-monthbook,.dn-task-group) a:focus-visible,
+html[data-theme] .dn-v2-story[data-design-style]
+  .dn-task-group .dn-task-status-switcher:focus-within {
+  outline:2px solid var(--dn-book-accent);outline-offset:3px;
+}

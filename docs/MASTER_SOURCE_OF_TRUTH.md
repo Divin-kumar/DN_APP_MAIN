@@ -6,6 +6,10 @@ DN organizes Moments, activities, memories, greetings, original attachments and 
 
 
 
+## Story formatted-writing palette refinement (6 November 2026)
+
+Recorded Journal, Diary and Tasks Story quotes now use book ink and an accent rule; inline code uses the selected book ink/tint with continuous decoration when wrapping. Keyboard focus on existing chapter links and the Tasks status control uses the same book accent. These rules are scoped to recorded paper surfaces, preserving shell colors for introductions and future/undated chapters. Heritage, Editorial and Minimal retain their light/dark themes. The focused Story contrast suite covers 320px and 390px, long inline text, quote/code contrast and link focus. Final browser evidence is pending; no deployment or version change is included. Guest fixtures need no reset because content and controls are unchanged.
+
 ## DN 2.3.4 second-pass verification (6 November 2026; synthetic Chromium passed, not released)
 
 **Executed:** Source SHA `ceb83f2cd2344a821201847532ebd4ea71115f7e` passed **25/25** responsive Chromium cases in [GitHub Actions 42088130871](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42088130871). Coverage includes Story's Journal/Diary/Tasks navigation touch geometry, title link routing, hidden decorative date ornaments, light/dark reading contrast, existing Tasks status, Moment header's three labels and values, five Moment tabs, Guest data preservation, and page overflow at 320/390/430px. [Same-SHA documentation and application governance 42088130618](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42088130618) passed unit, lint, build, audit and document contracts. An earlier intermediate test edit broke ESLint parsing; source at `ceb83f2` repaired the test file without altering application runtime and passed both suites. The 2.3.4 styling is not a new version or a deployment, and real iPhone Safari/VoiceOver, native keyboard and account journeys remain unverified. See CHG-20261106-429.

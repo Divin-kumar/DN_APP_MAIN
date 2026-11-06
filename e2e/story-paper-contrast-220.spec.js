@@ -32,17 +32,18 @@ const readableContrast = async (element, paper) => {
 };
 
 for (const theme of ['dark', 'light']) {
-  test(`Story book pages keep readable text in ${theme} app theme at iPhone width`, async ({ page }, testInfo) => {
+ for (const width of [320, 390]) {
+  test(`Story book pages keep readable text in ${theme} app theme at ${width}px iPhone width`, async ({ page }, testInfo) => {
     test.setTimeout(120000);
     const source = fixtureMoments()[0];
     const moments = formatNames.map(({ id, type }) => ({
       ...structuredClone(source), id, name: id, type,
       activities: [{ id: id + '-chapter', title: 'The little village',
-        description: '<p>We walked between shops and discovered a calm street.</p>',
+        description: 'We walked between shops and discovered a calm street.\n> A quiet memory worth keeping.\n`' + 'Keepsake'.repeat(24) + '`',
         date: '2026-10-14', completed: true }],
     }));
     const errors = await seedGuest(page, { moments, theme });
-    await page.setViewportSize({ width: 390, height: 844 });
+    await page.setViewportSize({ width, height: 844 });
     // Establish the local DN origin before touching browser-local preferences.
     await page.goto('/events');
     for (const style of ['heritage', 'editorial', 'minimal']) {
@@ -63,10 +64,31 @@ for (const theme of ['dark', 'light']) {
         expect(await readableContrast(h, paper), `${format}/${style}/${theme} title`).toBeGreaterThanOrEqual(4.5);
         if (format === 'journey' && style === 'heritage') {
           await h.scrollIntoViewIfNeeded();
-          await testInfo.attach(`journal-heritage-${theme}-390px`, {
+          await testInfo.attach(`journal-heritage-${theme}-${width}px`, {
             body: await page.screenshot({ fullPage: false }), contentType: 'image/png',
           });
         }
+        const quote = story.locator(paper + ' blockquote').first();
+        const code = story.locator(paper + ' code').first();
+        await expect(quote).toBeVisible();
+        await expect(code).toBeVisible();
+        expect(await readableContrast(quote, paper), `${format}/${style}/${theme} quote`).toBeGreaterThanOrEqual(4.5);
+        expect(await readableContrast(code, paper + ' code'), `${format}/${style}/${theme} code`).toBeGreaterThanOrEqual(4.5);
+        expect(await code.textContent()).toBe('Keepsake'.repeat(24));
+        expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+        const link = format === 'chronicle' ? h : h.locator('a');
+        await link.focus();
+        const focus = await link.evaluate((node) => ({
+          visible: node.matches(':focus-visible'),
+          outline: getComputedStyle(node).outlineColor,
+          accent: getComputedStyle(node.closest('.dn-v2-story')).getPropertyValue('--dn-book-accent').trim(),
+        }));
+        expect(focus.visible).toBe(true);
+        expect(focus.outline).toBe(await link.evaluate((node, accent) => {
+          const probe = document.createElement('span');
+          probe.style.color = accent; node.append(probe);
+          const rgb = getComputedStyle(probe).color; probe.remove(); return rgb;
+        }, focus.accent));
         if (format !== 'chronicle') {
           const prose = story.locator(paper + ' .dn-v2-story-entry-description').first();
           await expect(prose).toBeVisible();
@@ -77,7 +99,7 @@ for (const theme of ['dark', 'light']) {
     expect(errors).toEqual([]);
   });
 }
-
+}
 
 // 2.3 Phase 1: auxiliary future/undated chapters render on the application
 // shell, not on the light book paper. They must not inherit dark paper ink.
