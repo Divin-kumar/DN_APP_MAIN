@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-448 | Verify PDF content photo thumbnails
+- **Executed:** Source cf744895356449090b353741b2e093ed18fd3671 passed the 30-case focused browser suite in [run 42186299855](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42186299855), including 320px light/430px dark loaded thumbnails, URL cleanup after Cancel, missing-photo fallback and unchanged PDF selection/export checks. Build, offline originals/PDF and both upgrade-preservation paths passed; same-source governance 42186299894 passed Node/lint/build/audit/docs.
+- **Manual QA:** Expanded Guest photo rows and Moment photos visibly showed the small previews in the refined sheet. Original files and stored records remain unchanged. Physical iPhone/VoiceOver remains unverified.
+- **Release ledger:** Verified application cf744895356449090b353741b2e093ed18fd3671 stays on OldVersion, without a version bump or deployment. This follow-up records evidence only.
+
 ## CHG-20261106-447 | Add photo thumbnails to PDF content selection
 - **Owner add-on:** Replace generic photo icons with small photo previews in the content sheet.
 - **Change:** 34px rounded thumbnails use the existing scoped/integrity-checked original loader, load only near the visible sheet area and revoke owned URLs when removed. Missing/broken images show a quiet fallback; non-photo files retain their icon. Selecting a photo remains the same single row action.
