@@ -56,7 +56,7 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    const bar=page.locator('.dn-command-bar');
    await expect(page.locator('.dn-command-controls > *')).toHaveCount(0);
    const visual=await bar.evaluate(e=>({w:e.getBoundingClientRect().width,b:getComputedStyle(e).borderTopWidth,bg:getComputedStyle(e).backgroundColor}));
-   expect(visual.w).toBeLessThanOrEqual(49);expect(visual.b).toBe('0px');
+   expect(visual.w).toBeGreaterThanOrEqual(66);expect(visual.w).toBeLessThanOrEqual(69);expect(visual.b).toBe('0px');
    expect(visual.bg).toBe('rgba(0, 0, 0, 0)');
    await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
    // No permanently reserved search dock on search-free screens.
@@ -84,11 +84,11 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
       refine:e.querySelector('.dn-list-controls-trigger').getBoundingClientRect().height,
       width:document.documentElement.scrollWidth};
    });
-   expect(box.h).toBeLessThanOrEqual(49);expect(box.border).toBe('0px');
+   expect(box.h).toBeLessThanOrEqual(70);expect(box.border).toBe('0px');
    expect(box.bg).toBe('rgba(0, 0, 0, 0)');
    expect(box.searchH).toBeGreaterThanOrEqual(44);
    expect(box.glass).toContain('gradient');
-   expect(box.plus).toBeGreaterThanOrEqual(47);
+   expect(box.plus).toBeGreaterThanOrEqual(66);
    expect(box.refine).toBeGreaterThanOrEqual(44);
    expect(box.width).toBeLessThanOrEqual(width+1);
    // Searchable routes still leave enough room for the entire dock.

@@ -4,6 +4,16 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-480 | Make the universal creator visible and animate real sheet movement
+
+**Owner feedback:** The first 48px journaling illustration was barely visible on an iPhone; opening the action sheet and form appeared to blink, with no convincing entrance/exit. The 48px SVG used a very small subject, the command bar used an immediate `visibility:hidden`, and selecting Create mounted a second modal while the first sheet was exiting. Existing visibility-only tests could not detect this visual failure.
+
+**Fix:** Enlarge the single illustrated button to 68px with a blue rounded-square background, redraw the character to fill the surface, and animate real SVG head/hand/float motion. Recompute drag snapping and safe clamping for the new dimensions, while retaining Search/Refine, the current five destinations, keyboard/VoiceOver labels, stored dock position, existing form handlers and Reduce Motion. Remove only the command bar's instant hide behavior, crossfade/move the character, and serialize command-sheet exit before form entrance. Animate command and universal-create sheets a visible 148px vertically on entry and a matching reverse closure; bypass competing legacy keyframe animations for those sheets alone.
+
+**Compatibility:** Changes are presentational. No Firebase/Guest scope, persistent record, finance balance, backups, original attachments, Story/PDF, desktop navigation, or version number changes. The public Guest tour wording (v2026.11.06.3) still explains the illustrated creator, so an automatic reset would be inappropriate.
+
+**Verification:** A dedicated nondeploying GitHub Actions run checks lint/build and motion-focused Chromium journeys at 320/390/430px, including measured intermediate transforms, modal handoff and existing touch navigation. CI status must be consulted before claiming success. Real iPhone Safari motion and VoiceOver remain unverified; Firebase production remains v2.3.8.
+
 ## CHG-20261106-479 | iPhone sticky Search and animated journal creator (OldVersion only)
 
 **Owner screenshot and requirements:** At 430px Safari width, focusing Search caused the underlying Moment list to shift upward, with two overlapping blue focus outlines. The owner also requested removal of redundant Tasks/Transactions links in the profile dropdown, replacing the solid + with an animated everyday-activity character and a matched bottom-sheet opening/closing motion, and one common input focus treatment. These changes apply to the existing app, not Story/PDF content.
