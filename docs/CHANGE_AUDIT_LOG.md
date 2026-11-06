@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-476 | Guarded DN v2.3.8 release after iPhone scroll-frame correction
+
+**Owner approval:** The previous request to implement the Search-free mobile layout fix and release to permanent Firebase is still in scope; the 6 November screenshot demonstrates the installed v2.3.7 correction was incomplete. Version 2.3.8 in the root package and lockfile now documents the additional removal of 88px retired parent-nav padding; About highlights full-length mobile scrolling, preserved compact Search/Refine and standalone +. Release-phase9 expectations match the installed version. No changes to data schemas, signed-in/Guest records, routes, saved search/filter state, finance, original attachments, Story, PDFs, desktop behavior or Guest tour fixtures.
+
+**Executed focused evidence:** Source `1d41e8e9a8b73d446e9b0e75d945702f2a901ba0` passed **19/19** Chromium mobile-command checks in GitHub Actions [42221337352](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42221337352): 320/390/430px light/dark search-free and searchable routes, command navigation, drag/redock, desktop invariance, and 430×932 light/dark scrolling to the last About version. This proof precedes the version/docs-only release commits. **Gate:** Request independent exact-SHA full pre-release validation (`[verify-full]`), enforce its success before Firebase Hosting publication (`[release-full] [deploy-live]`), and require live built-version readback. A failed or incomplete gate blocks publication. Do not claim physical Safari or VoiceOver verification or Firebase publication until separately confirmed.
+
 ## CHG-20261106-475 | Repair the iPhone bottom scroll viewport beyond v2.3.7
 
 **Owner evidence:** An actual 430px iPhone Plus screenshot of the installed v2.3.7 About page shows Version History cut at the bottom, with a visually empty dark strip beside the detached +. The earlier patch removed conditional child padding but missed the legacy `@media (max-width:760px) .dn-main { padding:0 14px 88px !important; }`. The parent is box-sized, so this 88px reservation reduces the inner scroll viewport on *every* portrait-mobile route. The header and fixed + remain full viewport height, causing the visible gap even when `.dn-command-controls` is empty.
