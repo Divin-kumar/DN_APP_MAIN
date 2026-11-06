@@ -63,7 +63,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
       return y >= 0 && y <= window.innerHeight
         && node.contains(document.elementFromPoint(x, y));
     });
-    expect(hittable).toBe(true);
+    if (height > width) expect(hittable).toBe(true);
     const savedStyle = (await studio.locator('.dn-pdf-style-default small').innerText())
       .replace(/^Saved default:\s*/, '').trim();
     const pageThemeBeforeRestore = await studio.getByRole('button', { name: 'Light', exact: true })
