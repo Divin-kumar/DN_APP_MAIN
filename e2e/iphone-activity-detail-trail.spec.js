@@ -32,7 +32,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geometry.parent.right).toBeLessThanOrEqual(width + 1);
       expect(geometry.link.left).toBeGreaterThanOrEqual(-1);
       expect(geometry.link.right).toBeLessThanOrEqual(width + 1);
-      expect(geometry.link.height).toBeGreaterThanOrEqual(44);
+      // getBoundingClientRect() may report 43.999984px for a 44px CSS target.
+      // Match the 43.9px precision tolerance used by other mobile tap checks.
+      expect(geometry.link.height).toBeGreaterThanOrEqual(43.9);
       expect(geometry.title.right).toBeLessThanOrEqual(width + 1);
       expect(geometry.ellipsis).toBe('ellipsis');
       expect(geometry.pageWidth).toBeLessThanOrEqual(width + 1);
