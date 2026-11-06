@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-458 | Verify detached desktop shell and impacted screens
+- **Executed:** Source f9401683e6f092eee0a69bef24277d42d9d4afe2 passed all 30 focused Chromium cases in run 42192339391: detached header geometry, direct navigation, five mobile pixel comparisons, mobile Task creation/actions with one heading, desktop PDF equal-height panels and independent scrolling in light/dark, transaction details/payment behavior, PDF content selection and navigation motion. Same-source governance 42192339374 passed unit tests, lint, production build, dependency audit and documentation contracts.
+- **Limits/release:** Manual Guest preview reviewed Tasks, transactions and PDF panels. Physical Safari/VoiceOver remain unverified. Mobile runtime change is only the requested duplicate Tasks text removal; desktop visuals stay scoped. OldVersion only, unpublished, no version bump. This entry is evidence only.
+
 ## CHG-20261106-457 | Separate desktop navigation and refine Tasks, PDF and transactions
 - **Scope:** Desktop logo/page context is a detached header tile above navigation. Removed the redundant Tasks title and description on desktop and mobile; shell page title and summary metrics remain. Side-by-side desktop PDF customization matches preview height and scrolls independently. Desktop transactions use compact icon/title/metadata rows and aligned amounts, without the decorative vertical accent.
 - **Executed:** Manual desktop Guest preview verified detached header, transaction rows and exactly matching PDF panel heights (923px); controls overflow independently. Local production build passed; focused CI is pending.
