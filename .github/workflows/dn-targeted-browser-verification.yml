@@ -7,6 +7,35 @@ on:
 permissions:
   contents: read
 jobs:
+  activity-footer-command-238:
+    # Target the eight responsive regressions and the existing mobile command
+    # acceptance without restarting the 850+ browser journeys.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-footer-238]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Check responsive Activity footer, search-free full canvas and command
+        run: npx playwright test e2e/responsive.spec.js e2e/mobile-command-bar.spec.js --workers=2
+      - name: Save failure screenshots and results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-238-activity-footer-focus
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
   command-canvas-238:
     # Screenshot-reported iPhone Plus: retired tab reservation must not clip About.
     if: >-

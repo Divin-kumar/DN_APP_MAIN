@@ -461,3 +461,12 @@ html[data-theme] .activity-attachment-hint {
   padding:0 4px; color:var(--color-text-muted);
   font-size:12px; font-weight:500; letter-spacing:.01em;
 }
+
+/* DN 2.3.8: search-free mobile Activity Detail fills its viewport, while the
+   final metadata can be scrolled completely clear of the detached 48px +.
+   Do not restore the removed parent-shell 88px dock reservation. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .activity-detail-page {
+    padding-bottom:calc(78px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
+  }
+}

@@ -51,10 +51,16 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     if (width >= 768) expect(frame.width).toBeGreaterThan(frame.height);
     if (height < 500) expect(frame.height).toBeLessThanOrEqual(Math.max(96, height * .25));
     await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
-    const end = await page.locator('.activity-detail-footer').boundingBox();
     if (width < 768) {
-      const dock = await page.locator('.dn-command-bar').boundingBox();
-      expect(end.bottom ?? end.y + end.height).toBeLessThanOrEqual(dock.y + 1);
+      // Search-free pages intentionally use the full scroll canvas. The old
+      // viewport-clipping dock is gone; check the *reachable* bottom of the
+      // document against the actual floating command button instead.
+      await page.locator('.dn-content').evaluate(node => { node.scrollTop = node.scrollHeight; });
+      const end = await page.locator('.activity-detail-footer').boundingBox();
+      const create = await page.getByRole('button', { name: 'Open quick create menu' }).boundingBox();
+      expect(end.y + end.height).toBeLessThanOrEqual(create.y - 2);
+      await expect(page.locator('.activity-detail-footer')).toBeInViewport();
+      await expect(page.getByRole('button', { name: 'Open quick create menu' })).toBeVisible();
     }
     await page.goto('/events/moment-one/attachments');
     const tabs = page.locator('.event-workspace-nav a');
