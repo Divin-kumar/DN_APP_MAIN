@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## iPhone universal + and bottom-sheet motion correction (6 November 2026; OldVersion development)
+
+Owner's physical iPhone screenshot showed the illustrated mascot was illegible inside its 68px blue creator tile and opening/closing the command sheet and forms still looked like a blink. The mobile trigger now displays only a large, high-contrast + while preserving its 68px touch target, movable dock position, accessible button name and all existing Navigate & create destinations. The mascot CSS and animations were removed; Guest tour v2026.11.06.4 provides updated instructions and requires an explicit Refresh demo to replace edited Guest records.
+
+The universal drawer now travels its entire height (100% rather than 148px) in and out, keeping the transparent scrim compositor visible until the sheet has finished leaving. The old global overlay-fade-in keyframe, which could override Framer's scrim animation on Safari/WebKit, is disabled for these universal sheets only. The parent scrim exit and sheet timing are coordinated; the + no longer fades/teleports out on open. Reduce Motion honors the device preference, and non-universal dialogs keep their prior behavior. The command-menu-to-form handoff preserves sequential exit/entry, focus handling, scroll lock, Guest/account data, Story/PDF, finances, and original attachments. Mobile E2E acceptance source selectors now target the + instead of the old mascot, but the fast development workflow does not execute E2E per the owner's deployment policy. **Status:** Commit and automatic development build/read-back pending independent GitHub Actions confirmation; physical Safari remains unverified.
+
 ## Permanent DN development preview on ExpenseTracker Hosting (6 November 2026; OldVersion)
 
 **Owner-authorized environment split:** DN production remains at `https://dn-10.web.app` on Hosting site `dn-10`. The old ExpenseTracker Hosting site, the default site `expense-tracker-divin` in Firebase project `expense-tracker-divin`, is repurposed as a stable DN development URL at `https://expense-tracker-divin.web.app`. Lifehub is not a deployment target for DN.

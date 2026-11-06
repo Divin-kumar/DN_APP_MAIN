@@ -11,6 +11,8 @@ import './ModalDialog.css';
 export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
+  // Keep the scrim visible throughout the universal sheet's full-height exit.
+  const isUniversalSheet = variant === 'drawer' && /\bdn-(?:command-dialog|create-sheet)\b/.test(className);
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
   const backdropRef = useRef(null);
@@ -96,22 +98,22 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   return createPortal(
     <motion.div
       ref={backdropRef}
-      className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}`}
+      className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isUniversalSheet ? ' dn-modal-slide-scrim' : ''}`}
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: isPresent ? 1 : 0 }}
-      exit={{ opacity: 0 }}
+      animate={{ opacity: isPresent || isUniversalSheet ? 1 : 0 }}
+      exit={{ opacity: 0, transition: reducedMotion ? { duration: 0 } : isUniversalSheet ? { delay: .43, duration: .14 } : { duration: .19 } }}
       transition={{ duration: reducedMotion ? 0 : 0.19 }}
+      onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
-        animate={{ opacity: isPresent ? 1 : .85, scale: isPresent ? 1 : .98, y: isPresent ? 0 : (variant === 'drawer' ? 148 : 20) }}
-        exit={{ opacity: .85, scale: .98, y: variant === 'drawer' ? 148 : 20 }}
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : isUniversalSheet ? { opacity: 1, scale: 1, y: '100%' } : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
+        animate={{ opacity: isUniversalSheet ? 1 : (isPresent ? 1 : .85), scale: isUniversalSheet || isPresent ? 1 : .98, y: isPresent ? 0 : (isUniversalSheet ? '100%' : (variant === 'drawer' ? 148 : 20)) }}
+        exit={{ opacity: isUniversalSheet ? 1 : .85, scale: isUniversalSheet ? 1 : .98, y: isUniversalSheet ? '100%' : (variant === 'drawer' ? 148 : 20) }}
         transition={reducedMotion ? { duration: 0 } : {
-          duration: variant === 'drawer' ? .45 : .32,
+          duration: isUniversalSheet ? .43 : (variant === 'drawer' ? .45 : .32),
           ease: [0.22, 1, 0.36, 1],
-          opacity: { duration: .28 },
-        }}
-        onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}>
+          opacity: { duration: isUniversalSheet ? 0 : .28 },
+        }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>

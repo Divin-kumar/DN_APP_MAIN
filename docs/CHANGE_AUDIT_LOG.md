@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-484 | Restore mobile + and make command sheets slide instead of blink
+
+**Owner evidence:** A real iPhone screenshot of DN development showed a tiny unreadable cartoon inside the universal creator; the command menu and forms still appeared to blink. Owner requested a plain + and reliable opening/closing movement.
+
+**Implementation:** Keep the 68px movable/docked button and all creation/navigation actions, replace its mascot with a prominent 34px plus, remove mascot animation CSS and update Guest tour to v2026.11.06.4 (existing edited Guest records are unchanged). The + stays stable underneath the scrim rather than fading/shrinking. Universal command and create drawers now enter and exit a full sheet height over .43s; the backdrop stays until the sheet finishes its reverse exit, then fades over .14s. A conflicting legacy scrim keyframe is disabled for these drawers only. Preserved reduced motion, drag/redock, account and Guest boundaries, access labels, keyboard focus, route navigation and sequential menu-to-form behavior. Other dialogs remain unchanged.
+
+**Validation boundary:** Source-derived inspection and updated targeted E2E acceptance assertions (not executed as part of development; development's automatic pipeline builds and deploys without E2E/unit/lint/audit gates). Check the new development GitHub Actions result and exact index read-back separately. Real iPhone Safari animation and VoiceOver remain unverified. No production `dn-10` deployment, Firebase rules/data changes, Lifehub, finance logic, or Story/PDF behavior change.
+
 ## CHG-20261106-483 | Make automatic ExpenseTracker development deployment build-only
 
 **Owner requirement:** Preview DN's latest `OldVersion` commits as quickly as possible in the repurposed ExpenseTracker Hosting site. No E2E or other test gate in the development deployment job; keep test and release verification independent of development.

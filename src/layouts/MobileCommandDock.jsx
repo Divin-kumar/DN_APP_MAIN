@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, ListChecks, ListTodo, Receipt, Upload, PanelBottom } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, ListChecks, ListTodo, Receipt, Upload, PanelBottom, Plus } from 'lucide-react';
 import ModalDialog from '../components/common/ModalDialog';
 import usePersistentListState from '../hooks/usePersistentListState';
 import './MobileCommandDock.css';
@@ -118,22 +118,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event=>pointerEnd(event)}
           onPointerCancel={event=>pointerEnd(event,true)}
           onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}setOpen(!open);}}>
-          <svg className="dn-create-mascot" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
-            <ellipse cx="32" cy="57" rx="24" ry="3" fill="#0B1D4D" opacity=".32"/>
-            <path d="M13 44c0-14 8-20 19-20s19 6 19 20v8H13v-8Z" fill="#79D2F1" stroke="#C8E7FF" strokeWidth="1.6"/>
-            <circle className="dn-mascot-head" cx="32" cy="20" r="12.4" fill="#FFD5AE"/>
-            <path d="M20 17c-2-11 18-17 23-4l1 8c-5-1-6-6-8-7-5 4-13 4-16 3Z" fill="#18294C"/>
-            <circle cx="27.5" cy="21" r="1.2" fill="#18294C"/><circle cx="36.5" cy="21" r="1.2" fill="#18294C"/>
-            <path d="M29 26c1.6 2 4.4 2 6 0" stroke="#B56859" strokeWidth="1.6" strokeLinecap="round"/>
-            <path d="M9 48q11-4 23 2 12-6 23-2v12q-13-3-23 2-11-5-23-2V48Z" fill="#FFFDF4" stroke="#C5D6FF" strokeWidth="1.8" strokeLinejoin="round"/>
-            <path d="M32 50v11M15 53l12 3M38 56l11-3" stroke="#ADC6EE" strokeWidth="1.4" strokeLinecap="round"/>
-            <g className="dn-mascot-writing">
-              <path d="M42 37 38 47 33 51" stroke="#FFD5AE" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
-              <path d="M34 51 47 35" stroke="#FFD66F" strokeWidth="3" strokeLinecap="round"/>
-              <path d="m47 35 2-2" stroke="#F9F7FF" strokeWidth="2.3" strokeLinecap="round"/>
-            </g>
-            <path className="dn-mascot-spark" d="M54 15v10m-5-5h10" stroke="#FFD76D" strokeWidth="2.8" strokeLinecap="round"/>
-          </svg>
+          <Plus className="dn-create-glyph" size={34} strokeWidth={2.7} aria-hidden="true" />
         </button>
       </div>
     </div>

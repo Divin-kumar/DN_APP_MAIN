@@ -134,21 +134,21 @@ test('iPhone search focus keeps its page canvas and one glass focus halo',async(
  await input.blur();await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
  expect(errors).toEqual([]);
 });
-test('top-right profile hides duplicate Task and Transaction links; cartoon preserves creation',async({page})=>{
+test('top-right profile hides duplicate Task and Transaction links; + preserves creation',async({page})=>{
  await page.setViewportSize({width:430,height:932});await seedGuest(page);await page.goto('/events');
  await page.getByRole('button',{name:'Open profile and account menu'}).click();
  const menu=page.getByRole('menu',{name:'Profile and account'});
  await expect(menu.getByRole('menuitem',{name:'Tasks'})).toHaveCount(0);
  await expect(menu.getByRole('menuitem',{name:'Transactions'})).toHaveCount(0);
  await expect(menu.getByRole('menuitem',{name:'Settings'})).toBeVisible();
- await expect(page.locator('.dn-create-mascot')).toBeVisible();
- await expect(page.locator('.dn-mascot-writing')).toHaveCount(1);
+ await expect(page.locator('.dn-command-trigger .dn-create-glyph')).toBeVisible();
+ await expect(page.locator('.dn-command-trigger .dn-create-glyph')).toHaveCount(1);
 });
 
 test('animated creation opens and reverses, with matching form focus treatment',async({page})=>{
  await page.setViewportSize({width:390,height:844});await seedGuest(page,{theme:'light'});
  await page.goto('/events');
- const character=page.locator('.dn-create-mascot');
+ const character=page.locator('.dn-command-trigger .dn-create-glyph');
  await expect(character).toBeVisible();
  await page.getByRole('button',{name:'Open quick create menu'}).click();
  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
@@ -164,10 +164,10 @@ test('animated creation opens and reverses, with matching form focus treatment',
  await expect(sheet).toHaveCount(0);
  await expect(character).toBeVisible();
 });
-test('reduced motion retains the creator and accessible command sheet without looping illustration',async({page})=>{
+test('reduced motion retains the + and accessible command sheet without animation',async({page})=>{
  await page.emulateMedia({reducedMotion:'reduce'});
  await page.setViewportSize({width:430,height:932});await seedGuest(page,{theme:'dark'});await page.goto('/tasks');
- const mascot=page.locator('.dn-create-mascot');
+ const mascot=page.locator('.dn-command-trigger .dn-create-glyph');
  await expect(mascot).toBeVisible();
  expect(await mascot.evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
  await page.getByRole('button',{name:'Open quick create menu'}).click();
@@ -177,7 +177,7 @@ test('reduced motion retains the creator and accessible command sheet without lo
  await expect(mascot).toBeVisible();
 });
 
-test('64-plus illustrated creator is visible at 320/390/430 and the sheet moves',async({page})=>{
+test('68px plus creator is visible at 320/390/430 and the sheet moves',async({page})=>{
  for(const width of [320,390,430]){
   await page.setViewportSize({width,height:844});
   await seedGuest(page,{theme:width===390?'dark':'light'});await page.goto('/events');
@@ -185,8 +185,9 @@ test('64-plus illustrated creator is visible at 320/390/430 and the sheet moves'
   const b=await button.boundingBox();
   expect(b.width).toBeGreaterThanOrEqual(66);expect(b.height).toBeGreaterThanOrEqual(66);
   expect(b.x+b.width).toBeLessThanOrEqual(width+1);
-  const mascot=button.locator('.dn-create-mascot');
-  expect(await mascot.evaluate(el=>getComputedStyle(el).animationName)).toContain('dn-storyteller-float');
+  const plus=button.locator('.dn-create-glyph');
+  await expect(plus).toBeVisible();
+  expect(await plus.evaluate(el=>Math.round(el.getBoundingClientRect().width))).toBeGreaterThanOrEqual(32);
   await button.click();
   const sheet=page.getByRole('dialog',{name:'Navigate & create'});
   await expect(sheet).toBeVisible();

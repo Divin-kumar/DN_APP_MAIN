@@ -127,3 +127,6 @@ html[data-theme] .dn-modal-viewport :is(.dn-command-dialog,.dn-create-sheet) {
 @media (prefers-reduced-motion:reduce) {
  html[data-theme] .dn-modal-viewport :is(.dn-command-dialog,.dn-create-sheet) {will-change:auto;}
 }
+
+/* Global overlay-fade-in uses fill-mode:both, overriding Framer exits on WebKit. */
+html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!important; }

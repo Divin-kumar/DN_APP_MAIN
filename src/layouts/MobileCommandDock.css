@@ -29,7 +29,6 @@
   html[data-theme] .dn-command-root .dn-command-trigger svg { color:inherit!important; }
   html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) { background:linear-gradient(145deg,var(--color-primary),color-mix(in srgb,var(--color-primary) 80%,#14213d))!important; }
   html[data-theme] .dn-command-root .dn-command-trigger.is-dragging { transition:none!important; box-shadow:0 8px 28px color-mix(in srgb,var(--color-primary) 35%,transparent)!important; }
-  html[data-theme] .dn-command-trigger.is-open .dn-create-glyph { transform:rotate(45deg); }
   body.dn-modal-open .dn-command-bar { visibility:hidden; }
   html[data-theme] .dn-content { padding-bottom:calc(98px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)))!important; }
 }
@@ -179,52 +178,24 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
    outline:2px solid var(--color-primary)!important;outline-offset:3px;
  }
  html[data-theme] .dn-command-root .dn-command-trigger.is-open {
-   opacity:0;transform:translateY(22px) scale(.76);pointer-events:none;
+   /* Keep the + stable beneath the modal scrim instead of blinking. */
+   opacity:1;transform:none;pointer-events:none;
  }
  html[data-theme] .dn-command-root .dn-command-trigger:not(.is-open):active {
    transform:scale(.95);
  }
- html[data-theme] .dn-create-mascot {
-   display:block;width:64px;height:64px;overflow:visible;
-   transform-origin:50% 75%;
-   animation:dn-storyteller-float 2.2s ease-in-out infinite;
+ html[data-theme] .dn-command-root .dn-command-trigger .dn-create-glyph {
+   display:block; width:34px; height:34px; flex:none;
+   stroke-width:2.7; transform:none;
  }
- html[data-theme] .dn-mascot-head {
-   transform-box:fill-box;transform-origin:50% 90%;
-   animation:dn-storyteller-nod 1.5s ease-in-out infinite alternate;
- }
- html[data-theme] .dn-mascot-writing {
-   transform-box:fill-box;transform-origin:100% 0%;
-   animation:dn-storyteller-writing .78s ease-in-out infinite alternate;
- }
- html[data-theme] .dn-mascot-spark {
-   transform-box:fill-box;transform-origin:center;
-   animation:dn-storyteller-spark 1.75s ease-in-out infinite;
- }
- html[data-theme] .dn-command-trigger.is-dragging .dn-create-mascot {
-   animation:none;transform:scale(1.08);
- }
-}
-@keyframes dn-storyteller-float {
- 0%,100% {transform:translateY(0)}
- 50% {transform:translateY(-5px)}
-}
-@keyframes dn-storyteller-nod {from {transform:rotate(-4deg)} to {transform:rotate(5deg)}}
-@keyframes dn-storyteller-writing {
- from {transform:translateX(-2px) rotate(-8deg)}
- to {transform:translateX(2px) rotate(10deg)}
-}
-@keyframes dn-storyteller-spark {
- 0%,100% {opacity:.3;transform:scale(.8)}
- 50% {opacity:1;transform:scale(1.25)}
 }
 body.dn-modal-open .dn-command-root .dn-command-bar {
  visibility:visible!important;
 }
 
 @media (prefers-reduced-motion:reduce) {
- html[data-theme] .dn-create-mascot,
- html[data-theme] .dn-mascot-head,
-  html[data-theme] .dn-mascot-writing,
- html[data-theme] .dn-mascot-spark {animation:none!important}
+ html[data-theme] .dn-command-root .dn-command-trigger,
+ html[data-theme] .dn-command-root .dn-command-trigger .dn-create-glyph {
+   transition:none!important;animation:none!important;
+ }
 }
