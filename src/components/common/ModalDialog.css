@@ -118,3 +118,12 @@ html[data-theme] .dn-modal-viewport .dn-create-sheet { will-change:transform,opa
 @media (prefers-reduced-motion:reduce) {
  html[data-theme] .dn-modal-viewport .dn-create-sheet { will-change:auto; }
 }
+
+/* Only Framer animates the universal drawer. Legacy sheet keyframes would
+   compete with the transform used by both enter and reversed exit. */
+html[data-theme] .dn-modal-viewport :is(.dn-command-dialog,.dn-create-sheet) {
+ animation:none!important;will-change:transform,opacity;backface-visibility:hidden;
+}
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-modal-viewport :is(.dn-command-dialog,.dn-create-sheet) {will-change:auto;}
+}

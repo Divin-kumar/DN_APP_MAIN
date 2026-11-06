@@ -98,6 +98,8 @@ export default function DashboardLayout() {
   const quickCreateMobileRef = useRef(null);
   const quickCreateKeyboardFocusRef = useRef(false);
   const [quickCreateType, setQuickCreateType] = useState(null);
+  const [commandHandoff, setCommandHandoff] = useState(false);
+  useEffect(() => { if (!mobileShell) setCommandHandoff(false); }, [mobileShell]);
   const commandReturnFocus = useRef(false);
   const previousCreateType = useRef(null);
   useEffect(() => {
@@ -338,6 +340,7 @@ export default function DashboardLayout() {
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type, activationEvent) => {
     if (transactionSaving.current || quickActivitySaving.current) return;
+    if (mobileShell && quickCreateOpen) setCommandHandoff(true);
     commandReturnFocus.current = mobileShell && activationEvent?.detail === 0;
     if (type === 'task') {
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
@@ -530,6 +533,7 @@ export default function DashboardLayout() {
     }
   };
 
+  const visibleQuickCreateType = commandHandoff ? null : quickCreateType;
   // The layout wraps every protected page in a consistent shell:
   // top header, left navigation, content area, and floating quick-create panel.
   // This creates a single app frame so the experience feels consistent throughout the product.
@@ -653,6 +657,7 @@ export default function DashboardLayout() {
 
       {mobileShell ? <MobileCommandDock controlsRef={setMobileControlsTarget} menuRef={quickCreateMobileRef}
         open={quickCreateOpen} setOpen={setQuickCreateOpen} onCreate={beginQuickCreate}
+        onExitComplete={() => setCommandHandoff(false)}
         onAttachment={(workspaceMoment || openedActivityContext?.moment) ? () => beginMomentCreate('attachment') : null}
         isEntry={Boolean(activityDetailMatch)} activePath={activeNavigationPath} /> : null}
 
@@ -679,13 +684,13 @@ export default function DashboardLayout() {
       </div>
 
       <AnimatePresence initial={false} mode="wait">
-      {quickCreateType === 'event' ? (
+      {visibleQuickCreateType === 'event' ? (
         <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'task' ? (
+      {visibleQuickCreateType === 'task' ? (
         <ModalDialog key="quick-task" title="New Task" className="dn-task-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
@@ -694,14 +699,14 @@ export default function DashboardLayout() {
             onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }} />
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
+      {visibleQuickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
         <ModalDialog key="quick-transaction" title="Add Transaction" className="dn-transaction-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={closeQuickTransaction}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'activity-entry' ? (
+      {visibleQuickCreateType === 'activity-entry' ? (
         <ModalDialog key="quick-entry" title="Add entry" className="dn-entry-add-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
           onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
@@ -725,7 +730,7 @@ export default function DashboardLayout() {
           </form>
         </ModalDialog>
       ) : null}
-      {quickCreateType === 'activity' ? (
+      {visibleQuickCreateType === 'activity' ? (
         <ModalDialog key="quick-activity" title="Add an activity" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>

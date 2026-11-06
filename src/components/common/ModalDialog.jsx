@@ -103,10 +103,14 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
       transition={{ duration: reducedMotion ? 0 : 0.19 }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: 0, scale: variant === 'drawer' ? 1 : .96, y: variant === 'drawer' ? 56 : 10 }}
-        animate={{ opacity: isPresent ? 1 : 0, scale: isPresent ? 1 : .985, y: isPresent ? 0 : (variant === 'drawer' ? 56 : 12) }}
-        exit={{ opacity: 0, scale: .985, y: variant === 'drawer' ? 56 : 12 }}
-        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 430, damping: 37, mass: .9 }}
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
+        animate={{ opacity: isPresent ? 1 : .85, scale: isPresent ? 1 : .98, y: isPresent ? 0 : (variant === 'drawer' ? 148 : 20) }}
+        exit={{ opacity: .85, scale: .98, y: variant === 'drawer' ? 148 : 20 }}
+        transition={reducedMotion ? { duration: 0 } : {
+          duration: variant === 'drawer' ? .45 : .32,
+          ease: [0.22, 1, 0.36, 1],
+          opacity: { duration: .28 },
+        }}
         onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>

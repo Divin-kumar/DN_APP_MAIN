@@ -8,12 +8,14 @@ import './MobileCommandDock.css';
 
 const defaults = Object.freeze({ floating: false, edge: 'right', y: .65 });
 const rules = Object.freeze({ edge: ['left','right'], y: value => Number.isFinite(value) && value >= 0 && value <= 1 });
+const CREATE_SIZE = 68;
+const EDGE_PADDING = 12;
 const destinations = [
   ['Home','/dashboard',LayoutDashboard], ['Moments','/events',CalendarDays],
   ['Activities','/activities',ListChecks], ['Tasks','/tasks',ListTodo],
   ['Finance','/financials/transactions',Receipt],
 ];
-export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, isEntry, activePath }) {
+export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, onExitComplete, isEntry, activePath }) {
   const [position, savePosition, resetPosition] = usePersistentListState('mobile-command', defaults, rules);
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight, top: 0, inset: 0 }));
   const [drag, setDrag] = useState(null);
@@ -77,8 +79,8 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   }, []);
   const clamp = (value, low, high) => Math.max(low, Math.min(value, Math.max(low, high)));
   const floating = position.floating && viewport.inset < 100;
-  const x = drag?.x ?? (position.edge === 'left' ? 12 : viewport.width - 64);
-  const y = drag?.y ?? (viewport.top + 76 + position.y * Math.max(0, viewport.height - 164));
+  const x = drag?.x ?? (position.edge === 'left' ? 12 : viewport.width - CREATE_SIZE - EDGE_PADDING);
+  const y = drag?.y ?? (viewport.top + 76 + position.y * Math.max(0, viewport.height - (CREATE_SIZE + 116)));
   const pointerDown = event => {
     if (event.button !== 0 || !event.isPrimary) return;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -92,12 +94,12 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (!p.moved && Math.hypot(event.clientX-p.startX,event.clientY-p.startY) < 10) return;
     p.moved = true;
     suppressClick.current = true;
-    setDrag({x:clamp(event.clientX-p.dx,12,viewport.width-64),y:clamp(event.clientY-p.dy,viewport.top+76,viewport.top+viewport.height-88)});
+    setDrag({x:clamp(event.clientX-p.dx,EDGE_PADDING,viewport.width-CREATE_SIZE-EDGE_PADDING),y:clamp(event.clientY-p.dy,viewport.top+76,viewport.top+viewport.height-CREATE_SIZE-24)});
   };
   const pointerEnd = (event, cancelled = false) => {
     const p = pointer.current;
     if (!p || p.id !== event.pointerId) return;
-    if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+26 < viewport.width/2 ? 'left':'right',
+    if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+CREATE_SIZE/2 < viewport.width/2 ? 'left':'right',
       y: clamp((drag.y-viewport.top-76)/Math.max(1,viewport.height-164),0,1) });
     if (cancelled) suppressClick.current = false;
     pointer.current = null;
@@ -116,25 +118,26 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event=>pointerEnd(event)}
           onPointerCancel={event=>pointerEnd(event,true)}
           onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}setOpen(!open);}}>
-          <svg className="dn-create-mascot" viewBox="0 0 52 52" fill="none" aria-hidden="true" focusable="false">
-            <path d="M8 45c6 3 28 3 36 0" stroke="currentColor" strokeOpacity=".2" strokeWidth="3" strokeLinecap="round"/>
-            <rect x="12" y="30" width="29" height="15" rx="5" fill="#3779DC"/>
-            <path d="M15 38h23" stroke="#8DBAFF" strokeWidth="1.3"/>
-            <path d="M26 31c-4-2-8-2-12-1v9c5-1 9 0 12 2 4-2 8-3 13-2v-9c-5-1-9-1-13 1Z" fill="#FAF8EE" stroke="#A5BCE4" strokeWidth="1.5" strokeLinejoin="round"/>
-            <path d="M26 31v10" stroke="#A5BCE4" strokeWidth="1.2"/>
-            <circle cx="26" cy="14" r="9" fill="#FFD3A5"/>
-            <path d="M17 13c0-8 15-12 18-2l-1 5-4-4-8 2-5-1Z" fill="#213354"/>
-            <circle cx="23" cy="15" r=".9" fill="#213354"/><circle cx="29" cy="15" r=".9" fill="#213354"/>
-            <path d="M24 19c1.2 1.4 3 1.4 4.3 0" stroke="#B36E59" strokeWidth="1.2" strokeLinecap="round"/>
-            <path d="M18 33v-5c0-8 16-8 16 0v4" fill="#72B6D8" stroke="#467EAB" strokeWidth="1.3"/>
-            <path className="dn-mascot-writing-arm" d="M31 28l-3 6-5 1" stroke="#FFD3A5" strokeWidth="4.2" strokeLinecap="round"/>
-            <path className="dn-mascot-pencil" d="m22 35 6-8" stroke="#E9A63A" strokeWidth="2.7" strokeLinecap="round"/>
-            <path className="dn-mascot-spark" d="M42 13v6m-3-3h6" stroke="#E8B35B" strokeWidth="2" strokeLinecap="round"/>
+          <svg className="dn-create-mascot" viewBox="0 0 64 64" fill="none" aria-hidden="true" focusable="false">
+            <ellipse cx="32" cy="57" rx="24" ry="3" fill="#0B1D4D" opacity=".32"/>
+            <path d="M13 44c0-14 8-20 19-20s19 6 19 20v8H13v-8Z" fill="#79D2F1" stroke="#C8E7FF" strokeWidth="1.6"/>
+            <circle className="dn-mascot-head" cx="32" cy="20" r="12.4" fill="#FFD5AE"/>
+            <path d="M20 17c-2-11 18-17 23-4l1 8c-5-1-6-6-8-7-5 4-13 4-16 3Z" fill="#18294C"/>
+            <circle cx="27.5" cy="21" r="1.2" fill="#18294C"/><circle cx="36.5" cy="21" r="1.2" fill="#18294C"/>
+            <path d="M29 26c1.6 2 4.4 2 6 0" stroke="#B56859" strokeWidth="1.6" strokeLinecap="round"/>
+            <path d="M9 48q11-4 23 2 12-6 23-2v12q-13-3-23 2-11-5-23-2V48Z" fill="#FFFDF4" stroke="#C5D6FF" strokeWidth="1.8" strokeLinejoin="round"/>
+            <path d="M32 50v11M15 53l12 3M38 56l11-3" stroke="#ADC6EE" strokeWidth="1.4" strokeLinecap="round"/>
+            <g className="dn-mascot-writing">
+              <path d="M42 37 38 47 33 51" stroke="#FFD5AE" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M34 51 47 35" stroke="#FFD66F" strokeWidth="3" strokeLinecap="round"/>
+              <path d="m47 35 2-2" stroke="#F9F7FF" strokeWidth="2.3" strokeLinecap="round"/>
+            </g>
+            <path className="dn-mascot-spark" d="M54 15v10m-5-5h10" stroke="#FFD76D" strokeWidth="2.8" strokeLinecap="round"/>
           </svg>
         </button>
       </div>
     </div>
-    <AnimatePresence initial={false} mode="wait">{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
+    <AnimatePresence initial={false} mode="wait" onExitComplete={onExitComplete}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
       <nav aria-label="Main navigation" className="dn-command-destinations">
         {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={()=>setOpen(false)}>
           <span className="dn-command-destination-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span><span>{label}</span>
@@ -151,7 +154,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         </div>
       </section>
       {position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();setOpen(false);}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
-        : <p className="dn-command-hint">Drag + to either edge for easier reach.</p>}
+        : <p className="dn-command-hint">Drag the creator to either edge for easier reach.</p>}
     </ModalDialog> : null}</AnimatePresence>
   </div>;
 }

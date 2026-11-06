@@ -176,3 +176,31 @@ test('reduced motion retains the creator and accessible command sheet without lo
  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
  await expect(mascot).toBeVisible();
 });
+
+test('64-plus illustrated creator is visible at 320/390/430 and the sheet moves',async({page})=>{
+ for(const width of [320,390,430]){
+  await page.setViewportSize({width,height:844});
+  await seedGuest(page,{theme:width===390?'dark':'light'});await page.goto('/events');
+  const button=page.getByRole('button',{name:'Open quick create menu'});
+  const b=await button.boundingBox();
+  expect(b.width).toBeGreaterThanOrEqual(66);expect(b.height).toBeGreaterThanOrEqual(66);
+  expect(b.x+b.width).toBeLessThanOrEqual(width+1);
+  const mascot=button.locator('.dn-create-mascot');
+  expect(await mascot.evaluate(el=>getComputedStyle(el).animationName)).toContain('dn-storyteller-float');
+  await button.click();
+  const sheet=page.getByRole('dialog',{name:'Navigate & create'});
+  await expect(sheet).toBeVisible();
+  await page.waitForTimeout(90);
+  const midway=await sheet.evaluate(el=>getComputedStyle(el).transform);
+  await page.waitForTimeout(470);
+  const settled=await sheet.evaluate(el=>getComputedStyle(el).transform);
+  expect(midway).not.toBe(settled);
+  await sheet.getByRole('button',{name:'Activity',exact:true}).click();
+  const form=page.getByRole('dialog',{name:'Add an activity'});
+  await expect(form).toBeVisible();
+  await expect(sheet).toHaveCount(0);
+  await form.getByRole('button',{name:'Cancel'}).click();
+  await expect(form).toHaveCount(0);
+  await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
+ }
+});
