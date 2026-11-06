@@ -53,8 +53,27 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     await testInfo.attach(`iPhone-PDF-${width}-${height}-${theme}`, {
       body: await page.screenshot(), contentType: 'image/png',
     });
+    // A visible button can still sit underneath a sticky rail on tiny screens.
+    // Verify the actual touch-center receives this button, not a nearby control.
+    await restore.scrollIntoViewIfNeeded();
+    const hittable = await restore.evaluate((node) => {
+      const rect = node.getBoundingClientRect();
+      const x = rect.left + rect.width / 2;
+      const y = rect.top + rect.height / 2;
+      return y >= 0 && y <= window.innerHeight
+        && node.contains(document.elementFromPoint(x, y));
+    });
+    expect(hittable).toBe(true);
+    const savedStyle = (await studio.locator('.dn-pdf-style-default small').innerText())
+      .replace(/^Saved default:\\s*/, '').trim();
+    const pageThemeBeforeRestore = await studio.getByRole('button', { name: 'Light', exact: true })
+      .getAttribute('aria-pressed');
     await restore.tap();
     await expect(restore).toHaveCount(0);
+    await expect(studio.getByRole('button', { name: `PDF design ${savedStyle}` }))
+      .toHaveAttribute('aria-pressed', 'true');
+    expect(await studio.getByRole('button', { name: 'Light', exact: true })
+      .getAttribute('aria-pressed')).toBe(pageThemeBeforeRestore);
     expect(await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'), localStorage.getItem('dn_guest_tasks'),
       localStorage.getItem('dn_guest_incomes'), localStorage.getItem('dn_guest_expenses'),
