@@ -63,7 +63,6 @@ export default function MomentPdfStudio({ event }) {
   const settingsRef = useRef(settings);
   const customizedRef = useRef(false);
   const styleOverrideRef = useRef(false);
-  const [styleOverridden, setStyleOverridden] = useState(false);
   const dialogRef = useRef(null);
   const thumbnailRef = useRef(null);
 
@@ -130,10 +129,7 @@ export default function MomentPdfStudio({ event }) {
     if (key === 'template' && !styleOverrideRef.current) {
       next.visualStyle = savedStyles[value];
     }
-    if (key === 'visualStyle') {
-      styleOverrideRef.current = true;
-      setStyleOverridden(true);
-    }
+    if (key === 'visualStyle') styleOverrideRef.current = true;
     customizedRef.current = true;
     settingsRef.current = next;
     setSettings(next);
@@ -155,10 +151,20 @@ export default function MomentPdfStudio({ event }) {
   };
 
   const restoreSavedStyle = () => {
+    // Restore is not a manual style override. Do not pass through update(),
+    // which intentionally marks visualStyle selections as customized.
+    const next = {
+      ...settingsRef.current,
+      visualStyle: savedStyles[settingsRef.current.template],
+    };
+    requestRef.current += 1;
+    setBusy(false);
+    setDirty(true);
+    setError('');
     styleOverrideRef.current = false;
-    update('visualStyle', savedStyles[settingsRef.current.template]);
-    styleOverrideRef.current = false;
-    setStyleOverridden(false);
+    customizedRef.current = true;
+    settingsRef.current = next;
+    setSettings(next);
   };
 
   const download = () => {
@@ -348,7 +354,7 @@ export default function MomentPdfStudio({ event }) {
           </div>
           <div className="dn-pdf-style-default">
             <small>Saved default: {PDF_STYLE_NAMES[savedStyles[settings.template]]}</small>
-            {styleOverridden ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
+            {settings.visualStyle !== savedStyles[settings.template] ? <button type="button" onClick={restoreSavedStyle} disabled={busy}>
               <RotateCcw size={14} aria-hidden="true" /> Use saved default</button> : null}
           </div>
         </fieldset>
