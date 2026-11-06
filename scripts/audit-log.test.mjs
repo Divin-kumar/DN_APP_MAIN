@@ -42,3 +42,11 @@ test('audit validation rejects duplicate, malformed, oldest-first and misplaced 
   assert.throws(() => verifyAuditLog(first, first + newest), /newest first/);
   assert.throws(() => verifyAuditLog(newest + first, newest + second + first), /must precede historical/);
 });
+
+// Both separators are present in the immutable log; preserve their exact text.
+test('audit accepts em-dash headings without permitting historical edits', () => {
+  const dash = newest.replace(' | ', ' — ');
+  assert.deepEqual(verifyAuditLog(dash + first, dash + first), {preserved:2,added:0});
+  assert.throws(() => verifyAuditLog(dash + first, newest + first), /edited/);
+  assert.throws(() => verifyAuditLog(dash + first, dash.replace('Current work.', 'Edited.') + first), /edited/);
+});

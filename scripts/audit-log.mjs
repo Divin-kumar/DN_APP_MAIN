@@ -2,7 +2,7 @@
 // valid: deciding which changes need new evidence belongs to documentation review.
 export const parseAuditEntries = (source) => {
   const text = source.replace(/\r\n/g, '\n');
-  const headings = [...text.matchAll(/^## (CHG-\d{8}-\d{3}) \| .+$/gm)];
+  const headings = [...text.matchAll(/^## (CHG-\d{8}-\d{3}) (?:\||—) .+$/gm)];
   const candidates = [...text.matchAll(/^## CHG-/gm)];
   if (headings.length !== candidates.length) throw new Error('Malformed CHG heading.');
   const entries = new Map();

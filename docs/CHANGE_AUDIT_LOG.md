@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-462 | Preserve alternate audit heading and prepare full verification
+
+The new CHG-461 used an em dash instead of the customary pipe separator. The parser now accepts either separator while preserving exact historical text, ordering, IDs and malformed-entry rejection; seven focused validator tests pass, including rejection of edits to an em-dash record. This retains the already-committed entry unchanged. Mobile command evidence waits for the dialog's opening animation to finish before capture. Application source is unchanged from 9a349cc. Full nondeploying verification is requested; no acceptance claim or release is made yet.
+
 ## CHG-20261106-461 — Mobile command regression corrections (unpublished)
 
 Corrected shared search styles after controls move into the mobile dock, retaining icon spacing, borderless inputs and clear-search placement. Suppressed persistent touch hover fill on the command button while retaining keyboard focus. Updated regression locators for relocated controls and desktop creation, and stabilized the desktop-only stylesheet comparison before capture. Core navigation/search-state/drag/desktop checks passed at a8435c3 in run 42196588655; the earlier broad run passed 79 and failed 37, motivating these fixes. Full downstream verification remains pending. No data, version or deployment changes; Guest tour remains current.
