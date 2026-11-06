@@ -26,6 +26,10 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light'],[1280,'da
       expect(style.border, name).toBe('0px');
       expect(style.shadow, name).toBe('none');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),name).toBe(true);
+      if(name==='moments') {
+        const preview=row.locator('.dn-v2-moment-activity');
+        if(await preview.count()) expect(await preview.evaluate(node => getComputedStyle(node).borderTopWidth)).toBe('0px');
+      }
       if(name==='tasks') {
         const calendar=await row.locator('.dn-task-calendar').boundingBox();
         expect(Math.abs(calendar.width-calendar.height)).toBeLessThan(1);

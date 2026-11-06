@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-450 | Remove nested Moment preview framing and verify the affected scope
+- **Manual finding:** The shared surface review still showed a framed latest-Activity preview inside Moment cards. Remove its border/fill and reduce inset padding so it reads as supporting text.
+- **Validation plan:** Preserve the 116-case shared-list run at 5a7914a14b88515c4c6fde69818fbf38edaff2ee as its own evidence. The small follow-up uses [verify-list-polish] for cross-screen surfaces, Moment navigation and hover stability plus build/offline preservation; no unrelated suite repeat. Add a direct nested-preview framing assertion.
+- **Boundary:** Presentation/test workflow only. Existing Moment data, navigation and Guest examples are unchanged. No version bump or deployment. Results pending.
+
 ## CHG-20261106-449 | Extend the PDF Content visual treatment across lists
 - **Owner instruction:** Apply the liked PDF content style to available lists while retaining their existing behavior.
 - **Scope:** Shared ListAppearance CSS paints Tasks, global/Moment Activities, Moments, Transactions, Code Lists, noncompact attachment rows, dropdown choices, sorting, filter chips, Dashboard rows and Settings navigation. Calm tinted surfaces, borderless selection ticks, softer hierarchy and compact real gallery thumbnails replace heavy decorative framing. Add a decorative Code List icon; no new actions or selection ticks on navigation records.

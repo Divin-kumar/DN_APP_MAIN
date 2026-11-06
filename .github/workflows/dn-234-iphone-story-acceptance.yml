@@ -172,7 +172,8 @@ jobs:
   shared-list-appearance:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&
-      contains(github.event.head_commit.message, '[verify-list-appearance]')
+      (contains(github.event.head_commit.message, '[verify-list-appearance]') ||
+       contains(github.event.head_commit.message, '[verify-list-polish]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -184,6 +185,7 @@ jobs:
       - run: npm ci
       - run: npx playwright install --with-deps chromium
       - name: Check shared list styling and affected interactions
+        if: contains(github.event.head_commit.message, '[verify-list-appearance]')
         run: >-
           npx playwright test
           e2e/shared-list-appearance.spec.js
@@ -202,6 +204,9 @@ jobs:
           e2e/dn-233-motion-navigation.spec.js
           e2e/pdf-content-selection.spec.js
           --workers=2
+      - name: Check final Moment polish and cross-screen surfaces
+        if: contains(github.event.head_commit.message, '[verify-list-polish]')
+        run: npx playwright test e2e/shared-list-appearance.spec.js e2e/moment-list-phase2.spec.js e2e/iphone-moment-card-hover-stability.spec.js --workers=2
       - name: Build application
         env:
           VITE_DEPLOY_ENV: Production

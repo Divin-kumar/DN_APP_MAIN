@@ -88,3 +88,7 @@ html[data-theme] body :is(.dashboard-upcoming-row,.dn-dashboard-task-row,.settin
   html[data-theme] { --dn-list-fill:var(--color-card); --dn-list-selected:var(--color-surface); }
   html[data-theme] body :is(.dn-independent-task-row,.dn-v2-moment-card,.dn-v2-activity-card,.dn-v2-transaction-card,.code-list-item,.dn-attachment-open) { outline:1px solid var(--color-text-muted); outline-offset:-1px; }
 }
+/* Moment previews are supporting text, not another card inside the row. */
+html[data-theme] body .life-timeline-page .dn-v2-moment-card .dn-v2-moment-activity {
+  border:0 !important; border-radius:0; background:transparent !important; box-shadow:none !important; padding:4px 0 !important;
+}
