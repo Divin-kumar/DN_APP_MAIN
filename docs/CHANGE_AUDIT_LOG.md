@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-445 | Refine PDF content selection appearance
+- **Owner feedback:** Replace the circular radio-like selectors with a premium lightweight surface.
+- **Change:** Borderless trailing ticks, small writing/photo/file icons, a faint selected-row tint, explicit file-count disclosure and gently indented attachment rows. Shorter guidance, visible keyboard focus, 44px minimum targets and reduced-motion support. Selection, cancellation, persistence and PDF projection are unchanged.
+- **Validation:** Run lint/build and the existing focused PDF browser checks, adding phone assertions for borderless selection markers, touch height and contained layout; screenshots retained. Exact-SHA browser results pending.
+- **Compatibility:** OldVersion only; no version bump or deployment. Existing Guest tour guidance remains accurate because the same Content and Apply interactions persist; no tour reset is needed for this presentational update.
+
 ## CHG-20261106-444 | Verify PDF content selection and data preservation
 - **Executed:** Source a0261682c1d5eaec86fc0b83c883f3f3070fc7ed passed all 29 focused Chromium tests in [run 42184612313](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42184612313): phone selection at 320/430px, Cancel/Apply/reset, persistence, parent/file exclusions, cancelled-content rules and existing PDF controls. Production build, offline originals/PDF and both upgrade-preservation paths passed. Same-source governance 42184612163 passed Node/lint/build/audit/docs; local full Node suite passed 623 tests.
 - **Correction:** Initial run 42184359576 passed 27/29; two new assertions incorrectly expected attachment filenames in the existing writing-only Diary/Tasks formats. The test-only correction verifies retained writing in all formats and retained file references in Journal. Exclusion assertions remain in all three formats; no rendering behavior was broadened.

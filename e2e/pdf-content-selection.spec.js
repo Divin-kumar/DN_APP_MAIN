@@ -15,6 +15,12 @@ for (const width of [320, 430]) test(`PDF content selection remembers activities
   const activity = sheet.getByRole('button', { name: 'Activity: Book a lakeside stay', exact: true });
   await sheet.getByRole('button', { name: 'Attachments for Book a lakeside stay' }).click();
   const file = sheet.getByRole('button', { name: 'Attachment: Activity photo 0.png', exact: true });
+  const marker = file.locator('.dn-pdf-content-tick');
+  const markerStyle = await marker.evaluate(node => ({ border: getComputedStyle(node).borderTopWidth, radius: getComputedStyle(node).borderRadius }));
+  expect(markerStyle).toEqual({ border: '0px', radius: '0px' });
+  expect((await file.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  expect(await sheet.evaluate(node => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await sheet.screenshot({ path: test.info().outputPath('pdf-content-sheet.png') });
   await file.click();
   await activity.click();
   await expect(file).toBeDisabled();

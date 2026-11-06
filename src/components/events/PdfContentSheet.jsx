@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Check, ChevronDown } from 'lucide-react';
+import { Check, ChevronDown, FileText, Image, BookOpen, Minus } from 'lucide-react';
 import ModalDialog from '../common/ModalDialog';
 import { pdfContentInventory, pdfContentKey } from '../../utils/pdfContentSelection';
 
@@ -13,15 +13,17 @@ export default function PdfContentSheet({ event, selection, onApply, onClose }) 
   const choice = (item, field, disabled = false) => {
     const key = pdfContentKey(item);
     const included = !disabled && !draft[field].includes(key);
+    const Icon = field === 'excludedActivities' ? BookOpen : item.type?.startsWith('image/') ? Image : FileText;
     return <button type="button" className="dn-pdf-content-choice" disabled={disabled || !key}
       aria-pressed={included} onClick={() => toggle(field, key)}
       aria-label={`${field === 'excludedActivities' ? 'Activity' : 'Attachment'}: ${item.title || item.name || 'Untitled'}`}>
-      <span className="dn-pdf-content-tick" aria-hidden="true">{included ? <Check size={16} /> : null}</span>
-      <span>{item.title || item.name || 'Untitled'}</span>
+      <Icon className="dn-pdf-content-kind" size={18} strokeWidth={1.6} aria-hidden="true" />
+      <span className="dn-pdf-content-name">{item.title || item.name || 'Untitled'}</span>
+      <span className="dn-pdf-content-tick" aria-hidden="true">{included ? <Check size={17} strokeWidth={2} /> : <Minus size={15} />}</span>
     </button>;
   };
   return <ModalDialog title="PDF content" onClose={onClose} variant="drawer" className="dn-pdf-content-sheet">
-    <p className="dn-pdf-content-help">Choose activities and files for this Moment. Cancelled activities are always excluded.</p>
+    <p className="dn-pdf-content-help">Keep what belongs in your book. Tap a row to include or leave it out.</p>
     <button type="button" className="dn-pdf-content-reset" onClick={() => setDraft({ excludedActivities: [], excludedAttachments: [] })}>Select all / Reset</button>
     <div className="dn-pdf-content-list">
       {inventory.activities.map(({ activity, attachments }) => {
@@ -33,7 +35,7 @@ export default function PdfContentSheet({ event, selection, onApply, onClose }) 
             {attachments.length ? <button type="button" className="dn-pdf-content-expand"
               aria-label={`Attachments for ${activity.title || 'Untitled'}`} aria-expanded={open}
               onClick={() => setExpanded(current => open ? current.filter(id => id !== key) : [...current, key])}>
-              <span>{attachments.length}</span><ChevronDown size={16} style={{ transform: open ? 'rotate(180deg)' : undefined }} aria-hidden="true" />
+              <span>{attachments.length} {attachments.length === 1 ? 'file' : 'files'}</span><ChevronDown size={16} style={{ transform: open ? 'rotate(180deg)' : undefined }} aria-hidden="true" />
             </button> : null}
           </div>
           {open ? <div className="dn-pdf-content-files">
@@ -46,7 +48,7 @@ export default function PdfContentSheet({ event, selection, onApply, onClose }) 
       </> : null}
       {!inventory.activities.length && !inventory.attachments.length ? <p>No eligible activities or attachments yet.</p> : null}
     </div>
-    <p className="dn-pdf-content-help">Remembered for this Moment in this browser. Book section options in PDF Studio still apply.</p>
+    <p className="dn-pdf-content-help">Saved for this Moment on this device. Cancelled activities stay out.</p>
     <div className="dialog-actions dn-pdf-content-actions">
       <button type="button" className="secondaryButton" onClick={onClose}>Cancel</button>
       <button type="button" className="primaryButton" onClick={() => onApply(draft)}>Apply selection</button>
