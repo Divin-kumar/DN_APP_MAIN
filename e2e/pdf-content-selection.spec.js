@@ -55,5 +55,7 @@ for (const template of ['journey', 'diary', 'chronicle']) test(`${template} PDF 
     return result.pages.flatMap(p => p.textRuns.map(run => run.text)).join(' ');
   }, template);
   expect(output).not.toContain('EXCLUDED_');
-  expect(output).toContain('KEEP_FILE');
+  expect(output).toContain('Choose the train');
+  // Existing Diary/Tasks formats are writing-only; Journal renders file references.
+  if (template === 'journey') expect(output).toContain('KEEP_FILE');
 });
