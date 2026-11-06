@@ -1,5 +1,15 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
+
+async function expectFullMobileScrollCanvas(page) {
+  const metrics = await page.locator('.dn-main').evaluate(main => {
+    const content = main.querySelector('.dn-content');
+    return { reserved:parseFloat(getComputedStyle(main).paddingBottom),
+      gap:main.getBoundingClientRect().bottom - content.getBoundingClientRect().bottom };
+  });
+  expect(metrics.reserved).toBe(0);
+  expect(Math.abs(metrics.gap)).toBeLessThanOrEqual(1);
+}
 for (const width of [320,390,430]) test(`module search state and creation survive command navigation ${width}`,async({page})=>{
  await page.setViewportSize({width,height:844});const errors=await seedGuest(page);await page.goto('/events');
  const bar=page.locator('.dn-command-bar');
@@ -88,3 +98,18 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
   expect(errors).toEqual([]);
  });
 }
+
+for(const theme of ['light','dark']) test(`About History scrolls to its last release without an 88px dead strip at iPhone Plus 430×932 ${theme}`,async({page})=>{
+  await page.setViewportSize({width:430,height:932});
+  const errors=await seedGuest(page,{theme});
+  await page.goto('/settings/about');
+  await expect(page.locator('.dn-command-controls > *')).toHaveCount(0);
+  await expectFullMobileScrollCanvas(page);
+  const last=page.locator('.dn-about-release-entry').last();
+  await last.scrollIntoViewIfNeeded();
+  const viewport=await page.locator('.dn-content').boundingBox();
+  const release=await last.boundingBox();
+  expect(release.y+release.height).toBeLessThanOrEqual(viewport.y+viewport.height+2);
+  await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
+  expect(errors).toEqual([]);
+});

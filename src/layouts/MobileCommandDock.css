@@ -137,6 +137,11 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
    Searchable screens retain their larger clearance; focus scrolling still
    keeps the last control reachable beside the independently draggable +. */
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  /* The retired tab bar also reserved 88px on .dn-main. Shrinking only
+     .dn-content padding leaves its actual scroll viewport cut short. */
+  html[data-theme] .dn-shell:has(> .dn-command-root) > .dn-main {
+    padding-bottom:0 !important;
+  }
   html[data-theme] .dn-shell:has(> .dn-command-root .dn-command-controls:empty)
     .dn-content:not(:has(.dn-financial-workspace)) {
     padding-bottom:max(20px,var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px))) !important;
