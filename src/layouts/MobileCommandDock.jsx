@@ -63,7 +63,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     setDrag(null);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
-  return <div ref={menuRef} className="dn-command-root" style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
+  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}`} style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
     <div className="dn-command-bar" aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">

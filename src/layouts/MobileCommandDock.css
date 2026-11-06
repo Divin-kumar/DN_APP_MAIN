@@ -9,6 +9,9 @@
     box-shadow:0 6px 24px color-mix(in srgb,var(--color-text) 10%,transparent); z-index:90;
   }
   html[data-theme] .dn-command-bar:not(:has(.dn-command-controls > *)) { left:auto; width:68px; }
+  html[data-theme] .dn-command-root.is-floating .dn-command-button-slot { width:0; height:0; flex-basis:0; }
+  html[data-theme] .dn-command-root.is-floating .dn-command-bar { gap:0; }
+  html[data-theme] .dn-command-root.is-floating .dn-command-bar:not(:has(.dn-command-controls > *)) { width:0; min-height:0; padding:0; border:0; background:transparent; box-shadow:none; }
   html[data-theme] .dn-command-controls { flex:1; min-width:0; }
   html[data-theme] .dn-command-controls:empty { display:none; }
   html[data-theme] .dn-command-controls .dn-list-controls-row { display:flex!important; align-items:center; gap:6px; padding:0!important; border:0!important; margin:0!important; }

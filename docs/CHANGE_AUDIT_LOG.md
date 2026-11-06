@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-463 | Reclaim the dock after moving the command button
+
+When the optional command button floats, its empty slot no longer consumes search width. On pages without search, the unused dock surface disappears while the floating button remains reachable. Added drag-to-Settings-and-back coverage; default docking and desktop remain unchanged. The 116 focused browser cases passed at 9a349cc in run 42197603995. Full run 42197969054 is evaluating the preceding source; this small correction requires its own acceptance. No data, release or version changes. Guest tour instructions already describe the same behavior.
+
 ## CHG-20261106-462 | Preserve alternate audit heading and prepare full verification
 
 The new CHG-461 used an em dash instead of the customary pipe separator. The parser now accepts either separator while preserving exact historical text, ordering, IDs and malformed-entry rejection; seven focused validator tests pass, including rejection of edits to an em-dash record. This retains the already-committed entry unchanged. Mobile command evidence waits for the dialog's opening animation to finish before capture. Application source is unchanged from 9a349cc. Full nondeploying verification is requested; no acceptance claim or release is made yet.

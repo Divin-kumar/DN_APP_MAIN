@@ -27,6 +27,9 @@ test('drag snaps, persists, clamps on rotation and can return to dock',async({pa
  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
  await expect(plus).toHaveCSS('position','fixed');expect((await plus.boundingBox()).x).toBeLessThan(20);
  await page.reload();await expect(plus).toHaveCSS('position','fixed');
+ await expect(page.locator('.dn-command-button-slot')).toHaveCSS('width','0px');
+ await page.goto('/settings');await expect(plus).toBeVisible();await expect(page.locator('.dn-command-bar')).toHaveCSS('width','0px');
+ await page.goto('/activities');await expect(page.locator('.dn-command-controls input')).toBeVisible();
  await page.setViewportSize({width:320,height:640});const clamped=await plus.boundingBox();expect(clamped.x+clamped.width).toBeLessThanOrEqual(320);expect(clamped.y+clamped.height).toBeLessThanOrEqual(640);
  await plus.click();await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCSS('opacity','1');await expect(page.locator('.dn-modal-backdrop')).toHaveCSS('opacity','1');await page.screenshot({path:test.info().outputPath('command-panel-mobile.png')});await page.getByRole('button',{name:'Return to dock'}).click();await expect(plus).not.toHaveCSS('position','fixed');
  await page.reload();await expect(plus).not.toHaveCSS('position','fixed');expect(errors).toEqual([]);
