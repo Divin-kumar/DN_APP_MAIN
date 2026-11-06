@@ -65,7 +65,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     });
     expect(hittable).toBe(true);
     const savedStyle = (await studio.locator('.dn-pdf-style-default small').innerText())
-      .replace(/^Saved default:\\s*/, '').trim();
+      .replace(/^Saved default:\s*/, '').trim();
     const pageThemeBeforeRestore = await studio.getByRole('button', { name: 'Light', exact: true })
       .getAttribute('aria-pressed');
     await restore.tap();
