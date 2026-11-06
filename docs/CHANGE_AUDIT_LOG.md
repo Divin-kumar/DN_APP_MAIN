@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-457 | Separate desktop navigation and refine Tasks, PDF and transactions
+- **Scope:** Desktop logo/page context is a detached header tile above navigation. Removed the redundant Tasks title and description on desktop and mobile; shell page title and summary metrics remain. Side-by-side desktop PDF customization matches preview height and scrolls independently. Desktop transactions use compact icon/title/metadata rows and aligned amounts, without the decorative vertical accent.
+- **Executed:** Manual desktop Guest preview verified detached header, transaction rows and exactly matching PDF panel heights (923px); controls overflow independently. Local production build passed; focused CI is pending.
+- **Preservation:** No PDF generation, record, calculation, action, original-file or persistence changes. Desktop visual rules remain limited to at least 1024px by 501px; PDF nested scrolling applies only when its container supports side-by-side panels. Mobile changes are limited to requested redundant Tasks text removal. Guest tour guidance/fixtures remain accurate; no reset or version change. OldVersion only, unpublished. Physical Safari remains unverified.
+
 ## CHG-20261106-456 | Verify compact desktop header
 - **Executed:** Application source b6228b6d93202546bb5847f1a10565affa37a935 passed all 15 focused Chromium tests in run 42191093342. Header/sidebar x-position and width match at 1024/1280/1440px, content starts alongside the header, and five mobile/short-landscape pixel comparisons remain identical without desktop CSS. Same-source governance 42191093375 passed unit/lint/build/audit/document checks.
 - **Release ledger:** Desktop visual alignment only, OldVersion, unpublished. Physical Safari/VoiceOver remain unverified. This evidence entry changes no runtime code.

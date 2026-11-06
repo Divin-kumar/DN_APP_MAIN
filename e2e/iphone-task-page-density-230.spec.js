@@ -10,8 +10,8 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     await page.goto('/tasks');
     const taskPage=page.locator('.dn-tasks-page');
     await expect(page.getByRole('main')).toHaveCount(1);
-    await expect(taskPage.getByRole('heading',{name:'Tasks',exact:true})).toBeVisible();
-    await expect(taskPage.getByText('Standalone and Moment-linked Tasks.')).toBeVisible();
+    await expect(page.getByRole('heading',{name:'Tasks',exact:true})).toHaveCount(1);
+    await expect(taskPage.getByText('Standalone and Moment-linked Tasks.')).toHaveCount(0);
     await expect(taskPage.locator('.dn-task-eyebrow')).toHaveCount(0);
     const metrics=taskPage.locator('.dn-task-metrics span');
     await expect(metrics).toHaveCount(3);

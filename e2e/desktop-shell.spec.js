@@ -50,3 +50,36 @@ for (const width of [1024,1280,1440]) {
     await expect(page.locator('.dn-quick-create-menu')).toBeHidden();
   });
 }
+
+for (const theme of ['light','dark']) test(`desktop PDF scroll and transaction hierarchy ${theme}`, async ({page}) => {
+  await page.setViewportSize({width:1440,height:900});
+  await seedGuest(page,{theme});
+  await page.goto('/tasks');
+  await expect(page.getByRole('heading',{name:'Tasks',exact:true})).toHaveCount(1);
+  await expect(page.getByText('Standalone and Moment-linked Tasks.')).toHaveCount(0);
+  const header=await page.locator('.dn-header').boundingBox();
+  const sidebar=await page.locator('.dn-sidebar').boundingBox();
+  expect(sidebar.y-header.y-header.height).toBeGreaterThanOrEqual(12);
+  await page.goto('/financials/transactions');
+  const card=page.locator('.dn-transaction-card').filter({hasText:'Room deposit'});
+  await expect(card).toBeVisible();
+  const title=await card.locator('.dn-transaction-copy > strong').boundingBox();
+  const amount=await card.locator('.dn-transaction-card-side').boundingBox();
+  expect(amount.x).toBeGreaterThan(title.x);
+  expect(Math.abs(amount.y-title.y)).toBeLessThan(30);
+  await card.locator('summary').click();
+  await expect(card.locator('details')).toHaveAttribute('open','');
+  await page.goto('/events/moment-one/pdf');
+  await expect(page.getByRole('button',{name:'Download customized PDF'})).toBeEnabled({timeout:30000});
+  const preview=await page.locator('.dn-pdf-studio-preview').boundingBox();
+  const controls=page.locator('.dn-pdf-studio-controls');
+  const panel=await controls.boundingBox();
+  expect(Math.abs(preview.y-panel.y)).toBeLessThan(1);
+  expect(Math.abs(preview.height-panel.height)).toBeLessThan(1);
+  expect(await controls.evaluate(e=>e.scrollHeight>e.clientHeight)).toBe(true);
+  const outerScroll=await page.locator('.dn-content').evaluate(e=>e.scrollTop);
+  await controls.evaluate(e=>{e.scrollTop=e.scrollHeight;});
+  expect(await controls.evaluate(e=>e.scrollTop)).toBeGreaterThan(0);
+  expect(await page.locator('.dn-content').evaluate(e=>e.scrollTop)).toBe(outerScroll);
+  await expect(controls.getByRole('button',{name:/^Content /})).toBeVisible();
+});

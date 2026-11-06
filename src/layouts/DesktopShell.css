@@ -9,9 +9,9 @@
     width: 240px;
     box-sizing: border-box;
     padding: 0 12px !important;
-    border: 0 !important;
-    border-radius: 24px 24px 0 0;
-    background: transparent !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 18px;
+    background: var(--color-surface) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
     box-shadow: none !important;
@@ -27,13 +27,14 @@
   html[data-theme] .dn-sidebar {
     width: 240px !important;
     min-width: 240px !important;
-    padding: 80px 16px 100px !important;
+    margin-top: 72px;
+    padding: 24px 16px 100px !important;
     gap: 8px !important;
   }
   html[data-theme] .dn-sidebar.dn-sidebar-collapsed {
     width: 88px !important;
     min-width: 88px !important;
-    padding: 80px 12px 148px !important;
+    padding: 24px 12px 148px !important;
   }
   html[data-theme] .dn-header .header-user-controls {
     position: fixed;
@@ -93,4 +94,39 @@
     min-height: 56px !important;
   }
   html[data-theme] .dn-shell .dn-quick-create-trigger svg { width: 25px; height: 25px; }
+
+  /* Keep the document and its settings panel the same height. Size
+     containment makes the preview, not the long form, size the grid row. */
+  @container (min-width:791px) {
+    html[data-theme] .dn-shell .dn-pdf-studio-controls {
+      contain: size;
+      align-self: stretch;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      scrollbar-width: none;
+    }
+    html[data-theme] .dn-shell .dn-pdf-studio-controls::-webkit-scrollbar { display: none; }
+    html[data-theme] .dn-shell .dn-pdf-update-rail { top: 0; flex-shrink: 0; }
+    html[data-theme] .dn-shell .dn-pdf-studio-controls > * { flex-shrink: 0; }
+  }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-card::before { display: none; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-card-core {
+    padding: 14px 16px !important;
+    align-items: start;
+    gap: 12px;
+  }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-copy {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) auto;
+    align-items: center;
+    gap: 5px 24px;
+    width: 100%;
+  }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-copy > strong { grid-column: 1; grid-row: 1; font-size: 14px; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-card-side { grid-column: 2; grid-row: 1 / span 2; position: static; text-align: right; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-meta { grid-column: 1; grid-row: 2; font-size: 12px; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-details { grid-column: 1 / -1; margin: 0; padding: 0; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-details summary { padding: 4px 0; min-height: 28px; font-size: 12px; }
+  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-icon { width: 34px; height: 34px; min-width: 34px; border: 0; border-radius: 11px; }
 }

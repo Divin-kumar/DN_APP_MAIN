@@ -236,7 +236,7 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: npx playwright test e2e/desktop-shell.spec.js e2e/dn-233-motion-navigation.spec.js --workers=2
+      - run: npx playwright test e2e/desktop-shell.spec.js e2e/dn-233-motion-navigation.spec.js e2e/iphone-task-page-density-230.spec.js e2e/transaction-payment-phase5.spec.js e2e/pdf-content-selection.spec.js --workers=2
       - uses: actions/upload-artifact@v4
         if: always()
         with:

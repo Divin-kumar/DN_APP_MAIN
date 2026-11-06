@@ -148,7 +148,6 @@ export function TaskListContent() {
     }
   };
   if (!enabled) return <div className="dn-tasks-page">
-    <div className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent Tasks</span><h2>Tasks</h2></div></div>
     <section className="dn-task-empty" role="status"><ListTodo size={28} aria-hidden="true" />
       <h3>Open a workspace to use Tasks</h3>
       <p>Sign in to sync your Tasks, or continue as Guest to keep them on this device.</p>
@@ -158,10 +157,6 @@ export function TaskListContent() {
   </div>;
 
   return <div className="dn-tasks-page">
-    <header className="dn-task-hero">
-      <div><h2>Tasks</h2><p>Standalone and Moment-linked Tasks.</p>
-      </div>
-    </header>
     <div className="dn-task-metrics" aria-label="Task summary">
       <span><strong>{matches.length}</strong> All Tasks</span>
       <span><strong>{active}</strong> In progress</span>
