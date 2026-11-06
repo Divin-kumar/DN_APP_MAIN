@@ -177,7 +177,7 @@ export function TaskListContent() {
             onClick={() => changeView({ search: '' })}><X size={17} aria-hidden="true" /></button> : null}
         </div>
         <button type="button" className={`dn-list-controls-trigger${activeFilterCount ? ' is-active' : ''}`}
-          aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
+          aria-label="Refine" aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
           <SlidersHorizontal size={17} aria-hidden="true" /><span>Refine</span>
           {activeFilterCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeFilterCount}</span> : null}
         </button>

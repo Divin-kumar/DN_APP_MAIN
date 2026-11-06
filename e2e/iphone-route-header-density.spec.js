@@ -78,22 +78,22 @@ test('Moment names use truncated header titles without hiding the important stor
   await expect(page.locator('.activity-detail-content h1')).toHaveText('Book a lakeside stay');
 });
 
-test('Insights Export shares the search toolbar without changing export behavior', async ({ page }) => {
+test('Insights keeps Export in page and search in the command bar', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
   await seedGuest(page);
   await page.goto('/insights');
   await expect(page.locator('.dn-header h1')).toHaveText('Insights');
   const toolbar = page.locator('.insights-discovery.dn-insights-compact-search');
-  const input = toolbar.getByRole('searchbox', { name: 'Search milestones in Insights' });
+  const input = page.locator('.dn-command-controls').getByRole('searchbox', { name: 'Search milestones in Insights' });
   const button = toolbar.getByRole('button', { name: 'Export Insights data' });
   await expect(input).toBeVisible();
   await expect(button).toBeVisible();
   const alignment = await toolbar.evaluate(node => {
-    const r1 = node.querySelector('input').getBoundingClientRect();
+    const r1 = document.querySelector('.dn-command-controls input').getBoundingClientRect();
     const r2 = node.querySelector('.insights-export').getBoundingClientRect();
     return { inputTop: r1.top, buttonTop: r2.top, buttonHeight: r2.height };
   });
-  expect(Math.abs(alignment.inputTop - alignment.buttonTop)).toBeLessThanOrEqual(3);
+  expect(alignment.inputTop).toBeGreaterThan(alignment.buttonTop);
   // Chrome's fractional layout can report 43.99999 for a 44px touch target.
   expect(alignment.buttonHeight).toBeGreaterThanOrEqual(43.99);
 });

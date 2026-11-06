@@ -14,6 +14,7 @@ for (const width of [320,390,430]) test(`module search state and creation surviv
  await page.getByRole('button',{name:'Open quick create menu'}).click();
  await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Moments'}).click();
  await expect(bar.getByRole('searchbox',{name:'Search moments'})).toHaveValue('Ooty');
+ if(width===390) await page.screenshot({path:test.info().outputPath('command-search-mobile.png')});
  await page.getByRole('button',{name:'Open quick create menu'}).click();
  await page.getByRole('button',{name:'Task',exact:true}).click();
  const form=page.getByRole('dialog',{name:'New Task'});await expect(form).toBeVisible();await form.getByRole('button',{name:'Cancel'}).click();
@@ -27,7 +28,7 @@ test('drag snaps, persists, clamps on rotation and can return to dock',async({pa
  await expect(plus).toHaveCSS('position','fixed');expect((await plus.boundingBox()).x).toBeLessThan(20);
  await page.reload();await expect(plus).toHaveCSS('position','fixed');
  await page.setViewportSize({width:320,height:640});const clamped=await plus.boundingBox();expect(clamped.x+clamped.width).toBeLessThanOrEqual(320);expect(clamped.y+clamped.height).toBeLessThanOrEqual(640);
- await plus.click();await page.getByRole('button',{name:'Return to dock'}).click();await expect(plus).not.toHaveCSS('position','fixed');
+ await plus.click();await page.screenshot({path:test.info().outputPath('command-panel-mobile.png')});await page.getByRole('button',{name:'Return to dock'}).click();await expect(plus).not.toHaveCSS('position','fixed');
  await page.reload();await expect(plus).not.toHaveCSS('position','fixed');expect(errors).toEqual([]);
 });
 test('desktop controls and navigation remain in-page',async({page})=>{

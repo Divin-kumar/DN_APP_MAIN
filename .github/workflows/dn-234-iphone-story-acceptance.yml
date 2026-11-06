@@ -245,7 +245,7 @@ jobs:
           retention-days: 7
 
   mobile-command:
-    if: github.ref == 'refs/heads/OldVersion' && contains(github.event.head_commit.message, '[verify-command]')
+    if: github.ref == 'refs/heads/OldVersion' && (contains(github.event.head_commit.message, '[verify-command]') || contains(github.event.head_commit.message, '[verify-command-core]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -256,7 +256,10 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
-      - run: >-
+      - if: contains(github.event.head_commit.message, '[verify-command-core]')
+        run: npx playwright test e2e/mobile-command-bar.spec.js --workers=2 --max-failures=3
+      - if: contains(github.event.head_commit.message, '[verify-command]')
+        run: >-
           npx playwright test
           e2e/mobile-command-bar.spec.js e2e/iphone-premium-bottom-dock.spec.js
           e2e/iphone-mobile-dock-phase1.spec.js e2e/iphone-dock-label-230.spec.js

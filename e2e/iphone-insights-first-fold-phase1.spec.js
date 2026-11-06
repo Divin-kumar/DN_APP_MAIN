@@ -16,7 +16,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const exportAction = page.locator('.insights-discovery').getByRole('button', { name:'Export Insights data' });
     await expect(exportAction).toBeVisible();
     const discovery = page.locator('.insights-page > .insights-discovery');
-    const field = discovery.getByRole('searchbox', { name:'Search milestones in Insights' });
+    const field = page.locator('.dn-command-controls').getByRole('searchbox', { name:'Search milestones in Insights' });
     await expect(field).toBeVisible();
     const metrics = page.locator('.insights-metric-grid > .insight-metric');
     await expect(metrics).toHaveCount(4);
@@ -24,7 +24,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
       const header = document.querySelector('.dn-header');
       const title = header.querySelector('h1').getBoundingClientRect();
       const exportRect = document.querySelector('.insights-discovery .insights-export').getBoundingClientRect();
-      const search = document.querySelector('.insights-discovery input').getBoundingClientRect();
+      const search = document.querySelector('.dn-command-controls input').getBoundingClientRect();
       const tiles = [...document.querySelectorAll('.insights-metric-grid > .insight-metric')].map(node => {
         const box = node.getBoundingClientRect(), value = node.querySelector('strong').getBoundingClientRect();
         const detail = node.querySelector('small').getBoundingClientRect();
@@ -33,13 +33,13 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
       });
       return { titleTop:title.top, exportTop:exportRect.top, exportWidth:exportRect.width,
         exportHeight:exportRect.height, searchTop:search.top,
-        inputFont:parseFloat(getComputedStyle(document.querySelector('.insights-discovery input')).fontSize),
+        inputFont:parseFloat(getComputedStyle(document.querySelector('.dn-command-controls input')).fontSize),
         tiles, scrollWidth:document.documentElement.scrollWidth };
     });
     expect(sizes.titleTop).toBeLessThan(sizes.exportTop);
     expect(sizes.exportWidth).toBeGreaterThanOrEqual(44);
     expect(sizes.exportHeight).toBeGreaterThanOrEqual(43.9);
-    expect(Math.abs(sizes.searchTop - sizes.exportTop)).toBeLessThanOrEqual(3);
+    expect(sizes.searchTop).toBeGreaterThan(sizes.exportTop);
     expect(sizes.inputFont).toBeGreaterThanOrEqual(16);
     expect(sizes.scrollWidth).toBeLessThanOrEqual(width + 1);
     for (const tile of sizes.tiles) {

@@ -64,7 +64,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await field.click();
     await field.fill(item.sample);
     await expect(field).toHaveValue(item.sample);
-    await expect(root.locator('.dn-list-controls-context')).toContainText('1 ');
+    await expect(page.locator('.dn-list-controls-context')).toContainText('1 ');
     expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)))).toEqual(before);
     expect(errors).toEqual([]);

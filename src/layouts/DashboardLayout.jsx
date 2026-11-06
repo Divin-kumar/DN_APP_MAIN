@@ -157,6 +157,7 @@ export default function DashboardLayout() {
     const handleViewportChange = (event) => {
       setSidebarCollapsed(event.matches);
       setMobileShell(event.matches);
+      setQuickCreateOpen(false);
     };
 
     handleViewportChange(mobileQuery);

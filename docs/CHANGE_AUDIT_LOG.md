@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-460 | Preserve command accessibility and responsive state
+- **Scope:** Tasks Refine keeps its accessible name when its visual label is compacted. Crossing mobile/desktop boundaries closes the command panel. Existing discovery and Insights tests now locate mobile search in its real toolbar while retaining in-page count/export checks. Added review screenshots and a small nondeploying core-test option for faster diagnosis before broad acceptance.
+- **Evidence:** Initial source f900989 passed governance unit/lint/build/audit/document checks. Focused browser run 42195844430 is still running against that initial source and is not acceptance of these corrections. No release/version/data changes.
+
 ## CHG-20261106-459 | Mobile command navigation and contextual discovery
 - **Impact assessment:** Shared DashboardLayout owns global navigation, contextual creation, keyboard focus and route scroll restoration. ListControls owns search/Refine for Moments, global and Moment Activities, global and Moment transactions and Insights; Tasks has a separate toolbar. Gallery, Story, detail, PDF and Settings retain their own content actions without an invented list search. SwipeActionCard and DropdownSelect reserve bottom-overlay space. Existing stores, list memory, filter builders, totals, backup, originals and PDF projection remain authoritative.
 - **Implementation:** Replace permanent phone navigation tabs with a docked + that opens a modal containing Home/Moments/Activities/Tasks/Finance and existing contextual creation. Portal existing list search/Refine into the bottom bar, retaining caller-owned handlers/state and in-page applied-filter summaries. Optional pointer drag snaps to an edge, stores normalized browser-local position per account/Guest and supports Return to dock. Safe-area/keyboard geometry, route closure, Escape and keyboard creation focus are handled. Desktop shell and in-page controls are preserved.
