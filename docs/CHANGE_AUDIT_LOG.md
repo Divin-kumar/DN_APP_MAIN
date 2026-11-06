@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-446 | Verify borderless PDF selection refinement
+- **Executed:** Source 72ba286d92ef0596117f9491f4bf1359d7fa8ea1 passed all 29 focused Chromium cases in [run 42185750268](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42185750268), including 320px light/430px dark borderless-marker, touch-height, contained-layout and selection persistence checks. Build, offline PDF/originals and both upgrade-preservation paths passed. Same-source governance 42185750297 passed Node/lint/build/audit/docs.
+- **Manual review:** Revised dark content sheet inspected in the local Guest preview: trailing ticks without rings, writing/photo icons, faint selected-row tint and file-count disclosures. Existing Guest guidance remains accurate; no demo reset.
+- **Boundary:** Documentation-only evidence; verified application remains at 72ba286d92ef0596117f9491f4bf1359d7fa8ea1 on OldVersion. No app-version change or production deployment. Physical iPhone/VoiceOver remains unverified.
+
 ## CHG-20261106-445 | Refine PDF content selection appearance
 - **Owner feedback:** Replace the circular radio-like selectors with a premium lightweight surface.
 - **Change:** Borderless trailing ticks, small writing/photo/file icons, a faint selected-row tint, explicit file-count disclosure and gently indented attachment rows. Shorter guidance, visible keyboard focus, 44px minimum targets and reduced-motion support. Selection, cancellation, persistence and PDF projection are unchanged.
