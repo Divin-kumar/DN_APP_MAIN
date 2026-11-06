@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-473 | Make Activity parent touch-target assertion subpixel-safe
+
+Independent full pre-release run 42214316708 at 8bf9839 executed all 852 Chromium journeys: 851 passed; the only failure was the 320px light Activity Detail parent-trail link measured as 43.99998474121094 CSS pixels against an exact >=44 assertion. This is floating-point layout rounding, not evidence of a smaller visible or interactive touch target. The existing 44px UI requirement and navigation/Guest-record checks remain unchanged. Align the test tolerance to the other mobile tap-target checks (>=43.9px, allowing <0.1px of browser arithmetic variation); verify both mobile themes and all three widths. Add a dedicated opt-in focused regression check using the already supported Ubuntu 24.04 Chromium runner before requesting full exact-source release gates. Firebase publication remains blocked until all checks and live readback succeed. No application, data, PDF, account, Guest tour or version changes.
+
 ## CHG-20261106-472 | Close iPhone PDF touch regression and prepare guarded 2.3.7 release
 
 After full verification 42210785235 passed 851/852 browser cases, the remaining 320×640 dark PDF Studio Restore failure was traced to touch overlap from the tall sticky “Update preview” rail. The previous state-only fix did not resolve a tap hitting another page-theme control. Restoring saved PDF design now bypasses the manual-override handler and derives Restore visibility from the actual selected versus saved design; the 320px sticky action remains available in one compact row while design touch targets gain scroll clearance. Portrait touch-center, saved-style selection, unchanged PDF page theme and unchanged Guest records are asserted; landscape still checks the actual restore action without imposing a portrait hit-center geometry.
