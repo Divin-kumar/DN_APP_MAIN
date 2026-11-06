@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-437 | Repair release-history regression and verify remaining preservation stages
+- **Executed:** Diagnostic full run 42164390346 at bf789a8 passed 806/812 Chromium cases. All six failures are the same obsolete About assertion: 14 release entries expected, 15 correctly rendered after adding 2.3.4. Retained artifact 13479216464 establishes the cause; this is not a Task or Story runtime defect.
+- **Correction:** Require all documented versions, uniqueness, newest-first order and exactly one installed version instead of a fixed history count. Existing phone geometry, keyboard, disclosure, refresh and data-preservation checks stay intact. Add a nondeploying focused About/release check followed by the previously blocked production offline/PDF/original and upgrade checks.
+- **Validation:** Local lint/documentation checks required; focused browser and remaining preservation outcomes pending. Local Chromium reproduction was blocked before app load by the workspace socket restriction. No app/data/schema/original-file change, Guest refresh, deployment or main write. Full exact-SHA release acceptance remains a separate gate.
+
 ## CHG-20261106-436 | Retain full-release browser failure evidence
 - **Executed:** Candidate 73f98e0 passed preliminary Node/lint/docs/security checks, but full browser run 42161528275 failed. Production build/offline/PDF/upgrade stages were skipped. The workflow did not retain its JSON report or screenshots; the connector repeatedly failed to retrieve the large job log. Failure count and cause are not yet established.
 - **Correction:** Persist the browser log, JSON report and failure screenshots as a seven-day Actions artifact even on failure. Print a bounded log tail for actionable connector retrieval. All 812 browser cases and release gates remain enabled; no failure is ignored and no production approval is implied.

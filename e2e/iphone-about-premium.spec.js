@@ -19,10 +19,20 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.locator('.about-guide-grid details')).toHaveCount(11);
       const history = root.locator('.dn-about-release-entry');
       await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
-      await expect(history).toHaveCount(14);
+      // Preserve every documented release while allowing future releases to be added.
+      const versions = await history.evaluateAll(items => items.map(item => item.dataset.version));
+      expect(versions).toEqual(expect.arrayContaining([
+        '2.3.4', '2.3.3', '2.3.2', '2.3.1', '2.3.0', '2.2.0',
+        '2.1.4', '2.1.3', '2.1.2', '2.1.1', '2.1.0',
+        '2.0.3', '2.0.2', '2.0.1', '2.0.0',
+      ]));
+      expect(new Set(versions).size).toBe(versions.length);
+      expect(versions).toEqual([...versions].sort((a, b) => b.localeCompare(a, undefined, { numeric: true })));
       const installedVersion = (await root.locator('.about-summary-item').nth(1).locator('strong').innerText()).trim();
       const installedEntry = root.locator(`.dn-about-release-entry[data-version="${installedVersion.slice(1)}"]`);
+      await expect(installedEntry).toHaveCount(1);
       await expect(installedEntry.locator('.dn-about-release-status')).toHaveText('Installed');
+      await expect(root.locator('.dn-about-release-status').filter({ hasText: /^Installed$/ })).toHaveCount(1);
       await expect(root.getByRole('heading', { name: `What's New in ${installedVersion}` })).toBeVisible();
       // Release history must start with the installed build, not a stale fixed version.
       await expect(history.first()).toHaveAttribute('data-version', installedVersion.slice(1));
