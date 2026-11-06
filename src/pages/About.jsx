@@ -53,6 +53,16 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.8',
+    title: 'Full-height mobile pages',
+    summary: 'The final blank strip left by the old mobile navigation is removed.',
+    highlights: [
+      'About, Settings and other mobile pages now scroll without the old 88px reserved gap.',
+      'Search and Refine keep their compact glass controls and the independent + remains available.',
+    ],
+    changes: ['This corrects only the mobile scroll container. Saved records, original attachments, PDFs, navigation actions and desktop layout are unchanged.'],
+  },
+  {
     version: '2.3.7',
     title: 'No blank search space on mobile',
     summary: 'Search-free screens reclaim the unused dock spacing.',
