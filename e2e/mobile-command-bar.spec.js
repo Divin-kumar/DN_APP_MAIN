@@ -1,0 +1,36 @@
+import { test, expect } from '@playwright/test';
+import { seedGuest } from './fixtures.js';
+for (const width of [320,390,430]) test(`module search state and creation survive command navigation ${width}`,async({page})=>{
+ await page.setViewportSize({width,height:844});const errors=await seedGuest(page);await page.goto('/events');
+ const bar=page.locator('.dn-command-bar');
+ await bar.getByRole('searchbox',{name:'Search moments'}).fill('Ooty');
+ await expect(page.getByRole('button',{name:'Open Weekend in Ooty — family plans and memories'})).toBeVisible();
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Tasks'}).click();
+ await expect(bar.getByRole('searchbox',{name:'Search Tasks'})).toHaveValue('');
+ await bar.getByRole('searchbox',{name:'Search Tasks'}).fill('different');
+ await bar.getByRole('button',{name:'Refine',exact:true}).click();
+ await expect(page.getByRole('dialog')).toBeVisible();await page.keyboard.press('Escape');
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Moments'}).click();
+ await expect(bar.getByRole('searchbox',{name:'Search moments'})).toHaveValue('Ooty');
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await page.getByRole('button',{name:'Task',exact:true}).click();
+ const form=page.getByRole('dialog',{name:'New Task'});await expect(form).toBeVisible();await form.getByRole('button',{name:'Cancel'}).click();
+ await expect(page).toHaveURL(/\/events$/);expect(errors).toEqual([]);
+});
+test('drag snaps, persists, clamps on rotation and can return to dock',async({page})=>{
+ await page.setViewportSize({width:390,height:844});const errors=await seedGuest(page);await page.goto('/activities');
+ const plus=page.locator('.dn-command-trigger');await expect(plus).toBeVisible();const b=await plus.boundingBox();
+ await page.mouse.move(b.x+24,b.y+24);await page.mouse.down();await page.mouse.move(40,330,{steps:12});await page.mouse.up();
+ await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+ await expect(plus).toHaveCSS('position','fixed');expect((await plus.boundingBox()).x).toBeLessThan(20);
+ await page.reload();await expect(plus).toHaveCSS('position','fixed');
+ await page.setViewportSize({width:320,height:640});const clamped=await plus.boundingBox();expect(clamped.x+clamped.width).toBeLessThanOrEqual(320);expect(clamped.y+clamped.height).toBeLessThanOrEqual(640);
+ await plus.click();await page.getByRole('button',{name:'Return to dock'}).click();await expect(plus).not.toHaveCSS('position','fixed');
+ await page.reload();await expect(plus).not.toHaveCSS('position','fixed');expect(errors).toEqual([]);
+});
+test('desktop controls and navigation remain in-page',async({page})=>{
+ await page.setViewportSize({width:1280,height:900});await seedGuest(page);await page.goto('/events');
+ await expect(page.locator('.dn-command-root')).toHaveCount(0);await expect(page.locator('.dn-list-controls').getByRole('searchbox',{name:'Search moments'})).toBeVisible();await expect(page.locator('.dn-sidebar').getByRole('link',{name:'Tasks'})).toBeVisible();
+});

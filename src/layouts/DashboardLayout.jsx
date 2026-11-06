@@ -16,7 +16,7 @@ import { detailQuickActivityContext } from '../utils/quickActivityDetailContext'
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { Activity, ArrowLeft, BookHeart, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, ListTodo, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
+import { Activity, ArrowLeft, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, ListTodo, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
@@ -40,6 +40,8 @@ import { getActiveSampleScenario } from '../dev/sampleData';
 import './ProfileMenuPremium.css';
 import './SessionBannerPremium.css';
 import './PremiumMobileDock.css';
+import MobileCommandDock from './MobileCommandDock';
+import { MobileControlsContext } from '../components/common/MobileControlsSlot';
 
 // These are the main screens in the application.
 // The app keeps the navigation consistent across desktop and mobile layouts.
@@ -48,16 +50,6 @@ const navItems = [
   { label: 'Activities', path: '/activities', icon: ListChecks },
   { label: 'Tasks', path: '/tasks', icon: ListTodo },
   { label: 'Moments', path: '/events', icon: CalendarDays },
-];
-// Two balanced destinations on either side of the universal create action.
-// The desktop sidebar is intentionally not reshuffled by this iPhone change.
-const mobileDockStart = [
-  { label: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-  { label: 'Activities', path: '/activities', icon: ListChecks },
-];
-const mobileDockEnd = [
-  { label: 'Moments', path: '/events', icon: BookHeart },
-  { label: 'Transactions', compactLabel: 'Finance', path: '/financials/transactions', icon: Receipt },
 ];
 // Portrait iPhones and short, touch-enabled landscape iPhones share the dock.
 const MOBILE_DOCK_MEDIA = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
@@ -85,6 +77,8 @@ export default function DashboardLayout() {
   const contentRef = useRef(null);
   const previousLocationRef = useRef(null);
   const scrollPositionsRef = useRef(new Map());
+  const [mobileShell, setMobileShell] = useState(() => window.matchMedia(MOBILE_DOCK_MEDIA).matches);
+  const [mobileControlsTarget, setMobileControlsTarget] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia(MOBILE_DOCK_MEDIA).matches);
   const [desktopShell, setDesktopShell] = useState(() => window.matchMedia(DESKTOP_SHELL_MEDIA).matches);
   useEffect(() => {
@@ -104,6 +98,15 @@ export default function DashboardLayout() {
   const quickCreateMobileRef = useRef(null);
   const quickCreateKeyboardFocusRef = useRef(false);
   const [quickCreateType, setQuickCreateType] = useState(null);
+  const commandReturnFocus = useRef(false);
+  const previousCreateType = useRef(null);
+  useEffect(() => {
+    if (previousCreateType.current && !quickCreateType && commandReturnFocus.current) {
+      quickCreateMobileRef.current?.querySelector('.dn-command-trigger')?.focus({ preventScroll: true });
+      commandReturnFocus.current = false;
+    }
+    previousCreateType.current = quickCreateType;
+  }, [quickCreateType]);
   const [quickTaskPreset, setQuickTaskPreset] = useState(null);
   const quickTaskScopeRef = useRef(null);
   const quickTaskSaving = useRef(false);
@@ -153,6 +156,7 @@ export default function DashboardLayout() {
     const mobileQuery = window.matchMedia(MOBILE_DOCK_MEDIA);
     const handleViewportChange = (event) => {
       setSidebarCollapsed(event.matches);
+      setMobileShell(event.matches);
     };
 
     handleViewportChange(mobileQuery);
@@ -280,6 +284,7 @@ export default function DashboardLayout() {
     if (!quickCreateOpen) return undefined;
 
     const closeQuickCreateOutside = (event) => {
+      if (event.target.closest?.('.dn-command-dialog')) return;
       const clickedInsideDesktop = quickCreateDesktopRef.current?.contains(event.target);
       const clickedInsideMobile = quickCreateMobileRef.current?.contains(event.target);
       if (!clickedInsideDesktop && !clickedInsideMobile) setQuickCreateOpen(false);
@@ -332,6 +337,7 @@ export default function DashboardLayout() {
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type, activationEvent) => {
     if (transactionSaving.current || quickActivitySaving.current) return;
+    commandReturnFocus.current = mobileShell && activationEvent?.detail === 0;
     if (type === 'task') {
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
       const activity = activityDetailMatch ? openedActivityContext?.activity : null;
@@ -527,6 +533,7 @@ export default function DashboardLayout() {
   // top header, left navigation, content area, and floating quick-create panel.
   // This creates a single app frame so the experience feels consistent throughout the product.
   return (
+    <MobileControlsContext.Provider value={mobileShell ? mobileControlsTarget : null}>
     <div className="dn-shell" style={styles.appShell}>
       <header className="dn-header" style={styles.header}>
         <div style={styles.topBarLeft}>
@@ -645,62 +652,10 @@ export default function DashboardLayout() {
         </section>
       </main>
 
-      <nav className="mobile-tabbar dn-premium-dock" aria-label="Main navigation">
-        {mobileDockStart.map((item) => (
-          <Link key={item.path} to={item.path}
-            className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
-            aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
-            <span className="dn-dock-icon">
-              {activeNavigationPath === item.path ? <motion.span aria-hidden="true"
-                className="dn-dock-motion-indicator" layoutId="dn-primary-nav-indicator"
-                transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 450, damping: 37, mass: .75 }} /> : null}
-              <item.icon size={20} strokeWidth={1.8} aria-hidden="true" />
-            </span>
-            <span className="dn-dock-label">{item.label}</span>
-          </Link>
-        ))}
-        <div ref={quickCreateMobileRef} className={`mobile-dock-create dn-dock-center${quickCreateOpen ? ' is-open' : ''}`}>
-          <button type="button" className="mobile-dock-create-trigger"
-            onClick={(event) => {
-              setQuickCreateOpen((open) => !open);
-              // Blur only touch/pointer activation. Keyboard users retain
-              // visible focus, and Escape still restores keyboard focus.
-              if (event.detail > 0 && window.matchMedia('(hover: none)').matches) {
-                event.currentTarget.blur();
-              }
-            }}
-            aria-label={quickCreateOpen ? 'Close quick create menu' : 'Open quick create menu'}
-            aria-expanded={quickCreateOpen} aria-controls={quickCreateOpen ? 'dn-mobile-quick-create' : undefined}>
-            <Plus size={24} aria-hidden="true" className="dn-create-glyph" />
-          </button>
-          {quickCreateOpen ? (
-            <div id="dn-mobile-quick-create" className="mobile-dock-create-menu dn-dock-action-menu" role="group" aria-label="Quick create actions">
-              <span className="dn-dock-menu-title">Create new</span>
-              <button type="button" onClick={(event) => beginQuickCreate('event', event)}><CalendarDays size={17} aria-hidden="true" /><span>Life moment</span></button>
-              <button type="button" onClick={(event) => beginQuickCreate('activity', event)}><ListChecks size={17} aria-hidden="true" /><span>{activityDetailMatch ? 'Add entry' : 'Activity'}</span></button>
-              <button type="button" onClick={(event) => beginQuickCreate('task', event)}><ListTodo size={17} aria-hidden="true" /><span>Task</span></button>
-              <button type="button" onClick={(event) => beginQuickCreate('transaction', event)}><Receipt size={17} aria-hidden="true" /><span>Transaction</span></button>
-              {(workspaceMoment || openedActivityContext?.moment) ? <button type="button" onClick={() => beginMomentCreate('attachment')}><Upload size={17} aria-hidden="true" /><span>Attachment</span></button> : null}
-            </div>
-          ) : null}
-        </div>
-        {mobileDockEnd.map((item) => (
-          <Link key={item.path} to={item.path}
-            className={`mobile-tab dn-dock-destination${activeNavigationPath === item.path ? ' mobile-tab-active' : ''}`}
-            aria-current={activeNavigationPath === item.path ? 'page' : undefined} aria-label={item.label}>
-            <span className="dn-dock-icon">
-              {activeNavigationPath === item.path ? <motion.span aria-hidden="true"
-                className="dn-dock-motion-indicator" layoutId="dn-primary-nav-indicator"
-                transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 450, damping: 37, mass: .75 }} /> : null}
-              <item.icon size={20} strokeWidth={1.8} aria-hidden="true" />
-            </span>
-            <span className="dn-dock-label">{item.compactLabel
-              ? <><span className="dn-dock-full-label">{item.label}</span>
-                <span className="dn-dock-compact-label" aria-hidden="true">{item.compactLabel}</span></>
-              : item.label}</span>
-          </Link>
-        ))}
-      </nav>
+      {mobileShell ? <MobileCommandDock controlsRef={setMobileControlsTarget} menuRef={quickCreateMobileRef}
+        open={quickCreateOpen} setOpen={setQuickCreateOpen} onCreate={beginQuickCreate}
+        onAttachment={(workspaceMoment || openedActivityContext?.moment) ? () => beginMomentCreate('attachment') : null}
+        isEntry={Boolean(activityDetailMatch)} activePath={activeNavigationPath} /> : null}
 
       <div ref={quickCreateDesktopRef} className={`dn-quick-create${quickCreateOpen ? ' is-open' : ''}`}>
         {quickCreateOpen ? (
@@ -830,6 +785,7 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
     </div>
+    </MobileControlsContext.Provider>
   );
 }
 

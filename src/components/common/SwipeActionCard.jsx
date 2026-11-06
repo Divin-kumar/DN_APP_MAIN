@@ -41,7 +41,7 @@ export default function SwipeActionCard({
     if (!anchor) return;
     const viewport = getVisibleViewport(window);
     if (anchor.bottom <= viewport.top || anchor.top >= viewport.top + viewport.height) { close(); return; }
-    const dock = document.querySelector('.mobile-tabbar');
+    const dock = document.querySelector('.dn-command-bar, .mobile-tabbar');
     const visibleDock = dock && getComputedStyle(dock).display !== 'none';
     const bottomReserve = getSwipeDockReserve({
       viewport,

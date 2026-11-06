@@ -57,7 +57,7 @@ for (const { width, height, theme } of viewportModes) {
           const topHeadings = [...document.querySelectorAll('main h1,main h2,main h3')]
             .filter(visible).slice(0, 8).map((el) => el.textContent.trim().slice(0, 100));
           const viewportWidth = document.documentElement.clientWidth;
-          const tabs = document.querySelector('.mobile-tabbar');
+          const tabs = document.querySelector('.dn-command-bar');
           const menus = [...document.querySelectorAll('button, [role="combobox"]')].filter(visible);
           const tiny = menus.map(el => ({ el, box: el.getBoundingClientRect() }))
             .filter(({ box }) => box.height > 0 && box.height < 36 && box.width > 0 && box.width < 36)

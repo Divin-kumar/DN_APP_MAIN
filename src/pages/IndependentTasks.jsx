@@ -1,3 +1,4 @@
+import MobileControlsSlot from '../components/common/MobileControlsSlot';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -166,7 +167,7 @@ export function TaskListContent() {
     {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     {notice ? <p className="sr-only" role="status" aria-live="polite">{notice}</p> : null}
     <div className="dn-list-controls dn-task-discovery">
-      <div className="dn-list-controls-row">
+      <MobileControlsSlot><div className="dn-list-controls-row">
         <div className="dn-list-controls-search">
           <Search className="dn-list-controls-search-icon" size={18} aria-hidden="true" />
           <input type="search" aria-label="Search Tasks" value={view.search}
@@ -180,7 +181,7 @@ export function TaskListContent() {
           <SlidersHorizontal size={17} aria-hidden="true" /><span>Refine</span>
           {activeFilterCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeFilterCount}</span> : null}
         </button>
-      </div>
+      </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
         <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown · Tap or swipe for actions</span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}

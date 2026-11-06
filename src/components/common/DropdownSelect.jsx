@@ -93,7 +93,7 @@ export default function DropdownSelect({
     const anchor = keyboardSearch && (bounds.bottom < viewport.top || bounds.top > viewport.top + viewport.height)
       ? { ...bounds, top: viewport.top + 14, bottom: viewport.top + 58 }
       : bounds;
-    const obstruction = [...element.ownerDocument.querySelectorAll('.mobile-tabbar, .mobile-dock, .mobile-bottom-nav')]
+    const obstruction = [...element.ownerDocument.querySelectorAll('.dn-command-bar, .mobile-tabbar, .mobile-dock, .mobile-bottom-nav')]
       .filter((node) => node.getClientRects().length && getComputedStyle(node).position === 'fixed')
       .map((node) => node.getBoundingClientRect().top)
       .filter((top) => top > bounds.bottom && top < viewport.top + viewport.height);

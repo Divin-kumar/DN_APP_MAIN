@@ -17,7 +17,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     await expect(menu).toBeVisible();
     await expect(menu.getByRole('menuitem', { name: 'Delete', exact: true })).toBeVisible();
     const popup = await menu.boundingBox();
-    const dock = await page.locator('.mobile-tabbar').boundingBox();
+    const dock = await page.locator('.dn-command-bar').boundingBox();
     expect(popup.y + popup.height).toBeLessThanOrEqual(dock.y - 8 + 1);
 
     await page.keyboard.press('Escape');

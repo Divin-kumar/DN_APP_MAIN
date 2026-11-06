@@ -13,7 +13,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
     await page.goto(item.path);
-    const root = page.locator('.dn-list-controls').first();
+    const root = page.locator('.dn-command-controls');
     const field = root.getByRole('searchbox', { name:item.search });
     const filter = root.getByRole('button', { name:/Filters and sort/ });
     await expect(field).toBeVisible();

@@ -30,8 +30,8 @@ const waitForReadableSurface = async (page, selector) => {
 };
 const assertTaskToolbarAlignment = async (page) => {
   const rects = await page.evaluate(() => {
-    const search = document.querySelector('.dn-task-discovery .dn-list-controls-search');
-    const button = document.querySelector('.dn-task-discovery .dn-list-controls-trigger');
+    const search = document.querySelector('.dn-task-discovery .dn-list-controls-search, .dn-command-controls .dn-list-controls-search');
+    const button = document.querySelector('.dn-task-discovery .dn-list-controls-trigger, .dn-command-controls .dn-list-controls-trigger');
     if (!search || !button) return null;
     const first = search.getBoundingClientRect(), second = button.getBoundingClientRect();
     return { searchTop: first.top, buttonTop: second.top, searchRight: first.right,

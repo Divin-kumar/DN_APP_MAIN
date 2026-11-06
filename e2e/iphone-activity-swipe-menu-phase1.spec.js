@@ -28,7 +28,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const popup = await menu.boundingBox();
     expect(popup.x).toBeGreaterThanOrEqual(0);
     expect(popup.x + popup.width).toBeLessThanOrEqual(width + 1);
-    const dock = await page.locator('.mobile-tabbar').boundingBox();
+    const dock = await page.locator('.dn-command-bar').boundingBox();
     expect(popup.y + popup.height).toBeLessThanOrEqual(dock.y - 7);
 
     await menu.getByRole('menuitem', { name: 'Delete', exact: true }).click();

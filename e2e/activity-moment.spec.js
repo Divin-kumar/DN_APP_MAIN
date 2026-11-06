@@ -13,7 +13,9 @@ test('direct detail/refresh uses both IDs, shows safe formatted notes and never 
   await expect(page.locator('.dn-content-row-body img, .dn-content-row-body script, .dn-content-row-body a')).toHaveCount(0);
   await expect(page.locator('.activity-cover img')).toHaveCount(0);
   await expect(page.locator('.activity-cover')).toContainText('No cover photo');
-  await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Activities');
+  await page.getByRole('button',{name:'Open quick create menu'}).click();
+  await expect(page.locator('.dn-command-destinations [aria-current="page"]')).toHaveText('Activities');
+  await page.keyboard.press('Escape');
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   await page.reload(); await expect(page.locator('h1')).toHaveText('Book a lakeside stay');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
@@ -136,7 +138,9 @@ test('Activity Detail and overview share the same accessible Activity actions', 
 test('Moment Transactions has five reachable tabs, matching totals, independent filters and in-place forms', async ({ page }) => {
   const errors = await seedGuest(page); await page.goto('/events/moment-one/transactions');
   await expect(page.getByRole('heading', { name: 'Transactions', exact: true })).toBeVisible();
-  await expect(page.locator('.mobile-tab[aria-current="page"]')).toHaveText('Moments');
+  await page.getByRole('button',{name:'Open quick create menu'}).click();
+  await expect(page.locator('.dn-command-destinations [aria-current="page"]')).toHaveText('Moments');
+  await page.keyboard.press('Escape');
   const tabs = page.locator('.event-workspace-nav a');
   await expect(tabs).toHaveCount(5);
   expect(await tabs.evaluateAll((links) => links.map((link) =>
@@ -203,7 +207,8 @@ for (const [label, width, height] of [['portrait', 300, 800], ['square', 600, 60
     const detailUrls = await page.locator('.activity-detail-page img').evaluateAll((images) =>
       images.map((image) => image.src).filter((src) => src.startsWith('blob:')));
     expect(detailUrls.length).toBeGreaterThan(0);
-    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Dashboard' }).click();
+    await page.getByRole('button',{name:'Open quick create menu'}).click();
+    await page.getByRole('navigation', { name: 'Main navigation' }).getByRole('link', { name: 'Home' }).click();
     await expect.poll(() => page.evaluate((urls) =>
       urls.every((url) => window.__dnUrls.revoked.includes(url)), detailUrls)).toBe(true);
   });

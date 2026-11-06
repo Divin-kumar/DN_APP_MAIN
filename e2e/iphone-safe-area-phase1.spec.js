@@ -13,7 +13,7 @@ for (const [width, height, theme] of devices) {
     const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
     const geometry = () => page.evaluate(() => {
-      const dock = document.querySelector('.mobile-tabbar');
+      const dock = document.querySelector('.dn-command-bar');
       const content = document.querySelector('.dn-content');
       if (!dock || !content) return null;
       const dockStyle = getComputedStyle(dock);

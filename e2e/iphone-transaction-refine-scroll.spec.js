@@ -17,13 +17,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await page.goto('/financials/transactions');
 
     const results = page.locator('.dn-financial-workspace .dn-transactions-results');
-    const dock = page.locator('.mobile-tabbar');
+    const dock = page.locator('.dn-command-bar');
     await expect(results.locator('.dn-transaction-card')).toHaveCount(24);
     await expect(dock).toBeVisible();
 
     const measure = async () => page.evaluate(() => {
       const list = document.querySelector('.dn-financial-workspace .dn-transactions-results');
-      const dock = document.querySelector('.mobile-tabbar');
+      const dock = document.querySelector('.dn-command-bar');
       const listRect = list.getBoundingClientRect();
       const dockRect = dock.getBoundingClientRect();
       return {

@@ -50,11 +50,11 @@ for (const width of [390, 1280]) {
     await expect(trigger).toBeVisible();
     await expect(trigger.locator('.dn-create-glyph')).toHaveCount(1);
     await trigger.click();
-    await expect(page.getByRole('button', { name: 'Close quick create menu' })).toHaveAttribute('aria-expanded', 'true');
     await expect(page.getByRole('button', { name: 'Task', exact: true })).toBeVisible();
-    const open = page.getByRole('button', { name: 'Close quick create menu' });
+    const open = page.locator('.dn-command-trigger');
+    await expect(open).toHaveAttribute('aria-expanded','true');
     await expect(open.locator('.dn-create-glyph')).toHaveCount(1);
-    await open.click();
+    await page.keyboard.press('Escape');
     await expect(page.getByRole('button', { name: 'Open quick create menu' })).toHaveAttribute('aria-expanded', 'false');
     expect(errors).toEqual([]);
   });

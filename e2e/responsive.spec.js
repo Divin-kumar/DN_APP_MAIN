@@ -53,7 +53,7 @@ for (const theme of ['light', 'dark']) for (const [width, height] of sizes) {
     await page.locator('.activity-detail-footer').scrollIntoViewIfNeeded();
     const end = await page.locator('.activity-detail-footer').boundingBox();
     if (width < 768) {
-      const dock = await page.locator('.mobile-tabbar').boundingBox();
+      const dock = await page.locator('.dn-command-bar').boundingBox();
       expect(end.bottom ?? end.y + end.height).toBeLessThanOrEqual(dock.y + 1);
     }
     await page.goto('/events/moment-one/attachments');

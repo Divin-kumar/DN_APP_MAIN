@@ -22,7 +22,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         const outer = node.getBoundingClientRect();
         const button = node.querySelector('button').getBoundingClientRect();
         const scroll = node.closest('.dn-transactions-results').getBoundingClientRect();
-        const dock = document.querySelector('.mobile-tabbar').getBoundingClientRect();
+        const dock = document.querySelector('.dn-command-bar').getBoundingClientRect();
         return { left: outer.left, right: outer.right, buttonHeight: button.height,
           documentWidth: document.documentElement.scrollWidth,
           listBottom: scroll.bottom, dockTop: dock.top };

@@ -243,3 +243,34 @@ jobs:
           name: dn-desktop-shell
           path: .verification
           retention-days: 7
+
+  mobile-command:
+    if: github.ref == 'refs/heads/OldVersion' && contains(github.event.head_commit.message, '[verify-command]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: >-
+          npx playwright test
+          e2e/mobile-command-bar.spec.js e2e/iphone-premium-bottom-dock.spec.js
+          e2e/iphone-mobile-dock-phase1.spec.js e2e/iphone-dock-label-230.spec.js
+          e2e/iphone-quick-create-touch-state.spec.js e2e/iphone-safe-area-phase1.spec.js
+          e2e/iphone-discovery-controls-phase1.spec.js e2e/iphone-transaction-refine-scroll.spec.js
+          e2e/iphone-oldversion-detail-quick-create.spec.js e2e/iphone-task-page-density-230.spec.js
+          e2e/desktop-shell.spec.js e2e/dn-233-motion-navigation.spec.js
+          e2e/iphone-apple-premium-coherence.spec.js e2e/iphone-swipe-dock-phase1.spec.js
+          e2e/iphone-activity-swipe-menu-phase1.spec.js e2e/ui-polish-230.spec.js
+          --workers=2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mobile-command-evidence
+          path: .verification
+          include-hidden-files: true
+          retention-days: 7

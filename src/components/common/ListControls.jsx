@@ -2,6 +2,7 @@ import { cloneElement, isValidElement, useEffect, useId, useRef, useState } from
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, X } from 'lucide-react';
 import './ListControls.css';
 import FilterSortSheet from './FilterSortSheet';
+import MobileControlsSlot from './MobileControlsSlot';
 
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
@@ -80,7 +81,7 @@ export default function ListControls({
 
   return (
     <div className="dn-list-controls">
-      <div className="dn-list-controls-row">
+      <MobileControlsSlot><div className="dn-list-controls-row">
         {search ? <div className="dn-list-controls-search"><Search className="dn-list-controls-search-icon" size={18} strokeWidth={1.8} aria-hidden="true" />{search}</div> : null}
         {hasPanel ? <button type="button" className={`dn-list-controls-trigger${activeCount ? ' is-active' : ''}`}
           aria-label={`${label}${activeCount ? `, ${activeCount} active` : ''}`}
@@ -89,7 +90,7 @@ export default function ListControls({
           {activeCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeCount}</span> : null}
         </button> : activeCount && onReset ? <button type="button" className="dn-list-controls-trigger"
           aria-label="Clear search" onClick={onReset}><X size={15} aria-hidden="true" /><span>Clear</span></button> : null}
-      </div>
+      </div></MobileControlsSlot>
       {hasPanel && open && refine ? <FilterSortSheet key={refine.conditions.editorKey} title={title}
         refine={refine} resultLabel={resultLabel} onReset={onReset} onClose={() => setOpen(false)} /> : null}
       {hasPanel && open && !refine ? <section id={panelId} ref={panelRef} className="dn-list-controls-panel" aria-label={title}>

@@ -97,7 +97,7 @@ const openControls = async (t, overrides = {}) => {
       },
       load(id) {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
-        if (id === '\0list-controls-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useId=${fixture}.id,useEffect=${fixture}.effect;`;
+        if (id === '\0list-controls-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useId=${fixture}.id,useEffect=${fixture}.effect; export const createContext=value=>({value}),useContext=context=>context.value;`;
         if (id === '\0list-controls-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx;';
         if (id === '\0list-controls-icons') return 'export const ChevronLeft="icon",ChevronRight="icon",SlidersHorizontal="icon",X="icon";';
         return null;

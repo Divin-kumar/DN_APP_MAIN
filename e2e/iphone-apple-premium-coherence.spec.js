@@ -16,31 +16,16 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         localStorage.getItem('dn_guest_expenses'),
       ]);
 
-      const dock = page.getByRole('navigation', { name: 'Main navigation' });
-      await expect(dock.locator('.dn-dock-destination')).toHaveCount(4);
-      await expect(dock.getByRole('button', { name: 'Open quick create menu' })).toHaveCount(1);
-      const dockTypography = await dock.evaluate((element) => {
-        const destinations = [...element.querySelectorAll('.dn-dock-destination')];
-        const labels = destinations.map((tab) => ({
-          label: tab.getAttribute('aria-label'),
-          font: parseFloat(getComputedStyle(tab).fontSize),
-          height: tab.getBoundingClientRect().height,
-        }));
-        return { labels, cols: getComputedStyle(element).gridTemplateColumns.split(' ').length,
-          width: element.getBoundingClientRect().width };
-      });
-      expect(dockTypography.cols).toBe(5);
-      expect(dockTypography.labels.map((x) => x.label)).toEqual(['Dashboard', 'Activities', 'Moments', 'Transactions']);
-      expect(dockTypography.labels.every((x) => x.font >= 10.5 && x.height >= 44)).toBe(true);
-
-      const plus = dock.getByRole('button', { name: 'Open quick create menu' });
-      const resting = await plus.evaluate((element) => getComputedStyle(element).backgroundImage);
+      const plus = page.locator('.dn-command-trigger');
+      await expect(plus).toBeVisible();
       await plus.click();
-      await expect(dock.getByRole('button', { name: 'Close quick create menu' })).toBeVisible();
-      await expect(dock.getByRole('button', { name: 'Transaction', exact: true })).toBeVisible();
-      await dock.getByRole('button', { name: 'Close quick create menu' }).click();
-      await expect(dock.getByRole('button', { name: 'Open quick create menu' })).toBeVisible();
-      expect(await plus.evaluate((element) => getComputedStyle(element).backgroundImage)).toBe(resting);
+      const dock = page.getByRole('navigation', {name:'Main navigation'});
+      await expect(dock.getByRole('link')).toHaveText(['Home','Moments','Activities','Tasks','Finance']);
+      const sizes = await dock.getByRole('link').evaluateAll(items => items.map(e => ({font:parseFloat(getComputedStyle(e).fontSize),height:e.getBoundingClientRect().height})));
+      expect(sizes.every(s => s.font >= 12 && s.height >= 44)).toBe(true);
+      await expect(page.getByRole('button',{name:'Transaction',exact:true})).toBeVisible();
+      await page.keyboard.press('Escape');
+      await expect(plus).toBeVisible();
 
       await page.goto('/events');
       await expect(page.getByRole('searchbox', { name: 'Search moments' })).toBeVisible();
