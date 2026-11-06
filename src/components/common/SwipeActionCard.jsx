@@ -238,14 +238,18 @@ export default function SwipeActionCard({
       {createPortal(<AnimatePresence>
         {open && position ? <motion.div id={menuId} ref={popupRef} role="menu" data-swipe-ignore
           data-dn-motion="swipe-spring"
-          initial={reducedMotion ? false : { opacity: 0, y: 7, scale: 0.985 }}
+          initial={reducedMotion ? false : { opacity: 0, y: position.direction === 'above' ? 16 : -16, scale: 0.965 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 4, scale: 0.992 }}
-          transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 410, damping: 33, mass: 0.8 }}
+          exit={reducedMotion ? { opacity: 0, transition: { duration: 0 } } : {
+            opacity: 0, y: position.direction === 'above' ? 9 : -9, scale: 0.985,
+            transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
+          }}
+          transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 230, damping: 24, mass: 0.9 }}
           className="dn-swipe-popup" aria-label={`Actions for ${label}`}
           style={{
             position: 'fixed', top: position.top, left: position.left,
             width: position.width, maxHeight: position.maxHeight,
+            transformOrigin: position.direction === 'above' ? 'bottom right' : 'top right',
           }}
           onKeyDown={handleMenuKey}>
           {actions.map(({ label: actionLabel, icon: Icon, onClick, danger, disabled: actionDisabled }, i) => (

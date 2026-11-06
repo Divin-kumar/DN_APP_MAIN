@@ -2422,7 +2422,10 @@ html[data-theme] .dn-swipe-popup {
   -webkit-backdrop-filter:blur(18px) saturate(1.24);
   box-shadow:0 14px 34px rgba(0,0,0,.22),0 2px 8px rgba(0,0,0,.09);
   overscroll-behavior:contain;
-  animation:dn-swipe-popup-in .18s cubic-bezier(.2,.82,.2,1) both;
+  /* Framer Motion owns both entry and exit. CSS keyframes here overrode
+     its opacity/transform on iOS Safari and made every module popup blink. */
+  animation:none !important;
+  will-change:transform,opacity;
 }
 html[data-theme] .dn-swipe-popup-item {
   display:flex; align-items:center; gap:10px; width:100%; min-height:44px;
@@ -2443,10 +2446,6 @@ html[data-theme] .dn-swipe-popup-item.is-danger {
   border-radius:5px 5px 10px 10px !important; margin-top:3px;
 }
 html[data-theme] .dn-swipe-popup-item.is-danger svg { color:var(--color-danger); }
-@keyframes dn-swipe-popup-in {
-  from { opacity:0; transform:translateY(5px) scale(.97); }
-  to { opacity:1; transform:translateY(0) scale(1); }
-}
 @media (prefers-reduced-motion:reduce) {
   html[data-theme] .dn-swipe-popup { animation:none !important; transition:none !important; }
 }

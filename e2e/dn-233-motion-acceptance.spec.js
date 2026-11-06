@@ -92,3 +92,41 @@ test('Filter release settles actual sibling order and removes the raised ghost',
   await expect(modal.locator('.is-drag-target,.is-drag-source')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+
+test('shared swipe menus animate without CSS-keyframe blinking across Moments Activities Tasks and Finance', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  const snapshot = () => page.evaluate(() => [
+    'dn_guest_eventGroups', 'dn_guest_tasks', 'dn_guest_incomes', 'dn_guest_expenses',
+  ].map(key => localStorage.getItem(key)));
+  const before = await snapshot();
+  for (const route of ['/events', '/activities', '/tasks', '/financials/transactions']) {
+    await page.goto(route);
+    const row = page.locator('.dn-swipe-surface').first();
+    await expect(row).toBeVisible();
+    const atRest = await row.boundingBox();
+    await row.focus();
+    await page.keyboard.press('ArrowRight');
+    const menu = page.getByRole('menu', { name: /Actions for/ });
+    await expect(menu).toHaveAttribute('data-dn-motion', 'swipe-spring');
+    await expect(menu).toBeVisible();
+    // Safari had two competing drivers: CSS keyframes overrode Framer's
+    // animated opacity and transform, producing a blink instead of movement.
+    expect(await menu.evaluate(node => getComputedStyle(node).animationName)).toBe('none');
+    await page.waitForTimeout(70);
+    const midpoint = await menu.evaluate(node => getComputedStyle(node).transform);
+    await page.waitForTimeout(360);
+    const settled = await menu.evaluate(node => getComputedStyle(node).transform);
+    expect(midpoint).not.toBe(settled);
+    const menuBounds = await menu.boundingBox();
+    expect(menuBounds.x).toBeGreaterThanOrEqual(0);
+    expect(menuBounds.x + menuBounds.width).toBeLessThanOrEqual(391);
+    const after = await row.boundingBox();
+    expect(Math.abs(after.x - atRest.x)).toBeLessThanOrEqual(2);
+    await page.keyboard.press('Escape');
+    await expect(menu).toHaveCount(0);
+    expect(await snapshot()).toEqual(before);
+  }
+  expect(errors).toEqual([]);
+});

@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-488 | Fix blinking swipe action menus in Moments Activities Tasks and Transactions
+
+**Owner observation:** An iPhone screenshot of the Moment card actions shows a popup that appears abruptly; owner explicitly extends the animation requirement to all swipe actions in Moments, Activities, Tasks and Transactions.
+
+**Implementation:** Audited the four list consumers of `SwipeActionCard`: Moments list, Activity list, independent Tasks and editable Transaction rows all share one portal action menu. Removed the conflicting `dn-swipe-popup-in` CSS keyframe from `src/design-system.css` (the CSS and Framer both animated the same opacity/transform). Kept Framer as the single motion driver with a visible spring entry (16px travel), reversible 220ms exit, direction-aware anchor origin and unchanged menu bounds. Cards never slide or obscure their content; Delete and other actions retain their existing callbacks, focus, outside-dismiss, Escape, saved records and confirmation checks. Reduce Motion stays instant. Read-only linked Transactions remain read-only. This preserves Guest/account scopes, finance, PDFs and backups.
+
+**Regression coverage / boundary:** Added a focused Playwright case visiting all four modules, checking no CSS popup keyframes, actual intermediate-to-settled transform changes, viewport bounds, stationary card and byte-identical Guest keys. **Authored, not executed:** development deployment remains fast build-and-hosting-readback only (no E2E, unit, lint or audit gate). Physical iPhone Safari and VoiceOver acceptance pending. Guest tour swipe guidance remains correct and does not require reset. No production deployment, backend/rules, Lifehub, main branch, PR or version bump. Earlier CHG history preserved.
+
 ## CHG-20261106-487 | Align the transparent + with enlarged mobile Search
 
 **Owner observation:** After the 50px Search enlargement, the floating + appeared out of line with Search on iPhone. The CSS independently translated only the Search/Refine controls up by 13px while leaving the 52px + in the original fixed dock row.
