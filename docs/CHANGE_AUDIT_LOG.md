@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-454 | Verify desktop navigation and unchanged mobile renders
+- **Executed:** Source 7174e8b2b562ee94ed0f4f0b9acaefd16ea5d3d4 passed all 15 focused Chromium checks in run 42190357423. Pixel comparisons with the desktop stylesheet disabled were identical at 320x844, 390x844, 430x932, 932x430 and 1024x430. Desktop checks at 1024/1280/1440px verified direct link order, navigation, sidebar theme placement, 56px + and Escape handling. Existing navigation motion checks also passed.
+- **Executed:** Same-source governance run 42190357502 passed unit tests, lint, production build, dependency audit and document contracts. Manual Guest preview checked expanded/collapsed desktop navigation. Physical iPhone Safari/VoiceOver remain unverified.
+- **Release ledger:** OldVersion only; no version bump or deployment. This entry records evidence and does not alter application source.
+
 ## CHG-20261106-453 | Desktop direct navigation and larger universal create
 - **Scope:** Owner requested individual account destinations in the left desktop navigation, in meaningful order, rather than relocating the account popup. Added direct destinations and desktop-only ordering; mobile controls and ordering are preserved. Desktop + grows from 44px to 56px.
 - **Executed:** Manual desktop Guest preview confirms ordered destinations, clear header and larger +. Local build/lint passed before final ordering refinement; final CI is pending.
