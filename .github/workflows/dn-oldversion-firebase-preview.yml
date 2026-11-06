@@ -1,5 +1,7 @@
 name: DN OldVersion automatic Firebase development
 # Standing owner approval: deploy DN builds to the existing ExpenseTracker Hosting site.
+# Build and publish ASAP: no tests, lint, dependency audit or E2E in this development job.
+# Production verification workflows are independent; never touch dn-10 here.
 # Keep committed firebase.json pointing at dn-10; only change Hosting site in this runner.
 on:
   push:
@@ -14,21 +16,15 @@ jobs:
   deploy-development:
     if: github.ref == 'refs/heads/OldVersion'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Install locked dependencies
-        run: npm ci
-      - name: Check dependency advisories
-        run: npm audit --audit-level=moderate
-      - name: Verify unit tests and lint
-        run: |
-          npm test
-          npm run lint
+      - name: Install locked dependencies (without audit)
+        run: npm ci --no-audit --no-fund
       - name: Build DN for development preview
         env:
           VITE_DEPLOY_ENV: Firebase development

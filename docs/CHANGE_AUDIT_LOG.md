@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-483 | Make automatic ExpenseTracker development deployment build-only
+
+**Owner requirement:** Preview DN's latest `OldVersion` commits as quickly as possible in the repurposed ExpenseTracker Hosting site. No E2E or other test gate in the development deployment job; keep test and release verification independent of development.
+
+**Implementation:** `.github/workflows/dn-oldversion-firebase-preview.yml` still auto-triggers for every `OldVersion` push and optional manual dispatch, but now executes only Node 22 checkout/cache, `npm ci --no-audit --no-fund`, Vite build, build-output existence, Firebase credential check, a guarded CI-only Hosting site override to `expense-tracker-divin`, deployment to that site's permanent live channel and exact index read-back. Removed the blocking `npm audit`, `npm test` and `npm run lint` steps. It never runs E2E; independently triggered full/targeted and production verification workflows are unchanged. Do not omit the build or Hosting safety checks. Automatic cancellation of superseded dev runs and protection of `dn-10` remain.
+
+**Evidence and boundaries:** The predecessor workflow completed successfully at SHA `965373228b12d279d99b9ff8b41914904ae2a78e`, including exact ExpenseTracker live byte read-back, in [run 42248626866](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42248626866). **Source-derived:** fast-path workflow configuration inspected; a successful new deployment/read-back must be checked separately. No production rollout, Firebase rules/data migration, Lifehub change, business behavior, Guest data, backups or version bump. Production's previously approved release verification policy is unchanged.
+
 ## CHG-20261106-482 | Authorize automatic DN development on existing ExpenseTracker Hosting
 
 **Owner decision:** The existing ExpenseTracker Hosting site contains an oldest DN version, and the owner approved repurposing it as the current DN development preview. The Firebase project remains `expense-tracker-divin`; `dn-10` remains DN production, and Lifehub stays untouched.
