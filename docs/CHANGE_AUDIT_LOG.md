@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-436 | Retain full-release browser failure evidence
+- **Executed:** Candidate 73f98e0 passed preliminary Node/lint/docs/security checks, but full browser run 42161528275 failed. Production build/offline/PDF/upgrade stages were skipped. The workflow did not retain its JSON report or screenshots; the connector repeatedly failed to retrieve the large job log. Failure count and cause are not yet established.
+- **Correction:** Persist the browser log, JSON report and failure screenshots as a seven-day Actions artifact even on failure. Print a bounded log tail for actionable connector retrieval. All 812 browser cases and release gates remain enabled; no failure is ignored and no production approval is implied.
+- **Compatibility:** CI evidence only; no application, record, original-file, Guest sample, package or release behavior changes. Nondeploying rerun pending on the updated source.
+
 ## CHG-20261106-435 | Prepare DN 2.3.4 candidate and full nondeploying verification
 - **Owner instruction:** Proceed with release preparation after the verified Story/Settings/Tasks batch. Align package/root lock to 2.3.4; add three concise About highlights with expandable details; correct stale three-dot Activity guidance to swipe actions.
 - **Evidence before full gate:** Tasks/Settings source 20bcf6b passed 44/44 focused browser checks and 618 Node tests plus governance. Story source e40f691 passed its focused browser gate. These do not establish final candidate release acceptance.

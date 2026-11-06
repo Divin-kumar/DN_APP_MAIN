@@ -35,7 +35,21 @@ jobs:
       - name: Install Chromium for pre-release tests only
         run: npx playwright install --with-deps chromium
       - name: Verify responsive browser journeys
-        run: npm run test:e2e
+        run: npm run test:e2e > .verification-full-browser.log 2>&1
+      - name: Preserve browser failure evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: full-browser-evidence-${{ github.sha }}
+          retention-days: 7
+          include-hidden-files: true
+          path: |
+            .verification-full-browser.log
+            .verification/browser-results.json
+            .verification/browser-results
+      - name: Print concise browser results
+        if: always()
+        run: tail -n 180 .verification-full-browser.log
       - name: Build release candidate
         env:
           VITE_DEPLOY_ENV: Production
