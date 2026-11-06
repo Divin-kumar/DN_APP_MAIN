@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-492 | Wait for Task creation sheet to finish leaving before testing card swipe
+
+**Evidence:** In the repeat [focused browser run 42267071959](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42267071959), 44 of 48 tests passed and the corrected four-module animation acceptance succeeded. All four remaining failures were the Task swipe test after creating a Task in an emulated mobile session. The diagnostic listener recorded zero pointer/touch events on the card. A new Task row had rendered behind a smoothly exiting creation dialog, but the test did not await dismissal of its full-screen scrim before dispatching a mouse gesture.
+
+**Correction:** After Task submission, wait for the New Task dialog and `.dn-modal-backdrop` to be fully removed, then send the established 125px in-card swipe. Keep assertions for actual Edit, Cancel and Delete actions, keyboard Escape/focus return, Task status, and Guest-data preservation. Remove the temporary event recorder from tests. This is a sequencing correction, not a removal of real swipe acceptance or product gesture functionality.
+
+**Gate:** Rerun the dedicated nondeploying `[verify-239-repair]` five-file targeted suite. Production v2.3.9 remains unpublished until independent exact-SHA full browser/offline/PDF/upgrade verification and guarded Firebase live readback pass. No application data, version, shared backend, production, Lifehub or main-branch writes.
+
 ## CHG-20261106-491 | Diagnose Task swipe under mobile touch emulation after 43/48 focused passes
 
 **Evidence:** Targeted nondeploying [run 42266356444](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42266356444) passed 43 of 48 tests. The old six-menu profile expectations, invisible floating + gap and short-screen original preview are now green. Remaining failures: four Task action swipes under `test.use({hasTouch:true,isMobile:true})`, even with a deliberate 125px gesture; and the new cross-module animation test encountering an empty independent Tasks list.
