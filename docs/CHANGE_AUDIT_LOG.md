@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-444 | Verify PDF content selection and data preservation
+- **Executed:** Source a0261682c1d5eaec86fc0b83c883f3f3070fc7ed passed all 29 focused Chromium tests in [run 42184612313](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42184612313): phone selection at 320/430px, Cancel/Apply/reset, persistence, parent/file exclusions, cancelled-content rules and existing PDF controls. Production build, offline originals/PDF and both upgrade-preservation paths passed. Same-source governance 42184612163 passed Node/lint/build/audit/docs; local full Node suite passed 623 tests.
+- **Correction:** Initial run 42184359576 passed 27/29; two new assertions incorrectly expected attachment filenames in the existing writing-only Diary/Tasks formats. The test-only correction verifies retained writing in all formats and retained file references in Journal. Exclusion assertions remain in all three formats; no rendering behavior was broadened.
+- **Manual QA:** Guest demo content sheet opened and attachment selection changed the summary from 16 to 15 files in the local preview. Physical iPhone/VoiceOver and cross-device behavior remain unverified.
+- **Release ledger:** Application source a0261682c1d5eaec86fc0b83c883f3f3070fc7ed is verified within the stated scope. This documentation-only follow-up records evidence; no version bump or production deployment. Browser-only choices do not alter originals, records or backup data.
+
 ## CHG-20261106-443 | Lightweight PDF activity and attachment selection
 - **Scope:** Owner approved a compact PDF Studio selector without crowding Activity pages. Add a Content sheet with parent/file selection, Cancel/Apply, reset and per-Moment/account/Guest/demo browser memory. Existing section options remain collapsed as Book sections.
 - **Compatibility:** Filter before chapters/covers, including alternate-ID parent links; cancelled records remain excluded. Source records, originals, Story and backup schema are unchanged. New items default to included; memory is local only, not cross-device or backup recovery.
