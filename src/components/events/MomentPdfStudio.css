@@ -525,10 +525,23 @@ html[data-theme] .dn-pdf-color-options button[aria-pressed="true"] {
 html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-text-muted); line-height:1.5; }
 
 @media(max-width:360px) {
-  /* The tall sticky update rail can cover Book design buttons during touch
-     scrolling at 320px. Keep it in normal flow to prevent misdirected taps. */
-  html[data-theme] .dn-pdf-update-rail { flex-wrap:wrap; position:static; top:auto; }
-  html[data-theme] .dn-pdf-update-rail .dn-pdf-update-button { margin-left:auto; }
+  /* A stacked sticky update rail used to cover Book design touch targets at
+     320px. Keep the action available in one compact row without overlap. */
+  html[data-theme] .dn-pdf-update-rail {
+    flex-wrap:nowrap;gap:5px;min-height:56px;padding:6px 8px;
+  }
+  html[data-theme] .dn-pdf-update-rail > small {
+    flex:1 1 auto;min-width:0;max-width:90px;
+    font-size:10px;line-height:1.15;
+  }
+  html[data-theme] .dn-pdf-update-rail .dn-pdf-update-button {
+    margin-left:auto;flex:0 0 116px;min-height:44px;
+    padding:6px 5px;gap:4px;font-size:11px;
+  }
+  html[data-theme] .dn-pdf-style-default button,
+  html[data-theme] .dn-pdf-style-option {
+    scroll-margin-top:calc(env(safe-area-inset-top,0px) + 200px);
+  }
 }
 
 /* One quiet entry point; selection controls live only in the content sheet. */
