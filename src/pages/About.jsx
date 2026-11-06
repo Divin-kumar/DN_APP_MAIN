@@ -53,6 +53,13 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.5',
+    title: 'Cancelled activities stay out of PDFs',
+    summary: 'PDF previews and downloads now exclude cancelled activities in every format.',
+    highlights: ['Journal, Diary and Tasks PDFs omit cancelled activities and their linked files.'],
+    changes: ['Saved records, original attachments and Story views remain unchanged. Restore an activity to include it in future PDFs.'],
+  },
+  {
     version: '2.3.4',
     title: 'Clearer Stories, consistent Settings and smoother Tasks',
     summary: 'An iPhone-focused polish for reading, everyday settings and Task navigation.',

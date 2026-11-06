@@ -6,6 +6,10 @@ DN organizes Moments, activities, memories, greetings, original attachments and 
 
 
 
+## DN 2.3.5 cancelled-activity PDF hotfix (publication pending)
+
+Owner-authorized hotfix: PDF preview and download exclude cancelled activities in Journal, Diary and Tasks, including nested writing and linked files. Both status=cancelled and the historical cancelled flag are respected. Filtering occurs only in the PDF projection before cover/chapter selection; files linked to excluded activities do not become orphan keepsakes. The cancelled-content option is removed and legacy includeCancelled=true cannot override exclusion. Source records, originals, Story and restore behavior remain unchanged. Focused PDF/release and preservation validation precedes production; existing Guest fixtures need no reset.
+
 ## DN 2.3.4 production release (6 November 2026)
 
 Published at https://dn-10.web.app after explicit owner approval. Manual Actions dispatch used OldVersion/full on the already-verified b2bb5af commit, so no E2E repeat was required for publication. Full verification 42169743568 passed 812/812 cases with zero skipped/flaky/unexpected, plus preflight and offline/PDF/original/upgrade checks. Production 42172081941 verified identical live index bytes; independent public service-worker readback reports 2.3.4. Earlier candidate/pending entries below describe the preparation history and are superseded by this release outcome. Documentation follow-ups do not alter the deployed source. Physical iPhone Safari/VoiceOver and real two-device sync remain separate acceptance checks.

@@ -17,7 +17,7 @@ test('Phase 6 Studio chooses compatible Journal Diary and Tasks templates withou
   assert.equal(normalizePdfStudioOptions({template:'invalid', density:'invalid'},'diary').template,'diary');
 });
 
-test('Phase 6 Tasks PDF sections preserve required order and optional cancelled/completed visibility',()=>{
+test('Phase 6 Tasks PDF sections preserve required order and completed visibility while excluding cancelled',()=>{
   const groups=[
     {status:'in-progress',entries:[{id:'a'}]},
     {status:'completed',entries:[{id:'b'}]},
@@ -26,7 +26,7 @@ test('Phase 6 Tasks PDF sections preserve required order and optional cancelled/
   const hidden=pdfStudioTaskSections(groups,{includeCompleted:false,includeCancelled:false});
   assert.deepEqual(hidden.map(g=>g.status),['in-progress']);
   const visible=pdfStudioTaskSections(groups,{includeCompleted:true,includeCancelled:true});
-  assert.deepEqual(visible.map(g=>g.status),['in-progress','completed','cancelled']);
+  assert.deepEqual(visible.map(g=>g.status),['in-progress','completed']);
   visible[0].entries.push({id:'external'});
   assert.equal(groups[0].entries.length,1,'source groups remain unchanged');
 });

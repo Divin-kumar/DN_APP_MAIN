@@ -29,7 +29,6 @@ const optionLabels = [
   { key: 'includeReflections', title: 'Earlier reflections', help: 'Preserved older Memory notes, if any' },
   { key: 'includeUpcoming', title: 'Upcoming entries', help: 'Future plans without inventing new dates' },
   { key: 'includeCompleted', title: 'Completed tasks', help: 'Finished items after in-progress tasks' },
-  { key: 'includeCancelled', title: 'Cancelled tasks', help: 'Show cancelled entries at the end' },
 ];
 const zoomSteps = [1, 1.25, 1.5, 2];
 const windowOfPages = (total, selected) => {

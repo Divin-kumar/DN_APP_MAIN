@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-441 | Exclude cancelled activities from all PDFs; prepare 2.3.5 hotfix
+- **Owner instruction:** Restrict cancelled activities from PDFs and publish the fix to production. All changes stay on OldVersion.
+- **Change:** A PDF-only projection removes activities cancelled by status or legacy flag, their nested writing, and files linked by canonical/Firestore IDs before grouping or cover selection. Journal, Diary and Tasks share this projection. Legacy includeCancelled requests normalize to false; the cancelled-content toggle is removed. Story, source records, original files and restoration remain unchanged.
+- **Validation:** 13 focused Node cases passed. New browser regressions check actual rendered/searchable page text for all three formats; the focused workflow also checks Studio exports, About/release notes, offline PDF/originals and upgrade preservation before publication. Browser results pending. Package/root lock and About advance to 2.3.5.
+- **Guest review:** Existing tour already contains a cancelled Activity and does not promise cancelled PDF content; it remains a useful demonstration. No fixture reset needed. No data migration or original-file rewrite.
+
 ## CHG-20261106-440 | Publish verified DN 2.3.4 to Firebase production
 - **Authorization and source:** Owner explicitly requested publication after full acceptance. GitHub Actions manual dispatch selected OldVersion and full validation at b2bb5af5c00f06aa5ecb079c3ef7dbc05f765e6e, without a new application commit or repeated E2E run.
 - **Executed acceptance:** Full run 42169743568 passed all 812 Chromium cases (zero skipped/flaky/unexpected), 8 release preflight cases, Node/lint/audit/docs/build, offline/PDF/original and upgrade checks. Browser stage took 13m14s versus about 20m36s in the prior single-worker diagnostic run.

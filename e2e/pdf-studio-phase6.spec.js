@@ -50,7 +50,7 @@ test('PDF Studio presents actual pages, requires refresh after customization and
   // Optional content intentionally starts collapsed for a calmer Studio.
   await studio.locator('.dn-pdf-content-options > summary').click();
   await expect(studio.getByText('Completed tasks')).toBeVisible();
-  await studio.getByLabel('Cancelled tasks').check();
+  await expect(studio.getByLabel('Cancelled tasks')).toHaveCount(0);
   await studio.getByRole('button', { name: 'Update preview' }).click();
   await expect(studio.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled({ timeout: 20000 });
   const taskHash = await fingerprint(page);

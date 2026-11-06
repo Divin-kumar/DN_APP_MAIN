@@ -25,7 +25,7 @@ test('defaults can be inherited per format without writing the setting to record
   assert.equal(normalizePdfStudioOptions({ visualStyle: 'bogus' }, 'journey').visualStyle, 'editorial');
 });
 
-test('PDF format and content options retain all existing flags', () => {
+test('PDF content options reject legacy requests to include cancelled activities', () => {
   const actual = normalizePdfStudioOptions({
     template: 'diary', visualStyle: 'heritage', density: 'compact',
     includeCover: true, includeIntro: false, includeReflections: true,
@@ -39,7 +39,7 @@ test('PDF format and content options retain all existing flags', () => {
   }, {
     template: 'diary', visualStyle: 'heritage', density: 'compact',
     includeCover: true, includeIntro: false, includeReflections: true,
-    includeUpcoming: false, includeCompleted: false, includeCancelled: true,
+    includeUpcoming: false, includeCompleted: false, includeCancelled: false,
   });
 });
 

@@ -94,7 +94,7 @@ export const normalizePdfStudioOptions = (source = {}, defaultTemplate = 'journe
     includeReflections: flag(source?.includeReflections, false),
     includeUpcoming: flag(source?.includeUpcoming, true),
     includeCompleted: flag(source?.includeCompleted, true),
-    includeCancelled: flag(source?.includeCancelled, false),
+    includeCancelled: false,
   };
 };
 // Preserve a lone image on its page when at least 40% of usable A4 height is free.
@@ -105,6 +105,5 @@ export const hasRoomForSinglePdfPhoto = (freeHeight, usableHeight) =>
 
 export const pdfStudioTaskSections = (groups = [], options = {}) =>
   groups.filter((group) => group.status === 'in-progress'
-    || (group.status === 'completed' && options.includeCompleted !== false)
-    || (group.status === 'cancelled' && options.includeCancelled === true))
+    || (group.status === 'completed' && options.includeCompleted !== false))
     .map((group) => ({ ...group, entries: [...group.entries] }));

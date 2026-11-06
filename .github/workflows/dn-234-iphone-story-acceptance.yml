@@ -123,3 +123,48 @@ jobs:
             .verification/browser-results.json
             .verification/production-shell
             .verification/release-upgrade
+
+  pdf-cancellation-repair:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      contains(github.event.head_commit.message, '[verify-235-pdf]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify cancelled PDF exclusion and existing exports
+        run: npx playwright test e2e/pdf-cancelled-activities-235.spec.js e2e/pdf-studio-phase6.spec.js e2e/pdf-studio-searchable-220.spec.js e2e/iphone-about-premium.spec.js e2e/release-phase9.spec.js --workers=2
+      - name: Build candidate
+        env:
+          VITE_DEPLOY_ENV: Production
+        run: npm run build
+      - name: Check offline originals and PDF
+        run: npm run test:production
+      - name: Build previous release fixture
+        env:
+          DN_UPGRADE_BASE_SHA: dfe40bbc90b0a740cf2dd44132d72997634f12c7
+        run: |
+          git fetch --no-tags --depth=1 origin "$DN_UPGRADE_BASE_SHA"
+          mkdir -p .verification/phase9/previous
+          git archive "$DN_UPGRADE_BASE_SHA" | tar -x -C .verification/phase9/previous
+          ln -s "$GITHUB_WORKSPACE/node_modules" .verification/phase9/previous/node_modules
+          npm --prefix .verification/phase9/previous run build
+      - name: Check upgrade preserves data and originals
+        run: npm run test:upgrade
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dn-235-pdf-exclusion
+          include-hidden-files: true
+          retention-days: 7
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+            .verification/production-shell
+            .verification/release-upgrade

@@ -3,8 +3,9 @@ import { getActiveSampleScenario } from '../dev/sampleData';
 import { attachmentRepository } from '../services/attachmentService';
 import { activityDateLabel, isAttachmentImage, legacyAttachmentImage } from './activityDetail';
 import { PDF_PAGE_HEIGHT, PDF_PAGE_WIDTH, pdfFromJpegPages, momentPdfFilename } from './pdfDocument';
-import { buildMomentStory, groupMomentStoryTasks } from './momentStory';
+import { groupMomentStoryTasks } from './momentStory';
 import { normalizePdfStudioOptions, pdfStudioTaskSections, PDF_TEMPLATE_NAMES, PDF_STYLE_PALETTES, PDF_DARK_STYLE_PALETTES, PDF_PAGE_QUALITY_PROFILES, pdfPageNumberLabel, hasRoomForSinglePdfPhoto } from './pdfStudioOptions';
+import { buildMomentPdfStory } from './momentPdfStory.js';
 import { pdfStoryText } from './pdfStoryText';
 
 const STANDARD_SCALE = PDF_PAGE_QUALITY_PROFILES.standard.scale;
@@ -377,7 +378,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
     }
   };
   const scope = { uid, isGuest, sample: Boolean(sample), assertCurrent };
-  const story = buildMomentStory(event, {
+  const story = buildMomentPdfStory(event, {
     momentTypes: momentTypes || initial.adminValues?.eventTypes || [],
   });
   const options = normalizePdfStudioOptions(studioOptions, story.presentation);
