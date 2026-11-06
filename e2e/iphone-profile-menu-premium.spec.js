@@ -18,7 +18,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(menu).toBeVisible();
       await expect(menu.getByText('Guest account')).toBeVisible();
       const choices = menu.getByRole('menuitem');
-      await expect(choices).toHaveCount(6);
+      await expect(choices).toHaveCount(4);
+      await expect(menu.getByRole('menuitem', { name:'Tasks' })).toHaveCount(0);
+      await expect(menu.getByRole('menuitem', { name:'Transactions' })).toHaveCount(0);
       const sizes = await menu.evaluate((element) => {
         const rect = element.getBoundingClientRect();
         const items = [...element.querySelectorAll('[role="menuitem"]')]
@@ -59,7 +61,7 @@ test('Account menu supports Arrow keys, Home/End and Escape with focus return', 
   await expect(menu).toBeVisible();
   await expect(menu.getByRole('menuitem', { name: 'Profile' })).toBeFocused();
   await page.keyboard.press('ArrowDown');
-  await expect(menu.getByRole('menuitem', { name: 'Tasks' })).toBeFocused();
+  await expect(menu.getByRole('menuitem', { name: 'Insights' })).toBeFocused();
   await page.keyboard.press('End');
   await expect(menu.getByRole('menuitem', { name: 'Logout' })).toBeFocused();
   await page.keyboard.press('Home');

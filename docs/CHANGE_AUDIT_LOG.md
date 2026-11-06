@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-490 | Repair 14 failed v2.3.9 pre-release E2E cases without weakening release gates
+
+**Evidence:** Source `6fe5725` full verification [run 42262165301](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42262165301) had 847 passes / 14 failures. Production [run 42262165311](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42262165311) correctly blocked before deployment. Downloaded full browser artifacts and examined screenshots/trace of the five failing spec families.
+
+**Corrections:** Navigate to the app origin before the newly added swipe-motion test snapshots Guest localStorage. Update seven profile-menu expectations to the owner's approved four-item header (Profile, Insights, Settings and Logout) and ensure removed Tasks/Transactions do not reappear there. Use the existing 125px in-card gesture helper for four Task swipe tests instead of a borderline 52px mouse drag, retaining genuine action and record checks. Correct a 52px!important floating-plus Search-free command-width regression by collapsing the phantom dock when floating. Await Framer Motion's final visual bounds for the short-height image preview rather than inspecting during its entering transform; fail if it does not settle within five seconds. Add `[verify-239-repair]` job in the existing opt-in targeted browser workflow to rerun all five spec families without triggering the 861-test full suite prematurely.
+
+**Release safeguards:** No source-application business semantics were removed; production still requires exact-SHA full independent Playwright, offline/PDF, upgrade, Node/lint/security and live Hosting verification. No production release is claimed by this corrective commit. ExpenseTracker dev remains build-only with no E2E. Saved data, Guest scope, app version 2.3.9, originals, PDF/Story, Firebase shared backend, Lifehub and main remain untouched. The corrective tests must be executed and reported separately; real iPhone Safari review remains pending.
+
 ## CHG-20261106-489 | Owner-authorized full-gate v2.3.9 DN production publication
 
 **Authorization:** Owner requested deploy to production now after Development stabilized the iPhone Search/+ alignment, swipe-to-close mobile sheets and shared Moments/Activities/Tasks/Transactions action-menu animation. This is an explicitly approved DN permanent Firebase Hosting release, not consent to modify Lifehub, overwrite the separate ExpenseTracker dev site, change the main branch or migrate data.

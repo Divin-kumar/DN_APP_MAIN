@@ -100,6 +100,8 @@ test('shared swipe menus animate without CSS-keyframe blinking across Moments Ac
   const snapshot = () => page.evaluate(() => [
     'dn_guest_eventGroups', 'dn_guest_tasks', 'dn_guest_incomes', 'dn_guest_expenses',
   ].map(key => localStorage.getItem(key)));
+  // Guest fixtures are registered for navigation; about:blank denies localStorage.
+  await page.goto('/events');
   const before = await snapshot();
   for (const route of ['/events', '/activities', '/tasks', '/financials/transactions']) {
     await page.goto(route);

@@ -9,9 +9,15 @@ async function openStory(page) {
 }
 
 async function assertViewport(page, locator) {
-  // Measure the presented dialog after its entrance, not its clipped incoming
-  // transform. Both ordinary motion and reduced-motion settings are supported.
-  await locator.evaluate((node) => Promise.all(node.getAnimations().map((animation) => animation.finished.catch(() => {}))));
+  // Framer drives the transform in JavaScript, so getAnimations() is not
+  // sufficient. Poll real final geometry and still fail genuine overflow.
+  await expect.poll(async () => {
+    const box = await locator.boundingBox();
+    const viewport = page.viewportSize();
+    return Boolean(box && box.x >= -1 && box.y >= -1
+      && box.x + box.width <= viewport.width + 1
+      && box.y + box.height <= viewport.height + 1);
+  }, { timeout: 5000 }).toBe(true);
   const rect = await locator.boundingBox();
   const viewport = page.viewportSize();
   expect(rect.x).toBeGreaterThanOrEqual(-1); expect(rect.y).toBeGreaterThanOrEqual(-1);

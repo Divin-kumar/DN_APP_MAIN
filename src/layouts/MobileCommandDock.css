@@ -210,6 +210,12 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
   html[data-theme] .dn-command-root .dn-command-bar:not(:has(.dn-command-controls > *)) {
     width:52px !important;
   }
+  /* A fixed, independently floating + has no reason to reserve a 52px
+     Search-free dock; defeat the later !important width when floating. */
+  html[data-theme] .dn-command-root.is-floating .dn-command-bar:not(:has(.dn-command-controls > *)) {
+    width:0 !important; min-width:0 !important; min-height:0 !important;
+    height:0 !important; padding:0 !important; gap:0 !important;
+  }
   html[data-theme] .dn-command-root .dn-command-button-slot {
     width:52px !important;height:52px !important;flex:0 0 52px !important;
   }

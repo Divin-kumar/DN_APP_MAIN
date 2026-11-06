@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedGuest } from './fixtures.js';
+import { seedGuest, swipe } from './fixtures.js';
 
 // iPhone-size Chromium checks, not native iOS Safari or VoiceOver.
 test.use({hasTouch:true,isMobile:true});
@@ -27,13 +27,8 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     await expect(row.locator('.dn-task-calendar')).toBeVisible();
     await expect(row.locator('.dn-task-done')).toHaveCount(0);
     const swipeRow=taskPage.locator('.dn-task-list .dn-independent-task-row').first();
-    const swipeTarget=await swipeRow.locator('.dn-task-copy').boundingBox();
-    const startX=swipeTarget.x+Math.min(30,swipeTarget.width/4);
-    const startY=swipeTarget.y+swipeTarget.height/2;
-    await page.mouse.move(startX,startY);
-    await page.mouse.down();
-    await page.mouse.move(startX+52,startY,{steps:4});
-    await page.mouse.up();
+    // Use the same deliberate, inside-the-card gesture validated on Activities.
+    await swipe(page, swipeRow, { distance: 125 });
     const actionMenu=page.getByRole('menu').filter({hasText:'Edit'});
     await expect(actionMenu).toBeVisible();
     await expect(actionMenu.getByRole('menuitem',{name:'Cancel'})).toBeVisible();
