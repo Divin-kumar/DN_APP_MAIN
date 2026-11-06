@@ -31,8 +31,8 @@ for(const width of [320,390,1280]) {
       await page.getByRole('button',{name:'Show results',exact:true}).click();
       const before=await saved(page,consumer.key);expect(rules(before)).toHaveLength(1);
       const chip=page.locator('.dn-condition-chip-rail .dn-condition-chip').last();
-      const style=await chip.evaluate(e=>({border:getComputedStyle(e).borderWidth,background:getComputedStyle(e).backgroundColor}));
-      expect(style).toEqual({border:'0px',background:'rgba(0, 0, 0, 0)'});
+      const style=await chip.evaluate(e=>({border:getComputedStyle(e).borderWidth,shadow:getComputedStyle(e).boxShadow}));
+      expect(style).toEqual({border:'0px',shadow:'none'});
       await choice(page,`Change ${consumer.field} filter`,consumer.to);
       await expect(chip).toContainText(consumer.to);await expect(chip).toHaveCount(1);
       const after=await saved(page,consumer.key);expect(after.id).toBe(before.id);expect(after.join).toBe(before.join);

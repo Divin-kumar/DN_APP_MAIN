@@ -47,21 +47,21 @@ html[data-theme] body :is(.activities-page,.workspace-activities) .event-activit
   background:color-mix(in srgb,var(--color-primary) 5%,var(--color-card)) !important;
 }
 html[data-theme] body :is(.activities-page,.workspace-activities) .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover:not(.has-photo)::before { display:none; }
-/* Rows use real photo previews; compact Story photo strips keep their layout. */
-html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open {
+/* Gallery rows use small photo previews; Story and Activity Detail retain their own image layouts. */
+html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open {
   min-height:56px; padding:10px; gap:12px; border:0 !important;
   border-radius:var(--dn-list-radius); background:var(--dn-list-fill); box-shadow:none;
 }
-html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open img {
+html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open img {
   width:40px; height:40px; border-radius:8px;
 }
-html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open > svg {
+html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open > svg {
   width:40px; height:40px; padding:10px; color:var(--color-text-muted);
 }
-html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open strong {
+html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open strong {
   font-size:14px; font-weight:550; line-height:1.5; white-space:normal; overflow-wrap:anywhere;
 }
-html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open small { font-size:12px; }
+html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open small { font-size:12px; }
 html[data-theme] body .dn-attachment-open[aria-pressed="true"] { background:var(--dn-list-selected) !important; }
 /* Choices show quiet selected rows and existing bare ticks/direction arrows.
    Do not change virtualized dropdown row geometry or filter drag coordinates. */

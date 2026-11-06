@@ -63,8 +63,8 @@ test('all five lists migrate legacy choices once and keep the active conditions 
   for (const item of cases) {
     await test.step(item.route, async () => {
       await page.goto(item.route);
-      const trigger = await openFilters(page);
-      await expect(trigger).toHaveAttribute('aria-label', new RegExp(`${item.active} active$`));
+      await expect(page.getByRole('button', { name: /^Filters(?: and sort)?(?:,|$)/ })).toHaveAttribute('aria-label', new RegExp(`${item.active} active$`));
+      await openFilters(page);
       await expect(page.locator('.dn-condition-chip')).toHaveCount(Math.min(item.active, 2));
       if (item.active > 2) await expect(page.getByRole('button', { name: `Show ${item.active - 2} more active filters` })).toBeVisible();
       await expect(page.locator(item.rows)).toHaveCount(1);

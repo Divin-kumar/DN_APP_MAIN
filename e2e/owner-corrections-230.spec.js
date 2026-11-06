@@ -17,7 +17,8 @@ for(const [width,theme] of [[320,'dark'],[430,'dark'],[390,'light']]){
    ])store.getState().saveTask(item);
   },{past:calendarDate(-2),future:calendarDate(2)});
   // Client-side navigation retains the lazily loaded Story stylesheet.
-  await page.getByRole('link',{name:'Dashboard',exact:true}).click();
+  await page.getByRole('button',{name:'Open quick create menu'}).click();
+  await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Home',exact:true}).click();
   await page.locator('.dn-dashboard-tasks').getByRole('link',{name:'View all'}).click();
   const rows=page.locator('.dn-independent-task-row');
   await expect(rows).toHaveCount(4);

@@ -19,7 +19,8 @@ for (const width of [320, 390, 1280]) {
     const errors = await seedGuest(page);
     await page.goto('/tasks');
     await expect(page.getByRole('main')).toHaveCount(1);
-    await expect(page.locator('.dn-tasks-page h2').filter({ hasText: 'Tasks' })).toBeVisible();
+    await expect(page.getByRole('heading', {name:'Tasks',exact:true})).toHaveCount(1);
+    await expect(page.getByRole('heading', {name:'Tasks',exact:true})).toBeVisible();
     const source = await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'), localStorage.getItem('dn_guest_expenses'), localStorage.getItem('dn_guest_incomes'),
     ]);

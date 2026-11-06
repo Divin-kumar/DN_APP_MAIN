@@ -245,7 +245,7 @@ jobs:
           retention-days: 7
 
   mobile-command:
-    if: github.ref == 'refs/heads/OldVersion' && (contains(github.event.head_commit.message, '[verify-command]') || contains(github.event.head_commit.message, '[verify-command-core]'))
+    if: github.ref == 'refs/heads/OldVersion' && (contains(github.event.head_commit.message, '[verify-command]') || contains(github.event.head_commit.message, '[verify-command-core]') || contains(github.event.head_commit.message, '[verify-command-downstream]'))
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     steps:
@@ -256,6 +256,13 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npx playwright install --with-deps chromium
+      - if: contains(github.event.head_commit.message, '[verify-command-downstream]')
+        run: >-
+          npx playwright test e2e/activity-detail-layout.spec.js e2e/applied-filter-edit.spec.js
+          e2e/filter-integration.spec.js e2e/independent-tasks-phase4.spec.js
+          e2e/iphone-insights-first-fold-phase1.spec.js e2e/iphone-settings-task-screenshot-fixes-230.spec.js
+          e2e/moment-story-phase4.spec.js e2e/owner-corrections-230.spec.js e2e/shared-list-appearance.spec.js
+          --workers=2
       - if: contains(github.event.head_commit.message, '[verify-command-core]')
         run: npx playwright test e2e/mobile-command-bar.spec.js --workers=2 --max-failures=3
       - if: contains(github.event.head_commit.message, '[verify-command]')

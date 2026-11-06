@@ -59,8 +59,8 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await field.fill('Weekend');
     await expect(discovery.locator('.dn-list-controls-context')).toContainText('1 milestones shown');
     await expect(discovery.locator('.dn-list-controls-summary')).toContainText('Milestone lists only');
-    await expect(discovery.getByRole('button', { name:'Clear search' })).toBeVisible();
-    await discovery.getByRole('button', { name:'Clear search' }).click();
+    await expect(page.locator('.dn-command-controls').getByRole('button', { name:'Clear search' })).toBeVisible();
+    await page.locator('.dn-command-controls').getByRole('button', { name:'Clear search' }).click();
     await expect(field).toHaveValue('');
     expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)))).toEqual(before);

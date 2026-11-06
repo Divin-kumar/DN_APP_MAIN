@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-466 | Restore Story photo sizing and reconcile downstream contracts
+
+Full diagnostic run 42197969054 at d3b50fa executed 840 browser cases: 818 passed, 22 failed, zero skipped/flaky. Its real regression was an earlier shared Gallery thumbnail selector also matching large Story photos and Activity Detail thumbnails. Scope the small-preview finish to the actual Gallery list so Story retains large images and Activity Detail retains its 44px preview. Existing image-size assertions remain unchanged.
+
+Other failures referenced removed duplicate Task headings, the former Dashboard tab, portalled clear-search controls or superseded border/transparency styling. Update their expectations to the approved UI while retaining record preservation, filter migration, editing, search and creation assertions. Check the filter trigger count before its modal intentionally hides the mobile bar. Add a focused nondeploying downstream repair option. Final refined command source 48418bf passed all 116 focused cases in run 42199799425 and governance; screenshots reviewed at 320px and 390px. Full acceptance remains pending. Guest tour remains accurate; no version or deployment changes.
+
 ## CHG-20261106-465 | Keep refined search and floating coordinates stable
 
 The mobile search underline override now outranks lazily loaded list styles. Floating removes backdrop-filter from the dock because CSS filters establish a containing block for fixed descendants; this keeps the dragged button positioned relative to the viewport while the docked state retains its translucent finish. Narrow sheets also gain a little horizontal space and explicit creation typography after screenshot review found crowded labels at 320px. These are source-derived fixes from visual-refinement review, with browser validation pending. Existing drag/rotation/reload/redock and borderless-search tests cover both contracts. No desktop, data, version or deployment changes.

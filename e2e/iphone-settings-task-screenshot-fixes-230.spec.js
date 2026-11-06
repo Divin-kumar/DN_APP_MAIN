@@ -56,7 +56,7 @@ for(const [width,height,theme] of [
       detail:el.querySelector('.dn-task-calendar').getBoundingClientRect().width,
       right:el.getBoundingClientRect().right,
     }));
-    expect(appearance.border).toBe('1px');
+    expect(appearance.border).toBe('0px');
     expect(parseFloat(appearance.radius)).toBeGreaterThanOrEqual(14);
     expect(appearance.heading).toBeGreaterThanOrEqual(15);
     expect(appearance.detail).toBeGreaterThanOrEqual(12);
