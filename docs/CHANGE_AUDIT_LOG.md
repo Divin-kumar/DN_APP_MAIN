@@ -4,6 +4,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-451 | Verify final cross-screen styling; restart stalled interaction verification
+- **Executed:** Final application e74048ef312144dbc5d00fcffbe1afe99d09461e passed cross-screen surface/record-preservation checks at 320/390/430/1280px, existing Moment navigation and hover checks, build and offline originals/PDF in [run 42188049411](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42188049411). Manual Guest review covered Tasks, Activities and Moments including the unboxed latest-Activity preview.
+- **Infrastructure:** Earlier 116-case run 42187661650 remained in browser dependency installation with tests not yet started at inspection. Queue the same relevant interaction coverage on a fresh runner using the unchanged final application source; do not claim the stalled run passed.
+- **Boundary:** Documentation-only follow-up; no data, Guest fixture, app-version or production change. Physical iPhone/VoiceOver remains unverified.
+
 ## CHG-20261106-450 | Remove nested Moment preview framing and verify the affected scope
 - **Manual finding:** The shared surface review still showed a framed latest-Activity preview inside Moment cards. Remove its border/fill and reduce inset padding so it reads as supporting text.
 - **Validation plan:** Preserve the 116-case shared-list run at 5a7914a14b88515c4c6fde69818fbf38edaff2ee as its own evidence. The small follow-up uses [verify-list-polish] for cross-screen surfaces, Moment navigation and hover stability plus build/offline preservation; no unrelated suite repeat. Add a direct nested-preview framing assertion.
