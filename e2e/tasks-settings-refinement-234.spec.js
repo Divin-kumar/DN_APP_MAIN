@@ -31,7 +31,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await row.click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Edit Task' });
-    await expect(editor.getByLabel('Due date')).toHaveValue(task.dueDate);
+    await expect(editor.getByLabel('Due date', { exact: true })).toHaveValue(task.dueDate);
     await editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await expect(editor.getByLabel('Notes (optional)')).toHaveValue(task.notes);
     await editor.getByLabel('Notes (optional)').fill('Discard this edit');
@@ -73,6 +73,10 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
 test('Task editor preserves a Moment alias and exposes its Activity options', async ({ page }) => {
   await seedGuest(page);
   await page.goto('/tasks');
+  await expect.poll(async () => page.evaluate(async () => {
+    const events = (await import('/src/store/useEventStore.js')).default;
+    return events.getState().events.length;
+  })).toBeGreaterThan(0);
   await page.evaluate(async () => {
     const events = (await import('/src/store/useEventStore.js')).default;
     const moments = events.getState().events;

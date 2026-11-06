@@ -3511,22 +3511,22 @@ html[data-theme] .dn-motion-loaded { animation:dn-motion-content-ready 180ms eas
 
 /* Settings share one readable hierarchy across the hub and its detail pages. */
 html[data-theme] .settings-page :is(.settings-hub-copy,.settings-accordion-text) strong,
-html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong {
+html[data-theme] .settings-page.dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong {
   font-size:15px;line-height:1.45;
 }
 html[data-theme] .settings-page :is(.settings-hub-copy,.settings-accordion-text) small,
-html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy small,
-html[data-theme] .dn-settings-appearance :is(.dn-appearance-theme-copy small,.dn-appearance-footnote,.dn-appearance-save-row > span),
-html[data-theme] .dn-list-defaults-page #list-order :is(.dn-defaults-sort-label small,.dn-defaults-sort-help,.dn-defaults-saved),
-html[data-theme] .dn-list-defaults-page .dn-defaults-domain > :is(.dn-defaults-factory,.dn-list-filter-switch small) {
+html[data-theme] .settings-page.dn-settings-redesign .settings-navigation-hub .settings-hub-copy small,
+html[data-theme] .settings-page.dn-settings-appearance :is(.dn-appearance-theme-copy small,.dn-appearance-footnote,.dn-appearance-save-row > span),
+html[data-theme] .settings-page.dn-list-defaults-page #list-order :is(.dn-defaults-sort-label small,.dn-defaults-sort-help,.dn-defaults-saved),
+html[data-theme] .settings-page.dn-list-defaults-page .dn-defaults-domain > :is(.dn-defaults-factory,.dn-list-filter-switch small) {
   font-size:13px;line-height:1.5;overflow-wrap:anywhere;
 }
-html[data-theme] .dn-settings-appearance .dn-appearance-section-heading h3,
-html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3,
-html[data-theme] .dn-list-defaults-page #list-order > .settings-section-heading h3 {
+html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-section-heading h3,
+html[data-theme] .settings-page.dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3,
+html[data-theme] .settings-page.dn-list-defaults-page #list-order > .settings-section-heading h3 {
   font-size:17px;line-height:1.4;letter-spacing:-.015em;
 }
-html[data-theme] .dn-settings-appearance .dn-appearance-theme-copy strong,
-html[data-theme] .dn-settings-appearance .dn-appearance-more > a strong {
+html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-theme-copy strong,
+html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-more > a strong {
   font-size:15px;line-height:1.45;
 }

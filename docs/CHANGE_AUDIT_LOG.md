@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-432 | Correct Settings cascade and focused Task regression setup
+- **Executed outcome:** First Tasks/Settings browser run 42157636095 at cfc2f26 passed 39/44 cases. All existing Task action, Dashboard/Refine, backup, simulated-account and Settings regression cases passed. New arrival checks reached and passed search-focus preservation before an ambiguous Due date label failed; the alias case read the event store before loading. Two Settings checks found mobile page CSS overriding the shared 15px label with 14px.
+- **Correction:** Increase Settings page scoping so shared typography wins after lazy-loaded page styles; use exact date-field matching and wait for loaded Moments in the alias regression. No Task record or service changes. Rerun the focused nondeploying suite; final results remain pending. Previous audit entries are preserved.
+
 ## CHG-20261106-431 | Refine Settings consistency and repair Task arrival, links and pending-save UI
 - **Owner scope:** Continue Settings consistency and review recently introduced Tasks and impacted functionality on OldVersion only.
 - **Corrections:** Focus a Dashboard-selected Task once instead of after every search/filter render; hide stale arrival feedback after deletion. Show linked Activity context; resolve alternate Moment IDs in TaskEditor without silently relinking. Disable fields and actions during pending saves. Improve date/time readability and completed-state color. Align Settings titles/supporting text and clarify that account Tasks and backups include Tasks.
