@@ -82,6 +82,10 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
       searchH:search.getBoundingClientRect().height,glass:getComputedStyle(search).backgroundImage,
       plus:e.querySelector('.dn-command-trigger').getBoundingClientRect().width,
       refine:e.querySelector('.dn-list-controls-trigger').getBoundingClientRect().height,
+      centers:['.dn-list-controls-search','.dn-list-controls-trigger','.dn-command-trigger'].map(selector=>{
+        const rect=e.querySelector(selector).getBoundingClientRect();
+        return rect.top + rect.height/2;
+      }),
       width:document.documentElement.scrollWidth};
    });
    expect(box.h).toBeLessThanOrEqual(70);expect(box.border).toBe('0px');
@@ -90,6 +94,9 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    expect(box.glass).toContain('gradient');
    expect(box.plus).toBeGreaterThanOrEqual(51);expect(box.plus).toBeLessThanOrEqual(53);
    expect(box.refine).toBeGreaterThanOrEqual(49);
+   // All three controls must share a centerline; independent translation of
+   // Search previously left the draggable + 13px lower on iPhone.
+   expect(Math.max(...box.centers)-Math.min(...box.centers)).toBeLessThanOrEqual(1);
    expect(box.width).toBeLessThanOrEqual(width+1);
    // Searchable routes still leave enough room for the entire dock.
    const bottom=await page.locator('.dn-content').evaluate(node=>parseFloat(getComputedStyle(node).paddingBottom));

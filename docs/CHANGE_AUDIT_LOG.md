@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-487 | Align the transparent + with enlarged mobile Search
+
+**Owner observation:** After the 50px Search enlargement, the floating + appeared out of line with Search on iPhone. The CSS independently translated only the Search/Refine controls up by 13px while leaving the 52px + in the original fixed dock row.
+
+**Correction:** Remove the independent Search transform and instead lift the entire Search-enabled fixed command bar by 13px, including its transparent +. Search/Refine (50px) and + touch target (52px) now share one flex centerline. Keep separate floating drag positioning and Search-free page placement unchanged, with no transformed ancestor interfering with fixed dragging. Preserve visual viewport keyboard offset, tappability, accessible labels and all creation/navigation actions. Focused E2E source assertions compare Search, Refine and + centerline within 1px at 320/390/430px, light/dark and all searchable modules; the separate fast development deployment still has no E2E gate.
+
+**Boundary:** Layout-only source change. No Guest tour reset (the existing tour already describes the higher Search and movable +), data migration, app version bump, new feature, production deployment, Firebase rules, Lifehub or main-branch modification. **Source-derived** until exact development workflow build/Hosting readback is verified; physical iPhone Safari remains unverified.
+
 ## CHG-20261106-486 | Raise mobile Search, remove the + tile and add downward sheet dismissal
 
 **Owner feedback:** Real iPhone Guest Moments and Navigation/Create screenshots show Search too low, an oversized blue + rectangle that obscures content, and no natural drag-down close for forms or bottom navigation sheets.

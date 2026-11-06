@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## iPhone Search and + centerline correction (6 November 2026; OldVersion development)
+
+The initial 50px Search/Refine and 52px transparent + adjustment positioned Search independently with `transform:translateY(-13px)`. This unintentionally placed the + 13px below the Search centerline when docked. For pages with Search, the shared command bar now moves up 13px as **one layout unit**, with no transform on the controls. Search, Refine and the bare + remain vertically centered together; the independent draggable + remains fixed to its saved position only when explicitly moved. Search-free pages retain their original dock location, and keyboard inset, accessible touch targets, light/dark styling, navigation, input focus, page scrolling, user data and desktop UI are unchanged. A focused E2E geometry check now compares the centerlines in 320/390/430px and both themes across all searchable modules; development builds still deploy with no E2E gate. Browser/physical iPhone acceptance remains separate.
+
 ## iPhone Search, bare + and swipe-down mobile sheets (6 November 2026, OldVersion Development)
 
 **Owner screenshot feedback:** In the signed-out Guest Moments list, the fixed Search row sat too low, while a 68px solid blue creator tile hid record details and looked oversized when redocked or moved. The bottom navigation/create sheet needed an actual downward swipe dismissal, not only its close button.
