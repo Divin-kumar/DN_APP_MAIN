@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-// The editorial search line and Refine affordance are shared across all lists.
+// Compact frosted Search and Refine are shared across all lists.
 // Synthetic Chromium geometry cannot prove installed iPhone Safari behavior.
 const pages = [
   { path:'/activities', search:'Search activities and Moments', sample:'Book a lakeside stay' },
@@ -42,7 +42,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     });
     expect(measures.railBorder).toBe('0px');
     expect(measures.railBackground).toBe('rgba(0, 0, 0, 0)');
-    expect(measures.searchUnderline).toBe('0px');
+    expect(measures.searchUnderline).toBe('1px');
     expect(measures.innerBorder).toBe('0px');
     expect(measures.refineLabel).toBe('Refine');
     expect(measures.iconVisible).toBe(true);

@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-467 | DN 2.3.6 standalone + and compact glass Search
+
+Owner-approved presentation refinement: the mobile command rail no longer draws a capsule around +. Dashboard, Settings and other search-free screens reserve no blank discovery block; list screens receive 44px frosted Search and separate translucent Refine. Keeps navigation and creation, drag/redock, portal ownership, saved filters, account boundaries, finance totals, 44px targets and desktop unchanged. Added multi-module, theme and narrow-device browser coverage and adapted the prior underline expectation to the new border. Guest tour v2026.11.06.2 already teaches the unchanged actions; it is not reset or bumped. Candidate version 2.3.6 has synchronized package/lock and concise About notes. Exact-SHA full browser, production gating and readback are pending, not asserted complete. Physical Safari and VoiceOver remain unverified.
+
 ## CHG-20261106-466 | Restore Story photo sizing and reconcile downstream contracts
 
 Full diagnostic run 42197969054 at d3b50fa executed 840 browser cases: 818 passed, 22 failed, zero skipped/flaky. Its real regression was an earlier shared Gallery thumbnail selector also matching large Story photos and Activity Detail thumbnails. Scope the small-preview finish to the actual Gallery list so Story retains large images and Activity Detail retains its 44px preview. Existing image-size assertions remain unchanged.

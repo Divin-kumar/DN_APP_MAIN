@@ -38,3 +38,43 @@ test('desktop controls and navigation remain in-page',async({page})=>{
  await page.setViewportSize({width:1280,height:900});await seedGuest(page);await page.goto('/events');
  await expect(page.locator('.dn-command-root')).toHaveCount(0);await expect(page.locator('.dn-list-controls').getByRole('searchbox',{name:'Search moments'})).toBeVisible();await expect(page.locator('.dn-sidebar').getByRole('link',{name:'Tasks'})).toBeVisible();
 });
+for (const width of [320,390,430]) for(const theme of ['light','dark']){
+ test(`no-search routes show only the detached + ${width} ${theme}`,async({page})=>{
+  await page.setViewportSize({width,height:844});const errors=await seedGuest(page,{theme});
+  for(const route of ['/dashboard','/settings']){
+   await page.goto(route);
+   const bar=page.locator('.dn-command-bar');
+   await expect(page.locator('.dn-command-controls > *')).toHaveCount(0);
+   const visual=await bar.evaluate(e=>({w:e.getBoundingClientRect().width,b:getComputedStyle(e).borderTopWidth,bg:getComputedStyle(e).backgroundColor}));
+   expect(visual.w).toBeLessThanOrEqual(49);expect(visual.b).toBe('0px');
+   expect(visual.bg).toBe('rgba(0, 0, 0, 0)');
+   await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
+  }
+  await page.getByRole('button',{name:'Open quick create menu'}).click();
+  await expect(page.getByRole('navigation',{name:'Main navigation'}).getByRole('link')).toHaveCount(5);
+  await page.keyboard.press('Escape');expect(errors).toEqual([]);
+ });
+ test(`mobile glass search retains full module access ${width} ${theme}`,async({page})=>{
+  await page.setViewportSize({width,height:844});const errors=await seedGuest(page,{theme});
+  for(const route of ['/events','/activities','/tasks','/financials/transactions']){
+   await page.goto(route);
+   await expect(page.locator('.dn-command-controls .dn-list-controls-search input')).toBeVisible();
+   const box=await page.locator('.dn-command-bar').evaluate(e=>{
+    const st=getComputedStyle(e),search=e.querySelector('.dn-list-controls-search');
+    return {h:e.getBoundingClientRect().height,bg:st.backgroundColor,border:st.borderTopWidth,
+      searchH:search.getBoundingClientRect().height,glass:getComputedStyle(search).backgroundImage,
+      plus:e.querySelector('.dn-command-trigger').getBoundingClientRect().width,
+      refine:e.querySelector('.dn-list-controls-trigger').getBoundingClientRect().height,
+      width:document.documentElement.scrollWidth};
+   });
+   expect(box.h).toBeLessThanOrEqual(49);expect(box.border).toBe('0px');
+   expect(box.bg).toBe('rgba(0, 0, 0, 0)');
+   expect(box.searchH).toBeGreaterThanOrEqual(44);
+   expect(box.glass).toContain('gradient');
+   expect(box.plus).toBeGreaterThanOrEqual(47);
+   expect(box.refine).toBeGreaterThanOrEqual(44);
+   expect(box.width).toBeLessThanOrEqual(width+1);
+  }
+  expect(errors).toEqual([]);
+ });
+}

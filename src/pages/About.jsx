@@ -53,6 +53,13 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.6',
+    title: 'Lighter navigation and glass search',
+    summary: 'Compact mobile discovery, a clean floating + and full-flow pages.',
+    highlights: ['Search-free screens no longer reserve a blank toolbar or ring.', 'Search and Refine have softly frosted controls in both themes.'],
+    changes: ['Navigation, creation, drag/redock and saved search and filters stay unchanged.', 'Desktop, finance, Story, PDFs, records, sync and backups are unaffected.'],
+  },
+  {
     version: '2.3.5',
     title: 'Cancelled activities stay out of PDFs',
     summary: 'PDF previews and downloads now exclude cancelled activities in every format.',

@@ -86,3 +86,48 @@ html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:ce
   html[data-theme] .dn-command-destinations { margin-inline:-3px; }
 }
 html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;letter-spacing:-.15px;white-space:nowrap; }
+/* DN 2.3.6: detach + from the glass discovery treatment. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+ html[data-theme] .dn-command-root .dn-command-bar {
+  min-height:48px; padding:0; gap:8px; border:0; border-radius:0;
+  background:transparent; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+ }
+ html[data-theme] .dn-command-root .dn-command-bar:not(:has(.dn-command-controls > *)) { left:auto; width:48px; }
+ html[data-theme] .dn-command-root .dn-command-controls:not(:has(.dn-list-controls-search)) { flex:0 0 auto; }
+ html[data-theme] .dn-command-root .dn-command-bar:has(.dn-command-controls > .dn-list-controls-row:not(:has(.dn-list-controls-search))) { left:auto; width:auto; }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row { min-height:44px; gap:7px; }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-search {
+  display:flex; align-items:center; position:relative; box-sizing:border-box; height:44px; min-height:44px;
+  padding:0; overflow:hidden; border-radius:16px !important;
+  border:1px solid color-mix(in srgb,var(--color-border) 75%,rgba(255,255,255,.3)) !important;
+  background:linear-gradient(135deg,
+   color-mix(in srgb,var(--color-card) 82%,transparent),
+   color-mix(in srgb,var(--color-glass) 68%,transparent)) !important;
+  box-shadow:0 5px 18px color-mix(in srgb,var(--color-text) 9%,transparent),
+    inset 0 1px 0 color-mix(in srgb,var(--color-card) 65%,transparent) !important;
+  backdrop-filter:blur(20px) saturate(1.3); -webkit-backdrop-filter:blur(20px) saturate(1.3);
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row .dn-list-controls-search:focus-within {
+  border-color:color-mix(in srgb,var(--color-primary) 52%,var(--color-border)) !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search-icon { left:12px; }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search input {
+  height:44px !important; min-height:44px !important; padding-inline-start:36px !important;
+  border:0 !important; background:transparent !important; box-shadow:none !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger {
+  height:44px !important; min-height:44px !important; width:44px !important;
+  border:1px solid color-mix(in srgb,var(--color-border) 65%,transparent) !important;
+  border-radius:15px !important;
+  background:color-mix(in srgb,var(--color-card) 76%,transparent) !important;
+  box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-card) 58%,transparent) !important;
+  backdrop-filter:blur(16px) saturate(1.2); -webkit-backdrop-filter:blur(16px) saturate(1.2);
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger:is(:hover,[aria-expanded="true"],.is-active) {
+  background:color-mix(in srgb,var(--color-primary) 12%,var(--color-card)) !important; color:var(--color-primary);
+ }
+ html[data-theme] .dn-command-root.is-floating .dn-command-bar:not(:has(.dn-command-controls > *)) { width:0; }
+}
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search { transition:none; }
+}
