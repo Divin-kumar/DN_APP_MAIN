@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-456 | Verify compact desktop header
+- **Executed:** Application source b6228b6d93202546bb5847f1a10565affa37a935 passed all 15 focused Chromium tests in run 42191093342. Header/sidebar x-position and width match at 1024/1280/1440px, content starts alongside the header, and five mobile/short-landscape pixel comparisons remain identical without desktop CSS. Same-source governance 42191093375 passed unit/lint/build/audit/document checks.
+- **Release ledger:** Desktop visual alignment only, OldVersion, unpublished. Physical Safari/VoiceOver remain unverified. This evidence entry changes no runtime code.
+
 ## CHG-20261106-455 | Reclaim unused desktop header space
 - **Scope:** The desktop logo and page context now occupy the same 240px column as the navigation panel. The content pane starts at the top alongside it, reclaiming the former full-width header band. Collapsing navigation also narrows the header. Mobile rules and controls are unchanged.
 - **Executed:** Manual desktop Guest preview confirms aligned header/sidebar and reclaimed content space. Production build passed. Targeted geometry and unchanged-mobile pixel checks are queued for this source.
