@@ -1,4 +1,4 @@
-**DN 2.3.5 PDF correction (publication pending):** Cancelled activities and their linked files are excluded from every PDF format. Saved records and original files remain available; restoring an activity makes it eligible for future PDFs again.
+**DN 2.3.5 PDF correction is live (6 November 2026):** Cancelled activities and their linked files are excluded from every PDF format. Saved records and original files remain available; restoring an activity makes it eligible for future PDFs again. All 21 focused browser checks and offline/upgrade preservation checks passed. Refresh the app and export a new PDF; previously downloaded PDFs do not change.
 
 **DN 2.3.4 is live (6 November 2026):** Published to https://dn-10.web.app after your approval. All 812 browser checks passed, together with PDF, offline and upgrade-preservation checks. The live build was verified. Story, Settings and Task refinements are now available; the completed E2E run was reused during publication. Earlier pending-release notes below are historical. Physical iPhone and real two-device account checks still need hands-on confirmation.
 

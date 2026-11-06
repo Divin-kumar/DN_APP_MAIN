@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-442 | Publish verified 2.3.5 cancelled-activity PDF fix
+- **Authorization/source:** Owner requested exclusion of cancelled activities and production publication. Manual GitHub Actions dispatch used OldVersion at a3e69f9fa31bff796f3600871dd49f119c20c035 with the existing fast-patch tier; no new runtime commit or repeated full E2E run was needed.
+- **Executed validation:** Focused run 42178136105 passed 21/21 Chromium cases, including rendered PDF text in Journal, Diary and Tasks, existing Studio exports and release checks. Offline Story/PDF, exact original bytes, unchanged records and both upgrade paths from 1.0.35 passed. Same-source governance 42178136154 passed. The prior 2.3.4 baseline passed all 812 browser cases; that is not claimed as a new full run at 2.3.5.
+- **Executed publication:** [Production run 42179460255](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42179460255) passed unit/lint/audit/build, version guard, Firebase publication and exact live index readback. Independent public sw.js confirms 2.3.5-2026-11-06T07-14-32-947Z at https://dn-10.web.app.
+- **Compatibility/limits:** Cancellation filtering affects PDF projection only; records, originals, Story and restore remain intact. Regenerate existing PDFs to apply exclusion. Guest tour already demonstrates cancellation and needs no reset. No main write or migration. Physical iPhone Safari/VoiceOver and real two-device sync remain unverified. This follow-up records evidence only.
+
 ## CHG-20261106-441 | Exclude cancelled activities from all PDFs; prepare 2.3.5 hotfix
 - **Owner instruction:** Restrict cancelled activities from PDFs and publish the fix to production. All changes stay on OldVersion.
 - **Change:** A PDF-only projection removes activities cancelled by status or legacy flag, their nested writing, and files linked by canonical/Firestore IDs before grouping or cover selection. Journal, Diary and Tasks share this projection. Legacy includeCancelled requests normalize to false; the cancelled-content toggle is removed. Story, source records, original files and restoration remain unchanged.
