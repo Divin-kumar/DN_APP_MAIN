@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-452 | Accept shared lightweight list appearance
+- **Executed:** Final source a493f77b14e903fb7ff689686a0f3951d5733af7 passed all 116 affected browser cases in 1.7 minutes in [run 42188325123](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42188325123). Coverage includes cross-screen surfaces at 320/390/430/1280px, Task actions, Activity photo/navigation/swipes, Moments, Code Lists, shared dropdown/filter/sort behavior, transactions, Gallery navigation and PDF content selection. No browser case failed.
+- **Preservation:** The built application passed offline Story, exact original bytes, PDF generation and unchanged-record checks with no page errors. Same-source governance 42188325172 passed Node/lint/build/audit/docs. The separate final-polish run 42188049411 passed 30 visual/navigation cases; its overlap is not counted as additional unique coverage.
+- **Scope/limits:** Shared list styling plus decorative Code List icons only; no new record actions or data mutation. Existing Guest fixtures remain accurate. Physical iPhone/VoiceOver remains unverified. This evidence supersedes the earlier stalled verification attempt for acceptance.
+- **Release ledger:** Verified application source a493f77b14e903fb7ff689686a0f3951d5733af7 on OldVersion; this follow-up is documentation only. No app-version change or Firebase/Vercel publication.
+
 ## CHG-20261106-451 | Verify final cross-screen styling; restart stalled interaction verification
 - **Executed:** Final application e74048ef312144dbc5d00fcffbe1afe99d09461e passed cross-screen surface/record-preservation checks at 320/390/430/1280px, existing Moment navigation and hover checks, build and offline originals/PDF in [run 42188049411](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42188049411). Manual Guest review covered Tasks, Activities and Moments including the unboxed latest-Activity preview.
 - **Infrastructure:** Earlier 116-case run 42187661650 remained in browser dependency installation with tests not yet started at inspection. Queue the same relevant interaction coverage on a fresh runner using the unchanged final application source; do not claim the stalled run passed.
