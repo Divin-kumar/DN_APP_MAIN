@@ -380,7 +380,7 @@ export async function renderMomentStudioPdf(event, studioOptions = {}, { momentT
   const scope = { uid, isGuest, sample: Boolean(sample), assertCurrent };
   const story = buildMomentPdfStory(event, {
     momentTypes: momentTypes || initial.adminValues?.eventTypes || [],
-  });
+  }, studioOptions.contentSelection);
   const options = normalizePdfStudioOptions(studioOptions, story.presentation);
   const pdf = new MomentPdfPainter(assertCurrent, options);
   const palette = pdf.palette;

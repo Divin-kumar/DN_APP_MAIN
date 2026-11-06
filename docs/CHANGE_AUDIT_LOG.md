@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-443 | Lightweight PDF activity and attachment selection
+- **Scope:** Owner approved a compact PDF Studio selector without crowding Activity pages. Add a Content sheet with parent/file selection, Cancel/Apply, reset and per-Moment/account/Guest/demo browser memory. Existing section options remain collapsed as Book sections.
+- **Compatibility:** Filter before chapters/covers, including alternate-ID parent links; cancelled records remain excluded. Source records, originals, Story and backup schema are unchanged. New items default to included; memory is local only, not cross-device or backup recovery.
+- **Guest review:** Update tour guidance and version to 2026.11.06.1; explicit Refresh demo preserves edited tours.
+- **Executed:** 17 focused Node tests, ESLint and production build passed locally (Node 24; CI uses required Node 22). Browser/CI verification pending. Added targeted mobile selection/persistence/cancel tests and real searchable-PDF exclusion checks for all three formats; reuse existing focused PDF regression workflow.
+- **Release:** OldVersion only, no app-version change or deployment. Physical iPhone/VoiceOver and actual account sync remain unverified.
+
 ## CHG-20261106-442 | Publish verified 2.3.5 cancelled-activity PDF fix
 - **Authorization/source:** Owner requested exclusion of cancelled activities and production publication. Manual GitHub Actions dispatch used OldVersion at a3e69f9fa31bff796f3600871dd49f119c20c035 with the existing fast-patch tier; no new runtime commit or repeated full E2E run was needed.
 - **Executed validation:** Focused run 42178136105 passed 21/21 Chromium cases, including rendered PDF text in Journal, Diary and Tasks, existing Studio exports and release checks. Offline Story/PDF, exact original bytes, unchanged records and both upgrade paths from 1.0.35 passed. Same-source governance 42178136154 passed. The prior 2.3.4 baseline passed all 812 browser cases; that is not claimed as a new full run at 2.3.5.

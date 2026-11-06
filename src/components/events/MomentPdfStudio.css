@@ -528,3 +528,23 @@ html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-tex
   html[data-theme] .dn-pdf-update-rail { flex-wrap:wrap; }
   html[data-theme] .dn-pdf-update-rail .dn-pdf-update-button { margin-left:auto; }
 }
+
+/* One quiet entry point; selection controls live only in the content sheet. */
+.dn-pdf-content-launch { display:flex; align-items:center; gap:10px; width:100%; min-height:48px; padding:10px 0; border:0; border-top:1px solid var(--border); background:transparent; color:var(--ink); text-align:left; }
+.dn-pdf-content-launch small { margin-left:auto; color:var(--ink-soft); text-align:right; }
+.dn-pdf-content-sheet { max-width:560px; }
+.dn-pdf-content-help { color:var(--ink-soft); font-size:13px; line-height:1.6; }
+.dn-pdf-content-reset { border:0; background:transparent; color:var(--ink-soft); min-height:44px; padding:0 4px; font-size:13px; }
+.dn-pdf-content-activity { display:flex; align-items:center; }
+.dn-pdf-content-choice { display:flex; flex:1; align-items:center; gap:12px; width:100%; min-width:0; min-height:48px; padding:10px 4px; border:0; background:transparent; color:var(--ink); text-align:left; font:inherit; font-size:14px; }
+.dn-pdf-content-choice > span:last-child { overflow-wrap:anywhere; }
+.dn-pdf-content-choice:disabled { opacity:.45; }
+.dn-pdf-content-tick { display:grid; place-items:center; flex:0 0 20px; height:20px; border:1px solid var(--ink-soft); border-radius:50%; }
+.dn-pdf-content-choice[aria-pressed="true"] .dn-pdf-content-tick { border-color:transparent; color:var(--ink); background:var(--surface-muted, #80808018); }
+.dn-pdf-content-expand { display:flex; align-items:center; gap:6px; flex-shrink:0; min-height:44px; min-width:44px; border:0; background:transparent; color:var(--ink-soft); }
+.dn-pdf-content-files { padding-left:30px; }
+.dn-pdf-content-list h4 { margin:16px 4px 4px; font-size:13px; color:var(--ink-soft); }
+.dn-pdf-content-actions { display:flex; justify-content:flex-end; gap:10px; padding-top:12px; }
+.dn-pdf-content-actions button { min-height:44px; }
+.dn-pdf-content-sheet .dn-modal-body { scrollbar-width:none; }
+.dn-pdf-content-sheet .dn-modal-body::-webkit-scrollbar { display:none; }

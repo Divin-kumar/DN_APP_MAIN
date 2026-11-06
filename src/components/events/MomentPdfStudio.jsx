@@ -4,6 +4,9 @@ import {
   Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw, CheckCircle2,
 } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
+import PdfContentSheet from './PdfContentSheet';
+import usePersistentListState from '../../hooks/usePersistentListState';
+import { PDF_CONTENT_DEFAULTS, PDF_CONTENT_RULES, pdfContentKey, projectPdfContent } from '../../utils/pdfContentSelection';
 import DropdownSelect from '../common/DropdownSelect';
 import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
 import { getActiveSampleScenario } from '../../dev/sampleData';
@@ -37,6 +40,12 @@ const windowOfPages = (total, selected) => {
 };
 
 export default function MomentPdfStudio({ event }) {
+  const user = useAppStore(state => state.user);
+  const sampleScope = getActiveSampleScenario(user?.uid || null) || 'personal';
+  const [selection, saveSelection] = usePersistentListState(`pdf-content:${sampleScope}:${pdfContentKey(event)}`, PDF_CONTENT_DEFAULTS, PDF_CONTENT_RULES);
+  const [contentOpen, setContentOpen] = useState(false);
+  const content = projectPdfContent(event, selection);
+  const customizedContent = selection.excludedActivities.length || selection.excludedAttachments.length;
   const momentTypes = useAppStore((state) => state.adminValues?.eventTypes || []);
   const savedStyles = useStoryDesignDefaults();
   const originalTemplate = resolveMomentStoryPresentation(event, momentTypes);
@@ -63,7 +72,7 @@ export default function MomentPdfStudio({ event }) {
     setDirty(true);
     setError('');
     try {
-      const result = await renderMomentStudioPdf(event, next, { momentTypes });
+      const result = await renderMomentStudioPdf(event, { ...next, contentSelection: selection }, { momentTypes });
       if (id !== requestRef.current) return;
       const urls = result.pages.map((page) => URL.createObjectURL(new Blob([page.bytes], { type: 'image/jpeg' })));
       if (id !== requestRef.current) {
@@ -85,7 +94,7 @@ export default function MomentPdfStudio({ event }) {
     } finally {
       if (id === requestRef.current) setBusy(false);
     }
-  }, [event, momentTypes]);
+  }, [event, momentTypes, selection]);
 
   // Refresh with the user's actual controls on source changes. Settings style
   // defaults follow the selected format unless this export has its own override.
@@ -430,8 +439,15 @@ export default function MomentPdfStudio({ event }) {
                 remain image-based; this does not increase printing resolution.</small></span>
           </label>
         </fieldset>
+        <button type="button" className="dn-pdf-content-launch" onClick={() => setContentOpen(true)} disabled={busy}>
+          <span>Content</span><small>{customizedContent
+            ? `${content.activities.length} activities · ${content.attachments.length} attachments`
+            : 'All eligible items'}</small><ChevronRight size={17} aria-hidden="true" />
+        </button>
+        {contentOpen ? <PdfContentSheet event={event} selection={selection}
+          onClose={() => setContentOpen(false)} onApply={next => { saveSelection(next); setContentOpen(false); }} /> : null}
         <details className="dn-pdf-content-options">
-          <summary><span>Included content</span>
+          <summary><span>Book sections</span>
             <small>{optionLabels.filter(({ key }) => settings.template === 'chronicle'
               ? key !== 'includeUpcoming' : !['includeCompleted', 'includeCancelled'].includes(key))
               .filter(({ key }) => settings[key]).length} selected · Customize</small>
