@@ -7,6 +7,38 @@ on:
 permissions:
   contents: read
 jobs:
+  activity-parent-trail-237:
+    # Isolate subpixel touch geometry on all iPhone-sized Activity Details.
+    # This opt-in job does not publish or trigger the full browser suite.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-237-activity-trail]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 16
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install supported Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify Activity parent-trail touch targets, navigation and Guest preservation
+        run: npx playwright test e2e/iphone-activity-detail-trail.spec.js --workers=2
+      - name: Preserve focused browser failure evidence
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-237-activity-trail-failure
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+
   repair-233-regression:
     # Dedicated follow-up to full gate 42042647692: run changed failing spec
     # families, not the 801-case pre-release suite. Never deploy or open PRs.
