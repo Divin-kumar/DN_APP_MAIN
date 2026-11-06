@@ -23,10 +23,11 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [priority, setPriority] = useState(task?.priority || 'medium');
   const [dueDate, setDueDate] = useState(task?.id ? (task.dueDate || '') : (task?.dueDate || formatMomentDate(new Date())));
   const [dueTime, setDueTime] = useState(task?.dueTime || '');
-  const [momentId, setMomentId] = useState(task?.momentId || '');
-  const [activityId, setActivityId] = useState(task?.activityId || '');
-  const parent = moments.find((item) => (recordId(item.id) || recordId(item.firestoreId)) === momentId);
-  const unresolved = task && resolveIndependentTaskParent({ ...task, momentId, activityId }, moments);
+  const [momentId, setMomentId] = useState(recordId(task?.momentId));
+  const [activityId, setActivityId] = useState(recordId(task?.activityId));
+  const unresolved = resolveIndependentTaskParent({ momentId, activityId }, moments);
+  const parent = unresolved.moment;
+  const momentAlias = parent && (recordId(parent.id) || recordId(parent.firestoreId)) !== momentId;
   const savedAlias = Boolean(activityId && !(parent?.activities || []).some((item) => recordId(item.id) === activityId));
   const save = (event) => {
     event.preventDefault();
@@ -49,35 +50,36 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     </div>
   </div>;
 
-  return <form className="dn-task-editor" onSubmit={save}>
+  return <form className="dn-task-editor" onSubmit={save} aria-busy={busy}>
     <label className="dn-task-field">Task title
-      <input required maxLength={500} autoComplete="off" value={title}
+      <input disabled={busy} required maxLength={500} autoComplete="off" value={title}
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
     </label>
     <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
-      <DateField label="Due date" name="dn-task-date" value={dueDate}
+      <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy}
         onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
-      <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={!dueDate} />
+      <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
     <FormDisclosure label="More options" hint={momentId ? "Linked Moment · priority and notes" : "Priority, links and notes"}>
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
-        <DropdownSelect id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
+        <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
           <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
         </DropdownSelect>
       </div>
       <div className="dn-task-field"><label htmlFor="dn-task-moment">Moment (optional)</label>
-        <DropdownSelect id="dn-task-moment" value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
+        <DropdownSelect disabled={busy} id="dn-task-moment" value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
           <option value="">Standalone Task</option>
           {moments.map((item) => <option key={recordId(item.id) || recordId(item.firestoreId)}
             value={recordId(item.id) || recordId(item.firestoreId)}>{item.name || 'Untitled Moment'}</option>)}
+          {momentAlias ? <option value={momentId}>{parent.name || 'Untitled Moment'}</option> : null}
           {momentId && !parent ? <option value={momentId}>Unavailable Moment (preserve link)</option> : null}
         </DropdownSelect>
       </div>
     </div>
     {momentId ? <div className="dn-task-field"><label htmlFor="dn-task-activity">Activity (optional)</label>
-      <DropdownSelect id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
+      <DropdownSelect disabled={busy} id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
         <option value="">Only link to Moment</option>
         {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
         {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
@@ -85,15 +87,15 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       </DropdownSelect>
     </div> : null}
     <label className="dn-task-field">Notes (optional)
-      <textarea rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
+      <textarea disabled={busy} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
         placeholder="Helpful details" />
     </label>
     </FormDisclosure>
     {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
       {task.status === 'cancelled'
-        ? <button type="button" data-task-action="restore" onClick={() => setPendingAction('restore')}>Restore Task…</button>
-        : <button type="button" data-task-action="cancel" onClick={() => setPendingAction('cancel')}>Cancel Task…</button>}
-      <button type="button" data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
+        ? <button type="button" disabled={busy} data-task-action="restore" onClick={() => setPendingAction('restore')}>Restore Task…</button>
+        : <button type="button" disabled={busy} data-task-action="cancel" onClick={() => setPendingAction('cancel')}>Cancel Task…</button>}
+      <button type="button" disabled={busy} data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
     </div> : null}
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">

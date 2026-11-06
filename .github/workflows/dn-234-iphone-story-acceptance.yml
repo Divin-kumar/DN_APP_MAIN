@@ -42,3 +42,39 @@ jobs:
             .verification/browser-results.json
           retention-days: 7
           if-no-files-found: ignore
+
+  tasks-settings:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      contains(github.event.head_commit.message, '[verify-tasks-settings]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Verify Tasks and impacted Settings flows
+        run: >-
+          npx playwright test
+          e2e/tasks-settings-refinement-234.spec.js
+          e2e/task-refine-dashboard-230.spec.js
+          e2e/task-actions-calendar-230.spec.js
+          e2e/task-editor-actions-230.spec.js
+          e2e/account-tasks-sync-230.spec.js
+          e2e/independent-task-backup-v4.spec.js
+          e2e/iphone-settings-task-screenshot-fixes-230.spec.js
+          e2e/settings-appearance-preferences-230.spec.js
+          e2e/dn-233-ui-acceptance.spec.js
+          --workers=2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dn-tasks-settings-refinement
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+          retention-days: 7

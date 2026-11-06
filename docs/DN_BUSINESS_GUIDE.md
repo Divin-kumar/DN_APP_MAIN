@@ -6,6 +6,8 @@
 
 # DN — Your App and Improvement Checklist
 
+**Tasks and Settings refinement (6 November 2026; not released):** Settings labels and supporting text are more consistent. Tasks show linked Activity context and clearer date/time labels. Opening a Task from Dashboard no longer repeatedly interrupts search, and existing alternate Moment links stay intact when editing. Fields pause while saving and failed saves retain your draft. Focused browser verification is pending; account storage, backups and PDF behavior are unchanged.
+
 **DN 2.3.4 verification (6 November 2026):** The current iPhone Story and Moment polish has passed 25/25 simulated mobile browser checks, along with routine code checks. This confirms responsive behavior in the tested browser but not on a physical iPhone. DN 2.3.3 remains the published release; no production update or app-version change is included.
 
 **DN 2.3.4 iPhone consistency follow-up (6 November 2026, not yet released):** Existing Story Activity titles now have larger touch areas. The three Moment figures retain their numbers and arrangement, with more readable labels on narrow phones. Decorative Journal date stars are not read aloud by assistive technology. The same destinations, records and Story layout remain. Browser regression verification is pending; production is unchanged.

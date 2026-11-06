@@ -262,3 +262,18 @@ html[data-theme] .dn-task-list .dn-independent-task-row.is-dashboard-selected {
     to { box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 17%,transparent); }
   }
 }
+
+/* Readable date badges and distinct completion feedback without extra actions. */
+html[data-theme] .dn-independent-task-row .dn-task-calendar small {
+  font-size:12px;line-height:1.2;
+}
+html[data-theme] .dn-independent-task-row .dn-task-calendar-time {
+  font-size:11px;line-height:1.2;
+}
+html[data-theme] .dn-independent-task-row .dn-task-context {
+  font-size:13px;line-height:1.5;
+}
+html[data-theme] .dn-task-signals.is-completed > span:last-child {color:var(--color-success);}
+html[data-theme] .dn-task-signals.is-cancelled > span:last-child {color:var(--color-text-muted);}
+html[data-theme] .dn-task-editor .dn-task-field {font-size:13px;line-height:1.5;}
+html[data-theme] .dn-task-editor .dn-task-time-hint {font-size:13px;line-height:1.5;}

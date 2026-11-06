@@ -1062,7 +1062,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <div className="dn-data-location-item">
               <Cloud size={18} aria-hidden="true" />
               <strong>Firebase records</strong>
-              <p>When signed in, Moments, Activity details, transactions and Code Lists live in your account's Firestore data. Guest records are browser-only.</p>
+              <p>When signed in, Moments, Activity details, Tasks, transactions and Code Lists live in your account's Firestore data. Guest records are browser-only.</p>
             </div>
             <div className="dn-data-location-item">
               <HardDrive size={18} aria-hidden="true" />
@@ -1072,7 +1072,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <div className="dn-data-location-item">
               <FileJson size={18} aria-hidden="true" />
               <strong>Recovery copy</strong>
-              <p>Your downloaded JSON can contain records, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
+              <p>Your downloaded JSON can contain Moments, Activities, Tasks, transactions, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
             </div>
           </div>
           <details className="dn-data-recovery-guide">

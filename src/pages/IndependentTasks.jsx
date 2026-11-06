@@ -43,6 +43,7 @@ export function TaskListContent() {
   const scope = taskScopeKey({ user, isGuest });
   const enabled = isGuest || Boolean(user?.uid);
   const pendingRef = useRef(false);
+  const focusedTaskRef = useRef('');
   const [busy, setBusy] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, changeView] = usePersistentListState('tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
@@ -104,11 +105,14 @@ export function TaskListContent() {
     setSearchParams(next, { replace: true });
   }, [enabled, ready, searchParams, setSearchParams, tasks]);
   useEffect(() => {
-    if (!dashboardTaskId || !ready || !displayedTasks.some((task) => task.id === dashboardTaskId)) return undefined;
+    if (!dashboardTaskId) { focusedTaskRef.current = ''; return undefined; }
+    if (focusedTaskRef.current === dashboardTaskId || !ready
+      || !displayedTasks.some((task) => task.id === dashboardTaskId)) return undefined;
     const frame = requestAnimationFrame(() => {
       const row = [...document.querySelectorAll('.dn-independent-task-row[data-task-id]')]
         .find((item) => item.dataset.taskId === dashboardTaskId);
       if (!row) return;
+      focusedTaskRef.current = dashboardTaskId;
       row.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
       row.focus({ preventScroll: true });
     });
@@ -138,7 +142,10 @@ export function TaskListContent() {
     return Boolean(saved);
   };
   const remove = async (task) => {
-    if (await run(() => store.removeTask(task.id), 'Task deleted')) setConfirm(null);
+    if (await run(() => store.removeTask(task.id), 'Task deleted')) {
+      setConfirm(null);
+      if (dashboardTaskId === task.id) setDashboardTaskId('');
+    }
   };
   if (!enabled) return <div className="dn-tasks-page">
     <div className="dn-task-hero"><div><span className="dn-task-eyebrow">Independent Tasks</span><h2>Tasks</h2></div></div>
@@ -203,7 +210,7 @@ export function TaskListContent() {
           })}>Clear filters</button> : null}
         </div>
       </div> : null}
-    {dashboardTaskId ? <div className="dn-task-dashboard-arrival" role="status">
+    {dashboardTaskId && tasks.some((task) => task.id === dashboardTaskId) ? <div className="dn-task-dashboard-arrival" role="status">
       <span>{highlightedOutsideFilters ? 'Selected Task is shown outside your current filters.' : 'Selected Task highlighted. Tap it for actions.'}</span>
       <button type="button" onClick={() => setDashboardTaskId('')}>Dismiss</button>
     </div> : null}
@@ -213,13 +220,13 @@ export function TaskListContent() {
         const context = parent.kind === 'activity' ? `${parent.moment.name} · ${parent.activity.title || 'Activity'}`
           : parent.kind === 'moment' ? parent.moment.name
             : parent.kind === 'standalone' ? 'Standalone'
-              : parent.kind === 'missing-activity' ? 'Activity unavailable' : 'Moment unavailable';
+              : parent.kind === 'missing-activity' ? `${parent.moment.name || 'Moment'} · Activity unavailable` : 'Moment unavailable';
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
         return <SwipeActionCard key={task.id} as="article" taskId={task.id}
           className={`dn-independent-task-row${dashboardTaskId === task.id ? ' is-dashboard-selected' : ''}`}
           mainClassName="dn-independent-task-row-main"
-          label={task.title} role="button" openOnTap disabled={Boolean(store.error)}
+          label={task.title} role="button" openOnTap disabled={busy || Boolean(store.error)}
           otherActions={[
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
               onClick: () => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed') }]),
@@ -237,9 +244,9 @@ export function TaskListContent() {
           </span>
           <div className="dn-task-copy">
             <strong>{task.title}</strong>
-            {parent.kind !== 'standalone' ? <small className="dn-task-context">{parent.moment?.name || context}</small> : null}
+            {parent.kind !== 'standalone' ? <small className="dn-task-context">{context}</small> : null}
           </div>
-          <span className="dn-task-signals">
+          <span className={`dn-task-signals is-${task.status}`}>
             {overdue || task.priority === 'high' ? <span role="img"
               className={overdue ? 'dn-task-flag is-overdue' : 'dn-task-flag is-high'}
               aria-label={overdue ? 'Overdue' : 'High priority'} title={overdue ? 'Overdue' : 'High priority'}>

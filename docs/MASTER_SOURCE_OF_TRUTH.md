@@ -6,6 +6,12 @@ DN organizes Moments, activities, memories, greetings, original attachments and 
 
 
 
+## Tasks and Settings consistency review (6 November 2026; browser verification pending)
+
+Dashboard Task arrival focuses the requested row once, allowing subsequent search typing and Refine changes without repeated focus/scroll jumps. A deleted selected Task no longer leaves a stale arrival banner. Task rows show both linked Moment and Activity names (or the unavailable Activity state), clearer date/time text and a green completion check. TaskEditor resolves both canonical and Firestore Moment IDs using the shared parent resolver and preserves existing alternate links when saving. Inputs and row actions are disabled while their save is pending; failed saves retain the draft. No Task schema, sorting/filter semantics, account service, backup logic or Activity/PDF conversion changes are introduced.
+
+Settings hub labels and detail-page labels use a shared 15px hierarchy; section headings use 17px, and the refined supporting text uses 13px across Appearance and List defaults. Data & Backup copy now explicitly mentions Tasks in account storage and downloaded JSON. Existing selected states, save/reset actions and compact controls remain. The existing Guest tour already contains standalone, Moment-linked, Activity-linked, completed and undated Tasks and remains accurate without an automatic reset. Local 618/618 Node tests, lint and build passed; focused synthetic browser checks cover the affected Task, Settings, backup and simulated-account flows. Real-account two-device sync and physical iPhone Safari/VoiceOver remain unverified. No deployment or version bump.
+
 ## Story formatted-writing palette refinement (6 November 2026)
 
 Recorded Journal, Diary and Tasks Story quotes now use book ink and an accent rule; inline code uses the selected book ink/tint with continuous decoration when wrapping. Keyboard focus on existing chapter links and the Tasks status control uses the same book accent. These rules are scoped to recorded paper surfaces, preserving shell colors for introductions and future/undated chapters. Heritage, Editorial and Minimal retain their light/dark themes. The focused Story contrast suite covers 320px and 390px, long inline text, quote/code contrast and link focus. Final browser evidence is pending; no deployment or version change is included. Guest fixtures need no reset because content and controls are unchanged.
