@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-478 | Confirm v2.3.8 live Firebase publication after focused recovery
+
+**Executed:** Firebase production GitHub Actions [42226175568](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42226175568) at exact release source `15b487e93a5f5e03530acb1499c89c085be95c7f` completed successfully using the owner-approved **fast patch tier**. Dependency audit, unit tests, lint, production build, upgrade-version guard (v2.3.8 newer than v2.3.7), service-account gate and Hosting deployment passed. The live `https://dn-10.web.app/?build=<SHA>` index bytes were compared with the generated `dist/index.html` and matched exactly. The 40/40 focused browser acceptance source `cc90698` differs only by release documentation from the published source. No full browser rerun was claimed: the earlier 846-pass/8-fail gate and its corrected targeted regressions remain disclosed in CHG-477. No application data migrations or destructive operations were performed. iPhone Safari and VoiceOver have not been physically verified.
+
 ## CHG-20261106-477 | Restore Activity footer reachability and authorize focused v2.3.8 patch publication
 
 **Failure evidence:** Full pre-release run [42221694569](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42221694569) on `2b4f754` executed 854 Chromium journeys: **846 passed; eight failed**, all one responsive Activity Detail footer check repeated at 320/360/390px and light/dark. With the old 88px parent dock space removed, the test's assumption that every `scrollIntoViewIfNeeded` target clears a full-width fixed dock no longer matched the standalone right-hand +. GitHub production run 42221694453 correctly blocked Firebase upload at its required full-verification gate. This is not an unobserved release success.
