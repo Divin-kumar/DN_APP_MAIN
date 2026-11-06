@@ -4,6 +4,16 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-479 | iPhone sticky Search and animated journal creator (OldVersion only)
+
+**Owner screenshot and requirements:** At 430px Safari width, focusing Search caused the underlying Moment list to shift upward, with two overlapping blue focus outlines. The owner also requested removal of redundant Tasks/Transactions links in the profile dropdown, replacing the solid + with an animated everyday-activity character and a matched bottom-sheet opening/closing motion, and one common input focus treatment. These changes apply to the existing app, not Story/PDF content.
+
+**Implementation:** MobileCommandDock preserves the scroll canvas height/offset on focus and visual-viewport keyboard movement. The glass Search wrapper carries the single focus halo, not its inner input. The top-right profile menu omits only the redundant Task/Transaction links; the command menu, desktop sidebar, module routes, form handlers, signed-in/Guest storage and PDF flows remain unchanged. A tiny animated journaling person replaces the standalone + artwork while retaining the same accessible control and draggable docking; AnimatePresence holds the command and universal-create sheets through a reversed close transition. Mobile modal fields receive one quiet, visible keyboard focus ring. Reduced Motion disables the cartoon loop and modal animation.
+
+**Guest demo:** Tour v2026.11.06.3 explains the new icon and unchanged discovery/navigation paths; existing user-editable Guest records are not automatically reset and require explicit demo refresh. No finance, data schema, originals, account scopes, backup or Story/PDF changes.
+
+**Validation:** Source changes in commit `7a2292e27952854cfd4caff2e0708f02de57b065`; opt-in Chromium and touch suites triggered in run [42229633250](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42229633250). Pending until actual GitHub results are inspected. No production deployment or new version bump authorized for this change. Native Safari keyboard interactions and VoiceOver remain unverified.
+
 ## CHG-20261106-478 | Confirm v2.3.8 live Firebase publication after focused recovery
 
 **Executed:** Firebase production GitHub Actions [42226175568](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42226175568) at exact release source `15b487e93a5f5e03530acb1499c89c085be95c7f` completed successfully using the owner-approved **fast patch tier**. Dependency audit, unit tests, lint, production build, upgrade-version guard (v2.3.8 newer than v2.3.7), service-account gate and Hosting deployment passed. The live `https://dn-10.web.app/?build=<SHA>` index bytes were compared with the generated `dist/index.html` and matched exactly. The 40/40 focused browser acceptance source `cc90698` differs only by release documentation from the published source. No full browser rerun was claimed: the earlier 846-pass/8-fail gate and its corrected targeted regressions remain disclosed in CHG-477. No application data migrations or destructive operations were performed. iPhone Safari and VoiceOver have not been physically verified.
