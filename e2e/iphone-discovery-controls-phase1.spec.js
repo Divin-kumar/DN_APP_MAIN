@@ -81,7 +81,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await expect(page.locator('.dn-header').getByRole('heading', { name: 'Transactions' })).toBeVisible();
     await expect(page.locator('.dn-transactions-page .transactions-heading')).toHaveCount(0);
     await expect(page.locator('.dn-transactions-page .dn-transaction-add, .dn-transactions-heading-description')).toHaveCount(0);
-    const refine = page.locator('.dn-transactions-page').getByRole('button', { name:/Filters and sort/ });
+    const refine = page.locator('.dn-command-controls').getByRole('button', { name:/Filters and sort/ });
     await refine.click();
     await page.getByRole('button', { name:'Add filter', exact:true }).click();
     const rule = page.locator('.dn-refine-sheet .dn-condition-rule').last();

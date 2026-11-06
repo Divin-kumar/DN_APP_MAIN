@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
 for (const [width,height] of [[320,844],[390,844],[430,932],[932,430],[1024,430]]) {
-  test(`desktop polish leaves mobile pixels unchanged ${width}x${height}`, async ({page}) => {
+  test(`desktop polish leaves mobile pixels unchanged ${width}x${height}`, async ({page}, testInfo) => {
     await page.setViewportSize({width,height});
     await seedGuest(page,{theme:'dark'});
     await page.goto('/events');
@@ -10,7 +10,15 @@ for (const [width,height] of [[320,844],[390,844],[430,932],[932,430],[1024,430]
     await expect(page.locator('.dn-header')).toBeVisible();
     await expect(page.locator('.dn-desktop-navigation-options')).toBeHidden();
     await page.evaluate(() => document.fonts.ready);
-    const before = await page.screenshot({animations:'disabled'});
+    if (width <= 760) await expect(page.locator('.dn-command-controls input')).toBeVisible();
+    // Wait for portal layout and initial content paint to settle before comparing stylesheets.
+    let before = await page.screenshot({animations:'disabled'});
+    await expect.poll(async () => {
+      const next = await page.screenshot({animations:'disabled'});
+      const stable = before.equals(next);
+      before = next;
+      return stable;
+    }).toBe(true);
     await page.evaluate(() => {
       const sheet = [...document.styleSheets].find(s => s.ownerNode?.getAttribute('data-vite-dev-id')?.endsWith('/DesktopShell.css'));
       if (!sheet) throw new Error('Desktop stylesheet missing');
@@ -19,6 +27,8 @@ for (const [width,height] of [[320,844],[390,844],[430,932],[932,430],[1024,430]
     // Hide only the new desktop destinations; all pre-existing DOM/CSS is the baseline.
     await page.addStyleTag({content:'.dn-desktop-navigation-options { display:none!important; }'});
     const after = await page.screenshot({animations:'disabled'});
+    await testInfo.attach('mobile-before-desktop-css-disabled', {body:before,contentType:'image/png'});
+    await testInfo.attach('mobile-after-desktop-css-disabled', {body:after,contentType:'image/png'});
     expect(before.equals(after)).toBe(true);
   });
 }

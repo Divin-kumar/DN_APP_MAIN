@@ -18,6 +18,7 @@
   html[data-theme] .dn-command-controls .dn-list-controls-trigger > span:not(.dn-list-controls-badge) { display:none; }
   html[data-theme] .dn-command-button-slot { width:48px; height:48px; flex:0 0 48px; }
   html[data-theme] .dn-command-root .dn-command-trigger { width:48px!important; height:48px!important; touch-action:none; user-select:none; -webkit-user-select:none; z-index:91; }
+  html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) { background:var(--action-fill)!important; }
   html[data-theme] .dn-command-root .dn-command-trigger.is-dragging { transition:none!important; box-shadow:0 8px 28px color-mix(in srgb,var(--color-primary) 35%,transparent)!important; }
   html[data-theme] .dn-command-trigger.is-open .dn-create-glyph { transform:rotate(45deg); }
   body.dn-modal-open .dn-command-bar { visibility:hidden; }

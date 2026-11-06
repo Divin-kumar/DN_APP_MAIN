@@ -6,7 +6,7 @@ html[data-theme] .dn-list-controls {
 html[data-theme] .dn-list-controls-topline { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 10px; }
 html[data-theme] .dn-list-controls-row { display: flex; min-width: 0; width: 100%; align-items: center; gap: 8px; }
 html[data-theme] .dn-list-controls-search { min-width: 0; flex: 1 1 0; }
-html[data-theme] .dn-list-controls .dn-list-controls-search input {
+html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-search input {
   display: block;
   width: 100% !important;
   min-width: 0 !important;
@@ -217,7 +217,7 @@ html[data-theme] .dn-list-controls-search-icon {
   position:absolute; z-index:1; left:5px; top:50%; transform:translateY(-50%);
   pointer-events:none; color:var(--color-text-muted); opacity:.75;
 }
-html[data-theme] .dn-list-controls .dn-list-controls-search input {
+html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-search input {
   display:block; width:100% !important; min-width:0 !important;
   min-height:44px !important; margin:0 !important;
   padding:10px 9px 10px 34px !important;
@@ -227,16 +227,16 @@ html[data-theme] .dn-list-controls .dn-list-controls-search input {
   font-weight:450; line-height:1.4;
   -webkit-appearance:none; appearance:none;
 }
-html[data-theme] .dn-list-controls .dn-list-controls-search input::placeholder {
+html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-search input::placeholder {
   color:var(--color-text-muted); opacity:.86;
 }
-html[data-theme] .dn-list-controls .dn-list-controls-search input::-webkit-search-decoration { display:none; }
+html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-search input::-webkit-search-decoration { display:none; }
 /* Recover a search without resetting saved sort or condition chips. */
 html[data-theme] .dn-list-controls-search:has(.dn-search-clear) input { padding-inline-end:48px !important; }
 html[data-theme] .dn-list-controls-search:has(.dn-search-clear) input::-webkit-search-cancel-button {
   -webkit-appearance:none; appearance:none; display:none;
 }
-html[data-theme] .dn-list-controls .dn-list-controls-search .dn-search-clear {
+html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-search .dn-search-clear {
   position:absolute; z-index:2; inset-inline-end:0; top:50%; transform:translateY(-50%);
   display:grid; place-items:center; width:44px; height:44px; min-width:44px;
   margin:0; padding:0; border:0; border-radius:10px;

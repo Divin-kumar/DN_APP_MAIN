@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-461 — Mobile command regression corrections (unpublished)
+
+Corrected shared search styles after controls move into the mobile dock, retaining icon spacing, borderless inputs and clear-search placement. Suppressed persistent touch hover fill on the command button while retaining keyboard focus. Updated regression locators for relocated controls and desktop creation, and stabilized the desktop-only stylesheet comparison before capture. Core navigation/search-state/drag/desktop checks passed at a8435c3 in run 42196588655; the earlier broad run passed 79 and failed 37, motivating these fixes. Full downstream verification remains pending. No data, version or deployment changes; Guest tour remains current.
+
 ## CHG-20261106-460 | Preserve command accessibility and responsive state
 - **Scope:** Tasks Refine keeps its accessible name when its visual label is compacted. Crossing mobile/desktop boundaries closes the command panel. Existing discovery and Insights tests now locate mobile search in its real toolbar while retaining in-page count/export checks. Added review screenshots and a small nondeploying core-test option for faster diagnosis before broad acceptance.
 - **Evidence:** Initial source f900989 passed governance unit/lint/build/audit/document checks. Focused browser run 42195844430 is still running against that initial source and is not acceptance of these corrections. No release/version/data changes.
