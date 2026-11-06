@@ -42,7 +42,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     });
     expect(measures.railBorder).toBe('0px');
     expect(measures.railBackground).toBe('rgba(0, 0, 0, 0)');
-    expect(measures.searchUnderline).toBe('1px');
+    expect(measures.searchUnderline).toBe('0px');
     expect(measures.innerBorder).toBe('0px');
     expect(measures.refineLabel).toBe('Refine');
     expect(measures.iconVisible).toBe(true);

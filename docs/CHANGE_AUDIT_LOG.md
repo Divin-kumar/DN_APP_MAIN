@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-464 | Refine the mobile command visual hierarchy
+
+Owner feedback requested a more current premium treatment. The mobile bar is now a softly translucent capsule with integrated borderless search, a circular Refine control and a stronger accent +. The command sheet has a single row of five destinations, readable labels and selected icon treatment, followed by lightweight two-column creation actions. Scoped typography, spacing, close control and short guidance replace the earlier tile-heavy appearance. Desktop and business handlers are unchanged. A cancelled drag also clears click suppression so keyboard activation is not lost. Guest tour v2026.11.06.2 still describes the same actions and needs no refresh.
+
+Added narrow/light/dark screenshots and assertions for all five destinations fitting one row with minimum touch targets; the updated borderless search expectation reflects the approved design. Local lint passes; affected browser and final full-source verification remain pending. Prior 116-case acceptance covers the preceding design only. No version change or deployment.
+
 ## CHG-20261106-463 | Reclaim the dock after moving the command button
 
 When the optional command button floats, its empty slot no longer consumes search width. On pages without search, the unused dock surface disappears while the floating button remains reachable. Added drag-to-Settings-and-back coverage; default docking and desktop remain unchanged. The 116 focused browser cases passed at 9a349cc in run 42197603995. Full run 42197969054 is evaluating the preceding source; this small correction requires its own acceptance. No data, release or version changes. Guest tour instructions already describe the same behavior.

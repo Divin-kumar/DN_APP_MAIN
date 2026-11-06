@@ -11,7 +11,13 @@ for(const [width,height] of [[320,640],[375,667],[390,844],[430,932]])for(const 
   await page.getByRole('button',{name:'Open quick create menu'}).click();
   const dialog=page.getByRole('dialog',{name:'Navigate & create'});await expect(dialog).toBeVisible();
   const d=await dialog.boundingBox();expect(d.x).toBeGreaterThanOrEqual(0);expect(d.x+d.width).toBeLessThanOrEqual(width+1);
-  await expect(dialog.getByRole('navigation').getByRole('link')).toHaveCount(5);
+  const links=dialog.getByRole('navigation').getByRole('link');
+  await expect(links).toHaveCount(5);
+  const boxes=await links.evaluateAll(items=>items.map(e=>({x:e.getBoundingClientRect().x,y:e.getBoundingClientRect().y,w:e.getBoundingClientRect().width,h:e.getBoundingClientRect().height,overflow:e.scrollWidth>e.clientWidth})));
+  expect(boxes.every(b=>Math.abs(b.y-boxes[0].y)<1 && b.w>=44 && b.h>=44 && !b.overflow)).toBe(true);
+  await expect(dialog).toHaveCSS('opacity','1');
+  await expect(page.locator('.dn-modal-backdrop')).toHaveCSS('opacity','1');
+  await page.screenshot({path:test.info().outputPath(`command-refined-${width}-${theme}.png`)});
   await dialog.getByRole('button',{name:'Transaction',exact:true}).click();
   const form=page.getByRole('dialog',{name:'Add Transaction'});await expect(form).toBeVisible();await form.getByRole('button',{name:'Cancel'}).click();
   await expect(bar).toBeVisible();expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(before);expect(errors).toEqual([]);

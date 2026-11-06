@@ -59,6 +59,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (!p || p.id !== event.pointerId) return;
     if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+26 < viewport.width/2 ? 'left':'right',
       y: clamp((drag.y-viewport.top-76)/Math.max(1,viewport.height-164),0,1) });
+    if (cancelled) suppressClick.current = false;
     pointer.current = null;
     setDrag(null);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
@@ -82,11 +83,11 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     {open ? <ModalDialog title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
       <nav aria-label="Main navigation" className="dn-command-destinations">
         {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={()=>setOpen(false)}>
-          <Icon size={21} aria-hidden="true" /><span>{label}</span>
+          <span className="dn-command-destination-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span><span>{label}</span>
         </Link>)}
       </nav>
       <section role="group" className="dn-command-actions" aria-label="Quick create actions">
-        <h3>Create</h3>
+        <h3>Create new</h3>
         <div>
           <button type="button" onClick={event=>onCreate('event',event)}><CalendarDays size={19} aria-hidden="true" />Life moment</button>
           <button type="button" onClick={event=>onCreate('activity',event)}><ListChecks size={19} aria-hidden="true" />{isEntry?'Add entry':'Activity'}</button>
@@ -96,7 +97,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         </div>
       </section>
       {position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();setOpen(false);}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
-        : <p className="dn-command-hint">Drag the + to move it. You can return it here from this menu.</p>}
+        : <p className="dn-command-hint">Drag + to either edge for easier reach.</p>}
     </ModalDialog> : null}
   </div>;
 }
