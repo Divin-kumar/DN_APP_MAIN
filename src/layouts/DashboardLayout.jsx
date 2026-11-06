@@ -15,7 +15,7 @@ import { detailQuickActivityContext } from '../utils/quickActivityDetailContext'
 */
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Activity, ArrowLeft, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, ListTodo, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
@@ -599,8 +599,6 @@ export default function DashboardLayout() {
               <div id="dn-profile-menu" className="profile-menu" role="menu" aria-label="Profile and account">
                 <div className="profile-menu-account" role="presentation"><strong>{profileName}</strong><span>{isGuest ? 'Guest account' : user?.email || 'DN account'}</span></div>
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
-                <NavLink to="/tasks" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><ListTodo size={16} /> Tasks</NavLink>
-                <NavLink to="/financials/transactions" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Receipt size={16} /> Transactions</NavLink>
                 <NavLink to="/insights" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Activity size={16} /> Insights</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
                 <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
@@ -680,14 +678,15 @@ export default function DashboardLayout() {
         </button>
       </div>
 
+      <AnimatePresence initial={false} mode="wait">
       {quickCreateType === 'event' ? (
-        <ModalDialog title="Create a life moment" onClose={() => setQuickCreateType(null)}>
+        <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => setQuickCreateType(null)}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'task' ? (
-        <ModalDialog title="New Task" className="dn-task-dialog"
+        <ModalDialog key="quick-task" title="New Task" className="dn-task-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
             busy={quickTaskBusy || taskStore.loadedFor !== quickTaskScope}
@@ -696,14 +695,14 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
       {quickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
-        <ModalDialog title="Add Transaction" className="dn-transaction-dialog" onClose={closeQuickTransaction}>
+        <ModalDialog key="quick-transaction" title="Add Transaction" className="dn-transaction-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={closeQuickTransaction}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity-entry' ? (
-        <ModalDialog title="Add entry" className="dn-entry-add-dialog"
+        <ModalDialog key="quick-entry" title="Add entry" className="dn-entry-add-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
           onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form dn-entry-add-form"
@@ -727,7 +726,7 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (
-        <ModalDialog title="Add an activity" onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
+        <ModalDialog key="quick-activity" title="Add an activity" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>
             <div className="dn-activity-create-destination">
@@ -785,6 +784,7 @@ export default function DashboardLayout() {
           </form>
         </ModalDialog>
       ) : null}
+      </AnimatePresence>
     </div>
     </MobileControlsContext.Provider>
   );

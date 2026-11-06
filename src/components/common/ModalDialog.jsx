@@ -2,7 +2,7 @@
 // It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
 import { useEffect, useId, useLayoutEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion, usePresence, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { observeDialogViewport } from '../../utils/dialogViewport';
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
@@ -10,6 +10,7 @@ import './ModalDialog.css';
 
 export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
   const reducedMotion = useReducedMotion();
+  const [isPresent, safeToRemove] = usePresence();
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
   const backdropRef = useRef(null);
@@ -97,11 +98,16 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
       ref={backdropRef}
       className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}`}
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: reducedMotion ? 0 : 0.16 }}
+      animate={{ opacity: isPresent ? 1 : 0 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: reducedMotion ? 0 : 0.19 }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: 10 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ duration: reducedMotion ? 0 : 0.2, ease: 'easeOut' }}>
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : { opacity: 0, scale: variant === 'drawer' ? 1 : .96, y: variant === 'drawer' ? 56 : 10 }}
+        animate={{ opacity: isPresent ? 1 : 0, scale: isPresent ? 1 : .985, y: isPresent ? 0 : (variant === 'drawer' ? 56 : 12) }}
+        exit={{ opacity: 0, scale: .985, y: variant === 'drawer' ? 56 : 12 }}
+        transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 430, damping: 37, mass: .9 }}
+        onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>

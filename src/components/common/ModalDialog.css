@@ -104,3 +104,17 @@ html[data-theme] .dn-modal-body :is(form, .field-group, .event-form-fields, .mom
     font-size:13px;line-height:1.55;
   }
 }
+
+/* One keyboard-accessible, restrained focus halo across form inputs. */
+html[data-theme] .dn-modal-body :is(
+ input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+ textarea, select, .dropdown-trigger
+):focus-visible {
+ outline:none !important;
+ border-color:color-mix(in srgb,var(--color-primary) 54%,var(--color-border)) !important;
+ box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 18%,transparent) !important;
+}
+html[data-theme] .dn-modal-viewport .dn-create-sheet { will-change:transform,opacity; }
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-modal-viewport .dn-create-sheet { will-change:auto; }
+}

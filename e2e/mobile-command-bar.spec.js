@@ -113,3 +113,34 @@ for(const theme of ['light','dark']) test(`About History scrolls to its last rel
   await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
   expect(errors).toEqual([]);
 });
+
+test('iPhone search focus keeps its page canvas and one glass focus halo',async({page})=>{
+ await page.setViewportSize({width:430,height:932});
+ const errors=await seedGuest(page,{theme:'dark'});await page.goto('/events');
+ const canvas=page.locator('.dn-content');
+ await canvas.evaluate(el=>el.scrollTop=165);
+ const before=await canvas.evaluate(el=>({top:el.scrollTop,h:el.closest('.dn-main').getBoundingClientRect().height}));
+ const input=page.getByRole('searchbox',{name:'Search moments'});
+ await input.focus();
+ await expect(page.locator('html')).toHaveClass(/dn-command-search-focused/);
+ const after=await canvas.evaluate(el=>({top:el.scrollTop,h:el.closest('.dn-main').getBoundingClientRect().height}));
+ expect(Math.abs(after.h-before.h)).toBeLessThanOrEqual(1);
+ expect(Math.abs(after.top-before.top)).toBeLessThanOrEqual(1);
+ const focus=await input.evaluate(el=>({
+  outline:getComputedStyle(el).outlineStyle,
+  shadow:getComputedStyle(el.closest('.dn-list-controls-search')).boxShadow,
+ }));
+ expect(focus.outline).toBe('none');expect(focus.shadow).not.toBe('none');
+ await input.blur();await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
+ expect(errors).toEqual([]);
+});
+test('top-right profile hides duplicate Task and Transaction links; cartoon preserves creation',async({page})=>{
+ await page.setViewportSize({width:430,height:932});await seedGuest(page);await page.goto('/events');
+ await page.getByRole('button',{name:'Open profile and account menu'}).click();
+ const menu=page.getByRole('menu',{name:'Profile and account'});
+ await expect(menu.getByRole('menuitem',{name:'Tasks'})).toHaveCount(0);
+ await expect(menu.getByRole('menuitem',{name:'Transactions'})).toHaveCount(0);
+ await expect(menu.getByRole('menuitem',{name:'Settings'})).toBeVisible();
+ await expect(page.locator('.dn-create-mascot')).toBeVisible();
+ await expect(page.locator('.dn-mascot-pencil')).toHaveCount(1);
+});

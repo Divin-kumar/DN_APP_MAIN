@@ -148,3 +148,46 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
     scroll-padding-bottom:calc(68px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
   }
 }
+
+/* vNext: search follows the visual keyboard, never shortens the page canvas. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+ html[data-theme].dn-command-search-focused .dn-shell:has(> .dn-command-root) > .dn-main {
+  height:var(--dn-command-search-rest-height,calc(100dvh - 56px)) !important;
+  min-height:0 !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search:focus-within {
+  border-color:color-mix(in srgb,var(--color-primary) 50%,var(--color-border)) !important;
+  box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 18%,transparent),
+   inset 0 1px 0 color-mix(in srgb,var(--color-card) 65%,transparent) !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search input:is(:focus,:focus-visible) {
+  outline:none !important;box-shadow:none !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-trigger,
+ html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) {
+  background:transparent !important;box-shadow:none !important;border:0 !important;
+  border-radius:15px !important;padding:0 !important;
+ }
+ html[data-theme] .dn-command-root .dn-command-trigger:focus-visible {
+  outline:2px solid var(--color-primary) !important;outline-offset:2px;
+ }
+ html[data-theme] .dn-command-root .dn-command-trigger.is-open { opacity:0;pointer-events:none; }
+ html[data-theme] .dn-create-mascot {
+  display:block;width:48px;height:48px;overflow:visible;
+  filter:drop-shadow(0 3px 5px rgba(12,31,65,.18));
+  transform-origin:50% 85%;animation:dn-mascot-bob 2.8s ease-in-out infinite;
+ }
+ html[data-theme] .dn-mascot-writing-arm,
+ html[data-theme] .dn-mascot-pencil { transform-origin:30px 28px;animation:dn-mascot-write 1.15s ease-in-out infinite alternate; }
+ html[data-theme] .dn-mascot-spark { transform-origin:42px 16px;animation:dn-mascot-twinkle 1.8s ease-in-out infinite; }
+ html[data-theme] .dn-command-trigger.is-dragging .dn-create-mascot { animation:none;transform:scale(1.08); }
+}
+@keyframes dn-mascot-bob { 0%,100% {transform:translateY(0)} 50% {transform:translateY(-3px)} }
+@keyframes dn-mascot-write { from {transform:rotate(-9deg)} to {transform:rotate(9deg)} }
+@keyframes dn-mascot-twinkle { 0%,100% {opacity:.35;transform:scale(.8)} 48% {opacity:1;transform:scale(1.12)} }
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-create-mascot,
+ html[data-theme] .dn-mascot-writing-arm,
+ html[data-theme] .dn-mascot-pencil,
+ html[data-theme] .dn-mascot-spark {animation:none!important}
+}
