@@ -1,0 +1,90 @@
+/* Shared list finish inspired by PDF Content. This layer only paints existing
+   surfaces: swipe transforms, record layout, selection logic and hit areas stay
+   owned by their components. Specificity keeps lazy-route CSS consistent. */
+html[data-theme] {
+  --dn-list-fill: color-mix(in srgb, var(--color-text) 3%, var(--color-card));
+  --dn-list-selected: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
+  --dn-list-hover: color-mix(in srgb, var(--color-text) 5%, var(--color-card));
+  --dn-list-radius: 14px;
+}
+html[data-theme] body :is(
+  .dn-task-list .dn-independent-task-row,
+  .life-timeline-page .dn-v2-moment-card,
+  :is(.activities-page,.workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card,
+  .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card,
+  .code-lists-page .code-list-rows .code-list-item
+) {
+  border:0 !important;
+  border-radius:var(--dn-list-radius) !important;
+  background:var(--dn-list-fill) !important;
+  box-shadow:none !important;
+}
+html[data-theme] body :is(
+  .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open,
+  .dn-task-list .dn-independent-task-row > .dn-swipe-main,
+  :is(.activities-page,.workspace-activities) .event-activity-content .dn-v2-activity-card .dn-swipe-main,
+  .code-lists-page .code-list-rows .code-list-item > .dn-swipe-main,
+  .code-lists-page .code-list-rows .code-list-row
+) { background:transparent !important; box-shadow:none !important; }
+html[data-theme] body :is(.dn-task-list .dn-independent-task-row.is-dashboard-selected,
+  .code-lists-page .code-list-rows .code-list-item:focus-within) {
+  background:var(--dn-list-selected) !important;
+}
+html[data-theme] body :is(.dn-task-list,.life-journey-items,.event-activity-list,.code-list-rows) { gap:8px; }
+html[data-theme] body :is(.dn-task-copy strong,.dn-v2-moment-copy > strong,
+  .event-activity-title-row > strong,.dn-transaction-copy > strong,.code-list-text) {
+  font-weight:600 !important; letter-spacing:-.015em;
+}
+html[data-theme] body .code-lists-page .code-list-rows .code-list-row {
+  display:flex; align-items:center; gap:12px; min-height:52px; padding:12px !important;
+}
+html[data-theme] body .dn-code-list-value-icon { flex:0 0 auto; color:var(--color-text-muted); }
+html[data-theme] body .code-lists-page .code-list-main { flex:1; min-width:0; }
+html[data-theme] body .code-lists-page .code-list-text { font-size:14px; line-height:1.5; }
+/* Quieter photo surfaces, retaining cover controls and all saved crops/dates. */
+html[data-theme] body .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover,
+html[data-theme] body :is(.activities-page,.workspace-activities) .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover:not(.has-photo) {
+  background:color-mix(in srgb,var(--color-primary) 5%,var(--color-card)) !important;
+}
+html[data-theme] body :is(.activities-page,.workspace-activities) .event-activity-content .dn-v2-activity-card .dn-v2-activity-cover:not(.has-photo)::before { display:none; }
+/* Rows use real photo previews; compact Story photo strips keep their layout. */
+html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open {
+  min-height:56px; padding:10px; gap:12px; border:0 !important;
+  border-radius:var(--dn-list-radius); background:var(--dn-list-fill); box-shadow:none;
+}
+html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open img {
+  width:40px; height:40px; border-radius:8px;
+}
+html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open > svg {
+  width:40px; height:40px; padding:10px; color:var(--color-text-muted);
+}
+html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open strong {
+  font-size:14px; font-weight:550; line-height:1.5; white-space:normal; overflow-wrap:anywhere;
+}
+html[data-theme] body .dn-attachment-gallery:not(.is-compact) .dn-attachment-open small { font-size:12px; }
+html[data-theme] body .dn-attachment-open[aria-pressed="true"] { background:var(--dn-list-selected) !important; }
+/* Choices show quiet selected rows and existing bare ticks/direction arrows.
+   Do not change virtualized dropdown row geometry or filter drag coordinates. */
+html[data-theme] body .dropdown-menu-portal .dropdown-option { border:0; border-radius:10px; box-shadow:none; font-weight:450; }
+html[data-theme] body .dropdown-menu-portal .dropdown-option.is-selected { background:var(--dn-list-selected); color:var(--color-text); font-weight:600; }
+html[data-theme] body .dropdown-menu-portal .dropdown-option > svg { border:0; background:transparent; border-radius:0; color:var(--color-primary); }
+html[data-theme] body .dn-refine-sort-chips > button {
+  border:0 !important; border-radius:12px; box-shadow:none !important;
+  background:transparent !important; color:var(--color-text-muted); font-weight:500;
+}
+html[data-theme] body .dn-refine-sort-chips > button.is-selected { background:var(--dn-list-selected) !important; color:var(--color-text); }
+html[data-theme] body .dn-condition-chip { border-radius:12px !important; border-color:transparent !important; box-shadow:none !important; background:var(--dn-list-fill) !important; }
+html[data-theme] body :is(.dashboard-upcoming-row,.dn-dashboard-task-row,.settings-hub-card) {
+  box-shadow:none !important; border-color:transparent !important; border-radius:var(--dn-list-radius); background:var(--dn-list-fill);
+}
+@media (hover:hover) and (pointer:fine) {
+  html[data-theme] body :is(.dn-task-list .dn-independent-task-row,.life-timeline-page .dn-v2-moment-card,
+    :is(.activities-page,.workspace-activities) .event-activity-content .event-activity-card.dn-v2-activity-card,
+    .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card,.code-lists-page .code-list-rows .code-list-item):hover {
+    background:var(--dn-list-hover) !important; box-shadow:none !important;
+  }
+}
+@media (prefers-contrast:more) {
+  html[data-theme] { --dn-list-fill:var(--color-card); --dn-list-selected:var(--color-surface); }
+  html[data-theme] body :is(.dn-independent-task-row,.dn-v2-moment-card,.dn-v2-activity-card,.dn-v2-transaction-card,.code-list-item,.dn-attachment-open) { outline:1px solid var(--color-text-muted); outline-offset:-1px; }
+}

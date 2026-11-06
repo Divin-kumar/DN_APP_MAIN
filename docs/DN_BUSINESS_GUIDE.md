@@ -1,3 +1,5 @@
+**Shared list styling (pending release):** Lists adopt the calmer PDF Content appearance: soft rows, clearer text, smaller photo previews and quiet selection marks. Tasks keep their date square and flags; opening records, swiping for actions, filters and sorting work as before.
+
 **PDF content selection (pending release):** PDF Studio → Content lets you choose activities and individual attachments without adding controls to activity pages. Excluding an activity also excludes its files. Apply remembers the choice for this Moment in this browser; Cancel leaves the previous selection unchanged. Cancelled activities stay excluded. Original memories and files are preserved.
 
 **DN 2.3.5 PDF correction is live (6 November 2026):** Cancelled activities and their linked files are excluded from every PDF format. Saved records and original files remain available; restoring an activity makes it eligible for future PDFs again. All 21 focused browser checks and offline/upgrade preservation checks passed. Refresh the app and export a new PDF; previously downloaded PDFs do not change.

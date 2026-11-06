@@ -268,6 +268,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         onDelete={() => handleDelete(entry)}>
         <button type="button" className="code-list-row"
           aria-label={`${entry.label}${isInactive ? ', inactive' : ''}. Tap to open actions; swipe is optional.`}>
+          <Hash size={17} strokeWidth={1.6} className="dn-code-list-value-icon" aria-hidden="true" />
           <span className="code-list-main">
             <span className="code-list-text">{entry.label}</span>
             {isInactive ? <span className="code-list-status">Inactive</span> : null}

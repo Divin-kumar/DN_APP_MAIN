@@ -168,3 +168,53 @@ jobs:
             .verification/browser-results.json
             .verification/production-shell
             .verification/release-upgrade
+
+  shared-list-appearance:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      contains(github.event.head_commit.message, '[verify-list-appearance]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Check shared list styling and affected interactions
+        run: >-
+          npx playwright test
+          e2e/shared-list-appearance.spec.js
+          e2e/task-actions-calendar-230.spec.js
+          e2e/tasks-settings-refinement-234.spec.js
+          e2e/iphone-moment-activity-photo-card.spec.js
+          e2e/iphone-activity-card-readability-phase1.spec.js
+          e2e/iphone-activity-swipe-menu-phase1.spec.js
+          e2e/moment-list-phase2.spec.js
+          e2e/iphone-code-lists-premium.spec.js
+          e2e/dropdown-search-recovery-230.spec.js
+          e2e/shared-filter-single-row.spec.js
+          e2e/task-refine-dashboard-230.spec.js
+          e2e/user-friendly-sort.spec.js
+          e2e/transaction-payment-phase5.spec.js
+          e2e/dn-233-motion-navigation.spec.js
+          e2e/pdf-content-selection.spec.js
+          --workers=2
+      - name: Build application
+        env:
+          VITE_DEPLOY_ENV: Production
+        run: npm run build
+      - name: Check offline originals and PDF
+        run: npm run test:production
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dn-shared-list-appearance
+          include-hidden-files: true
+          retention-days: 7
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+            .verification/production-shell

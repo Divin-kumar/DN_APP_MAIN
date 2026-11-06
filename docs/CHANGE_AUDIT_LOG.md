@@ -4,6 +4,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-449 | Extend the PDF Content visual treatment across lists
+- **Owner instruction:** Apply the liked PDF content style to available lists while retaining their existing behavior.
+- **Scope:** Shared ListAppearance CSS paints Tasks, global/Moment Activities, Moments, Transactions, Code Lists, noncompact attachment rows, dropdown choices, sorting, filter chips, Dashboard rows and Settings navigation. Calm tinted surfaces, borderless selection ticks, softer hierarchy and compact real gallery thumbnails replace heavy decorative framing. Add a decorative Code List icon; no new actions or selection ticks on navigation records.
+- **Preservation:** Date squares, priority flags, completion states, cover geometry/actions, swipe transforms, sort/filter semantics and virtualized option heights remain owned by existing components. No stores, originals, persistence or PDF renderer changes.
+- **Validation:** Lint/build and documentation checks required; new cross-screen light/dark phone/desktop checks verify consistent surfaces, no overflow, original previews, task actions and unchanged records. Existing relevant interaction suites run through nondeploying [verify-list-appearance]. Results pending.
+- **Guest/release:** Existing tour examples and instructions remain accurate; no automatic reset or fixture changes. OldVersion only; no version bump or production deployment. Physical iPhone/VoiceOver remains unverified.
+
 ## CHG-20261106-448 | Verify PDF content photo thumbnails
 - **Executed:** Source cf744895356449090b353741b2e093ed18fd3671 passed the 30-case focused browser suite in [run 42186299855](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42186299855), including 320px light/430px dark loaded thumbnails, URL cleanup after Cancel, missing-photo fallback and unchanged PDF selection/export checks. Build, offline originals/PDF and both upgrade-preservation paths passed; same-source governance 42186299894 passed Node/lint/build/audit/docs.
 - **Manual QA:** Expanded Guest photo rows and Moment photos visibly showed the small previews in the refined sheet. Original files and stored records remain unchanged. Physical iPhone/VoiceOver remains unverified.
