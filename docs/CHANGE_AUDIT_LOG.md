@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-470 | Restore PDF saved-default button state and gate v2.3.7 production
+
+The full 642a6b3 candidate ran 852 browser journeys: 851 passed and one failed in iPhone PDF Studio at 320×640 dark. After tapping “Use saved default,” the button could remain visible because the visual-style override flag was a mutable ref rather than observable render state. Synchronize its UI visibility with React state while preserving the original ref’s template/default resolution and all PDF, storage and user data logic. The existing iPhone PDF tap-target regression checks dismissal and unchanged records. Source-derived patch only; full independent verification, production publication and live readback remain pending until the exact-SHA GitHub Actions gates succeed.
+
 ## CHG-20261106-469 | Match legacy safe-area tests to search-free layout contract
 
 Two pre-existing responsive tests measured full dock-sized bottom padding even on search-free Home and About screens. Their assertions now check that the empty band is actually absent, the Home Indicator safe-area padding remains, and scroll-padding preserves focus clearance near the floating +. Existing record-preservation and responsive width checks are unchanged. Earlier CHG-468 source remains unmodified; CI for the corrected tests is pending.
