@@ -144,3 +144,35 @@ test('top-right profile hides duplicate Task and Transaction links; cartoon pres
  await expect(page.locator('.dn-create-mascot')).toBeVisible();
  await expect(page.locator('.dn-mascot-pencil')).toHaveCount(1);
 });
+
+test('animated creation opens and reverses, with matching form focus treatment',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await seedGuest(page,{theme:'light'});
+ await page.goto('/events');
+ const character=page.locator('.dn-create-mascot');
+ await expect(character).toBeVisible();
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
+ await page.getByRole('button',{name:'Life moment',exact:true}).click();
+ const sheet=page.getByRole('dialog',{name:'Create a life moment'});
+ await expect(sheet).toBeVisible();
+ const field=sheet.locator('input:not([type="checkbox"]):not([type="radio"])').first();
+ await field.focus();
+ const styles=await field.evaluate(input=>({outline:getComputedStyle(input).outlineStyle,shadow:getComputedStyle(input).boxShadow}));
+ expect(styles.outline).toBe('none');
+ expect(styles.shadow).not.toBe('none');
+ await sheet.getByRole('button',{name:'Close dialog'}).click();
+ await expect(sheet).toHaveCount(0);
+ await expect(character).toBeVisible();
+});
+test('reduced motion retains the creator and accessible command sheet without looping illustration',async({page})=>{
+ await page.emulateMedia({reducedMotion:'reduce'});
+ await page.setViewportSize({width:430,height:932});await seedGuest(page,{theme:'dark'});await page.goto('/tasks');
+ const mascot=page.locator('.dn-create-mascot');
+ await expect(mascot).toBeVisible();
+ expect(await mascot.evaluate(node=>getComputedStyle(node).animationName)).toBe('none');
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
+ await page.keyboard.press('Escape');
+ await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+ await expect(mascot).toBeVisible();
+});

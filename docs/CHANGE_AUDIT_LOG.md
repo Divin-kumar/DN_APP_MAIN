@@ -12,7 +12,7 @@
 
 **Guest demo:** Tour v2026.11.06.3 explains the new icon and unchanged discovery/navigation paths; existing user-editable Guest records are not automatically reset and require explicit demo refresh. No finance, data schema, originals, account scopes, backup or Story/PDF changes.
 
-**Validation:** Source changes in commit `7a2292e27952854cfd4caff2e0708f02de57b065`; opt-in Chromium and touch suites triggered in run [42229633250](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42229633250). Pending until actual GitHub results are inspected. No production deployment or new version bump authorized for this change. Native Safari keyboard interactions and VoiceOver remain unverified.
+**Validation:** **Executed:** Source `7a2292e27952854cfd4caff2e0708f02de57b065` passed **35/35** mobile Chromium/touch/browser cases in [42229633250](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42229633250). A later exact-head verification also runs Node contracts, ESLint and production build on the updated Guest tour text. These checks are pending until their separate run concludes. No production deployment or new version bump authorized for this change. Native Safari keyboard interactions and VoiceOver remain unverified.
 
 ## CHG-20261106-478 | Confirm v2.3.8 live Firebase publication after focused recovery
 

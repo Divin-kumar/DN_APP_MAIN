@@ -47,7 +47,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     const restore = () => {
       if (!isSearch(document.activeElement)) return;
       if (Math.abs(canvas.scrollTop - savedScroll) > 1) canvas.scrollTop = savedScroll;
-      if (window.scrollY > 1) window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      if (window.scrollY > 1) window.scrollTo(0, 0);
     };
     const focused = event => {
       if (!isSearch(event.target)) return;
