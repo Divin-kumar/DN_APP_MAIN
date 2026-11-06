@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-471 | Make PDF saved-default restore deterministic and pin targeted Chromium runners
+
+The independent v2.3.7 full run 42210785235 passed 851 of 852 browser journeys and failed only the 320×640 dark iPhone PDF Studio “Use saved default” dismissal; production run 42210785331 correctly blocked Firebase before upload. The earlier state-sync attempt did not resolve the regression. Restore now applies the selected format's saved design directly without calling the manual-override handler, clears the temporary override marker, invalidates the stale preview and reuses the existing Update preview flow. Button presence derives from the actual current design versus the saved design, removing duplicate React visibility state. No user records, stored settings, original attachments or PDF export model change; existing Guest examples and tour semantics remain accurate.
+
+The first focused retry 42213128973 stopped before its tests because GitHub's ubuntu-latest resolved to Ubuntu 26.04, unsupported by the locked Playwright 1.56.1 Chromium installer. All 27 remaining ubuntu-latest jobs in the opt-in targeted browser workflow are pinned to Ubuntu 24.04, matching the working full pre-release runner. Focused CI, exact-SHA full verification, release authorization and Firebase live readback must be independently checked; none are claimed here. Physical Safari and VoiceOver remain unverified.
+
 ## CHG-20261106-470 | Restore PDF saved-default button state and gate v2.3.7 production
 
 The full 642a6b3 candidate ran 852 browser journeys: 851 passed and one failed in iPhone PDF Studio at 320×640 dark. After tapping “Use saved default,” the button could remain visible because the visual-style override flag was a mutable ref rather than observable render state. Synchronize its UI visibility with React state while preserving the original ref’s template/default resolution and all PDF, storage and user data logic. The existing iPhone PDF tap-target regression checks dismissal and unchanged records. Source-derived patch only; full independent verification, production publication and live readback remain pending until the exact-SHA GitHub Actions gates succeed.
