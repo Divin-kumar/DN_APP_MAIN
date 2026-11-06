@@ -223,3 +223,23 @@ jobs:
             .verification/browser-results
             .verification/browser-results.json
             .verification/production-shell
+
+  desktop-shell:
+    if: github.ref == 'refs/heads/OldVersion' && contains(github.event.head_commit.message, '[verify-desktop-shell]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/desktop-shell.spec.js e2e/dn-233-motion-navigation.spec.js --workers=2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dn-desktop-shell
+          path: .verification
+          retention-days: 7

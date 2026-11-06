@@ -61,6 +61,7 @@ const mobileDockEnd = [
 ];
 // Portrait iPhones and short, touch-enabled landscape iPhones share the dock.
 const MOBILE_DOCK_MEDIA = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
+const DESKTOP_SHELL_MEDIA = '(min-width: 1024px) and (min-height: 501px)';
 const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
 
@@ -85,6 +86,14 @@ export default function DashboardLayout() {
   const previousLocationRef = useRef(null);
   const scrollPositionsRef = useRef(new Map());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => window.matchMedia(MOBILE_DOCK_MEDIA).matches);
+  const [desktopShell, setDesktopShell] = useState(() => window.matchMedia(DESKTOP_SHELL_MEDIA).matches);
+  useEffect(() => {
+    const query = window.matchMedia(DESKTOP_SHELL_MEDIA);
+    const update = () => setDesktopShell(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  const shellNavItems = desktopShell ? [navItems[0], navItems[3], navItems[1], navItems[2]] : navItems;
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const profileMenuRef = useRef(null);
@@ -603,7 +612,7 @@ export default function DashboardLayout() {
             ...(sidebarCollapsed ? styles.sidebarCollapsed : {}),
           }}
         >
-          {navItems.map((item) => (
+          {shellNavItems.map((item) => (
             <Link key={item.path} to={item.path} className="dn-nav-link"
               aria-current={activeNavigationPath === item.path ? 'page' : undefined}
               style={{ ...styles.navCard, ...(activeNavigationPath === item.path ? styles.navCardActive : {}) }}>
@@ -611,6 +620,13 @@ export default function DashboardLayout() {
               <span className="dn-nav-label">{item.label}</span>
             </Link>
           ))}
+          <div className="dn-desktop-navigation-options">
+            <NavLink to="/financials/transactions" aria-label="Transactions" className="dn-nav-link"><span className="dn-nav-icon"><Receipt size={18} /></span><span className="dn-nav-label">Transactions</span></NavLink>
+            <NavLink to="/insights" aria-label="Insights" className="dn-nav-link"><span className="dn-nav-icon"><Activity size={18} /></span><span className="dn-nav-label">Insights</span></NavLink>
+            <Link to="/settings#profile" className="dn-nav-link dn-desktop-account-start" aria-label="Profile"><span className="dn-nav-icon"><UserCircle size={18} /></span><span className="dn-nav-label">Profile</span></Link>
+            <NavLink to="/settings" aria-label="Settings" end className="dn-nav-link"><span className="dn-nav-icon"><Settings size={18} /></span><span className="dn-nav-label">Settings</span></NavLink>
+            <button type="button" className="dn-nav-link dn-desktop-logout" aria-label="Logout" onClick={handleLogout}><span className="dn-nav-icon"><LogOut size={18} /></span><span className="dn-nav-label">Logout</span></button>
+          </div>
         </aside>
 
         {!sidebarCollapsed ? <button className="mobile-nav-overlay" type="button" aria-label="Close navigation" onClick={() => setSidebarCollapsed(true)} /> : null}

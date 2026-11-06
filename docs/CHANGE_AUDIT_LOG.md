@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-453 | Desktop direct navigation and larger universal create
+- **Scope:** Owner requested individual account destinations in the left desktop navigation, in meaningful order, rather than relocating the account popup. Added direct destinations and desktop-only ordering; mobile controls and ordering are preserved. Desktop + grows from 44px to 56px.
+- **Executed:** Manual desktop Guest preview confirms ordered destinations, clear header and larger +. Local build/lint passed before final ordering refinement; final CI is pending.
+- **Preservation:** Same routes, logout, theme and create handlers; no storage changes. Guest tour data/guidance remain accurate and need no version/reset. No app-version bump, deployment or main write.
+- **Verification:** Added opt-in nondeploying desktop checks plus mobile pixel comparisons at 320/390/430px and short landscape. Physical Safari/VoiceOver remain unverified.
+
 ## CHG-20261106-452 | Accept shared lightweight list appearance
 - **Executed:** Final source a493f77b14e903fb7ff689686a0f3951d5733af7 passed all 116 affected browser cases in 1.7 minutes in [run 42188325123](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42188325123). Coverage includes cross-screen surfaces at 320/390/430/1280px, Task actions, Activity photo/navigation/swipes, Moments, Code Lists, shared dropdown/filter/sort behavior, transactions, Gallery navigation and PDF content selection. No browser case failed.
 - **Preservation:** The built application passed offline Story, exact original bytes, PDF generation and unchanged-record checks with no page errors. Same-source governance 42188325172 passed Node/lint/build/audit/docs. The separate final-polish run 42188049411 passed 30 visual/navigation cases; its overlap is not counted as additional unique coverage.

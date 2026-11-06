@@ -1,0 +1,80 @@
+.dn-desktop-navigation-options { display: none; }
+/* Desktop-only shell polish. Keep every rule inside this boundary: phone
+   portrait and short landscape layouts must retain their existing pixels. */
+@media (min-width: 1024px) and (min-height: 501px) {
+  html[data-theme] .dn-header {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    box-shadow: none !important;
+  }
+  html[data-theme] .dn-main { padding: 16px !important; }
+  html[data-theme] .dn-sidebar {
+    width: 240px !important;
+    min-width: 240px !important;
+    padding: 24px 16px 100px !important;
+    gap: 8px !important;
+  }
+  html[data-theme] .dn-sidebar.dn-sidebar-collapsed {
+    width: 88px !important;
+    min-width: 88px !important;
+    padding: 24px 12px 148px !important;
+  }
+  html[data-theme] .dn-header .header-user-controls {
+    position: fixed;
+    left: 32px;
+    top: auto;
+    right: auto;
+    transform: none;
+    bottom: 44px;
+    width: 208px;
+    gap: 8px !important;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+    z-index: 30;
+  }
+  html[data-theme] .dn-header .profile-menu-wrap { display: none !important; }
+  html[data-theme] .dn-desktop-navigation-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 0;
+    margin-top: 0;
+  }
+  html[data-theme] .dn-desktop-account-start {
+    margin-top: 16px;
+  }
+  html[data-theme] .dn-desktop-navigation-options .dn-nav-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-align: left;
+    text-decoration: none;
+  }
+  html[data-theme] .dn-desktop-navigation-options .dn-nav-link.active {
+    background: var(--action-fill) !important;
+    color: var(--action-ink) !important;
+  }
+  html[data-theme] .dn-desktop-navigation-options .dn-desktop-logout {
+    color: var(--color-text-muted) !important;
+    background: transparent !important;
+    cursor: pointer;
+  }
+  html[data-theme] .dn-shell:has(.dn-sidebar-collapsed) .header-user-controls {
+    left: 28px;
+    width: 64px;
+    justify-content: center;
+  }
+  html[data-theme] .dn-sidebar .dn-nav-link {
+    box-shadow: none !important;
+    border-color: transparent !important;
+    transition: background .16s ease, color .16s ease;
+  }
+  html[data-theme] .dn-sidebar .dn-nav-link:hover { transform: none; }
+  html[data-theme] .dn-shell .dn-quick-create-trigger {
+    width: 56px !important;
+    min-width: 56px !important;
+    height: 56px !important;
+    min-height: 56px !important;
+  }
+  html[data-theme] .dn-shell .dn-quick-create-trigger svg { width: 25px; height: 25px; }
+}

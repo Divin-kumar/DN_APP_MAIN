@@ -175,6 +175,10 @@ The approved **DN 2.1.4** source is prepared on the authorized `OldVersion` bran
 
 **A cleaner screen header (DN 2.1, development only):** The top navigation bar now tells you which page you're viewing, for example **Dashboard**, **Moments**, **Activities**, **Transactions**, **Insights** or **Settings**, instead of always saying “Personal Experience.” The large repeated title below the bar is gone, giving your records more room on an iPhone. Data & Backup, Code Lists and About use a Back to Settings arrow in that same bar. Insights Export stays beside its search field. Moment and Activity Detail keep their meaningful photo/story and record titles, while the extra Moment section heading under its tabs is removed visually. No records, filters, financial amounts, PDFs or backups change. This update is committed on `OldVersion` but not published to Firebase; real iPhone QA is still pending.
 
+## Desktop navigation refinement (6 November 2026; unpublished)
+
+At widths of at least 1024px and heights above 500px, the sidebar lists Home, Moments, Activities, Tasks, Transactions and Insights, followed by Profile, Settings and Logout. Theme remains a single control at the sidebar foot; the account dropdown remains available only on the existing smaller-screen layout. Desktop universal + is 56px. All added styling is scoped to that desktop boundary; mobile portrait and short landscape retain existing controls and appearance. Routes, logout handling and data are unchanged. Guest demo fixtures and tour version remain accurate because no sample content or action semantics changed. Browser invariance checks compare mobile renders with and without the desktop stylesheet. This work is pending targeted CI acceptance and is not a release.
+
 ## 1. What DN helps you do
 
 DN brings your important life moments, plans, memories and money records into one place. It helps you answer:

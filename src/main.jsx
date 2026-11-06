@@ -20,6 +20,7 @@ import './index.css';
 import './design-system.css';
 import './PremiumUX2026.css';
 import './components/common/ListAppearance.css';
+import './layouts/DesktopShell.css';
 
 const applyDocumentTheme = (theme) => {
   const normalizedTheme = theme === 'light' ? 'light' : 'dark';
