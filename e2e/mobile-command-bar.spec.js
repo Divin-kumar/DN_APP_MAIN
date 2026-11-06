@@ -142,7 +142,7 @@ test('top-right profile hides duplicate Task and Transaction links; cartoon pres
  await expect(menu.getByRole('menuitem',{name:'Transactions'})).toHaveCount(0);
  await expect(menu.getByRole('menuitem',{name:'Settings'})).toBeVisible();
  await expect(page.locator('.dn-create-mascot')).toBeVisible();
- await expect(page.locator('.dn-mascot-pencil')).toHaveCount(1);
+ await expect(page.locator('.dn-mascot-writing')).toHaveCount(1);
 });
 
 test('animated creation opens and reverses, with matching form focus treatment',async({page})=>{

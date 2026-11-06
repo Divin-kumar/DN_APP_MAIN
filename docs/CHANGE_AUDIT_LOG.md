@@ -12,7 +12,7 @@
 
 **Compatibility:** Changes are presentational. No Firebase/Guest scope, persistent record, finance balance, backups, original attachments, Story/PDF, desktop navigation, or version number changes. The public Guest tour wording (v2026.11.06.3) still explains the illustrated creator, so an automatic reset would be inappropriate.
 
-**Verification:** A dedicated nondeploying GitHub Actions run checks lint/build and motion-focused Chromium journeys at 320/390/430px, including measured intermediate transforms, modal handoff and existing touch navigation. CI status must be consulted before claiming success. Real iPhone Safari motion and VoiceOver remain unverified; Firebase production remains v2.3.8.
+**Verification in progress:** Initial run [42233351121](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42233351121) passed lint/build and 25/38 browser cases, including the frame-sampled entrance/exit acceptance, but its 12 legacy assumptions required a 48px dock; one outdated SVG path assertion still referenced `.dn-mascot-pencil`. Documentation governance also exposed a source-contract test expecting the literal `quickCreateType === 'transaction'` expression. The render guard now uses that original source expression with `!commandHandoff`, preserving logic while testing the new animation state; responsive tests now accept the intentional 68px button and the SVG test targets its new animated group. A new opt-in run checks these corrections. No production release has been requested. Real iPhone Safari motion and VoiceOver remain unverified; Firebase production remains v2.3.8.
 
 ## CHG-20261106-479 | iPhone sticky Search and animated journal creator (OldVersion only)
 
