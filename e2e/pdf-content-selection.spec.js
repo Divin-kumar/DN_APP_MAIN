@@ -15,6 +15,10 @@ for (const width of [320, 430]) test(`PDF content selection remembers activities
   const activity = sheet.getByRole('button', { name: 'Activity: Book a lakeside stay', exact: true });
   await sheet.getByRole('button', { name: 'Attachments for Book a lakeside stay' }).click();
   const file = sheet.getByRole('button', { name: 'Attachment: Activity photo 0.png', exact: true });
+  const thumbnail = file.locator('.dn-pdf-content-thumbnail img');
+  await expect(thumbnail).toBeVisible();
+  await expect.poll(() => thumbnail.evaluate(img => img.naturalWidth)).toBeGreaterThan(0);
+  const thumbnailUrl = await thumbnail.getAttribute('src');
   const marker = file.locator('.dn-pdf-content-tick');
   const markerStyle = await marker.evaluate(node => ({ border: getComputedStyle(node).borderTopWidth, radius: getComputedStyle(node).borderRadius }));
   expect(markerStyle).toEqual({ border: '0px', radius: '0px' });
@@ -25,6 +29,7 @@ for (const width of [320, 430]) test(`PDF content selection remembers activities
   await activity.click();
   await expect(file).toBeDisabled();
   await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect.poll(() => page.evaluate(url => window.__dnUrls.revoked.includes(url), thumbnailUrl)).toBe(true);
   await launch.click();
   await expect(activity).toHaveAttribute('aria-pressed', 'true');
   await activity.click();
@@ -64,4 +69,20 @@ for (const template of ['journey', 'diary', 'chronicle']) test(`${template} PDF 
   expect(output).toContain('Choose the train');
   // Existing Diary/Tasks formats are writing-only; Journal renders file references.
   if (template === 'journey') expect(output).toContain('KEEP_FILE');
+});
+
+test('PDF content keeps unavailable photos selectable with a quiet fallback', async ({ page }) => {
+  const moments = fixtureMoments();
+  moments[0].attachments = [{ id: 'missing', name: 'Unavailable photo.jpg', type: 'image/jpeg' }];
+  const errors = await seedGuest(page, { moments });
+  await page.goto('/events/moment-one/pdf');
+  await page.getByRole('button', { name: /^Content / }).click();
+  const sheet = page.getByRole('dialog', { name: 'PDF content' });
+  const file = sheet.getByRole('button', { name: 'Attachment: Unavailable photo.jpg', exact: true });
+  await expect(file.locator('.dn-pdf-content-thumbnail svg')).toBeVisible();
+  await file.click();
+  await expect(file).toHaveAttribute('aria-pressed', 'false');
+  await sheet.getByRole('button', { name: 'Apply selection' }).click();
+  await expect(page.getByRole('button', { name: 'Download customized PDF' })).toBeEnabled();
+  expect(errors).toEqual([]);
 });

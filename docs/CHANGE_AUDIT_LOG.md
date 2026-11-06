@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-447 | Add photo thumbnails to PDF content selection
+- **Owner add-on:** Replace generic photo icons with small photo previews in the content sheet.
+- **Change:** 34px rounded thumbnails use the existing scoped/integrity-checked original loader, load only near the visible sheet area and revoke owned URLs when removed. Missing/broken images show a quiet fallback; non-photo files retain their icon. Selecting a photo remains the same single row action.
+- **Validation:** Extend phone tests to verify real loaded thumbnails and URL cleanup on Cancel; add missing-photo fallback/exclusion regression. Focused browser results pending.
+- **Compatibility:** No file rewrite, new storage, selection behavior, version bump or deployment. Guest tour already contains photo examples and unchanged selection instructions; no reset needed.
+
 ## CHG-20261106-446 | Verify borderless PDF selection refinement
 - **Executed:** Source 72ba286d92ef0596117f9491f4bf1359d7fa8ea1 passed all 29 focused Chromium cases in [run 42185750268](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42185750268), including 320px light/430px dark borderless-marker, touch-height, contained-layout and selection persistence checks. Build, offline PDF/originals and both upgrade-preservation paths passed. Same-source governance 42185750297 passed Node/lint/build/audit/docs.
 - **Manual review:** Revised dark content sheet inspected in the local Guest preview: trailing ticks without rings, writing/photo icons, faint selected-row tint and file-count disclosures. Existing Guest guidance remains accurate; no demo reset.
