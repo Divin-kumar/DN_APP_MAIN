@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-469 | Match legacy safe-area tests to search-free layout contract
+
+Two pre-existing responsive tests measured full dock-sized bottom padding even on search-free Home and About screens. Their assertions now check that the empty band is actually absent, the Home Indicator safe-area padding remains, and scroll-padding preserves focus clearance near the floating +. Existing record-preservation and responsive width checks are unchanged. Earlier CHG-468 source remains unmodified; CI for the corrected tests is pending.
+
 ## CHG-20261106-468 | Restore full-height search-free mobile pages (v2.3.7 candidate)
 
 Search-free routes retained dock-sized content bottom padding even after the visual Search rail collapsed to the standalone +. Conditional mobile styling now gives those routes normal safe-area padding and scroll-focus clearance; routes with actual Search and Refine retain their established dock clearance. Added 320/390/430px light/dark geometry assertions for both route types, preserved navigation, drag/redock, 44px controls and existing data handlers. Version 2.3.7 package/lock and concise About notes updated for the production version guard. Guest tour v2026.11.06.2 already covers these unchanged interactions and needs no reset. This is source-derived; focused CI and Firebase live readback remain pending. Physical iPhone Safari and VoiceOver remain unverified.

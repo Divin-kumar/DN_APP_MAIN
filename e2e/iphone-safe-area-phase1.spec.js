@@ -22,6 +22,7 @@ for (const [width, height, theme] of devices) {
         dockBottom: Number.parseFloat(dockStyle.bottom),
         dockHeight: dock.getBoundingClientRect().height,
         contentBottomPadding: Number.parseFloat(getComputedStyle(content).paddingBottom),
+        focusScrollClearance: Number.parseFloat(getComputedStyle(content).scrollPaddingBottom),
         documentWidth: document.documentElement.scrollWidth,
       };
     });
@@ -35,8 +36,11 @@ for (const [width, height, theme] of devices) {
     await page.addStyleTag({ content: 'html[data-theme] { --dn-safe-area-bottom: 34px !important; }' });
     const inset = await geometry();
     expect(inset.dockBottom).toBeGreaterThanOrEqual(33.5);
-    expect(inset.contentBottomPadding).toBeGreaterThanOrEqual(110.5);
-    expect(inset.contentBottomPadding - inset.dockBottom - inset.dockHeight).toBeGreaterThanOrEqual(-7);
+    // Search-free pages no longer reserve an empty bar-height strip.
+    // The Home Indicator inset and focus scrolling still protect controls near +.
+    expect(inset.contentBottomPadding).toBeGreaterThanOrEqual(33.5);
+    expect(inset.contentBottomPadding).toBeLessThanOrEqual(50);
+    expect(inset.focusScrollClearance).toBeGreaterThanOrEqual(inset.dockBottom + inset.dockHeight - 7);
     expect(inset.documentWidth).toBeLessThanOrEqual(width + 1);
     const after = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
