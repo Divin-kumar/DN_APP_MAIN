@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-440 | Publish verified DN 2.3.4 to Firebase production
+- **Authorization and source:** Owner explicitly requested publication after full acceptance. GitHub Actions manual dispatch selected OldVersion and full validation at b2bb5af5c00f06aa5ecb079c3ef7dbc05f765e6e, without a new application commit or repeated E2E run.
+- **Executed acceptance:** Full run 42169743568 passed all 812 Chromium cases (zero skipped/flaky/unexpected), 8 release preflight cases, Node/lint/audit/docs/build, offline/PDF/original and upgrade checks. Browser stage took 13m14s versus about 20m36s in the prior single-worker diagnostic run.
+- **Executed publication:** [Production run 42172081941](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42172081941) succeeded, including the exact-SHA full gate, newer-version check, Firebase live publication and byte-for-byte live index readback. Public sw.js independently reports 2.3.4 with build timestamp 2026-11-06T06-04-31-398Z. Site: https://dn-10.web.app.
+- **Boundary:** This follow-up only records evidence; deployed source remains b2bb5af. No main write, record migration, original-file modification or Guest reset. Physical iPhone Safari/VoiceOver and real two-device account sync remain unverified.
+
 ## CHG-20261106-439 | Use existing verification evidence and shorten future release checks
 - **Owner instruction:** Continue while considering completed E2E runs to avoid unnecessary delays. Retain the 806-case diagnostic pass and 8-case repair/preservation evidence, with their actual source SHAs and limits.
 - **Change:** Add fast About/release preflight before the full browser suite; preserve its log/report separately. Use two workers for the complete suite and avoid misleading missing-log errors when preflight blocks later stages. All full-suite cases and exact-SHA production safeguards remain intact.
