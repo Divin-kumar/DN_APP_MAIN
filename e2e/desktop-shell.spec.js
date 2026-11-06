@@ -35,6 +35,11 @@ for (const width of [1024,1280,1440]) {
     await expect(page.locator('.dn-quick-create-trigger')).toHaveCSS('width','56px');
     const controls=await page.locator('.header-user-controls').boundingBox();
     const sidebar=await side.boundingBox();
+    const header=await page.locator('.dn-header').boundingBox();
+    const content=await page.locator('.dn-content').boundingBox();
+    expect(header.x).toBe(sidebar.x);
+    expect(header.width).toBe(sidebar.width);
+    expect(content.y).toBeLessThan(header.y+header.height);
     expect(controls.x).toBeGreaterThanOrEqual(sidebar.x);
     expect(controls.x+controls.width).toBeLessThanOrEqual(sidebar.x+sidebar.width);
     await side.getByRole('link',{name:'Transactions',exact:true}).click();
