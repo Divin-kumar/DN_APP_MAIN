@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-481 | Verify iPhone creator movement and preserve audit chronology
+
+**Executed:** Latest application/test source `569fbcdeb8df79aa9d09ac4f19862580e5d1e48c` passed **38/38** targeted Playwright journeys in [42233899936](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42233899936) at 320px, 390px and 430px, including actual intermediate dialog transforms (not only visible state), menu-to-form sequential handoff, touch creation, accessible focus and reduced-motion. Lint and production build also passed at the same source. The application smoke-test job at source 569fbc succeeded within documentation governance run 42233899827, but its documentation-contract job failed because CHG-480 had been edited after first being committed.
+
+**Audit correction:** CHG-480 is preserved exactly as currently committed; this new CHG-481 records the outcome and fixes the editing process going forward. Never change a numbered historical CHG entry after first introduction. The next documentation governance push must validate this new entry while preserving all prior ones. The owner still needs to authorize a production version bump and release separately. Real iPhone Safari movement and VoiceOver have not been verified; current Firebase production remains DN v2.3.8. No application data, Guest records, account scopes, documents, original files or saved settings were altered.
+
 ## CHG-20261106-480 | Make the universal creator visible and animate real sheet movement
 
 **Owner feedback:** The first 48px journaling illustration was barely visible on an iPhone; opening the action sheet and form appeared to blink, with no convincing entrance/exit. The 48px SVG used a very small subject, the command bar used an immediate `visibility:hidden`, and selecting Create mounted a second modal while the first sheet was exiting. Existing visibility-only tests could not detect this visual failure.
