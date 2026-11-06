@@ -28,8 +28,24 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     await expect(row.locator('.dn-task-done')).toHaveCount(0);
     const swipeRow=taskPage.locator('.dn-task-list .dn-independent-task-row').first();
     // Use the same deliberate, inside-the-card gesture validated on Activities.
+    // Record pointer/touch events for diagnosing differences under mobile emulation.
+    await page.evaluate(() => {
+      window.__dnSwipeTrace = [];
+      for (const type of ['pointerdown','pointermove','pointerup','pointercancel','touchstart','touchmove','touchend','touchcancel','click']) {
+        document.addEventListener(type, (event) => {
+          if (!event.target?.closest?.('.dn-independent-task-row')) return;
+          if (type === 'pointermove' || type === 'touchmove') return;
+          const touch = event.changedTouches?.[0];
+          window.__dnSwipeTrace.push({ type, pointerType:event.pointerType || '',
+            x:event.clientX ?? touch?.clientX ?? 0, y:event.clientY ?? touch?.clientY ?? 0 });
+        }, true);
+      }
+    });
     await swipe(page, swipeRow, { distance: 125 });
     const actionMenu=page.getByRole('menu').filter({hasText:'Edit'});
+    if (!await actionMenu.count()) {
+      console.log('TASK_SWIPE_TRACE:', JSON.stringify(await page.evaluate(() => window.__dnSwipeTrace)));
+    }
     await expect(actionMenu).toBeVisible();
     await expect(actionMenu.getByRole('menuitem',{name:'Cancel'})).toBeVisible();
     await expect(actionMenu.getByRole('menuitem',{name:'Delete'})).toBeVisible();

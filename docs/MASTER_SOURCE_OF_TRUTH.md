@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Focused 2.3.9 failure reduction and remaining swipe diagnosis (6 November 2026)
+
+The first targeted repair at SHA `4650c9dfdcf514604af6b0aa19793d5d2e646c88` (GitHub [run 42266356444](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42266356444)) completed **43 passes and five failures**, narrowing the original 14. All seven old profile-menu expectations, mobile + zero-width docking and the short original-photo preview bound check now pass. The new four-module animation test failed because it expected a non-existent independent Task in a fresh Guest fixture; it now creates a disposable Task via real UI before exercising the four action menus. The remaining four Task touch-emulation cases still cannot open swipe actions even with the established 125px mouse helper, so the revised test captures pointer/touch event sequence in a focused nondeploying run before modifying shared gesture handlers. This is diagnostic E2E only; no app model/backend/version/production changes. The source remains blocked from production until the precise touch issue, targeted tests, and subsequent full exact-SHA gate are green.
+
 ## DN v2.3.9 full verification failure recovery (6 November 2026; OldVersion)
 
 **Exact evidence:** GitHub full pre-release run `42262165301` at v2.3.9 source `6fe57255cb67142309d00fed77649e6a6b99154b` completed **847 passed, 14 failed** E2E tests out of 861. Independent production run `42262165311` correctly failed closed before the Firebase publish step; verified public DN remains v2.3.8. Browser logs and downloaded screenshots confirm five related failure categories. Other checks (release About preflight, Node tests, lint, dependency audit and build) passed.

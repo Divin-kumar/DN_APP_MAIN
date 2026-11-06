@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-491 | Diagnose Task swipe under mobile touch emulation after 43/48 focused passes
+
+**Evidence:** Targeted nondeploying [run 42266356444](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42266356444) passed 43 of 48 tests. The old six-menu profile expectations, invisible floating + gap and short-screen original preview are now green. Remaining failures: four Task action swipes under `test.use({hasTouch:true,isMobile:true})`, even with a deliberate 125px gesture; and the new cross-module animation test encountering an empty independent Tasks list.
+
+**Follow-up:** Seed a disposable Task through its real creation form in the cross-module animation test before taking its baseline snapshot; do not weaken expectations that all four modules have an anchored swipe popup and leave Guest records unchanged. In the Task test capture the actual `pointerdown/up/cancel`, `touchstart/end/cancel` and click event sequence only on the Task row; print on failure in the separate opt-in `[verify-239-repair]` run, not in app telemetry. Use that evidence to determine whether real gesture handling must be repaired without introducing blind changes to Activities, Moments or Transactions. No runtime behavior, persisted data, app version, Firebase backend, production publication or main branch changes.
+
 ## CHG-20261106-490 | Repair 14 failed v2.3.9 pre-release E2E cases without weakening release gates
 
 **Evidence:** Source `6fe5725` full verification [run 42262165301](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42262165301) had 847 passes / 14 failures. Production [run 42262165311](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42262165311) correctly blocked before deployment. Downloaded full browser artifacts and examined screenshots/trace of the five failing spec families.

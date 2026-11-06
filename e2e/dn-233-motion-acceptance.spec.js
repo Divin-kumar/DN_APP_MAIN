@@ -100,7 +100,14 @@ test('shared swipe menus animate without CSS-keyframe blinking across Moments Ac
   const snapshot = () => page.evaluate(() => [
     'dn_guest_eventGroups', 'dn_guest_tasks', 'dn_guest_incomes', 'dn_guest_expenses',
   ].map(key => localStorage.getItem(key)));
-  // Guest fixtures are registered for navigation; about:blank denies localStorage.
+  // Fresh Guest sessions have no independent Tasks until they are created.
+  // Create a disposable Task first so all four module action menus are tested.
+  await page.goto('/tasks');
+  await page.getByRole('button', { name: 'Open quick create menu' }).click();
+  await page.getByRole('button', { name: 'Task', exact: true }).click();
+  const editor = page.getByRole('dialog', { name: 'New Task' });
+  await editor.getByLabel('Task title').fill('Swipe motion example');
+  await editor.getByRole('button', { name: 'Create Task' }).click();
   await page.goto('/events');
   const before = await snapshot();
   for (const route of ['/events', '/activities', '/tasks', '/financials/transactions']) {
