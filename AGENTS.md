@@ -8,6 +8,8 @@
 
 **STANDING OWNER WORKFLOW (31 October 2026):** Commit and push reviewed in-scope work to `OldVersion` only, preserving unrelated work and verifying the latest branch head before each write. The previous Batch-2 work was integrated into `OldVersion` (see Master CHG-233), so it is not an active implementation branch. Owner review and batch publication happen on Firebase only after explicit authorization. Do not depend on Vercel previews/limits for manual acceptance; do not request paid upgrades. Keep a clear pending-release ledger with exact code SHA, actual test evidence and known risks. Firebase Hosting publication, app-version changes, merges and destructive data actions still require separate owner authorization.
 
+**STANDING DEVELOPMENT DEPLOYMENT AUTHORIZATION (6 November 2026):** The owner approved using the legacy ExpenseTracker Hosting site (`expense-tracker-divin`) as DN's permanent development environment. Every pushed `OldVersion` commit may automatically run the guarded development workflow, which swaps only its CI-local Hosting target; production `dn-10` remains opt-in with separate approval. Do not deploy to Lifehub, alter shared backend data/rules or expand this approval to Vercel, other branches or production. This specific standing approval is the only exception to the earlier no-deploy-without-separate-authorization rule.
+
 ## Authority and inventory
 
 Keep exactly five approved Markdown files:

@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-482 | Authorize automatic DN development on existing ExpenseTracker Hosting
+
+**Owner decision:** The existing ExpenseTracker Hosting site contains an oldest DN version, and the owner approved repurposing it as the current DN development preview. The Firebase project remains `expense-tracker-divin`; `dn-10` remains DN production, and Lifehub stays untouched.
+
+**Implementation:** The existing `dn-oldversion-firebase-preview.yml` workflow now runs on every `OldVersion` push and can also be manually dispatched. After locked install, advisory check, unit tests, lint and Vite build, the runner verifies the committed `.firebaserc` and `firebase.json` still identify the expected project and `dn-10` production site. **Only in the CI working copy**, it switches `hosting.site` to the project's default site `expense-tracker-divin` and publishes to that site's permanent live channel. This replaces the former 14-day `oldversion-usability` preview with a stable development URL. The workflow cancels stale concurrent runs and checks that the deployed index bytes match its exact build. It has no `[deploy-live]` marker, no application schema change, no database/rules migration and no production workflow edits.
+
+**Safety and validation:** Production publication remains separately authorized and gated; `firebase.json` in Git stays mapped to `dn-10`. The development URL uses the same project/backend as production, so Guest/sample or disposable testing remains essential; Hosting isolation does not isolate signed-in Firestore records. **Source-derived:** Workflow and environment guard reviewed; deployed Hosting target and live read-back await GitHub Actions on this commit. No physical iPhone acceptance or full browser suite is claimed.
+
 ## CHG-20261106-481 | Verify iPhone creator movement and preserve audit chronology
 
 **Executed:** Latest application/test source `569fbcdeb8df79aa9d09ac4f19862580e5d1e48c` passed **38/38** targeted Playwright journeys in [42233899936](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42233899936) at 320px, 390px and 430px, including actual intermediate dialog transforms (not only visible state), menu-to-form sequential handoff, touch creation, accessible focus and reduced-motion. Lint and production build also passed at the same source. The application smoke-test job at source 569fbc succeeded within documentation governance run 42233899827, but its documentation-contract job failed because CHG-480 had been edited after first being committed.

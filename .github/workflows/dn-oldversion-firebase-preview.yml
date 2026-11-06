@@ -1,27 +1,27 @@
-name: DN OldVersion Firebase usability preview
-# Opt-in: Only [deploy-preview] commits or explicit manual dispatch on OldVersion.
-# Fast preflight for usability previews; full browser/upgrade checks are release-only.
+name: DN OldVersion automatic Firebase development
+# Standing owner approval: deploy DN builds to the existing ExpenseTracker Hosting site.
+# Keep committed firebase.json pointing at dn-10; only change Hosting site in this runner.
 on:
   push:
     branches: [OldVersion]
   workflow_dispatch:
 permissions:
   contents: read
+concurrency:
+  group: dn-oldversion-development-hosting
+  cancel-in-progress: true
 jobs:
-  deploy-preview:
-    if: >-
-      github.ref == 'refs/heads/OldVersion' &&
-      (github.event_name == 'workflow_dispatch' ||
-       contains(github.event.head_commit.message, '[deploy-preview]'))
+  deploy-development:
+    if: github.ref == 'refs/heads/OldVersion'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: npm
-      - name: Install dependencies
+      - name: Install locked dependencies
         run: npm ci
       - name: Check dependency advisories
         run: npm audit --audit-level=moderate
@@ -29,47 +29,68 @@ jobs:
         run: |
           npm test
           npm run lint
-      - name: Build Vite app
+      - name: Build DN for development preview
         env:
-          VITE_DEPLOY_ENV: Firebase preview
+          VITE_DEPLOY_ENV: Firebase development
         run: npm run build
       - name: Verify build entry exists
         run: test -s dist/index.html
-      - name: Verify Firebase deploy credentials
+      - name: Verify Firebase deployment credentials
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         shell: bash
         run: |
           if [[ -z "$FIREBASE_SERVICE_ACCOUNT" ]]; then
-            echo "::error::Firebase preview blocked: configure the repository Actions secret FIREBASE_SERVICE_ACCOUNT with service-account JSON, or connect the Firebase plugin in ChatGPT."
-            echo "::error::Nothing was uploaded to Firebase."
+            echo "::error::Firebase development deployment blocked: FIREBASE_SERVICE_ACCOUNT is unavailable. No files uploaded."
             exit 1
           fi
-      - name: Deploy to non-live Firebase Hosting preview channel
-        id: firebase_preview
+      - name: Point this CI runner at ExpenseTracker development site only
+        shell: bash
+        run: |
+          node --input-type=module <<'NODE'
+          import { readFileSync, writeFileSync } from 'node:fs';
+          const config = JSON.parse(readFileSync('firebase.json', 'utf8'));
+          const rc = JSON.parse(readFileSync('.firebaserc', 'utf8'));
+          if (rc.projects?.default !== 'expense-tracker-divin' || Array.isArray(config.hosting) || config.hosting?.site !== 'dn-10') {
+            throw new Error('Hosting safety guard failed: expected the unchanged dn-10 production config in project expense-tracker-divin.');
+          }
+          config.hosting.site = 'expense-tracker-divin';
+          writeFileSync('firebase.json', JSON.stringify(config, null, 2) + '\n');
+          console.log('Development-only site: expense-tracker-divin; committed production site: dn-10.');
+          NODE
+      - name: Publish DN development to permanent ExpenseTracker Hosting
+        id: firebase_development
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: expense-tracker-divin
-          channelId: oldversion-usability
-          expires: 14d
-      - name: Publish usability preview URL
-        env:
-          PREVIEW_URL: ${{ steps.firebase_preview.outputs.details_url }}
-          PREVIEW_EXPIRES: ${{ steps.firebase_preview.outputs.expire_time_formatted }}
+          channelId: live
+      - name: Verify exact development build is live
         shell: bash
         run: |
-          if [[ -z "$PREVIEW_URL" ]]; then
-            echo "::error::Hosting action did not return a preview URL."
-            exit 1
-          fi
+          set -euo pipefail
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if curl --fail --silent --show-error --location --retry 2 --max-time 20 \
+              -H 'Cache-Control: no-cache' "https://expense-tracker-divin.web.app/?build=$GITHUB_SHA" -o /tmp/dn-development-index.html \
+              && cmp -s dist/index.html /tmp/dn-development-index.html; then
+              echo "Verified development index bytes match this exact OldVersion build."
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "::error::Development Hosting did not return the exact built index. Inspect the site and Hosting target."
+          exit 1
+      - name: Publish development link and SHA
+        shell: bash
+        run: |
           {
-            echo "## DN OldVersion usability preview"
-            echo "- URL: $PREVIEW_URL"
+            echo "## DN automatic development preview"
+            echo "- Development site: https://expense-tracker-divin.web.app"
             echo "- Commit: $GITHUB_SHA"
+            echo "- Source: OldVersion"
             echo "- Firebase project: expense-tracker-divin"
-            echo "- Hosting site: dn-10"
-            echo "- Channel: oldversion-usability"
-            echo "- Expiration: $PREVIEW_EXPIRES"
-            echo "- WARNING: Preview accesses the project's real Firebase backend. Prefer guest/sample data."
+            echo "- Development Hosting site: expense-tracker-divin (live channel)"
+            echo "- Production site: dn-10 (not deployed by this workflow)"
+            echo "- Read-back: exact build verified"
+            echo "- WARNING: Development shares the real Firebase backend; use Guest/disposable data."
           } >> "$GITHUB_STEP_SUMMARY"
