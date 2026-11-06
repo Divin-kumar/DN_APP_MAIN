@@ -23,11 +23,12 @@ html[data-theme] {
    photo-card hero headings or forcing extra whitespace into compact screens. */
 html[data-theme] :is(
   .settings-section-heading h3,
+  .dn-appearance-section-heading h3,
   .dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3,
   .dn-premium-about > .settings-section > .settings-section-heading h3,
   .dn-data-page .dn-data-guide-heading h3
 ) {
-  font-size: clamp(16px, 1.05rem, 18px) !important;
+  font-size: 17px !important;
   font-weight: 750;
   line-height: 1.3;
   letter-spacing: -.025em;

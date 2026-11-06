@@ -3521,11 +3521,6 @@ html[data-theme] .settings-page.dn-list-defaults-page #list-order :is(.dn-defaul
 html[data-theme] .settings-page.dn-list-defaults-page .dn-defaults-domain > :is(.dn-defaults-factory,.dn-list-filter-switch small) {
   font-size:13px;line-height:1.5;overflow-wrap:anywhere;
 }
-html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-section-heading h3,
-html[data-theme] .settings-page.dn-premium-code-lists .dn-code-list-editor-section > .settings-section-heading h3,
-html[data-theme] .settings-page.dn-list-defaults-page #list-order > .settings-section-heading h3 {
-  font-size:17px;line-height:1.4;letter-spacing:-.015em;
-}
 html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-theme-copy strong,
 html[data-theme] .settings-page.dn-settings-appearance .dn-appearance-more > a strong {
   font-size:15px;line-height:1.45;

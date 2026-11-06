@@ -61,7 +61,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
       const targets = page.locator(selector);
       await expect(targets.first()).toBeVisible();
       for (const target of await targets.all()) {
-        expect(await target.evaluate(el => parseFloat(getComputedStyle(el).fontSize))).toBe(size);
+        expect(await target.evaluate(el => parseFloat(getComputedStyle(el).fontSize)), `${route}: ${selector}`).toBe(size);
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     }

@@ -4,6 +4,10 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-433 | Consolidate Settings section typography after Task checks pass
+- **Executed:** Retry run 42157972330 at 640dcfd passed 42/44 focused Chromium cases. Task arrival/search/edit/delete, historical Moment alias preservation and all prior affected flows passed. Only two Settings cases failed because the existing PremiumUX global important rule forced 16.8px headings instead of the intended 17px.
+- **Correction:** Update the authoritative shared Settings section-heading rule, including Appearance; remove the redundant newer heading rule. Keep the narrow-phone typography assertions and improve their route labels. No Task logic/data changes. The final focused rerun is pending; this is not a release.
+
 ## CHG-20261106-432 | Correct Settings cascade and focused Task regression setup
 - **Executed outcome:** First Tasks/Settings browser run 42157636095 at cfc2f26 passed 39/44 cases. All existing Task action, Dashboard/Refine, backup, simulated-account and Settings regression cases passed. New arrival checks reached and passed search-focus preservation before an ambiguous Due date label failed; the alias case read the event store before loading. Two Settings checks found mobile page CSS overriding the shared 15px label with 14px.
 - **Correction:** Increase Settings page scoping so shared typography wins after lazy-loaded page styles; use exact date-field matching and wait for loaded Moments in the alias regression. No Task record or service changes. Rerun the focused nondeploying suite; final results remain pending. Previous audit entries are preserved.
