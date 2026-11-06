@@ -130,3 +130,26 @@ html[data-theme] .dn-modal-viewport :is(.dn-command-dialog,.dn-create-sheet) {
 
 /* Global overlay-fade-in uses fill-mode:both, overriding Framer exits on WebKit. */
 html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!important; }
+
+
+/* Native-feeling, opt-in downward dismissal for phone sheets. The title and
+   existing visual grabber are the drag surface; body scroll and fields remain
+   normal so a writing gesture can never accidentally discard an edit. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim > .dn-modal {
+    animation:none!important;will-change:transform;
+  }
+  html[data-theme] .dn-modal-swipeable .dn-modal-header {
+    touch-action:none;user-select:none;-webkit-user-select:none;
+    cursor:grab;
+  }
+  html[data-theme] .dn-modal-swipeable .dn-modal-header:active {
+    cursor:grabbing;
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim > .dn-modal,
+  html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim {
+    animation:none!important;transition:none!important;will-change:auto;
+  }
+}

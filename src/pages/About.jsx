@@ -40,6 +40,7 @@ const isDevelopmentHosting = deployEnvironment === 'Firebase development';
 const pendingHighlights = [
   { commit: '7a2292e27952854cfd4caff2e0708f02de57b065', text: 'Mobile Search stays in place above the iPhone keyboard, with consistent focus styling and fewer duplicate profile links.' },
   { commit: '29eaececbaf20fb5a22df3690a981951be6ca497', text: 'The floating universal creator is a clear + again, and creation sheets use full-height opening and closing transitions.' },
+  { subject: 'fix(iphone): lift search, bare plus and swipe-dismiss sheets', text: 'Search is slightly higher and larger, the movable creator is a bare +, and mobile forms and navigation sheets can be pulled down from the header to close.' },
   { commit: '965373228b12d279d99b9ff8b41914904ae2a78e', text: 'ExpenseTracker is now DN Development, separately from the protected production site.' },
   { commit: 'fe96c679c0a812f72633ee5dfb632c0dac6c161e', text: 'OldVersion builds publish automatically to Development without blocking E2E, unit, lint or audit steps.' },
 ];
@@ -335,7 +336,11 @@ export default function About() {
   }, []);
 
   const pendingCommits = pendingLedger?.status === 'ready' ? pendingLedger.commits || [] : [];
-  const activeHighlights = pendingHighlights.filter(item => pendingCommits.some(commit => commit.sha === item.commit));
+  const hasLatestGesturePolish = pendingCommits.some(commit => commit.title === 'fix(iphone): lift search, bare plus and swipe-dismiss sheets');
+  const activeHighlights = pendingHighlights.filter(item =>
+    // The newest final-design highlight replaces the older intermediate + note.
+    (!hasLatestGesturePolish || item.commit !== '29eaececbaf20fb5a22df3690a981951be6ca497')
+    && pendingCommits.some(commit => item.commit ? commit.sha === item.commit : commit.title === item.subject));
 
   const refreshApp = async () => {
     if (refreshing) return;
@@ -464,7 +469,7 @@ export default function About() {
                 <>
                   {activeHighlights.length ? (
                     <ul className="about-list compact-list">
-                      {activeHighlights.map(item => <li key={item.commit}>{item.text}</li>)}
+                      {activeHighlights.map(item => <li key={item.commit || item.subject}>{item.text}</li>)}
                     </ul>
                   ) : null}
                   <details className="dn-about-pending-details">

@@ -56,7 +56,7 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    const bar=page.locator('.dn-command-bar');
    await expect(page.locator('.dn-command-controls > *')).toHaveCount(0);
    const visual=await bar.evaluate(e=>({w:e.getBoundingClientRect().width,b:getComputedStyle(e).borderTopWidth,bg:getComputedStyle(e).backgroundColor}));
-   expect(visual.w).toBeGreaterThanOrEqual(66);expect(visual.w).toBeLessThanOrEqual(69);expect(visual.b).toBe('0px');
+   expect(visual.w).toBeGreaterThanOrEqual(51);expect(visual.w).toBeLessThanOrEqual(53);expect(visual.b).toBe('0px');
    expect(visual.bg).toBe('rgba(0, 0, 0, 0)');
    await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
    // No permanently reserved search dock on search-free screens.
@@ -86,10 +86,10 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    });
    expect(box.h).toBeLessThanOrEqual(70);expect(box.border).toBe('0px');
    expect(box.bg).toBe('rgba(0, 0, 0, 0)');
-   expect(box.searchH).toBeGreaterThanOrEqual(44);
+   expect(box.searchH).toBeGreaterThanOrEqual(49);
    expect(box.glass).toContain('gradient');
-   expect(box.plus).toBeGreaterThanOrEqual(66);
-   expect(box.refine).toBeGreaterThanOrEqual(44);
+   expect(box.plus).toBeGreaterThanOrEqual(51);expect(box.plus).toBeLessThanOrEqual(53);
+   expect(box.refine).toBeGreaterThanOrEqual(49);
    expect(box.width).toBeLessThanOrEqual(width+1);
    // Searchable routes still leave enough room for the entire dock.
    const bottom=await page.locator('.dn-content').evaluate(node=>parseFloat(getComputedStyle(node).paddingBottom));
@@ -177,17 +177,19 @@ test('reduced motion retains the + and accessible command sheet without animatio
  await expect(mascot).toBeVisible();
 });
 
-test('68px plus creator is visible at 320/390/430 and the sheet moves',async({page})=>{
+test('bare plus stays visible at 320/390/430 and the sheet moves',async({page})=>{
  for(const width of [320,390,430]){
   await page.setViewportSize({width,height:844});
   await seedGuest(page,{theme:width===390?'dark':'light'});await page.goto('/events');
   const button=page.getByRole('button',{name:'Open quick create menu'});
   const b=await button.boundingBox();
-  expect(b.width).toBeGreaterThanOrEqual(66);expect(b.height).toBeGreaterThanOrEqual(66);
+  expect(b.width).toBeGreaterThanOrEqual(51);expect(b.height).toBeGreaterThanOrEqual(51);
+  const visual=await button.evaluate(node=>({background:getComputedStyle(node).backgroundColor,border:getComputedStyle(node).borderTopWidth,shadow:getComputedStyle(node).boxShadow}));
+  expect(visual.background).toBe('rgba(0, 0, 0, 0)');expect(visual.border).toBe('0px');expect(visual.shadow).toBe('none');
   expect(b.x+b.width).toBeLessThanOrEqual(width+1);
   const plus=button.locator('.dn-create-glyph');
   await expect(plus).toBeVisible();
-  expect(await plus.evaluate(el=>Math.round(el.getBoundingClientRect().width))).toBeGreaterThanOrEqual(32);
+  expect(await plus.evaluate(el=>Math.round(el.getBoundingClientRect().width))).toBeGreaterThanOrEqual(30);
   await button.click();
   const sheet=page.getByRole('dialog',{name:'Navigate & create'});
   await expect(sheet).toBeVisible();
@@ -204,4 +206,34 @@ test('68px plus creator is visible at 320/390/430 and the sheet moves',async({pa
   await expect(form).toHaveCount(0);
   await expect(page.getByRole('button',{name:'Open quick create menu'})).toBeVisible();
  }
+});
+
+test('mobile command and form sheets slide down from their header without changing Guest records',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const errors=await seedGuest(page,{theme:'dark'});
+ await page.goto('/events');
+ const before=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
+ const swipeHeader=async name=>{
+   const modal=page.getByRole('dialog',{name});
+   await expect(modal).toBeVisible();
+   // Release after the opening transition has settled, then pull only the sheet
+   // title/grabber. Text fields and scrollable bodies must retain touch scrolling.
+   await expect.poll(async()=>modal.evaluate(node=>getComputedStyle(node).transform)).not.toBe('matrix(1, 0, 0, 1, 0, 100)');
+   await page.waitForTimeout(450);
+   const header=modal.locator('.dn-modal-header');
+   const rect=await header.boundingBox();
+   const x=rect.x+Math.min(80,rect.width/3), y=rect.y+rect.height/2;
+   await page.mouse.move(x,y);
+   await page.mouse.down();
+   await page.mouse.move(x,y+205,{steps:12});
+   await page.mouse.up();
+   await expect(modal).toHaveCount(0,{timeout:3000});
+ };
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await swipeHeader('Navigate & create');
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await page.getByRole('button',{name:'Life moment',exact:true}).click();
+ await swipeHeader('Create a life moment');
+ expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+ expect(errors).toEqual([]);
 });

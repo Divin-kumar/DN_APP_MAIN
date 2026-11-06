@@ -199,3 +199,68 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
    transition:none!important;animation:none!important;
  }
 }
+
+
+/* iPhone: independent Search is slightly higher and larger; the + is only a
+   visible glyph, never a background tile that obscures the moment underneath. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-command-root .dn-command-bar {
+    min-height:52px !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-bar:not(:has(.dn-command-controls > *)) {
+    width:52px !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-button-slot {
+    width:52px !important;height:52px !important;flex:0 0 52px !important;
+  }
+  html[data-theme] .dn-command-root.is-floating .dn-command-button-slot {
+    width:0 !important;height:0 !important;flex-basis:0 !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-controls:not(:empty) {
+    transform:translateY(-13px);
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row {
+    min-height:50px !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-search,
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-search input {
+    min-height:50px !important;height:50px !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger {
+    width:50px !important;min-width:50px !important;height:50px !important;min-height:50px !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-trigger,
+  html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)),
+  html[data-theme] .dn-command-root .dn-command-trigger.is-dragging {
+    width:52px !important;min-width:52px !important;height:52px !important;min-height:52px !important;
+    display:grid !important;place-items:center !important;
+    padding:0 !important;border:0 !important;border-radius:0 !important;
+    background:transparent !important;box-shadow:none !important;
+    color:#70A7FF !important;
+    -webkit-tap-highlight-color:transparent;
+    filter:none !important;
+    transition:transform .18s ease !important;
+  }
+  html[data-theme="light"] .dn-command-root .dn-command-trigger,
+  html[data-theme="light"] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) {
+    color:#2459BC !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-trigger .dn-create-glyph {
+    display:block !important;width:31px !important;height:31px !important;
+    stroke-width:2.8 !important;filter:drop-shadow(0 1px 2px rgba(0,0,0,.16));
+    transform:none !important;
+  }
+  html[data-theme] .dn-command-root .dn-command-trigger.is-open {
+    opacity:1;transform:none;pointer-events:none;
+  }
+  html[data-theme] .dn-command-root .dn-command-trigger:not(.is-open):active {
+    transform:scale(.92) !important;
+  }
+  html[data-theme] .dn-shell:has(> .dn-command-root .dn-command-controls .dn-list-controls-search) .dn-content {
+    padding-bottom:calc(114px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px))) !important;
+    scroll-padding-bottom:calc(114px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
+  }
+}
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-command-root .dn-command-trigger {transition:none !important;}
+}

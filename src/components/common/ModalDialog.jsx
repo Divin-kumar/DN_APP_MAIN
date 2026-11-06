@@ -1,18 +1,56 @@
 // This file creates reusable popup dialogs and confirmation windows.
 // It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
-import { useEffect, useId, useLayoutEffect, useRef } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, usePresence, useReducedMotion } from 'framer-motion';
+import { motion, useDragControls, usePresence, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
 import { observeDialogViewport } from '../../utils/dialogViewport';
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
-export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '' }) {
+export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '', swipeDismiss = true }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
-  // Keep the scrim visible throughout the universal sheet's full-height exit.
-  const isUniversalSheet = variant === 'drawer' && /\bdn-(?:command-dialog|create-sheet)\b/.test(className);
+  // Every phone-bottom sheet uses one motion path, rather than old CSS entry
+  // keyframes fighting Framer's exit. Desktop dialogs stay unchanged.
+  const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
+  const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
+  const [swipeClosing, setSwipeClosing] = useState(false);
+  const dismissRequested = useRef(false);
+  const dragControls = useDragControls();
+  const isSlidingSheet = isMobileSheet;
+  const allowsSwipe = isSlidingSheet && swipeDismiss;
+  useEffect(() => {
+    const media = window.matchMedia(mobileMedia);
+    const update = () => setMobileSheet(media.matches);
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
+  const startSheetDrag = (event) => {
+    if (!allowsSwipe || swipeClosing || event.button !== 0 || !event.isPrimary) return;
+    // Do not steal text selection, fields, footer actions or nested scroll.
+    // On an iPhone, the sheet's grip and title header are the drag region.
+    if (event.target.closest('button,a,input,textarea,select,label,[contenteditable="true"],[role="button"]')) return;
+    if (event.target === dialogRef.current || event.target.closest('.dn-modal-header')) dragControls.start(event);
+  };
+  const endSheetDrag = (_, info) => {
+    if (info.offset.y > 125 || (info.offset.y > 48 && info.velocity.y > 850)) {
+      setSwipeClosing(true);
+    }
+    // Short pulls automatically spring to origin within the drag constraints.
+  };
+  // If an existing guarded onClose refuses to dismiss (for example during a
+  // pending save), restore the sheet instead of leaving it below the viewport.
+  useEffect(() => {
+    if (!swipeClosing) return undefined;
+    const id = window.setTimeout(() => {
+      if (dialogRef.current && isPresent) {
+        setSwipeClosing(false);
+        dismissRequested.current = false;
+      }
+    }, 750);
+    return () => window.clearTimeout(id);
+  }, [swipeClosing, isPresent]);
   const closeButtonRef = useRef(null);
   const dialogRef = useRef(null);
   const backdropRef = useRef(null);
@@ -98,21 +136,31 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   return createPortal(
     <motion.div
       ref={backdropRef}
-      className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isUniversalSheet ? ' dn-modal-slide-scrim' : ''}`}
+      className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isSlidingSheet ? ' dn-modal-slide-scrim' : ''}`}
       initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: isPresent || isUniversalSheet ? 1 : 0 }}
-      exit={{ opacity: 0, transition: reducedMotion ? { duration: 0 } : isUniversalSheet ? { delay: .43, duration: .14 } : { duration: .19 } }}
+      animate={{ opacity: isPresent || isSlidingSheet ? 1 : 0 }}
+      exit={{ opacity: 0, transition: reducedMotion ? { duration: 0 } : isSlidingSheet ? { delay: .37, duration: .14 } : { duration: .19 } }}
       transition={{ duration: reducedMotion ? 0 : 0.19 }}
       onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
     >
-      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}`} role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1} initial={reducedMotion ? false : isUniversalSheet ? { opacity: 1, scale: 1, y: '100%' } : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
-        animate={{ opacity: isUniversalSheet ? 1 : (isPresent ? 1 : .85), scale: isUniversalSheet || isPresent ? 1 : .98, y: isPresent ? 0 : (isUniversalSheet ? '100%' : (variant === 'drawer' ? 148 : 20)) }}
-        exit={{ opacity: isUniversalSheet ? 1 : .85, scale: isUniversalSheet ? 1 : .98, y: isUniversalSheet ? '100%' : (variant === 'drawer' ? 148 : 20) }}
+      <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}${allowsSwipe ? ' dn-modal-swipeable' : ''}`}
+        role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+        drag={allowsSwipe ? 'y' : false} dragListener={false} dragControls={dragControls}
+        dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: .72 }} dragMomentum={false}
+        onPointerDown={startSheetDrag} onDragEnd={endSheetDrag}
+        initial={reducedMotion ? false : isSlidingSheet ? { opacity: 1, scale: 1, y: '100%' } : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
+        animate={{ opacity: isSlidingSheet ? 1 : (isPresent ? 1 : .85), scale: isSlidingSheet || isPresent ? 1 : .98, y: isPresent && !swipeClosing ? 0 : (isSlidingSheet ? '100%' : (variant === 'drawer' ? 148 : 20)) }}
+        exit={{ opacity: isSlidingSheet ? 1 : .85, scale: isSlidingSheet ? 1 : .98, y: isSlidingSheet ? '100%' : (variant === 'drawer' ? 148 : 20) }}
         transition={reducedMotion ? { duration: 0 } : {
-          duration: isUniversalSheet ? .43 : (variant === 'drawer' ? .45 : .32),
+          duration: isSlidingSheet ? .37 : (variant === 'drawer' ? .45 : .32),
           ease: [0.22, 1, 0.36, 1],
-          opacity: { duration: isUniversalSheet ? 0 : .28 },
+          opacity: { duration: isSlidingSheet ? 0 : .28 },
+        }}
+        onAnimationComplete={() => {
+          if (!swipeClosing || dismissRequested.current || !isPresent) return;
+          dismissRequested.current = true;
+          onCloseRef.current();
         }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
@@ -127,7 +175,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
 
 export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '' }) {
   return (
-    <ModalDialog title={title} onClose={onCancel}>
+    <ModalDialog title={title} onClose={onCancel} swipeDismiss={false}>
       <p style={styles.message}>{message}</p>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
       <div className="modal-confirm-actions" style={styles.actions}>

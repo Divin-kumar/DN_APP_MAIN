@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-486 | Raise mobile Search, remove the + tile and add downward sheet dismissal
+
+**Owner feedback:** Real iPhone Guest Moments and Navigation/Create screenshots show Search too low, an oversized blue + rectangle that obscures content, and no natural drag-down close for forms or bottom navigation sheets.
+
+**Implementation:** In the shared mobile command dock, move Search/Refine up by 13px and raise their heights to 50px; retain keyboard focus lock and sufficient list scroll clearance. Replace the 68px painted creator with a transparent 52px touch target containing only a clear 31px +; retain click, menu/creation, draggable edge snapping, accessibility and correct its saved Y-range calculation. In the shared ModalDialog, use Framer-owned entry and exit for mobile sheets, permit downward drag from the handle/title surface, threshold dismissal and snap-back for shorter drags, and retain the sheet until the dismiss animation completes even for dialogs outside AnimatePresence. Preserve inner form scrolling and field taps; a refused close during save returns the sheet to view. Exclude confirmation dialogs from drag-dismiss and respect Reduce Motion. Updated Guest tour v2026.11.06.5 explains the interaction; existing edited Guest records remain untouched until explicit Refresh demo. About Pending production gets a newer highlight instead of repeating the old intermediate + note. Desktop dialogs, finance, records, originals, Story/PDF and Firebase backend remain unchanged.
+
+**Validation boundary:** Revised targeted Playwright assertions cover 320/390/430 geometry and a header-swipe transition through command and Moment form sheets, but **development GitHub Actions still does not run E2E, lint, unit tests or audit by owner instruction**. Build/deployment evidence must be checked on the exact new source; real iPhone Safari and VoiceOver remain unverified. No production release, no Lifehub/main branch change, no version bump. All earlier audit entries remain immutable.
+
 ## CHG-20261106-485 | Show all pending changes in Development About until production release
 
 **Owner direction:** Show every unreleased DN change in the ExpenseTracker development About page, beginning with the last actual production deployment. After a future production deployment passes, reset that **pending** ledger and start collecting new changes; preserve the released Version History and personal data.

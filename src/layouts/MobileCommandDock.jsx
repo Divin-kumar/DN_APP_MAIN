@@ -8,8 +8,8 @@ import './MobileCommandDock.css';
 
 const defaults = Object.freeze({ floating: false, edge: 'right', y: .65 });
 const rules = Object.freeze({ edge: ['left','right'], y: value => Number.isFinite(value) && value >= 0 && value <= 1 });
-const CREATE_SIZE = 68;
-const EDGE_PADDING = 12;
+const CREATE_SIZE = 52;
+const EDGE_PADDING = 10;
 const destinations = [
   ['Home','/dashboard',LayoutDashboard], ['Moments','/events',CalendarDays],
   ['Activities','/activities',ListChecks], ['Tasks','/tasks',ListTodo],
@@ -79,8 +79,9 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   }, []);
   const clamp = (value, low, high) => Math.max(low, Math.min(value, Math.max(low, high)));
   const floating = position.floating && viewport.inset < 100;
-  const x = drag?.x ?? (position.edge === 'left' ? 12 : viewport.width - CREATE_SIZE - EDGE_PADDING);
-  const y = drag?.y ?? (viewport.top + 76 + position.y * Math.max(0, viewport.height - (CREATE_SIZE + 116)));
+  const x = drag?.x ?? (position.edge === 'left' ? EDGE_PADDING : viewport.width - CREATE_SIZE - EDGE_PADDING);
+  const verticalTravel = Math.max(1, viewport.height - (CREATE_SIZE + 116));
+  const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
     if (event.button !== 0 || !event.isPrimary) return;
     const rect = event.currentTarget.getBoundingClientRect();
@@ -100,7 +101,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     const p = pointer.current;
     if (!p || p.id !== event.pointerId) return;
     if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+CREATE_SIZE/2 < viewport.width/2 ? 'left':'right',
-      y: clamp((drag.y-viewport.top-76)/Math.max(1,viewport.height-164),0,1) });
+      y: clamp((drag.y-viewport.top-76)/verticalTravel,0,1) });
     if (cancelled) suppressClick.current = false;
     pointer.current = null;
     setDrag(null);
@@ -118,7 +119,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event=>pointerEnd(event)}
           onPointerCancel={event=>pointerEnd(event,true)}
           onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}setOpen(!open);}}>
-          <Plus className="dn-create-glyph" size={34} strokeWidth={2.7} aria-hidden="true" />
+          <Plus className="dn-create-glyph" size={31} strokeWidth={2.8} aria-hidden="true" />
         </button>
       </div>
     </div>
