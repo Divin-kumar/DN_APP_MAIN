@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261106-493 | All 48 v2.3.9 targeted repairs green; start approved full production release verification
+
+**Executed:** The prior full v2.3.9 candidate at `6fe5725` failed 14 of 861 browser cases and production was correctly blocked. Successive focused repairs covered retired profile links, the floating + phantom dock width, early Story photo-preview geometry, the missing sample Task in a motion test, and Task swipes attempted while the animated Create Task backdrop was still intercepting input. The final corrected source `7631478f503a2b8029077ca2c07a7174367429f2` completed **48/48** affected browser cases in [targeted run 42267684311](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42267684311); documentation governance and the E2E-free ExpenseTracker development deployment also passed. No application logic was weakened.
+
+**Owner-authorized continuation:** The owner previously requested publication of v2.3.9 to permanent `dn-10.web.app`, then directed repair of the failed checks. This note-only promotion-trigger commit carries `[verify-full] [release-full] [deploy-live]` to start the existing independent full pre-release workflow and the guarded Firebase production workflow together. The production workflow must not publish until a successful exact-SHA full browser/offline/PDF/upgrade result is recorded; it independently requires unit/lint/audit/build, increased live version, credentials, and exact Hosting readback.
+
+**Preservation/limits:** No version increment beyond 2.3.9, data, original-file, Task, finance, Story/PDF, Guest tour, Firebase rules, Lifehub or main modifications. All historical logs remain, and only pending development About entries reset after a verified production release. Publication is unconfirmed until the production job succeeds; real Safari/VoiceOver still requires acceptance.
+
 ## CHG-20261106-492 | Wait for Task creation sheet to finish leaving before testing card swipe
 
 **Evidence:** In the repeat [focused browser run 42267071959](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42267071959), 44 of 48 tests passed and the corrected four-module animation acceptance succeeded. All four remaining failures were the Task swipe test after creating a Task in an emulated mobile session. The diagnostic listener recorded zero pointer/touch events on the card. A new Task row had rendered behind a smoothly exiting creation dialog, but the test did not await dismissal of its full-screen scrim before dispatching a mouse gesture.
