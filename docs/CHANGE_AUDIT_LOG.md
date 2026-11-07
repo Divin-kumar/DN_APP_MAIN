@@ -4,11 +4,19 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261107-498 | Preserve immutable CHG-497 and clarify keyboard tap timing
+
+**Audit correction:** The prior documentation-only follow-up changed the words of CHG-497 after its first commit, violating the permanent historical entry contract. Restore CHG-497 verbatim from first recorded commit `9b69d6f`; superseding details belong in this new entry, not an edit to an earlier entry.
+
+**Actual final behavior:** In the mobile command dock, an activation of the universal + blurs a focused Search input **on click after pointerup**, not on pointerdown. This prevents the keyboard-driven dock resize from moving the + before a touch tap completes. The original 320ms tap-versus-double-tap logic is unchanged. The focused synthetic keyboard test also follows real visualViewport geometry: when the viewport has a 25px top offset, its visible bottom is 535px and the dock's bottom is 527px, 8px above that edge. This corrects the test's initially incorrect 502px assertion and adds the Search-to-+ focus handoff regression.
+
+**Validation:** GitHub documentation audit previously reported edited history on CHG-497; restoration is submitted to run that immutable check again. This is a documentation-only correction at this commit. No further application code, version, account data, backend/rules, other Hosting site, `main` or production release changes.
+
 ## CHG-20261107-497 | Stabilize Safari Search/keyboard dock and restore brighter + blue
 
 **Owner screenshots:** On an iPhone Activities list the fixed Search row or + intermittently jumps high over cards or disappears while the iOS keyboard stays visible. The owner also requested the earlier lighter blue circle rather than the newly dark `#2d61c5`.
 
-**Scoped correction:** The shared mobile dock clamps negative visual-viewport offsets, disregards sub-120px browser-chrome movement, and schedules viewport measurements once per animation frame. During a true keyboard occlusion Search, Refine and the classic 52px + align 8px above the keyboard without an extra safe-area offset. Pressing + from focused Search blurs the input on click (after pointerup, avoiding a moving touch target) before the existing 320ms single/double-tap gesture resolves. Replace the dark-blue fill with `#4383F5`, keeping the white glyph, no outer ring and the unchanged drag/navigation/create behavior. Add a synthetic iPhone visual-viewport jitter regression and update the existing color assertion.
+**Scoped correction:** The shared mobile dock clamps negative visual-viewport offsets, disregards sub-120px browser-chrome movement, and schedules viewport measurements once per animation frame. During a true keyboard occlusion Search, Refine and the classic 52px + align 8px above the keyboard without an extra safe-area offset. Pressing + from focused Search blurs the input on pointerdown to dismiss the keyboard before the existing 320ms single/double-tap gesture resolves. Replace the dark-blue fill with `#4383F5`, keeping the white glyph, no outer ring and the unchanged drag/navigation/create behavior. Add a synthetic iPhone visual-viewport jitter regression and update the existing color assertion.
 
 **Verification/boundaries:** Source-derived before remote CI; browser simulation cannot prove real iPhone Safari keyboard behavior. Trigger independent mobile command focused tests and the already-authorized isolated ExpenseTracker development preview only. Do not trigger full production release or alter `dn-10`, Lifehub, `main`, saved records, accounts, backend rules, financial logic, Story/PDF, Guest sample/version, or app version 2.3.9. Guest tour remains accurate because no new user-facing control was introduced.
 
