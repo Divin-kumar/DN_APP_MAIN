@@ -249,3 +249,58 @@ test('mobile command and form sheets slide down from their header without changi
  expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
  expect(errors).toEqual([]);
 });
+
+test('double-tapping the universal + returns to the previous DN page without opening a sheet', async ({page}) => {
+  await page.setViewportSize({width:430,height:932});
+  const errors = await seedGuest(page,{theme:'light'});
+  await page.goto('/events');
+  const plus = page.getByRole('button',{name:'Open quick create menu'});
+  const before = await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(key=>localStorage.getItem(key)));
+  await plus.click();
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
+  await page.getByRole('navigation',{name:'Main navigation'}).getByRole('link',{name:'Activities'}).click();
+  await expect(page).toHaveURL(/\/activities$/);
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+  await plus.dblclick({delay:60});
+  await expect(page).toHaveURL(/\/events$/);
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+  await page.waitForTimeout(400);
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+  await plus.click();
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
+  await page.keyboard.press('Escape');
+  expect(await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(key=>localStorage.getItem(key)))).toEqual(before);
+  expect(errors).toEqual([]);
+});
+
+test('double-tap on a directly opened deep link stays inside DN; keyboard single activation is instant', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  const errors = await seedGuest(page,{theme:'dark'});
+  await page.goto('/settings/about');
+  const plus = page.getByRole('button',{name:'Open quick create menu'});
+  await plus.dblclick({delay:60});
+  await expect(page).toHaveURL(/\/settings$/);
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+  await plus.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
+  await page.keyboard.press('Escape');
+  expect(errors).toEqual([]);
+});
+
+test('starting to drag during single-tap recognition cancels menu opening', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  const errors = await seedGuest(page);
+  await page.goto('/activities');
+  const plus = page.getByRole('button',{name:'Open quick create menu'});
+  const rect = await plus.boundingBox();
+  await plus.click();
+  await page.mouse.move(rect.x+24,rect.y+24);
+  await page.mouse.down();
+  await page.mouse.move(40,330,{steps:10});
+  await page.mouse.up();
+  await page.waitForTimeout(420);
+  await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCount(0);
+  await expect(plus).toHaveCSS('position','fixed');
+  expect(errors).toEqual([]);
+});

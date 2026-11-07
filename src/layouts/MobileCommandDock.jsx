@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, CalendarDays, ListChecks, ListTodo, Receipt, Upload, PanelBottom, Plus } from 'lucide-react';
 import ModalDialog from '../components/common/ModalDialog';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -10,17 +10,38 @@ const defaults = Object.freeze({ floating: false, edge: 'right', y: .65 });
 const rules = Object.freeze({ edge: ['left','right'], y: value => Number.isFinite(value) && value >= 0 && value <= 1 });
 const CREATE_SIZE = 52;
 const EDGE_PADDING = 10;
+const DOUBLE_TAP_WINDOW_MS = 320;
+
+// On a direct deep link there is no safe in-app history to pop.
+const fallbackBackPath = pathname => {
+  if (pathname.startsWith('/settings/')) return '/settings';
+  if (/^\/events\/[^/]+\/(activities\/[^/]+|[^/]+)$/.test(pathname)) return pathname.slice(0, pathname.lastIndexOf('/'));
+  if (/^\/events\/[^/]+$/.test(pathname)) return '/events';
+  return pathname === '/dashboard' ? null : '/dashboard';
+};
 const destinations = [
   ['Home','/dashboard',LayoutDashboard], ['Moments','/events',CalendarDays],
   ['Activities','/activities',ListChecks], ['Tasks','/tasks',ListTodo],
   ['Finance','/financials/transactions',Receipt],
 ];
 export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, onExitComplete, isEntry, activePath }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [position, savePosition, resetPosition] = usePersistentListState('mobile-command', defaults, rules);
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight, top: 0, inset: 0 }));
   const [drag, setDrag] = useState(null);
   const pointer = useRef(null);
+  const tapTimer = useRef(null);
   const suppressClick = useRef(false);
+  const clearPendingTap = () => {
+    if (tapTimer.current !== null) window.clearTimeout(tapTimer.current);
+    tapTimer.current = null;
+  };
+  // Do not open a stale menu after another route navigates or the dock unmounts.
+  useEffect(() => () => {
+    window.clearTimeout(tapTimer.current);
+    tapTimer.current = null;
+  }, [location.key]);
   const trigger = useRef(null);
   useEffect(() => {
     const update = () => {
@@ -95,6 +116,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (!p.moved && Math.hypot(event.clientX-p.startX,event.clientY-p.startY) < 10) return;
     p.moved = true;
     suppressClick.current = true;
+    clearPendingTap();
     setDrag({x:clamp(event.clientX-p.dx,EDGE_PADDING,viewport.width-CREATE_SIZE-EDGE_PADDING),y:clamp(event.clientY-p.dy,viewport.top+76,viewport.top+viewport.height-CREATE_SIZE-24)});
   };
   const pointerEnd = (event, cancelled = false) => {
@@ -107,6 +129,30 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     setDrag(null);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
+  const onTriggerClick = event => {
+    if (suppressClick.current) { suppressClick.current = false; return; }
+    // Keyboard and assistive-tech activation remains immediate, not delayed.
+    if (event.detail === 0) {
+      clearPendingTap();
+      setOpen(previous => !previous);
+      return;
+    }
+    if (tapTimer.current !== null) {
+      clearPendingTap();
+      // React Router history index prevents leaving DN for an external origin.
+      if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1);
+      else {
+        const fallback = fallbackBackPath(location.pathname);
+        if (fallback) navigate(fallback, { replace: true });
+      }
+      return;
+    }
+    // Wait briefly so a second tap goes Back without flashing the create sheet.
+    tapTimer.current = window.setTimeout(() => {
+      tapTimer.current = null;
+      setOpen(previous => !previous);
+    }, DOUBLE_TAP_WINDOW_MS);
+  };
   return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}`} style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
     <div className="dn-command-bar" aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
@@ -114,11 +160,11 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${drag?' is-dragging':''}`}
           style={floating || drag ? {position:'fixed',left:x,top:y}:undefined}
           aria-label={open?'Close quick create menu':'Open quick create menu'}
-          aria-description="Navigation and creation. Drag to move; return to dock from the menu."
+          aria-description="Tap once for navigation and creation, double-tap to go back. Drag to move; return to dock from the menu."
           aria-haspopup="dialog" aria-expanded={open}
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event=>pointerEnd(event)}
           onPointerCancel={event=>pointerEnd(event,true)}
-          onClick={()=>{if(suppressClick.current){suppressClick.current=false;return;}setOpen(!open);}}>
+          onClick={onTriggerClick}>
           <Plus className="dn-create-glyph" size={31} strokeWidth={2.8} aria-hidden="true" />
         </button>
       </div>

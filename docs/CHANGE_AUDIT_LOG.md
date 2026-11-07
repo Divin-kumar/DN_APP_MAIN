@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261107-495 | Double-tap the mobile universal + to go Back
+
+**Owner request:** The classic white + in blue circle should act as a Back control on two quick taps, while retaining single-tap Navigate & Create. No delete/backspace action on personal records.
+
+**Implementation:** In `src/layouts/MobileCommandDock.jsx`, single pointer activation is deferred 320ms to distinguish a second activation. The second activation cancels the menu and goes back through React Router history only when an in-app history index exists; direct URL opening falls back to Settings/Moment parent or Dashboard without leaving DN. Keyboard and assistive-technology activations open the menu immediately. Starting a drag cancels the pending tap, route transitions clear the timer, and existing click-suppression, edge-dock movement, animations and creation actions remain. Add browser regressions for history back, direct link, single tap, keyboard and drag, and refresh `src/dev/sampleData.js` Guest tour guidance/version to `2026.11.07.1` without rewriting edited guests.
+
+**Evidence and boundaries:** Source-derived before automated GitHub run; opt-in scoped mobile command verification requested with this commit. No production deployment, `main` modification, new business feature, data deletion, Firestore/rules, Lifehub, account migration, attachments, finance or Story/PDF changes.
+
 ## CHG-20261107-494 | Restore the classic blue circular universal + across DN mobile
 
 **Owner direction:** Use the familiar solid blue circular creator with a white +, matching the provided Activity Detail mockup instead of the later bare blue glyph. The change is global to DN's shared mobile command trigger on every route and in both themes, without adding an outer ring.
