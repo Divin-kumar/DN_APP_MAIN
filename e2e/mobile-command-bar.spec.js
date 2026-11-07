@@ -184,15 +184,20 @@ test('reduced motion retains the + and accessible command sheet without animatio
  await expect(mascot).toBeVisible();
 });
 
-test('bare plus stays visible at 320/390/430 and the sheet moves',async({page})=>{
+test('solid blue circular plus stays visible at 320/390/430 and the sheet moves',async({page})=>{
  for(const width of [320,390,430]){
   await page.setViewportSize({width,height:844});
   await seedGuest(page,{theme:width===390?'dark':'light'});await page.goto('/events');
   const button=page.getByRole('button',{name:'Open quick create menu'});
   const b=await button.boundingBox();
   expect(b.width).toBeGreaterThanOrEqual(51);expect(b.height).toBeGreaterThanOrEqual(51);
-  const visual=await button.evaluate(node=>({background:getComputedStyle(node).backgroundColor,border:getComputedStyle(node).borderTopWidth,shadow:getComputedStyle(node).boxShadow}));
-  expect(visual.background).toBe('rgba(0, 0, 0, 0)');expect(visual.border).toBe('0px');expect(visual.shadow).toBe('none');
+  const visual=await button.evaluate(node=>({background:getComputedStyle(node).backgroundColor,border:getComputedStyle(node).borderTopWidth,
+    radius:getComputedStyle(node).borderRadius,color:getComputedStyle(node).color,
+    icon:getComputedStyle(node.querySelector('.dn-create-glyph')).color}));
+  expect(visual.background).toBe('rgb(45, 97, 197)');
+  expect(visual.border).toBe('0px');expect(visual.radius).toBe('50%');
+  expect(visual.color).toBe('rgb(255, 255, 255)');
+  expect(visual.icon).toBe('rgb(255, 255, 255)');
   expect(b.x+b.width).toBeLessThanOrEqual(width+1);
   const plus=button.locator('.dn-create-glyph');
   await expect(plus).toBeVisible();

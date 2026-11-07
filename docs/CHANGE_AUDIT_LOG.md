@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261107-494 | Restore the classic blue circular universal + across DN mobile
+
+**Owner direction:** Use the familiar solid blue circular creator with a white +, matching the provided Activity Detail mockup instead of the later bare blue glyph. The change is global to DN's shared mobile command trigger on every route and in both themes, without adding an outer ring.
+
+**Implementation:** In `src/layouts/MobileCommandDock.css` restore a compact 52px circular blue fill, centered white glyph, no border and a subtle native shadow; retain the existing accessible touch/drag target and all quick-create/navigation callbacks. Remove the light-theme override that previously recolored the glyph blue. In `e2e/mobile-command-bar.spec.js`, replace the obsolete transparent-button assertion with blue fill, 50% radius, white foreground/icon, zero-border assertions at 320/390/430px. The existing suite continues checking alignment, sheet movement, routes and creation.
+
+**Preservation and evidence:** Source-derived only at the time of authoring; runner E2E/browser and physical Safari must be checked separately. No database, user records, guest-tour reset (its instructions are unchanged), app-version bump, prod deployment, other Hosting sites, Lifehub, `main`, Story/PDF, financial behavior or Firebase rules changes. OldVersion push may publish the existing ExpenseTracker development preview through its standing build-only workflow; that is not production approval.
+
 ## CHG-20261106-493 | All 48 v2.3.9 targeted repairs green; start approved full production release verification
 
 **Executed:** The prior full v2.3.9 candidate at `6fe5725` failed 14 of 861 browser cases and production was correctly blocked. Successive focused repairs covered retired profile links, the floating + phantom dock width, early Story photo-preview geometry, the missing sample Task in a motion test, and Task swipes attempted while the animated Create Task backdrop was still intercepting input. The final corrected source `7631478f503a2b8029077ca2c07a7174367429f2` completed **48/48** affected browser cases in [targeted run 42267684311](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42267684311); documentation governance and the E2E-free ExpenseTracker development deployment also passed. No application logic was weakened.
