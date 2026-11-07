@@ -44,16 +44,30 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   }, [location.key]);
   const trigger = useRef(null);
   useEffect(() => {
+    // Safari reports transient/negative visualViewport offsets while its
+    // keyboard and browser chrome animate. Only a real keyboard-sized occlusion
+    // should move the dock; harmless address-bar changes must not jump the +.
+    let frame = null;
     const update = () => {
-      const v = window.visualViewport;
-      setViewport({ width: v?.width || window.innerWidth, height: v?.height || window.innerHeight,
-        top: v?.offsetTop || 0, inset: Math.max(0, window.innerHeight - (v?.height || window.innerHeight) - (v?.offsetTop || 0)) });
+      if (frame !== null) window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        frame = null;
+        const v = window.visualViewport;
+        const width = v?.width || window.innerWidth;
+        const height = v?.height || window.innerHeight;
+        const top = Math.max(0, v?.offsetTop || 0);
+        const occluded = Math.max(0, window.innerHeight - height - top);
+        const inset = occluded >= 120 ? occluded : 0;
+        setViewport(current => current.width === width && current.height === height &&
+          current.top === top && current.inset === inset ? current : { width, height, top, inset });
+      });
     };
     update();
     window.addEventListener('resize', update);
     window.visualViewport?.addEventListener('resize', update);
     window.visualViewport?.addEventListener('scroll', update);
     return () => {
+      if (frame !== null) window.cancelAnimationFrame(frame);
       window.removeEventListener('resize', update);
       window.visualViewport?.removeEventListener('resize', update);
       window.visualViewport?.removeEventListener('scroll', update);
@@ -105,6 +119,10 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
     if (event.button !== 0 || !event.isPrimary) return;
+    // A tap on + is also an explicit exit from iOS Search. Blur synchronously
+    // on pointerdown so the keyboard cannot linger beneath the delayed menu.
+    const focused = document.activeElement;
+    if (focused?.matches?.('.dn-command-controls .dn-list-controls-search input')) focused.blur();
     const rect = event.currentTarget.getBoundingClientRect();
     pointer.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, dx: event.clientX-rect.x, dy: event.clientY-rect.y, moved: false };
     suppressClick.current = false;
@@ -153,7 +171,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       setOpen(previous => !previous);
     }, DOUBLE_TAP_WINDOW_MS);
   };
-  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}`} style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
+  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}${viewport.inset ? ' is-keyboard-open' : ''}`} style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
     <div className="dn-command-bar" aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">

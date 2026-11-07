@@ -232,6 +232,12 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
   html[data-theme] .dn-command-root .dn-command-bar:has(.dn-command-controls .dn-list-controls-search) {
     bottom:calc(max(17px,var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px))) + var(--dn-command-keyboard,0px) + 13px) !important;
   }
+  /* When the iOS keyboard is truly open, place Search/Refine/+ just above it.
+     Do not add the home-indicator safe area twice or leave the dock floating
+     over record cards while Safari's viewport is resizing. */
+  html[data-theme] .dn-command-root.is-keyboard-open .dn-command-bar:has(.dn-command-controls .dn-list-controls-search) {
+    bottom:calc(var(--dn-command-keyboard,0px) + 8px) !important;
+  }
   html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row {
     min-height:50px !important;
   }
@@ -248,7 +254,7 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     width:52px !important;min-width:52px !important;height:52px !important;min-height:52px !important;
     display:grid !important;place-items:center !important;
     padding:0 !important;border:0 !important;border-radius:50% !important;
-    background:#2d61c5 !important;box-shadow:0 5px 14px rgba(27,66,153,.24) !important;
+    background:#4383f5 !important;box-shadow:0 5px 14px rgba(44,94,190,.24) !important;
     color:#fff !important;
     -webkit-tap-highlight-color:transparent;
     filter:none !important;

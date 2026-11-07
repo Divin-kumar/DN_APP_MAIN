@@ -141,6 +141,47 @@ test('iPhone search focus keeps its page canvas and one glass focus halo',async(
  await input.blur();await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
  expect(errors).toEqual([]);
 });
+
+test('iPhone Search stays aligned to the visual keyboard through Safari viewport jitter',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const errors=await seedGuest(page,{theme:'light'});
+ await page.goto('/activities');
+ const input=page.getByRole('searchbox',{name:'Search activities and Moments'});
+ await input.focus();
+ await expect(page.locator('html')).toHaveClass(/dn-command-search-focused/);
+ // Chromium has no native software keyboard. Model Safari's shrinking visual
+ // viewport and temporary negative offset without changing the document height.
+ await page.evaluate(()=>{
+   const v=window.visualViewport;
+   Object.defineProperty(v,'height',{configurable:true,value:510});
+   Object.defineProperty(v,'offsetTop',{configurable:true,value:-20});
+   v.dispatchEvent(new Event('resize'));
+ });
+ await expect(page.locator('.dn-command-root')).toHaveClass(/is-keyboard-open/);
+ await expect(input).toBeVisible();
+ await expect(input).toBeFocused();
+ await expect(page.locator('.dn-command-controls .dn-list-controls-search')).toHaveCount(1);
+ const bar=page.locator('.dn-command-bar');
+ await expect.poll(async()=>bar.evaluate(node=>Math.round(node.getBoundingClientRect().bottom))).toBe(502);
+ const plus=page.getByRole('button',{name:'Open quick create menu'});
+ await expect(plus).toBeVisible();
+ await page.evaluate(()=>{
+   Object.defineProperty(window.visualViewport,'offsetTop',{configurable:true,value:25});
+   window.visualViewport.dispatchEvent(new Event('scroll'));
+ });
+ await expect.poll(async()=>bar.evaluate(node=>Math.round(node.getBoundingClientRect().bottom))).toBe(502);
+ // The transient keyboard close must restore the original dock and retain Search.
+ await page.evaluate(()=>{
+   delete window.visualViewport.height;delete window.visualViewport.offsetTop;
+   window.visualViewport.dispatchEvent(new Event('resize'));
+ });
+ await expect(page.locator('.dn-command-root')).not.toHaveClass(/is-keyboard-open/);
+ await expect(input).toBeVisible();
+ await input.blur();
+ await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
+ expect(errors).toEqual([]);
+});
+
 test('top-right profile hides duplicate Task and Transaction links; + preserves creation',async({page})=>{
  await page.setViewportSize({width:430,height:932});await seedGuest(page);await page.goto('/events');
  await page.getByRole('button',{name:'Open profile and account menu'}).click();
@@ -194,7 +235,7 @@ test('solid blue circular plus stays visible at 320/390/430 and the sheet moves'
   const visual=await button.evaluate(node=>({background:getComputedStyle(node).backgroundColor,border:getComputedStyle(node).borderTopWidth,
     radius:getComputedStyle(node).borderRadius,color:getComputedStyle(node).color,
     icon:getComputedStyle(node.querySelector('.dn-create-glyph')).color}));
-  expect(visual.background).toBe('rgb(45, 97, 197)');
+  expect(visual.background).toBe('rgb(67, 131, 245)');
   expect(visual.border).toBe('0px');expect(visual.radius).toBe('50%');
   expect(visual.color).toBe('rgb(255, 255, 255)');
   expect(visual.icon).toBe('rgb(255, 255, 255)');

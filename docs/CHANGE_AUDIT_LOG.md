@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261107-497 | Stabilize Safari Search/keyboard dock and restore brighter + blue
+
+**Owner screenshots:** On an iPhone Activities list the fixed Search row or + intermittently jumps high over cards or disappears while the iOS keyboard stays visible. The owner also requested the earlier lighter blue circle rather than the newly dark `#2d61c5`.
+
+**Scoped correction:** The shared mobile dock clamps negative visual-viewport offsets, disregards sub-120px browser-chrome movement, and schedules viewport measurements once per animation frame. During a true keyboard occlusion Search, Refine and the classic 52px + align 8px above the keyboard without an extra safe-area offset. Pressing + from focused Search blurs the input on pointerdown to dismiss the keyboard before the existing 320ms single/double-tap gesture resolves. Replace the dark-blue fill with `#4383F5`, keeping the white glyph, no outer ring and the unchanged drag/navigation/create behavior. Add a synthetic iPhone visual-viewport jitter regression and update the existing color assertion.
+
+**Verification/boundaries:** Source-derived before remote CI; browser simulation cannot prove real iPhone Safari keyboard behavior. Trigger independent mobile command focused tests and the already-authorized isolated ExpenseTracker development preview only. Do not trigger full production release or alter `dn-10`, Lifehub, `main`, saved records, accounts, backend rules, financial logic, Story/PDF, Guest sample/version, or app version 2.3.9. Guest tour remains accurate because no new user-facing control was introduced.
+
 ## CHG-20261107-496 | Correct pixel-raster E2E blocker and retry owner-approved v2.3.9 production gate
 
 **Exact failing evidence:** The guarded production attempt at [run 42268223545](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42268223545) did not deploy, because [full verification 42268223373](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42268223373) passed 858/861 browser cases and failed three portrait-phone desktop-stylesheet-isolation comparisons. Decoding the archived before/after screenshots at 320×844, 390×844 and 430×932 showed only 464, 481 and 469 changed Search-placeholder pixels respectively, with a maximum per-channel RGB difference of 2, 2 and 1. No other screenshot pixels, positions or colors changed.
