@@ -169,7 +169,7 @@ test('iPhone Search stays aligned to the visual keyboard through Safari viewport
    Object.defineProperty(window.visualViewport,'offsetTop',{configurable:true,value:25});
    window.visualViewport.dispatchEvent(new Event('scroll'));
  });
- await expect.poll(async()=>bar.evaluate(node=>Math.round(node.getBoundingClientRect().bottom))).toBe(502);
+ await expect.poll(async()=>bar.evaluate(node=>Math.round(node.getBoundingClientRect().bottom))).toBe(527);
  // The transient keyboard close must restore the original dock and retain Search.
  await page.evaluate(()=>{
    delete window.visualViewport.height;delete window.visualViewport.offsetTop;
@@ -179,6 +179,10 @@ test('iPhone Search stays aligned to the visual keyboard through Safari viewport
  await expect(input).toBeVisible();
  await input.blur();
  await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
+ await input.focus();
+ await plus.click();
+ await expect(input).not.toBeFocused();
+ await expect(page.getByRole('dialog',{name:'Navigate & create'})).toBeVisible();
  expect(errors).toEqual([]);
 });
 

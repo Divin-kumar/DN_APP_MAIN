@@ -119,10 +119,6 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
     if (event.button !== 0 || !event.isPrimary) return;
-    // A tap on + is also an explicit exit from iOS Search. Blur synchronously
-    // on pointerdown so the keyboard cannot linger beneath the delayed menu.
-    const focused = document.activeElement;
-    if (focused?.matches?.('.dn-command-controls .dn-list-controls-search input')) focused.blur();
     const rect = event.currentTarget.getBoundingClientRect();
     pointer.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, dx: event.clientX-rect.x, dy: event.clientY-rect.y, moved: false };
     suppressClick.current = false;
@@ -149,6 +145,10 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   };
   const onTriggerClick = event => {
     if (suppressClick.current) { suppressClick.current = false; return; }
+    // Close Search's iOS keyboard only after pointerup/click, otherwise
+    // resizing the dock during a tap can move its target before activation.
+    const focused = document.activeElement;
+    if (focused?.matches?.('.dn-command-controls .dn-list-controls-search input')) focused.blur();
     // Keyboard and assistive-tech activation remains immediate, not delayed.
     if (event.detail === 0) {
       clearPendingTap();
