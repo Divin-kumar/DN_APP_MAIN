@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261107-496 | Correct pixel-raster E2E blocker and retry owner-approved v2.3.9 production gate
+
+**Exact failing evidence:** The guarded production attempt at [run 42268223545](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42268223545) did not deploy, because [full verification 42268223373](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42268223373) passed 858/861 browser cases and failed three portrait-phone desktop-stylesheet-isolation comparisons. Decoding the archived before/after screenshots at 320×844, 390×844 and 430×932 showed only 464, 481 and 469 changed Search-placeholder pixels respectively, with a maximum per-channel RGB difference of 2, 2 and 1. No other screenshot pixels, positions or colors changed.
+
+**Scoped correction:** The desktop isolation test now compares decoded screenshots in the browser, allowing at most a two-level per-channel rasterization difference across fewer than 0.25% of pixels. Any meaningful color or layout shift still fails. Restore accurate v2.3.9 About release notes: the latest mobile creator is a classic blue circle with a white +, and double-tap performs safe in-app Back; update release-note acceptance text to match. The latest Guest tour already documents the gesture. No app business logic, records, navigation implementation, financial calculations, Story/PDF, Firebase backend/rules, dependencies or version number changed by this QA/release-note repair.
+
+**Authorized release attempt:** Owner requested production publication on 7 November 2026. This OldVersion-only commit includes `[verify-full] [release-full] [deploy-live]` to launch the independent full exact-SHA gate and guarded Firebase Hosting deployment. No live success may be claimed before both workflows pass and the production HTML readback matches. Development remains the distinct ExpenseTracker Hosting target; Lifehub and `main` must not be touched. Physical Safari behavior remains device-acceptance work.
+
 ## CHG-20261107-495 | Double-tap the mobile universal + to go Back
 
 **Owner request:** The classic white + in blue circle should act as a Back control on two quick taps, while retaining single-tap Navigate & Create. No delete/backspace action on personal records.

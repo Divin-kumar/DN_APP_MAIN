@@ -14,7 +14,7 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
     for (const text of (version === '2.3.9'
-      ? ['Search and Refine', 'transparent +', 'Pull a mobile navigation', 'Moment, Activity, Task and Transaction']
+      ? ['Search and Refine', 'blue circular +', 'double-tap Back', 'Pull a mobile navigation', 'Moment, Activity, Task and Transaction']
       : version === '2.3.8'
       ? ['About, Settings', '88px reserved gap', 'Search and Refine', 'independent +']
       : version === '2.3.7'
