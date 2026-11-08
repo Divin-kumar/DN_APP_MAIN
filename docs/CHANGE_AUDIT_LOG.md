@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-499 | Keep iPhone Search above the keyboard through Safari viewport shrink and pan
+
+**User report:** After the preceding mobile keyboard adjustment, tapping Search could still make the fixed dock disappear below the iOS keyboard. The earlier code assumed `window.innerHeight` would stay unchanged while `visualViewport.height` shrank, and it repeatedly forced `window.scrollY` to zero while iOS was trying to pan the focused input into view.
+
+**Fix:** Capture pre-focus viewport height; detect a keyboard even when both layout and visual heights shrink or `offsetTop` moves. While keyboard-open, anchor the shared Search/Refine/+ dock to `visualViewport.offsetTop + visualViewport.height - 60px` instead of applying a bottom inset that can become zero. Suspend independently floating + during Search focus or keyboard visibility; restore its saved position afterwards. Do not fight Safari's own window scroll pan; keep the existing independent content-canvas scroll-restoration. Extend focused Playwright tests to model a simultaneous inner-height shrink and visual-viewport pan.
+
+**Scope/validation:** OldVersion-only front-end layout change with independent opt-in mobile tests and automatic ExpenseTracker development preview. No change to data, finance logic, PDFs, authentication, Firebase configuration, other Hosting sites, `main`, production `dn-10`, Guest tour or app version. Synthetic Chromium viewport tests cannot fully replicate the iPhone software keyboard, so real Safari remains an acceptance condition. No production release requested or triggered.
+
 ## CHG-20261107-498 | Preserve immutable CHG-497 and clarify keyboard tap timing
 
 **Audit correction:** The prior documentation-only follow-up changed the words of CHG-497 after its first commit, violating the permanent historical entry contract. Restore CHG-497 verbatim from first recorded commit `9b69d6f`; superseding details belong in this new entry, not an edit to an earlier entry.

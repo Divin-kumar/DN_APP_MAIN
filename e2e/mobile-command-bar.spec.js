@@ -186,6 +186,48 @@ test('iPhone Search stays aligned to the visual keyboard through Safari viewport
  expect(errors).toEqual([]);
 });
 
+
+test('Safari keyboard keeps Search visible when layout and visual viewport both shrink',async({page})=>{
+ await page.setViewportSize({width:390,height:844});
+ const errors=await seedGuest(page,{theme:'light'});await page.goto('/activities');
+ const input=page.getByRole('searchbox',{name:'Search activities and Moments'});
+ await input.focus();
+ const bar=page.locator('.dn-command-bar');
+ // iOS sometimes changes window.innerHeight along with visualViewport.height.
+ // Under the old difference-only formula this looked like a CLOSED keyboard.
+ await page.evaluate(()=>{
+   Object.defineProperty(window,'innerHeight',{configurable:true,value:510});
+   Object.defineProperty(window.visualViewport,'height',{configurable:true,value:510});
+   Object.defineProperty(window.visualViewport,'offsetTop',{configurable:true,value:0});
+   window.dispatchEvent(new Event('resize'));
+   window.visualViewport.dispatchEvent(new Event('resize'));
+ });
+ await expect(page.locator('.dn-command-root')).toHaveClass(/is-keyboard-open/);
+ await expect.poll(async()=>bar.evaluate(el=>Math.round(el.getBoundingClientRect().bottom))).toBe(502);
+ await expect(input).toBeFocused();
+ await expect(input).toBeVisible();
+ // Safari may pan the visual viewport DOWN while leaving the keyboard up.
+ // Even if the computed keyboard inset drops to zero, Search must track it.
+ await page.evaluate(()=>{
+   Object.defineProperty(window.visualViewport,'offsetTop',{configurable:true,value:330});
+   window.visualViewport.dispatchEvent(new Event('scroll'));
+ });
+ await expect(page.locator('.dn-command-root')).toHaveClass(/is-keyboard-open/);
+ await expect.poll(async()=>bar.evaluate(el=>Math.round(el.getBoundingClientRect().bottom))).toBe(832);
+ expect(await bar.evaluate(el=>getComputedStyle(el).bottom)).toBe('auto');
+ await page.evaluate(()=>{
+   delete window.innerHeight;
+   delete window.visualViewport.height;
+   delete window.visualViewport.offsetTop;
+   window.visualViewport.dispatchEvent(new Event('resize'));
+   window.dispatchEvent(new Event('resize'));
+ });
+ await expect(page.locator('.dn-command-root')).not.toHaveClass(/is-keyboard-open/);
+ await expect(input).toBeVisible();
+ await input.blur();
+ expect(errors).toEqual([]);
+});
+
 test('top-right profile hides duplicate Task and Transaction links; + preserves creation',async({page})=>{
  await page.setViewportSize({width:430,height:932});await seedGuest(page);await page.goto('/events');
  await page.getByRole('button',{name:'Open profile and account menu'}).click();

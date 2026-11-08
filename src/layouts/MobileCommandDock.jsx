@@ -28,7 +28,11 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const location = useLocation();
   const navigate = useNavigate();
   const [position, savePosition, resetPosition] = usePersistentListState('mobile-command', defaults, rules);
-  const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight, top: 0, inset: 0 }));
+  const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight, top: 0,
+    inset: 0, visualBottom: window.innerHeight, keyboardOpen: false }));
+  const [searchFocused, setSearchFocused] = useState(false);
+  const searchFocusRef = useRef(false);
+  const focusBaselineRef = useRef(0);
   const [drag, setDrag] = useState(null);
   const pointer = useRef(null);
   const tapTimer = useRef(null);
@@ -44,10 +48,12 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   }, [location.key]);
   const trigger = useRef(null);
   useEffect(() => {
-    // Safari reports transient/negative visualViewport offsets while its
-    // keyboard and browser chrome animate. Only a real keyboard-sized occlusion
-    // should move the dock; harmless address-bar changes must not jump the +.
+    // Safari can shrink BOTH window.innerHeight and visualViewport.height, or
+    // pan visualViewport.offsetTop during focus. Comparing the two current
+    // heights then reports zero keyboard inset even while Search is covered.
+    // Preserve the pre-focus height and anchor to the visible viewport edge.
     let frame = null;
+    const isSearch = node => node?.matches?.('.dn-command-controls .dn-list-controls-search input');
     const update = () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
       frame = window.requestAnimationFrame(() => {
@@ -56,18 +62,48 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         const width = v?.width || window.innerWidth;
         const height = v?.height || window.innerHeight;
         const top = Math.max(0, v?.offsetTop || 0);
-        const occluded = Math.max(0, window.innerHeight - height - top);
+        const layoutHeight = Math.max(window.innerHeight, document.documentElement.clientHeight || 0);
+        const occluded = Math.max(0, layoutHeight - height - top);
         const inset = occluded >= 120 ? occluded : 0;
+        const baseline = focusBaselineRef.current;
+        const keyboardOpen = inset >= 120 || (baseline > 0 && baseline - height >= 120);
+        const visualBottom = top + height;
+        if (!searchFocusRef.current && baseline > 0 && height >= baseline - 40) {
+          focusBaselineRef.current = 0;
+        }
         setViewport(current => current.width === width && current.height === height &&
-          current.top === top && current.inset === inset ? current : { width, height, top, inset });
+          current.top === top && current.inset === inset && current.keyboardOpen === keyboardOpen &&
+          current.visualBottom === visualBottom
+          ? current : { width, height, top, inset, visualBottom, keyboardOpen });
       });
     };
-    update();
+    const focused = event => {
+      if (!isSearch(event.target)) return;
+      searchFocusRef.current = true;
+      // Capture before iOS begins keyboard animation; do not replace it on
+      // every resize or address-bar adjustment while Search remains focused.
+      focusBaselineRef.current = Math.max(window.innerHeight,
+        document.documentElement.clientHeight || 0, window.visualViewport?.height || 0);
+      setSearchFocused(true);
+      update();
+    };
+    const blurred = event => {
+      if (!isSearch(event.target)) return;
+      searchFocusRef.current = false;
+      setSearchFocused(false);
+      // Retain baseline until keyboard finishes its dismissal animation.
+      update();
+    };
+    document.addEventListener('focusin', focused);
+    document.addEventListener('focusout', blurred);
     window.addEventListener('resize', update);
     window.visualViewport?.addEventListener('resize', update);
     window.visualViewport?.addEventListener('scroll', update);
+    update();
     return () => {
       if (frame !== null) window.cancelAnimationFrame(frame);
+      document.removeEventListener('focusin', focused);
+      document.removeEventListener('focusout', blurred);
       window.removeEventListener('resize', update);
       window.visualViewport?.removeEventListener('resize', update);
       window.visualViewport?.removeEventListener('scroll', update);
@@ -84,7 +120,8 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     const restore = () => {
       if (!isSearch(document.activeElement)) return;
       if (Math.abs(canvas.scrollTop - savedScroll) > 1) canvas.scrollTop = savedScroll;
-      if (window.scrollY > 1) window.scrollTo(0, 0);
+      // Do not reset window.scrollY: iOS Safari pans its visual viewport to
+      // reveal focused inputs. Fighting that pan hides Search under the keyboard.
     };
     const focused = event => {
       if (!isSearch(event.target)) return;
@@ -113,7 +150,9 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     };
   }, []);
   const clamp = (value, low, high) => Math.max(low, Math.min(value, Math.max(low, high)));
-  const floating = position.floating && viewport.inset < 100;
+  // Temporarily dock the movable + alongside Search while the keyboard is
+  // active; restore its saved edge position after focus/keyboard dismissal.
+  const floating = position.floating && !searchFocused && !viewport.keyboardOpen;
   const x = drag?.x ?? (position.edge === 'left' ? EDGE_PADDING : viewport.width - CREATE_SIZE - EDGE_PADDING);
   const verticalTravel = Math.max(1, viewport.height - (CREATE_SIZE + 116));
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
@@ -171,7 +210,10 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       setOpen(previous => !previous);
     }, DOUBLE_TAP_WINDOW_MS);
   };
-  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}${viewport.inset ? ' is-keyboard-open' : ''}`} style={{'--dn-command-keyboard':`${viewport.inset}px`}}>
+  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
+    '--dn-command-keyboard':`${viewport.inset}px`,
+    '--dn-command-visual-bottom':`${viewport.visualBottom}px`
+  }}>
     <div className="dn-command-bar" aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">
