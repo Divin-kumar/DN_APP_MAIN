@@ -165,14 +165,14 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
    Keep the surface nearly opaque for reading; do not apply opacity to children
    (fields, photos and text must remain fully legible). Desktop is unchanged. */
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
-  html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim > .dn-modal {
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport.dn-modal-slide-scrim > section.dn-modal[role="dialog"] {
     background: color-mix(in srgb, var(--color-card) 93%, transparent) !important;
     border-color: color-mix(in srgb, var(--color-border) 82%, transparent) !important;
     -webkit-backdrop-filter: blur(20px) saturate(1.1);
     backdrop-filter: blur(20px) saturate(1.1);
     box-shadow: 0 -14px 44px rgba(17, 29, 48, .16), inset 0 1px 0 rgba(255, 255, 255, .12) !important;
   }
-  html[data-theme="dark"] .dn-modal-backdrop.dn-modal-slide-scrim > .dn-modal {
+  html[data-theme="dark"] body .dn-modal-backdrop.dn-modal-viewport.dn-modal-slide-scrim > section.dn-modal[role="dialog"] {
     background: color-mix(in srgb, var(--color-card) 95%, transparent) !important;
     box-shadow: 0 -18px 48px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
   }

@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-503 | Correct modal CSS precedence and profile option hit area
+
+**Failed evidence:** [Targeted browser run 42435297483](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42435297483) at `d5d16c4` recorded **50 passes and seven failures**. Four profile tests detected option heights below the guaranteed 44px minimum during the menu entrance. Three glass tests measured fully opaque shared ModalDialog backgrounds because later legacy theme rules overrode the initial translucent declarations.
+
+**Repair:** Restore 46px minimum profile options while keeping the reduced menu width, outer padding and glass surface. Make the shared mobile-sheet CSS selector explicitly match the modal viewport and `section[role=dialog]` with a higher priority than legacy modal backgrounds, preserving exact theme-specific glass opacity and child legibility. Retain the new assertions; do not weaken their opacity or touch-size checks. Rerun targeted browser verification before any production release.
+
+**Scope:** Presentation-only follow-up on OldVersion; v2.3.10 candidate and data behavior unchanged. No Firebase production publication or other-app deployment authorized by this commit itself; owner approval remains subject to passing gates.
+
 ## CHG-20261108-502 | Subtle glass mobile sheets, compact glass profile and v2.3.10 release preparation
 
 **Approval:** Owner requested a slightly glassy treatment on all bottom sheets and a compact lightly frosted top-right profile menu, cancelled the proposed long-press + action wheel, and explicitly authorized DN production publication.
