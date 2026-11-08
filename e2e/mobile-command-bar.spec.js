@@ -214,7 +214,14 @@ test('Safari keyboard keeps Search visible when layout and visual viewport both 
  });
  await expect(page.locator('.dn-command-root')).toHaveClass(/is-keyboard-open/);
  await expect.poll(async()=>bar.evaluate(el=>Math.round(el.getBoundingClientRect().bottom))).toBe(832);
- expect(await bar.evaluate(el=>getComputedStyle(el).bottom)).toBe('auto');
+ // Computed bottom can resolve to pixels even with CSS bottom:auto; assert
+ // the actual dock placement instead of the browser's resolved style text.
+ const placed=await bar.evaluate(el=>({
+   top:Math.round(el.getBoundingClientRect().top),
+   height:Math.round(el.getBoundingClientRect().height),
+ }));
+ expect(placed.top).toBe(780);
+ expect(placed.height).toBe(52);
  await page.evaluate(()=>{
    delete window.innerHeight;
    delete window.visualViewport.height;

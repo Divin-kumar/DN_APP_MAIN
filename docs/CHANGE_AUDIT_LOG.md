@@ -4,6 +4,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-500 | Assert actual Safari keyboard dock geometry, not computed bottom text
+
+**Focused evidence:** GitHub [run 42431630994](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42431630994) at `73b0adf` passed 43 of 44 mobile-command/browser cases, including the existing viewport-jitter test, but the newly added combined-height keyboard case incorrectly asserted `getComputedStyle(bar).bottom === 'auto'`. Chromium reports a resolved `12px` even when the new top anchor has placed the dock at its correct visual coordinate; the preceding assertion had already confirmed the correct 832px bottom after viewport pan.
+
+**Focused test repair:** Keep the exact bottom-coordinate assertion, and require top=780px and dock height=52px after a synthetic Safari 330px pan. This checks the visible dock rather than a browser-specific computed-style string. No application CSS, keyboard behavior, authentication, finance, PDF, saved records, app version, Firebase configuration, `main` or production changes. Request the same independent mobile-command suite again; physical iPhone Safari still needs owner testing.
+
 ## CHG-20261108-499 | Keep iPhone Search above the keyboard through Safari viewport shrink and pan
 
 **User report:** After the preceding mobile keyboard adjustment, tapping Search could still make the fixed dock disappear below the iOS keyboard. The earlier code assumed `window.innerHeight` would stay unchanged while `visualViewport.height` shrank, and it repeatedly forced `window.scrollY` to zero while iOS was trying to pan the focused input into view.
