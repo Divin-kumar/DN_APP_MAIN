@@ -344,6 +344,36 @@ test('mobile command and form sheets slide down from their header without changi
  expect(errors).toEqual([]);
 });
 
+
+test('bottom sheet dismisses from safe body touch, but not from an editable field', async ({page}) => {
+ await page.setViewportSize({width:390,height:844});
+ const errors=await seedGuest(page,{theme:'light'});await page.goto('/events');
+ const swipe=async locator => locator.evaluate(el=>{
+   const start=new Touch({identifier:7,target:el,clientX:120,clientY:350});
+   const end=new Touch({identifier:7,target:el,clientX:124,clientY:510});
+   el.dispatchEvent(new TouchEvent('touchstart',{bubbles:true,cancelable:true,touches:[start],targetTouches:[start],changedTouches:[start]}));
+   el.dispatchEvent(new TouchEvent('touchend',{bubbles:true,cancelable:true,touches:[],targetTouches:[],changedTouches:[end]}));
+ });
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ const menu=page.getByRole('dialog',{name:'Navigate & create'});
+ await expect(menu).toBeVisible();
+ await page.waitForTimeout(430);
+ await swipe(menu.locator('.dn-command-actions h3'));
+ await expect(menu).toHaveCount(0,{timeout:3000});
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ await page.getByRole('button',{name:'Life moment',exact:true}).click();
+ const form=page.getByRole('dialog',{name:'Create a life moment'});
+ await expect(form).toBeVisible();
+ await page.waitForTimeout(430);
+ await swipe(form.locator('input').first());
+ await expect(form).toBeVisible();
+ await form.getByRole('button',{name:'Close dialog'}).click();
+ // The close button now uses the same reverse slide instead of unmounting.
+ await expect(form).toBeVisible();
+ await expect(form).toHaveCount(0,{timeout:3000});
+ expect(errors).toEqual([]);
+});
+
 test('double-tapping the universal + returns to the previous DN page without opening a sheet', async ({page}) => {
   await page.setViewportSize({width:430,height:932});
   const errors = await seedGuest(page,{theme:'light'});

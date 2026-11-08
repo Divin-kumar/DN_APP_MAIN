@@ -4,6 +4,16 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-501 | Animate action dismissal and enlarge safe mobile sheet swipe area
+
+**Owner observation:** Actions in Activities, Moments and related lists appeared to open smoothly but closed instantly, while bottom navigation/forms only responded to downward swipes from the very top. The owner floated an experimental long-press + drag-toward-quick-action interaction but requested it only if clearly better.
+
+**Implementation:** Preserve shared swipe-action portals for a 220ms exit and defer action callbacks until that exit finishes, avoiding immediate parent unmounts. Give the independent Moment overflow menu an explicit Framer entrance/exit. In the shared mobile sheet, allow a 118px downward-intent swipe from noninteractive content at the top of its scroll body, while ignoring touch on fields/buttons/links/labels or inside nested scrollers. Increase its close hit target to 52px; close-button, backdrop and Escape now request reverse-slide dismissal and respect guarded onClose. No automatic closing when content is scrolled. Add regression checks for observable menu exit across Moments/Activities/Tasks/Transactions and gesture safety in Navigate & Create and forms.
+
+**Rejected experimental idea (not implemented):** A long-press + drag-to-choice radial menu would conflict with the already-approved long-drag move-to-edge, single-tap menu and double-tap Back. Edge-constrained left/right mirrors would also be harder to discover and use; leave the current visible actions unchanged.
+
+**Scope/verification:** Changes committed only to OldVersion, with the existing authorized ExpenseTracker development publication and opt-in independent browser verification; live iPhone Safari evidence remains to be collected. Bump public Guest tour to `2026.11.08.1` without touching personal Guest edits. No production `dn-10` approval, app-version change, `main`, Lifehub, Firebase backend/rules, authentication, financial data, Story/PDF or destructive action semantics.
+
 ## CHG-20261108-500 | Assert actual Safari keyboard dock geometry, not computed bottom text
 
 **Focused evidence:** GitHub [run 42431630994](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42431630994) at `73b0adf` passed 43 of 44 mobile-command/browser cases, including the existing viewport-jitter test, but the newly added combined-height keyboard case incorrectly asserted `getComputedStyle(bar).bottom === 'auto'`. Chromium reports a resolved `12px` even when the new top anchor has placed the dock at its correct visual coordinate; the preceding assertion had already confirmed the correct 832px bottom after viewport pan.

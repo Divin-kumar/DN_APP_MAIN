@@ -140,8 +140,15 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
     animation:none!important;will-change:transform;
   }
   html[data-theme] .dn-modal-swipeable .dn-modal-header {
+    min-height:52px;
+    padding-block:4px;
     touch-action:none;user-select:none;-webkit-user-select:none;
     cursor:grab;
+  }
+  /* Larger close target without introducing a new button or stealing space
+     from the scrollable form body. */
+  html[data-theme] .dn-modal-swipeable .dn-modal-header .modal-close-button {
+    width:52px!important;min-width:52px!important;height:52px!important;
   }
   html[data-theme] .dn-modal-swipeable .dn-modal-header:active {
     cursor:grabbing;

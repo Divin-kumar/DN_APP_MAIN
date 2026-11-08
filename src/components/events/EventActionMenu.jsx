@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Archive, ArchiveRestore, ClipboardList, Copy, Ellipsis, Pencil, Share2, Trash2 } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
 
@@ -7,6 +8,8 @@ import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlay
 export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, onArchive, onDelete, onSummary, className = '' }) {
   const [open, setOpen] = useState(false);
   const [position, setPosition] = useState(null);
+  const reducedMotion = useReducedMotion();
+  const pendingAction = useRef(null);
   const anchor = useRef(null);
   const menu = useRef(null);
   const isArchived = Boolean(event.archived);
@@ -21,7 +24,7 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
 
   const close = useCallback((restoreFocus = false) => {
     setOpen(false);
-    setPosition(null);
+    // Retain its anchor until AnimatePresence finishes the exit.
     if (restoreFocus) anchor.current?.focus({ preventScroll: true });
   }, []);
   const reposition = useCallback(() => {
@@ -85,9 +88,16 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
       options[event.key === 'Home' ? 0 : options.length - 1]?.focus();
     }
   };
+  const onExitComplete = () => {
+    const callback = pendingAction.current;
+    pendingAction.current = null;
+    setPosition(null);
+    // Opening the editor can unmount this menu's parent; do so only after exit.
+    callback?.();
+  };
   const run = (action) => {
+    pendingAction.current = action.run;
     close(true);
-    action.run?.();
   };
 
   return (
@@ -97,8 +107,15 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
         onClick={() => setOpen((value) => !value)}>
         <Ellipsis size={21} aria-hidden="true" />
       </button>
-      {open && position ? createPortal(
-        <div ref={menu} className="dn-event-overflow-menu" role="menu"
+      {createPortal(<AnimatePresence onExitComplete={onExitComplete}>
+        {open && position ? <motion.div ref={menu} className="dn-event-overflow-menu" role="menu"
+          data-dn-motion="event-menu-exit"
+          initial={reducedMotion ? false : { opacity: 0, y: -10, scale: .98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { opacity: 0, transition: { duration: 0 } } : {
+            opacity: 0, y: -8, scale: .985, transition: { duration: .22, ease: [.4, 0, .2, 1] },
+          }}
+          transition={reducedMotion ? { duration: 0 } : { duration: .24, ease: [.22, 1, .36, 1] }}
           aria-label={'Actions for ' + (event.name || 'event')}
           onKeyDown={onMenuKey}
           style={{ position: 'fixed', left: position.left, top: position.top,
@@ -113,8 +130,8 @@ export default function EventActionMenu({ event, onEdit, onDuplicate, onShare, o
               </button>
             );
           })}
-        </div>, document.body,
-      ) : null}
+        </motion.div> : null}
+      </AnimatePresence>, document.body)}
     </span>
   );
 }

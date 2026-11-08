@@ -18,6 +18,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   const [swipeClosing, setSwipeClosing] = useState(false);
   const dismissRequested = useRef(false);
   const dragControls = useDragControls();
+  const bodySwipe = useRef(null);
   const isSlidingSheet = isMobileSheet;
   const allowsSwipe = isSlidingSheet && swipeDismiss;
   useEffect(() => {
@@ -26,6 +27,32 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     media.addEventListener('change', update);
     return () => media.removeEventListener('change', update);
   }, []);
+  // The header remains directly draggable. From the rest of a phone sheet,
+  // allow a deliberate downward pull on noninteractive content only when its
+  // scrolling body is already at the top. Native vertical scrolling wins.
+  const startBodySwipe = (event) => {
+    bodySwipe.current = null;
+    const body = bodyRef.current;
+    if (!allowsSwipe || swipeClosing || event.touches.length !== 1 || !body || body.scrollTop > 1) return;
+    if (event.target.closest?.('button,a,input,textarea,select,label,[contenteditable="true"],[role="button"],[role="textbox"],[role="slider"],[role="listbox"],[data-swipe-ignore]')) return;
+    let node = event.target;
+    while (node && node !== body) {
+      if (node instanceof Element && node.scrollHeight > node.clientHeight + 3 &&
+        /auto|scroll/.test(getComputedStyle(node).overflowY)) return;
+      node = node.parentElement;
+    }
+    const touch = event.touches[0];
+    bodySwipe.current = { x: touch.clientX, y: touch.clientY };
+  };
+  const endBodySwipe = (event) => {
+    const start = bodySwipe.current;
+    bodySwipe.current = null;
+    const touch = event.changedTouches[0];
+    if (!start || !touch || bodyRef.current?.scrollTop > 1 || swipeClosing) return;
+    const dx = touch.clientX - start.x;
+    const dy = touch.clientY - start.y;
+    if (dy >= 118 && dy > Math.abs(dx) * 1.6) setSwipeClosing(true);
+  };
   const startSheetDrag = (event) => {
     if (!allowsSwipe || swipeClosing || event.button !== 0 || !event.isPrimary) return;
     // Do not steal text selection, fields, footer actions or nested scroll.
@@ -56,6 +83,12 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
   const backdropRef = useRef(null);
   const bodyRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  // Close actions use the same reverse sheet animation as a downward swipe.
+  // Re-evaluate the media query for the Escape listener installed on mount.
+  const requestClose = () => {
+    if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
+    else onCloseRef.current();
+  };
   // Capture before portal children mount: React autoFocus can run before this
   // component's effect and would otherwise remember a disappearing input.
   const previousFocusRef = useRef(typeof document === 'undefined' ? null : document.activeElement);
@@ -103,7 +136,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
       if (activeDialogs[activeDialogs.length - 1] !== dialogRef.current) return;
       if (event.key === 'Escape') {
         event.preventDefault();
-        onCloseRef.current();
+        requestClose();
         return;
       }
 
@@ -142,7 +175,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
       exit={{ opacity: 0, transition: reducedMotion ? { duration: 0 } : isSlidingSheet ? { delay: .37, duration: .14 } : { duration: .19 } }}
       transition={{ duration: reducedMotion ? 0 : 0.19 }}
       onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}
-      onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}
+      onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose(); }}
     >
       <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}${allowsSwipe ? ' dn-modal-swipeable' : ''}`}
         role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
@@ -164,9 +197,10 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
         }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
-          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={onClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
+          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
-        <div className="dn-modal-body" ref={bodyRef}>{children}</div>
+        <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
+          onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>{children}</div>
       </motion.section>
     </motion.div>,
     document.body,

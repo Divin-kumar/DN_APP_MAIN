@@ -23,6 +23,9 @@ export default function SwipeActionCard({
   const removePointerListeners = useRef(null);
   const suppressClick = useRef(0);
   const focusOnOpen = useRef(false);
+  // An action can replace or navigate away from the card. Run it only after
+  // the portal's closing animation, or React unmounts the menu instantly.
+  const pendingAction = useRef(null);
   const menuId = useId();
   // A non-touch swipe can end on a neighboring card or outside the viewport.
   // Track only the active pointer on window capture; no listeners remain at rest.
@@ -53,7 +56,7 @@ export default function SwipeActionCard({
     }));
   };
   const showMenu = (isTouch = false, fromKeyboard = false) => {
-    if (disabled || !actions.length || !rootRef.current) return;
+    if (disabled || !actions.length || !rootRef.current || pendingAction.current) return;
     positionMenu();
     focusOnOpen.current = fromKeyboard;
     window.dispatchEvent(new CustomEvent('dn:record-menu', { detail: menuId }));
@@ -157,11 +160,17 @@ export default function SwipeActionCard({
       items[next]?.focus({ preventScroll: true });
     }
   };
+  const runPendingAction = () => {
+    const callback = pendingAction.current;
+    pendingAction.current = null;
+    if (!callback) return;
+    // Run AFTER the exit so opening an editor or changing routes cannot cut
+    // the closing motion short. Existing error/draft handling stays in caller.
+    try { Promise.resolve(callback()).catch(() => {}); } catch { /* Caller reports the failure. */ }
+  };
   const perform = (callback) => {
+    pendingAction.current = callback;
     close(true);
-    // Callers retain their draft/error treatment. A rejected menu action must
-    // never become an unhandled rejection or bypass their recovery UI.
-    try { Promise.resolve(callback?.()).catch(() => {}); } catch { /* Caller reports the failure. */ }
   };
   return (
     <>
@@ -235,7 +244,7 @@ export default function SwipeActionCard({
           </button> : null}
         </div>
       </Root>
-      {createPortal(<AnimatePresence>
+      {createPortal(<AnimatePresence onExitComplete={runPendingAction}>
         {open && position ? <motion.div id={menuId} ref={popupRef} role="menu" data-swipe-ignore
           data-dn-motion="swipe-spring"
           initial={reducedMotion ? false : { opacity: 0, y: position.direction === 'above' ? 16 : -16, scale: 0.965 }}

@@ -134,6 +134,15 @@ test('shared swipe menus animate without CSS-keyframe blinking across Moments Ac
     const after = await row.boundingBox();
     expect(Math.abs(after.x - atRest.x)).toBeLessThanOrEqual(2);
     await page.keyboard.press('Escape');
+    // Exit must visibly reverse, not blink away on the same event frame.
+    await expect(menu).toBeVisible();
+    await page.waitForTimeout(90);
+    const leaving = await menu.evaluate(node=>({
+      opacity:Number(getComputedStyle(node).opacity),
+      transform:getComputedStyle(node).transform,
+    }));
+    expect(leaving.opacity).toBeLessThan(1);
+    expect(leaving.transform).not.toBe(settled);
     await expect(menu).toHaveCount(0);
     expect(await snapshot()).toEqual(before);
   }
