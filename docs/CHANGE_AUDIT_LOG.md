@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-504 | Authorize guarded DN v2.3.10 production publication
+
+**Authorization:** The owner explicitly requested production deployment of the subtle mobile bottom-sheet glass, compact frosted profile popover, and previously approved UI closing/gesture refinements, excluding the cancelled + long-press action wheel.
+
+**Independent verification:** Exact code candidate `aeaf5f9176918b013b26ffa4fe72d8c10ddb35fb` passed **57/57** focused Chromium browser checks in [GitHub run 42435583454](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42435583454), including mobile sheet translucency at 320/390/430px and profile menu contrast/hit areas at all three widths in light and dark mode. Unit tests, lint, build, dependency audit and documentation governance also passed in [run 42435583447](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42435583447). No separate full pre-release E2E was requested for this minor patch.
+
+**Release action:** Trigger the existing guarded OldVersion-only **fast patch** production workflow using `[deploy-live]` at this documentation-only commit. The workflow must verify v2.3.10 is greater than the live v2.3.9, rerun Node/lint/audit/build, deploy only Firebase site `dn-10` in project `expense-tracker-divin`, and compare live HTML bytes to the exact release build. The automatically deployed ExpenseTracker Development site and Lifehub remain separate; no backend, schema, rules or account data changes. This record is authorization and expectation, not a claim that publication has already succeeded.
+
 ## CHG-20261108-503 | Correct modal CSS precedence and profile option hit area
 
 **Failed evidence:** [Targeted browser run 42435297483](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/42435297483) at `d5d16c4` recorded **50 passes and seven failures**. Four profile tests detected option heights below the guaranteed 44px minimum during the menu entrance. Three glass tests measured fully opaque shared ModalDialog backgrounds because later legacy theme rules overrode the initial translucent declarations.
