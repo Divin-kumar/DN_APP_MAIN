@@ -63,6 +63,24 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.10',
+    title: 'Refined glass and comfortable iPhone controls',
+    summary: 'Lightly frosted mobile sheets, a more compact profile menu and smoother dismissal across DN.',
+    highlights: [
+      'Bottom sheets use subtle glass in light and dark mode, with text and controls remaining fully readable.',
+      'The top-right profile dropdown is narrower and lightly frosted, without shrinking touch targets.',
+      'Action menus close smoothly, and downward dismissal works from safe areas of mobile sheets.',
+      'Search stays above the iPhone keyboard and the classic blue + keeps its existing gestures.',
+    ],
+    changes: [
+      'Shared mobile sheets — A near-opaque frosted surface adds gentle blur without fading children or changing desktop layout. The Close button and guarded swipe-to-dismiss continue to work.',
+      'Profile — The account popover is reduced to 248px maximum, with compact spacing, preserved 44px options and a subtle blurred backdrop.',
+      'Motion — Moment, Activity, Task and Transaction actions finish their reverse animation before an editor or route replaces the menu.',
+      'Search & navigation — The iPhone keyboard dock follows the visual viewport and leaves Search visible. The blue + retains single-tap Navigate & Create, double-tap Back and drag-to-reposition.',
+      'Scope — The suggested long-press + action wheel was cancelled. No records, authentication, attachments, totals, PDFs, backups or account boundaries were changed.',
+    ],
+  },
+  {
     version: '2.3.9',
     title: 'Smoother iPhone navigation and actions',
     summary: 'Clearer Search, the classic blue + with double-tap Back, and natural motion across forms and action menus.',

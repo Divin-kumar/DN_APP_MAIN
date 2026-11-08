@@ -13,7 +13,9 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     const release = page.locator('.settings-section').filter({ has:page.getByRole('heading', { name:`What's New in v${version}`, exact:true }) });
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
-    for (const text of (version === '2.3.9'
+    for (const text of (version === '2.3.10'
+      ? ['Bottom sheets', 'profile dropdown', 'Action menus', 'Search']
+      : version === '2.3.9'
       ? ['Search and Refine', 'blue circular +', 'double-tap Back', 'Pull a mobile navigation', 'Moment, Activity, Task and Transaction']
       : version === '2.3.8'
       ? ['About, Settings', '88px reserved gap', 'Search and Refine', 'independent +']

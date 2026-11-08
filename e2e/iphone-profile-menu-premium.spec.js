@@ -27,7 +27,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
           .map((item) => item.getBoundingClientRect().height);
         const button = document.querySelector('.profile-trigger').getBoundingClientRect();
         const themeButton = document.querySelector('.theme-toggle').getBoundingClientRect();
+        const style = getComputedStyle(element);
         return { menuLeft: rect.left, menuRight: rect.right, menuBottom: rect.bottom,
+          menuWidth: rect.width, background: style.backgroundColor, glass: style.backdropFilter,
           bodyWidth: document.documentElement.scrollWidth,
           triggerHeight: button.height, triggerWidth: button.width,
           themeButtonHeight: themeButton.height, themeButtonWidth: themeButton.width, items };
@@ -35,6 +37,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(sizes.menuLeft).toBeGreaterThanOrEqual(-1);
       expect(sizes.menuRight).toBeLessThanOrEqual(width + 1);
       expect(sizes.menuBottom).toBeLessThanOrEqual(height + 1);
+      expect(sizes.menuWidth).toBeLessThanOrEqual(249);
+      expect(sizes.background).toMatch(/(?:\/\s*0\.\d+|rgba\([^)]*,\s*0\.\d+\))/);
+      expect(sizes.glass).toContain('blur(');
       expect(sizes.bodyWidth).toBeLessThanOrEqual(width + 1);
       expect(sizes.triggerHeight).toBeGreaterThanOrEqual(44);
       expect(sizes.triggerWidth).toBeGreaterThanOrEqual(44);

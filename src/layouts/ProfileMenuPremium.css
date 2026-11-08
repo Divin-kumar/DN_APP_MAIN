@@ -72,29 +72,29 @@ html[data-theme] .dn-header .profile-menu {
   z-index: 100 !important;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  width: min(274px, calc(100vw - 24px)) !important;
+  gap: 1px;
+  width: min(248px, calc(100vw - 24px)) !important;
   min-width: 0;
   max-width: calc(100vw - 24px) !important;
-  max-height: min(480px, calc(100dvh - 82px));
-  padding: 8px !important;
+  max-height: min(420px, calc(100dvh - 82px));
+  padding: 6px !important;
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid var(--color-border) !important;
-  border-radius: 18px !important;
-  background: color-mix(in srgb, var(--color-card) 96%, transparent) !important;
+  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent) !important;
+  border-radius: 17px !important;
+  background: color-mix(in srgb, var(--color-card) 92%, transparent) !important;
   color: var(--color-text);
-  box-shadow: 0 16px 42px rgba(7, 19, 34, .17) !important;
-  -webkit-backdrop-filter: blur(18px) saturate(1.1);
-  backdrop-filter: blur(18px) saturate(1.1);
+  box-shadow: 0 14px 36px rgba(7, 19, 34, .16), inset 0 1px 0 rgba(255, 255, 255, .11) !important;
+  -webkit-backdrop-filter: blur(20px) saturate(1.12);
+  backdrop-filter: blur(20px) saturate(1.12);
 }
 html[data-theme] .dn-header .profile-menu-account {
   display: grid;
   gap: 2px;
   min-width: 0;
-  margin: 0 2px 5px;
-  padding: 9px 9px 12px;
+  margin: 0 2px 3px;
+  padding: 7px 8px 9px;
   border-bottom: 1px solid var(--color-border) !important;
 }
 html[data-theme] .dn-header .profile-menu-account strong {
@@ -117,11 +117,11 @@ html[data-theme] .dn-header .profile-menu-account span {
 html[data-theme] .dn-header .profile-menu-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   min-width: 0;
-  min-height: 46px;
-  padding: 10px 12px;
+  min-height: 44px;
+  padding: 8px 10px;
   border: 1px solid transparent !important;
   border-radius: 11px;
   background: transparent !important;
@@ -147,7 +147,7 @@ html[data-theme] .dn-header .profile-menu-item:focus-visible {
   outline-offset: -2px;
 }
 html[data-theme] .dn-header .profile-menu-danger {
-  margin-top: 5px;
+  margin-top: 3px;
   border-top: 1px solid var(--color-border) !important;
   border-radius: 0 0 11px 11px;
   color: var(--color-danger) !important;
@@ -170,11 +170,17 @@ html[data-theme] .dn-header .profile-menu-danger:focus-visible {
     position: fixed !important;
     top: calc(60px + max(7px, env(safe-area-inset-top, 0px))) !important;
     right: max(10px, env(safe-area-inset-right, 0px)) !important;
-    width: min(274px, calc(100vw - 20px)) !important;
+    width: min(248px, calc(100vw - 20px)) !important;
     max-height: calc(100dvh - 82px);
   }
 }
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-header .profile-trigger-chevron,
   html[data-theme] .dn-header .profile-menu { transition: none; animation: none !important; }
+}
+
+/* Subtle dark glass: preserve contrast without a heavy opaque panel. */
+html[data-theme="dark"] .dn-header .profile-menu {
+  background: color-mix(in srgb, var(--color-card) 94%, transparent) !important;
+  box-shadow: 0 16px 38px rgba(0, 0, 0, .31), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
 }

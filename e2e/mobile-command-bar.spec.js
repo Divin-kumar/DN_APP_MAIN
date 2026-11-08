@@ -374,6 +374,43 @@ test('bottom sheet dismisses from safe body touch, but not from an editable fiel
  expect(errors).toEqual([]);
 });
 
+
+// All phone bottom-sheet variants use the same glass layer, independent of
+// the underlying list route, and only the shell is translucent.
+for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light']]) {
+ test(`phone glass stays legible at ${width}px ${theme}`,async({page})=>{
+  await page.setViewportSize({width,height:width===320?700:932});
+  const errors=await seedGuest(page,{theme});
+  await page.goto('/activities');
+  await page.getByRole('button',{name:'Open quick create menu'}).click();
+  const dialog=page.getByRole('dialog',{name:'Navigate & create'});
+  await expect(dialog).toBeVisible();
+  const glass=await dialog.evaluate(el=>{
+    const css=getComputedStyle(el);
+    const r=el.getBoundingClientRect();
+    return {background:css.backgroundColor,filter:css.backdropFilter,opacity:css.opacity,
+      width:r.width,left:r.left,right:r.right};
+  });
+  expect(glass.background).toMatch(/(?:\/\s*0\.\d+|rgba\([^)]*,\s*0\.\d+\))/);
+  expect(glass.filter).toContain('blur(');
+  expect(glass.opacity).toBe('1');
+  expect(glass.left).toBeGreaterThanOrEqual(-1);
+  expect(glass.right).toBeLessThanOrEqual(width+1);
+  await dialog.getByRole('button',{name:'Close dialog'}).click();
+  await expect(dialog).toHaveCount(0);
+  const refine=page.getByRole('button',{name:/^Filters and sort/}).first();
+  await refine.click();
+  const filter=page.getByRole('dialog',{name:'Activity filters'});
+  await expect(filter).toBeVisible();
+  const filterGlass=await filter.evaluate(el=>({bg:getComputedStyle(el).backgroundColor,blur:getComputedStyle(el).backdropFilter}));
+  expect(filterGlass.bg).toMatch(/(?:\/\s*0\.\d+|rgba\([^)]*,\s*0\.\d+\))/);
+  expect(filterGlass.blur).toContain('blur(');
+  await filter.getByRole('button',{name:'Close dialog'}).click();
+  await expect(filter).toHaveCount(0);
+  expect(errors).toEqual([]);
+ });
+}
+
 test('double-tapping the universal + returns to the previous DN page without opening a sheet', async ({page}) => {
   await page.setViewportSize({width:430,height:932});
   const errors = await seedGuest(page,{theme:'light'});

@@ -4,6 +4,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261108-502 | Subtle glass mobile sheets, compact glass profile and v2.3.10 release preparation
+
+**Approval:** Owner requested a slightly glassy treatment on all bottom sheets and a compact lightly frosted top-right profile menu, cancelled the proposed long-press + action wheel, and explicitly authorized DN production publication.
+
+**Implementation:** Apply 93% light/95% dark card surface opacity and 20px backdrop blur to mobile shared sheets only. Preserve opaque children, gesture-safe form fields and desktop dialogs. Narrow the profile popover from 274px to 248px with less internal whitespace; maintain 44px touch and keyboard targets, account identity, Profile/Insights/Settings/Logout. Apply 92% light/94% dark translucent card backing and restrained blur. Update About's curated 2.3.10 release notes and tests. Bump `package.json` and `package-lock.json` from 2.3.9 to 2.3.10 because Firebase production forbids duplicate release versions.
+
+**Scope and verification plan:** Only `OldVersion` may change. First verify documentation, unit/lint/build/audit and targeted 320/390/430px browser tests, then opt-in guarded production `dn-10` deployment with exact build readback. ExpenseTracker's previously approved development preview may update automatically; Lifehub and backend authentication/database rules remain untouched. No feature expansion, schema migration or financial/PDF behavior change. Demo tour already accurately describes these controls; no additional Guest fixture refresh is needed. Actual verification and publication status must be reported from GitHub Actions and never inferred.
+
 ## CHG-20261108-501 | Animate action dismissal and enlarge safe mobile sheet swipe area
 
 **Owner observation:** Actions in Activities, Moments and related lists appeared to open smoothly but closed instantly, while bottom navigation/forms only responded to downward swipes from the very top. The owner floated an experimental long-press + drag-toward-quick-action interaction but requested it only if clearly better.
