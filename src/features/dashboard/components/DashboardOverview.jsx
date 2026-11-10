@@ -354,7 +354,7 @@ export function DashboardOverviewContent() {
               </div>
             </div>
           ) : (
-            <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p>
+            <p className="dashboard-upcoming-empty">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'} <Link to="/events">Browse Moments</Link></p>
           )}
           </></DashboardReveal>
         </section>
@@ -407,7 +407,7 @@ export function DashboardOverviewContent() {
               </div>
             </div>
           ) : (
-            <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p>
+            <p className="dashboard-upcoming-empty">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'} <Link to="/activities">Browse Activities</Link></p>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
 

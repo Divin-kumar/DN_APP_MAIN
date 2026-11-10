@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Dashboard empty-period navigation and discovery metadata (10 November 2026, OldVersion)
+
+When the Dashboard Upcoming or On This Day view contains no matching Moments or Activities, its existing no-results message now includes a lightweight **Browse Moments** or **Browse Activities** link to the corresponding established list screen. This does not create records or alter the date logic, saved Dashboard visibility preferences, filters, navigation shell, task cards, guest/account data, search, PDF exports or backend. Both links have a 44px minimum touch target and visible keyboard focus. The public page description now describes DN as Moments, Activities, Tasks and Finance instead of only a finance dashboard. The versioned Guest tour is unchanged because it already demonstrates navigation and its nonempty sample lists; no sample content or records are reset. Source-level string/route checks precede the commit; real device, browser E2E and production deployment require separate verification and approval.
+
 ## 2.3.10 glass cascade and tap-target correction (8 November 2026)
 
 Focused v2.3.10 verification at `d5d16c4` passed 50 browser cases but exposed four profile row-height failures and three shared-sheet background failures. The profile is kept visually compact by its 248px width and reduced internal padding, but each row again uses a 46px minimum to remain at least 44px under entry transitions. The translucent mobile sheet rule now targets the actual `section[role=dialog]` inside the modal viewport with greater selector priority than pre-existing high-specificity legacy/dark backgrounds. The intended glass opacity (93% light/95% dark) and blur remain unchanged; this is a CSS compatibility correction, not a test bypass. Targeted cross-route browser tests must pass before production publication.

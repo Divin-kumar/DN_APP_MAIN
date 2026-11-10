@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-498 | Dashboard empty-period browsing and honest app metadata | 10 November 2026 | OldVersion development
+
+- **Scope:** Add inline Browse Moments / Browse Activities links only to Dashboard empty-period messages, keeping the existing date-sensitive copy and no extra navigation controls in populated cards. Give these inline links 44px tap targets and clear focus outlines; update the HTML description to reflect the app beyond finance.
+- **Compatibility:** Routes reuse /events and /activities. No data model, filters, stored preferences, payments, Story, PDF, auth, Firebase or release-version changes. The current Guest tour covers navigation and retains its version/sample data unchanged.
+- **Validation:** Source-derived exact-match and route assertions performed before writing; browser E2E, native iOS Safari, production readback and live-user testing not executed as part of this commit. Existing GitHub checks may verify after push. Risk is limited to layout wrapping of empty copy on narrow screens and must be reviewed there before promotion.
+- **Release:** Development on OldVersion only; production remains unchanged pending separate owner approval.
+
 **Policy:** Record meaningful changes below this introduction, latest first by descending CHG date and sequence. Preserve historical entry text; record corrections in a new entry. A new entry is not required for every push or ordinary documentation maintenance. Earlier mandatory-per-push and append-at-bottom instructions inside historical records are superseded by the owner's 2026-10-22 direction. The [master](MASTER_SOURCE_OF_TRUTH.md) defines current behavior; [AGENTS.md](../AGENTS.md) defines maintenance rules.
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.

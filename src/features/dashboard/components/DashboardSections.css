@@ -1,4 +1,14 @@
 html[data-theme] .dashboard-overview.dashboard-compact { gap:12px !important; }
+/* Empty-period navigation is a quiet text affordance, not another dashboard button. */
+html[data-theme] .dashboard-compact .dashboard-upcoming-empty a {
+  display:inline-flex; align-items:center; min-height:44px;
+  margin-inline-start:4px; padding-inline:4px;
+  color:var(--color-primary); font-weight:680; text-underline-offset:3px;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-empty a:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:5px;
+}
+
 html[data-theme] .dashboard-compact .dashboard-upcoming-card { min-width:0; align-content:start; padding:12px 14px; gap:5px; border-radius:16px; }
 html[data-theme] .dashboard-compact .dashboard-upcoming-empty { margin:6px 0; font-size:13px; }
 html[data-theme] .dashboard-compact .dashboard-upcoming-row { min-height:54px; }
