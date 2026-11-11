@@ -285,7 +285,7 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
  html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a,
  html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button {
-  animation:dn-command-tile-arrive .26s cubic-bezier(.22,1,.36,1) both;
+  animation:dn-command-tile-arrive .26s cubic-bezier(.22,1,.36,1) backwards;
   transition:background-color .18s ease,box-shadow .18s ease,transform .16s ease;
  }
  html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(1){animation-delay:.06s}
