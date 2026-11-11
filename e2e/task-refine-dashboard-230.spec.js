@@ -221,3 +221,43 @@ test('filter long press visibly lifts and moves a rule without changing records'
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
   expect(errors).toEqual([]);
 });
+
+// Date geometry, overdue cue and title size must agree between Task pages and Home.
+// No edits or status actions: compare the original Guest record bytes after navigation.
+for(const [width,theme] of [[320,'dark'],[390,'light'],[430,'dark']]){
+ test('iPhone Task and Dashboard use matching square date tiles '+width+'px '+theme,async({page})=>{
+   await page.setViewportSize({width,height:844});
+   const errors=await seedTasks(page,theme);
+   const originalTasks=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
+   const originalMoments=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
+   const taskRow=page.locator('.dn-independent-task-row').filter({hasText:'Book return tickets'});
+   const tile=taskRow.locator('.dn-task-calendar');
+   await expect(tile).toBeVisible();
+   const taskGeometry=await tile.evaluate(el=>{
+     const b=el.getBoundingClientRect(),s=getComputedStyle(el);
+     return {w:b.width,h:b.height,bg:s.backgroundColor,color:s.color};
+   });
+   const expected=width<=360?48:52;
+   expect(Math.abs(taskGeometry.w-expected)).toBeLessThanOrEqual(1);
+   expect(Math.abs(taskGeometry.w-taskGeometry.h)).toBeLessThanOrEqual(1);
+   expect(await taskRow.locator('.dn-task-copy strong').evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(13.5);
+   await page.goto('/dashboard');
+   await page.getByRole('button',{name:'Show Tasks on dashboard'}).click();
+   const rows=page.locator('.dn-dashboard-tasks .dn-dashboard-task-row');
+   await expect(rows).toHaveCount(2);
+   const dashboardTile=rows.filter({hasText:'Book return tickets'}).locator('.dn-dashboard-task-date');
+   const dashboardGeometry=await dashboardTile.evaluate(el=>{
+     const b=el.getBoundingClientRect(),s=getComputedStyle(el);
+     return {w:b.width,h:b.height,bg:s.backgroundColor,color:s.color};
+   });
+   expect(Math.abs(dashboardGeometry.w-expected)).toBeLessThanOrEqual(1);
+   expect(Math.abs(dashboardGeometry.w-dashboardGeometry.h)).toBeLessThanOrEqual(1);
+   expect(dashboardGeometry.bg).toBe(taskGeometry.bg);
+   expect(dashboardGeometry.color).toBe(taskGeometry.color);
+   expect(await rows.first().locator('.dn-dashboard-task-name').evaluate(el=>parseFloat(getComputedStyle(el).fontSize))).toBeGreaterThanOrEqual(13.5);
+   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
+   expect(await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'))).toBe(originalTasks);
+   expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(originalMoments);
+   expect(errors).toEqual([]);
+ });
+}

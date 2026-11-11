@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-500 | iPhone Tasks / Dashboard shared date-tile polish | 11 November 2026 | OldVersion development
+
+- **Visual scope:** Align standalone Task and Dashboard Task phone date squares (52px; 48px on narrowest phones), typography/spacing, subdued surface treatment, overdue accents and signal alignment without heavy cards. Preserve four preview rows, existing scroll, full Task tap/swipe interactions and visible focus.
+- **Behavior unchanged:** Task count/filters/status/sorting, date/time data, dashboard Task links, priority flags, Guest and signed-in storage, demo/version, desktop, PDF, backend and all hosting production targets.
+- **Verification:** New focused 320/390/430px light/dark geometry and storage-preservation checks added to the existing Task Refine/Dashboard browser suite. Opt-in [verify-230-task-ui] GitHub workflow requested on the exact commit. Production and native Safari require separate authorization/evidence.
+- **Release:** OldVersion development only; no app-version increase or production trigger.
+
 ### CHG-499 | iPhone navigation-tile and page-motion polish | 11 November 2026 | OldVersion development
 
 - **Scope:** Gentle staggered menu child tiles, clearer selected destination, creation action press/focus states and slightly smoother route entrance on phone; all animations honor Reduce Motion.
