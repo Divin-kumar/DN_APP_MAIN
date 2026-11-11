@@ -465,3 +465,31 @@ test('starting to drag during single-tap recognition cancels menu opening', asyn
   await expect(plus).toHaveCSS('position','fixed');
   expect(errors).toEqual([]);
 });
+
+// iPhone navigation animations must keep Guest records and routes unchanged.
+for(const width of [320,390,430]) test('Navigation tile response preserves records at '+width+'px',async({page})=>{
+ await page.setViewportSize({width,height:844});await page.emulateMedia({reducedMotion:'no-preference'});
+ const errors=await seedGuest(page);await page.goto('/events');
+ const before=await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'));
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ const menu=page.getByRole('dialog',{name:'Navigate & create'});
+ const nav=menu.getByRole('navigation',{name:'Main navigation'});
+ await expect(nav.getByRole('link',{name:'Moments'})).toHaveAttribute('aria-current','page');
+ await expect(nav.getByRole('link',{name:'Home'})).toHaveCSS('animation-name','dn-command-tile-arrive');
+ await nav.getByRole('link',{name:'Tasks'}).click();
+ await expect(page).toHaveURL(/\/tasks$/);await expect(menu).toHaveCount(0);
+ expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+ expect(errors).toEqual([]);
+});
+test('Reduced Motion keeps keyboard navigation without tile animation',async({page})=>{
+ await page.setViewportSize({width:390,height:844});await page.emulateMedia({reducedMotion:'reduce'});
+ const errors=await seedGuest(page);await page.goto('/events');
+ await page.getByRole('button',{name:'Open quick create menu'}).click();
+ const menu=page.getByRole('dialog',{name:'Navigate & create'});
+ const nav=menu.getByRole('navigation',{name:'Main navigation'});
+ await expect(nav.getByRole('link',{name:'Home'})).toHaveCSS('animation-name','none');
+ await expect(menu.getByRole('button',{name:'Task',exact:true})).toHaveCSS('animation-name','none');
+ await page.keyboard.press('Tab');await expect(nav.getByRole('link',{name:'Home'})).toBeFocused();
+ await page.keyboard.press('Escape');await expect(menu).toHaveCount(0);
+ expect(errors).toEqual([]);
+});

@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-499 | iPhone navigation-tile and page-motion polish | 11 November 2026 | OldVersion development
+
+- **Scope:** Gentle staggered menu child tiles, clearer selected destination, creation action press/focus states and slightly smoother route entrance on phone; all animations honor Reduce Motion.
+- **Preserved:** Existing Framer sheet reverse exit, movable blue + gestures, Search, forms, routes, Guest data, filters, desktop, PDF, account separation, production/version and Firebase backend. Guest tour wording unchanged.
+- **Validation:** Source-derived checks; opt-in [verify-iphone-command-motion] browser suite (including new 320/390/430 and Reduce Motion navigation regression) requested on commit. Chromium result and physical Safari remain unverified until checked.
+- **Publication:** Only OldVersion auto-development preview; no production release trigger.
+
 ### CHG-498 | Dashboard empty-period browsing and honest app metadata | 10 November 2026 | OldVersion development
 
 - **Scope:** Add inline Browse Moments / Browse Activities links only to Dashboard empty-period messages, keeping the existing date-sensitive copy and no extra navigation controls in populated cards. Give these inline links 44px tap targets and clear focus outlines; update the HTML description to reflect the app beyond finance.

@@ -280,3 +280,37 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
 @media (prefers-reduced-motion:reduce) {
  html[data-theme] .dn-command-root .dn-command-trigger {transition:none !important;}
 }
+
+/* Child-only iPhone tile motion: never override Framer's drawer exit. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a,
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button {
+  animation:dn-command-tile-arrive .26s cubic-bezier(.22,1,.36,1) both;
+  transition:background-color .18s ease,box-shadow .18s ease,transform .16s ease;
+ }
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(1){animation-delay:.06s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(2){animation-delay:.085s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(3){animation-delay:.11s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(4){animation-delay:.135s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a:nth-child(5){animation-delay:.16s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button{animation-delay:.16s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button:nth-child(2n){animation-delay:.19s}
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a[aria-current="page"] {
+  background:color-mix(in srgb,var(--color-primary) 6%,transparent);color:var(--color-primary);
+ }
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button:focus-visible,
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-redock:focus-visible {
+  outline:2px solid var(--color-primary);outline-offset:2px;
+ }
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button:active{
+  transform:translateY(1px) scale(.98);
+  background:color-mix(in srgb,var(--color-primary) 7%,transparent)!important;
+ }
+}
+@keyframes dn-command-tile-arrive {from{opacity:.78;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@media (prefers-reduced-motion:reduce) {
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-destinations a,
+ html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button{
+  animation:none!important;transition:none!important;transform:none!important;
+ }
+}

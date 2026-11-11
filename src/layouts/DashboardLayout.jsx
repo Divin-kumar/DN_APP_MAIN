@@ -645,9 +645,9 @@ export default function DashboardLayout() {
           <motion.div
             key={getRouteTransitionKey(location.pathname)}
             className="dn-route-transition"
-            initial={reducedMotion ? false : { opacity: 0.94, y: 4 }}
+            initial={reducedMotion ? false : { opacity: mobileShell ? 0.91 : 0.94, y: mobileShell ? 6 : 4 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reducedMotion ? 0 : 0.14, ease: 'easeOut' }}
+            transition={{ duration: reducedMotion ? 0 : (mobileShell ? 0.2 : 0.14), ease: [0.22, 1, 0.36, 1] }}
           >
             <Outlet />
           </motion.div>
