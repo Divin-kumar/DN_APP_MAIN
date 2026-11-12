@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-507 | Story original-photo framing and PDF page navigation reset | 12 November 2026 | OldVersion development
+
+- **Story photos:** Give existing one-column iPhone Journal spreads a subtle book-paper-toned photo frame, consistent gap/radius, native aspect-ratio preservation and keyboard-visible focus. Disable touch-hover brightening without changing saved originals, attachment loading, Activity connections, original preview or downloads. No new overlays, galleries or cards; Diary and Tasks remain unchanged.
+- **PDF navigation:** After the currently supported Next/Previous, page-jump and thumbnail actions, reset normal/full-screen preview scrolling to the beginning of the newly selected page. Keep the chosen zoom level, centered thumbnail indicator, page data and guards, PDF bytes and option settings intact.
+- **Evidence:** Add synthetic 320/390px portrait/landscape original photo/viewer checks and zoomed PDF page/fullscreen scroll-reset cases to existing opt-in Story `[verify-234]` and PDF `[verify-230-iphone-pdf]` suites. Review exact-SHA CI after push; native iPhone Safari remains unverified until manual acceptance.
+- **Scope:** OldVersion only, with standing automatic ExpenseTracker development Hosting. No Guest tour version bump, production deployment, main branch write, backend/data migration, Lifehub, PDF renderer or app-version change.
+
 ### CHG-506 | iPhone long-form Story typography and narrow PDF preview layout | 12 November 2026 | OldVersion development
 
 - **Story:** Standardize recorded Journal/Diary body and continuation writing at 16px/1.78 on phones, with Task Story body/continuations at 13px/1.62. Preserve dark/light paper tokens, the standalone shell's upcoming/undated text, chapter continuity, titles, media, Task status and stored memories.

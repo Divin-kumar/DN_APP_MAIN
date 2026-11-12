@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ChevronLeft, ChevronRight, Download, RefreshCw, SlidersHorizontal,
   Maximize2, Images, ZoomIn, ZoomOut, X, RotateCcw, CheckCircle2,
@@ -65,6 +65,8 @@ export default function MomentPdfStudio({ event }) {
   const styleOverrideRef = useRef(false);
   const dialogRef = useRef(null);
   const thumbnailRef = useRef(null);
+  const pageViewportRef = useRef(null);
+  const fullscreenViewportRef = useRef(null);
 
   const renderPreview = useCallback(async (next) => {
     const id = ++requestRef.current;
@@ -207,6 +209,17 @@ export default function MomentPdfStudio({ event }) {
       row.scrollLeft += (item.left + item.width / 2) - (viewport.left + viewport.width / 2);
     }
   }, [thumbsOpen, pageIndex, thumbnailPages]);
+  // Keep zoom choice intact, but never land midway through the *previous*
+  // page after changing chapters, jumping to a page or choosing a thumbnail.
+  // Layout timing prevents a one-frame flash of the old scroll position.
+  useLayoutEffect(() => {
+    for (const viewport of [pageViewportRef.current, fullscreenViewportRef.current]) {
+      if (!viewport) continue;
+      viewport.scrollTop = 0;
+      viewport.scrollLeft = 0;
+    }
+  }, [pageIndex, preview?.pageUrls]);
+
   const changeZoom = (direction) => setZoomIndex((current) =>
     Math.max(0, Math.min(zoomSteps.length - 1, current + direction)));
 
@@ -274,7 +287,7 @@ export default function MomentPdfStudio({ event }) {
               aria-label="Open full-screen PDF preview" title="Full-screen preview">
               <Maximize2 size={17} aria-hidden="true" /></button>
           </div>
-          <div className="dn-pdf-preview-viewport" aria-label="PDF document page" style={{ '--dn-preview-zoom': zoom }}>
+          <div ref={pageViewportRef} className="dn-pdf-preview-viewport" aria-label="PDF document page" style={{ '--dn-preview-zoom': zoom }}>
             <div className="dn-pdf-preview-page">
               <img src={preview.pageUrls[pageIndex]} alt={'Rendered PDF page ' + (pageIndex + 1)} />
             </div>
@@ -487,7 +500,7 @@ export default function MomentPdfStudio({ event }) {
         </button>
       </div>
       {preview ? <>
-        <div className="dn-pdf-fullscreen-viewport">
+        <div ref={fullscreenViewportRef} className="dn-pdf-fullscreen-viewport">
           <img src={preview.pageUrls[pageIndex]} alt={'Fullscreen PDF page ' + (pageIndex + 1)} />
         </div>
         {controls(true)}

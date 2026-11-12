@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { seedGuest } from './fixtures.js';
+import { addOriginal, seedGuest } from './fixtures.js';
 
 // Synthetic mobile Chromium only; real Safari, PWA and VoiceOver remain manual checks.
 test.use({ hasTouch: true, isMobile: true });
@@ -131,6 +131,55 @@ for (const { width, theme } of [
     await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(modal).toHaveCount(0);
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+    expect(errors).toEqual([]);
+  });
+}
+
+
+// Real Guest-backed originals in portrait and landscape orientations. The
+// phone Story frame must preserve the original image proportions and viewer.
+for (const { width, height, theme, originalWidth, originalHeight } of [
+  { width: 320, height: 740, theme: 'dark', originalWidth: 600, originalHeight: 900 },
+  { width: 390, height: 844, theme: 'light', originalWidth: 900, originalHeight: 600 },
+]) {
+  test(`Journal photo framing and original preview at ${width}px ${theme}`, async ({ page }) => {
+    const errors = await seedGuest(page, { theme });
+    await addOriginal(page, { width: originalWidth, height: originalHeight, count: 2 });
+    await page.setViewportSize({ width, height });
+    await page.goto('/events/moment-one/story');
+    const source = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+    const journal = page.locator('.dn-v2-story[data-presentation="journey"]');
+    const album = journal.locator('[data-story-activity="shared"] .dn-journal-gallery');
+    await expect(album).toHaveAttribute('data-album-layout', 'pair');
+    const button = album.getByRole('button', { name: 'Preview Activity photo 0.png' });
+    const photo = button.locator('img');
+    await expect(photo).toBeVisible();
+    await expect.poll(() => photo.evaluate((img) => img.naturalWidth)).toBe(originalWidth);
+    const dimensions = await photo.evaluate((img) => {
+      const style = getComputedStyle(img);
+      const frame = img.closest('button').getBoundingClientRect();
+      const picture = img.getBoundingClientRect();
+      return {
+        fit: style.objectFit,
+        naturalHeight: img.naturalHeight,
+        width: picture.width,
+        frameWidth: frame.width,
+        viewport: window.innerWidth,
+        overflow: document.documentElement.scrollWidth > window.innerWidth + 1,
+      };
+    });
+    expect(dimensions.fit).toBe('contain');
+    expect(dimensions.naturalHeight).toBe(originalHeight);
+    expect(dimensions.width).toBeLessThanOrEqual(dimensions.frameWidth + 1);
+    expect(dimensions.frameWidth).toBeLessThanOrEqual(width);
+    expect(dimensions.overflow).toBe(false);
+    await button.tap();
+    const original = page.getByRole('dialog', { name: 'Activity photo 0.png' });
+    await expect(original).toBeVisible();
+    await expect(original.getByRole('img', { name: 'Activity photo 0.png' })).toBeVisible();
+    await original.getByRole('button', { name: 'Close dialog' }).tap();
+    await expect(original).toHaveCount(0);
+    expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(source);
     expect(errors).toEqual([]);
   });
 }

@@ -468,3 +468,32 @@ html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-story-writing-part 
     font-size:13px;line-height:1.62;
   }
 }
+
+
+/* iPhone documentary photo presentation: quiet framing for the original,
+   no forced crop, no new photo overlay or competing card chrome. */
+@media (max-width:680px) {
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery[data-album-layout] .dn-attachment-gallery {
+    gap:clamp(12px,3vw,16px);
+  }
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery[data-album-layout] .dn-attachment-open {
+    display:grid;place-items:center;
+    min-width:0;min-height:44px;padding:0;
+    border:0;border-radius:14px;
+    background:color-mix(in srgb,var(--dn-book-ink) 4%,var(--dn-book-paper));
+    box-shadow:0 1px 12px color-mix(in srgb,var(--dn-book-ink) 9%,transparent);
+  }
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery[data-album-layout] .dn-attachment-open img {
+    width:100%;height:auto;max-height:72dvh;
+    object-fit:contain;object-position:center;
+    border-radius:inherit;
+  }
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery .dn-attachment-open:focus-visible {
+    outline:2px solid var(--dn-book-accent);outline-offset:2px;
+  }
+}
+@media(max-width:680px) and (hover:none) {
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery .dn-attachment-open:hover img {
+    filter:none;
+  }
+}
