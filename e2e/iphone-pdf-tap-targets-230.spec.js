@@ -127,6 +127,13 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     await expect(download).toBeEnabled({ timeout: 30000 });
     const pageCount = Number.parseInt(await studio.locator('.dn-pdf-page-count').innerText(), 10);
     expect(pageCount).toBeGreaterThanOrEqual(4);
+    const pageNavigation = studio.getByRole('navigation', { name: 'PDF page navigation' });
+    const pageAnnouncement = pageNavigation.locator('.dn-pdf-page-announcement');
+    await expect(pageAnnouncement).toHaveAttribute('aria-live', 'polite');
+    await expect(pageAnnouncement).toHaveText('Page 1 of ' + pageCount);
+    const nextPage = pageNavigation.getByRole('button', { name: 'Next PDF page' });
+    await nextPage.focus();
+    expect(await nextPage.evaluate(node => getComputedStyle(node).outlineWidth)).toBe('2px');
 
     for (let i = 0; i < 3; i += 1) {
       await studio.getByRole('button', { name: 'Zoom in PDF preview' }).click();
@@ -143,6 +150,7 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     expect(scrolled[1]).toBeGreaterThan(30);
     await studio.getByRole('button', { name: 'Next PDF page' }).click();
     await expect(studio.getByRole('img', { name: 'Rendered PDF page 2' })).toBeVisible();
+    await expect(pageAnnouncement).toHaveText('Page 2 of ' + pageCount);
     await expect.poll(() => viewport.evaluate((node) => [node.scrollTop, node.scrollLeft]))
       .toEqual([0, 0]);
     await expect(studio.getByRole('button', { name: 'Reset PDF preview zoom' }))
@@ -152,11 +160,15 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     await studio.getByRole('navigation', { name: 'PDF page thumbnails' })
       .getByRole('button', { name: 'Go to PDF page 3' }).click();
     await expect(studio.getByRole('img', { name: 'Rendered PDF page 3' })).toBeVisible();
+    await expect(pageAnnouncement).toHaveText('Page 3 of ' + pageCount);
 
     await studio.getByRole('button', { name: 'Open full-screen PDF preview' }).click();
     const dialog = studio.getByRole('dialog', { name: 'Full-screen PDF preview' });
     await expect(dialog).toBeVisible();
     const fullViewport = dialog.locator('.dn-pdf-fullscreen-viewport');
+    const fullscreenNavigation = dialog.getByRole('navigation', { name: 'Fullscreen PDF page navigation' });
+    const fullscreenAnnouncement = fullscreenNavigation.locator('.dn-pdf-page-announcement');
+    await expect(fullscreenAnnouncement).toHaveText('Page 3 of ' + pageCount);
     const fullscreenScroll = await fullViewport.evaluate((node) => {
       const img = node.querySelector('img');
       // Controlled test-only viewport overflow: fullscreen normally scales to fit.
@@ -171,9 +183,20 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     expect(fullscreenScroll[1]).toBeGreaterThan(30);
     await dialog.getByRole('button', { name: 'Next fullscreen page' }).click();
     await expect(dialog.getByRole('img', { name: 'Fullscreen PDF page 4' })).toBeVisible();
+    await expect(fullscreenAnnouncement).toHaveText('Page 4 of ' + pageCount);
     await expect.poll(() => fullViewport.evaluate((node) => [node.scrollTop, node.scrollLeft]))
       .toEqual([0, 0]);
+    await fullViewport.evaluate(node => { node.scrollTop = 100; node.scrollLeft = 60; });
     await dialog.getByRole('button', { name: 'Close full-screen PDF preview' }).click();
+    // Reopening the same page is a distinct operation from changing pages.
+    // The image must begin at the origin again, without resetting zoom.
+    await studio.getByRole('button', { name: 'Open full-screen PDF preview' }).click();
+    await expect(dialog).toBeVisible();
+    await expect(fullscreenAnnouncement).toHaveText('Page 4 of ' + pageCount);
+    await expect.poll(() => fullViewport.evaluate(node => [node.scrollTop, node.scrollLeft]))
+      .toEqual([0, 0]);
+    await dialog.getByRole('button', { name: 'Close full-screen PDF preview' }).click();
+    await expect(studio.getByRole('button', { name: 'Reset PDF preview zoom' })).toHaveText('200%');
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(original);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     expect(errors).toEqual([]);

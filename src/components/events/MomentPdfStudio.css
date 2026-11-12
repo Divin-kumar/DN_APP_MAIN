@@ -592,3 +592,19 @@ html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-tex
     min-width:0;
   }
 }
+
+/* A visible keyboard focus ring for pagination/thumbnails, including dark
+   theme, without adding a permanent control border or changing tab order. */
+html[data-theme] .dn-pdf-page-nav button:focus-visible,
+html[data-theme] .dn-pdf-page-thumbnails button:focus-visible,
+html[data-theme] .dn-pdf-thumbnail-tools button:focus-visible {
+  outline:2px solid var(--color-primary);
+  outline-offset:2px;
+}
+/* One live page announcement per navigation. The native dialog automatically
+   makes the ordinary preview inert while fullscreen is open, avoiding double
+   screen-reader announcements. This must not occupy phone toolbar space. */
+html[data-theme] .dn-pdf-page-announcement {
+  position:absolute;width:1px;height:1px;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;
+}

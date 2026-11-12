@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-509 | PDF navigation announcement, focus clarity and fullscreen reopen | 12 November 2026 | OldVersion development
+
+- **Accessibility:** Existing normal and fullscreen PDF page navigation gain screen-reader-only, polite current-page announcements. The modal hides the underlying navigation from interaction while open; normal and fullscreen labels remain distinct. Explicit keyboard-visible focus rings on existing page navigation and thumbnails are scoped to PDF Studio only.
+- **iPhone viewer:** Reopening fullscreen on the same PDF page now begins at top-left, rather than inheriting a previous scroll offset. Preserve the existing page-change reset, persistent zoom selection, pagination, active thumbnail, image bytes, export guards and original records.
+- **Verification:** Extend synthetic 320px/dark and 390px/light PDF page-flow tests for status, keyboard focus, page change, full-screen reopen and unchanged Guest data. Run the existing `[verify-230-iphone-pdf]` and `[verify-234]` suites on exact SHA, plus build and documentation governance. No new Story changes require separate Guest sample refresh.
+- **Scope:** `OldVersion` and previously approved automatic ExpenseTracker development Hosting only. No version bump, production publish, Lifehub, Firebase rule, original attachment, backend, or `main` change.
+
 ### CHG-508 | Correct new Story/PDF synthetic acceptance assumptions | 12 November 2026 | OldVersion development
 
 - **Exact failure:** At CHG-507 commit `41b882e`, [PDF run 43238215896](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43238215896) passed 13 existing cases but the two new page-scroll cases stopped on a doubly escaped page-count regex, returning NaN before navigation checks. [Story run 43238215631](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43238215631) passed 27 existing cases but the two new portrait/landscape cases expected an <img> before the real original's IntersectionObserver lazy-loading region was reached.

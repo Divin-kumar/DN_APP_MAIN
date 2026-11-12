@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## iPhone PDF preview keyboard and screen-reader navigation polish (12 November 2026, OldVersion development)
+
+The regular PDF page navigation and the native full-screen dialog each expose their current rendered page using an unobtrusive, screen-reader-only polite status announcement. Page index and total reflect the actual current PDF preview and never alter the exported document. When fullscreen is closed and reopened on the same page, the viewer now resets its own scroll position to the start, as it already does on page changes; the selected zoom level in the regular preview remains unchanged. Keyboard-visible focus outlines are now explicit for PDF Previous/Next/Go buttons, thumbnails, and First/Last controls, without affecting touch sizes, density, ordering or page render code.
+
+Existing responsive, dark-mode, download guards, thumbnail centering, page jump validation, original-photo selection, source records and Story layouts remain unchanged. Targeted synthetic iPhone acceptance at 320px dark and 390px light checks announcements, computed focus styling, normal/fullscreen page changes, reopening at the page origin and Guest records. This is presentation and accessibility behavior only, with no app version, Guest tour, backend, PDF bytes, other Hosting sites, Lifehub, `main` or production deployment changes. Physical iPhone Safari and VoiceOver remain manual gates.
+
 ## Story original-photo framing and PDF page scroll reset (12 November 2026, OldVersion development only)
 
 Phone Journal photo spreads continue to render actual saved originals at their natural aspect ratio with `object-fit:contain`, now in a quiet book-paper-toned frame with consistent rounded edges and album spacing. On touch screens the original photo buttons avoid residual hover brightening; keyboard focus receives a visible paper-accent outline. The existing original viewer, download, local attachment loading, photo order, one-column phone layout, Chapter prose, Diary/Task no-photo rules and full-sized originals remain unchanged. Public Guest demo already demonstrates original photo viewing and needs no fixture/version bump; existing Guest records are not refreshed.

@@ -226,6 +226,12 @@ export default function MomentPdfStudio({ event }) {
   const openFullscreen = () => {
     if (!preview || dirty || busy || !dialogRef.current) return;
     dialogRef.current.showModal();
+    // A reopened viewer must not inherit a previous fullscreen reading
+    // position when the current page has not changed.
+    if (fullscreenViewportRef.current) {
+      fullscreenViewportRef.current.scrollTop = 0;
+      fullscreenViewportRef.current.scrollLeft = 0;
+    }
   };
 
   const controls = (full = false) => <nav className="dn-pdf-page-nav"
@@ -248,6 +254,9 @@ export default function MomentPdfStudio({ event }) {
       aria-label={full ? 'Next fullscreen page' : 'Next PDF page'}>
       <ChevronRight size={18} aria-hidden="true" />
     </button>
+    <span className="dn-pdf-page-announcement" role="status" aria-live="polite" aria-atomic="true">
+      Page {pageIndex + 1} of {preview?.pageUrls.length || 0}
+    </span>
   </nav>;
 
   return <section className="dn-pdf-studio-page" aria-label="PDF Studio">
