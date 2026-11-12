@@ -1,5 +1,13 @@
 # DN — Change Log
 
+### CHG-501 | Unified lightweight Refine sorting and visible direction | 12 November 2026 | OldVersion development
+
+- **Scope:** Add Reverse order and readable current direction to shared sorting, while retaining the selected-chip toggle. Align the six Task sorting fields into the two-column phone grid shared with other Refine sheets and Settings.
+- **Compatibility:** No comparator, persistence format, default direction, AND/OR filter, drag behavior, totals, original data, Guest/account separation, Story/PDF or backend change. Refine Cancel/Apply/Reset and applied-filter +N retain their existing semantics.
+- **Guest tour:** Task example now explains direction switching and the version advances; existing Guest records remain unchanged until explicitly refreshed.
+- **Validation:** Source-derived patch checks, new 320/390/430px browser cases and updated Task grid assertion, with opt-in `[verify-filter-sort-ui]` Node/lint/build/browser CI. Actual browser CI and native iPhone Safari results require verification after commit.
+- **Publication:** OldVersion only, existing automatic ExpenseTracker development preview permitted. No production publication or app-version change.
+
 ### CHG-500 | iPhone Tasks / Dashboard shared date-tile polish | 11 November 2026 | OldVersion development
 
 - **Visual scope:** Align standalone Task and Dashboard Task phone date squares (52px; 48px on narrowest phones), typography/spacing, subdued surface treatment, overdue accents and signal alignment without heavy cards. Preserve four preview rows, existing scroll, full Task tap/swipe interactions and visible focus.

@@ -161,11 +161,10 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
   font-size:11px; line-height:1.5;
 }
 
-/* Screenshot review: six Task sorting options must all be visible and
-   evenly grouped, not five above a stranded Updated choice. No boxes. */
+/* Keep six Task sorts in the same two-column phone layout as other Refine sheets. */
 @media (max-width:760px), (max-height:500px) and (pointer:coarse) {
   html[data-theme] .dn-task-refine .dn-refine-sort-chips {
-    display:grid; grid-template-columns:repeat(3,minmax(0,1fr));
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
     gap:2px 8px; width:100%; overflow:visible;
   }
   html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
@@ -213,4 +212,38 @@ html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static;
   html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open="false"] > .dn-modal.dn-refine-sheet {
     max-height: min(88dvh, 800px) !important;
   }
+}
+
+/* Lightweight shared direction action. Existing field chips stay borderless. */
+html[data-theme] .dn-refine-sort-control { display:grid; gap:5px; min-width:0; }
+html[data-theme] .dn-refine-sort-direction {
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px; min-width:0; padding:1px 0 0;
+}
+html[data-theme] .dn-refine-sort-direction-current {
+  display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px;
+  min-width:0; color:var(--color-text-muted); font-size:11px;
+}
+html[data-theme] .dn-refine-sort-direction-current strong {
+  color:var(--color-text); font-size:12px; font-weight:700;
+}
+html[data-theme] .dn-refine-sort-reverse {
+  display:inline-flex; align-items:center; justify-content:center;
+  gap:7px; flex:0 0 auto; min-height:44px; padding:7px 9px;
+  border:0; border-radius:10px; background:transparent;
+  color:var(--color-primary); font:inherit; font-size:12px;
+  font-weight:680; cursor:pointer;
+}
+html[data-theme] .dn-refine-sort-reverse:where(:hover,:focus-visible) {
+  background:color-mix(in srgb,var(--color-primary) 8%,transparent);
+}
+html[data-theme] .dn-refine-sort-reverse:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:-2px;
+}
+@media(max-width:360px) {
+  html[data-theme] .dn-refine-sort-direction { gap:5px; }
+  html[data-theme] .dn-refine-sort-reverse { gap:4px; padding-inline:5px; }
+}
+@media(prefers-reduced-motion:reduce) {
+  html[data-theme] .dn-refine-sort-reverse { transition:none !important; }
 }
