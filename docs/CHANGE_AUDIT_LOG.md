@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-505 | Reveal offscreen large form editor on phone keyboard focus | 12 November 2026 | OldVersion development
+
+- **Issue:** Shared mobile dialogs already moved short focused fields above sticky actions, but skipped oversized text editors even when the entire editor was below the visible scroll area. A keyboard focus could therefore leave the beginning of a long draft inaccessible.
+- **Change:** Use a small shared geometry helper to reveal only the top of a fully hidden oversized editor. Preserve the existing native caret scroll for partly visible writing, short-field handling, keyboard inset, header/backdrop animation and swipe dismissal.
+- **Evidence:** Added deterministic viewport geometry tests and a synthetic keyboard browser case at 320/390px for Task notes, including cancelled-draft/Guest storage checks; opt-in [verify-230-form-ui] now runs Node geometry, lint, build and focused browser tests. Exact-SHA CI results must be checked after the commit, and real iPhone Safari remains unverified.
+- **Scope:** OldVersion and standing Firebase development site only. No change to form content, saved data, authentication, filter/sort, Story/PDF, tour version, production DN site, main or Lifehub.
+
 ### CHG-504 | Wait for finished applied-filter reveal animation in acceptance | 12 November 2026 | OldVersion development
 
 - **Exact failed check:** The independent filter/sort workflow at `d36a3c7`, [run 43202575914](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43202575914), passed **39 of 41 browser checks**, including existing list/Task sorting and filter editing, but the two new +N tests at 320 and 390px read chip coordinates during the intended smooth scroll. Their earlier `scrollLeft > 0` check confirms movement started, not arrival.

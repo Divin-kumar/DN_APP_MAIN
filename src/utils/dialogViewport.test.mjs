@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { getDialogViewportBounds, observeDialogViewport } from './dialogViewport.js';
+import { focusedDialogScrollDelta, getDialogViewportBounds, observeDialogViewport } from './dialogViewport.js';
 
 class EventSurface {
   listeners = new Map();
@@ -222,4 +222,19 @@ test('observation still updates and cleans up when visualViewport is unavailable
   });
   stop();
   assert.equal(win.listenerCount, 0);
+});
+
+
+test('keyboard focus reveals a short field above the sticky actions without jumping past it', () => {
+  const body = { top: 80, bottom: 360 };
+  assert.equal(focusedDialogScrollDelta({ top: 340, bottom: 386, height: 46 }, body, 330), 68);
+  assert.equal(focusedDialogScrollDelta({ top: 65, bottom: 95, height: 30 }, body, 330), -27);
+  assert.equal(focusedDialogScrollDelta({ top: 130, bottom: 178, height: 48 }, body, 330), 0);
+});
+
+test('keyboard focus reveals an offscreen large editor but preserves an already visible caret', () => {
+  const body = { top: 80, bottom: 340 };
+  assert.equal(focusedDialogScrollDelta({ top: 370, bottom: 740, height: 370 }, body, 290), 278);
+  assert.equal(focusedDialogScrollDelta({ top: 94, bottom: 464, height: 370 }, body, 290), 0);
+  assert.equal(focusedDialogScrollDelta({ top: 370, bottom: 740, height: 370 }, body, 90), 0);
 });

@@ -27,6 +27,22 @@ export function getDialogViewportBounds(win, layout = getDialogLayoutSize(win)) 
   };
 }
 
+// Return only the distance needed to expose the focused field above a sticky
+// action footer. A tall editor that is partly visible must not be snapped to
+// its top while someone is typing near its bottom; reveal its beginning only
+// when it is completely below the usable region.
+export function focusedDialogScrollDelta(field, visible, footerTop = visible.bottom) {
+  const top = visible.top + 12;
+  const bottom = Math.min(visible.bottom, Math.max(visible.top, footerTop)) - 12;
+  if (bottom <= top) return 0;
+  if (field.height > bottom - top) {
+    return field.top >= bottom ? field.top - top : 0;
+  }
+  if (field.top < top) return field.top - top;
+  if (field.bottom > bottom) return field.bottom - bottom;
+  return 0;
+}
+
 export function observeDialogViewport(win, update) {
   let frame = null;
   let layout = getDialogLayoutSize(win);

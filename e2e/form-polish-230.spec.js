@@ -98,3 +98,55 @@ for (const width of [320, 390]) {
     expect(errors).toEqual([]);
   });
 }
+
+
+// Synthetic visualViewport keyboard geometry, not a physical iOS keyboard.
+// The 320/390px regression makes the former oversized-editor early return fail.
+for (const [width, height] of [[320, 640], [390, 844]]) {
+  test(`phone keyboard reveals an offscreen long Task editor at ${width}px without saving drafts`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme: 'dark' });
+    await page.goto('/tasks');
+    const original = await page.evaluate(() => [
+      localStorage.getItem('dn_guest_tasks'), localStorage.getItem('dn_guest_eventGroups'),
+    ]);
+    await page.getByRole('button', { name: 'Open quick create menu' }).click();
+    await page.getByRole('button', { name: 'Task', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'New Task' });
+    await dialog.getByText('More options', { exact: true }).click();
+    const editor = dialog.locator('.dn-form-disclosure textarea');
+    await expect(editor).toBeVisible();
+    await editor.evaluate((node) => {
+      node.style.marginTop = '400px';
+      node.style.height = '340px';
+      node.style.setProperty('max-height', 'none', 'important');
+    });
+    await page.evaluate(() => {
+      Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 290 });
+      window.visualViewport.dispatchEvent(new Event('resize'));
+    });
+    await expect(page.locator('.dn-modal-backdrop')).toHaveAttribute('data-keyboard-open', 'true');
+    await editor.evaluate((node) => { node.closest('.dn-modal-body').scrollTop = 0; });
+    expect(await editor.evaluate((node) => {
+      const visible = node.closest('.dn-modal-body').getBoundingClientRect();
+      return node.getBoundingClientRect().top >= visible.bottom - 12;
+    })).toBe(true);
+    await editor.evaluate((node) => node.focus({ preventScroll: true }));
+    await expect(editor).toBeFocused();
+    await expect.poll(() => editor.evaluate((node) => {
+      const body = node.closest('.dn-modal-body').getBoundingClientRect();
+      const field = node.getBoundingClientRect();
+      return field.top >= body.top + 8 && field.top < body.bottom - 12;
+    })).toBe(true);
+    await page.evaluate(() => {
+      delete window.visualViewport.height;
+      window.visualViewport.dispatchEvent(new Event('resize'));
+    });
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+    await expect(dialog).toHaveCount(0);
+    expect(await page.evaluate(() => [
+      localStorage.getItem('dn_guest_tasks'), localStorage.getItem('dn_guest_eventGroups'),
+    ])).toEqual(original);
+    expect(errors).toEqual([]);
+  });
+}

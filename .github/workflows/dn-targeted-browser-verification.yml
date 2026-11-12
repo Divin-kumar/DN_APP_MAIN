@@ -561,7 +561,7 @@ jobs:
       github.event_name == 'push' &&
       contains(github.event.head_commit.message, '[verify-230-form-ui]')
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -570,6 +570,11 @@ jobs:
           cache: npm
       - name: Install exact locked dependencies
         run: npm ci
+      - name: Check viewport contracts, lint and build before browser QA
+        run: |
+          node --test src/utils/dialogViewport.test.mjs
+          npm run lint
+          npm run build
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Verify compact form layout and inline validation

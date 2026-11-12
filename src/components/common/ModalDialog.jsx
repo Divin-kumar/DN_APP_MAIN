@@ -4,7 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useDragControls, usePresence, useReducedMotion } from 'framer-motion';
 import { X } from 'lucide-react';
-import { observeDialogViewport } from '../../utils/dialogViewport';
+import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dialogViewport';
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
@@ -113,12 +113,10 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     const visible = body.getBoundingClientRect();
     const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions, .dn-list-controls-footer');
     const footerTop = footer && getComputedStyle(footer).position === 'sticky' ? footer.getBoundingClientRect().top : visible.bottom;
-    const visibleBottom = Math.min(visible.bottom, Math.max(visible.top, footerTop));
-    // Keyboard-only CSS bounds long textareas, leaving caret scrolling inside
-    // the field. Never jump the entire body to the end of oversized content.
-    if (field.height > visibleBottom - visible.top - 24) return;
-    if (field.bottom > visibleBottom - 12) body.scrollTop += field.bottom - visibleBottom + 12;
-    else if (field.top < visible.top + 12) body.scrollTop -= visible.top + 12 - field.top;
+    // A completely hidden long editor needs its beginning revealed; a partly
+    // visible editor keeps its caret position and native internal scrolling.
+    const delta = focusedDialogScrollDelta(field, visible, footerTop);
+    if (delta) body.scrollTop += delta;
   }), []);
 
   useEffect(() => {
