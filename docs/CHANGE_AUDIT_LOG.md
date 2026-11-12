@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-504 | Wait for finished applied-filter reveal animation in acceptance | 12 November 2026 | OldVersion development
+
+- **Exact failed check:** The independent filter/sort workflow at `d36a3c7`, [run 43202575914](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43202575914), passed **39 of 41 browser checks**, including existing list/Task sorting and filter editing, but the two new +N tests at 320 and 390px read chip coordinates during the intended smooth scroll. Their earlier `scrollLeft > 0` check confirms movement started, not arrival.
+- **Correction:** Keep the strict third-chip visibility and first-chip/collapse assertions, but poll for full chip intersection with the visible rail before reading final coordinates. Do not remove the geometry check, change scroll duration, disable animation or weaken the saved-data/overflow checks.
+- **Scope:** Test timing and audit only. Production code, user preferences, demo fixtures, accessibility behavior, Firebase configuration, version and release permissions remain unchanged. Re-run `[verify-filter-sort-ui]` on the new exact SHA; physical iPhone Safari remains unverified.
+
 ### CHG-503 | Applied filter +N rail continuity and keyboard access | 12 November 2026 | OldVersion development
 
 - **Observed issue:** Expanding a clipped applied-filter chip rail always scrolled to its maximum right edge. With several conditions, the first newly disclosed rule could be skipped; collapsing could leave the initial chips offscreen on narrow phones.

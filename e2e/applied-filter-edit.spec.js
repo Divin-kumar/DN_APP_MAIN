@@ -142,6 +142,13 @@ for (const width of [320, 390]) {
     const less = page.getByRole('button', { name: 'Show fewer active filters' });
     await expect(less).toBeVisible();
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    // Smooth-scroll is asynchronous. Assert the real first-reveal destination
+    // after the rail reaches it, rather than measuring an in-flight frame.
+    await expect.poll(() => rail.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const third = el.children[2].getBoundingClientRect();
+      return third.left < box.right && third.right > box.left;
+    })).toBe(true);
     const positions = await rail.evaluate((el) => {
       const box = el.getBoundingClientRect();
       const third = el.children[2].getBoundingClientRect();
