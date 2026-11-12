@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-510 | Keyboard modality for PDF focus acceptance | 12 November 2026 | OldVersion development
+
+- The CHG-509 PDF suite on commit `24f0fe4` passed its 13 existing cases but the two newly extended accessibility cases expected a `:focus-visible` ring after programmatic focus while Chromium remained in pointer modality. Browser behavior is intentional: mouse focus does not show keyboard-only outlines.
+- Correct the test by sending an actual Tab keyboard input before focusing the page button. Keep the real computed-outline assertion, all existing PDF page/zoom/reopen/navigation/storage checks, and production code unchanged. Do not replace `:focus-visible` with an always-on outline.
+- Retest the exact new SHA with the existing `[verify-230-iphone-pdf]` and `[verify-234]` opt-in gates. No user-data or export change, production deploy, app version, Guest fixture, Lifehub or main modification.
+
 ### CHG-509 | PDF navigation announcement, focus clarity and fullscreen reopen | 12 November 2026 | OldVersion development
 
 - **Accessibility:** Existing normal and fullscreen PDF page navigation gain screen-reader-only, polite current-page announcements. The modal hides the underlying navigation from interaction while open; normal and fullscreen labels remain distinct. Explicit keyboard-visible focus rings on existing page navigation and thumbnails are scoped to PDF Studio only.

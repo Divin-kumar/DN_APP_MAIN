@@ -132,7 +132,11 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     await expect(pageAnnouncement).toHaveAttribute('aria-live', 'polite');
     await expect(pageAnnouncement).toHaveText('Page 1 of ' + pageCount);
     const nextPage = pageNavigation.getByRole('button', { name: 'Next PDF page' });
+    // A :focus-visible ring is deliberately keyboard-only. Enter keyboard
+    // modality before focusing the target, rather than reusing pointer state.
+    await page.keyboard.press('Tab');
     await nextPage.focus();
+    await expect(nextPage).toBeFocused();
     expect(await nextPage.evaluate(node => getComputedStyle(node).outlineWidth)).toBe('2px');
 
     for (let i = 0; i < 3; i += 1) {
