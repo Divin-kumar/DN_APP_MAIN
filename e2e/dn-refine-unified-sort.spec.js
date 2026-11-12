@@ -21,10 +21,20 @@ for (const width of [320, 390, 430]) {
         settings: Object.fromEntries(Object.keys(localStorage).filter((key) =>
           key.startsWith('dn_list_state_')).sort().map((key) => [key, localStorage.getItem(key)])),
       }));
-      const before = await snapshot();
       await page.getByRole('button', { name: trigger }).first().tap();
       const sheet = page.getByRole('dialog').last();
       await expect(sheet).toBeVisible();
+      // Initial list-state migration is a legitimate first-open write.
+      // Observe it before comparing the Cancel draft's persisted state.
+      if (route !== '/tasks') {
+        const domain = route === '/events' ? 'moments'
+          : route === '/activities' ? 'activities' : 'transactions';
+        await expect.poll(() => page.evaluate((scope) => {
+          const key = `dn_list_state_guest_${encodeURIComponent('conditions:' + scope)}`;
+          return JSON.parse(localStorage.getItem(key) || 'null')?.migrationVersion || 0;
+        }, domain)).toBeGreaterThanOrEqual(1);
+      }
+      const before = await snapshot();
       const sorts = sheet.locator('.dn-refine-sort-chips');
       const geometry = await sorts.evaluate((node) => ({
         columns: getComputedStyle(node).gridTemplateColumns.split(' ').length,

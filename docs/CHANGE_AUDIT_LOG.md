@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-502 | Align Refine browser acceptance with migration and short landscape | 12 November 2026 | OldVersion development
+
+- **Diagnosis:** Targeted Chromium run 43130132420 passed Node, lint, build, 29 browser cases and documentation, but the new cross-route test failed nine Cancel snapshots by comparing storage before first-open list-preference migration finished. The tenth failure expected three Task sort columns at 844×390 even though the existing coarse-pointer short-landscape CSS legitimately renders two.
+- **Correction:** Snapshot List state after the existing migration is observable, then verify a direction-only draft followed by Cancel leaves the post-migration state and source record bytes intact. Match Task layout expectations to short-touch landscape as well as narrow widths. Do not weaken the real sort direction, 44px targets, scroll-overflow or account/data checks.
+- **Scope:** Tests and audit only; no application code, defaults, guest tour, record, version, Firebase or Hosting changes. Re-run the same opt-in `[verify-filter-sort-ui]` suite on the new exact SHA. Physical Safari and production remain separate.
+
 ### CHG-501 | Unified lightweight Refine sorting and visible direction | 12 November 2026 | OldVersion development
 
 - **Scope:** Add Reverse order and readable current direction to shared sorting, while retaining the selected-chip toggle. Align the six Task sorting fields into the two-column phone grid shared with other Refine sheets and Settings.
