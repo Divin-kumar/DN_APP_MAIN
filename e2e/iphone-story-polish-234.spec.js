@@ -64,6 +64,22 @@ for (const { width, theme } of [
       const continuation = story.locator('.dn-story-writing-heading').first();
       await expect(continuation).toBeVisible();
       expect(await continuation.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
+      const bodyCopy = story.locator(variant.presentation === 'chronicle'
+        ? '.dn-task-group .dn-task-row-description'
+        : variant.presentation === 'journey'
+          ? '.dn-journal-page .dn-v2-story-entry-description'
+          : '.dn-diary-monthbook .dn-v2-story-entry-description').first();
+      await expect(bodyCopy).toBeVisible();
+      expect(await bodyCopy.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)),
+        variant.presentation + ' reading size').toBeGreaterThanOrEqual(variant.presentation === 'chronicle' ? 13 : 16);
+      const datedWriting = story.locator(variant.presentation === 'chronicle'
+        ? '.dn-task-group .dn-story-writing-text'
+        : variant.presentation === 'journey'
+          ? '.dn-journal-page .dn-story-writing-text'
+          : '.dn-diary-monthbook .dn-story-writing-text').first();
+      await expect(datedWriting).toBeVisible();
+      expect(await datedWriting.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)),
+        variant.presentation + ' continuation size').toBeGreaterThanOrEqual(variant.presentation === 'chronicle' ? 13 : 16);
       const recordedTime = story.locator('.dn-story-entry-aside').first();
       if (variant.presentation !== 'chronicle') {
         await expect(recordedTime).toBeVisible();

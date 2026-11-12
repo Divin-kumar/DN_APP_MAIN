@@ -453,3 +453,18 @@ html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-story-writing-part 
     flex:0 0 auto;
   }
 }
+
+/* Phone reading comfort: strengthen long-form prose, not the compact task UI.
+   Keep each page's chosen ink/paper tokens and its continuous journal flow. */
+@media (max-width:680px) {
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-page .dn-journal-chapter .dn-v2-story-entry-description,
+  html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-monthbook .dn-diary-paragraph .dn-v2-story-entry-description,
+  html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-page .dn-story-writing-text,
+  html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-diary-monthbook .dn-story-writing-text {
+    font-size:16px;line-height:1.78;
+  }
+  html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-task-group .dn-task-row-description,
+  html[data-theme] .dn-v2-story[data-presentation="chronicle"] .dn-task-group .dn-task-row .dn-story-writing-text {
+    font-size:13px;line-height:1.62;
+  }
+}

@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-506 | iPhone long-form Story typography and narrow PDF preview layout | 12 November 2026 | OldVersion development
+
+- **Story:** Standardize recorded Journal/Diary body and continuation writing at 16px/1.78 on phones, with Task Story body/continuations at 13px/1.62. Preserve dark/light paper tokens, the standalone shell's upcoming/undated text, chapter continuity, titles, media, Task status and stored memories.
+- **PDF Studio:** On container widths up to 350px, arrange Pages and full-screen on the first toolbar row and zoom actions centered on a second row. The same five actions, 44px targets, previews, page numbering, customize/apply flows, stale-export protection and PDF bytes remain unchanged. Other widths and desktop are unchanged.
+- **Evidence:** Extend synthetic iPhone Story body/continuation computed-size checks and PDF 320px toolbar geometry/tap checks. Trigger existing [verify-234] Story/contrast/Task acceptance and [verify-230-iphone-pdf] preview/controls acceptance on the exact commit. Actual CI results and native iPhone Safari/VoiceOver remain separately verifiable.
+- **Scope:** OldVersion plus previously approved automatic ExpenseTracker development preview only. No app version, data model, PDF rendering algorithm, Guest tour fixture version, Firebase rule, Lifehub, main or production Hosting change.
+
 ### CHG-505 | Reveal offscreen large form editor on phone keyboard focus | 12 November 2026 | OldVersion development
 
 - **Issue:** Shared mobile dialogs already moved short focused fields above sticky actions, but skipped oversized text editors even when the entire editor was below the visible scroll area. A keyboard focus could therefore leave the beginning of a long draft inaccessible.

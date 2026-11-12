@@ -572,3 +572,23 @@ html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-tex
 
 .dn-pdf-content-thumbnail { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; overflow:hidden; border-radius:7px; background:color-mix(in srgb, var(--ink) 6%, transparent); color:var(--ink-soft); }
 .dn-pdf-content-thumbnail img { display:block; width:100%; height:100%; object-fit:cover; }
+
+/* Narrow iPhone preview: Pages / Fullscreen share a predictable top row,
+   with zoom centered below. Never compress the five existing 44px controls
+   into a partially clipped flex wrap. Wider layouts are unchanged. */
+@container (max-width:350px) {
+  html[data-theme] .dn-pdf-preview-tools {
+    display:grid;grid-template-columns:minmax(0,1fr) auto;
+    gap:6px 8px;align-items:center;
+  }
+  html[data-theme] .dn-pdf-preview-tools > button:first-child {
+    grid-row:1;grid-column:1;justify-self:start;
+  }
+  html[data-theme] .dn-pdf-preview-tools > button:last-child {
+    grid-row:1;grid-column:2;justify-self:end;
+  }
+  html[data-theme] .dn-pdf-preview-tools .dn-pdf-preview-zoom-controls {
+    grid-row:2;grid-column:1 / -1;justify-self:center;
+    min-width:0;
+  }
+}

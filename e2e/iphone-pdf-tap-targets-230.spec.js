@@ -28,6 +28,25 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
       expect(r.left).toBeGreaterThanOrEqual(-1);
       expect(r.right).toBeLessThanOrEqual(width + 1);
     }
+    if (width === 320) {
+      const geometry = await controls.evaluate((node) => {
+        const box = (child) => {
+          const { x, y, right, bottom } = child.getBoundingClientRect();
+          return { x, y, right, bottom };
+        };
+        return {
+          layout: getComputedStyle(node).display,
+          pages: box(node.firstElementChild),
+          zoom: box(node.querySelector('.dn-pdf-preview-zoom-controls')),
+          fullscreen: box(node.lastElementChild),
+          right: node.getBoundingClientRect().right,
+        };
+      });
+      expect(geometry.layout).toBe('grid');
+      expect(Math.abs(geometry.pages.y - geometry.fullscreen.y)).toBeLessThan(2);
+      expect(geometry.zoom.y).toBeGreaterThanOrEqual(geometry.pages.bottom + 4);
+      expect(geometry.zoom.right).toBeLessThanOrEqual(geometry.right + 1);
+    }
     await controls.getByRole('button', { name: 'Zoom in PDF preview' }).tap();
     await expect(controls.getByRole('button', { name: 'Reset PDF preview zoom' })).toHaveText('125%');
     await controls.getByRole('button', { name: 'Reset PDF preview zoom' }).tap();
