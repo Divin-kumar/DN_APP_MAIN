@@ -1,5 +1,13 @@
 # DN — Change Log
 
+### CHG-503 | Applied filter +N rail continuity and keyboard access | 12 November 2026 | OldVersion development
+
+- **Observed issue:** Expanding a clipped applied-filter chip rail always scrolled to its maximum right edge. With several conditions, the first newly disclosed rule could be skipped; collapsing could leave the initial chips offscreen on narrow phones.
+- **Correction:** Scroll only the chip rail to the first newly disclosed rule, keep the existing +N/Less action fixed beside it, and reset that rail to its start on collapse. Permit Left/Right navigation when the rail itself has keyboard focus, without intercepting editing controls. Honor Reduce Motion.
+- **Preserved:** The same lightweight single row, chip labels, drag/reorder, removal and inline editing, OR/AND logic, search, sort, counts, saved state, sample data, authentication, financial calculations and Story/PDF. No new features, account mutations or change to Guests' existing data. Existing tour instructions remain accurate, so no tour version bump.
+- **Evidence:** Source-level anchored replacement checks plus new 320/390px Playwright assertions in `e2e/applied-filter-edit.spec.js` for +N/Less, first revealed chip, fixed overflow control, keyboard scroll, page overflow and no console errors. Exact-SHA CI results pending until workflow completion; physical iPhone Safari unverified.
+- **Release:** OldVersion only, `[verify-filter-sort-ui]` opt-in nonproduction checks and standing automatic ExpenseTracker development preview. No `main` write, production deploy, version bump, Firebase rule or Lifehub change.
+
 ### CHG-502 | Align Refine browser acceptance with migration and short landscape | 12 November 2026 | OldVersion development
 
 - **Diagnosis:** Targeted Chromium run 43130132420 passed Node, lint, build, 29 browser cases and documentation, but the new cross-route test failed nine Cancel snapshots by comparing storage before first-open list-preference migration finished. The tenth failure expected three Task sort columns at 844×390 even though the existing coarse-pointer short-landscape CSS legitimately renders two.

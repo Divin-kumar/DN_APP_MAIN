@@ -326,11 +326,37 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
   const visible = compact ? chips.slice(0, maxVisible) : chips;
   const overflow = chips.length - visible.length;
   const expanded = !compact && Boolean(onShowLess);
-  useEffect(() => {
-    if (expanded && railRef.current) railRef.current.scrollLeft = railRef.current.scrollWidth;
-  }, [expanded, chips.length]);
+  const priorVisibility = useRef({ expanded, count: visible.length });
+  useLayoutEffect(() => {
+    const rail = railRef.current;
+    const prior = priorVisibility.current;
+    priorVisibility.current = { expanded, count: visible.length };
+    if (!rail) return;
+    if (prior.expanded && !expanded) {
+      // Collapsing should restore the first applied filter, even on a narrow phone.
+      rail.scrollLeft = 0;
+      return;
+    }
+    if (expanded && !prior.expanded && visible.length > prior.count) {
+      const newlyRevealed = rail.children[prior.count];
+      if (!newlyRevealed) return;
+      // Scroll only the chip rail, never the page or the Safari visual viewport.
+      const railBox = rail.getBoundingClientRect();
+      const chipBox = newlyRevealed.getBoundingClientRect();
+      rail.scrollTo({
+        left: Math.max(0, rail.scrollLeft + chipBox.left - railBox.left - 8),
+        behavior: reducedMotion ? 'instant' : 'smooth',
+      });
+    }
+  }, [expanded, visible.length, reducedMotion]);
   return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters">
-    <div ref={railRef} className="dn-condition-chip-rail" tabIndex={chips.length > 1 ? 0 : undefined}>
+    <div ref={railRef} className="dn-condition-chip-rail" role="group"
+      aria-label="Applied filters, horizontally scrollable" tabIndex={chips.length > 1 ? 0 : undefined}
+      onKeyDown={(event) => {
+        if (event.target !== event.currentTarget || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
+        event.preventDefault();
+        railRef.current?.scrollBy({ left: event.key === 'ArrowRight' ? 88 : -88, behavior: 'instant' });
+      }}>
       <AnimatePresence initial={false}>
         {visible.map((chip) => <AppliedCondition key={`${filter.editorKey}:${chip.id}`}
           filter={filter} chip={chip} node={nodes.get(chip.id)} reducedMotion={reducedMotion} />)}

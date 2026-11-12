@@ -113,3 +113,54 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
   await accountScope(page,'applied-filter-review',fixtureMoments());await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await saved(page,'transactions')).toEqual(guestFilter);expect(await records(page)).toEqual(original);expect(await page.evaluate(()=>window.__dnAccountWrites)).toEqual([]);expect(errors).toEqual([]);
 });
+
+// When +N reveals a long strip, do not skip straight to the last chip or pan
+// the full page. Less returns to the first applied rule, including on phones.
+for (const width of [320, 390]) {
+  test(`applied filter +N reveals the next chip without a page jump at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const errors = await seedGuest(page);
+    await page.addInitScript(() => {
+      const key = 'dn_list_state_guest_conditions%3Aactivities';
+      const group = { id: 'root', kind: 'group', join: 'OR', children: [
+        'completed', 'in-progress', 'cancelled', 'planned', 'pending',
+      ].map((value, index) => ({
+        id: 'visible-filter-' + index, kind: 'rule', field: 'activity.status',
+        operator: 'eq', value,
+      })) };
+      localStorage.setItem(key, JSON.stringify({ group, migrationVersion: 1 }));
+    });
+    await page.goto('/activities');
+    const rail = page.locator('.dn-condition-chip-rail');
+    const chips = rail.locator('.dn-condition-chip');
+    await expect(chips).toHaveCount(2);
+    const beforePageY = await page.evaluate(() => window.scrollY);
+    const more = page.getByRole('button', { name: 'Show 3 more active filters' });
+    const moreBox = await more.boundingBox();
+    await more.click();
+    await expect(chips).toHaveCount(5);
+    const less = page.getByRole('button', { name: 'Show fewer active filters' });
+    await expect(less).toBeVisible();
+    await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(0);
+    const positions = await rail.evaluate((el) => {
+      const box = el.getBoundingClientRect();
+      const third = el.children[2].getBoundingClientRect();
+      return { left: box.left, right: box.right, thirdLeft: third.left, thirdRight: third.right };
+    });
+    expect(positions.thirdLeft).toBeGreaterThanOrEqual(positions.left - 12);
+    expect(positions.thirdLeft).toBeLessThan(positions.right);
+    const lessBox = await less.boundingBox();
+    expect(Math.abs(lessBox.x - moreBox.x)).toBeLessThanOrEqual(2);
+    await rail.focus();
+    const earlier = await rail.evaluate((el) => el.scrollLeft);
+    await rail.press('ArrowLeft');
+    await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeLessThan(earlier);
+    await less.click();
+    await expect(chips).toHaveCount(2);
+    await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBe(0);
+    expect(await page.evaluate(() => window.scrollY)).toBe(beforePageY);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth))
+      .toBeLessThanOrEqual(width + 1);
+    expect(errors).toEqual([]);
+  });
+}
