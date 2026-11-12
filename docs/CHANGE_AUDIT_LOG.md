@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-508 | Correct new Story/PDF synthetic acceptance assumptions | 12 November 2026 | OldVersion development
+
+- **Exact failure:** At CHG-507 commit `41b882e`, [PDF run 43238215896](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43238215896) passed 13 existing cases but the two new page-scroll cases stopped on a doubly escaped page-count regex, returning NaN before navigation checks. [Story run 43238215631](https://github.com/Divin-kumar/DN_APP_MAIN/actions/runs/43238215631) passed 27 existing cases but the two new portrait/landscape cases expected an <img> before the real original's IntersectionObserver lazy-loading region was reached.
+- **Correction:** Parse the existing page-count label with decimal `parseInt` and scroll the existing preview button into view before asserting its original image has loaded. Keep the actual preview-scroll reset, full-screen navigation, rendered image geometry, original preview and record-preservation assertions unchanged. Do not bypass checks, alter timing or disable lazy loading.
+- **Scope:** Two tests and the change log only. App source/styles, PDF bytes, data, Guest tour, backend, version, Firebase rules, production and main remain unchanged. Repeat the opt-in `[verify-234]` and `[verify-230-iphone-pdf]` jobs on the new SHA; physical iOS Safari/VoiceOver is still separate.
+
 ### CHG-507 | Story original-photo framing and PDF page navigation reset | 12 November 2026 | OldVersion development
 
 - **Story photos:** Give existing one-column iPhone Journal spreads a subtle book-paper-toned photo frame, consistent gap/radius, native aspect-ratio preservation and keyboard-visible focus. Disable touch-hover brightening without changing saved originals, attachment loading, Activity connections, original preview or downloads. No new overlays, galleries or cards; Diary and Tasks remain unchanged.

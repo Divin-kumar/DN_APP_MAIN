@@ -153,6 +153,9 @@ for (const { width, height, theme, originalWidth, originalHeight } of [
     await expect(album).toHaveAttribute('data-album-layout', 'pair');
     const button = album.getByRole('button', { name: 'Preview Activity photo 0.png' });
     const photo = button.locator('img');
+    // Gallery originals load only when the attachment tile approaches the
+    // visible Story viewport; scroll the button before expecting an <img>.
+    await button.scrollIntoViewIfNeeded();
     await expect(photo).toBeVisible();
     await expect.poll(() => photo.evaluate((img) => img.naturalWidth)).toBe(originalWidth);
     const dimensions = await photo.evaluate((img) => {

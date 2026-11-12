@@ -125,8 +125,8 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light']]) 
     await studio.getByRole('radio', { name: 'Start each Activity on a new PDF page' }).click();
     await studio.getByRole('button', { name: 'Update preview' }).click();
     await expect(download).toBeEnabled({ timeout: 30000 });
-    expect(Number((await studio.locator('.dn-pdf-page-count').innerText()).match(/\\d+/)?.[0]))
-      .toBeGreaterThanOrEqual(4);
+    const pageCount = Number.parseInt(await studio.locator('.dn-pdf-page-count').innerText(), 10);
+    expect(pageCount).toBeGreaterThanOrEqual(4);
 
     for (let i = 0; i < 3; i += 1) {
       await studio.getByRole('button', { name: 'Zoom in PDF preview' }).click();
