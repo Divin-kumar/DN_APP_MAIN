@@ -34,9 +34,19 @@ for (const { width, height, theme } of [
       await expect(dark).toHaveAttribute('aria-pressed', 'true');
       await expect.poll(() => page.evaluate(() => document.documentElement.dataset.theme)).toBe('dark');
 
+      const defaults = page.getByRole('region', { name: 'Defaults for new records' });
+      const status = defaults.getByRole('status');
+      await expect(status).toHaveText('Defaults saved.');
       await pick(page, 'Default currency', 'USD · US dollar ($)');
       await pick(page, 'Default Moment type', 'Birthday');
-      await page.getByRole('button', { name: 'Save defaults' }).click();
+      await expect(status).toHaveText('Save defaults to apply your changes.');
+      expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_preferences')).currency)).not.toBe('USD');
+      const reset = await defaults.getByRole('button', { name: 'Reset defaults' }).boundingBox();
+      const save = await defaults.getByRole('button', { name: 'Save defaults' }).boundingBox();
+      expect(Math.abs(reset.y - save.y)).toBeLessThanOrEqual(1);
+      expect(Math.min(reset.height, save.height)).toBeGreaterThanOrEqual(43.9);
+      await defaults.getByRole('button', { name: 'Save defaults' }).click();
+      await expect(status).toHaveText('Defaults saved.');
       await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('dn_preferences')).currency)).toBe('USD');
       await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('dn_preferences')).defaultEventType)).toBe('Birthday');
       await page.reload();
@@ -84,5 +94,39 @@ test('legacy Settings bookmarks and header Back stay consistent and do not open 
   await expect(page.getByRole('link',{name:'Open Appearance & preferences'})).toBeVisible();
   await expect(page.getByText('Coming later. No alerts or reminders are currently sent by DN.')).toBeVisible();
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+
+test('Creation defaults keeps a failed save available for retry', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/settings/appearance');
+  await pick(page, 'Default currency', 'USD · US dollar ($)');
+  const defaults = page.getByRole('region', { name: 'Defaults for new records' });
+  const status = defaults.getByRole('status');
+  const save = defaults.getByRole('button', { name: 'Save defaults' });
+  const before = await page.evaluate(() => localStorage.getItem('dn_preferences'));
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function (key, value) {
+      if (key === 'dn_preferences') throw new Error('Storage is unavailable');
+      return original.call(this, key, value);
+    };
+    window.__restorePreferenceWrites = () => { Storage.prototype.setItem = original; };
+  });
+  await save.click();
+  await expect(status).toContainText('Could not save defaults');
+  await expect(defaults.getByRole('combobox', { name: 'Default currency' })).toContainText('USD');
+  expect(await page.evaluate(() => localStorage.getItem('dn_preferences'))).toBe(before);
+  await page.evaluate(() => window.__restorePreferenceWrites());
+  await save.click();
+  await expect(status).toHaveText('Defaults saved.');
+  await defaults.getByRole('button', { name: 'Reset defaults' }).click();
+  await expect(defaults.getByRole('combobox', { name: 'Default currency' })).toContainText('INR');
+  await expect(status).toHaveText('Save defaults to apply your changes.');
+  await page.reload();
+  await expect(defaults.getByRole('combobox', { name: 'Default currency' })).toContainText('USD');
+  await expect(status).toHaveText('Defaults saved.');
   expect(errors).toEqual([]);
 });

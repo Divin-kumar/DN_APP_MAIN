@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Appearance creation defaults feedback (13 November 2026, OldVersion development only)
+
+Creation defaults shows whether the four visible defaults match their saved values. Save defaults applies the draft. Reset defaults stages the built-in values, and a browser write failure keeps the draft available for retry with a message beside the actions. Reset and Save share one row on phones. Theme continues to save independently. The public Guest tour requires no fixture or instruction changes.
+
 ## Data & Backup navigation and operation feedback (13 November 2026, OldVersion development only)
 
 The Backup, Manage data and Data guide shortcuts focus their destination sections, including when opening a bookmark or using browser Back and Forward. The shortcut matching the address is marked as the current location. Backup progress and results appear alongside Export and Restore, and clearing results appear in Manage data. The existing restore review, scoped storage, export format and deletion confirmations apply. The Guest tour already covers the same backup workflow.

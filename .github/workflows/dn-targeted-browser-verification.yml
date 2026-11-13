@@ -466,6 +466,7 @@ jobs:
           npx playwright test
           e2e/iphone-appearance-legibility-230.spec.js
           e2e/settings-appearance-preferences-230.spec.js
+          e2e/iphone-settings-premium.spec.js
           e2e/story-design-phase1.spec.js
           --workers=2
       - name: Upload screenshots and failure evidence

@@ -153,6 +153,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       reminderTime: preferences.notifications?.reminderTime ?? '09:00',
     },
   });
+  const [creationDefaultsError, setCreationDefaultsError] = useState('');
   const [backupMessage, setBackupMessage] = useState('');
   const [dataManagementMessage, setDataManagementMessage] = useState('');
   const [pendingBackup, setPendingBackup] = useState(null);
@@ -221,17 +222,30 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
     showToast('Admin values saved', 'success');
   };
 
+  const creationDefaultsChanged = ['currency', 'defaultEventType', 'defaultIncomeType', 'defaultExpenseCategory']
+    .some((key) => prefForm[key] !== preferences[key]);
+
+  const updateCreationDefault = (key, value) => {
+    setCreationDefaultsError('');
+    setPrefForm((current) => ({ ...current, [key]: value }));
+  };
+
   const savePreferences = () => {
     const normalized = {
       ...prefForm,
       notifications: preferences.notifications,
     };
-    setPrefForm(normalized);
-    setPreferences(normalized);
-    showToast('Preferences saved', 'success');
+    try {
+      setPreferences(normalized);
+      setCreationDefaultsError('');
+      showToast('Preferences saved', 'success');
+    } catch {
+      setCreationDefaultsError('Could not save defaults in this browser. Try Save defaults again.');
+    }
   };
 
   const resetPreferencesForm = () => {
+    setCreationDefaultsError('');
     // This button belongs to Creation defaults. Reset its draft only; never
     // surprise-reset the independently saved theme or Story/PDF designs.
     setPrefForm((current) => ({
@@ -802,7 +816,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       <section className="dn-appearance-section" id="appearance-theme" aria-label="App color theme">
         <div className="dn-appearance-section-heading">
           <div>
-            <span className="dn-appearance-section-kicker">01 · DISPLAY</span>
             <h3>Choose your theme</h3>
             <p>Choose light or dark. Story and PDF styles stay separate.</p>
           </div>
@@ -826,16 +839,15 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       <section className="dn-appearance-section" id="appearance-creation" aria-label="Defaults for new records">
         <div className="dn-appearance-section-heading">
           <div>
-            <span className="dn-appearance-section-kicker">02 · NEW RECORDS</span>
             <h3>Creation defaults</h3>
-            <p>Defaults for new records. Your existing records stay unchanged.</p>
+            <p>Choose the values DN suggests when you create a record.</p>
           </div>
         </div>
         <div className="settings-admin-grid dn-appearance-default-fields">
           <label className="settings-input-block">
             <span>Currency</span>
             <DropdownSelect aria-label="Default currency" value={prefForm.currency}
-              onChange={(event) => setPrefForm((current) => ({ ...current, currency: event.target.value }))}>
+              onChange={(event) => updateCreationDefault('currency', event.target.value)}>
               <option value="INR">INR · Indian rupee (₹)</option>
               <option value="USD">USD · US dollar ($)</option>
               <option value="EUR">EUR · Euro (€)</option>
@@ -845,7 +857,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <label className="settings-input-block">
             <span>New Moment type</span>
             <DropdownSelect aria-label="Default Moment type" value={prefForm.defaultEventType}
-              onChange={(event) => setPrefForm((current) => ({ ...current, defaultEventType: event.target.value }))}>
+              onChange={(event) => updateCreationDefault('defaultEventType', event.target.value)}>
               {!eventTypeOptions.includes(prefForm.defaultEventType) ?
                 <option value={prefForm.defaultEventType}>{prefForm.defaultEventType} · previously selected</option> : null}
               {eventTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -854,7 +866,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <label className="settings-input-block">
             <span>New income type</span>
             <DropdownSelect aria-label="Default income type" value={prefForm.defaultIncomeType}
-              onChange={(event) => setPrefForm((current) => ({ ...current, defaultIncomeType: event.target.value }))}>
+              onChange={(event) => updateCreationDefault('defaultIncomeType', event.target.value)}>
               {!incomeTypeOptions.includes(prefForm.defaultIncomeType) ?
                 <option value={prefForm.defaultIncomeType}>{prefForm.defaultIncomeType} · previously selected</option> : null}
               {incomeTypeOptions.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -863,7 +875,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <label className="settings-input-block">
             <span>New expense category</span>
             <DropdownSelect aria-label="Default expense category" value={prefForm.defaultExpenseCategory}
-              onChange={(event) => setPrefForm((current) => ({ ...current, defaultExpenseCategory: event.target.value }))}>
+              onChange={(event) => updateCreationDefault('defaultExpenseCategory', event.target.value)}>
               {!expenseCategoryOptions.includes(prefForm.defaultExpenseCategory) ?
                 <option value={prefForm.defaultExpenseCategory}>{prefForm.defaultExpenseCategory} · previously selected</option> : null}
               {expenseCategoryOptions.map((option) => <option key={option} value={option}>{option}</option>)}
@@ -871,7 +883,9 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           </label>
         </div>
         <div className="dn-appearance-save-row">
-          <span>Applies to new records only.</span>
+          <span role="status" className={creationDefaultsError ? 'has-error' : undefined}>
+            {creationDefaultsError || (creationDefaultsChanged ? 'Save defaults to apply your changes.' : 'Defaults saved.')}
+          </span>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={resetPreferencesForm}>Reset defaults</button>
             <button type="button" className="settings-primary-button" onClick={savePreferences}>Save defaults</button>
@@ -882,7 +896,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       <section className="dn-appearance-section dn-appearance-story" id="appearance-story">
         <div className="dn-appearance-section-heading">
           <div>
-            <span className="dn-appearance-section-kicker">03 · YOUR MEMORY BOOK</span>
             <h3>Story & PDF design</h3>
             <p>Choose a style for each Story type.</p>
           </div>

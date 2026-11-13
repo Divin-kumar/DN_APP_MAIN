@@ -9,8 +9,7 @@ html[data-theme] .settings-page.dn-settings-appearance {
 html[data-theme] .dn-appearance-intro {
   display:grid; justify-items:start; min-width:0; gap:7px; padding:2px 0 8px;
 }
-html[data-theme] .dn-appearance-eyebrow,
-html[data-theme] .dn-appearance-section-kicker {
+html[data-theme] .dn-appearance-eyebrow {
   color:var(--color-primary); font-size:10px; font-weight:760;
   letter-spacing:.11em; text-transform:uppercase;
 }
@@ -125,7 +124,10 @@ html[data-theme] .dn-appearance-save-row {
 }
 html[data-theme] .dn-appearance-save-row > span {
   flex:1 1 180px; color:var(--color-text-muted);
-  font-size:11px; line-height:1.5;
+  font-size:13px; line-height:1.5; overflow-wrap:anywhere;
+}
+html[data-theme] .dn-appearance-save-row > span.has-error {
+  color:var(--color-danger);
 }
 html[data-theme] .dn-appearance-save-row .settings-actions {
   display:flex; flex-wrap:wrap; gap:8px; margin:0;
@@ -221,7 +223,12 @@ html[data-theme] .dn-settings-redesign .settings-reset-card { min-width:0; }
   html[data-theme] .dn-appearance-footnote { font-size:12px; line-height:1.5; }
   html[data-theme] .dn-appearance-default-fields { grid-template-columns:minmax(0,1fr); gap:15px; }
   html[data-theme] .dn-appearance-save-row { align-items:stretch; flex-direction:column; }
-  html[data-theme] .dn-appearance-save-row .settings-actions { justify-content:flex-end; width:100%; }
+  html[data-theme] .dn-appearance-save-row .settings-actions {
+    display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%;
+  }
+  html[data-theme] .dn-appearance-save-row .settings-actions button {
+    min-width:0; padding-inline:6px; white-space:normal;
+  }
 }
 @media(max-width:350px) {
   html[data-theme] .dn-appearance-theme-pick { padding:8px; }
@@ -257,7 +264,7 @@ html[data-theme] .dn-appearance-default-fields {
   html[data-theme] .dn-appearance-section { gap:10px; padding-bottom:16px; }
   html[data-theme] .dn-appearance-default-fields { gap:8px; }
   html[data-theme] .dn-appearance-save-row { gap:7px; }
-  html[data-theme] .dn-appearance-save-row > span { flex:0 1 auto; font-size:12px; }
+  html[data-theme] .dn-appearance-save-row > span { flex:0 1 auto; }
 }
 
 /* DN 2.3: compact Creation Defaults on large-screen iPhones.
@@ -288,6 +295,5 @@ html[data-theme] .dn-appearance-default-fields {
   }
   html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong,
   html[data-theme] .dn-appearance-more > a strong {font-size:14px;line-height:1.4;}
-  html[data-theme] .dn-settings-redesign .dn-settings-explore-header,
-  html[data-theme] .dn-appearance-section-kicker {font-size:11px;}
+  html[data-theme] .dn-settings-redesign .dn-settings-explore-header {font-size:11px;}
 }

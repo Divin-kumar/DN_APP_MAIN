@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-521 | Clarify when Appearance defaults are saved
+
+- **Appearance:** Remove numbered section labels and keep Reset defaults and Save defaults in one row on narrow phones. Show whether the creation defaults match the saved values.
+- **Save recovery:** Keep the draft visible if browser storage rejects a save. Reset stages the built-in values and theme still saves independently. Existing preference storage and Guest tour instructions continue to apply.
+- **Executed:** 18 focused Chromium checks, lint, build and documentation checks passed. Coverage includes a browser storage failure, retry, reset, reload and the new-Moment form reading its saved default. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261113-520 | Place Data & Backup feedback beside its controls
 
 - **Navigation:** Open and focus Backup, Manage data and Data guide from section links and bookmarks. Mark the shortcut matching the URL and restore section focus on browser Back and Forward.
