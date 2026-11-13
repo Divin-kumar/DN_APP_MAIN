@@ -97,10 +97,26 @@ test('the last active Guest and synthetic Account filters persist separately whe
   await openFilters(page);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await addTextCondition(page, 'Moment name', 'Weekend');
+  const guestChip = page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ });
+  const momentsHeading = page.getByRole('heading', { name: 'Moments', exact: true });
+  const readGuestFilter = () => page.evaluate((key) => JSON.parse(localStorage.getItem(key))?.group.children.map(({ value }) => value),
+    storageKey('guest', 'conditions:moments'));
+  await expect.poll(readGuestFilter).toEqual(['Weekend']);
 
-  await accountScope(page, 'filter-isolation-owner', moments);
+  // If a document reload interrupts the synthetic switch, wait for the new
+  // Moments page and repeat only the fixture setup before making any edits.
+  const switchAccount = () => accountScope(page, 'filter-isolation-owner', moments);
+  try {
+    await switchAccount();
+  } catch (error) {
+    if (!String(error?.message).includes('Execution context was destroyed')) throw error;
+    await page.waitForLoadState('domcontentloaded');
+    await expect(momentsHeading).toBeVisible();
+    await switchAccount();
+  }
+  await expect(page.getByText('Account · Cloud storage', { exact: true })).toBeVisible();
   await openFilters(page);
-  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toHaveCount(0);
+  await expect(guestChip).toHaveCount(0);
   await page.getByRole('button', { name: 'Clear all', exact: true }).click();
   await addTextCondition(page, 'Moment name', 'separate');
   await expect(page.getByRole('button', { name: /Remove filter Moment name Contains separate/ })).toBeVisible();
@@ -115,7 +131,7 @@ test('the last active Guest and synthetic Account filters persist separately whe
     app.setState({ user: null, isGuest: true, authReady: true });
   }, moments);
   await openFilters(page);
-  await expect(page.getByRole('button', { name: /Remove filter Moment name Contains Weekend/ })).toBeVisible();
+  await expect(guestChip).toBeVisible();
   await expect(page.locator('.event-story-main')).toHaveCount(1);
   await expect(page.locator('.event-story-main')).toContainText('Weekend in Ooty');
   const saved = await page.evaluate((keys) => {

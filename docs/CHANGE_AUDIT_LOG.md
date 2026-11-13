@@ -119,6 +119,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-529 | Recover an interrupted synthetic Account filter setup
+
+- **Executed:** Full Chromium run `43447502764` on `a1a3349` passed 915 checks, including Activity Detail, with 2 skipped and one failure when a document navigation interrupted the synthetic Account setup.
+- **Correction:** The filter test verifies that the Guest filter is saved before switching. If the document is replaced during the fixture setup, the test waits for Moments and repeats only that setup once. It verifies the Account view before editing and retains the separate Guest and Account storage assertions. The focused test passed all 10 repeats locally.
+
 ## CHG-20261113-528 | Measure Activity Detail tap targets after route motion
 
 - **Executed:** Full Chromium run `43444105469` on `f2f205f` passed 915 checks, including the two editor regressions, with 2 skipped and one Activity Detail geometry failure. A Chromium reproduction confirmed that fractional route translation can return a DOMRect height of 43.999969px for a 44px control.
