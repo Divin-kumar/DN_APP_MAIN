@@ -390,7 +390,8 @@ export default function Events() {
         </div>
       ) : (
         <QuietEmptyState kind="moments" filtered={events.length > 0}
-          onClear={events.length && canResetMoment ? resetMomentDiscovery : undefined} />
+          onClearSearch={search.trim() ? () => setSearch('') : undefined}
+          onRestoreDefaults={canResetMoment ? resetMomentDiscovery : undefined} />
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}

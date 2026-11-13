@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Clear search from empty discovery results (13 November 2026, OldVersion development only)
+
+When a search returns no results in Moments, Activities or Transactions, Clear search removes only the query. Restore saved defaults still reloads saved sort and filter preferences. Both actions fit within the empty-result panel, and first-use lists keep their existing guidance. The Guest tour explains the two actions. Existing edited tours can receive the new guidance through Refresh demo.
+
 ## Development changelog readability (13 November 2026, OldVersion development only)
 
 Settings → About shows the current development build and the last published production release together. Pending production surfaces up to five recent highlights whose commits are still pending. Expanding the commit count reveals the full history, newest first, including commit details and GitHub links. The release baseline and the production Version History follow the existing publication workflow. The public Guest tour does not depend on development release notes.

@@ -530,3 +530,12 @@ html[data-theme] .dn-transactions-export:disabled { color: var(--color-text-mute
 @media(max-width:360px) {
   html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) .dn-list-controls-summary { order: 3; flex-basis: 100%; }
 }
+
+html[data-theme] .dn-empty-recovery-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  max-width: 100%;
+  margin-top: 5px;
+}

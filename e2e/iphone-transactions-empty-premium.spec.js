@@ -12,7 +12,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         .map((key) => localStorage.getItem(key)));
       const rows = page.locator('.dn-financial-workspace .dn-transactions-results .dn-transaction-card');
       await expect(rows).toHaveCount(4);
-      await page.getByRole('searchbox', { name: 'Search transactions' }).fill('unique-unmatched-text-999');
+      const input = page.getByRole('searchbox', { name: 'Search transactions' });
+      const refine = page.getByRole('button', { name: /^Filters and sort/ });
+      await refine.click();
+      const dialog = page.getByRole('dialog');
+      await dialog.getByRole('button', { name: 'Sort by Amount', exact: true }).click();
+      await dialog.getByRole('button', { name: 'Show results' }).click();
+      await input.fill('unique-unmatched-text-999');
       const empty = page.locator('.dn-financial-workspace .dn-transactions-empty-premium');
       await expect(empty).toBeVisible();
       await expect(empty.getByText('No matching transactions')).toBeVisible();
@@ -32,11 +38,15 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       expect(geometry.documentWidth).toBeLessThanOrEqual(width + 1);
       expect(geometry.buttonHeight).toBeGreaterThanOrEqual(44);
       expect(geometry.listBottom).toBeLessThanOrEqual(geometry.dockTop - 4);
+      await empty.getByRole('button', { name: 'Clear search', exact: true }).click();
+      await expect(input).toHaveValue('');
+      await expect(rows).toHaveCount(4);
+      await expect(page.locator('.dn-financial-workspace .dn-list-controls-summary')).toContainText('Amount · Lowest first');
+      await input.fill('unique-unmatched-text-999');
       await reset.click();
       await expect(rows).toHaveCount(4);
       await expect(empty).toHaveCount(0);
       await expect(page.getByRole('searchbox', { name: 'Search transactions' })).toHaveValue('');
-      const refine = page.getByRole('button', { name: /^Filters and sort/ });
       await refine.click();
       await expect(page.locator('.dn-financial-workspace .dn-list-controls-summary')).toContainText('Newest first');
       expect(await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']

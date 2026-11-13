@@ -4,8 +4,8 @@ import { seedGuest, fixtureMoments } from './fixtures.js';
 // Synthetic Guest checks; physical installed Safari, signed-in account and
 // actual Firebase release acceptance remain separate gates.
 const sections = [
-  { route: '/events', title: 'No matching moments', input: 'Search moments', cards: '.dn-v2-moment-card', count: 2 },
-  { route: '/activities', title: 'No matching activities', input: 'Search activities and Moments', cards: '.dn-v2-activity-card', count: 3 },
+  { route: '/events', title: 'No matching moments', input: 'Search moments', cards: '.dn-v2-moment-card', count: 2, sort: 'Name' },
+  { route: '/activities', title: 'No matching activities', input: 'Search activities and Moments', cards: '.dn-v2-activity-card', count: 3, sort: 'Title' },
 ];
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
   for (const theme of ['light', 'dark']) {
@@ -18,7 +18,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         await expect(records).toHaveCount(section.count);
         const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
           .map((key) => localStorage.getItem(key)));
-        await page.getByRole('searchbox', { name: section.input }).fill('no-match-discovery-999');
+        const refine = page.getByRole('button', { name: /^Filters and sort/ });
+        await refine.click();
+        const dialog = page.getByRole('dialog');
+        await dialog.getByRole('button', { name: 'Sort by ' + section.sort, exact: true }).click();
+        await dialog.getByRole('button', { name: 'Show results' }).click();
+        const input = page.getByRole('searchbox', { name: section.input });
+        await input.fill('no-match-discovery-999');
         const empty = page.locator('.dn-discovery-empty');
         await expect(empty.getByRole('heading', { name: section.title })).toBeVisible();
         const clear = empty.getByRole('button', { name: 'Restore saved defaults' });
@@ -33,6 +39,13 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         expect(geometry.right).toBeLessThanOrEqual(width + 1);
         expect(geometry.documentWidth).toBeLessThanOrEqual(width + 1);
         expect(geometry.buttonHeight).toBeGreaterThanOrEqual(44);
+        await empty.getByRole('button', { name: 'Clear search', exact: true }).click();
+        await expect(input).toHaveValue('');
+        await expect(records).toHaveCount(section.count);
+        await refine.click();
+        await expect(dialog.getByRole('button', { name: 'Sort by ' + section.sort + ', ascending' })).toHaveAttribute('aria-pressed', 'true');
+        await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+        await input.fill('no-match-discovery-999');
         await clear.click();
         await expect(records).toHaveCount(section.count);
         await expect(empty).toHaveCount(0);

@@ -50,8 +50,7 @@ html[data-theme] .dn-transactions-page .dn-transactions-empty-reset {
   gap: 7px;
   min-height: 44px;
   max-width: 100%;
-  margin-top: 5px;
-  padding: 8px 13px;
+  padding: 8px 10px;
   box-sizing: border-box;
   border: 1px solid var(--color-border);
   border-radius: 12px;

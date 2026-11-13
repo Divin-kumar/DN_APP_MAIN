@@ -17,7 +17,7 @@ for (const width of [320, 390]) {
       const original = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
         .map((key) => localStorage.getItem(key)));
       await input.fill('no-match-search-recovery-999');
-      const clear = page.getByRole('button', { name: 'Clear search', exact: true });
+      const clear = page.locator('button.dn-search-clear');
       await expect(clear).toBeVisible();
       expect((await clear.boundingBox())?.height).toBeGreaterThanOrEqual(44);
       await clear.click();

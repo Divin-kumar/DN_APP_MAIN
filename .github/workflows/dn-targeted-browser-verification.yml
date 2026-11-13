@@ -734,7 +734,13 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
       - name: Check query-only clearing and lightweight Task recovery
-        run: npx playwright test e2e/search-recovery-230.spec.js --workers=2
+        run: >-
+          npx playwright test
+          e2e/search-recovery-230.spec.js
+          e2e/iphone-discovery-empty-premium.spec.js
+          e2e/iphone-transactions-empty-premium.spec.js
+          --workers=2
+      - run: npx playwright test e2e/backup-phase7.spec.js --grep "new Guest backup guidance" --workers=2
       - name: Upload focused recovery results
         if: always()
         uses: actions/upload-artifact@v4

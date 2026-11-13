@@ -102,7 +102,8 @@ export default function TransactionHistory({
   onResetDefaults, canResetDefaults = false, onExport, savedDefaults,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
-  const hasActiveFilter = Boolean(conditions.activeCount || filters.search?.trim());
+  const hasSearch = Boolean(filters.search?.trim());
+  const canRestoreDefaults = canResetDefaults && Boolean(conditions.activeCount || hasSearch);
   const resetAllFilters = () => onResetDefaults?.();
   return (
     <section className="transactions-panel dn-transactions-page" aria-label="Transactions">
@@ -139,11 +140,19 @@ export default function TransactionHistory({
             <p>{totalCount
               ? 'Nothing matches your current search or filters.'
               : 'Transactions you record will appear here.'}</p>
-            {hasActiveFilter && totalCount && canResetDefaults ? (
-              <button type="button" className="dn-transactions-empty-reset" onClick={resetAllFilters}>
-                <RotateCcw size={15} aria-hidden="true" />
-                Restore saved defaults
-              </button>
+            {totalCount > 0 && (hasSearch || canRestoreDefaults) ? (
+              <div className="dn-empty-recovery-actions">
+                {hasSearch ? (
+                  <button type="button" className="dn-transactions-empty-reset" onClick={() => onFilters({ search: '' })}>
+                    Clear search
+                  </button>
+                ) : null}
+                {canRestoreDefaults ? (
+                  <button type="button" className="dn-transactions-empty-reset" onClick={resetAllFilters}>
+                    <RotateCcw size={15} aria-hidden="true" /> Restore saved defaults
+                  </button>
+                ) : null}
+              </div>
             ) : null}
           </div>
         )}

@@ -188,7 +188,8 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
-              onClear={allInScope.length && canResetActivity ? resetActivityDiscovery : undefined} />
+              onClearSearch={filters.search.trim() ? () => changeFilters({ search: '' }) : undefined}
+              onRestoreDefaults={canResetActivity ? resetActivityDiscovery : undefined} />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allViews} progressActivities={allViews}
             progressLabel="overall active steps complete"
             getActivityKey={(view) => projection.context.get(view).key}

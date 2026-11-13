@@ -3,7 +3,7 @@ import './QuietEmptyState.css';
 
 // Presentation-only recovery for top-level discovery lists. The caller owns
 // its existing shared Refine reset; this component stores no filter state.
-export default function QuietEmptyState({ kind, filtered = false, hasMoments = false, onClear }) {
+export default function QuietEmptyState({ kind, filtered = false, hasMoments = false, onClearSearch, onRestoreDefaults }) {
   const moments = kind === 'moments';
   const Icon = moments ? BookHeart : ListChecks;
   const title = filtered
@@ -21,10 +21,15 @@ export default function QuietEmptyState({ kind, filtered = false, hasMoments = f
       <span className="dn-discovery-empty-icon" aria-hidden="true"><Icon size={22} strokeWidth={1.6} /></span>
       <h3>{title}</h3>
       <p>{description}</p>
-      {filtered && onClear ? (
-        <button type="button" className="dn-discovery-empty-reset" onClick={onClear}>
-          Restore saved defaults
-        </button>
+      {filtered && (onClearSearch || onRestoreDefaults) ? (
+        <div className="dn-empty-recovery-actions">
+          {onClearSearch ? (
+            <button type="button" className="dn-discovery-empty-reset" onClick={onClearSearch}>Clear search</button>
+          ) : null}
+          {onRestoreDefaults ? (
+            <button type="button" className="dn-discovery-empty-reset" onClick={onRestoreDefaults}>Restore saved defaults</button>
+          ) : null}
+        </div>
       ) : null}
     </section>
   );

@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-523 | Clear unmatched searches without resetting the list
+
+- **Recovery:** Add Clear search to empty results in Moments, Activities and Transactions. Keep Restore saved defaults available for a full reset and preserve the existing first-use guidance.
+- **Guest tour:** Explain the two actions in tour edition 2026.11.13.1. Existing edited demos keep their records until an explicit refresh.
+- **Executed:** 30 focused Chromium checks passed across search recovery, saved sort behavior, first-use lists and Guest tour refresh. Lint, build and documentation checks passed. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261113-522 | Make the development changelog easier to scan
 
 - **About:** Show the development build beside the last production release. Surface up to five recent highlights and open the complete pending commit list newest first, with larger titles and detail text.
