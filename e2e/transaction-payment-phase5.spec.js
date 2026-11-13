@@ -101,7 +101,10 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     await expect(card.locator('.dn-transaction-value')).toContainText('₹1,750');
     const meta = card.locator('.dn-transaction-meta');
     await expect(meta).toContainText('Cash');
-    expect(await meta.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
+    // Phone metadata has a 13px floor; unchanged desktop captions use the
+    // existing 12.5px semantic scale while expanded details still reach 13px.
+    expect(await meta.evaluate(node => parseFloat(getComputedStyle(node).fontSize)))
+      .toBeGreaterThanOrEqual(width <= 760 ? 13 : 12.5);
     const summary = card.locator('.dn-transaction-details > summary');
     await expect(summary).toBeVisible();
     const size = await summary.boundingBox();

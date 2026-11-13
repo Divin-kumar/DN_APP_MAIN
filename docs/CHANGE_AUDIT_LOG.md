@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-512 | Finance reading test preserves intentional desktop metadata scale | 13 November 2026 | OldVersion development
+
+- CHG-511 targeted Desktop Shell run `43344422896` passed 35/36 browser tests; only the new 1280px Transaction metadata check expected 13px despite the spec intentionally preserving the previous desktop 12.5px caption style. Phone 320/390px, expanded detail, Task/Finance actions, desktop shell and remaining cases all passed.
+- Correct only the assertion: require 13px for phone metadata; allow the unchanged 12.5px semantic caption size for desktop. Keep 13px minimum for expanded Details at every tested size, existing scroll, storage and interaction assertions. No CSS, component, backend, Guest data, version or production change.
+- Repeat the existing opt-in `[verify-desktop-shell]` suite against the exact new SHA and confirm documentation, app smoke and development deployment. Actual Safari/VoiceOver remain manual gates.
+
 ### CHG-511 | Finance and Tasks secondary-label readability | 13 November 2026 | OldVersion development
 
 - **Transactions:** For iPhone-sized layouts, increase actual date/category/payment metadata, Details summary, expanded Moment/Activity labels, and original notes to 13px with 1.5+ line-height. On desktop, lift Details summary/labels/notes to the same readable 13px floor. Keep original title/amount positioning, bank semantics, colors, live filters/totals, PDF/CSV exports, swipe actions, screen scroll, records and data shape exactly intact.
