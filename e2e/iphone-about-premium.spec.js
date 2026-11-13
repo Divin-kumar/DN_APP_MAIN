@@ -10,6 +10,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await page.goto('/settings/about');
       await expect(page.getByRole('heading', { name: 'About DN', exact: true })).toBeVisible();
       const root = page.locator('.dn-premium-about');
+      if (process.env.VITE_DEPLOY_ENV !== 'Firebase development') {
+        await expect(root.getByRole('region', { name: 'Pending production' })).toHaveCount(0);
+      }
       await expect(root.locator('.about-summary-item')).toHaveCount(4);
       await expect(root.getByText('Build date', { exact: true })).toBeVisible();
       await expect(root.getByText('Environment', { exact: true })).toBeVisible();
@@ -88,3 +91,47 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     });
   }
 }
+
+
+test('About development ledger shows the build and newest pending commits first', async ({ page }) => {
+  test.skip(process.env.VITE_DEPLOY_ENV !== 'Firebase development', 'Requires the development Hosting configuration.');
+  await page.setViewportSize({ width: 320, height: 640 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  const oldest = '7a2292e27952854cfd4caff2e0708f02de57b065';
+  const newest = '8ed4a6c12a9f92d8f0d886a8414cfd415e5288bb';
+  await page.route('**/dn-pending-release.json', (route) => route.fulfill({
+    json: {
+      status: 'ready',
+      sourceSha: newest,
+      production: { version: '2.3.10', sha: 'c'.repeat(40) },
+      commits: [oldest, newest].map((sha, index) => ({
+        sha, title: index ? 'Make creation defaults save state clear' : 'Earlier search update',
+        details: index ? 'Preserve an unsaved choice if the browser rejects a write.' : '',
+        date: index ? '2026-11-13T06:00:00Z' : '2026-11-08T06:00:00Z',
+        url: `https://github.com/Divin-kumar/DN_APP_MAIN/commit/${sha}`,
+      })),
+    },
+  }));
+  await page.goto('/settings/about');
+  const pending = page.getByRole('region', { name: 'Pending production' });
+  const metadata = pending.locator('.dn-about-pending-meta');
+  await expect(metadata).toContainText('Development build');
+  await expect(metadata).toContainText('8ed4a6c');
+  await expect(metadata).toContainText('Last production release');
+  await expect(metadata).toContainText('v2.3.10');
+  await expect(pending.getByText(/Appearance shows which creation defaults need saving/)).toBeVisible();
+
+  const summary = pending.locator('summary');
+  await expect(summary).toHaveText('2 pending commits');
+  await summary.focus();
+  await page.keyboard.press('Enter');
+  const commits = pending.getByRole('article');
+  await expect(commits).toHaveCount(2);
+  await expect(commits.first()).toContainText('Make creation defaults save state clear');
+  await expect(commits.first()).toContainText('Preserve an unsaved choice');
+  await expect(commits.last()).toContainText('Earlier search update');
+  await expect(commits.first().getByRole('link')).toHaveAttribute('href', `https://github.com/Divin-kumar/DN_APP_MAIN/commit/${newest}`);
+  expect((await summary.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
+  expect(errors).toEqual([]);
+});

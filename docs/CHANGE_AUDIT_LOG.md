@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-522 | Make the development changelog easier to scan
+
+- **About:** Show the development build beside the last production release. Surface up to five recent highlights and open the complete pending commit list newest first, with larger titles and detail text.
+- **Compatibility:** Keep the full generated ledger, its production baseline and the released version history. The public Guest tour does not depend on development notes.
+- **Executed:** Six standard About Chromium checks and one development-configured check passed. The development check uses a synthetic release ledger to verify the build identifiers, keyboard disclosure, order and commit links. Lint, build and documentation checks passed. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261113-521 | Clarify when Appearance defaults are saved
 
 - **Appearance:** Remove numbered section labels and keep Reset defaults and Save defaults in one row on narrow phones. Show whether the creation defaults match the saved values.

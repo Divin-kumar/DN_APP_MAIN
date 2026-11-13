@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Development changelog readability (13 November 2026, OldVersion development only)
+
+Settings → About shows the current development build and the last published production release together. Pending production surfaces up to five recent highlights whose commits are still pending. Expanding the commit count reveals the full history, newest first, including commit details and GitHub links. The release baseline and the production Version History follow the existing publication workflow. The public Guest tour does not depend on development release notes.
+
 ## Appearance creation defaults feedback (13 November 2026, OldVersion development only)
 
 Creation defaults shows whether the four visible defaults match their saved values. Save defaults applies the draft. Reset defaults stages the built-in values, and a browser write failure keeps the draft available for retry with a message beside the actions. Reset and Save share one row on phones. Theme continues to save independently. The public Guest tour requires no fixture or instruction changes.

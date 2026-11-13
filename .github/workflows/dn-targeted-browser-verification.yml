@@ -7,6 +7,26 @@ on:
 permissions:
   contents: read
 jobs:
+  about-development-ledger:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-about-ledger]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npx playwright test e2e/iphone-about-premium.spec.js --grep "About keeps release controls" --workers=2
+      - run: npx playwright test e2e/iphone-about-premium.spec.js --grep "About development ledger" --workers=2
+        env:
+          VITE_DEPLOY_ENV: Firebase development
+
   data-backup-navigation:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&

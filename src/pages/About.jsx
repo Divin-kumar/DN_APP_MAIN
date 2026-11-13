@@ -38,6 +38,11 @@ const isDevelopmentHosting = deployEnvironment === 'Firebase development';
 
 // Curated highlights display only while their underlying commits remain unreleased.
 const pendingHighlights = [
+  { commit: '8ed4a6c12a9f92d8f0d886a8414cfd415e5288bb', text: 'Appearance shows which creation defaults need saving and keeps the draft available if a save fails.' },
+  { commit: '99b5b3addc9ba7c773ff332cd92ac89a67f0a80f', text: 'Data & Backup opens bookmarked sections and shows backup feedback beside Export and Restore.' },
+  { commit: 'a99454a505fcb491b3f3c001b812bf9583df6561', text: 'Download original stays visible beneath tall photo previews.' },
+  { commit: '78fa6b60d019e0ef77402f31fb0db04f3c20fe7d', text: 'Insights shows full milestone names and gives large spending amounts room on phones.' },
+  { commit: '8ef4a91db948a04ade92ca9e73e739abbda6433e', text: 'Refine keeps the matching count and actions visible while you edit filters.' },
   { commit: '7a2292e27952854cfd4caff2e0708f02de57b065', text: 'Mobile Search stays in place above the iPhone keyboard, with consistent focus styling and fewer duplicate profile links.' },
   { commit: '29eaececbaf20fb5a22df3690a981951be6ca497', text: 'The floating universal creator is a clear + again, and creation sheets use full-height opening and closing transitions.' },
   { subject: 'fix(iphone): lift search, bare plus and swipe-dismiss sheets', text: 'Search is slightly higher and larger, the movable creator is a bare +, and mobile forms and navigation sheets can be pulled down from the header to close.' },
@@ -370,12 +375,13 @@ export default function About() {
     return () => controller.abort();
   }, []);
 
-  const pendingCommits = pendingLedger?.status === 'ready' ? pendingLedger.commits || [] : [];
+  // The generated ledger is chronological. Keep its complete contents and show the latest work first.
+  const pendingCommits = pendingLedger?.status === 'ready' ? [...(pendingLedger.commits || [])].reverse() : [];
   const hasLatestGesturePolish = pendingCommits.some(commit => commit.title === 'fix(iphone): lift search, bare plus and swipe-dismiss sheets');
   const activeHighlights = pendingHighlights.filter(item =>
     // The newest final-design highlight replaces the older intermediate + note.
     (!hasLatestGesturePolish || item.commit !== '29eaececbaf20fb5a22df3690a981951be6ca497')
-    && pendingCommits.some(commit => item.commit ? commit.sha === item.commit : commit.title === item.subject));
+    && pendingCommits.some(commit => item.commit ? commit.sha === item.commit : commit.title === item.subject)).slice(0, 5);
 
   const refreshApp = async () => {
     if (refreshing) return;
@@ -493,11 +499,19 @@ export default function About() {
             <p className="settings-helper" role="status">The commit log could not be verified for this build. Development is available, but release notes are temporarily unavailable.</p>
           ) : (
             <>
-              <div className="dn-about-pending-meta">
-                <span>Production {pendingLedger.production?.version ? 'v' + pendingLedger.production.version : ''}</span>
-                <code>{pendingLedger.production?.sha?.slice(0, 7)}</code>
-                <span>{pendingCommits.length} pending {pendingCommits.length === 1 ? 'commit' : 'commits'}</span>
-              </div>
+              <dl className="dn-about-pending-meta">
+                <div>
+                  <dt>Development build</dt>
+                  <dd><code>{pendingLedger.sourceSha?.slice(0, 7) || 'Unavailable'}</code></dd>
+                </div>
+                <div>
+                  <dt>Last production release</dt>
+                  <dd>
+                    {pendingLedger.production?.version ? <span>v{pendingLedger.production.version}</span> : null}
+                    <code>{pendingLedger.production?.sha?.slice(0, 7) || 'Unavailable'}</code>
+                  </dd>
+                </div>
+              </dl>
               {pendingCommits.length === 0 ? (
                 <p className="settings-helper">Everything recorded here is now in production. New development commits will appear automatically.</p>
               ) : (
@@ -508,7 +522,7 @@ export default function About() {
                     </ul>
                   ) : null}
                   <details className="dn-about-pending-details">
-                    <summary><span>All {pendingCommits.length} commits and details</span><ChevronDown size={17} aria-hidden="true" /></summary>
+                    <summary><span>{pendingCommits.length} pending {pendingCommits.length === 1 ? 'commit' : 'commits'}</span><ChevronDown size={17} aria-hidden="true" /></summary>
                     <div className="dn-about-pending-list">
                       {pendingCommits.map(commit => (
                         <article className="dn-about-pending-commit" key={commit.sha}>

@@ -66,6 +66,8 @@
 
 **DN 2.3 easier Task actions (OldVersion only, unpublished):** Tap a Task to edit it, then use the clearly labeled Cancel Task, Restore Task or Delete Task actions. A confirmation explains the effect; Keep editing returns to your unchanged draft. Confirming affects only the saved Task, leaving its linked Moment and Activities intact. Swipe and keyboard actions still work. Focused browser checks passed on phone and desktop sizes; actual iPhone accessibility and release acceptance remain outstanding.
 
+**Development changelog (13 November 2026):** Settings → About shows the build you’re previewing alongside the last production release. Open the pending commit count to see every change, starting with the newest.
+
 **Creation defaults (13 November 2026, development):** Appearance shows when your changes need saving. Reset defaults lets you review the built-in choices before saving. If a save fails, you can retry with the choices you already entered.
 
 **Data & Backup (13 November 2026, development):** Section bookmarks open at the selected controls or guide. Export and restore feedback appears beside the backup buttons, and clearing feedback appears under Manage data.
