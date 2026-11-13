@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-518 | Improve Insights milestone and spending readability
+
+- **Milestones:** Show full names and stack upcoming and recent lists on narrow phones. Use the singular result label when search returns one milestone.
+- **Spending:** Reserve width for whole category amounts. Move bars under their labels and arrange Income, Expenses and Balance as compact rows on narrow phones.
+- **Compatibility:** Preserve calculations, search scope and full JSON export. The public Guest tour needs no data or instruction changes.
+- **Executed:** 18 focused Chromium checks, lint, build and documentation checks passed. Reviewed 320px screenshots with a long milestone name and seven-digit spending. Native iPhone Safari and VoiceOver remain unverified. Development Hosting follows the standing OldVersion workflow.
+
 ## CHG-20261113-517 | Align Settings browser checks with the shipped Task title scale
 
 - The expanded Settings browser suite measured the established 13.5px title at 320px and 14px at larger phone sizes. Its prior 15px assertion predated the matched Task and Dashboard date-tile layout.

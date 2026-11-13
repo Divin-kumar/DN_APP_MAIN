@@ -7,6 +7,27 @@ on:
 permissions:
   contents: read
 jobs:
+  insights-readability:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-insights-ui]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: >-
+          npx playwright test
+          e2e/iphone-insights-first-fold-phase1.spec.js
+          e2e/iphone-route-header-density.spec.js
+          --workers=2
+
   dashboard-activities-iphone:
     # CHG-514: actual Dashboard/Activities phone layouts and original gestures.
     if: >-

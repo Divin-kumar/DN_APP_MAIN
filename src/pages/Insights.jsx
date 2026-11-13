@@ -9,6 +9,7 @@ import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
 import ListControls from '../components/common/ListControls';
 import usePersistentListState from '../hooks/usePersistentListState';
+import './Insights.css';
 
 const defaultInsightFilters = Object.freeze({ search: '' });
 
@@ -110,6 +111,7 @@ export default function Insights() {
   const empty = !events.length && !incomes.length && !expenses.length;
   const searchedUpcoming = nextEvents.filter((event) => `${event.name || ''} ${event.type || ''}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4);
   const searchedPast = pastEvents.filter((event) => `${event.name || ''} ${event.type || ''}`.toLowerCase().includes(search.toLowerCase())).slice(0, 4);
+  const milestoneCount = searchedUpcoming.length + searchedPast.length;
   const years = [...new Set(events.map((event) => eventDate(event)?.getFullYear()).filter(Boolean))].sort((first, second) => second - first);
   const memoryMax = Math.max(1, ...monthlyMemories.map((month) => month.count));
 
@@ -131,7 +133,7 @@ export default function Insights() {
     <div className="insights-page">
       <div className="insights-discovery dn-insights-compact-search">
         <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
-          resultCount={searchedUpcoming.length + searchedPast.length} resultLabel="milestones shown"
+          resultCount={milestoneCount} resultLabel={milestoneCount === 1 ? 'milestone shown' : 'milestones shown'}
           summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
           search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
             placeholder="Search milestones" aria-label="Search milestones in Insights" />} />
@@ -168,7 +170,7 @@ export default function Insights() {
 
         <section className="insights-panel">
           <PanelHeading icon={HeartPulse} title="Event categories" detail="The moments you make room for" />
-          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{name}</span><i><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
+          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{name}</span><i aria-hidden="true"><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
         </section>
 
         <section className="insights-panel">
@@ -191,7 +193,7 @@ export default function Insights() {
 
         <section className="insights-panel">
           <PanelHeading icon={ArrowDownRight} title="Spending by category" detail="Where expenses are recorded" />
-          {expenseCategoryRows.length ? <div className="category-insight-list">{expenseCategoryRows.map(([category, amount]) => <div key={category} className="category-insight-row"><span>{category}</span><i><b style={{ width: `${Math.max(8, (amount / Math.max(1, totalExpenses)) * 100)}%` }} /></i><strong>{money(amount)}</strong></div>)}</div> : <p className="insights-muted">Add expenses to see your spending breakdown.</p>}
+          {expenseCategoryRows.length ? <div className="category-insight-list">{expenseCategoryRows.map(([category, amount]) => <div key={category} className="category-insight-row"><span>{category}</span><i aria-hidden="true"><b style={{ width: `${Math.max(8, (amount / Math.max(1, totalExpenses)) * 100)}%` }} /></i><strong>{money(amount)}</strong></div>)}</div> : <p className="insights-muted">Add expenses to see your spending breakdown.</p>}
         </section>
 
         <section className="insights-panel">

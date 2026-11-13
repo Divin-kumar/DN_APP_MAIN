@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Insights milestone and spending readability (13 November 2026, OldVersion development only)
+
+Insights wraps full milestone names and uses one column for the upcoming and recent lists through 580px. Category breakdowns reserve room for whole amounts and put bars below their labels on narrow phones. The financial overview shows Income, Expenses and Balance in three compact rows at those widths. The milestone search count uses the singular for one result. Existing search scope, totals, chart inputs and full JSON export are unchanged. The Guest tour requires no fixture update for this layout change.
+
 ## Code Lists section navigation (13 November 2026, OldVersion development only)
 
 The sticky Code Lists shortcut row uses readable 13px labels and native horizontal scrolling. Opening a section link, including a bookmark or a browser Back/Forward entry, reveals and focuses the destination after the page loads. The shortcut matching the URL remains highlighted, is announced as the current location, and scrolls fully into view. Payment Methods has a stable destination while transaction data loads. The earlier List defaults bookmark still redirects to Settings → List defaults. During a Code List rename or in-use disable save, the dialog blocks dismissal so a failed save leaves the draft and error available for retry. Usage counts and record values follow their existing paths. The Guest tour still describes the same Settings destination and needs no fixture update.

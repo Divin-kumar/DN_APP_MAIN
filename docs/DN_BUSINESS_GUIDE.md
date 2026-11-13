@@ -66,6 +66,8 @@
 
 **DN 2.3 easier Task actions (OldVersion only, unpublished):** Tap a Task to edit it, then use the clearly labeled Cancel Task, Restore Task or Delete Task actions. A confirmation explains the effect; Keep editing returns to your unchanged draft. Confirming affects only the saved Task, leaving its linked Moment and Activities intact. Swipe and keyboard actions still work. Focused browser checks passed on phone and desktop sizes; actual iPhone accessibility and release acceptance remain outstanding.
 
+**Insights readability (13 November 2026, development):** Full milestone names can wrap. On narrow phones, upcoming and recent milestones stack vertically, category amounts sit beside their names, and Income, Expenses and Balance each have their own row.
+
 **Code Lists shortcuts (13 November 2026, development):** The shortcut row uses larger labels and highlights the section you opened. Bookmarked section links open at the matching list, and your browser’s Back and Forward controls return to those sections.
 
 **List defaults and Refine (13 November 2026, development):** Set your preferred sort and filters for Moments, Activities, Transactions and Tasks in Settings → List defaults. Edits save automatically in this browser. To use them on a list, open Refine, tap Reset and select Show results. Refine keeps the matching count, Reset, Cancel and Show results visible while you scroll through the options. Cancel discards the draft.
