@@ -18,7 +18,9 @@ for (const [width, height, theme] of [
       localStorage.getItem('dn_guest_incomes'),
       localStorage.getItem('dn_guest_expenses'),
     ]);
-    // All three SortChips groups and their chosen fields stay untouched.
+    await expect(section.locator('.dn-defaults-intro')).toContainText('open Refine and tap Reset');
+    await expect(section.getByRole('button', { name: 'Tasks filters' })).toHaveAccessibleDescription('None');
+    // All four SortChips groups are available.
     const groups = section.locator('.dn-defaults-sort-card');
     await expect(groups).toHaveCount(4);
     // List Defaults has the same lightweight hierarchy as Settings home.
@@ -35,7 +37,7 @@ for (const [width, height, theme] of [
       const font = (sel) => [...root.querySelectorAll(sel)].map((node) =>
         parseFloat(getComputedStyle(node).fontSize));
       return {
-        intro: font('.dn-defaults-intro p:not(.dn-defaults-sort-help)'),
+        intro: font('.dn-defaults-intro p:not(.dn-defaults-saved)'),
         saved: font('.dn-defaults-intro .dn-defaults-saved'),
         sortLabels: font('.dn-defaults-sort-label strong'),
         sortHints: font('.dn-defaults-sort-label small'),
@@ -110,7 +112,7 @@ test('Per-list restore updates its summary and leaves other defaults and working
   // Reset is discoverable without opening the filter editor.
   await activity.getByRole('button', { name: 'Restore built-in defaults for Activities' }).click();
   await expect(activity.getByRole('button', { name: 'Sort by Due date, ascending' })).toHaveAttribute('aria-pressed', 'true');
-  await expect(activity.getByRole('button', { name: 'Activities filters', exact: true })).toContainText('2 saved');
+  await expect(activity.getByRole('button', { name: 'Activities filters', exact: true })).toHaveAccessibleDescription('2 saved');
   await expect(moments.getByRole('button', { name: 'Sort by Name, ascending' })).toHaveAttribute('aria-pressed', 'true');
   await activity.getByRole('button', { name: 'Activities filters', exact: true }).click();
   await expect(editor.locator('.dn-condition-rule')).toHaveCount(2);

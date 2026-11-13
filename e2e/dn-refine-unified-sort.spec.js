@@ -73,3 +73,37 @@ for (const width of [320, 390, 430]) {
     });
   }
 }
+
+for (const { route, trigger } of routes) {
+  test(`${route}: result count and actions stay visible while the short sheet scrolls`, async ({ page }) => {
+    await page.setViewportSize({ width: 844, height: 390 });
+    const errors = await seedGuest(page);
+    await page.goto(route);
+    await page.getByRole('button', { name: trigger }).first().tap();
+    const sheet = page.getByRole('dialog').last();
+    const body = sheet.locator('.dn-modal-body');
+    const count = sheet.getByRole('status').filter({ hasText: /matching/ });
+    const apply = sheet.getByRole('button', { name: 'Show results' });
+    const addFilter = sheet.getByRole('button', { name: 'Add filter', exact: true });
+    await addFilter.tap();
+    await addFilter.tap();
+    await body.evaluate((node) => { node.scrollTop = 0; });
+    await expect(count).toBeInViewport({ ratio: 1 });
+    await expect(apply).toBeInViewport({ ratio: 1 });
+    const countOffset = async () => (await count.boundingBox()).y - (await sheet.boundingBox()).y;
+    const position = await countOffset();
+
+    const scrolled = await body.evaluate((node) => {
+      node.scrollTop = node.scrollHeight;
+      return node.scrollTop;
+    });
+    expect(scrolled).toBeGreaterThan(0);
+    await expect(count).toBeInViewport({ ratio: 1 });
+    await expect(apply).toBeInViewport({ ratio: 1 });
+    expect(Math.abs(await countOffset() - position)).toBeLessThanOrEqual(1);
+    await expect(addFilter).toBeInViewport({ ratio: 1 });
+    await sheet.getByRole('button', { name: 'Cancel', exact: true }).tap();
+    await expect(sheet).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}

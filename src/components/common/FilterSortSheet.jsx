@@ -1,8 +1,8 @@
 import { useMemo, useRef, useState } from 'react';
-import { RotateCcw } from 'lucide-react';
 import SortChips from './SortChips';
 import ModalDialog from './ModalDialog';
 import ConditionBuilder from './ConditionBuilder';
+import RefineActions from './RefineActions';
 import { compileConditionGroup, conditionCount, emptyGroup } from '../../utils/conditionEngine';
 import './FilterSortSheet.css';
 
@@ -31,9 +31,6 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
   const draftCount = useMemo(() => Array.isArray(refine.candidates)
     ? refine.candidates.filter(compileConditionGroup(draft.group, conditions.schema)).length : null,
   [refine.candidates, draft.group, conditions.schema]);
-  const pickSort = (field) => setDraft((current) => field === current.field
-    ? { ...current, direction: current.direction === 'asc' ? 'desc' : 'asc' }
-    : { ...current, field, direction: 'asc' });
   const resetDraft = () => setDraft({
     group: cloneGroup(defaults?.group), field: defaults?.field || sort.field,
     direction: defaults?.direction || sort.direction, reset: true,
@@ -50,24 +47,17 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
     }
     onClose();
   };
-  return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}>
-    <p className="dn-refine-sheet-intro">Choose what appears in your list. Changes apply only when you select Show results.</p>
+  return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}
+    footer={<RefineActions count={draftCount} resultLabel={resultLabel} onReset={resetDraft} onCancel={onClose} onApply={apply} />}>
+    <p className="dn-refine-sheet-intro">Changes apply when you select Show results.</p>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
       <SortChips field={draft.field} direction={draft.direction} options={sort.options}
-        label={sort.label || 'Sort by'} onChange={(field) => pickSort(field)} />
+        label={sort.label || 'Sort by'} onChange={(field, direction) => setDraft((current) => ({ ...current, field, direction }))} />
     </div>
     <div className="dn-refine-sheet-section">
       <h4>Filters</h4>
       <ConditionBuilder filter={draftFilter} title={title + ' conditions'} immediate />
-    </div>
-    {typeof draftCount === 'number' ? <p className="dn-refine-preview-count" role="status" aria-live="polite">
-      <strong>{draftCount} matching {resultLabel}</strong><span>Preview only. Your list updates after Show results.</span>
-    </p> : null}
-    <div className="dn-list-controls-footer" role="group" aria-label="Apply or discard Refine changes">
-      <button type="button" className="dn-refine-reset" onClick={resetDraft}><RotateCcw size={15} aria-hidden="true" />Reset</button>
-      <button type="button" className="dn-refine-cancel" onClick={onClose}>Cancel</button>
-      <button type="button" className="dn-refine-apply" onClick={apply}>Show results</button>
     </div>
   </ModalDialog>;
 }

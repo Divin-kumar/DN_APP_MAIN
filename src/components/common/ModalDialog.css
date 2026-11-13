@@ -62,7 +62,7 @@ html[data-theme] .dn-modal-body :is(form, .field-group, .event-form-fields, .mom
   html[data-theme] .dn-modal-viewport .dn-modal .dn-modal-header h3 { font-size: 18px !important; line-height: 1.3; }
   html[data-theme] .dn-modal-viewport .dn-modal-body { padding-bottom: max(2px, env(safe-area-inset-bottom)); scroll-padding-bottom: 80px; }
   html[data-theme] .dn-modal-viewport .event-form-intro { font-size: 12px; line-height: 1.45; margin-bottom: 0; }
-  html[data-theme] .dn-modal-viewport :is(.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions, .dn-list-controls-footer) {
+  html[data-theme] .dn-modal-viewport :is(.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions) {
     position: sticky;
     bottom: 0;
     z-index: 2;

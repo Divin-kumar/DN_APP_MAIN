@@ -874,7 +874,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
 
       <nav className="dn-appearance-more" aria-label="Other personalization settings">
         <Link to="/settings/list-defaults"><SlidersHorizontal size={18} aria-hidden="true" />
-          <span><strong>List defaults</strong><small>Saved sorting and filters for Moments, Activities and Transactions</small></span>
+          <span><strong>List defaults</strong><small>Saved sorting and filters for Moments, Activities, Transactions and Tasks</small></span>
           <ChevronRight size={17} aria-hidden="true" /></Link>
         <Link to="/settings/code-lists"><Settings2 size={18} aria-hidden="true" />
           <span><strong>Code Lists</strong><small>Manage Moment types, priorities, payment methods and categories</small></span>
@@ -1141,7 +1141,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
           <span className="settings-hub-copy">
             <strong>List defaults</strong>
-            <small>Choose the saved sort and filters restored by Reset on Moments, Activities and Transactions</small>
+            <small>Choose what Reset restores in Moments, Activities, Transactions and Tasks</small>
           </span>
           <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
         </Link>
@@ -1229,7 +1229,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
               <li>Saved preferences; Notifications remain a coming-soon feature</li>
               <li>Greeting types and templates</li>
               <li>All Code Lists and their system default values</li>
-              <li>Saved default sorting and filters for Moments, Activities and Transactions</li>
+              <li>Saved default sorting and filters for Moments, Activities, Transactions and Tasks</li>
             </ul>
             <p>Unused custom Code List values will be removed. Values referenced by existing records will remain available as inactive values.</p>
             <p><strong>Your events, expenses, income, activities, memories, attachments, and account data will not be deleted or edited.</strong></p>

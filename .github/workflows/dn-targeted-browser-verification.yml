@@ -1411,6 +1411,10 @@ jobs:
         run: >-
           npx playwright test
           e2e/dn-refine-unified-sort.spec.js
+          e2e/iphone-list-defaults-legibility-230.spec.js
+          e2e/iphone-settings-filter-defaults.spec.js
+          e2e/shared-refine-premium.spec.js
+          e2e/iphone-transaction-refine-scroll.spec.js
           e2e/user-friendly-sort.spec.js
           e2e/shared-filter-single-row.spec.js
           e2e/iphone-task-refine-clean-230.spec.js

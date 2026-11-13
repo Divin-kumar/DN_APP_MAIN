@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-515 | Keep Refine results and actions in view
+
+- **Refine:** Keep the live draft count and Reset, Cancel and Show results below the scrolling options in Moments, Activities, Transactions and Tasks. Reuse the shared sort direction control. Saved filter groups, ordering, finance totals and Guest/account record storage follow their existing paths.
+- **Settings:** List defaults guidance includes Tasks and explains browser-local autosave and Refine → Reset. Saved filter counts are available to assistive technology. The existing Guest tour already describes this workflow.
+- **Verification:** 626 Node tests, lint and build passed locally. Existing focused browser cases passed, and the four short-landscape cases passed with scrollable drafts after correcting when the test measured the opening sheet. The opt-in filter/sort lane covers the footer, saved defaults, linked lists and Guest record preservation. Physical iPhone Safari and VoiceOver remain unverified.
+- **Release:** OldVersion with the authorized automatic ExpenseTracker development preview.
+
 ## CHG-20261108-504 | Authorize guarded DN v2.3.10 production publication
 
 **Authorization:** The owner explicitly requested production deployment of the subtle mobile bottom-sheet glass, compact frosted profile popover, and previously approved UI closing/gesture refinements, excluding the cancelled + long-press action wheel.

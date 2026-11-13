@@ -146,10 +146,11 @@ function ListPreferences({ config, expanded, onToggle }) {
           ? { sort: `${nextField}-${nextDirection}` } : { field: nextField, direction: nextDirection })} />
     </div>
     <button type="button" className={`dn-list-filter-switch${expanded ? ' is-active' : ''}`}
-      aria-label={`${label} filters`} aria-expanded={expanded} aria-controls={`dn-filter-editor-${domain}`}
+      aria-label={`${label} filters`} aria-describedby={`dn-saved-filter-count-${domain}`}
+      aria-expanded={expanded} aria-controls={`dn-filter-editor-${domain}`}
       onClick={onToggle}>
       <ListFilter size={16} aria-hidden="true" /><span>Filters</span>
-      <small>{count ? `${count} saved` : 'None'}</small>
+      <small id={`dn-saved-filter-count-${domain}`}>{count ? `${count} saved` : 'None'}</small>
       <ChevronDown size={16} aria-hidden="true" className="dn-defaults-chevron" />
     </button>
     <div className="dn-list-filter-expanded" id={`dn-filter-editor-${domain}`} hidden={!expanded}>
@@ -166,9 +167,8 @@ function ListOrderingPreferences() {
   return <section className="settings-section code-list-section" id="list-order" aria-label="List sorting and filters preferences">
     <div className="settings-section-heading"><h3>List defaults</h3></div>
     <div className="dn-defaults-intro">
-      <p>Choose the sorting and filters restored by <strong>Reset</strong> on each list.</p>
-      <span className="dn-defaults-saved">Saved automatically · This device</span>
-      <p className="dn-defaults-sort-help">Tap the selected sort again to reverse its order.</p>
+      <p>In any list, open <strong>Refine</strong> and tap <strong>Reset</strong> to load these defaults.</p>
+      <p className="dn-defaults-saved">Changes save automatically in this browser.</p>
     </div>
     <div className="dn-defaults-domains">
       {LISTS.map((config) => <ListPreferences key={config.domain} config={config}

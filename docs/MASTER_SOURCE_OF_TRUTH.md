@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Refine result preview and List defaults guidance (13 November 2026, OldVersion development only)
+
+Refine keeps its matching-result count and Reset, Cancel and Show results actions below the scrolling editor on Moments, Activities, Transactions and Tasks, including the existing Moment-linked lists that use the shared sheet. The count previews the draft. Reset loads saved defaults into the draft, Cancel discards it, and Show results applies it. Sort direction continues to use the same field-specific choices and ascending/descending behavior.
+
+Settings and Appearance both identify Tasks as supported by List defaults. The List defaults page explains how to load those defaults through Refine → Reset and that edits save automatically in this browser. Filter disclosure buttons expose their saved rule counts to assistive technology. The existing Guest tour already describes the same controls and workflows and needs no sample or version update. List preference storage, filter evaluation, financial totals and record data use the existing paths.
+
 ## Dashboard date-view clarity and Activities context readability (13 November 2026, OldVersion development only)
 
 The Dashboard retains Tasks/Moments/Activities order, the compact greeting, default-collapsed Task preview, each existing list's nested scroll, upcoming/on-this-day selection behavior and original navigation routes. On iPhone widths, both date switchers have 13px labels (with unchanged 44px touch height), and the existing Hide/Show labels have a 12.5px floor. When using keyboard access, the two scrollable Moment/Activity list regions now have an explicit focus indicator. No new Dashboard cards, buttons, navigation destinations, persistent view settings or PDF changes are introduced.

@@ -8,7 +8,7 @@ import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dia
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
-export default function ModalDialog({ title, onClose, children, variant = 'dialog', className = '', swipeDismiss = true }) {
+export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   // Every phone-bottom sheet uses one motion path, rather than old CSS entry
@@ -111,7 +111,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
     if (!viewport.keyboardOpen || !body?.contains(active) || !active.matches('input, textarea, [contenteditable="true"]')) return;
     const field = active.getBoundingClientRect();
     const visible = body.getBoundingClientRect();
-    const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions, .dn-list-controls-footer');
+    const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions');
     const footerTop = footer && getComputedStyle(footer).position === 'sticky' ? footer.getBoundingClientRect().top : visible.bottom;
     // A completely hidden long editor needs its beginning revealed; a partly
     // visible editor keeps its caret position and native internal scrolling.
@@ -199,6 +199,7 @@ export default function ModalDialog({ title, onClose, children, variant = 'dialo
         </div>
         <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
           onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>{children}</div>
+        {footer}
       </motion.section>
     </motion.div>,
     document.body,
