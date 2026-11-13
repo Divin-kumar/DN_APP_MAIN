@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Searchable dropdown keyboard editing (13 November 2026, OldVersion development only)
+
+Shared searchable dropdowns keep Home and End available for editing search text. Tab reaches Clear search when it is shown, and Shift+Tab returns to the text field. Enter confirms text composition before it can choose an option. Escape closes the choices and returns focus to their trigger. Existing filter and record values, touch targets and the public Guest tour continue to use their existing paths.
+
 ## Clear search from empty discovery results (13 November 2026, OldVersion development only)
 
 When a search returns no results in Moments, Activities or Transactions, Clear search removes only the query. Restore saved defaults still reloads saved sort and filter preferences. Both actions fit within the empty-result panel, and first-use lists keep their existing guidance. The Guest tour explains the two actions. Existing edited tours can receive the new guidance through Refresh demo.

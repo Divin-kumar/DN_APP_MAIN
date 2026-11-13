@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-524 | Improve keyboard access in searchable dropdowns
+
+- **Search:** Home and End move the caret within the search field. Tab reaches Clear search, Shift+Tab returns to the field, and Clear supports native button activation. Escape returns focus to the dropdown trigger within Refine.
+- **Text input:** Composition keystrokes stay with the input method so they can complete without selecting an option or dismissing the menu.
+- **Executed:** All 23 focused Chromium checks passed across dropdown keyboard access, Task and Dashboard Refine, and simulated iPhone touch. Lint and build passed. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261113-523 | Clear unmatched searches without resetting the list
 
 - **Recovery:** Add Clear search to empty results in Moments, Activities and Transactions. Keep Restore saved defaults available for a full reset and preserve the existing first-use guidance.

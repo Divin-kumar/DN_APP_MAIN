@@ -44,14 +44,33 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     await expect(menu.getByRole('button', { name: 'Clear search filters' })).toHaveCount(0);
 
     await search.fill('Status');
-    await clear.focus();
+    await search.press('Tab');
+    await expect(clear).toBeFocused();
+    await clear.press('Shift+Tab');
+    await expect(search).toBeFocused();
+    await search.press('Tab');
     await clear.press('Enter');
     await expect(search).toHaveValue('');
     await expect(search).toBeFocused();
     await expect(menu.getByRole('option')).toHaveCount(totalOptions);
 
+    await search.fill('Stat');
+    await search.press('Home');
+    expect(await search.evaluate(input => input.selectionStart)).toBe(0);
+    await search.press('End');
+    expect(await search.evaluate(input => input.selectionStart)).toBe(4);
+    await search.evaluate(input => input.dispatchEvent(new KeyboardEvent('keydown', {
+      key: 'Enter', isComposing: true, bubbles: true, cancelable: true,
+    })));
+    await expect(search).toBeFocused();
+    await expect(menu).toBeVisible();
+    await search.press('Escape');
+    await expect(menu).toHaveCount(0);
+    await expect(picker).toBeFocused();
+    await expect(sheet).toBeVisible();
+    await picker.click();
     await search.fill('Status');
-    await menu.getByRole('option', { name: 'Status', exact: true }).click();
+    await search.press('Enter');
     await expect(picker).toContainText('Status');
     await expect(menu).toHaveCount(0);
     await sheet.getByRole('button', { name: 'Cancel', exact: true }).click();

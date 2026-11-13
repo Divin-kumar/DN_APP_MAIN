@@ -595,6 +595,7 @@ jobs:
           npx playwright test
           e2e/dropdown-search-recovery-230.spec.js
           e2e/task-refine-dashboard-230.spec.js
+          e2e/iphone-filter-value-touches-230.spec.js
           --workers=2
       - name: Upload focused QA evidence and failures
         if: always()

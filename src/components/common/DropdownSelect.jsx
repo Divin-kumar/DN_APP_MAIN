@@ -25,6 +25,7 @@ export default function DropdownSelect({
   const menuRef = useRef(null);
   const listRef = useRef(null);
   const searchRef = useRef(null);
+  const clearSearchRef = useRef(null);
   const typeahead = useRef({ text: '', time: 0 });
   // A rapid typeahead + Enter can precede React's highlighted-state render.
   // Keep the selected option synchronous with keyboard events.
@@ -183,9 +184,15 @@ export default function DropdownSelect({
   };
 
   const onKeyDown = (event) => {
-    // Let an explicit Search button handle Enter/Space as a real button, not
-    // as an option-selection shortcut on the parent portaled dropdown.
-    if (event.target.closest?.('.dropdown-search-reveal, .dropdown-search-clear') && event.key !== 'Escape') return;
+    const inSearch = event.target === searchRef.current;
+    const onClearSearch = event.target === clearSearchRef.current;
+    if (inSearch && (event.nativeEvent.isComposing || event.nativeEvent.keyCode === 229)) {
+      event.stopPropagation();
+      return;
+    }
+    // Search and Clear keep native button activation inside the portal.
+    if (event.target.closest?.('.dropdown-search-reveal, .dropdown-search-clear')
+      && event.key !== 'Escape' && !(onClearSearch && event.key === 'Tab')) return;
     if (event.key === 'Escape' && open) {
       event.preventDefault();
       event.stopPropagation();
@@ -200,7 +207,17 @@ export default function DropdownSelect({
         else searchRef.current?.focus({ preventScroll: true });
         return;
       }
-      if (event.target === searchRef.current) {
+      if (inSearch && !event.shiftKey && clearSearchRef.current) {
+        event.preventDefault();
+        clearSearchRef.current.focus({ preventScroll: true });
+        return;
+      }
+      if (onClearSearch && event.shiftKey) {
+        event.preventDefault();
+        searchRef.current?.focus({ preventScroll: true });
+        return;
+      }
+      if (inSearch || onClearSearch) {
         triggerRef.current?.focus({ preventScroll: true });
         if (event.shiftKey) { event.preventDefault(); return; }
       }
@@ -214,7 +231,7 @@ export default function DropdownSelect({
       return;
     }
     if (event.key === 'Home' || event.key === 'End') {
-      if (!open) return;
+      if (!open || inSearch) return;
       event.preventDefault();
       keyboardChoiceRef.current = -1;
       if (enabledIndices.length) setActiveIndex(event.key === 'Home' ? enabledIndices[0] : enabledIndices[enabledIndices.length - 1]);
@@ -292,7 +309,7 @@ export default function DropdownSelect({
                 aria-controls={listboxId} aria-activedescendant={shownActiveIndex >= 0 ? `${listboxId}-option-${shownActiveIndex}` : undefined}
                 value={query} onChange={(event) => { setQuery(event.target.value); setActiveIndex(-1); setScrollTop(0); if (listRef.current) listRef.current.scrollTop = 0; }}
                 placeholder={allowCustom ? 'Search or type a value' : searchLabel} />
-              {query ? <button type="button" className="dropdown-search-clear"
+              {query ? <button ref={clearSearchRef} type="button" className="dropdown-search-clear"
                 aria-label={`Clear ${searchLabel.toLowerCase()}`} title="Clear search"
                 onPointerDown={(event) => event.preventDefault()}
                 onClick={() => {
