@@ -66,8 +66,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(metrics.statusBottom).toBeLessThanOrEqual(metrics.titleTop + 30);
     expect(metrics.contextTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1);
     expect(metrics.statusSize).toBeGreaterThanOrEqual(11);
-    expect(metrics.momentSize).toBeGreaterThanOrEqual(12);
-    expect(metrics.dueSize).toBeGreaterThanOrEqual(11);
+    expect(metrics.momentSize).toBeGreaterThanOrEqual(13);
+    expect(metrics.dueSize).toBeGreaterThanOrEqual(13);
     expect(metrics.momentWrap).toBe('normal');
     expect(metrics.pageWidth).toBeLessThanOrEqual(width + 1);
     // Every visible status, including completed/cancelled where listed,
@@ -93,6 +93,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const momentCard = page.getByRole('group', { name: 'Open ' + title, exact: true });
     await expect(momentCard).toBeVisible();
     await expect(momentCard.locator('.event-activity-title-row > strong')).toHaveCSS('font-size', '15px');
+    // Moment-local Activity cards reuse the same responsive context scale.
+    expect(await momentCard.locator('.event-activity-moment-name').count()).toBe(0);
+    expect(await momentCard.locator('.event-activity-context > span:last-child')
+      .evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
     await page.goto('/dashboard');
     await expect(page.getByRole('button', { name: 'Open ' + title, exact: true })).toBeVisible();
     await page.goto('/activities');

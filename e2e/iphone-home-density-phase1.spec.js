@@ -23,8 +23,34 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const momentBox = await moments.boundingBox();
     expect(momentBox.y).toBeGreaterThanOrEqual(card.y + card.height - 1);
     expect(momentBox.y).toBeLessThan(height * 0.58);
-    await expect(moments.getByRole('group', { name: 'Moment dates' })).toBeVisible();
-    await expect(page.getByRole('region', { name: 'Activities', exact: true })).toBeVisible();
+    const momentDates = moments.getByRole('group', { name: 'Moment dates' });
+    const activities = page.getByRole('region', { name: 'Activities', exact: true });
+    const activityDates = activities.getByRole('group', { name: 'Activity dates' });
+    await expect(momentDates).toBeVisible();
+    await expect(activityDates).toBeVisible();
+
+    // Date switches remain 44px touch targets, visibly readable on phones
+    // and within each section header, never forcing horizontal scrolling.
+    for (const segment of [momentDates, activityDates]) {
+      for (const button of await segment.getByRole('button').all()) {
+        const style = await button.evaluate((node) => {
+          const buttonBox = node.getBoundingClientRect();
+          const parentBox = node.closest('.dashboard-upcoming-card').getBoundingClientRect();
+          return {
+            font: parseFloat(getComputedStyle(node).fontSize),
+            height: buttonBox.height,
+            right: buttonBox.right,
+            cardRight: parentBox.right,
+          };
+        });
+        expect(style.font).toBeGreaterThanOrEqual(13);
+        expect(style.height).toBeGreaterThanOrEqual(43.9);
+        expect(style.right).toBeLessThanOrEqual(style.cardRight + 1);
+      }
+    }
+    await activities.getByRole('button', { name: 'On This Day' }).click();
+    await expect(activities.getByRole('button', { name: 'On This Day' })).toHaveAttribute('aria-pressed','true');
+    await activities.getByRole('button', { name: 'Upcoming' }).click();
 
     await moments.getByRole('button', { name: 'On This Day' }).click();
     await expect(moments.getByRole('button', { name: 'On This Day' })).toHaveAttribute('aria-pressed', 'true');

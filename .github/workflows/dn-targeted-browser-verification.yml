@@ -7,6 +7,43 @@ on:
 permissions:
   contents: read
 jobs:
+  dashboard-activities-iphone:
+    # CHG-514: actual Dashboard/Activities phone layouts and original gestures.
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-dashboard-activities]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 22
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - name: Install locked dependencies
+        run: npm ci
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+      - name: Verify Dashboard date views, Activity card context and existing gestures
+        run: >-
+          npx playwright test
+          e2e/iphone-home-density-phase1.spec.js
+          e2e/iphone-dashboard-photo-cards.spec.js
+          e2e/iphone-activity-card-readability-phase1.spec.js
+          e2e/iphone-activity-swipe-menu-phase1.spec.js
+          --workers=2
+      - name: Preserve focused browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dn-dashboard-activities-${{ github.sha }}
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            .verification/browser-results
+            .verification/browser-results.json
+
   repair-239-failed-families:
     # Five failure families at v2.3.9, without restarting the 861-case suite.
     if: >-

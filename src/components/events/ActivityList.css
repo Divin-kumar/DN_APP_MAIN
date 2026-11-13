@@ -233,3 +233,17 @@ html[data-theme] :is(.activities-page,.workspace-activities) .event-activity-con
   border:0 !important; background:transparent !important;
   color:var(--color-success) !important;
 }
+
+/* CHG-514: photo-led Activities still need readable parent and date context
+   below their 15px title. Keep the square cover, status-inline first row,
+   two-line parent clamp, existing swipe geometry and list grouping. */
+@media (max-width:760px) {
+  html[data-theme] :is(.activities-page,.workspace-activities) .event-activity-content
+    .dn-v2-activity-card .event-activity-context > span.event-activity-moment-name:first-child {
+    font-size:13px !important;line-height:1.5;
+  }
+  html[data-theme] :is(.activities-page,.workspace-activities) .event-activity-content
+    .dn-v2-activity-card .event-activity-context > span:last-child {
+    font-size:13px !important;line-height:1.5;
+  }
+}

@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-514 | Dashboard date switches and Activity context reading | 13 November 2026 | OldVersion development
+
+- **Dashboard:** Improve Upcoming/On This Day date-view label visibility (13px on phones), Hide/Show caption floor (12.5px), and show focus when keyboard users enter nested Moment/Activity scroll regions. Keep the 44px date toggles, Dashboard Task-first/Moment-second/Activity-third order, default-collapsed Tasks, nested scrolling and all existing view-state business logic unchanged. No PDF/Story edit.
+- **Activities:** Increase photo-led card Moment and date context to 13px on phones in both main Activities and Moment-local cards. Preserve title/status first row, two-line parent clamp, image originals, record links, swipe actions, filters, sorting, records and layout.
+- **Verification:** Extend mobile Home and Activity cards assertions; add `[verify-dashboard-activities]` opt-in browser lane running four existing affected specs. CI app smoke/build/docs and approved ExpenseTracker development deployment only. Native Safari and VoiceOver require manual acceptance.
+- **Scope:** `OldVersion` only. No production, main, Lifehub, code-list, schema, Guest tour/version, backend or PDF change.
+
 ### CHG-513 | Preserve compact desktop transaction disclosure in new browser acceptance | 13 November 2026 | OldVersion development
 
 - CHG-512 exact-SHA Desktop Shell browser run `43344688741` again passed 35/36 tests. The remaining new desktop case checked the phone-only 44px disclosure hit-area; the established desktop disclosure is 28px high and was never changed by CHG-511. All iPhone visual and interaction checks passed.
