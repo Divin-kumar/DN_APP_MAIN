@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-513 | Preserve compact desktop transaction disclosure in new browser acceptance | 13 November 2026 | OldVersion development
+
+- CHG-512 exact-SHA Desktop Shell browser run `43344688741` again passed 35/36 tests. The remaining new desktop case checked the phone-only 44px disclosure hit-area; the established desktop disclosure is 28px high and was never changed by CHG-511. All iPhone visual and interaction checks passed.
+- Keep the existing desktop density rather than quietly changing card heights. Require 44px phone touch disclosure, 28px existing desktop disclosure, 13px desktop expanded content, full original notes, and no source/overflow mutations. This changes only the scoped synthetic acceptance assertion, not app UI or business logic.
+- Repeat `[verify-desktop-shell]`, documentation smoke and automatic development deployment on exact follow-up SHA. No main/prod push, app version, Guest tour or backend changes.
+
 ### CHG-512 | Finance reading test preserves intentional desktop metadata scale | 13 November 2026 | OldVersion development
 
 - CHG-511 targeted Desktop Shell run `43344422896` passed 35/36 browser tests; only the new 1280px Transaction metadata check expected 13px despite the spec intentionally preserving the previous desktop 12.5px caption style. Phone 320/390px, expanded detail, Task/Finance actions, desktop shell and remaining cases all passed.
