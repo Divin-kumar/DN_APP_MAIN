@@ -7,6 +7,27 @@ on:
 permissions:
   contents: read
 jobs:
+  release-action-regressions:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-release-actions]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: >-
+          npx playwright test
+          e2e/activity-cover-navigation-summary.spec.js
+          e2e/dashboard-type-visibility.spec.js
+          e2e/task-actions-calendar-230.spec.js --workers=2
+
   about-development-ledger:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&

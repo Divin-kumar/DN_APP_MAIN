@@ -56,6 +56,7 @@ test('completed Activities require reopening before Edit, and a stale editor can
   await page.getByRole('button', { name: 'Activity options', exact: true }).click();
   await expect(page.getByRole('menuitem', { name: 'Edit', exact: true })).toHaveCount(0);
   await page.getByRole('menuitem', { name: 'Reopen', exact: true }).click();
+  await expect(page.locator('.activity-status-pill')).toHaveText('In progress');
   await activityDetailAction(page, 'Edit'); const dialog = page.getByRole('dialog');
   await dialog.getByRole('textbox', { name: 'Activity title', exact: true }).fill('Preserve this draft');
   await page.evaluate(async () => {

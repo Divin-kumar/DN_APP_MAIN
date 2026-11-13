@@ -43,7 +43,7 @@ const items = (page, section) => page.getByRole('region', { name: section, exact
 
 test('Moment type switches independently save Dashboard Moments and Activities visibility', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.clock.install({ time: new Date('2026-10-26T09:30:00+05:30') });
+  await page.clock.setFixedTime(new Date('2026-10-26T09:30:00+05:30'));
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await seedTypeSettings(page);
   await page.goto('/dashboard');
@@ -89,7 +89,7 @@ test('Moment type switches independently save Dashboard Moments and Activities v
 });
 
 test('synthetic account Dashboard type choices do not inherit or overwrite Guest visibility', async ({ page }) => {
-  await page.clock.install({ time: new Date('2026-10-26T09:30:00+05:30') });
+  await page.clock.setFixedTime(new Date('2026-10-26T09:30:00+05:30'));
   const errors = await seedGuest(page, { moments, incomes: [], expenses: [] });
   await seedTypeSettings(page);
   await page.goto('/dashboard');

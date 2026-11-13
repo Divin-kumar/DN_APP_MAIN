@@ -20,6 +20,7 @@ for (const width of [320,430,1280]) {
     await expect(row.getByRole('img',{name:'Completed',exact:true})).toBeVisible();
     await row.focus(); await page.keyboard.press('Enter');
     await page.getByRole('menuitem',{name:'Reopen',exact:true}).click();
+    await expect(row.getByRole('img',{name:'Completed',exact:true})).toHaveCount(0);
     await row.click();
     await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
     await expect(page.getByRole('dialog',{name:'Edit Task'})).toBeVisible();

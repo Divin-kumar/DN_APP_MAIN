@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-526 | Verify action completion before reopening menus in release checks
+
+- **Executed:** The v2.3.11 release candidate passed the About preflight. The full browser suite reported 911 passing, 2 skipped and 5 failing cases in run 43433597585.
+- **Correction:** In Activity and Task tests, wait for the reopened status before choosing Edit because the mutation follows the action menu exit. For the Dashboard visibility tests, freeze only the calendar date so real animation frames and timers can run across page loads. Keep the existing persistence, visibility and draft assertions.
+- **Release:** Repeat the affected journeys in parallel with the required full verification on the follow-up source. Production remains gated on a successful full run.
+
 ## CHG-20261113-525 | Prepare DN v2.3.11 for production and reset the development changelog
 
 - **Release scope:** Package the approved development baseline `6fbdb21` as v2.3.11, with release notes covering the changes since v2.3.10. The owner authorized promotion to production and cleanup of About in both environments.
