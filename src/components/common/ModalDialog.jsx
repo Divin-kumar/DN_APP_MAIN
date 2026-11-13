@@ -8,7 +8,7 @@ import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dia
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
-export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true }) {
+export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true, closeDisabled = false }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   // Every phone-bottom sheet uses one motion path, rather than old CSS entry
@@ -20,7 +20,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const dragControls = useDragControls();
   const bodySwipe = useRef(null);
   const isSlidingSheet = isMobileSheet;
-  const allowsSwipe = isSlidingSheet && swipeDismiss;
+  const allowsSwipe = isSlidingSheet && swipeDismiss && !closeDisabled;
   useEffect(() => {
     const media = window.matchMedia(mobileMedia);
     const update = () => setMobileSheet(media.matches);
@@ -83,9 +83,11 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const backdropRef = useRef(null);
   const bodyRef = useRef(null);
   const onCloseRef = useRef(onClose);
+  const closeDisabledRef = useRef(closeDisabled);
   // Close actions use the same reverse sheet animation as a downward swipe.
   // Re-evaluate the media query for the Escape listener installed on mount.
   const requestClose = () => {
+    if (closeDisabledRef.current) return;
     if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
     else onCloseRef.current();
   };
@@ -121,7 +123,8 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
 
   useEffect(() => {
     onCloseRef.current = onClose;
-  }, [onClose]);
+    closeDisabledRef.current = closeDisabled;
+  }, [onClose, closeDisabled]);
 
   useEffect(() => {
     const previousFocus = previousFocusRef.current;
@@ -195,7 +198,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
         }}>
         <div className="dn-modal-header" style={styles.header}>
           <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
-          <button ref={closeButtonRef} type="button" className="modal-close-button" onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
+          <button ref={closeButtonRef} type="button" className="modal-close-button" disabled={closeDisabled} onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
         <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
           onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>{children}</div>

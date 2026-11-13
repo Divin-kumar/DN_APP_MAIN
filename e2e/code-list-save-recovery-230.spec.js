@@ -39,6 +39,7 @@ for (const [width, theme] of [[320,'dark'],[390,'light'],[430,'dark'],[1280,'lig
     });
     await dialog.getByRole('button', { name: 'Save changes' }).click();
     await expect(dialog.getByRole('button', { name: 'Saving…' })).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Close dialog' })).toBeDisabled();
     await page.keyboard.press('Escape');
     await expect(dialog).toBeVisible();
     expect(await page.evaluate(() => window.__saveCalls)).toBe(1);

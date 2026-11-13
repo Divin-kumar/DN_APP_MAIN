@@ -13,8 +13,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const index = page.getByRole('navigation', { name: 'Code List sections' });
       const links = index.getByRole('link');
       await expect(links).toHaveCount(6);
-      await expect(index.getByRole('link', { name: 'Moment Types' })).toHaveAttribute('href', '#code-list-eventTypes');
-      await expect(index.getByRole('link', { name: 'Payment Methods' })).toHaveAttribute('href', '#code-list-paymentMethods');
+      await expect(index.getByRole('link', { name: 'Moment Types' })).toHaveAttribute('href', '/settings/code-lists#code-list-eventTypes');
+      await expect(index.getByRole('link', { name: 'Payment Methods' })).toHaveAttribute('href', '/settings/code-lists#code-list-paymentMethods');
       await expect(index.getByRole('link', { name: 'Sorting & filters' })).toHaveCount(0);
       await expect(page.locator('.dn-code-list-editor-section')).toHaveCount(6);
 
@@ -64,7 +64,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         .map((key) => localStorage.getItem(key)));
       await index.getByRole('link', { name: 'Activity Priorities' }).click();
       await expect(page).toHaveURL(/#code-list-activityPriorities$/);
-      await expect(page.locator('#code-list-activityPriorities')).toBeVisible();
+      const priorities = page.locator('#code-list-activityPriorities');
+      await expect(priorities).toBeFocused();
+      await expect(priorities.getByRole('heading', { level: 3 })).toBeInViewport({ ratio: 1 });
+      await expect(index.getByRole('link', { name: 'Activity Priorities' })).toHaveAttribute('aria-current', 'location');
 
       await page.locator('#code-list-activityPriorities .code-list-row').first().click();
       await expect(page.getByRole('menu', { name: /Actions for/ })).toBeVisible();
@@ -78,3 +81,30 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     });
   }
 }
+
+test('Code Lists opens bookmarked sections and restores their shortcut on Back', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const errors = await seedGuest(page);
+  await page.goto('/settings/code-lists#code-list-reminderPresets');
+  const index = page.getByRole('navigation', { name: 'Code List sections' });
+  const reminder = page.locator('#code-list-reminderPresets');
+  const reminderLink = index.getByRole('link', { name: 'Reminder Presets' });
+  await expect(reminder).toBeFocused();
+  await expect(reminder.getByRole('heading', { level: 3 })).toBeInViewport({ ratio: 1 });
+  await expect(reminderLink).toBeInViewport({ ratio: 1 });
+  await expect(reminderLink).toHaveAttribute('aria-current', 'location');
+
+  const payments = page.locator('#code-list-paymentMethods');
+  await index.getByRole('link', { name: 'Payment Methods' }).focus();
+  await page.keyboard.press('Enter');
+  await expect(payments).toBeFocused();
+  await expect(payments.getByRole('heading', { level: 3 })).toBeInViewport({ ratio: 1 });
+  await page.goBack();
+  await expect(reminder).toBeFocused();
+  await expect(reminder.getByRole('heading', { level: 3 })).toBeInViewport({ ratio: 1 });
+  await expect(reminderLink).toHaveAttribute('aria-current', 'location');
+  await page.goForward();
+  await expect(payments).toBeFocused();
+  await expect(payments.getByRole('heading', { level: 3 })).toBeInViewport({ ratio: 1 });
+  expect(errors).toEqual([]);
+});

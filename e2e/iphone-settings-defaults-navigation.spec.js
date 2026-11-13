@@ -62,7 +62,7 @@ test('Reset all settings discloses saved list-default loss before confirmation',
       .map((key) => localStorage.getItem(key)));
   await page.getByRole('button', { name: 'Reset all settings', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Reset all settings?' });
-  await expect(dialog.getByText('Saved default sorting and filters for Moments, Activities and Transactions')).toBeVisible();
+  await expect(dialog.getByText('Saved default sorting and filters for Moments, Activities, Transactions and Tasks')).toBeVisible();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(() =>

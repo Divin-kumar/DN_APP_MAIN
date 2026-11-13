@@ -975,6 +975,8 @@ jobs:
           npx playwright test
           e2e/iphone-settings-task-screenshot-fixes-230.spec.js
           e2e/iphone-code-lists-premium.spec.js
+          e2e/code-list-save-recovery-230.spec.js
+          e2e/transaction-payment-phase5.spec.js
           e2e/iphone-settings-filter-defaults.spec.js
           e2e/independent-tasks-phase4.spec.js
           --workers=2

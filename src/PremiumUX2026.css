@@ -129,7 +129,7 @@ html[data-theme] .dn-data-page :is(
   min-height: var(--dn-interactive-min);
 }
 html[data-theme] .dn-premium-code-lists :is(
-  .dn-code-list-index-label, .dn-defaults-kicker,
+  .dn-defaults-kicker,
   .dn-defaults-sort-label small, .dn-defaults-saved,
   .dn-defaults-filter-footer p
 ) {

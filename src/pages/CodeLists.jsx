@@ -15,7 +15,7 @@
 import { BellRing, Check, Hash, PencilLine, Plus, ShieldOff, Trash2 } from 'lucide-react';
 import './CodeListsPremium.css';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import ModalDialog from '../components/common/ModalDialog';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
@@ -28,6 +28,15 @@ import RichText from '../components/common/RichText';
 import DropdownSelect from '../components/common/DropdownSelect';
 import { resolveMomentStoryPresentation, STORY_PRESENTATIONS } from '../utils/momentStory';
 import { ENTRY_MODE_LABELS } from '../utils/activityEntries';
+
+const CODE_LIST_SECTIONS = [
+  ['code-list-eventTypes', 'Moment Types'],
+  ['code-list-expenseCategories', 'Expense Categories'],
+  ['code-list-incomeTypes', 'Income Types'],
+  ['code-list-paymentMethods', 'Payment Methods'],
+  ['code-list-activityPriorities', 'Activity Priorities'],
+  ['code-list-reminderPresets', 'Reminder Presets'],
+];
 
 const sanitizeEntries = (items) => serializeCodeListEntries(items || DEFAULT_CODE_LISTS.eventTypes);
 
@@ -52,7 +61,7 @@ const getRecordUsageCount = (listKey, value, state) => {
   }
 };
 
-function CodeListSection({ title, description, listKey, placeholder, allowLabels = false }) {
+function CodeListSection({ title, description, listKey, placeholder, allowLabels = false, anchor = true }) {
   const accountError = useAppStore((state) => state.adminValuesError);
   const accountLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -279,11 +288,13 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   };
 
   return (
-    <section id={`code-list-${listKey}`} className={`settings-section code-list-section dn-code-list-editor-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
+    <section id={anchor ? `code-list-${listKey}` : undefined} tabIndex={anchor ? -1 : undefined}
+      aria-labelledby={`code-list-heading-${listKey}`}
+      className={`settings-section code-list-section dn-code-list-editor-section ${listKey === 'eventTypes' ? 'has-modal-add' : ''}`}>
       <div className="settings-section-heading">
         <span className="settings-accordion-icon"><Hash size={18} /></span>
         <div>
-          <h3>{title}</h3>
+          <h3 id={`code-list-heading-${listKey}`}>{title}</h3>
         </div>
         {listKey === 'eventTypes' ? (
           <button type="button" className="settings-tag-add moment-type-add-button" onClick={() => openMomentTypeEditor()}>
@@ -328,7 +339,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       </div>
 
       {editingValue ? (
-        <ModalDialog title="Edit value" className="code-list-rename-dialog" onClose={() => { if (!savingRef.current) setEditingValue(null); }}>
+        <ModalDialog title="Edit value" className="code-list-rename-dialog" closeDisabled={saving} onClose={() => { if (!savingRef.current) setEditingValue(null); }}>
           <div className="code-list-editor-modal">
             <label className="settings-input-block">
               <span>Value</span>
@@ -425,7 +436,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
       ) : null}
 
       {warningValue ? (
-        <ModalDialog title="Value is currently in use" onClose={() => { if (!savingRef.current) setWarningValue(null); }}>
+        <ModalDialog title="Value is currently in use" closeDisabled={saving} onClose={() => { if (!savingRef.current) setWarningValue(null); }}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>
             {warningValue.label} is currently used by {warningValue.usageCount} {listKey === 'eventTypes' ? 'moment record' : listKey === 'expenseCategories' ? 'expense record' : listKey === 'incomeTypes' ? 'income record' : listKey === 'paymentMethods' ? 'transaction' : listKey === 'activityPriorities' ? 'activity record' : 'related record'}{warningValue.usageCount === 1 ? '' : 's'}.
             Deleting this value may affect existing records and reporting.
@@ -453,15 +464,15 @@ function PaymentMethodsSection() {
     incomes.loadIncomes(uid, isGuest);
     expenses.loadExpenses(uid, isGuest);
   }, [uid, isGuest, incomes.loadIncomes, expenses.loadExpenses]);
-  if (incomes.error || expenses.error) return <section id="code-list-paymentMethods" className="settings-section" role="alert">
+  if (incomes.error || expenses.error) return <section className="settings-section" role="alert">
     <h3>Payment Methods</h3>
     <p>Transactions could not be loaded to check which methods are in use.</p>
     <button type="button" className="settings-secondary-button" onClick={() => {
       incomes.loadIncomes(uid, isGuest); expenses.loadExpenses(uid, isGuest);
     }}>Retry loading payment methods</button>
   </section>;
-  if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section id="code-list-paymentMethods" className="settings-section" role="status">Loading payment methods…</section>;
-  return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" />;
+  if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section className="settings-section" role="status">Loading payment methods…</section>;
+  return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" anchor={false} />;
 }
 
 
@@ -483,6 +494,27 @@ function CodeListsContent() {
   useEffect(() => {
     if (!adminValuesLoading && !adminValuesError) setHasLoaded(true);
   }, [adminValuesLoading, adminValuesError]);
+  const showSections = hasLoaded || (!adminValuesLoading && !adminValuesError);
+  const railRef = useRef(null);
+  const sectionId = location.hash.slice(1);
+  useEffect(() => {
+    if (!showSections || !CODE_LIST_SECTIONS.some(([id]) => id === sectionId)) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const section = document.getElementById(sectionId);
+      if (!section) return;
+      section.scrollIntoView({ block: 'start' });
+      section.focus({ preventScroll: true });
+      const rail = railRef.current;
+      const link = rail?.querySelector('[aria-current="location"]');
+      if (link) {
+        const railBounds = rail.getBoundingClientRect();
+        const linkBounds = link.getBoundingClientRect();
+        if (linkBounds.left < railBounds.left) rail.scrollLeft += linkBounds.left - railBounds.left;
+        if (linkBounds.right > railBounds.right) rail.scrollLeft += linkBounds.right - railBounds.right;
+      }
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, sectionId, showSections]);
   const retryCodeLists = async () => {
     if (!user?.uid) return;
     try {
@@ -507,27 +539,20 @@ function CodeListsContent() {
           </button>
         </section>
       ) : null}
-      {hasLoaded || (!adminValuesLoading && !adminValuesError) ? <>
+      {showSections ? <>
         <nav className="dn-code-list-index" aria-label="Code List sections">
-          <span className="dn-code-list-index-label">Browse</span>
-          <div className="dn-code-list-nav-window">
-            <div className="dn-code-list-index-scroll" tabIndex={0}
-              aria-label="Scroll Code List sections horizontally">
-            {[
-              { id: "code-list-eventTypes", title: "Moment Types" },
-              { id: "code-list-expenseCategories", title: "Expense Categories" },
-              { id: "code-list-incomeTypes", title: "Income Types" },
-              { id: "code-list-paymentMethods", title: "Payment Methods" },
-              { id: "code-list-activityPriorities", title: "Activity Priorities" },
-              { id: "code-list-reminderPresets", title: "Reminder Presets" },
-            ].map(({ id, title }) => <a key={id} href={`#${id}`}>{title}</a>)}
-            </div>
+          <div className="dn-code-list-index-scroll" ref={railRef} tabIndex={0}
+            aria-label="Scroll Code List sections horizontally">
+            {CODE_LIST_SECTIONS.map(([id, title]) => <Link key={id} to={{ search: location.search, hash: `#${id}` }}
+              aria-current={sectionId === id ? 'location' : undefined}>{title}</Link>)}
           </div>
         </nav>
         <CodeListSection title="Moment Types" description="Manage Moment types and choose their Daily, Journal, or Tasks mode, greetings, and Dashboard options." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
-        <PaymentMethodsSection />
+        <div id="code-list-paymentMethods" tabIndex={-1} role="group" aria-label="Payment Methods">
+          <PaymentMethodsSection />
+        </div>
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
         <CodeListSection title="Reminder Presets" description="Saved presets for the future Notifications feature." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />
       </> : null}

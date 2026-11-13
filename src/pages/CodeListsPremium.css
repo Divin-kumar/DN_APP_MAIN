@@ -10,22 +10,10 @@ html[data-theme] .dn-premium-code-lists {
 html[data-theme] .dn-premium-code-lists .dn-code-list-index {
   display:flex;
   align-items:stretch;
-  gap:14px;
   min-width:0;
   max-width:100%;
   padding:0 1px;
   border-bottom:1px solid var(--color-border);
-}
-html[data-theme] .dn-premium-code-lists .dn-code-list-index-label {
-  display:inline-flex;
-  flex:0 0 auto;
-  align-items:center;
-  min-height:46px;
-  color:var(--color-text-muted);
-  font-size:10px;
-  font-weight:750;
-  letter-spacing:.085em;
-  text-transform:uppercase;
 }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll {
   display:flex;
@@ -39,7 +27,7 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll {
   overscroll-behavior-x:contain;
   -webkit-overflow-scrolling:touch;
   scrollbar-width:none;
-  scroll-padding-inline:12px;
+  scroll-padding-inline:4px;
 }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll::-webkit-scrollbar { display:none; }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index a {
@@ -49,21 +37,26 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-index a {
   flex:0 0 auto;
   min-height:46px;
   padding:0 11px;
-  border-radius:9px 9px 0 0;
+  border-radius:10px;
   background:transparent;
   color:var(--color-text-muted);
-  font-size:12px;
+  font-size:13px;
   font-weight:630;
   line-height:1.25;
   text-decoration:none;
   white-space:nowrap;
   transition:color .16s ease,background-color .16s ease;
 }
+html[data-theme] .dn-premium-code-lists .dn-code-list-index a[aria-current="location"] {
+  background:var(--action-fill);
+  color:var(--action-ink);
+  font-weight:720;
+}
 html[data-theme] .dn-premium-code-lists .dn-code-list-index a:hover {
   background:color-mix(in srgb,var(--color-primary) 6%,transparent);
   color:var(--color-text);
 }
-html[data-theme] .dn-premium-code-lists .dn-code-list-index a:focus-visible {
+html[data-theme] .dn-premium-code-lists .dn-code-list-index :is(a,.dn-code-list-index-scroll):focus-visible {
   outline:2px solid var(--color-primary);
   outline-offset:-3px;
   color:var(--color-text);
@@ -158,9 +151,7 @@ html[data-theme] .dn-premium-code-lists .code-list-add-row :is(input,button):foc
   outline-offset:2px;
 }
 @media(max-width:760px) {
-  html[data-theme] .dn-premium-code-lists .dn-code-list-index { gap:0; }
-  html[data-theme] .dn-premium-code-lists .dn-code-list-index-label { display:none; }
-  html[data-theme] .dn-premium-code-lists .dn-code-list-index a { min-height:44px; padding-inline:12px; font-size:11.5px; }
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index a { min-height:44px; padding-inline:10px; }
   html[data-theme] .dn-premium-code-lists .dn-code-list-editor-section { padding:14px !important; }
   /* Two inputs never turn Add into an 88px-tall control. */
   html[data-theme] .dn-premium-code-lists .code-list-add-row.has-labels {
@@ -309,28 +300,6 @@ html[data-theme] .dn-list-defaults-page .dn-defaults-sort-card .dn-refine-sort-c
 }
 
 
-/* DN 2.3 cross-app audit: make all six Code List destinations discoverable on
-   narrow screens without changing anchor navigation or allowing page overflow. */
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-window {
-  position:relative; display:flex; flex:1 1 0; min-width:0; max-width:100%;
-}
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-window > .dn-code-list-index-scroll {
-  width:100%; min-width:0; max-width:100%; flex:1 1 0;
-  scroll-padding-inline:48px;
-}
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow {
-  position:absolute; z-index:2; top:0; bottom:0;
-  display:grid; place-items:center; width:44px; min-width:44px; min-height:44px;
-  padding:0; border:0; border-radius:9px;
-  background:color-mix(in srgb,var(--color-card) 93%,var(--color-bg));
-  color:var(--color-primary); box-shadow:0 0 10px color-mix(in srgb,var(--color-bg) 75%,transparent);
-  cursor:pointer;
-}
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow.is-next { right:0; }
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow.is-previous { left:0; }
-html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow:focus-visible {
-  outline:2px solid var(--color-primary); outline-offset:-3px;
-}
 @media (max-width:410px) {
   /* Saved sorting is configuration, not a cramped horizontal carousel.
      Show every choice, preserve existing SortChips click semantics. */
@@ -342,9 +311,6 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow:focus-visible {
     width:100%; max-width:100%; min-width:0; min-height:44px;
     padding:8px 5px; white-space:normal; line-height:1.25; text-align:center;
   }
-}
-@media(prefers-reduced-motion:reduce) {
-  html[data-theme] .dn-premium-code-lists .dn-code-list-nav-arrow { transition:none; }
 }
 
 
@@ -448,6 +414,14 @@ html[data-theme] .code-lists-page .dn-code-list-editor-section,
 html[data-theme] .code-lists-page #code-list-paymentMethods {
   scroll-margin-top:76px;
 }
+html[data-theme] .code-lists-page :is(.dn-code-list-editor-section, #code-list-paymentMethods):focus-visible {
+  outline:none;
+}
+html[data-theme] .code-lists-page :is(.dn-code-list-editor-section, #code-list-paymentMethods):focus-visible h3 {
+  text-decoration:underline;
+  text-decoration-color:var(--color-primary);
+  text-underline-offset:4px;
+}
 /* LOV actions already open on row tap; remove visual faux-card framing. */
 html[data-theme] .code-lists-page .code-list-rows .code-list-item {
   border:0 !important; border-bottom:1px solid var(--color-border) !important;
@@ -512,14 +486,6 @@ html[data-theme] .dn-premium-code-lists .code-list-add-row button:disabled {
   opacity:.55; cursor:default;
 }
 
-/* Reserve real space for arrows so they never cover category labels. */
-html[data-theme] .code-lists-page .dn-code-list-nav-window { gap:4px; }
-html[data-theme] .code-lists-page .dn-code-list-nav-arrow {
-  position:static; flex:0 0 44px; box-shadow:none; border-radius:14px;
-}
-html[data-theme] .code-lists-page .dn-code-list-nav-window > .dn-code-list-index-scroll {
-  width:0; scroll-padding-inline:4px;
-}
 html[data-theme] .code-lists-page .settings-section-heading { min-width:0; flex-wrap:wrap; }
 html[data-theme] .code-lists-page .settings-section-heading > div { min-width:0; flex:1 1 130px; }
 html[data-theme] .code-lists-page .moment-type-add-button { margin-left:auto; flex:0 0 auto; max-width:100%; }

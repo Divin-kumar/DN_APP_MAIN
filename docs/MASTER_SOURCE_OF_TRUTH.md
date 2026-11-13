@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Code Lists section navigation (13 November 2026, OldVersion development only)
+
+The sticky Code Lists shortcut row uses readable 13px labels and native horizontal scrolling. Opening a section link, including a bookmark or a browser Back/Forward entry, reveals and focuses the destination after the page loads. The shortcut matching the URL remains highlighted, is announced as the current location, and scrolls fully into view. Payment Methods has a stable destination while transaction data loads. The earlier List defaults bookmark still redirects to Settings → List defaults. During a Code List rename or in-use disable save, the dialog blocks dismissal so a failed save leaves the draft and error available for retry. Usage counts and record values follow their existing paths. The Guest tour still describes the same Settings destination and needs no fixture update.
+
 ## Refine result preview and List defaults guidance (13 November 2026, OldVersion development only)
 
 Refine keeps its matching-result count and Reset, Cancel and Show results actions below the scrolling editor on Moments, Activities, Transactions and Tasks, including the existing Moment-linked lists that use the shared sheet. The count previews the draft. Reset loads saved defaults into the draft, Cancel discards it, and Show results applies it. Sort direction continues to use the same field-specific choices and ascending/descending behavior.

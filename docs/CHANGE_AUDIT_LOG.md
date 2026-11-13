@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-516 | Make Code Lists shortcuts and save recovery reliable
+
+- **Navigation:** Follow bookmarked, tapped and keyboard-activated Code Lists links after the settings page loads. The sticky shortcut row reveals and highlights the URL's section, with larger labels, native horizontal scrolling and destination focus. Payment Methods keeps its destination through loading and errors.
+- **Save recovery:** Disable dismissal while a rename or in-use disable write is pending. If the write fails, the open dialog keeps its error and draft for retry. Record values, usage counts and workspace storage use the existing save paths.
+- **Compatibility:** Keep the legacy List defaults bookmark redirect. The public Guest tour already describes the existing destination and needs no fixture update.
+- **Verification:** 41 focused Chromium tests passed for Code Lists navigation, synthetic save recovery, payment, legacy bookmarks and Settings. The 17 Code List unit tests, lint, build and documentation checks passed. Native iPhone Safari and VoiceOver remain unverified. OldVersion development Hosting uses the approved automatic workflow.
+
 ## CHG-20261113-515 | Keep Refine results and actions in view
 
 - **Refine:** Keep the live draft count and Reset, Cancel and Show results below the scrolling options in Moments, Activities, Transactions and Tasks. Reuse the shared sort direction control. Saved filter groups, ordering, finance totals and Guest/account record storage follow their existing paths.
