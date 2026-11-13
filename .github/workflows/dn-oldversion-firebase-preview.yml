@@ -78,14 +78,26 @@ jobs:
           for attempt in 1 2 3 4 5 6 7 8; do
             if curl --fail --silent --show-error --location --retry 2 --max-time 20 \
               -H 'Cache-Control: no-cache' "https://expense-tracker-divin.web.app/?build=$GITHUB_SHA" -o /tmp/dn-development-index.html \
-              && cmp -s dist/index.html /tmp/dn-development-index.html; then
-              echo "Verified development index bytes match this exact OldVersion build."
+              && cmp -s dist/index.html /tmp/dn-development-index.html \
+              && curl --fail --silent --show-error --location --retry 2 --max-time 20 \
+                -H 'Cache-Control: no-cache' "https://expense-tracker-divin.web.app/dn-pending-release.json?build=$GITHUB_SHA&run=$GITHUB_RUN_ID" -o /tmp/dn-development-ledger.json \
+              && cmp -s dist/dn-pending-release.json /tmp/dn-development-ledger.json; then
+              echo "Verified the exact development build and About ledger on Hosting."
               exit 0
             fi
             sleep 5
           done
           echo "::error::Development Hosting did not return the exact built index. Inspect the site and Hosting target."
           exit 1
+      - name: Verify the production release baseline in About
+        if: inputs.production_sha != ''
+        env:
+          PRODUCTION_SHA: ${{ inputs.production_sha }}
+        run: |
+          jq -e --arg production "$PRODUCTION_SHA" --arg head "$GITHUB_SHA" '
+            .status == "ready" and .production.sha == $production
+            and .sourceSha == $head and ($head != $production or .commits == [])
+          ' /tmp/dn-development-ledger.json
       - name: Publish development link and SHA
         shell: bash
         run: |

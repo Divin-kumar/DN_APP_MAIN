@@ -1,5 +1,8 @@
 import { test, expect } from '@playwright/test';
+import { readFileSync } from 'node:fs';
 import { seedGuest } from './fixtures.js';
+
+const { version } = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
 
 // Synthetic Chromium coverage. Physical iPhone Safari, VoiceOver and signed-in data remain separate gates.
 for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
@@ -40,6 +43,10 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       // Release history must start with the installed build, not a stale fixed version.
       await expect(history.first()).toHaveAttribute('data-version', installedVersion.slice(1));
       await expect(history.last()).toHaveAttribute('data-version', '2.0.0');
+      const archive = root.locator('.dn-about-history .dn-about-pending-details');
+      await expect(archive).not.toHaveAttribute('open');
+      await expect(history.last()).toBeHidden();
+      await archive.locator(':scope > summary').click();
       await expect(history.last()).not.toHaveAttribute('open');
       await history.last().locator('summary').click();
       await expect(history.last()).toHaveAttribute('open');
@@ -119,6 +126,8 @@ test('About development ledger shows the build and newest pending commits first'
   await expect(metadata).toContainText('8ed4a6c');
   await expect(metadata).toContainText('Last production release');
   await expect(metadata).toContainText('v2.3.10');
+  await expect(page.getByRole('heading', { name: 'Last production highlights' })
+    .locator('..')).toContainText('Released in v2.3.10');
   await expect(pending.getByText(/Appearance shows which creation defaults need saving/)).toBeVisible();
 
   const summary = pending.locator('summary');
@@ -134,4 +143,18 @@ test('About development ledger shows the build and newest pending commits first'
   expect((await summary.boundingBox()).height).toBeGreaterThanOrEqual(44);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(321);
   expect(errors).toEqual([]);
+});
+
+test('About development ledger starts fresh after a production release', async ({ page }) => {
+  test.skip(process.env.VITE_DEPLOY_ENV !== 'Firebase development', 'Requires the development Hosting configuration.');
+  await seedGuest(page);
+  const sha = 'a'.repeat(40);
+  await page.route('**/dn-pending-release.json', route => route.fulfill({
+    json: { status: 'ready', sourceSha: sha, production: { version, sha }, commits: [] },
+  }));
+  await page.goto('/settings/about');
+  const pending = page.getByRole('region', { name: 'Pending production' });
+  await expect(pending.getByText(/Everything recorded here is now in production/)).toBeVisible();
+  await expect(pending.locator('article, details')).toHaveCount(0);
+  await expect(page.locator('.dn-about-history .dn-about-release-entry:visible')).toHaveCount(1);
 });

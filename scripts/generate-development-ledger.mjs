@@ -1,5 +1,5 @@
 // Build-time development About ledger. Only public commit metadata enters the output.
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 
 const output = resolve('public/dn-pending-release.json');
@@ -31,15 +31,17 @@ try {
   ledger.production.sha = releasedSha;
   ledger.production.runUrl = latest?.html_url || (releasedSha === initialProduction ? ledger.production.runUrl : null);
   try {
-    const file = await api('/repos/' + repo + '/contents/package.json?ref=' + releasedSha);
-    const packageJson = JSON.parse(Buffer.from(file.content.replace(/\s+/g, ''), 'base64').toString('utf8'));
+    const packageJson = releasedSha === head
+      ? JSON.parse(await readFile('package.json', 'utf8'))
+      : await api('/repos/' + repo + '/contents/package.json?ref=' + releasedSha)
+        .then(file => JSON.parse(Buffer.from(file.content.replace(/\s+/g, ''), 'base64').toString('utf8')));
     ledger.production.version = packageJson.version || null;
   } catch {
     ledger.production.version = releasedSha === initialProduction ? '2.3.8' : null;
   }
-  let page = 1, total = null;
+  let page = 1, total = releasedSha === head ? 0 : null;
   const seen = new Set();
-  while (page <= 50) {
+  while (total !== 0 && page <= 50) {
     const comparison = await api('/repos/' + repo + '/compare/' + releasedSha + '...' + head + '?per_page=100&page=' + page);
     if (!['ahead', 'identical'].includes(comparison.status)) throw Error('Production baseline not ancestor of development');
     if (total === null) total = comparison.total_commits;

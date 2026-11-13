@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-525 | Prepare DN v2.3.11 for production and reset the development changelog
+
+- **Release scope:** Package the approved development baseline `6fbdb21` as v2.3.11, with release notes covering the changes since v2.3.10. The owner authorized promotion to production and cleanup of About in both environments.
+- **About:** Show the latest published release with earlier versions available under one collapsed disclosure. Development uses the production baseline for its release highlights and lists only commits ahead of it. The development Hosting workflow compares both the index and About ledger to the live files and checks the post-publication baseline.
+- **Verification:** The existing independent full pre-release workflow must pass on the exact source SHA before the production workflow can publish. The production workflow then verifies the live index and triggers the development baseline refresh. The Guest tour does not depend on release history, so its version stays the same.
+
 ## CHG-20261113-524 | Improve keyboard access in searchable dropdowns
 
 - **Search:** Home and End move the caret within the search field. Tab reaches Clear search, Shift+Tab returns to the field, and Clear supports native button activation. Escape returns focus to the dropdown trigger within Refine.

@@ -68,6 +68,24 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.11',
+    title: 'Easier search, settings and reading on iPhone',
+    summary: 'The latest development refinements for finding records, changing defaults and reading your memories.',
+    highlights: [
+      'Search and Refine are easier to use, with a Clear search action when a list has no matches.',
+      'Appearance, Code Lists and Data & Backup give clearer navigation and save feedback.',
+      'Dashboard, Tasks, Transactions and Insights are easier to read on phones.',
+      'Story photos keep their original proportions, and PDF Studio opens each selected page at its start.',
+    ],
+    changes: [
+      'Search and Refine use clearer sort directions, keep the result count visible, and support keyboard navigation and clearing in searchable dropdowns.',
+      'Dashboard Tasks and the Tasks list use matching date tiles. Activity context, Transaction details and Insights milestones are easier to read.',
+      'Appearance shows which creation defaults need saving. Code Lists and Data & Backup remember section links and show feedback beside the relevant controls.',
+      'Story writing is easier to read on phones. Original attachment downloads stay accessible under tall previews. PDF Studio improves keyboard focus, page announcements and narrow-screen controls.',
+      'About puts earlier releases behind one expandable history. The development change list starts fresh from the verified production build.',
+    ],
+  },
+  {
     version: '2.3.10',
     title: 'Refined glass and comfortable iPhone controls',
     summary: 'Lightly frosted mobile sheets, a more compact profile menu and smoother dismissal across DN.',
@@ -377,6 +395,29 @@ export default function About() {
 
   // The generated ledger is chronological. Keep its complete contents and show the latest work first.
   const pendingCommits = pendingLedger?.status === 'ready' ? [...(pendingLedger.commits || [])].reverse() : [];
+  const releaseHighlights = isDevelopmentHosting
+    ? versionHistory.find(release => release.version === pendingLedger?.production?.version)
+    : documentedRelease;
+  const renderRelease = (release) => (
+    <details key={release.version} className="dn-about-release-entry" data-version={release.version}>
+      <summary>
+        <span className="dn-about-release-meta">
+          <span className="dn-about-release-version">
+            <strong>v{release.version}</strong>
+            {appVersion === release.version ? <span className="dn-about-release-status">Installed</span> : null}
+          </span>
+          <span className="dn-about-release-title">{release.title}</span>
+        </span>
+        <ChevronDown size={17} strokeWidth={1.9} aria-hidden="true" />
+      </summary>
+      <div className="dn-about-release-body">
+        <p>{release.summary}</p>
+        <ul className="about-list compact-list">
+          {release.changes.map(item => <li key={item}>{item}</li>)}
+        </ul>
+      </div>
+    </details>
+  );
   const hasLatestGesturePolish = pendingCommits.some(commit => commit.title === 'fix(iphone): lift search, bare plus and swipe-dismiss sheets');
   const activeHighlights = pendingHighlights.filter(item =>
     // The newest final-design highlight replaces the older intermediate + note.
@@ -538,7 +579,6 @@ export default function About() {
                   </details>
                 </>
               )}
-              <p className="settings-helper">After a verified production deployment, this development-only ledger resets to that release. Saved records and completed release history are never cleared.</p>
             </>
           )}
         </section>
@@ -549,15 +589,16 @@ export default function About() {
           <span className="settings-accordion-icon"><Sparkles size={18} /></span>
           <div>
             <h3>{isDevelopmentHosting ? 'Last production highlights' : `What's New in v${documentedRelease.version}`}</h3>
-            <p>{documentedRelease.version === appVersion ? 'Changes in your installed version' : 'Latest documented highlights for this version range'}</p>
+            {releaseHighlights ? <p>Released in v{releaseHighlights.version}</p> : null}
           </div>
         </div>
-        <ul className="about-list compact-list">
-          {(documentedRelease.highlights || documentedRelease.changes.slice(0, 3)).map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-        <p className="settings-helper">Open a version below for the full changes.</p>
+        {releaseHighlights ? (
+          <ul className="about-list compact-list">
+            {(releaseHighlights.highlights || releaseHighlights.changes.slice(0, 3)).map(item => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
+        ) : <p className="settings-helper">Production release notes are temporarily unavailable.</p>}
       </section>
 
       <section className="settings-section dn-about-history" aria-labelledby="dn-about-history-title">
@@ -565,35 +606,21 @@ export default function About() {
           <span className="settings-accordion-icon"><BookOpen size={18} /></span>
           <div>
             <h3 id="dn-about-history-title">Version History</h3>
-            <p>What changed in DN, starting with 2.0</p>
+            <p>Release notes for your build and earlier versions</p>
           </div>
         </div>
-        <div className="dn-about-release-list">
-          {versionHistory.map((release) => {
-            const current = appVersion === release.version;
-            const future = !isAtLeastVersion(appVersion, release.version);
-            return <details key={release.version} className="dn-about-release-entry"
-              data-version={release.version}>
-              <summary>
-                <span className="dn-about-release-meta">
-                  <span className="dn-about-release-version">
-                    <strong>v{release.version}</strong>
-                    {current ? <span className="dn-about-release-status">Installed</span> : null}
-                    {future ? <span className="dn-about-release-status">In development</span> : null}
-                  </span>
-                  <span className="dn-about-release-title">{release.title}</span>
-                </span>
-                <ChevronDown size={17} strokeWidth={1.9} aria-hidden="true" />
-              </summary>
-              <div className="dn-about-release-body">
-                <p>{release.summary}</p>
-                <ul className="about-list compact-list">
-                  {release.changes.map((item) => <li key={item}>{item}</li>)}
-                </ul>
+        {releaseHighlights ? (
+          <div className="dn-about-release-list">
+            {renderRelease(releaseHighlights)}
+            <details className="dn-about-pending-details">
+              <summary><span>Earlier releases</span><ChevronDown size={17} aria-hidden="true" /></summary>
+              <div className="dn-about-release-list">
+                {versionHistory.filter(release => release !== releaseHighlights
+                  && isAtLeastVersion(releaseHighlights.version, release.version)).map(renderRelease)}
               </div>
-            </details>;
-          })}
-        </div>
+            </details>
+          </div>
+        ) : null}
       </section>
 
       <section className="settings-section">
