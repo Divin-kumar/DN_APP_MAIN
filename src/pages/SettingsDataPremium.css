@@ -261,6 +261,17 @@ html[data-theme] .dn-data-page .dn-data-page-jumps a {
   color:var(--color-text-muted);font-size:12px;font-weight:700;
   background:transparent;
 }
+html[data-theme] .dn-data-page .dn-data-page-jumps a[aria-current="location"] {
+  color:var(--action-ink);background:var(--action-fill);
+}
+html[data-theme] .dn-data-page .dn-data-operation-status:not(:empty) {
+  padding:8px 10px;border-inline-start:2px solid var(--color-primary);
+  color:var(--color-text);background:var(--color-surface);
+  font-size:13px;line-height:1.5;overflow-wrap:anywhere;
+}
+html[data-theme] .dn-data-page .dn-data-operation-status:empty {
+  position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);
+}
 html[data-theme] .dn-data-page .dn-data-page-jumps a svg {color:var(--color-primary);}
 @media(hover:hover) and (pointer:fine) {
   html[data-theme] .dn-data-page .dn-data-page-jumps a:hover {

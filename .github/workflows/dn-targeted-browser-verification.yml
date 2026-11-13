@@ -7,6 +7,29 @@ on:
 permissions:
   contents: read
 jobs:
+  data-backup-navigation:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-data-backup-navigation]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: >-
+          npx playwright test
+          e2e/iphone-data-backup-subpage.spec.js
+          e2e/backup-phase7.spec.js
+          e2e/iphone-settings-cloud-delete-safety.spec.js
+          e2e/phase5-ui-audit-fixes.spec.js
+          --workers=2
+
   attachment-preview-layout:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&

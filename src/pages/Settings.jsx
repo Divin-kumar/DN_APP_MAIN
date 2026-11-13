@@ -102,8 +102,25 @@ const ValueListEditor = ({ label, value, onChange }) => {
   );
 };
 
+const DATA_BACKUP_SECTIONS = [
+  { id: 'backup-actions', label: 'Backup', icon: Download },
+  { id: 'data-management', label: 'Manage data', icon: HardDrive },
+  { id: 'data-guide', label: 'Data guide', icon: BookOpen },
+];
+
 export default function Settings({ dataBackupOnly = false, appearanceOnly = false }) {
   const location = useLocation();
+  const dataPageRef = useRef(null);
+  const dataSectionId = location.hash.slice(1);
+  useEffect(() => {
+    if (!dataBackupOnly || !DATA_BACKUP_SECTIONS.some(({ id }) => id === dataSectionId)) return undefined;
+    const frame = requestAnimationFrame(() => {
+      const section = dataPageRef.current?.querySelector(`#${dataSectionId}`);
+      section?.scrollIntoView({ block: 'start' });
+      section?.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [dataBackupOnly, dataSectionId, location.key]);
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -137,6 +154,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
     },
   });
   const [backupMessage, setBackupMessage] = useState('');
+  const [dataManagementMessage, setDataManagementMessage] = useState('');
   const [pendingBackup, setPendingBackup] = useState(null);
   const [importingBackup, setImportingBackup] = useState(false);
   const [exportingBackup, setExportingBackup] = useState(false);
@@ -622,7 +640,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         setCloudDeleteProgress(progress);
       });
       setConfirmCloudDeleteUid(null);
-      setBackupMessage(`Online Firestore records cleared: ${result.deleted} documents deleted. Google identity, local originals and legacy Firebase Storage files remain. Signing out…`);
+      setDataManagementMessage(`Online Firestore records cleared: ${result.deleted} documents deleted. Google identity, local originals and legacy Firebase Storage files remain. Signing out…`);
       try {
         // Staying authenticated on this device can immediately create a new
         // default Code List document. End this session before app bootstrap.
@@ -630,12 +648,12 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         window.location.reload();
       } catch (signOutError) {
         console.error('Online records were cleared but Firebase sign-out failed:', signOutError);
-        setBackupMessage(`Online Firestore records were cleared (${result.deleted} documents), but sign-out failed. Sign out manually before refreshing to avoid recreating online defaults.`);
+        setDataManagementMessage(`Online Firestore records were cleared (${result.deleted} documents), but sign-out failed. Sign out manually before refreshing to avoid recreating online defaults.`);
         showToast('Online data cleared. Please sign out manually.', 'danger');
       }
     } catch (error) {
       console.error('Online account data deletion did not complete:', error);
-      setBackupMessage(`Online deletion incomplete: ${error.message || 'Unable to verify the cloud records.'} ${committed ? `${committed} records were already deleted and cannot be restored without a backup.` : 'Deletion may not have started; check Firebase before retrying.'}`);
+      setDataManagementMessage(`Online deletion incomplete: ${error.message || 'Unable to verify the cloud records.'} ${committed ? `${committed} records were already deleted and cannot be restored without a backup.` : 'Deletion may not have started; check Firebase before retrying.'}`);
       showToast('Online deletion incomplete. Review the details in Data & Backup.', 'danger');
       setConfirmCloudDeleteUid(null);
     } finally {
@@ -647,7 +665,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
 
   const clearLocalData = () => {
     clearDnLocalData();
-    setBackupMessage('Local records and preferences cleared. Stored originals and account data are retained. Reloading...');
+    setDataManagementMessage('Local records and preferences cleared. Stored originals and account data are retained. Reloading...');
     showToast('Local data cleared', 'danger');
     window.location.reload();
   };
@@ -885,7 +903,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
 
   const renderDataSection = () => (
     <div className="settings-accordion-body dn-data-backup">
-      <section id="backup-actions" className="dn-data-backup-block" aria-label="Backup and restore">
+      <section id="backup-actions" tabIndex={-1} className="dn-data-backup-block" aria-label="Backup and restore">
         <div className="dn-data-backup-head">
           <span className="dn-data-backup-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
           <div><strong>Protect your records</strong><p>Save a copy of your Moments, transactions, settings and available original photos before making changes.</p></div>
@@ -903,10 +921,11 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </div>
         {readingBackup || exportingBackup ? <button type="button" className="settings-secondary-button dn-data-cancel-prep"
           onClick={() => backupOperationRef.current?.abort()}>Cancel preparation</button> : null}
+        <div role="status" className="dn-data-operation-status">{backupMessage}</div>
         <p className="settings-helper">Export produces a JSON backup. Restore merges records into the current workspace and preserves existing IDs. Original files stored in this browser can be included when available.</p>
       </section>
 
-      <section id="data-management" className="dn-data-backup-block dn-data-clear-block" aria-label="Clear DN data">
+      <section id="data-management" tabIndex={-1} className="dn-data-backup-block dn-data-clear-block" aria-label="Clear DN data">
         <div className="dn-data-backup-head">
           <span className="dn-data-backup-icon"><HardDrive size={18} aria-hidden="true" /></span>
           <div><strong>Manage stored data</strong><p>Choose exactly where to clear. Browser data and online Firebase records are separate.</p></div>
@@ -933,8 +952,8 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <p className="dn-data-guest-note">To clear Firebase records, sign in to the account that owns them. Guest records stay on this device.</p>
           )}
         </div>
+        <div role="status" className="dn-data-operation-status">{dataManagementMessage}</div>
       </section>
-      {backupMessage ? <p className="settings-message" role="status" aria-live="polite">{backupMessage}</p> : null}
     </div>
   );
 
@@ -1033,7 +1052,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   if (dataBackupOnly) {
     const signedIn = Boolean(user?.uid && !isGuest && !getActiveSampleScenario(user.uid));
     return (
-      <div className="settings-page feature-page dn-settings-home dn-data-page">
+      <div ref={dataPageRef} className="settings-page feature-page dn-settings-home dn-data-page">
         <section className="dn-data-page-intro" aria-label="Your data protection">
           <div className="dn-data-page-intro-copy">
             <span className="dn-data-page-overline"><ShieldCheck size={15} aria-hidden="true" /> Your data, your control</span>
@@ -1046,14 +1065,16 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </section>
 
         <nav className="dn-data-page-jumps" aria-label="Data and Backup sections">
-          <a href="#backup-actions"><Download size={14} aria-hidden="true" /> Backup</a>
-          <a href="#data-management"><HardDrive size={14} aria-hidden="true" /> Manage data</a>
-          <a href="#data-guide"><BookOpen size={14} aria-hidden="true" /> Data guide</a>
+          {DATA_BACKUP_SECTIONS.map(({ id, label, icon: Icon }) =>
+            <Link key={id} to={{ search: location.search, hash: `#${id}` }}
+              aria-current={dataSectionId === id ? 'location' : undefined}>
+              <Icon size={14} aria-hidden="true" /> {label}
+            </Link>)}
         </nav>
 
         {renderDataSection()}
 
-        <section id="data-guide" className="dn-data-page-guide" aria-label="How DN stores your data">
+        <section id="data-guide" tabIndex={-1} className="dn-data-page-guide" aria-label="How DN stores your data">
           <div className="dn-data-guide-heading">
             <BookOpen size={18} aria-hidden="true" />
             <div><h3>Know what lives where</h3><p>Account sync, original files and downloads have different responsibilities.</p></div>

@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-520 | Place Data & Backup feedback beside its controls
+
+- **Navigation:** Open and focus Backup, Manage data and Data guide from section links and bookmarks. Mark the shortcut matching the URL and restore section focus on browser Back and Forward.
+- **Feedback:** Show progress and results for backup and restore beside their controls. Keep clearing messages in Manage data. Existing restore review, cancellation, deletion confirmation and storage scopes continue to apply.
+- **Executed:** 26 focused Chromium checks, 13 restore unit tests, lint, build and documentation checks passed. Browser coverage includes a backup over 50 MiB, exact original-file restore, and cancelled or invalid imports. Guest tour instructions already describe the workflow. Native iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261113-519 | Keep original attachment downloads in view
 
 - **Preview:** Reserve a footer for Download original and fit images inside the remaining viewer space. Gallery, Activity Detail and Story use the same viewer. Announce loading or unavailable-file messages.

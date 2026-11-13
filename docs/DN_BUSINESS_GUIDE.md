@@ -66,6 +66,8 @@
 
 **DN 2.3 easier Task actions (OldVersion only, unpublished):** Tap a Task to edit it, then use the clearly labeled Cancel Task, Restore Task or Delete Task actions. A confirmation explains the effect; Keep editing returns to your unchanged draft. Confirming affects only the saved Task, leaving its linked Moment and Activities intact. Swipe and keyboard actions still work. Focused browser checks passed on phone and desktop sizes; actual iPhone accessibility and release acceptance remain outstanding.
 
+**Data & Backup (13 November 2026, development):** Section bookmarks open at the selected controls or guide. Export and restore feedback appears beside the backup buttons, and clearing feedback appears under Manage data.
+
 **Original photo and file previews (13 November 2026, development):** Download original stays visible below the preview, even for tall photos or long filenames on a short screen. The downloaded file keeps its original name and contents.
 
 **Insights readability (13 November 2026, development):** Full milestone names can wrap. On narrow phones, upcoming and recent milestones stack vertically, category amounts sit beside their names, and Income, Expenses and Balance each have their own row.

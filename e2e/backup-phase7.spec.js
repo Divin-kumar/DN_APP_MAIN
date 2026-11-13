@@ -97,7 +97,7 @@ test('backup reading can be cancelled before confirmation or persistence and the
   await picker.setInputFiles(payload);
   await page.getByRole('button', { name: 'Cancel preparation', exact: true }).click();
   await page.evaluate(() => { window.__restoreBackupReader(); void window.__finishBackupRead(); });
-  await expect(page.getByRole('status')).toContainText('Backup reading cancelled');
+  await expect(page.getByRole('region', { name: 'Backup and restore' }).getByRole('status')).toContainText('Backup reading cancelled');
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth + 1)).toBe(false);
   await expect(page.getByRole('dialog', { name: 'Review backup restore' })).toHaveCount(0);
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual([]);

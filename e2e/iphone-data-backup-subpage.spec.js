@@ -33,9 +33,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(subpage.getByRole('region', { name: 'Clear DN data' })).toBeVisible();
 
       const nav = subpage.getByRole('navigation', { name: 'Data and Backup sections' });
-      await expect(nav.getByRole('link', { name: 'Backup' })).toHaveAttribute('href', '#backup-actions');
-      await expect(nav.getByRole('link', { name: 'Manage data' })).toHaveAttribute('href', '#data-management');
-      await expect(nav.getByRole('link', { name: 'Data guide' })).toHaveAttribute('href', '#data-guide');
+      await expect(nav.getByRole('link', { name: 'Backup' })).toHaveAttribute('href', '/settings/data-backup#backup-actions');
+      await expect(nav.getByRole('link', { name: 'Manage data' })).toHaveAttribute('href', '/settings/data-backup#data-management');
+      await expect(nav.getByRole('link', { name: 'Data guide' })).toHaveAttribute('href', '/settings/data-backup#data-guide');
       const guide = subpage.getByRole('region', { name: 'How DN stores your data' });
       await expect(guide).toContainText('Firebase records');
       await expect(guide).toContainText('Original photos');
@@ -83,4 +83,43 @@ test('legacy Settings backup bookmark routes into the separate destination', asy
   await page.goto('/settings#backup');
   await expect(page).toHaveURL(new RegExp('/settings/data-backup$'));
   await expect(page.getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
+});
+
+
+test('Data & Backup opens section bookmarks and keeps restore feedback by the file picker', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const errors = await seedGuest(page);
+  await page.goto('/settings/data-backup#data-guide');
+  const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const guide = page.getByRole('region', { name: 'How DN stores your data' });
+  const navigation = page.getByRole('navigation', { name: 'Data and Backup sections' });
+  await expect(guide).toBeFocused();
+  await expect(guide.getByRole('heading')).toBeInViewport();
+  await expect(navigation.getByRole('link', { name: 'Data guide' })).toHaveAttribute('aria-current', 'location');
+
+  const backupLink = navigation.getByRole('link', { name: 'Backup', exact: true });
+  await backupLink.focus();
+  await page.keyboard.press('Enter');
+  const backup = page.getByRole('region', { name: 'Backup and restore' });
+  await expect(backup).toBeFocused();
+  await expect(backupLink).toHaveAttribute('aria-current', 'location');
+  await backup.locator('input[type=file]').setInputFiles({
+    name: 'invalid-backup.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from('{'),
+  });
+  await expect(backup.getByRole('status')).toContainText('The backup is not valid JSON');
+  await expect(backup.getByRole('status')).toBeInViewport();
+  await expect(page.getByRole('region', { name: 'Clear DN data' }).getByRole('status')).toBeEmpty();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.goBack();
+  await expect(guide).toBeFocused();
+  await expect(guide.getByRole('heading')).toBeInViewport();
+  await page.goForward();
+  await expect(backup).toBeFocused();
+  await navigation.getByRole('link', { name: 'Manage data' }).click();
+  await expect(page.getByRole('region', { name: 'Clear DN data' })).toBeFocused();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+  expect(errors).toEqual([]);
 });

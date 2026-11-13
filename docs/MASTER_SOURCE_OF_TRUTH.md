@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Data & Backup navigation and operation feedback (13 November 2026, OldVersion development only)
+
+The Backup, Manage data and Data guide shortcuts focus their destination sections, including when opening a bookmark or using browser Back and Forward. The shortcut matching the address is marked as the current location. Backup progress and results appear alongside Export and Restore, and clearing results appear in Manage data. The existing restore review, scoped storage, export format and deletion confirmations apply. The Guest tour already covers the same backup workflow.
+
 ## Original attachment preview controls (13 November 2026, OldVersion development only)
 
 Attachment previews in Gallery, Activity Detail and Story keep **Download original** below the scrollable content whenever the original is available. Photos fit the available viewer space while retaining their aspect ratio. Loading and unavailable-file messages are announced in the viewer. The existing filename, byte-for-byte download, scope checks and attachment storage apply. The public Guest tour already describes original previews and needs no fixture changes.
