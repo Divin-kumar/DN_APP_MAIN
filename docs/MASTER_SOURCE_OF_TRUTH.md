@@ -4,6 +4,8 @@
 
 The authorized v2.3.11 candidate packages development source `6fbdb21` with About release notes and a single collapsed Earlier releases disclosure. Production shows the installed release. Development shows the latest published release and only pending changes since it. After verified production publication, the automatic ExpenseTracker workflow reads back the new index and pending ledger from Hosting. When both sites share the same source commit, the ledger must be ready and empty. Earlier release notes and repository history remain available. Release evidence comes from the exact-SHA full pre-release run and the Hosting readbacks. The Guest tour is unaffected.
 
+The shared card action menu runs its fade and movement on the same animation frame loop. An action opens its editor or confirmation after the menu exits, and repeated taps during exit cannot replace the selected action. The existing Guest tour steps still apply.
+
 ## Searchable dropdown keyboard editing (13 November 2026, OldVersion development only)
 
 Shared searchable dropdowns keep Home and End available for editing search text. Tab reaches Clear search when it is shown, and Shift+Tab returns to the text field. Enter confirms text composition before it can choose an option. Escape closes the choices and returns focus to their trigger. Existing filter and record values, touch targets and the public Guest tour continue to use their existing paths.

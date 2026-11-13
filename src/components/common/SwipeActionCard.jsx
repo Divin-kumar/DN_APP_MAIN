@@ -169,6 +169,7 @@ export default function SwipeActionCard({
     try { Promise.resolve(callback()).catch(() => {}); } catch { /* Caller reports the failure. */ }
   };
   const perform = (callback) => {
+    if (pendingAction.current) return;
     pendingAction.current = callback;
     close(true);
   };
@@ -247,10 +248,12 @@ export default function SwipeActionCard({
       {createPortal(<AnimatePresence onExitComplete={runPendingAction}>
         {open && position ? <motion.div id={menuId} ref={popupRef} role="menu" data-swipe-ignore
           data-dn-motion="swipe-spring"
-          initial={reducedMotion ? false : { opacity: 0, y: position.direction === 'above' ? 16 : -16, scale: 0.965 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={reducedMotion ? { opacity: 0, transition: { duration: 0 } } : {
-            opacity: 0, y: position.direction === 'above' ? 9 : -9, scale: 0.985,
+          // Use the same Motion frame loop for the fade and transform so a
+          // compositor opacity animation cannot stall the editor handoff.
+          initial={reducedMotion ? false : { '--dn-swipe-popup-opacity': 0, y: position.direction === 'above' ? 16 : -16, scale: 0.965 }}
+          animate={{ '--dn-swipe-popup-opacity': 1, y: 0, scale: 1 }}
+          exit={reducedMotion ? { '--dn-swipe-popup-opacity': 0, transition: { duration: 0 } } : {
+            '--dn-swipe-popup-opacity': 0, y: position.direction === 'above' ? 9 : -9, scale: 0.985,
             transition: { duration: 0.22, ease: [0.4, 0, 0.2, 1] },
           }}
           transition={reducedMotion ? { duration: 0 } : { type: 'spring', stiffness: 230, damping: 24, mass: 0.9 }}

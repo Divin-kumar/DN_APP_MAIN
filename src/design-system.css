@@ -2413,6 +2413,7 @@ html[data-theme] .dn-swipe-surface .dn-swipe-main {
   transform:none !important; transition:none !important; will-change:auto !important;
 }
 html[data-theme] .dn-swipe-popup {
+  opacity:var(--dn-swipe-popup-opacity,1);
   z-index:2600 !important; display:block; overflow-y:auto; overflow-x:hidden;
   box-sizing:border-box; padding:5px; border-radius:16px;
   border:1px solid color-mix(in srgb,var(--color-primary) 16%,var(--color-border));

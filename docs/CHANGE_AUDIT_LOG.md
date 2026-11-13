@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-527 | Finish the shared card action exit before opening editors
+
+- **Executed:** Full browser run `43437461050` on `c57ab14` finished with 914 passing, 2 skipped and 2 failing cases. Local Chromium reproduced both failures. The Dashboard and Transaction traces showed that the menu reached its exit transform while opacity and the queued Edit action stalled.
+- **Correction:** Drive the shared menu fade and movement on the same Motion frame loop and keep the first action selected during exit. The Transaction regression opens More options before checking that the saved record's time field is blank. The public Guest tour already describes the same actions, so its version and fixtures stay in place.
+- **Executed after correction:** 23 focused Chromium checks passed, including the two reproduced failures and the four-module menu animation check. All 626 Node tests, lint, the production build and the documentation check passed locally.
+- **Release:** The owner approved production publication of v2.3.11 from OldVersion. The existing exact-source full pre-release workflow and Hosting readback still apply. Physical iPhone Safari remains unverified.
+
 ## CHG-20261113-526 | Verify action completion before reopening menus in release checks
 
 - **Executed:** The v2.3.11 release candidate passed the About preflight. The full browser suite reported 911 passing, 2 skipped and 5 failing cases in run 43433597585.
