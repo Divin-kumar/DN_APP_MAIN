@@ -119,6 +119,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-528 | Measure Activity Detail tap targets after route motion
+
+- **Executed:** Full Chromium run `43444105469` on `f2f205f` passed 915 checks, including the two editor regressions, with 2 skipped and one Activity Detail geometry failure. A Chromium reproduction confirmed that fractional route translation can return a DOMRect height of 43.999969px for a 44px control.
+- **Correction:** Recheck the real rendered bounds as the route settles while still requiring two controls, each at least 44px wide and high. The Activity Detail suite passed all 16 focused cases across four repeats. The full exact-source verification and production Hosting readback still apply.
+
 ## CHG-20261113-527 | Finish the shared card action exit before opening editors
 
 - **Executed:** Full browser run `43437461050` on `c57ab14` finished with 914 passing, 2 skipped and 2 failing cases. Local Chromium reproduced both failures. The Dashboard and Transaction traces showed that the menu reached its exit transform while opacity and the queued Edit action stalled.

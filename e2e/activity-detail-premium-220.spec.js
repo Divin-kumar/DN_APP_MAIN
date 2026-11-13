@@ -58,19 +58,32 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
       expect(originalRow.overlap).toBe(false);
     }
 
-    const geometry = await detail.evaluate((root) => {
-      const row = [...root.querySelectorAll('.dn-content-row')].find((node) => node.textContent.includes('Saved afternoon details'));
+    const target = detail.locator('.dn-content-row').filter({ hasText: 'Saved afternoon details' });
+    const controls = target.locator('.dn-content-row-actions').getByRole('button');
+    await expect(controls).toHaveCount(2);
+    // Fractional route translation can briefly round a 44px DOMRect below 44px.
+    // Keep the exact minimum and measure again once the controls settle.
+    await expect(async () => {
+      const sizes = await controls.evaluateAll((buttons) => buttons.map((button) => {
+        const { width, height } = button.getBoundingClientRect();
+        return { width, height };
+      }));
+      expect(sizes).toHaveLength(2);
+      for (const { width: controlWidth, height: controlHeight } of sizes) {
+        expect(controlWidth).toBeGreaterThanOrEqual(44);
+        expect(controlHeight).toBeGreaterThanOrEqual(44);
+      }
+    }).toPass({ timeout: 5000 });
+
+    const geometry = await target.evaluate((row) => {
       const body = row.querySelector('.dn-content-row-body').getBoundingClientRect();
       const meta = row.querySelector('.dn-content-row-meta').getBoundingClientRect();
       const outer = row.getBoundingClientRect();
-      const controls = [...row.querySelectorAll('.dn-content-row-actions button')].map((node) => node.getBoundingClientRect());
       return { docWidth: document.documentElement.scrollWidth, viewport: document.documentElement.clientWidth,
         bodyLeft: body.left, bodyTop: body.top, bodyRight: body.right, metaTop: meta.top,
-        metaRight: meta.right, rowRight: outer.right, controlSizes: controls.map(({ width, height }) => [width, height]) };
+        metaRight: meta.right, rowRight: outer.right };
     });
     expect(geometry.docWidth).toBeLessThanOrEqual(geometry.viewport + 1);
-    expect(geometry.controlSizes.length).toBe(2);
-    expect(geometry.controlSizes.every(([w, h]) => w >= 44 && h >= 44)).toBe(true);
     if (width < 768) {
       expect(geometry.bodyTop).toBeGreaterThan(geometry.metaTop);
       expect(geometry.rowRight - geometry.bodyRight).toBeLessThan(2);
@@ -79,7 +92,6 @@ for (const [width, height, theme] of [[320, 640, 'light'], [390, 844, 'dark'], [
     }
 
     const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
-    const target = detail.locator('.dn-content-row').filter({ hasText: 'Saved afternoon details' });
     await target.getByRole('button', { name: 'Edit entry', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Edit entry' });
     await expect(editor.getByRole('textbox', { name: 'Entry content' })).toBeVisible();
