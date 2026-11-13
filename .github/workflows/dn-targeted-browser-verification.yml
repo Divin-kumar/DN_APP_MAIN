@@ -7,6 +7,29 @@ on:
 permissions:
   contents: read
 jobs:
+  attachment-preview-layout:
+    if: >-
+      github.ref == 'refs/heads/OldVersion' &&
+      github.event_name == 'push' &&
+      contains(github.event.head_commit.message, '[verify-attachment-preview]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: >-
+          npx playwright test
+          e2e/local-attachments-readonly.spec.js
+          e2e/activity-detail-layout.spec.js
+          e2e/dn-233-motion-navigation.spec.js
+          --workers=2
+      - run: npx playwright test e2e/iphone-story-polish-234.spec.js --grep "Journal photo framing and original preview" --workers=2
+
   insights-readability:
     if: >-
       github.ref == 'refs/heads/OldVersion' &&

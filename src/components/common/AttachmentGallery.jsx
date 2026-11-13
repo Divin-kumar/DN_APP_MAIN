@@ -41,10 +41,15 @@ function AttachmentTile({ attachment, uid, isGuest, onRemove, compact, showMetad
       {showImageNames || !isImage(attachment.type) ? <span><strong>{attachment.name || 'Attachment'}</strong>{!compact && showMetadata ? <small>{error || `${Math.ceil(Number(attachment.size || 0) / 1024)} KB`}</small> : null}</span> : null}
     </button>
     {onRemove ? <button className="dn-attachment-remove" type="button" aria-label={`Remove ${attachment.name}`} onClick={() => onRemove(attachment)}><X size={14} /></button> : null}
-    {open ? <ModalDialog title={attachment.name || 'Attachment'} className="dn-attachment-viewer" onClose={closePreview}>
+    {open ? <ModalDialog title={attachment.name || 'Attachment'} className="dn-attachment-viewer" onClose={closePreview}
+      footer={blob ? <div className="dn-attachment-viewer-actions">
+        <button type="button" className="secondaryButton" onClick={() => downloadBlob(blob, attachment.name || 'attachment')}>
+          <Download size={16} aria-hidden="true" /> Download original
+        </button>
+      </div> : null}>
       {photoReady ? <img className="dn-attachment-original" src={source} alt={attachment.name || 'Attached photo'}
-        style={{ viewTransitionName: photoName }} onError={() => setBroken(source)} /> : <p>{error || (blob ? 'Your original file is ready to download.' : 'Loading original file…')}</p>}
-      {blob ? <button type="button" className="secondaryButton" onClick={() => downloadBlob(blob, attachment.name || 'attachment')}><Download size={15} /> Download original</button> : null}
+        style={{ viewTransitionName: photoName }} onError={() => setBroken(source)} />
+        : <p role="status">{error || (blob ? 'Your original file is ready to download.' : 'Loading original file…')}</p>}
     </ModalDialog> : null}
   </div>;
 }

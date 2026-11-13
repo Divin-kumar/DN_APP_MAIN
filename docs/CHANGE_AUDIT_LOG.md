@@ -119,6 +119,12 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-519 | Keep original attachment downloads in view
+
+- **Preview:** Reserve a footer for Download original and fit images inside the remaining viewer space. Gallery, Activity Detail and Story use the same viewer. Announce loading or unavailable-file messages.
+- **Compatibility:** Preserve original names and bytes, account and Guest scope, attachment links and the existing close and focus behavior. The public Guest tour already demonstrates original-file previews.
+- **Executed:** 20 focused Chromium checks, 23 attachment unit tests, lint, build and documentation checks passed. Downloaded SHA-256 matched the stored original at 320×480, 430×932 and 844×390. Native iPhone Safari and VoiceOver remain unverified. Automatic Hosting targets DN development.
+
 ## CHG-20261113-518 | Improve Insights milestone and spending readability
 
 - **Milestones:** Show full names and stack upcoming and recent lists on narrow phones. Use the singular result label when search returns one milestone.

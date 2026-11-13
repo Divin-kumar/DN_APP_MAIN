@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Original attachment preview controls (13 November 2026, OldVersion development only)
+
+Attachment previews in Gallery, Activity Detail and Story keep **Download original** below the scrollable content whenever the original is available. Photos fit the available viewer space while retaining their aspect ratio. Loading and unavailable-file messages are announced in the viewer. The existing filename, byte-for-byte download, scope checks and attachment storage apply. The public Guest tour already describes original previews and needs no fixture changes.
+
 ## Insights milestone and spending readability (13 November 2026, OldVersion development only)
 
 Insights wraps full milestone names and uses one column for the upcoming and recent lists through 580px. Category breakdowns reserve room for whole amounts and put bars below their labels on narrow phones. The financial overview shows Income, Expenses and Balance in three compact rows at those widths. The milestone search count uses the singular for one result. Existing search scope, totals, chart inputs and full JSON export are unchanged. The Guest tour requires no fixture update for this layout change.

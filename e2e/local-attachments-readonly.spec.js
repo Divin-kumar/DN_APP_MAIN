@@ -1,5 +1,7 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScope } from './fixtures.js';
+import { createHash } from 'node:crypto';
+import { readFile } from 'node:fs/promises';
+import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScope, addOriginal } from './fixtures.js';
 
 // Only the Firestore store edge is mocked; file IO uses the real scoped IndexedDB repository.
 
@@ -142,4 +144,54 @@ test('an obsolete universal transaction draft closes on scope change without wri
   expect(await page.evaluate(() => window.__dnAccountWrites)).toEqual([]);
   await openUniversalTransaction(page);
   await expect(page.getByRole('dialog').getByRole('textbox', { name: 'Title *', exact: true })).toHaveValue('');
+});
+
+test.describe('Gallery original preview on touch screens', () => {
+  test.use({ hasTouch: true, isMobile: true });
+
+  for (const [width, height, theme] of [[320, 480, 'dark'], [430, 932, 'light'], [844, 390, 'dark']]) {
+    test(`keeps a portrait and its original download in view at ${width}×${height}`, async ({ page }) => {
+      await page.setViewportSize({ width, height });
+      const errors = await seedGuest(page, { theme });
+      const original = await addOriginal(page, { width: 400, height: 900, count: 0 });
+      const filename = 'November family celebration original portrait at the main entrance.png';
+      const before = await page.evaluate((name) => {
+        const key = 'dn_guest_eventGroups';
+        const moments = JSON.parse(localStorage.getItem(key));
+        moments[0].attachments[0].name = name;
+        const saved = JSON.stringify(moments);
+        localStorage.setItem(key, saved);
+        return saved;
+      }, filename);
+      await page.goto('/events/moment-one/gallery');
+      const preview = page.getByRole('button', { name: `Preview ${filename}` });
+      await preview.focus();
+      await page.keyboard.press('Enter');
+      const dialog = page.getByRole('dialog', { name: filename });
+      const portrait = dialog.getByRole('img', { name: filename });
+      const downloadButton = dialog.getByRole('button', { name: 'Download original' });
+      await expect(portrait).toBeInViewport({ ratio: 1 });
+      await expect(downloadButton).toBeInViewport({ ratio: 1 });
+      const geometry = await dialog.evaluate((node) => {
+        const body = node.querySelector('.dn-modal-body').getBoundingClientRect();
+        const photo = node.querySelector('img').getBoundingClientRect();
+        const button = node.querySelector('.dn-attachment-viewer-actions button').getBoundingClientRect();
+        return { imageBottom: photo.bottom, bodyBottom: body.bottom, buttonTop: button.top, buttonHeight: button.height };
+      });
+      expect(geometry.imageBottom).toBeLessThanOrEqual(geometry.bodyBottom + 1);
+      expect(geometry.buttonTop).toBeGreaterThanOrEqual(geometry.bodyBottom);
+      expect(geometry.buttonHeight).toBeGreaterThanOrEqual(43.9);
+
+      const downloaded = page.waitForEvent('download');
+      await downloadButton.tap();
+      const file = await downloaded;
+      expect(file.suggestedFilename()).toBe(filename);
+      expect(createHash('sha256').update(await readFile(await file.path())).digest('hex')).toBe(original.assetId);
+      await page.keyboard.press('Escape');
+      await expect(dialog).toHaveCount(0);
+      await expect(preview).toBeFocused();
+      expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
+      expect(errors).toEqual([]);
+    });
+  }
 });
