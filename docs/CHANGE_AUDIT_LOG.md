@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-511 | Finance and Tasks secondary-label readability | 13 November 2026 | OldVersion development
+
+- **Transactions:** For iPhone-sized layouts, increase actual date/category/payment metadata, Details summary, expanded Moment/Activity labels, and original notes to 13px with 1.5+ line-height. On desktop, lift Details summary/labels/notes to the same readable 13px floor. Keep original title/amount positioning, bank semantics, colors, live filters/totals, PDF/CSV exports, swipe actions, screen scroll, records and data shape exactly intact.
+- **Independent Tasks:** Raise phone parent Moment/Activity context to 13px and summary metric captions to 12px. Do not resize the 48/52px date square, move flags, change filter/sort/editor behavior, or alter stored due date, priority or Task status.
+- **Evidence:** Add 320/390/430px Task linked context, no-overflow and storage checks and 320/390px Transaction + 1280px desktop Details accessibility/readability checks to existing opt-in suites. Verify with `[verify-desktop-shell]` against the exact SHA plus CI smoke/docs; actual iOS Safari and VoiceOver remain manual.
+- **Scope:** `OldVersion` exclusively, with standing automatic ExpenseTracker development Hosting. No production publish, main branch write, schema/version change, Guest tour refresh or other Firebase app change.
+
 ### CHG-510 | Keyboard modality for PDF focus acceptance | 12 November 2026 | OldVersion development
 
 - The CHG-509 PDF suite on commit `24f0fe4` passed its 13 existing cases but the two newly extended accessibility cases expected a `:focus-visible` ring after programmatic focus while Chromium remained in pointer modality. Browser behavior is intentional: mouse focus does not show keyboard-only outlines.

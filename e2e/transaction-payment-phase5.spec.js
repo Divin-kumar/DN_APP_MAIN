@@ -76,3 +76,52 @@ test('Phase 5 payment choice remains usable on a narrow iPhone viewport', async(
  expect(overflow).toBe(false);
  expect(errors).toEqual([]);
 });
+
+
+// CHG-511: date/payment and existing expanded notes must be legible without
+// disturbing amount layout or original Guest records. Synthetic browser only.
+for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [1280, 900, 'dark']]) {
+  test(`Transaction detail text and disclosure remain readable at ${width}px ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, {
+      theme, moments: fixtureMoments(),
+      incomes: [{ id: 'reading-income', name: 'Project payment', amount: 25000,
+        date: '2026-10-21', type: 'Other', paymentMethod: 'Online' }],
+      expenses: [{ id: 'reading-expense', name: 'School materials for the family',
+        amount: 1750, date: '2026-10-22', category: 'Supplies',
+        paymentMethod: 'Cash', eventId: 'moment-one',
+        notes: 'Keep the receipt and the original payment details together.' }],
+    });
+    await page.goto('/financials/transactions');
+    const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes']
+      .map(key => localStorage.getItem(key)));
+    const card = page.locator('.dn-transactions-page .dn-v2-transaction-card.is-expense')
+      .filter({ hasText: 'School materials for the family' });
+    await expect(card).toBeVisible();
+    await expect(card.locator('.dn-transaction-value')).toContainText('₹1,750');
+    const meta = card.locator('.dn-transaction-meta');
+    await expect(meta).toContainText('Cash');
+    expect(await meta.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
+    const summary = card.locator('.dn-transaction-details > summary');
+    await expect(summary).toBeVisible();
+    const size = await summary.boundingBox();
+    expect(size.height).toBeGreaterThanOrEqual(43.9);
+    expect(await summary.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
+    await summary.click();
+    const detail = card.locator('.dn-transaction-details');
+    await expect(detail).toHaveAttribute('open', '');
+    const note = detail.locator('.dn-transaction-note');
+    await expect(note).toContainText('Keep the receipt');
+    expect(await note.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
+    const labels = detail.locator('.dn-transaction-details-content > small');
+    for (const label of await labels.all()) {
+      expect(await label.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
+    }
+    await summary.click();
+    await expect(detail).not.toHaveAttribute('open', '');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+    expect(await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes']
+      .map(key => localStorage.getItem(key)))).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}

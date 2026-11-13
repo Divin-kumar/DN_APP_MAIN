@@ -133,3 +133,32 @@ html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-ca
     transition: none !important;
   }
 }
+
+/* CHG-511: transactions are read hundreds of times more than they are edited.
+   Keep the existing concise title/amount lead row and restrained cards, but
+   make the smaller payment, date and expanded details readable on phones.
+   No swipe, data, disclosure or list-scrolling changes. */
+@media (max-width:760px) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-meta {
+    font-size:13px !important;line-height:1.55;
+    gap:3px 7px;
+  }
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-details > summary {
+    font-size:13px;line-height:1.45;min-height:44px;
+  }
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-details-content {
+    gap:7px;padding:3px 0 8px;
+    font-size:13px;line-height:1.55;
+  }
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-details-content > small,
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-note {
+    font-size:13px;line-height:1.55;overflow-wrap:anywhere;
+  }
+}
+@media (min-width:761px) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-details > summary,
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-details-content > small,
+  html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card .dn-transaction-note {
+    font-size:13px;line-height:1.5;
+  }
+}

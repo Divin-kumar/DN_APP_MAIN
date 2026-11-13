@@ -59,3 +59,42 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     expect(errors).toEqual([]);
   });
 }
+
+
+// CHG-511: long linked-Moment names are information, not 11px footnotes.
+// Synthetic Guest records, small screens, and a no-mutation assertion.
+for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [430, 932, 'dark']]) {
+  test(`Task linked context and summary labels remain readable at ${width}px ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width, height });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/tasks');
+    const task = { id:'linked-reading', title:'Review family travel documents before departure',
+      momentId:'moment-one', activityId:'shared', dueDate:'2026-12-03',
+      dueTime:'09:45', priority:'high', status:'in-progress' };
+    await page.evaluate(row => localStorage.setItem('dn_guest_tasks', JSON.stringify([row])), task);
+    await page.reload();
+    const before = await page.evaluate(() => ['dn_guest_tasks','dn_guest_eventGroups']
+      .map(key => localStorage.getItem(key)));
+    const list = page.locator('.dn-tasks-page .dn-task-list');
+    const row = list.locator('.dn-independent-task-row').filter({ hasText: task.title });
+    await expect(row).toBeVisible();
+    const context = row.locator('.dn-task-context');
+    await expect(context).toContainText('Weekend in Ooty');
+    expect(await context.evaluate(node => parseFloat(getComputedStyle(node).fontSize)))
+      .toBeGreaterThanOrEqual(13);
+    expect(await context.evaluate(node => parseFloat(getComputedStyle(node).lineHeight)))
+      .toBeGreaterThanOrEqual(19);
+    const metrics = page.locator('.dn-tasks-page .dn-task-metrics span');
+    await expect(metrics).toHaveCount(3);
+    for (const label of await metrics.all()) {
+      expect(await label.evaluate(node => parseFloat(getComputedStyle(node).fontSize)))
+        .toBeGreaterThanOrEqual(12);
+    }
+    await expect(row.locator('.dn-task-calendar')).toBeVisible();
+    await expect(row.getByRole('img', { name:'High priority' })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+    expect(await page.evaluate(() => ['dn_guest_tasks','dn_guest_eventGroups']
+      .map(key => localStorage.getItem(key)))).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}
