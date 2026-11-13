@@ -58,8 +58,9 @@ for(const [width,height,theme] of [
     }));
     expect(appearance.border).toBe('0px');
     expect(parseFloat(appearance.radius)).toBeGreaterThanOrEqual(14);
-    expect(appearance.heading).toBeGreaterThanOrEqual(15);
-    expect(appearance.detail).toBeGreaterThanOrEqual(12);
+    // Independent Tasks and Dashboard use a shared compact phone title scale.
+    expect(appearance.heading).toBeGreaterThanOrEqual(width <= 360 ? 13.5 : 14);
+    expect(appearance.detail).toBeGreaterThanOrEqual(width <= 360 ? 48 : 52);
     expect(appearance.right).toBeLessThanOrEqual(width+1);
     expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(width+1);
     expect(await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']

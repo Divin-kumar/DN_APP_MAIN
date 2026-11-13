@@ -119,6 +119,11 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261113-517 | Align Settings browser checks with the shipped Task title scale
+
+- The expanded Settings browser suite measured the established 13.5px title at 320px and 14px at larger phone sizes. Its prior 15px assertion predated the matched Task and Dashboard date-tile layout.
+- Check the current phone title scale and the actual 48px or 52px date tile alongside the existing overflow, saved preferences and Task creation checks. This correction changes only browser verification. Repeat the Settings browser lane on OldVersion.
+
 ## CHG-20261113-516 | Make Code Lists shortcuts and save recovery reliable
 
 - **Navigation:** Follow bookmarked, tapped and keyboard-activated Code Lists links after the settings page loads. The sticky shortcut row reveals and highlights the URL's section, with larger labels, native horizontal scrolling and destination focus. Payment Methods keeps its destination through loading and errors.
