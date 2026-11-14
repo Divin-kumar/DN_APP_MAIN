@@ -70,7 +70,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       : task?.status !== 'completed' ? 'Repeat, priority, links and notes' : 'Priority, links and notes'}>
     {task?.status !== 'completed' ? <RepeatField value={repeatFrequency}
       onChange={setRepeatFrequency} disabled={busy} dueDate={dueDate} previous={task}>
-      {momentId ? 'Moment and Activity links apply to this Task only.' : 'Done or Skip adds the next Task.'}
+      {momentId ? 'Moment and Activity links apply to this Task only.' : null}
     </RepeatField> : null}
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>

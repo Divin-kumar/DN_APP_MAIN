@@ -25,5 +25,9 @@ export default function useExpensePlans(uid, isGuest, sample) {
     } catch (error) { fail(error); }
     return () => { active = false; stop?.(); };
   }, [uid, isGuest, sample, attempt]);
-  return { plans, loadError, retry: () => setAttempt((value) => value + 1) };
+  const applySavedPlan = (previous, saved) => setPlans((current) => current.flatMap((plan) => {
+    if (plan.id !== previous.id || plan.updatedAt !== previous.updatedAt || plan.dueDate !== previous.dueDate) return [plan];
+    return saved ? [saved] : [];
+  }));
+  return { plans, loadError, applySavedPlan, retry: () => setAttempt((value) => value + 1) };
 }

@@ -102,8 +102,8 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = paymentPlan ? 'Title, category, time, links and notes'
-    : (isPlan ? [!expensePlan && scheduleHint, 'Notes']
+  const supportingDetails = paymentPlan ? 'Time, links and notes'
+    : (isPlan ? [!expensePlan && scheduleHint, 'Method and notes']
       : [formatScheduleDate(form.date) || 'Choose date', canRepeat && 'Repeat', !canRepeat && form.time,
         form.eventId && 'Moment linked', form.activityId && 'Activity linked']).filter(Boolean).join(' · ');
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
@@ -167,6 +167,32 @@ export default function TransactionForm({
     dueDate={form.date} previous={expensePlan} allowOneTime={!expensePlan}>
     {presetLink?.eventId || form.eventId ? 'Choose the Moment or Activity when you record each payment.' : null}
   </RepeatField> : null;
+  const amount = <label className="dn-transaction-field">
+    <span>{paymentPlan ? 'Amount paid *' : isPlan ? 'Expected amount *' : 'Amount *'}</span>
+    <input type="number" inputMode="decimal" min="0.01" step="0.01" required
+      value={form.amount} onChange={(event) => change('amount', event.target.value)}
+      placeholder="0.00" disabled={busy} />
+  </label>;
+  const paymentMethod = <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
+    <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
+    <div className="dn-payment-method-options">
+      {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
+        <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
+          onChange={() => change('paymentMethod', method)} disabled={busy} />
+        <span>{method}</span>
+      </label>)}
+      {isPlan ? <label className="dn-payment-method-choice">
+        <input type="radio" name="paymentMethod" value="" checked={!form.paymentMethod}
+          onChange={() => change('paymentMethod', '')} disabled={busy} />
+        <span>Choose at payment</span>
+      </label> : null}
+    </div>
+    {!paymentMethods.length && !isPlan ? <small>Add a payment method in Settings → Code Lists before saving.</small> : null}
+    {previousMethod && !getCodeListItems('paymentMethods', adminValues.paymentMethods).includes(previousMethod)
+      ? <small>The saved method is no longer active. You can keep it here or choose an active method.</small> : null}
+    {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
+      ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
+  </fieldset>;
 
   return (
     <form className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}`} onSubmit={handleSubmit} aria-busy={busy}>
@@ -174,6 +200,7 @@ export default function TransactionForm({
         <span className="dn-payment-context-icon"><CalendarDays size={19} aria-hidden="true" /></span>
         <div><strong>{paymentPlan.name}</strong>
           <p>Scheduled for {formatScheduleDate(paymentPlan.dueDate)} · {REPEAT_OPTIONS[paymentPlan.repeat.frequency]}</p>
+          {nextPaymentDate ? <p>After saving, next due <strong>{nextPaymentDate}</strong>.</p> : null}
         </div>
       </div> : null}
       {!paymentPlan && !expensePlan ? <div className="dn-transaction-field">
@@ -184,40 +211,18 @@ export default function TransactionForm({
           <option value="expense">Expense</option>
         </DropdownSelect>
       </div> : null}
-      <label className="dn-transaction-field">
-        <span>{paymentPlan ? 'Amount paid *' : isPlan ? 'Expected amount *' : 'Amount *'}</span>
-        <input type="number" inputMode="decimal" min="0.01" step="0.01" required
-          value={form.amount} onChange={(event) => change('amount', event.target.value)}
-          placeholder="0.00" disabled={busy} />
-      </label>
+      {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div> : amount}
       {!paymentPlan ? titleField : null}
-      {planFlow ? <div className="dn-plan-form-date">{dates}</div> : null}
+      {expensePlan ? <div className="dn-plan-form-date">{dates}</div> : null}
       {expensePlan ? repeatField : null}
       {!paymentPlan ? categoryField : null}
-      <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
-        <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
-        <div className="dn-payment-method-options">
-          {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
-            <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
-              onChange={() => change('paymentMethod', method)} disabled={busy} />
-            <span>{method}</span>
-          </label>)}
-          {isPlan ? <label className="dn-payment-method-choice">
-            <input type="radio" name="paymentMethod" value="" checked={!form.paymentMethod}
-              onChange={() => change('paymentMethod', '')} disabled={busy} />
-            <span>Choose at payment</span>
-          </label> : null}
-        </div>
-        {!paymentMethods.length && !isPlan ? <small>Add a payment method in Settings → Code Lists before saving.</small> : null}
-        {previousMethod && !getCodeListItems('paymentMethods', adminValues.paymentMethods).includes(previousMethod)
-          ? <small>The saved method is no longer active. You can keep it here or choose an active method.</small> : null}
-        {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
-          ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
-      </fieldset>
-      {isPlan ? <p className="dn-plan-form-hint">Spending updates when you record a payment.</p> : null}
-      {nextPaymentDate ? <p className="dn-plan-form-hint">After saving, next due <strong>{nextPaymentDate}</strong>.</p> : null}
+      {!isPlan ? paymentMethod : null}
       <FormDisclosure label="More options" hint={supportingDetails}>
-      {!expensePlan ? repeatField : null}
+      {canRepeat && !expensePlan ? <>
+        <div className={isPlan ? 'dn-plan-form-date' : undefined}>{dates}</div>
+        {repeatField}
+      </> : null}
+      {isPlan ? paymentMethod : null}
       {paymentPlan ? <>{titleField}{categoryField}
         <ActivityTimeField subject="Payment" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
       </> : null}
@@ -253,10 +258,11 @@ export default function TransactionForm({
             : null}
       </div>
       </> : null}
-      {!planFlow ? dates : null}
+      {!planFlow && !canRepeat ? dates : null}
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       </FormDisclosure>
+      {isPlan ? <p className="dn-plan-form-hint">Spending updates when you record a payment.</p> : null}
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       <div className="form-actions">
         <button className="primaryButton" type="submit" disabled={busy}>

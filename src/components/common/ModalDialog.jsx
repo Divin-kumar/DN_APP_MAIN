@@ -3,12 +3,13 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useDragControls, usePresence, useReducedMotion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { ChevronLeft, X } from 'lucide-react';
 import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dialogViewport';
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
-export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true, closeDisabled = false }) {
+export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
+  closeDisabled = false, viewKey, onBack, backLabel = 'Back' }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   // Every phone-bottom sheet uses one motion path, rather than old CSS entry
@@ -79,6 +80,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     return () => window.clearTimeout(id);
   }, [swipeClosing, isPresent]);
   const closeButtonRef = useRef(null);
+  const titleRef = useRef(null);
   const dialogRef = useRef(null);
   const backdropRef = useRef(null);
   const bodyRef = useRef(null);
@@ -126,10 +128,16 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     closeDisabledRef.current = closeDisabled;
   }, [onClose, closeDisabled]);
 
+  useLayoutEffect(() => {
+    if (!viewKey) return;
+    bodyRef.current.scrollTop = 0;
+    titleRef.current?.focus({ preventScroll: true });
+  }, [viewKey]);
+
   useEffect(() => {
     const previousFocus = previousFocusRef.current;
     const unlockScroll = lockDialogScroll(window);
-    closeButtonRef.current?.focus({ preventScroll: true });
+    if (!viewKey) closeButtonRef.current?.focus({ preventScroll: true });
 
     const handleKeyDown = (event) => {
       // A nested original preview owns focus/Escape until it closes.
@@ -150,7 +158,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (event.shiftKey && document.activeElement === first) {
+      if (document.activeElement === titleRef.current) {
+        event.preventDefault();
+        (event.shiftKey ? last : first).focus();
+      } else if (event.shiftKey && document.activeElement === first) {
         event.preventDefault();
         last.focus();
       } else if (!event.shiftKey && document.activeElement === last) {
@@ -197,7 +208,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
           onCloseRef.current();
         }}>
         <div className="dn-modal-header" style={styles.header}>
-          <h3 id={titleId} style={{ margin: 0 }}>{title}</h3>
+          {onBack ? <button type="button" className="modal-back-button" disabled={closeDisabled} onClick={onBack} aria-label={backLabel}>
+            <ChevronLeft size={22} aria-hidden="true" />
+          </button> : null}
+          <h3 id={titleId} ref={titleRef} tabIndex={viewKey ? -1 : undefined} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" disabled={closeDisabled} onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
         <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
@@ -209,15 +223,23 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   );
 }
 
-export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '', destructive = true }) {
+export function ConfirmActions({ message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '', destructive = true }) {
   return (
-    <ModalDialog title={title} onClose={onCancel} swipeDismiss={false} closeDisabled={busy}>
+    <>
       <p style={styles.message}>{message}</p>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
       <div className="modal-confirm-actions" style={styles.actions}>
         <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
         <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
       </div>
+    </>
+  );
+}
+
+export function ConfirmDialog({ title, ...actions }) {
+  return (
+    <ModalDialog title={title} onClose={actions.onCancel} swipeDismiss={false} closeDisabled={actions.busy}>
+      <ConfirmActions {...actions} />
     </ModalDialog>
   );
 }

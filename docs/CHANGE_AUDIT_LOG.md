@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-532 | Keep recurring expense work in one sheet
+
+- **Scope:** Show the four Repeat choices directly in More options for Tasks and new Expenses. Keep Transactions to one Upcoming expenses row, then group bills under Due now and Later in a single sheet. Use Back for the previous view and return to the refreshed list after recording, editing, skipping or ending a plan. Put the original and following due dates together and the amount paid and actual date side by side.
+- **Source-derived:** The schedule and receipt persistence, personal and sample scope, anchor dates, projections, exports and backups keep their existing contracts. Financial totals count recorded payments through the existing expense path. Explore DN v2026.11.14.3 shows the updated controls.
+- **Executed:** Node 22 lint and build, 632 Node tests, and 42 selected Chromium journeys passed. Reviewed the repeating Task and expense screens at 320px light and 430px dark. Tests cover multiple payments in one sheet, keyboard back and focus recovery, linked spending, skip, edit, end, backup restore, ordinary Task and transaction forms, and Guest tour isolation.
+- **Unverified:** Physical iPhone Safari, VoiceOver and signed-in use of the new interface.
+
 ## CHG-20261114-531 | Simplify repeating Tasks and expense plans on phones
 
 - **Scope:** Add inline frequency choices and a calendar preview to the existing Repeat disclosure. Show the next due date in Task and expense skip confirmations and payment feedback. Make due and overdue expense plans easy to scan from the collapsed Transactions section. Give Edit schedule, Skip and End repeat their own Manage sheet, and put amount paid, date and method first in the payment sheet.

@@ -16,6 +16,7 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   expect(sample.events).toHaveLength(3);
   expect(sample.incomes.map(x => x.paymentMethod)).toEqual(['Online','Cash']);
   expect(sample.expenses.map(x => x.paymentMethod)).toContain('Cash');
+  expect(sample.expensePlans).toMatchObject([{ name: 'Home internet' }]);
   const guestRecords = await page.evaluate(() => ({
     moments: localStorage.getItem('dn_guest_eventGroups'),
     incomes: localStorage.getItem('dn_guest_incomes'),
@@ -25,6 +26,11 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
   await expect(page.getByText('Explore DN · Our little getaway')).toBeVisible();
   await expect(page.getByText('Explore DN · This month in words')).toBeVisible();
+  await page.goto('/financials/transactions');
+  await page.getByRole('button', { name: /Upcoming expenses/ }).click();
+  const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
+  await expect(plans.getByRole('button', { name: 'Record payment for Home internet' })).toBeVisible();
+  await plans.getByRole('button', { name: 'Close dialog' }).click();
   await page.goto('/settings');
   const panel = page.getByRole('region', { name: 'Explore DN guest demo' });
   await expect(panel).toContainText('demo');

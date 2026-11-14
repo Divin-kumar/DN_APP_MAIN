@@ -96,7 +96,7 @@ export default function useTransactionManager() {
           saved.expense, ...useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, saved.expense)),
         ]));
       }
-      return saved.expense;
+      return saved;
     }
     const current = original && oldKind === nextKind
       ? { ...original, ...payload, transactionKind: nextKind }

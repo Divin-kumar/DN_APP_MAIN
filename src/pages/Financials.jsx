@@ -20,7 +20,7 @@ import { downloadBlob } from '../utils/download';
 import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
-import ExpensePlans, { ExpensePlanActions, nextExpenseDate } from '../components/financials/ExpensePlans';
+import ExpensePlanEntry, { ExpensePlanSheet } from '../components/financials/ExpensePlans';
 import { formatScheduleDate } from '../utils/repeatSchedule.js';
 import { changeExpensePlanDate } from '../services/expensePlanService';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
@@ -48,7 +48,7 @@ function FinancialsContent() {
   const { expenses, loading: loadingExpense, error: expenseError, loadExpenses } = expenseState;
   const { events } = useScopedMoments();
   const { saveTransaction, removeTransaction } = useTransactionManager();
-  const { plans, loadError: planLoadError, retry: retryPlans } = useExpensePlans(uid, isGuest, sample);
+  const { plans, loadError: planLoadError, applySavedPlan, retry: retryPlans } = useExpensePlans(uid, isGuest, sample);
   const settingsDefaults = useListViewDefaults('transactions');
   const [filters, changeFilters, resetFilters] = usePersistentListState('transactions', settingsDefaults.filters, filterRules);
   const [editing, setEditing] = useState(null);
@@ -58,8 +58,12 @@ function FinancialsContent() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [busy, setBusy] = useState(false);
   const [savingError, setSavingError] = useState('');
-  const [planEditor, setPlanEditor] = useState(null);
+  const [planView, setPlanView] = useState(null);
+  const [planNotice, setPlanNotice] = useState('');
   const savingPlanRef = useRef(false);
+  const planEntryRef = useRef(null);
+  const financeSummaryRef = useRef(null);
+  const openedFromLink = useRef(null);
 
   useEffect(() => {
     if (!user && !isGuest) return;
@@ -114,6 +118,18 @@ function FinancialsContent() {
     navigate('/financials/transactions', { replace: true });
   }, [location.search, navigate]);
 
+  useEffect(() => {
+    if (location.hash !== '#expense-plans') {
+      openedFromLink.current = null;
+      return;
+    }
+    if (openedFromLink.current === location.key || dialogOpen || !planEntryRef.current) return;
+    openedFromLink.current = location.key;
+    planEntryRef.current.scrollIntoView({ block: 'nearest' });
+    setPlanNotice('');
+    setPlanView({ mode: 'list' });
+  }, [location.hash, location.key, dialogOpen, ready, loadingIncome, loadingExpense, planLoadError, plans.length]);
+
   const openEdit = (transaction) => {
     setEditing(transaction); setActivityPreset(null); setDefaultKind(transaction.transactionKind);
     setSavingError(''); setDialogOpen(true);
@@ -132,42 +148,46 @@ function FinancialsContent() {
       throw error;
     } finally { savingPlanRef.current = false; setBusy(false); }
   };
-  const openPlan = (plan, mode, trigger) => {
+  const openPlanList = () => {
+    setPlanNotice('');
+    setPlanView({ mode: 'list' });
+  };
+  const openPlan = (plan, mode) => {
+    setPlanNotice('');
     setSavingError('');
-    setPlanEditor({ plan, mode, trigger, context: records.capture() });
+    setPlanView({ plan, mode, context: records.capture() });
   };
   const switchPlanView = (mode) => {
+    if (savingPlanRef.current) return;
     setSavingError('');
-    setPlanEditor((current) => current ? { ...current, mode } : null);
-  };
-  const restorePlanFocus = (trigger) => {
-    requestAnimationFrame(() => {
-      const target = trigger?.isConnected ? trigger : document.querySelector('#expense-plans summary') || document.querySelector('.dn-finance-summary');
-      target?.focus({ preventScroll: true });
-    });
+    setPlanView((current) => mode === 'list' ? { mode } : { ...current, mode });
   };
   const closePlan = () => {
     if (savingPlanRef.current) return;
-    const trigger = planEditor?.trigger;
-    setPlanEditor(null); setSavingError('');
-    restorePlanFocus(trigger);
+    setPlanView(null);
+    setSavingError('');
+    requestAnimationFrame(() => (planEntryRef.current || financeSummaryRef.current)?.focus({ preventScroll: true }));
   };
-  const runPlan = async (action, message, { errorInForm = false } = {}) => {
-    if (savingPlanRef.current || !planEditor) return;
+  const runPlan = async (form) => {
+    if (savingPlanRef.current || !planView?.plan) return;
+    const { context, mode, plan } = planView;
     const assertCurrent = () => {
-      if (!records.isCurrent(planEditor.context)) throw new Error('Your session changed. Reopen the expense plan.');
+      if (!records.isCurrent(context)) throw new Error('Your session changed. Reopen the expense plan.');
     };
     savingPlanRef.current = true;
     setBusy(true); setSavingError('');
     try {
       assertCurrent();
-      const result = await action(assertCurrent);
+      const result = form ? await saveTransaction(form, null, mode === 'edit' ? { expensePlan: plan } : { paymentPlan: plan })
+        : await changeExpensePlanDate(context, plan, mode, assertCurrent);
       assertCurrent();
-      setPlanEditor(null);
-      restorePlanFocus(planEditor.mode === 'end' ? null : planEditor.trigger);
-      showToast(typeof message === 'function' ? message(result) : message, 'success');
+      applySavedPlan(plan, result.plan);
+      const message = { edit: 'Expense plan saved', payment: 'Payment recorded', skip: 'Occurrence skipped', end: 'Expense plan ended' }[mode];
+      const nextDue = (mode === 'payment' || mode === 'skip') && formatScheduleDate(result.plan.dueDate);
+      setPlanNotice(nextDue ? `${message}. Next due ${nextDue}.` : `${message}.`);
+      setPlanView({ mode: 'list' });
     } catch (error) {
-      if (errorInForm) throw error;
+      if (form) throw error;
       setSavingError(error?.message || 'Could not save the expense plan. Try again.');
     } finally {
       savingPlanRef.current = false;
@@ -194,7 +214,7 @@ function FinancialsContent() {
       {hasLoadError ? null : (!ready || loadingIncome || loadingExpense)
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
-          <section className="dn-finance-summary" aria-label="Financial totals for matching transactions" tabIndex={-1}>
+          <section ref={financeSummaryRef} className="dn-finance-summary" aria-label="Financial totals for matching transactions" tabIndex={-1}>
             <span className="moment-finance-caption">Matching transactions</span>
             <div className="dn-finance-summary-grid">
               <div className="dn-finance-metric dn-finance-metric-income">
@@ -213,8 +233,7 @@ function FinancialsContent() {
           </section>
           {planLoadError ? <div role="alert" className="financial-load-error">Unable to load expense plans.{' '}
             <button type="button" onClick={retryPlans}>Retry plans</button>
-          </div> : <ExpensePlans plans={plans} busy={busy} openFromLink={location.hash === '#expense-plans' && location.key}
-            onRecord={(plan, trigger) => openPlan(plan, 'payment', trigger)} onManage={(plan, trigger) => openPlan(plan, 'manage', trigger)} />}
+          </div> : plans.length ? <ExpensePlanEntry plans={plans} expanded={Boolean(planView)} buttonRef={planEntryRef} onOpen={openPlanList} /> : null}
           <TransactionHistory transactions={sorted} candidates={searchCandidates} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
@@ -227,26 +246,8 @@ function FinancialsContent() {
             onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
         </ModalDialog>
       ) : null}
-      {planEditor?.mode === 'manage' ? <ExpensePlanActions plan={planEditor.plan} busy={busy} onClose={closePlan}
-        onEdit={() => switchPlanView('edit')} onSkip={() => switchPlanView('skip')} onEnd={() => switchPlanView('end')} /> : null}
-      {planEditor && ['edit', 'payment'].includes(planEditor.mode) ? <ModalDialog title={planEditor.mode === 'edit' ? 'Edit expense plan' : 'Record payment'}
-        className="dn-transaction-dialog" onClose={closePlan} closeDisabled={busy}>
-        <TransactionForm key={planEditor.plan.id + planEditor.mode} expensePlan={planEditor.mode === 'edit' ? planEditor.plan : null}
-          paymentPlan={planEditor.mode === 'payment' ? planEditor.plan : null} busy={busy} events={events} onCancel={closePlan}
-          onSubmit={(form) => runPlan(() => saveTransaction(form, null, planEditor.mode === 'edit'
-            ? { expensePlan: planEditor.plan } : { paymentPlan: planEditor.plan }),
-          planEditor.mode === 'edit' ? 'Expense plan saved' : `Payment recorded. Next due ${nextExpenseDate(planEditor.plan)}.`,
-          { errorInForm: true })} />
-      </ModalDialog> : null}
-      {planEditor && ['skip', 'end'].includes(planEditor.mode) ? <ConfirmDialog
-        title={planEditor.mode === 'skip' ? 'Skip this expense?' : 'End this expense plan?'}
-        message={planEditor.mode === 'skip'
-          ? `Skip ${planEditor.plan.name} due ${formatScheduleDate(planEditor.plan.dueDate)}. Next due ${nextExpenseDate(planEditor.plan)}.`
-          : `End future payments for ${planEditor.plan.name}. Recorded payments stay in Transactions.`}
-        confirmLabel={planEditor.mode === 'skip' ? 'Skip occurrence' : 'End repeat'} destructive={planEditor.mode === 'end'}
-        busy={busy} error={savingError} onCancel={() => { if (!busy) switchPlanView('manage'); }}
-        onConfirm={() => runPlan((assertCurrent) => changeExpensePlanDate(planEditor.context, planEditor.plan, planEditor.mode, assertCurrent),
-          planEditor.mode === 'skip' ? ({ plan }) => `Expense skipped. Next due ${formatScheduleDate(plan.dueDate)}.` : 'Expense plan ended')} /> : null}
+      {planView ? <ExpensePlanSheet view={planView} plans={plans} events={events} busy={busy} error={savingError} notice={planNotice}
+        onClose={closePlan} onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
       {deleteTarget ? <ConfirmDialog title="Delete transaction?"
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
         onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}
