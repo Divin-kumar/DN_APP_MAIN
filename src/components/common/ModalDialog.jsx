@@ -224,27 +224,21 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   );
 }
 
-export function ConfirmActions({
-  message, children, onCancel, onConfirm, confirmLabel = 'Delete', busy = false,
-  error = '', destructive = true, confirmDisabled = false,
-}) {
+export function ConfirmButtons({ onCancel, onConfirm, confirmLabel = 'Delete', busy = false,
+  destructive = true, confirmDisabled = false }) {
+  return <div className="modal-confirm-actions" style={styles.actions}>
+    <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
+    <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy || confirmDisabled} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
+  </div>;
+}
+
+export function ConfirmDialog({ title, message, children, error, ...actions }) {
   return (
-    <>
+    <ModalDialog title={title} onClose={actions.onCancel} swipeDismiss={false} closeDisabled={actions.busy}
+      footer={<div className="dn-modal-fixed-actions"><ConfirmButtons {...actions} /></div>}>
       {message ? <p style={styles.message}>{message}</p> : null}
       {children}
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
-      <div className="modal-confirm-actions" style={styles.actions}>
-        <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
-        <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy || confirmDisabled} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
-      </div>
-    </>
-  );
-}
-
-export function ConfirmDialog({ title, ...actions }) {
-  return (
-    <ModalDialog title={title} onClose={actions.onCancel} swipeDismiss={false} closeDisabled={actions.busy}>
-      <ConfirmActions {...actions} />
     </ModalDialog>
   );
 }

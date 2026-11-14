@@ -13,6 +13,75 @@ const readGuest = (page, key) => page.evaluate((name) => JSON.parse(localStorage
 const empty = { moments: [], incomes: [], expenses: [] };
 const more = (dialog) => dialog.locator('summary').filter({ hasText: 'More options' });
 
+test.describe('Recurring sheets on short phone screens', () => {
+  test.use({ isMobile: true, hasTouch: true, reducedMotion: 'no-preference' });
+
+  test('long Task titles keep the scheduled date clear of the confirmation buttons', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 480 });
+    const errors = await seedGuest(page, empty);
+    const title = 'Review the household maintenance and payment schedule '.repeat(9).trim();
+    await page.addInitScript((taskTitle) => {
+      localStorage.setItem('dn_guest_tasks', JSON.stringify([{ id: 'long-repeat', title: taskTitle,
+        status: 'in-progress', dueDate: '2026-11-14', dueTime: '18:30',
+        repeat: { frequency: 'monthly', anchorDate: '2026-11-14', seriesId: 'long-repeat' } }]));
+    }, title);
+    await page.goto('/tasks');
+    await page.locator('[data-task-id="long-repeat"]').tap();
+    await page.getByRole('menuitem', { name: 'Pause repeat', exact: true }).tap();
+    const pause = page.getByRole('dialog', { name: 'Pause repeat?' });
+    const date = pause.locator('time');
+    const cancel = pause.getByRole('button', { name: 'Cancel', exact: true });
+    await expect(pause.getByText(title, { exact: true })).toBeVisible();
+    await expect(date).toHaveAttribute('datetime', '2026-11-14T18:30');
+    await expect(date).toBeInViewport({ ratio: 1 });
+    await expect.poll(() => date.evaluate((element) => {
+      const bounds = element.getBoundingClientRect();
+      const hit = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+      return element.contains(hit);
+    })).toBe(true);
+    expect((await date.boundingBox()).y).toBeLessThan((await cancel.boundingBox()).y);
+    const before = await readGuest(page, 'dn_guest_tasks');
+    await cancel.tap();
+    await expect(pause).toBeHidden();
+    expect(await readGuest(page, 'dn_guest_tasks')).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+
+  test('landscape payment options scroll above a separate Save footer', async ({ page }) => {
+    await page.setViewportSize({ width: 932, height: 430 });
+    const errors = await seedGuest(page, empty);
+    await page.addInitScript(() => {
+      localStorage.setItem('dn_guest_expense_plans', JSON.stringify([{ id: 'home-internet', name: 'Home internet',
+        amount: 799, category: 'Home', dueDate: '2026-11-14', paymentMethod: 'Online', updatedAt: '2026-11-13T12:00:00Z',
+        repeat: { frequency: 'monthly', anchorDate: '2026-11-14' } }]));
+    });
+    await page.goto('/financials/transactions#expense-plans');
+    const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
+    await plans.getByRole('button', { name: 'Record payment for Home internet' }).tap();
+    const payment = page.getByRole('dialog', { name: 'Record payment' });
+    const save = payment.getByRole('button', { name: 'Save payment' });
+    await expect(save).toBeInViewport({ ratio: 1 });
+    await expect(more(payment)).toBeInViewport({ ratio: 1 });
+    await expect.poll(() => save.evaluate((button) => {
+      const body = button.closest('[role="dialog"]').querySelector('.dn-modal-body');
+      return button.form === body.querySelector('form') && !body.contains(button)
+        && body.getBoundingClientRect().bottom <= button.getBoundingClientRect().top;
+    })).toBe(true);
+    await more(payment).tap();
+    await expect(payment.getByLabel('Payment time', { exact: true })).toBeVisible();
+    await expect(save).toBeInViewport({ ratio: 1 });
+    await payment.getByLabel('Amount paid *', { exact: true }).fill('0');
+    await save.tap();
+    await expect(payment).toBeVisible();
+    expect(await readGuest(page, 'dn_guest_expenses')).toEqual([]);
+    await payment.getByLabel('Amount paid *', { exact: true }).fill('825');
+    await save.tap();
+    await expect(plans.getByRole('status')).toContainText('Payment recorded. Next due 14 Dec 2026.');
+    expect((await readGuest(page, 'dn_guest_expenses')).map(({ amount }) => amount)).toEqual([825]);
+    expect(errors).toEqual([]);
+  });
+});
+
 test('recurring Tasks use the normal list and advance one due date at a time', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page, empty);

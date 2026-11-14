@@ -89,6 +89,10 @@ html[data-theme] .dn-repeat-action-summary .dn-repeat-action-name {
   color: var(--color-text);
   font-size: 16px;
   font-weight: 680;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
 }
 html[data-theme] .dn-repeat-action-summary dl { margin: 0; border-block: 1px solid var(--color-border); }
 html[data-theme] .dn-repeat-action-summary dl > div {

@@ -1,6 +1,7 @@
 import ActivityTimeField from '../common/ActivityTimeField';
 import { activityTime, currentEntryTime } from '../../utils/activityTime';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
 import RepeatField, { RepeatSummary } from '../common/RepeatField';
@@ -59,8 +60,9 @@ const paymentDraft = (plan) => ({
 
 export default function TransactionForm({
   initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [], expensePlan = null, paymentPlan = null,
-  onSubmit, onCancel, busy = false,
+  onSubmit, onCancel, busy = false, actionsContainer,
 }) {
+  const formId = useId();
   const preferences = useAppStore((state) => state.preferences);
   const adminValues = useAppStore((state) => state.adminValues);
   const [form, setForm] = useState(() => {
@@ -195,8 +197,16 @@ export default function TransactionForm({
       ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
   </fieldset>;
 
+  const actions = <div className="form-actions">
+    <button className="primaryButton" type="submit" form={formId} disabled={busy || (isPlan && !nextRepeat)}>
+      {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
+    </button>
+    <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
+  </div>;
+
   return (
-    <form className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}`} onSubmit={handleSubmit} aria-busy={busy}>
+    <form id={formId} className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}${paymentPlan ? ' dn-expense-payment-form' : ''}`}
+      onSubmit={handleSubmit} aria-busy={busy}>
       {paymentPlan ? <div className="dn-payment-context">
         <span className="dn-payment-context-icon"><CalendarDays size={19} aria-hidden="true" /></span>
         <div><strong>{paymentPlan.name}</strong>
@@ -267,12 +277,7 @@ export default function TransactionForm({
       </FormDisclosure>
       {isPlan ? <p className="dn-plan-form-hint">Spending updates when you record a payment.</p> : null}
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
-      <div className="form-actions">
-        <button className="primaryButton" type="submit" disabled={busy || (isPlan && !nextRepeat)}>
-          {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
-        </button>
-        <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
-      </div>
+      {actionsContainer ? createPortal(actions, actionsContainer) : actions}
     </form>
   );
 }

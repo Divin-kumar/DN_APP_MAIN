@@ -229,9 +229,21 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
 @media (max-width: 300px) {
   .dn-payment-fields { grid-template-columns: minmax(0, 1fr); }
 }
-html[data-theme] .dn-modal .dn-plan-transaction-form .form-actions {
+html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-form-actions) .form-actions {
   display: grid;
   grid-template-columns: minmax(0, 1fr) max-content;
   align-items: stretch;
 }
-html[data-theme] .dn-modal .dn-plan-transaction-form .form-actions > button { margin: 0; }
+html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-form-actions) .form-actions > button { margin: 0; }
+@media (min-width: 520px) and (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-expense-plan-dialog .dn-expense-payment-form {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas: 'context context' 'fields method' 'options options';
+    align-items: start;
+  }
+  .dn-expense-payment-form > .dn-payment-context { grid-area: context; }
+  .dn-expense-payment-form > .dn-payment-fields { grid-area: fields; }
+  .dn-expense-payment-form > .dn-payment-method-field { grid-area: method; }
+  .dn-expense-payment-form > .dn-form-disclosure { grid-area: options; }
+  .dn-expense-payment-form > .dn-transaction-form-error { grid-column: 1 / -1; }
+}

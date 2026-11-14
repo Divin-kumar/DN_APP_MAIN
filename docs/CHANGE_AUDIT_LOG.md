@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-539 | Keep recurring Task and expense sheets usable on short screens
+
+- **Scope:** Separate confirmation and expense form actions from scrollable content. Limit the displayed repeat title to three lines so the due date stays visible. Put the payment method beside the amount and date in short touch landscape so More options fits above the footer.
+- **Source-derived:** Buttons still submit through the existing form validation and mutation handlers. Schedule dates, payment totals, saved titles and data formats retain their existing behavior. The Guest tour steps and examples still describe the flow.
+- **Executed:** Node 22 lint and build, 632 Node tests and the targeted Chromium suite passed. The two short-screen regressions passed on Chromium and WebKit. Inspected narrow and landscape screenshots, checked invalid-payment rejection, and verified that a valid payment creates one record.
+- **Unverified:** Physical iPhone Safari and signed-in use with live records.
+
 ## CHG-20261114-538 | Clarify pausing Tasks and ending expense repeats
 
 - **Scope:** Label the existing repeating Task actions Pause repeat and Resume repeat. Show the scheduled date and optional time in the pause, resume-editor and delete confirmations. End repeat for a bill shows its upcoming date and explains that recorded payments stay in Transactions. Back or Cancel from an expense plan action restores focus to the corresponding Manage button.
