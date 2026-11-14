@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-535 | Make recurring Task and payment confirmations easier to verify
+
+- **Scope:** Provide View payment after a recorded bill. Show the saved amount, date, method and scheduled and next due dates in the same sheet. Preserve the list's scroll position and focus the payment confirmation's action on Back. Include an optional due time in repeating Task feedback and expose the exact date and time of the Task highlighted by View next.
+- **Source-derived:** The payment summary uses the actual saved transaction and an in-session copy of its schedule dates. Opening it never calls a write. Task, expense, linked records, financial reports and backup formats retain their existing contracts. Explore DN v2026.11.14.6 includes the updated paths.
+- **Executed:** Node 22 lint and build, 632 Node tests and 47 selected Chromium journeys passed. Browser checks cover a renamed bill payment with a different paid date and amount, list position, keyboard focus, repeat dates and times, filter preservation, the Guest sample, and ordinary Task and transaction actions. Reviewed light and dark at 320px and 430px respectively.
+- **Unverified:** Physical iPhone Safari, VoiceOver and signed-in use with live data.
+
 ## CHG-20261114-534 | Show repeat dates at a glance and simplify bill rows
 
 - **Scope:** Show the next date on the closed More options row for Tasks and new repeating Expenses, including the original due date for a new plan. Explain missing and unsupported repeat dates while keeping Save available for valid drafts. Let the bill's name, amount and date open the payment form, with Manage beside the bill.

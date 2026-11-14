@@ -245,6 +245,8 @@ html[data-theme] .dn-task-dashboard-arrival {
   display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between;
   gap:6px 10px; padding:4px 2px; color:var(--color-text-muted); font-size:12px;
 }
+.dn-task-arrival-status { display: grid; flex: 1 1 170px; gap: 2px; min-width: 0; line-height: 1.4; }
+.dn-task-arrival-status strong { color: var(--color-text); font-size: 13px; }
 html[data-theme] .dn-task-dashboard-arrival button {
   min-height:44px; padding:0 10px; border:0; background:transparent;
   color:var(--color-primary); font:inherit; font-weight:650; cursor:pointer;

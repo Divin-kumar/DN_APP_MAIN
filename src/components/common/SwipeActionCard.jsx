@@ -11,7 +11,7 @@ import { computeSwipeMenuPlacement, getSwipeDockReserve } from '../../utils/swip
 export default function SwipeActionCard({
   as: Root = 'article', className = '', mainClassName = '',
   label = 'Card', role = 'group', otherActions = [], onDelete, openOnTap = false, children,
-  onOpen, menuButton = false, menuLabel = 'Activity options', swipeEnabled = true, disabled = false, taskId,
+  onOpen, menuButton = false, menuLabel = 'Activity options', swipeEnabled = true, disabled = false, taskId, actionDescription,
 }) {
   const [open, setOpen] = useState(false);
   const reducedMotion = useReducedMotion();
@@ -176,7 +176,8 @@ export default function SwipeActionCard({
   return (
     <>
       <Root ref={rootRef} data-task-id={taskId} tabIndex={menuButton && !onOpen ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
-        aria-description={swipeEnabled && actions.length ? 'Swipe left or right to open actions. Use the left or right arrow key for keyboard access.' : undefined}
+        aria-description={[actionDescription, swipeEnabled && actions.length
+          ? 'Swipe left or right to open actions. Use the left or right arrow key for keyboard access.' : null].filter(Boolean).join(' ') || undefined}
         aria-expanded={!menuButton && actions.length ? open : undefined} aria-controls={!menuButton && actions.length && open ? menuId : undefined}
         className={`dn-swipe-surface ${className}`}
         onKeyDown={handleCardKey}

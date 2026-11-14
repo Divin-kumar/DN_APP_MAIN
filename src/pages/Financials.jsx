@@ -59,7 +59,7 @@ function FinancialsContent() {
   const [busy, setBusy] = useState(false);
   const [savingError, setSavingError] = useState('');
   const [planView, setPlanView] = useState(null);
-  const [planNotice, setPlanNotice] = useState('');
+  const [planNotice, setPlanNotice] = useState(null);
   const savingPlanRef = useRef(false);
   const planEntryRef = useRef(null);
   const financeSummaryRef = useRef(null);
@@ -126,7 +126,7 @@ function FinancialsContent() {
     if (openedFromLink.current === location.key || dialogOpen || !planEntryRef.current) return;
     openedFromLink.current = location.key;
     planEntryRef.current.scrollIntoView({ block: 'nearest' });
-    setPlanNotice('');
+    setPlanNotice(null);
     setPlanView({ mode: 'list' });
   }, [location.hash, location.key, dialogOpen, ready, loadingIncome, loadingExpense, planLoadError, plans.length]);
 
@@ -149,11 +149,11 @@ function FinancialsContent() {
     } finally { savingPlanRef.current = false; setBusy(false); }
   };
   const openPlanList = () => {
-    setPlanNotice('');
+    setPlanNotice(null);
     setPlanView({ mode: 'list' });
   };
   const openPlan = (plan, mode) => {
-    setPlanNotice('');
+    setPlanNotice(null);
     setSavingError('');
     setPlanView({ plan, mode, context: records.capture() });
   };
@@ -184,7 +184,15 @@ function FinancialsContent() {
       applySavedPlan(plan, result.plan);
       const message = { edit: 'Expense plan saved', payment: 'Payment recorded', skip: 'Occurrence skipped', end: 'Expense plan ended' }[mode];
       const nextDue = (mode === 'payment' || mode === 'skip') && formatScheduleDate(result.plan.dueDate);
-      setPlanNotice(nextDue ? `${message}. Next due ${nextDue}.` : `${message}.`);
+      setPlanNotice({
+        message: nextDue ? `${message}. Next due ${nextDue}.` : `${message}.`,
+        payment: mode === 'payment' ? {
+          expense: result.expense,
+          planName: plan.name,
+          scheduledFor: plan.dueDate,
+          nextDue: result.plan.dueDate,
+        } : null,
+      });
       setPlanView({ mode: 'list' });
     } catch (error) {
       if (form) throw error;

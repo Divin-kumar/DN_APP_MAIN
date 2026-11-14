@@ -2,7 +2,9 @@ import { useRef } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmActions } from '../common/ModalDialog';
 import TransactionForm from './TransactionForm';
+import { activityTime } from '../../utils/activityTime.js';
 import { formatMomentDate } from '../../utils/momentDates.js';
+import { paymentMethodLabel } from '../../utils/paymentMethod.js';
 import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import useDashboardClock from '../../features/dashboard/useDashboardClock';
 import './ExpensePlans.css';
@@ -12,6 +14,7 @@ const planTitles = {
   list: 'Upcoming expenses',
   manage: 'Manage expense plan',
   payment: 'Record payment',
+  receipt: 'Payment details',
   edit: 'Edit expense plan',
   skip: 'Skip this expense?',
   end: 'End this expense plan?',
@@ -101,14 +104,33 @@ function ExpensePlanActions({ plan, onNavigate }) {
   </>;
 }
 
+function RecordedPayment({ payment }) {
+  const { expense, planName, scheduledFor, nextDue } = payment;
+  const paidTime = activityTime(expense);
+  return <div className="dn-expense-payment-details">
+    <div className="dn-expense-plan-title"><strong>{expense.name}</strong><span>{formatAmount.format(expense.amount)}</span></div>
+    <dl>
+      <dt>Paid on</dt><dd><time dateTime={paidTime ? `${expense.date}T${paidTime}` : expense.date}>
+        {formatScheduleDate(expense.date)}{paidTime ? ` · ${paidTime}` : null}
+      </time></dd>
+      <dt>Payment method</dt><dd>{paymentMethodLabel(expense.paymentMethod)}</dd>
+      {expense.name !== planName ? <><dt>Expense plan</dt><dd>{planName}</dd></> : null}
+      <dt>Scheduled for</dt><dd><time dateTime={scheduledFor}>{formatScheduleDate(scheduledFor)}</time></dd>
+      <dt>Next due</dt><dd><time dateTime={nextDue}>{formatScheduleDate(nextDue)}</time></dd>
+    </dl>
+  </div>;
+}
+
 export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onClose, onSelect, onNavigate, onSave, onConfirm }) {
   const { mode, plan } = view;
   const isList = mode === 'list';
-  const previousView = mode === 'manage' || mode === 'payment' ? 'list' : 'manage';
+  const previousView = ['manage', 'payment', 'receipt'].includes(mode) ? 'list' : 'manage';
   const goBack = () => onNavigate(previousView);
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
   const listReturnRef = useRef(null);
+  const listBodyRef = useRef(null);
+  const viewPaymentRef = useRef(null);
 
   const selectPlan = (selected, action, button) => {
     const body = button.closest('.dn-modal-body');
@@ -117,9 +139,16 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   };
 
   const restoreListPosition = (body) => {
+    if (!isList) return;
+    listBodyRef.current = body;
     const anchor = listReturnRef.current;
-    if (!isList || !anchor) return;
+    if (!anchor) return;
     listReturnRef.current = null;
+    if (anchor.action === 'receipt') {
+      viewPaymentRef.current?.focus({ preventScroll: true });
+      body.scrollTop = anchor.scrollTop;
+      return;
+    }
     const rows = [...body.querySelectorAll('[data-plan-id]')];
     const previousRow = rows.find((row) => row.dataset.planId === anchor.planId);
     const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"]`);
@@ -141,8 +170,15 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     body.scrollTop = anchor.scrollTop;
   };
 
-  const feedback = <div className="dn-expense-plan-notice" role="status">
-    {isList && notice ? <><Check size={16} aria-hidden="true" /><span>{notice}</span></> : null}
+  const visibleNotice = isList ? notice : null;
+  const feedback = <div className={`dn-expense-plan-notice${visibleNotice ? ' is-visible' : ''}`}>
+    <div className="dn-expense-plan-notice-text" role="status">
+      {visibleNotice ? <><Check size={16} aria-hidden="true" /><span>{visibleNotice.message}</span></> : null}
+    </div>
+    {visibleNotice?.payment ? <button type="button" ref={viewPaymentRef} className="dn-expense-view-payment" onClick={() => {
+      listReturnRef.current = { action: 'receipt', scrollTop: listBodyRef.current.scrollTop };
+      onNavigate('receipt');
+    }}>View payment</button> : null}
   </div>;
 
   return <ModalDialog title={planTitles[mode]} className="dn-transaction-dialog dn-expense-plan-dialog" viewKey={mode}
@@ -151,6 +187,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     onClose={onClose} closeDisabled={busy} footer={feedback}>
     {isList && plans.length ? <p className="dn-expense-plan-list-hint">Select a bill to record a payment.</p> : null}
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
+    {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={onNavigate} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null} busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}

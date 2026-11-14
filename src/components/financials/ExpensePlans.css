@@ -77,11 +77,12 @@ html[data-theme] .dn-expense-plan-dialog .dn-modal-body { overflow-anchor: none;
   min-width: 0;
 }
 .dn-expense-plan-row + .dn-expense-plan-row { border-top: 1px solid var(--color-border); }
-.dn-expense-plan-notice:not(:empty) {
+.dn-expense-plan-notice.is-visible {
   flex-shrink: 0;
   display: flex;
-  align-items: flex-start;
-  gap: 8px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
   margin-top: 10px;
   padding: 8px 10px;
   border-radius: 10px;
@@ -90,7 +91,29 @@ html[data-theme] .dn-expense-plan-dialog .dn-modal-body { overflow-anchor: none;
   font-size: 13px;
   line-height: 1.45;
 }
+.dn-expense-plan-notice-text { display: flex; align-items: flex-start; gap: 8px; min-width: 0; }
 .dn-expense-plan-notice svg { flex-shrink: 0; color: var(--color-primary); margin-top: 1px; }
+.dn-expense-view-payment {
+  flex: 0 0 auto;
+  min-height: 44px;
+  max-width: 45%;
+  padding: 5px 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-card);
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 680;
+  cursor: pointer;
+}
+.dn-expense-view-payment:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.dn-expense-payment-details { padding: 2px 0 0; }
+.dn-expense-payment-details .dn-expense-plan-title { font-size: 17px; }
+.dn-expense-payment-details dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); margin: 12px 0 0; }
+.dn-expense-payment-details :is(dt, dd) { margin: 0; padding-block: 8px; border-top: 1px solid var(--color-border); font-size: 13px; line-height: 1.4; }
+.dn-expense-payment-details dt { color: var(--color-text-muted); padding-inline-end: 8px; }
+.dn-expense-payment-details dd { color: var(--color-text); overflow-wrap: anywhere; text-align: end; }
 .dn-expense-plan-empty { margin: 12px 0 16px; color: var(--color-text-muted); }
 .dn-expense-plan-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
 .dn-expense-plan-title strong { min-width: 0; overflow-wrap: anywhere; line-height: 1.35; }

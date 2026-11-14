@@ -32,7 +32,12 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   await plans.getByRole('button', { name: 'Record payment for Home internet' }).getByText('Home internet', { exact: true }).click();
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
   await expect(payment.getByLabel('Amount paid *', { exact: true })).toHaveValue('799');
-  await payment.getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  await payment.getByRole('button', { name: 'Save payment' }).click();
+  await plans.getByRole('button', { name: 'View payment' }).click();
+  const receipt = page.getByRole('dialog', { name: 'Payment details' });
+  await expect(receipt).toContainText('₹799');
+  await receipt.getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_expenses') || '[]'))).toEqual([]);
   await plans.getByRole('button', { name: 'Close dialog' }).click();
   await page.goto('/settings');
   const panel = page.getByRole('region', { name: 'Explore DN guest demo' });

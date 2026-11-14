@@ -31,6 +31,7 @@ const formatDate = (value) => {
 };
 const statusLabel = (status) => status === 'in-progress' ? 'In progress' : status === 'completed' ? 'Completed' : 'Cancelled';
 const nextTaskDate = (task) => formatScheduleDate(previewNextRepeat(task, task.repeat?.frequency, task.dueDate));
+const taskDueLabel = (task, date = task.dueDate) => `${formatDate(date)}${task.dueTime ? ` · ${task.dueTime}` : ''}`;
 
 export default function IndependentTasks() {
   const user = useAppStore((state) => state.user);
@@ -57,7 +58,8 @@ export function TaskListContent() {
   const resetDefaults = useMemo(() => ({ ...savedTaskSort,
     group: configuredConditionGroup('tasks', savedTaskFilters) }), [savedTaskSort, savedTaskFilters]);
   const [editor, setEditor] = useState(null);
-  const [selectedTaskId, setSelectedTaskId] = useState('');
+  const [selection, setSelection] = useState(null);
+  const selectedTaskId = selection?.id;
   const [refine, setRefine] = useState(false);
   const [showAllTaskFilters, setShowAllTaskFilters] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -81,6 +83,7 @@ export function TaskListContent() {
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId);
+  const nextTask = selection?.fromRepeat && selectedTask?.status === 'in-progress' && selectedTask.repeat ? selectedTask : null;
   const highlightedOutsideFilters = Boolean(selectedTask && !matches.some((task) => task.id === selectedTask.id));
   const displayedTasks = useMemo(() => {
     const sorted = sortIndependentTasks(matches, view.direction, view.field);
@@ -102,7 +105,8 @@ export function TaskListContent() {
     const requested = searchParams.get('task');
     if (!requested) return;
     // The account listener may deliver a just-created occurrence after the link is followed.
-    if (arrival?.nextTaskId === requested || tasks.some((task) => task.id === requested)) setSelectedTaskId(requested);
+    const fromRepeat = arrival?.nextTaskId === requested;
+    if (fromRepeat || tasks.some((task) => task.id === requested)) setSelection({ id: requested, fromRepeat });
     else setNotice('The selected Task is no longer available.');
     const next = new URLSearchParams(searchParams);
     next.delete('task');
@@ -145,9 +149,10 @@ export function TaskListContent() {
       nextDate ? '' : status === 'completed' ? 'Task completed' : 'Task status updated');
     if (!saved) return false;
     setConfirm(null);
+    if (task.id === nextTask?.id) setSelection(null);
     if (nextDate && taskScopeKey(useAppStore.getState()) === scope) {
       const nextTaskId = repeatingTaskOccurrenceId(task.repeat, nextDate);
-      const message = `Task ${status === 'skip' ? 'skipped' : 'completed'}. Next due ${formatScheduleDate(nextDate)}.`;
+      const message = `Task ${status === 'skip' ? 'skipped' : 'completed'}. Next due ${taskDueLabel(task, nextDate)}.`;
       toast(message, 'success', { label: 'View next', onClick: () => {
         if (taskScopeKey(useAppStore.getState()) === scope) {
           navigate(`/tasks?task=${encodeURIComponent(nextTaskId)}`, { replace: true, state: { nextTaskId } });
@@ -159,7 +164,7 @@ export function TaskListContent() {
   const remove = async (task) => {
     if (await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')) {
       setConfirm(null);
-      if (selectedTaskId === task.id) setSelectedTaskId('');
+      if (selectedTaskId === task.id) setSelection(null);
     }
   };
   if (!enabled) return <div className="dn-tasks-page">
@@ -220,9 +225,15 @@ export function TaskListContent() {
           })}>Clear filters</button> : null}
         </div>
       </div> : null}
-    {selectedTask ? <div className="dn-task-dashboard-arrival" role="status">
-      <span>{highlightedOutsideFilters ? 'Selected Task is shown outside your current filters.' : 'Selected Task highlighted. Tap it for actions.'}</span>
-      <button type="button" onClick={() => setSelectedTaskId('')}>Dismiss</button>
+    {selectedTask ? <div className="dn-task-dashboard-arrival">
+      <div role="status" className="dn-task-arrival-status">
+        {nextTask ? <strong>Next occurrence · <time dateTime={nextTask.dueTime ? `${nextTask.dueDate}T${nextTask.dueTime}` : nextTask.dueDate}>
+          {taskDueLabel(nextTask)}
+        </time></strong> : null}
+        {highlightedOutsideFilters ? <span>Selected Task is shown outside your current filters.</span>
+          : !nextTask ? <span>Selected Task highlighted. Tap it for actions.</span> : null}
+      </div>
+      <button type="button" onClick={() => setSelection(null)}>Dismiss</button>
     </div> : null}
     <div className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {
@@ -237,6 +248,7 @@ export function TaskListContent() {
           className={`dn-independent-task-row${selectedTaskId === task.id ? ' is-dashboard-selected' : ''}`}
           mainClassName="dn-independent-task-row-main"
           label={task.title} role="button" openOnTap disabled={busy || Boolean(store.error)}
+          actionDescription={nextTask?.id === task.id ? `Next occurrence, ${taskDueLabel(task)}.` : undefined}
           otherActions={[
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
               onClick: () => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed') }]),

@@ -34,6 +34,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await more(draft).click();
   await expect(more(draft).getByText('Choose a due date to repeat.')).toBeVisible();
   await draft.getByLabel('Due date', { exact: true }).fill('2026-01-31');
+  await draft.getByLabel('Task time', { exact: true }).fill('18:30');
   await expect(more(draft).locator('time')).toHaveAttribute('datetime', '2026-02-28');
   await expect(more(draft).locator('time')).toBeVisible();
   await createTask.click();
@@ -48,10 +49,12 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
     ['2026-01-31', 'completed'], ['2026-02-28', 'in-progress'],
   ]);
   const viewNext = page.getByRole('button', { name: 'View next', exact: true });
-  await expect(page.locator('.app-toast')).toContainText('Next due 28 Feb 2026.');
+  await expect(page.locator('.app-toast')).toContainText('Next due 28 Feb 2026 · 18:30.');
   await viewNext.click();
   await expect(recurring).toBeFocused();
   await expect(recurring).toHaveClass(/is-dashboard-selected/);
+  await expect(recurring).toHaveAccessibleDescription(/Next occurrence, 28 Feb 2026 · 18:30/);
+  await expect(page.getByText('Next occurrence ·', { exact: false }).filter({ hasText: '28 Feb 2026' })).toBeVisible();
   await recurring.click();
   await page.getByRole('menuitem', { name: 'Skip this occurrence', exact: true }).click();
   const skip = page.getByRole('dialog', { name: 'Skip this Task?' });
@@ -65,7 +68,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   expect((await readGuest(page, 'dn_guest_tasks')).map((task) => [task.dueDate, task.status])).toEqual([
     ['2026-01-31', 'completed'], ['2026-02-28', 'cancelled'], ['2026-03-31', 'in-progress'],
   ]);
-  await expect(page.locator('.app-toast')).toContainText('Next due 31 Mar 2026.');
+  await expect(page.locator('.app-toast')).toContainText('Next due 31 Mar 2026 · 18:30.');
   await viewNext.click();
   await expect(recurring).toBeFocused();
   await recurring.click();
@@ -105,6 +108,7 @@ test('View next highlights a just-created Task outside the current filters witho
   await expect(list.locator('article')).toBeFocused();
   await expect(list.locator('article').getByRole('img', { name: '19 Nov 2026', exact: true })).toBeVisible();
   await expect(page.getByText('Selected Task is shown outside your current filters.')).toBeVisible();
+  await expect(list.locator('article')).toHaveAccessibleDescription(/Next occurrence, 19 Nov 2026\./);
   await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
   await expect(list.locator('article')).toHaveCount(0);
   expect(errors).toEqual([]);
@@ -168,8 +172,11 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(payment.getByLabel('Title', { exact: true })).toBeHidden();
   await expect(payment.getByLabel('Amount paid *', { exact: true })).toHaveValue('799');
   await payment.getByLabel('Amount paid *', { exact: true }).fill('825');
+  await payment.getByLabel('Paid on *', { exact: true }).fill('2026-02-03');
   await payment.getByRole('radio', { name: 'Online' }).check();
   await more(payment).click();
+  await payment.getByLabel('Title', { exact: true }).fill('Internet receipt');
+  await payment.getByLabel('Payment time', { exact: true }).fill('19:45');
   await choose(page, payment, 'Linked Moment', 'Home plans');
   await choose(page, payment, 'Linked Activity', 'Internet connection');
   await payment.getByRole('button', { name: 'Save payment' }).click();
@@ -178,6 +185,20 @@ test('recurring expenses stay outside totals, then post one editable payment and
   expect((await readGuest(page, 'dn_guest_eventGroups'))[0].activities[0].expenses[0].amount).toBe(825);
   await expect(plans.getByRole('status')).toHaveText('Payment recorded. Next due 28 Feb 2026.');
   await expect(plans.getByRole('listitem')).toContainText('28 Feb 2026');
+  const viewPayment = plans.getByRole('button', { name: 'View payment', exact: true });
+  await viewPayment.click();
+  const receipt = page.getByRole('dialog', { name: 'Payment details', exact: true });
+  await expect(receipt.getByRole('heading', { name: 'Payment details' })).toBeFocused();
+  await expect(receipt).toContainText('Internet receipt');
+  await expect(receipt).toContainText('Home internet');
+  await expect(receipt).toContainText('₹825');
+  await expect(receipt).toContainText('3 Feb 2026 · 19:45');
+  await expect(receipt).toContainText('Online');
+  await expect(receipt).toContainText('31 Jan 2026');
+  await expect(receipt).toContainText('28 Feb 2026');
+  await receipt.getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  await expect(viewPayment).toBeFocused();
+  expect(await readGuest(page, 'dn_guest_expenses')).toHaveLength(1);
   const manage = plans.getByRole('button', { name: 'Manage plan for Home internet' });
   await manage.click();
   const planActions = page.getByRole('dialog', { name: 'Manage expense plan' });
@@ -308,6 +329,12 @@ test('returning to a long expense list keeps the scroll position and shows payme
   const feedback = plans.getByRole('status');
   await expect(feedback).toHaveText('Payment recorded. Next due 12 Nov 2026.');
   await expect(feedback).toBeInViewport({ ratio: 1 });
+  expect(await body.evaluate((element) => element.scrollTop)).toBe(beforeSave);
+  const viewPayment = plans.getByRole('button', { name: 'View payment' });
+  await expect(viewPayment).toBeInViewport({ ratio: 1 });
+  await viewPayment.click();
+  await page.getByRole('dialog', { name: 'Payment details' }).getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  await expect(viewPayment).toBeFocused();
   expect(await body.evaluate((element) => element.scrollTop)).toBe(beforeSave);
   await expect(plans.getByRole('region', { name: 'Due now' }).getByRole('listitem').last()).toContainText('Bill 12');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(['Bill 12']);
