@@ -77,6 +77,7 @@ html[data-theme] .dn-task-empty p { margin:0; max-width:42ch; font-size:13px; li
 html[data-theme] .dn-task-empty a { min-height:44px; color:var(--color-primary); display:inline-flex; align-items:center; }
 html[data-theme] .dn-task-feedback { margin:0; padding:11px 14px; border:1px solid var(--color-border); border-radius:12px; background:var(--color-surface); color:var(--color-text); font-size:13px; }
 html[data-theme] .dn-task-editor { display:grid; gap:14px; min-width:0; }
+html[data-theme] .dn-task-editor .dn-repeat-disclosure + .dn-form-disclosure { margin-top: -9px; }
 html[data-theme] .dn-task-field { display:grid; align-content:start; gap:6px; min-width:0; font-size:12px; font-weight:700; color:var(--color-text); }
 html[data-theme] .dn-task-field input,
 html[data-theme] .dn-task-field textarea {

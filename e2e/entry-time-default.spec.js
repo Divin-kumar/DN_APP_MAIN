@@ -74,7 +74,6 @@ test('editing existing untimed Moments, Activities and transactions does not ins
   await page.locator('.dn-transaction-card').filter({hasText:'Room deposit'}).locator('.dn-transaction-copy > strong').click();
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
   const transactionEditor = page.getByRole('dialog', { name: 'Edit Transaction', exact: true });
-  await transactionEditor.locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(transactionEditor.getByLabel('Transaction time', { exact: true })).toHaveValue('');
   await transactionEditor.getByRole('button', { name: 'Cancel', exact: true }).click();
   expect(errors).toEqual([]);

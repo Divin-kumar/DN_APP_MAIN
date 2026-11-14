@@ -74,7 +74,7 @@ function ExpensePlanList({ plans, onSelect }) {
                   <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
                 </span>
               </span>
-              <ChevronRight size={15} aria-hidden="true" />
+              <span className="dn-expense-plan-record" aria-hidden="true">Record</span>
             </button>
             <button type="button" className="dn-expense-plan-manage" data-plan-action="manage" aria-label={`Manage plan for ${plan.name}`}
               onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>Manage</button>
@@ -208,7 +208,6 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
     onClose={onClose} closeDisabled={busy} footer={footer}>
-    {isList && plans.length ? <p className="dn-expense-plan-list-hint">Select a bill to record a payment.</p> : null}
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={(action) => {

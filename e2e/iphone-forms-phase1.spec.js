@@ -125,8 +125,9 @@ test('Activity Detail entry and two canonical create forms preserve distinct dat
   await openQuick('Transaction');
   dialog = page.getByRole('dialog', { name: 'Add Transaction' });
   await expect(dialog.getByRole('spinbutton', { name: 'Amount *' })).toBeVisible();
+  await expect(dialog.getByLabel('Date *', { exact: true })).toBeVisible();
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment' })).toBeHidden();
-  await dialog.locator('.dn-form-disclosure > summary').click();
+  await dialog.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
   await expect(dialog.getByRole('combobox', { name: 'Linked Moment' })).toBeVisible();
   await expect(dialog.getByRole('combobox', { name: 'Linked Activity' })).toContainText('Book a lakeside stay');
   await dialog.getByRole('button', { name: 'Cancel' }).click();

@@ -2,7 +2,7 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
-import RepeatField, { RepeatActionSummary, RepeatSummary } from '../common/RepeatField';
+import { RepeatActionSummary, RepeatDisclosure } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
@@ -82,14 +82,11 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-    <FormDisclosure label="More options" className={repeatFrequency || repeatNotice ? 'dn-repeat-disclosure' : undefined}
-      hint={repeatFrequency || repeatNotice
-        ? <RepeatSummary value={repeatFrequency} dueDate={dueDate} nextDate={nextRepeat} notice={repeatNotice} />
-        : task?.status !== 'completed' ? 'Repeat, priority, links and notes' : 'Priority, links and notes'}>
-    {task?.status !== 'completed' ? <RepeatField value={repeatFrequency}
+    {task?.status !== 'completed' ? <RepeatDisclosure value={repeatFrequency} paused={task?.status === 'cancelled'}
       onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
       {momentId ? 'Moment and Activity links apply to this Task only.' : null}
-    </RepeatField> : null}
+    </RepeatDisclosure> : null}
+    <FormDisclosure label="More options" hint="Priority, links and notes">
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
         <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>

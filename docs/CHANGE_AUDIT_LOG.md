@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-540 | Simplify the recurring Task and expense flows
+
+- **Scope:** Give Repeat its own compact row beside the schedule in Task and expense forms. Keep the frequency and next date visible when closed, and show Paused on a paused Task. Show the expense title and amount together, label Record and Manage separately in the bill list, and fit both scheduled dates on a compact payment summary.
+- **Source-derived:** The existing repeat calendars, valid-date checks, Task and expense writes, recorded-payment totals and backup formats apply. Explore DN v2026.11.14.10 teaches the new controls and retains the explicit Refresh demo flow.
+- **Executed:** Reviewed before and after at 320px light and 430px dark. Node 22 lint, build and 632 Node tests passed. Browser coverage exercises both repeat forms, paused Tasks, payment recording, short screens, timing and the Guest tour.
+- **Unverified:** Physical iPhone Safari, VoiceOver and live signed-in use.
+
 ## CHG-20261114-539 | Keep recurring Task and expense sheets usable on short screens
 
 - **Scope:** Separate confirmation and expense form actions from scrollable content. Limit the displayed repeat title to three lines so the due date stays visible. Put the payment method beside the amount and date in short touch landscape so More options fits above the footer.

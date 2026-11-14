@@ -56,12 +56,6 @@ html[data-theme] .dn-modal-viewport .dn-expense-plan-dialog {
 }
 html[data-theme] .dn-expense-plan-dialog .dn-modal-body { overflow-anchor: none; }
 html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top: 38px; }
-.dn-expense-plan-list-hint {
-  margin: 0 0 12px;
-  color: var(--color-text-muted);
-  font-size: 13px;
-  line-height: 1.4;
-}
 .dn-expense-plan-groups { display: grid; gap: 10px; }
 .dn-expense-plan-heading {
   position: sticky;
@@ -73,9 +67,9 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   gap: 8px;
   min-height: 34px;
   margin: 0;
-  padding: 4px 2px;
+  padding: 4px 0;
   border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--color-text) 4%, var(--color-card));
+  background: var(--color-card);
   color: var(--color-text);
   font-size: 13px;
   font-weight: 680;
@@ -163,9 +157,9 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 }
 .dn-expense-plan-row .dn-expense-plan-payment {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 15px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   min-width: 0;
   padding: 10px 3px 10px 0;
   color: var(--color-text);
@@ -174,12 +168,18 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-payment-details { min-width: 0; }
 .dn-expense-plan-payment .dn-expense-plan-title { font-size: 15px; gap: 6px; }
 .dn-expense-plan-payment .dn-expense-plan-meta { gap: 2px 8px; margin-top: 3px; font-size: 12px; }
-.dn-expense-plan-payment > svg { color: var(--color-primary); }
+.dn-expense-plan-record { color: var(--color-primary); font-weight: 680; }
+@media (max-width: 360px) {
+  .dn-expense-plan-payment-details { display: contents; }
+  .dn-expense-plan-payment .dn-expense-plan-title { grid-column: 1 / -1; }
+  .dn-expense-plan-row .dn-expense-plan-payment { row-gap: 2px; }
+  .dn-expense-plan-payment .dn-expense-plan-meta { margin-top: 0; }
+}
 .dn-expense-plan-row .dn-expense-plan-manage {
   min-width: 52px;
   border-radius: 8px;
   color: var(--color-text-muted);
-  font-size: 12px;
+  font-size: 13px;
 }
 .dn-expense-plan-row button:focus-visible, .dn-expense-plan-menu-actions button:focus-visible { border-radius: 8px; }
 .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
@@ -209,8 +209,6 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-menu-actions button small { display: block; color: var(--color-text-muted); font-size: 12px; line-height: 1.4; }
 html[data-theme] .dn-plan-transaction-form { gap: 12px; }
 html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-columns: minmax(0, 1fr); }
-.dn-plan-form-hint { margin: 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.45; }
-.dn-plan-form-hint strong { color: var(--color-text); }
 .dn-payment-context { display: flex; gap: 11px; align-items: flex-start; min-width: 0; }
 .dn-payment-context-icon {
   display: grid;
@@ -223,7 +221,13 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
 }
 .dn-payment-context div { min-width: 0; overflow-wrap: anywhere; }
 .dn-payment-context p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.45; }
-.dn-payment-context p strong { color: var(--color-text); }
+.dn-payment-context time:last-of-type { color: var(--color-text); font-weight: 650; }
+.dn-expense-draft-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(118px, 1fr);
+  align-items: end;
+  gap: 10px;
+}
 .dn-payment-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 1.25fr); align-items: start; gap: 10px; }
 .dn-payment-fields .dn-plan-form-date { min-width: 0; }
 @media (max-width: 300px) {
