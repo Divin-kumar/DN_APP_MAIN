@@ -50,23 +50,27 @@ function ExpensePlanList({ plans, onSelect }) {
       <ul className="dn-expense-plan-list">
         {items.map((plan) => {
           const dueState = plan.dueDate < today ? 'overdue' : plan.dueDate === today ? 'today' : '';
+          const amountId = `dn-plan-amount-${plan.id}`;
+          const dateId = `dn-plan-date-${plan.id}`;
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
-            <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span>{formatAmount.format(plan.amount)}</span></div>
-            <div className="dn-expense-plan-meta">
-              <span className={dueState ? `dn-expense-plan-${dueState}` : undefined}>
-                {dueState === 'overdue' ? 'Overdue · ' : dueState === 'today' ? 'Due today · ' : 'Due '}
-                <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+            <button type="button" className="dn-expense-plan-payment" data-plan-action="payment"
+              aria-label={`Record payment for ${plan.name}`}
+              aria-describedby={`${amountId} ${dateId}`}
+              onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>
+              <span className="dn-expense-plan-payment-details">
+                <span className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></span>
+                <span className="dn-expense-plan-meta" id={dateId}>
+                  <span className={dueState ? `dn-expense-plan-${dueState}` : undefined}>
+                    {dueState === 'overdue' ? 'Overdue · ' : dueState === 'today' ? 'Due today · ' : 'Due '}
+                    <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+                  </span>
+                  <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
+                </span>
               </span>
-              <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
-            </div>
-            <div className="dn-expense-plan-actions">
-              <button type="button" data-plan-action="manage" aria-label={`Manage plan for ${plan.name}`}
-                onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>Manage</button>
-              <button type="button" className="dn-record-plan-payment" data-plan-action="payment" aria-label={`Record payment for ${plan.name}`}
-                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>
-                Record payment<ChevronRight size={15} aria-hidden="true" />
-              </button>
-            </div>
+              <ChevronRight size={15} aria-hidden="true" />
+            </button>
+            <button type="button" className="dn-expense-plan-manage" data-plan-action="manage" aria-label={`Manage plan for ${plan.name}`}
+              onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>Manage</button>
           </li>;
         })}
       </ul>
@@ -145,6 +149,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     onViewChange={restoreListPosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
     onClose={onClose} closeDisabled={busy} footer={feedback}>
+    {isList && plans.length ? <p className="dn-expense-plan-list-hint">Select a bill to record a payment.</p> : null}
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={onNavigate} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}

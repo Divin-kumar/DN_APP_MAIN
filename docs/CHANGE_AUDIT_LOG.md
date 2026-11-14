@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-534 | Show repeat dates at a glance and simplify bill rows
+
+- **Scope:** Show the next date on the closed More options row for Tasks and new repeating Expenses, including the original due date for a new plan. Explain missing and unsupported repeat dates while keeping Save available for valid drafts. Let the bill's name, amount and date open the payment form, with Manage beside the bill.
+- **Source-derived:** Both editors use the existing calendar and anchor rules. Stable occurrence IDs, skipped items, payment recording, reports and backup formats keep their existing contracts. Explore DN v2026.11.14.5 describes the updated interactions.
+- **Executed:** Node 22 lint and build and 632 Node tests passed. The 43-journey Chromium run covered recurrence, narrow Finance screens, Task actions, date and time behavior, the Guest tour and synthetic account sync. Rechecked 10 recurrence and Guest journeys after the final summary change. Eleven additional transaction payment and filter journeys passed. Visually verified the forms and bill list at 320px light and 430px dark.
+- **Unverified:** Physical iPhone Safari, VoiceOver and use with a real signed-in account.
+
 ## CHG-20261114-533 | Keep your place in recurring Tasks and expenses
 
 - **Scope:** Add View next to recurring Task completion and skip feedback. Focus the next occurrence in the normal list and allow a temporary highlight outside the user's filters. Restore the Upcoming expenses scroll offset and action focus on Back. Keep confirmation and the next due date visible below the bill list after saving.

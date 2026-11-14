@@ -3,7 +3,7 @@ import { activityTime, currentEntryTime } from '../../utils/activityTime';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
-import RepeatField from '../common/RepeatField';
+import RepeatField, { RepeatSummary } from '../common/RepeatField';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
@@ -73,7 +73,8 @@ export default function TransactionForm({
   const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
   const planFlow = Boolean(paymentPlan || expensePlan || isPlan);
-  const scheduleHint = isPlan && REPEAT_OPTIONS[form.repeatFrequency];
+  const nextRepeat = previewNextRepeat(expensePlan, form.repeatFrequency, form.date);
+  const hasRepeatPreviewInDisclosure = isPlan && !expensePlan;
   const nextPaymentDate = paymentPlan && formatScheduleDate(previewNextRepeat(paymentPlan, paymentPlan.repeat.frequency, paymentPlan.dueDate));
 
   const sourceRef = useRef([initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date]);
@@ -102,10 +103,9 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = paymentPlan ? 'Time, links and notes'
-    : (isPlan ? [!expensePlan && scheduleHint, 'Method and notes']
-      : [formatScheduleDate(form.date) || 'Choose date', canRepeat && 'Repeat', !canRepeat && form.time,
-        form.eventId && 'Moment linked', form.activityId && 'Activity linked']).filter(Boolean).join(' · ');
+  const transactionOptions = [formatScheduleDate(form.date) || 'Choose date', canRepeat && 'Repeat', !canRepeat && form.time,
+    form.eventId && 'Moment linked', form.activityId && 'Activity linked'].filter(Boolean).join(' · ');
+  const supportingDetails = paymentPlan ? 'Time, links and notes' : expensePlan ? 'Method and notes' : transactionOptions;
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -125,7 +125,7 @@ export default function TransactionForm({
   };
   const handleSubmit = async (event) => {
     event.preventDefault();
-    if (busy) return;
+    if (busy || (isPlan && !nextRepeat)) return;
     const amount = Number(form.amount);
     if (!form.title.trim() || !form.category || !form.date || !Number.isFinite(amount) || amount <= 0) {
       setError('Enter a title, category, valid positive amount and date.');
@@ -164,7 +164,7 @@ export default function TransactionForm({
   </div>;
   const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
-    dueDate={form.date} previous={expensePlan} allowOneTime={!expensePlan}>
+    nextDate={nextRepeat} dueDate={form.date} allowOneTime={!expensePlan}>
     {presetLink?.eventId || form.eventId ? 'Choose the Moment or Activity when you record each payment.' : null}
   </RepeatField> : null;
   const amount = <label className="dn-transaction-field">
@@ -217,7 +217,9 @@ export default function TransactionForm({
       {expensePlan ? repeatField : null}
       {!paymentPlan ? categoryField : null}
       {!isPlan ? paymentMethod : null}
-      <FormDisclosure label="More options" hint={supportingDetails}>
+      <FormDisclosure label="More options"
+        hint={hasRepeatPreviewInDisclosure ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} showDueDate /> : supportingDetails}
+        className={hasRepeatPreviewInDisclosure ? 'dn-repeat-disclosure' : undefined}>
       {canRepeat && !expensePlan ? <>
         <div className={isPlan ? 'dn-plan-form-date' : undefined}>{dates}</div>
         {repeatField}
@@ -265,7 +267,7 @@ export default function TransactionForm({
       {isPlan ? <p className="dn-plan-form-hint">Spending updates when you record a payment.</p> : null}
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       <div className="form-actions">
-        <button className="primaryButton" type="submit" disabled={busy}>
+        <button className="primaryButton" type="submit" disabled={busy || (isPlan && !nextRepeat)}>
           {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
         </button>
         <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>

@@ -2,12 +2,12 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
-import RepeatField from '../common/RepeatField';
+import RepeatField, { RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
-import { REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
+import { previewNextRepeat } from '../../utils/repeatSchedule.js';
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
 export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
@@ -28,13 +28,15 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [repeatFrequency, setRepeatFrequency] = useState(task?.repeat?.frequency || '');
   const [momentId, setMomentId] = useState(recordId(task?.momentId));
   const [activityId, setActivityId] = useState(recordId(task?.activityId));
+  const nextRepeat = previewNextRepeat(task, repeatFrequency, dueDate);
+  const canSave = !busy && title.trim() && (!repeatFrequency || nextRepeat);
   const unresolved = resolveIndependentTaskParent({ momentId, activityId }, moments);
   const parent = unresolved.moment;
   const momentAlias = parent && (recordId(parent.id) || recordId(parent.firestoreId)) !== momentId;
   const savedAlias = Boolean(activityId && !(parent?.activities || []).some((item) => recordId(item.id) === activityId));
   const save = (event) => {
     event.preventDefault();
-    if (!busy && title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId, repeatFrequency });
+    if (canSave) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId, repeatFrequency });
   };
 
   if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
@@ -66,10 +68,11 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-    <FormDisclosure label="More options" hint={repeatFrequency ? REPEAT_OPTIONS[repeatFrequency]
-      : task?.status !== 'completed' ? 'Repeat, priority, links and notes' : 'Priority, links and notes'}>
+    <FormDisclosure label="More options" className={repeatFrequency ? 'dn-repeat-disclosure' : undefined}
+      hint={repeatFrequency ? <RepeatSummary value={repeatFrequency} dueDate={dueDate} nextDate={nextRepeat} />
+        : task?.status !== 'completed' ? 'Repeat, priority, links and notes' : 'Priority, links and notes'}>
     {task?.status !== 'completed' ? <RepeatField value={repeatFrequency}
-      onChange={setRepeatFrequency} disabled={busy} dueDate={dueDate} previous={task}>
+      onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate}>
       {momentId ? 'Moment and Activity links apply to this Task only.' : null}
     </RepeatField> : null}
     <div className="dn-task-fields-row">
@@ -110,7 +113,9 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">
       <button type="button" className="secondaryButton" disabled={busy} onClick={onClose}>Cancel</button>
-      <button type="submit" className="primaryButton" disabled={busy || !title.trim()}>{busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}</button>
+      <button type="submit" className="primaryButton" disabled={!canSave}>
+        {busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}
+      </button>
     </div>
   </form>;
 }

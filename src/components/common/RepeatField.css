@@ -67,3 +67,11 @@ html[data-theme] .dn-repeat-preview {
 }
 html[data-theme] .dn-repeat-preview p { margin: 0; }
 html[data-theme] .dn-repeat-preview strong { color: var(--color-text); margin-inline-start: 3px; }
+html[data-theme] .dn-repeat-disclosure .dn-repeat-summary-date {
+  display: block;
+  color: var(--color-text);
+  font-size: 12px;
+  font-weight: 650;
+}
+html[data-theme] .dn-repeat-disclosure > summary > small { line-height: 1.35; }
+html[data-theme] .dn-repeat-disclosure[open] > summary > small { display: none; }
