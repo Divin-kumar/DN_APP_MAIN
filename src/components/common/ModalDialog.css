@@ -27,7 +27,8 @@ html[data-theme] .dn-modal-viewport .dn-modal-header h3 { overflow-wrap: anywher
 html[data-theme] .dn-modal-viewport .dn-modal .dn-modal-header .modal-back-button {
   display: grid;
   flex: 0 0 44px;
-  height: 44px;
+  height: 44px !important;
+  min-height: 44px;
   place-items: center;
   padding: 0;
   border: 0;

@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-533 | Keep your place in recurring Tasks and expenses
+
+- **Scope:** Add View next to recurring Task completion and skip feedback. Focus the next occurrence in the normal list and allow a temporary highlight outside the user's filters. Restore the Upcoming expenses scroll offset and action focus on Back. Keep confirmation and the next due date visible below the bill list after saving.
+- **Source-derived:** The Task link uses the stable occurrence ID, including when the account listener has yet to receive the new record. Preference, schedule, payment, reporting and backup behavior keep their existing contracts. Explore DN v2026.11.14.4 explains both interactions.
+- **Executed:** Node 22 lint and build, 632 Node tests and 50 selected Chromium journeys. Repeated the 18-bill scroll test eight times. Reviewed the updated feedback and focus at 320px light and 430px dark. Browser coverage includes a delayed synthetic account listener, filter preservation, and payment, edit, skip, end and backup restore.
+- **Unverified:** Physical iPhone Safari, VoiceOver and the new interactions in a real signed-in account.
+
 ## CHG-20261114-532 | Keep recurring expense work in one sheet
 
 - **Scope:** Show the four Repeat choices directly in More options for Tasks and new Expenses. Keep Transactions to one Upcoming expenses row, then group bills under Due now and Later in a single sheet. Use Back for the previous view and return to the refreshed list after recording, editing, skipping or ending a plan. Put the original and following due dates together and the amount paid and actual date side by side.

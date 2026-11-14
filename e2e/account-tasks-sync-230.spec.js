@@ -6,9 +6,23 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
   await page.setViewportSize({ width: 390, height: 844 });
   await page.route('**/src/services/accountTaskService.js', (route) => route.fulfill({ contentType: 'application/javascript', body: `
     const rows = new Map(); let receive;
-    window.taskTransport = { fail: false, push: (tasks) => { rows.clear(); tasks.forEach(t=>rows.set(t.id,t)); receive?.([...rows.values()]); } };
+    const publish = () => receive?.([...rows.values()]);
+    window.taskTransport = { fail: false, flush: publish, push: (tasks) => { rows.clear(); tasks.forEach(t=>rows.set(t.id,t)); publish(); } };
     export const watchAccountTasks=(uid,guard,next)=>{receive=tasks=>{guard();next(tasks)};queueMicrotask(()=>receive([...rows.values()]));return()=>{receive=null}};
-    export const writeAccountTask=async(uid,task)=>{await new Promise(r=>setTimeout(r,100));if(window.taskTransport.fail)throw Error('Save failed. Try again.');rows.set(task.id,task);receive?.([...rows.values()]);return task};
+    export const writeAccountTask = async (uid, task, { repeatAction } = {}) => {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+      if (window.taskTransport.fail) throw Error('Save failed. Try again.');
+      if (repeatAction) {
+        const { resolveRepeatingTask } = await import('/src/utils/independentTasks.js');
+        const { current, next } = resolveRepeatingTask(task, repeatAction);
+        rows.set(task.id, current);
+        rows.set(next.id, next);
+        return current;
+      }
+      rows.set(task.id, task);
+      publish();
+      return task;
+    };
     export const removeAccountTask=async(uid,id)=>{rows.delete(id);receive?.([...rows.values()]);return true};
     export const listAccountTasks=async()=>[...rows.values()];export const mergeAccountTasks=async()=>({added:0,conflicts:0});export const detachAccountTaskLinks=async()=>{};
   ` }));
@@ -35,8 +49,21 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
   await page.evaluate(() => window.taskTransport.push([{ id: 'remote', title: 'Changed on another device', status: 'completed', priority: 'medium' }]));
   await expect(page.locator('.dn-independent-task-row')).toContainText('Changed on another device');
   await expect(page.locator('.dn-task-metrics')).toContainText('1 Completed');
+  await page.evaluate(() => window.taskTransport.push([{
+    id: 'rent-check', title: 'Check rent', status: 'in-progress', priority: 'medium', dueDate: '2026-11-07',
+    repeat: { frequency: 'weekly', anchorDate: '2026-11-07', seriesId: 'rent' },
+  }]));
+  await page.locator('[data-task-id="rent-check"]').click();
+  await page.getByRole('menuitem', { name: 'Done', exact: true }).click();
+  const next = page.locator('[data-task-id="repeat-rent-2026-11-14"]');
+  await page.getByRole('button', { name: 'View next', exact: true }).click();
+  await expect(page).toHaveURL(/\/tasks$/);
+  await expect(next).toHaveCount(0);
+  await page.evaluate(() => window.taskTransport.flush());
+  await expect(next).toHaveClass(/is-dashboard-selected/);
+  await expect(next).toBeFocused();
   await page.evaluate(async () => {
     (await import('/src/store/useAppStore.js')).default.setState({ user: null, isGuest: true });
   });
-  await expect(page.getByText('Changed on another device')).toHaveCount(0);
+  await expect(page.getByText('Check rent')).toHaveCount(0);
 });

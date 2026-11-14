@@ -9,7 +9,7 @@ import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
-  closeDisabled = false, viewKey, onBack, backLabel = 'Back' }) {
+  closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back' }) {
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   // Every phone-bottom sheet uses one motion path, rather than old CSS entry
@@ -132,6 +132,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     if (!viewKey) return;
     bodyRef.current.scrollTop = 0;
     titleRef.current?.focus({ preventScroll: true });
+    onViewChange?.(bodyRef.current);
   }, [viewKey]);
 
   useEffect(() => {
@@ -158,7 +159,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       }
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
-      if (document.activeElement === titleRef.current) {
+      if (!focusable.includes(document.activeElement)) {
         event.preventDefault();
         (event.shiftKey ? last : first).focus();
       } else if (event.shiftKey && document.activeElement === first) {

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmActions } from '../common/ModalDialog';
 import TransactionForm from './TransactionForm';
@@ -49,7 +50,7 @@ function ExpensePlanList({ plans, onSelect }) {
       <ul className="dn-expense-plan-list">
         {items.map((plan) => {
           const dueState = plan.dueDate < today ? 'overdue' : plan.dueDate === today ? 'today' : '';
-          return <li key={plan.id} className="dn-expense-plan-row">
+          return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
             <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span>{formatAmount.format(plan.amount)}</span></div>
             <div className="dn-expense-plan-meta">
               <span className={dueState ? `dn-expense-plan-${dueState}` : undefined}>
@@ -59,8 +60,10 @@ function ExpensePlanList({ plans, onSelect }) {
               <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
             </div>
             <div className="dn-expense-plan-actions">
-              <button type="button" aria-label={`Manage plan for ${plan.name}`} onClick={() => onSelect(plan, 'manage')}>Manage</button>
-              <button type="button" className="dn-record-plan-payment" aria-label={`Record payment for ${plan.name}`} onClick={() => onSelect(plan, 'payment')}>
+              <button type="button" data-plan-action="manage" aria-label={`Manage plan for ${plan.name}`}
+                onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>Manage</button>
+              <button type="button" className="dn-record-plan-payment" data-plan-action="payment" aria-label={`Record payment for ${plan.name}`}
+                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>
                 Record payment<ChevronRight size={15} aria-hidden="true" />
               </button>
             </div>
@@ -101,12 +104,48 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const goBack = () => onNavigate(previousView);
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
+  const listReturnRef = useRef(null);
+
+  const selectPlan = (selected, action, button) => {
+    const body = button.closest('.dn-modal-body');
+    listReturnRef.current = { planId: selected.id, action, scrollTop: body.scrollTop };
+    onSelect(selected, action);
+  };
+
+  const restoreListPosition = (body) => {
+    const anchor = listReturnRef.current;
+    if (!isList || !anchor) return;
+    listReturnRef.current = null;
+    const rows = [...body.querySelectorAll('[data-plan-id]')];
+    const previousRow = rows.find((row) => row.dataset.planId === anchor.planId);
+    const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"]`);
+    if (!notice && previousButton) {
+      previousButton.focus({ preventScroll: true });
+    }
+    body.scrollTop = anchor.scrollTop;
+    const { top, bottom } = body.getBoundingClientRect();
+    if (!notice && previousButton) {
+      const rect = previousButton.getBoundingClientRect();
+      body.scrollTop += rect.top < top ? rect.top - top : Math.max(0, rect.bottom - bottom);
+      return;
+    }
+    const visibleRow = rows.find((row) => {
+      const rect = row.getBoundingClientRect();
+      return rect.top >= top && rect.bottom <= bottom;
+    });
+    visibleRow?.querySelector('button')?.focus({ preventScroll: true });
+    body.scrollTop = anchor.scrollTop;
+  };
+
+  const feedback = <div className="dn-expense-plan-notice" role="status">
+    {isList && notice ? <><Check size={16} aria-hidden="true" /><span>{notice}</span></> : null}
+  </div>;
 
   return <ModalDialog title={planTitles[mode]} className="dn-transaction-dialog dn-expense-plan-dialog" viewKey={mode}
+    onViewChange={restoreListPosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
-    onClose={onClose} closeDisabled={busy}>
-    <div className="dn-expense-plan-notice" role="status">{isList && notice ? <><Check size={16} aria-hidden="true" /><span>{notice}</span></> : null}</div>
-    {isList ? <ExpensePlanList plans={plans} onSelect={onSelect} /> : null}
+    onClose={onClose} closeDisabled={busy} footer={feedback}>
+    {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={onNavigate} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null} busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}

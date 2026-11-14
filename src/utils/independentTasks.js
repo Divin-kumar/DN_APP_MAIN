@@ -73,6 +73,8 @@ export function taskRepeatForDraft(previous, frequency, dueDate, createId) {
   return { ...repeatScheduleForDraft(previous, frequency, dueDate), seriesId: createId() };
 }
 
+export const repeatingTaskOccurrenceId = (rule, dueDate) => `repeat-${rule.seriesId}-${dueDate}`;
+
 export function resolveRepeatingTask(task, action, now = new Date()) {
   if (!task?.repeat || task.status !== 'in-progress' || !['complete', 'skip'].includes(action)) {
     throw new Error('This repeating Task changed. Reopen Tasks and try again.');
@@ -82,7 +84,7 @@ export function resolveRepeatingTask(task, action, now = new Date()) {
     updatedAt: scheduleTimestamp(task.updatedAt, now) });
   const dueDate = nextScheduledDate(task.repeat, task.dueDate);
   const next = normalizeIndependentTask({ ...task, dueDate,
-    id: `repeat-${task.repeat.seriesId}-${dueDate}`,
+    id: repeatingTaskOccurrenceId(task.repeat, dueDate),
     momentId: '', activityId: '', createdAt: now.toISOString(), updatedAt: now.toISOString(),
   });
   return { current, next };

@@ -38,6 +38,11 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   expect((await readGuest(page, 'dn_guest_tasks')).map((task) => [task.dueDate, task.status])).toEqual([
     ['2026-01-31', 'completed'], ['2026-02-28', 'in-progress'],
   ]);
+  const viewNext = page.getByRole('button', { name: 'View next', exact: true });
+  await expect(page.locator('.app-toast')).toContainText('Next due 28 Feb 2026.');
+  await viewNext.click();
+  await expect(recurring).toBeFocused();
+  await expect(recurring).toHaveClass(/is-dashboard-selected/);
   await recurring.click();
   await page.getByRole('menuitem', { name: 'Skip this occurrence', exact: true }).click();
   const skip = page.getByRole('dialog', { name: 'Skip this Task?' });
@@ -51,6 +56,9 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   expect((await readGuest(page, 'dn_guest_tasks')).map((task) => [task.dueDate, task.status])).toEqual([
     ['2026-01-31', 'completed'], ['2026-02-28', 'cancelled'], ['2026-03-31', 'in-progress'],
   ]);
+  await expect(page.locator('.app-toast')).toContainText('Next due 31 Mar 2026.');
+  await viewNext.click();
+  await expect(recurring).toBeFocused();
   await recurring.click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit Task' });
@@ -62,6 +70,34 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await expect(list.locator('article')).toHaveCount(3);
   expect((await readGuest(page, 'dn_guest_tasks')).every((task) => !task.repeat)).toBe(true);
   expect(await readGuest(page, 'dn_guest_expenses')).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
+test('View next highlights a just-created Task outside the current filters without changing them', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-11-14T12:00:00.000Z'));
+  const errors = await seedGuest(page, empty);
+  await page.addInitScript(() => {
+    localStorage.setItem('dn_guest_tasks', JSON.stringify([{ id: 'weekly-meter', title: 'Read the meter', status: 'in-progress',
+      dueDate: '2026-11-12', repeat: { frequency: 'weekly', anchorDate: '2026-11-12', seriesId: 'meter' } }]));
+  });
+  await page.goto('/tasks');
+  await page.getByRole('button', { name: 'Refine', exact: true }).click();
+  const refine = page.getByRole('dialog', { name: 'Refine Tasks' });
+  await refine.getByRole('button', { name: 'Add filter', exact: true }).click();
+  await choose(page, refine, 'Filter by', 'Due timing');
+  await choose(page, refine, 'Value for Due timing', 'Overdue');
+  await refine.getByRole('button', { name: 'Show results' }).click();
+  const list = page.locator('.dn-task-list');
+  await list.locator('article').click();
+  await page.getByRole('menuitem', { name: 'Done', exact: true }).click();
+  await expect(list.locator('article')).toHaveCount(0);
+  await page.getByRole('button', { name: 'View next', exact: true }).click();
+  await expect(list.locator('article')).toHaveCount(1);
+  await expect(list.locator('article')).toBeFocused();
+  await expect(list.locator('article').getByRole('img', { name: '19 Nov 2026', exact: true })).toBeVisible();
+  await expect(page.getByText('Selected Task is shown outside your current filters.')).toBeVisible();
+  await page.getByRole('button', { name: 'Dismiss', exact: true }).click();
+  await expect(list.locator('article')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -99,6 +135,9 @@ test('recurring expenses stay outside totals, then post one editable payment and
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
   await expect(payment.getByRole('heading', { name: 'Record payment' })).toBeFocused();
   expect(await sheet.getAttribute('aria-labelledby')).toBe(await payment.getByRole('heading').getAttribute('id'));
+  await page.keyboard.press('Shift+Tab');
+  await expect(payment.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await payment.getByRole('heading', { name: 'Record payment' }).focus();
   await page.keyboard.press('Tab');
   await expect(payment.getByRole('button', { name: 'Back to upcoming expenses' })).toBeFocused();
   await payment.getByRole('button', { name: 'Back to upcoming expenses' }).click();
@@ -191,6 +230,65 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
   await expect(later.getByRole('listitem')).toHaveCount(3);
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹200');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(expect.arrayContaining(['Internet', 'Mobile']));
+  expect(errors).toEqual([]);
+});
+
+test('returning to a long expense list keeps the scroll position and shows payment feedback', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 680 });
+  await page.clock.setFixedTime(new Date('2026-11-14T12:00:00.000Z'));
+  const errors = await seedGuest(page, { ...empty, theme: 'dark' });
+  await page.addInitScript(() => {
+    localStorage.setItem('dn_guest_expense_plans', JSON.stringify(Array.from({ length: 18 }, (_, index) => {
+      const number = index + 1;
+      const dueDate = `2026-10-${String(number).padStart(2, '0')}`;
+      return { id: `bill-${number}`, name: `Bill ${number}`, amount: 100, category: 'Home', dueDate,
+        repeat: { frequency: 'monthly', anchorDate: dueDate }, paymentMethod: 'Online', updatedAt: '2026-11-01T12:00:00.000Z' };
+    })));
+  });
+  await page.goto('/financials/transactions#expense-plans');
+  const plans = page.getByRole('dialog', { name: 'Upcoming expenses', exact: true });
+  const body = plans.locator('.dn-modal-body');
+  const recordPayment = plans.getByRole('button', { name: 'Record payment for Bill 12', exact: true });
+  const manage = plans.getByRole('button', { name: 'Manage plan for Bill 12', exact: true });
+  await expect(manage).toBeVisible();
+  // Sample the offset when the action fires, after browser actionability scrolling.
+  const openedAt = await body.evaluateHandle((element) => {
+    const offsets = [];
+    element.addEventListener('click', (event) => {
+      if (event.target.closest('[data-plan-action]')) offsets.push(element.scrollTop);
+    });
+    return offsets;
+  });
+  await body.evaluate((element) => {
+    const button = element.querySelector('[data-plan-id="bill-12"] [data-plan-action="payment"]');
+    element.scrollTop += button.getBoundingClientRect().top - element.getBoundingClientRect().top - 200;
+  });
+  await expect(manage).toBeInViewport({ ratio: 1 });
+  await expect(recordPayment).toBeInViewport({ ratio: 1 });
+  await manage.click();
+  const beforeManage = await openedAt.evaluate((offsets) => offsets[0]);
+  expect(beforeManage).toBeGreaterThan(300);
+  const manageView = page.getByRole('dialog', { name: 'Manage expense plan', exact: true });
+  await manageView.getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  await expect(manage).toBeFocused();
+  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(beforeManage);
+  await recordPayment.click();
+  const beforePayment = await openedAt.evaluate((offsets) => offsets[1]);
+  const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
+  const back = payment.getByRole('button', { name: 'Back to upcoming expenses' });
+  expect((await back.boundingBox()).height).toBeGreaterThanOrEqual(44);
+  await back.click();
+  await expect(recordPayment).toBeFocused();
+  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(beforePayment);
+  await recordPayment.click();
+  const beforeSave = await openedAt.evaluate((offsets) => offsets[2]);
+  await payment.getByRole('button', { name: 'Save payment' }).click();
+  const feedback = plans.getByRole('status');
+  await expect(feedback).toHaveText('Payment recorded. Next due 12 Nov 2026.');
+  await expect(feedback).toBeInViewport({ ratio: 1 });
+  expect(await body.evaluate((element) => element.scrollTop)).toBe(beforeSave);
+  await expect(plans.getByRole('region', { name: 'Due now' }).getByRole('listitem').last()).toContainText('Bill 12');
+  expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(['Bill 12']);
   expect(errors).toEqual([]);
 });
 

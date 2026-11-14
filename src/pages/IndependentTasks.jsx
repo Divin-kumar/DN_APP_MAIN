@@ -1,7 +1,7 @@
 import MobileControlsSlot from '../components/common/MobileControlsSlot';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Flag, Check, ListTodo, Pencil, Repeat, RotateCcw, Search, SkipForward, SlidersHorizontal, X, XCircle } from 'lucide-react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import TaskEditor from '../components/tasks/TaskEditor';
@@ -15,7 +15,7 @@ import usePersistentListState from '../hooks/usePersistentListState';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
-import { sortIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
+import { repeatingTaskOccurrenceId, sortIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
 import { formatMomentDate } from '../utils/momentDates.js';
 import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../utils/repeatSchedule.js';
 import { getActiveSampleScenario } from '../dev/sampleData';
@@ -48,6 +48,8 @@ export function TaskListContent() {
   const pendingRef = useRef(false);
   const focusedTaskRef = useRef('');
   const [busy, setBusy] = useState(false);
+  const navigate = useNavigate();
+  const { state: arrival } = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [view, changeView] = usePersistentListState('tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
   const [savedTaskSort] = usePersistentListState('defaults:tasks', TASK_VIEW_DEFAULTS, TASK_VIEW_RULES);
@@ -55,7 +57,7 @@ export function TaskListContent() {
   const resetDefaults = useMemo(() => ({ ...savedTaskSort,
     group: configuredConditionGroup('tasks', savedTaskFilters) }), [savedTaskSort, savedTaskFilters]);
   const [editor, setEditor] = useState(null);
-  const [dashboardTaskId, setDashboardTaskId] = useState('');
+  const [selectedTaskId, setSelectedTaskId] = useState('');
   const [refine, setRefine] = useState(false);
   const [showAllTaskFilters, setShowAllTaskFilters] = useState(false);
   const [confirm, setConfirm] = useState(null);
@@ -78,13 +80,12 @@ export function TaskListContent() {
   const eventReady = isRecordScopeLoaded(eventStore, `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`, getActiveSampleScenario(user?.uid));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
+  const selectedTask = tasks.find((task) => task.id === selectedTaskId);
+  const highlightedOutsideFilters = Boolean(selectedTask && !matches.some((task) => task.id === selectedTask.id));
   const displayedTasks = useMemo(() => {
     const sorted = sortIndependentTasks(matches, view.direction, view.field);
-    const selected = dashboardTaskId && tasks.find((task) => task.id === dashboardTaskId);
-    return selected && !sorted.some((task) => task.id === selected.id) ? [selected, ...sorted] : sorted;
-  }, [matches, view.direction, view.field, dashboardTaskId, tasks]);
-  const highlightedOutsideFilters = Boolean(dashboardTaskId && tasks.some((task) => task.id === dashboardTaskId)
-    && !matches.some((task) => task.id === dashboardTaskId));
+    return highlightedOutsideFilters ? [selectedTask, ...sorted] : sorted;
+  }, [matches, view.direction, view.field, selectedTask, highlightedOutsideFilters]);
   const viewGroup = useMemo(() => taskViewConditionGroup(view), [view]);
   const activeFilterCount = conditionCount(viewGroup);
   const filterSchema = useMemo(() => taskFilterFields(tasks, moments, today), [tasks, moments, today]);
@@ -100,27 +101,26 @@ export function TaskListContent() {
     if (!enabled || !ready || searchParams.has('create')) return;
     const requested = searchParams.get('task');
     if (!requested) return;
-    const selected = tasks.find((task) => task.id === requested);
-    if (selected) setDashboardTaskId(selected.id);
+    // The account listener may deliver a just-created occurrence after the link is followed.
+    if (arrival?.nextTaskId === requested || tasks.some((task) => task.id === requested)) setSelectedTaskId(requested);
     else setNotice('The selected Task is no longer available.');
     const next = new URLSearchParams(searchParams);
     next.delete('task');
     setSearchParams(next, { replace: true });
-  }, [enabled, ready, searchParams, setSearchParams, tasks]);
+  }, [arrival, enabled, ready, searchParams, setSearchParams, tasks]);
   useEffect(() => {
-    if (!dashboardTaskId) { focusedTaskRef.current = ''; return undefined; }
-    if (focusedTaskRef.current === dashboardTaskId || !ready
-      || !displayedTasks.some((task) => task.id === dashboardTaskId)) return undefined;
+    if (!selectedTaskId) { focusedTaskRef.current = ''; return undefined; }
+    if (focusedTaskRef.current === selectedTaskId || !selectedTask) return undefined;
     const frame = requestAnimationFrame(() => {
       const row = [...document.querySelectorAll('.dn-independent-task-row[data-task-id]')]
-        .find((item) => item.dataset.taskId === dashboardTaskId);
+        .find((item) => item.dataset.taskId === selectedTaskId);
       if (!row) return;
-      focusedTaskRef.current = dashboardTaskId;
+      focusedTaskRef.current = selectedTaskId;
       row.scrollIntoView({ block: 'center', behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
       row.focus({ preventScroll: true });
     });
     return () => cancelAnimationFrame(frame);
-  }, [dashboardTaskId, ready, displayedTasks]);
+  }, [selectedTaskId, selectedTask]);
   const active = matches.filter((task) => task.status === 'in-progress').length;
   const completed = matches.filter((task) => task.status === 'completed').length;
   const run = async (change, message) => {
@@ -140,18 +140,26 @@ export function TaskListContent() {
     if (item) { setEditor(null); toast(patch.id ? 'Task updated' : 'Task created', 'success'); }
   };
   const statusChange = async (task, status) => {
-    const advancing = task.repeat && ['completed', 'skip'].includes(status);
-    const message = advancing ? `Task ${status === 'skip' ? 'skipped' : 'completed'}. Next due ${nextTaskDate(task)}.`
-      : status === 'completed' ? 'Task completed' : 'Task status updated';
-    const saved = await run(() => store.setTaskStatus(task.id, status, task.updatedAt), message);
-    if (saved) setConfirm(null);
-    if (saved && advancing) toast(message, 'success');
-    return Boolean(saved);
+    const nextDate = ['completed', 'skip'].includes(status) && previewNextRepeat(task, task.repeat?.frequency, task.dueDate);
+    const saved = await run(() => store.setTaskStatus(task.id, status, task.updatedAt),
+      nextDate ? '' : status === 'completed' ? 'Task completed' : 'Task status updated');
+    if (!saved) return false;
+    setConfirm(null);
+    if (nextDate && taskScopeKey(useAppStore.getState()) === scope) {
+      const nextTaskId = repeatingTaskOccurrenceId(task.repeat, nextDate);
+      const message = `Task ${status === 'skip' ? 'skipped' : 'completed'}. Next due ${formatScheduleDate(nextDate)}.`;
+      toast(message, 'success', { label: 'View next', onClick: () => {
+        if (taskScopeKey(useAppStore.getState()) === scope) {
+          navigate(`/tasks?task=${encodeURIComponent(nextTaskId)}`, { replace: true, state: { nextTaskId } });
+        }
+      } });
+    }
+    return true;
   };
   const remove = async (task) => {
     if (await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')) {
       setConfirm(null);
-      if (dashboardTaskId === task.id) setDashboardTaskId('');
+      if (selectedTaskId === task.id) setSelectedTaskId('');
     }
   };
   if (!enabled) return <div className="dn-tasks-page">
@@ -212,9 +220,9 @@ export function TaskListContent() {
           })}>Clear filters</button> : null}
         </div>
       </div> : null}
-    {dashboardTaskId && tasks.some((task) => task.id === dashboardTaskId) ? <div className="dn-task-dashboard-arrival" role="status">
+    {selectedTask ? <div className="dn-task-dashboard-arrival" role="status">
       <span>{highlightedOutsideFilters ? 'Selected Task is shown outside your current filters.' : 'Selected Task highlighted. Tap it for actions.'}</span>
-      <button type="button" onClick={() => setDashboardTaskId('')}>Dismiss</button>
+      <button type="button" onClick={() => setSelectedTaskId('')}>Dismiss</button>
     </div> : null}
     <div className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {
@@ -226,7 +234,7 @@ export function TaskListContent() {
         const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
         return <SwipeActionCard key={task.id} as="article" taskId={task.id}
-          className={`dn-independent-task-row${dashboardTaskId === task.id ? ' is-dashboard-selected' : ''}`}
+          className={`dn-independent-task-row${selectedTaskId === task.id ? ' is-dashboard-selected' : ''}`}
           mainClassName="dn-independent-task-row-main"
           label={task.title} role="button" openOnTap disabled={busy || Boolean(store.error)}
           otherActions={[
