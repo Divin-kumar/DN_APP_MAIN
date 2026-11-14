@@ -8,8 +8,10 @@ import { MAX_ATTACHMENT_BYTES } from './attachmentService.js';
 import { validateSavedListDefaultsDocument } from '../utils/listViewDefaults.js';
 import { validateBackupDashboardConfiguration } from '../utils/backupDashboardConfiguration.js';
 import { validateStoryDesignBackup } from '../utils/storyDesignPreferences.js';
+import { normalizeExpensePlans } from '../utils/expensePlans.js';
 
-export const CURRENT_BACKUP_VERSION = 4;
+export const CURRENT_BACKUP_VERSION = 5;
+const TASK_BACKUP_VERSION = 4;
 const REQUIRED_LIST_KEYS = ['eventTypes', 'incomeTypes', 'expenseCategories', 'activityPriorities', 'reminderPresets'];
 const COLLECTION_KEYS = ['moments', 'activities', 'memories', 'attachments', 'expenses', 'incomes', 'tasks'];
 const isRecord = (value) => value && typeof value === 'object' && !Array.isArray(value);
@@ -121,6 +123,7 @@ export const createBackupDocument = ({
   expenses = [],
   incomes = [],
   tasks = [],
+  expensePlans = [],
   attachmentFiles = [],
   codeLists,
   codeListSchemaVersion = 1,
@@ -144,9 +147,12 @@ export const createBackupDocument = ({
       }
     }
   }
+  const backupTasks = tasks.map((task) => normalizeIndependentTask(task));
+  const plans = normalizeExpensePlans(expensePlans);
+  const hasSchedules = plans.length > 0 || backupTasks.some((task) => task.repeat);
   const document = {
     app: 'DN',
-    backupVersion: CURRENT_BACKUP_VERSION,
+    backupVersion: hasSchedules ? CURRENT_BACKUP_VERSION : TASK_BACKUP_VERSION,
     createdDate,
     moments: flattened.moments,
     activities: flattened.activities,
@@ -156,7 +162,8 @@ export const createBackupDocument = ({
     expenses: normalizedExpenses,
     incomes: incomes.map(portableRecord),
     // Tasks use a separate collection and never become Moment Activity children.
-    tasks: tasks.map((task) => normalizeIndependentTask(task)),
+    tasks: backupTasks,
+    ...(hasSchedules ? { expensePlans: plans } : {}),
     codeLists: codeLists || {},
     codeListSchemaVersion,
     settings,
@@ -180,7 +187,7 @@ export const createBackupDocument = ({
 
 export const validateBackupDocument = (backup, options = {}) => {
   if (!isRecord(backup)) throw new Error('Backup root must be a JSON object.');
-  if (backup.backupVersion !== CURRENT_BACKUP_VERSION) {
+  if (![TASK_BACKUP_VERSION, CURRENT_BACKUP_VERSION].includes(backup.backupVersion)) {
     throw new Error(`Unsupported backup version: ${String(backup.backupVersion)}.`);
   }
   if (typeof backup.createdDate !== 'string' || Number.isNaN(Date.parse(backup.createdDate))) {
@@ -189,6 +196,10 @@ export const validateBackupDocument = (backup, options = {}) => {
   COLLECTION_KEYS.forEach((key) => {
     if (!Array.isArray(backup[key])) throw new Error(`Backup ${key} must be an array.`);
   });
+  if (backup.backupVersion === CURRENT_BACKUP_VERSION) normalizeExpensePlans(backup.expensePlans);
+  else if (backup.expensePlans !== undefined || backup.tasks.some((task) => task?.repeat != null)) {
+    throw new Error('A backup with repeat schedules needs version 5.');
+  }
   ['settings', 'preferences', 'dashboardConfiguration', 'metadata', 'codeLists'].forEach((key) => {
     if (!isRecord(backup[key])) throw new Error(`Backup ${key} must be an object.`);
   });
@@ -216,9 +227,13 @@ export const validateBackupDocument = (backup, options = {}) => {
   uniqueById(backup.expenses, 'Expenses');
   uniqueById(backup.incomes, 'Income');
   uniqueById(backup.tasks, 'Tasks');
+  const series = new Set();
   backup.tasks.forEach((task) => {
     // Validation must never repair, generate IDs or infer dates/links.
-    normalizeIndependentTask(task);
+    const normalized = normalizeIndependentTask(task);
+    if (!normalized.repeat) return;
+    if (series.has(normalized.repeat.seriesId)) throw new Error('Backup contains multiple open occurrences of a Task schedule.');
+    series.add(normalized.repeat.seriesId);
   });
 
   backup.activities.forEach((activity) => {
@@ -245,7 +260,7 @@ const normalizeV3Backup = (parsed, options = {}) => {
   if (Object.prototype.hasOwnProperty.call(parsed, 'tasks')) {
     throw new Error('Version 3 backup cannot contain independent Tasks.');
   }
-  return validateBackupDocument({ ...parsed, backupVersion: CURRENT_BACKUP_VERSION, tasks: [] }, options);
+  return validateBackupDocument({ ...parsed, backupVersion: TASK_BACKUP_VERSION, tasks: [] }, options);
 };
 
 const normalizeV2Backup = (parsed) => {
@@ -301,7 +316,7 @@ const normalizeLegacyBackup = (parsed) => {
 
 export const parseBackupDocument = (parsed, options = {}) => {
   if (!isRecord(parsed)) throw new Error('Backup root must be a JSON object.');
-  if (parsed.backupVersion === CURRENT_BACKUP_VERSION) return validateBackupDocument(parsed, options);
+  if ([TASK_BACKUP_VERSION, CURRENT_BACKUP_VERSION].includes(parsed.backupVersion)) return validateBackupDocument(parsed, options);
   if (parsed.backupVersion === 3) return normalizeV3Backup(parsed, options);
   if (parsed.backupVersion !== undefined) {
     if (parsed.backupFormatVersion === 2 || parsed.backupVersion === 2) return normalizeV2Backup(parsed);

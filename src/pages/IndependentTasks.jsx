@@ -1,6 +1,6 @@
 import MobileControlsSlot from '../components/common/MobileControlsSlot';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { Flag, Check, ListTodo, Pencil, RotateCcw, Search, SlidersHorizontal, X, XCircle } from 'lucide-react';
+import { Flag, Check, ListTodo, Pencil, RotateCcw, Search, SkipForward, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import SwipeActionCard from '../components/common/SwipeActionCard';
@@ -17,6 +17,7 @@ import useEventStore from '../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
 import { sortIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
 import { formatMomentDate } from '../utils/momentDates.js';
+import { REPEAT_OPTIONS } from '../utils/repeatSchedule.js';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import '../components/common/ListControls.css';
@@ -138,12 +139,16 @@ export function TaskListContent() {
     if (item) { setEditor(null); toast(patch.id ? 'Task updated' : 'Task created', 'success'); }
   };
   const statusChange = async (task, status) => {
-    const saved = await run(() => store.setTaskStatus(task.id, status), status === 'completed' ? 'Task completed' : 'Task status updated');
+    const message = status === 'skip' ? 'Task skipped. Next occurrence scheduled.'
+      : status === 'completed' ? task.repeat ? 'Task completed. Next occurrence scheduled.' : 'Task completed'
+        : 'Task status updated';
+    const saved = await run(() => store.setTaskStatus(task.id, status, task.updatedAt), message);
     if (saved) setConfirm(null);
+    if (saved && task.repeat && ['completed', 'skip'].includes(status)) toast(message, 'success');
     return Boolean(saved);
   };
   const remove = async (task) => {
-    if (await run(() => store.removeTask(task.id), 'Task deleted')) {
+    if (await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')) {
       setConfirm(null);
       if (dashboardTaskId === task.id) setDashboardTaskId('');
     }
@@ -227,6 +232,8 @@ export function TaskListContent() {
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
               onClick: () => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed') }]),
             { label: 'Edit', icon: Pencil, onClick: edit },
+            ...(task.repeat && task.status === 'in-progress'
+              ? [{ label: 'Skip this occurrence', icon: SkipForward, onClick: () => statusChange(task, 'skip') }] : []),
             task.status === 'cancelled'
               ? { label: 'Restore', icon: RotateCcw, onClick: () => statusChange(task, 'in-progress') }
               : { label: 'Cancel', icon: XCircle, onClick: () => { setError(''); setConfirm({ kind: 'cancel', task }); } },
@@ -240,7 +247,10 @@ export function TaskListContent() {
           </span>
           <div className="dn-task-copy">
             <strong>{task.title}</strong>
-            {parent.kind !== 'standalone' ? <small className="dn-task-context">{context}</small> : null}
+            {parent.kind !== 'standalone' || task.repeat ? <small className="dn-task-context">
+              {[parent.kind !== 'standalone' && context, task.repeat && `Repeats ${REPEAT_OPTIONS[task.repeat.frequency].toLowerCase()}`]
+                .filter(Boolean).join(' · ')}
+            </small> : null}
           </div>
           <span className={`dn-task-signals is-${task.status}`}>
             {overdue || task.priority === 'high' ? <span role="img"
@@ -260,8 +270,8 @@ export function TaskListContent() {
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
         busy={busy} onTaskAction={async (action) => {
           const task = editor.value;
-          const result = await run(() => action === 'delete' ? store.removeTask(task.id)
-            : store.setTaskStatus(task.id, action === 'restore' ? 'in-progress' : 'cancelled'),
+          const result = await run(() => action === 'delete' ? store.removeTask(task.id, task.updatedAt)
+            : store.setTaskStatus(task.id, action === 'restore' ? 'in-progress' : 'cancelled', task.updatedAt),
           action === 'delete' ? 'Task deleted' : 'Task status updated');
           if (result) setEditor(null);
         }}
@@ -270,8 +280,9 @@ export function TaskListContent() {
     {refine ? <TaskRefineSheet current={view} resetDefaults={resetDefaults} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
     {confirm ? <ConfirmDialog title={confirm.kind === 'delete' ? 'Delete Task?' : 'Cancel Task?'}
-      message={confirm.kind === 'delete' ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`
-        : `Mark "${confirm.task.title}" as cancelled? You can restore it later.`}
+      message={confirm.kind === 'delete'
+        ? `Remove "${confirm.task.title}"? ${confirm.task.repeat ? 'This will end the repeat schedule.' : 'Its Moment and Activities will not be changed.'}`
+        : `Mark "${confirm.task.title}" as cancelled? ${confirm.task.repeat ? 'Repeats will pause until you restore this Task.' : 'You can restore it later.'}`}
       confirmLabel={confirm.kind === 'delete' ? 'Delete Task' : 'Cancel Task'}
       busy={busy} error={error} onCancel={() => { setConfirm(null); setError(''); }}
       onConfirm={() => confirm.kind === 'delete' ? remove(confirm.task) : statusChange(confirm.task, 'cancelled')} /> : null}

@@ -30,6 +30,7 @@ import { downloadBlob } from '../utils/download';
 import { buildEventGroupsFromBackup, collectBackupReferenceWarnings, mergeEventGroupsForRestore, mergeRecordsById } from '../services/backupService';
 import { createBackupFile, readBackupFile } from '../services/backupFileService';
 import { createGuestTaskRepository } from '../services/guestTaskService';
+import { listAccountExpensePlans, mergeAccountExpensePlans, mergeGuestExpensePlans, readGuestExpensePlans } from '../services/expensePlanService';
 import { restoreAttachmentFiles } from '../services/attachmentService';
 import { deleteSignedInCloudRecords } from '../services/accountCloudDeletionService';
 import { CLOUD_DELETE_CONFIRMATION } from '../utils/accountCloudDeletionSafety';
@@ -278,24 +279,27 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       let expenses;
       let incomes;
       let tasks = [];
+      let expensePlans = [];
       let dataSource;
 
       const sampleData = getActiveSampleData(user?.uid || null);
       if (sampleData) {
-        ({ events, expenses, incomes, tasks = [] } = sampleData);
+        ({ events, expenses, incomes, tasks = [], expensePlans = [] } = sampleData);
         dataSource = sampleData.scenario === GUEST_TOUR_SCENARIO ? 'guided-guest-demo' : 'development-sample';
       } else if (isGuest) {
         events = getGuestEvents();
         expenses = getGuestExpenses();
         incomes = getGuestIncomes();
         tasks = guardedGuestTasks(assertSourceScope).list();
+        expensePlans = readGuestExpensePlans();
         dataSource = 'guest-local';
       } else if (user?.uid) {
-        [events, expenses, incomes, tasks] = await Promise.all([
+        [events, expenses, incomes, tasks, expensePlans] = await Promise.all([
           getEventsForUser(user.uid),
           getExpensesForUser(user.uid),
           getIncomesForUser(user.uid),
           listAccountTasks(user.uid, assertSourceScope),
+          listAccountExpensePlans(user.uid, assertSourceScope),
         ]);
         dataSource = 'firebase-account';
       } else {
@@ -319,6 +323,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         expenses,
         incomes,
         tasks,
+        expensePlans,
         codeLists: adminValues,
         codeListSchemaVersion: CODE_LIST_SCHEMA_VERSION,
         preferences,
@@ -462,6 +467,12 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       const guestTasks = destinationGuest && !destinationUid ? guardedGuestTasks(assertDestinationScope) : null;
       guestTasks?.list();
       if (destinationUid) await listAccountTasks(destinationUid, assertDestinationScope);
+      const importedPlans = backup.expensePlans ?? [];
+      if (importedPlans.length) {
+        if (destinationUid) await listAccountExpensePlans(destinationUid, assertDestinationScope);
+        else if (destinationGuest) readGuestExpensePlans();
+        else throw new Error('Open an account or Guest workspace to restore expense plans.');
+      }
       assertDestinationScope();
       setBackupMessage('Verifying and restoring original attachment files before records…');
       const importedGroups = await restoreAttachmentFiles(buildEventGroupsFromBackup(backup, { originalFiles: pendingBackup.originalFiles }), backup.attachmentFiles || [], {
@@ -472,6 +483,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       let restoredGroups;
       let resultingExpenses;
       let resultingIncomes;
+      let recordedExpenses;
 
       if (isGuest || !user?.uid) {
         const existingExpenseMasters = getGuestExpenseMasters();
@@ -496,6 +508,8 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         // matching activity mirror; never copy the merged projection to storage.
         resultingExpenses = mergeRecordsById(existingExpenseMasters, standaloneBackupExpenses).items;
         setGuestExpenses(resultingExpenses);
+        recordedExpenses = [...resultingExpenses, ...restoredGroups.flatMap((moment) =>
+          (moment.activities || []).flatMap((activity) => activity.expenses || []))];
         imported.expenses = standaloneBackupExpenses.length;
 
         const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
@@ -537,8 +551,9 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           - backup.expenses.filter((expense) => nestedExpenseIds.has(expense.id)).length;
         for (const expense of standaloneBackupExpenses) {
           assertDestinationScope();
-          await createExpense(user.uid, expense);
+          await createExpense(user.uid, expense, assertDestinationScope);
         }
+        recordedExpenses = [...existingExpenses, ...backup.expenses];
         imported.expenses = standaloneBackupExpenses.length;
 
         const mergedIncomes = mergeRecordsById(existingIncomes, backup.incomes);
@@ -562,6 +577,14 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         const taskMerge = await mergeAccountTasks(destinationUid, backup.tasks, assertDestinationScope);
         imported.tasks = taskMerge.added;
         imported.conflicts += taskMerge.conflicts;
+      }
+      let planRestoreSummary = '';
+      if (importedPlans.length) {
+        const planMerge = destinationUid
+          ? await mergeAccountExpensePlans(destinationUid, importedPlans, assertDestinationScope, recordedExpenses)
+          : await mergeGuestExpensePlans(importedPlans, assertDestinationScope, recordedExpenses);
+        imported.conflicts += planMerge.conflicts;
+        planRestoreSummary = ` and ${planMerge.added} expense plans`;
       }
 
       // Configuration is restored only after record writes succeed. Existing record values win on ID conflicts.
@@ -600,7 +623,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         localStorage.setItem(`dn_${storageKey}_${pickerStorageId}`, JSON.stringify(ids));
       }
 
-      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records, plus ${imported.tasks} independent Tasks added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, Dashboard shortcuts, Code Lists and saved List defaults were restored where present.`;
+      const importSummary = `Restore complete: ${imported.moments} Moments, ${imported.activities} Activities, ${imported.memories} Memories, ${imported.attachments} attachment records, ${imported.expenses} standalone Expenses, and ${imported.incomes} Income records, plus ${imported.tasks} independent Tasks${planRestoreSummary} added; ${imported.conflicts} existing-ID conflicts preserved. Preferences, Dashboard shortcuts, Code Lists and saved List defaults were restored where present.`;
 
       if (restoreFromGuestTour) {
         // Only conclude the demo after all verified originals, records,
@@ -707,10 +730,13 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       const expenseState = useExpenseStore.getState();
       const incomeState = useIncomeStore.getState();
       assertSettingsResetRecords(context, eventState, expenseState, incomeState);
+      const expensePlans = context.uid ? await listAccountExpensePlans(context.uid, assertCurrent)
+        : context.scenario ? getActiveSampleData()?.expensePlans ?? [] : readGuestExpensePlans();
+      assertCurrent();
 
       const referencedValues = collectReferencedCodeListValues({
         events: eventState.events,
-        expenses: expenseState.expenses,
+        expenses: [...expenseState.expenses, ...expensePlans],
         incomes: incomeState.incomes,
       });
       await resetAllSettings(referencedValues, assertCurrent);
@@ -946,7 +972,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         <div className="dn-data-clear-options">
           <div className="dn-data-clear-option">
             <div><span className="dn-data-clear-label"><HardDrive size={15} aria-hidden="true" /> This browser</span>
-              <p>Clear local app data, including independent Guest Tasks and preferences. Does not remove online records or stored original files.</p></div>
+              <p>Clear local app data, including Guest Tasks, expense plans and preferences. Does not remove online records or stored original files.</p></div>
             <button type="button" className="dn-data-outlined-button" onClick={() => setConfirmClearData(true)}
               disabled={exportingBackup || importingBackup || readingBackup || deletingCloudRecords}>
               <Trash2 size={15} aria-hidden="true" /> Clear local
@@ -990,6 +1016,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
                   <li>{pendingBackup.backup.expenses.length} Expenses</li>
                   <li>{pendingBackup.backup.incomes.length} Income records</li>
                   <li>{pendingBackup.backup.tasks.length} independent Tasks</li>
+                  {pendingBackup.backup.expensePlans?.length ? <li>{pendingBackup.backup.expensePlans.length} expense {pendingBackup.backup.expensePlans.length === 1 ? 'plan' : 'plans'}</li> : null}
                   <li>Code Lists, preferences, dashboard configuration, and saved List defaults (when present)</li>
                 </ul>
                 <p>Restore uses a merge policy: missing records and child records are added; existing records with matching IDs are preserved, not overwritten. Configuration in the backup replaces its matching destination settings. Older backups without saved List defaults or Dashboard shortcuts leave those existing preferences unchanged. Explicit empty Dashboard shortcut lists still clear them. An interrupted restore can be retried; completed records are recognized by ID.</p>
@@ -1019,7 +1046,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div className="dn-cloud-delete-warning">
             <span className="dn-cloud-delete-warning-icon"><CloudOff size={22} aria-hidden="true" /></span>
             <div><strong>This permanently deletes online records</strong>
-              <p>Moments, Activities, linked files' metadata, income, expenses, transactions, Code Lists and legacy Firestore records in this account will be removed.</p></div>
+              <p>Moments, Activities, Tasks, linked files' metadata, income, expenses, expense plans, transactions, Code Lists and legacy Firestore records in this account will be removed.</p></div>
           </div>
           <p className="dn-cloud-delete-account"><strong>Signed-in account</strong><span>{user?.uid === confirmCloudDeleteUid ? (user?.email || user?.displayName || 'Current account') : 'Account changed'}</span></p>
           <p className="settings-helper">Your Google sign-in, records stored only on this browser, original photos in browser storage and any older Firebase Storage files are <strong>not</strong> deleted. Deletions cannot be undone without a backup. DN signs out after successful deletion to prevent immediate cloud re-creation. You can sign in again to start fresh; DN may create default Code Lists then. Close other signed-in DN tabs first.</p>
@@ -1051,7 +1078,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
 
       {confirmClearData ? (
         <ModalDialog title="Clear local DN data?" className="dn-local-clear-modal" onClose={() => setConfirmClearData(false)}>
-          <p className="settings-helper">This removes guest records, independent Guest Tasks, preferences, and local record backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
+          <p className="settings-helper">This removes Guest records, expense plans, preferences and local backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
             <button type="button" className="dn-data-outlined-button is-danger" onClick={clearLocalData}><Trash2 size={15} aria-hidden="true" /> Clear local data</button>
@@ -1106,7 +1133,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <div className="dn-data-location-item">
               <FileJson size={18} aria-hidden="true" />
               <strong>Recovery copy</strong>
-              <p>Your downloaded JSON can contain Moments, Activities, Tasks, transactions, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
+              <p>Your downloaded JSON can contain Moments, Activities, Tasks, transactions, expense plans, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
             </div>
           </div>
           <details className="dn-data-recovery-guide">

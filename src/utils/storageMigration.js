@@ -14,6 +14,7 @@ const FIXED_SUFFIXES = Object.freeze([
   'guest_expenses',
   'guest_incomes',
   'guest_tasks',
+  'guest_expense_plans',
   'guest_mode',
   'session_backup',
   'dev_fixture_scenario',

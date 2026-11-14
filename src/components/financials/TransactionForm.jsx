@@ -3,12 +3,14 @@ import { activityTime, currentEntryTime } from '../../utils/activityTime';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
+import RepeatField from '../common/RepeatField';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
 import { normalizePaymentMethod, requirePaymentMethod } from '../../utils/paymentMethod';
+import { REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 
 const today = () => {
   const date = new Date();
@@ -25,6 +27,7 @@ const defaultValues = (preferences, defaultKind = 'expense') => ({
   eventId: '',
   activityId: '',
   notes: '',
+  repeatFrequency: '',
 });
 
 const createDraft = (preferences, initialTransaction, defaultKind, presetLink) => {
@@ -47,14 +50,26 @@ const createDraft = (preferences, initialTransaction, defaultKind, presetLink) =
   };
 };
 
+const paymentDraft = (plan) => ({
+  transactionKind: 'expense', title: plan.name, amount: String(plan.amount),
+  category: plan.category, notes: plan.notes, paymentMethod: plan.paymentMethod || '',
+});
+
 export default function TransactionForm({
-  initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [],
+  initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [], expensePlan = null, paymentPlan = null,
   onSubmit, onCancel, busy = false,
 }) {
   const preferences = useAppStore((state) => state.preferences);
   const adminValues = useAppStore((state) => state.adminValues);
-  const [form, setForm] = useState(() => createDraft(preferences, initialTransaction, defaultKind, presetLink));
+  const [form, setForm] = useState(() => {
+    const original = createDraft(preferences, initialTransaction, defaultKind, presetLink);
+    if (expensePlan) return { ...original, ...paymentDraft(expensePlan), time: '',
+      date: expensePlan.dueDate, repeatFrequency: expensePlan.repeat.frequency };
+    return paymentPlan ? { ...original, ...paymentDraft(paymentPlan) } : original;
+  });
   const [error, setError] = useState('');
+  const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
+  const isPlan = canRepeat && Boolean(form.repeatFrequency);
 
   const sourceRef = useRef([initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date]);
   useEffect(() => {
@@ -73,7 +88,7 @@ export default function TransactionForm({
     return [...new Set([...list, form.category, 'Other'].filter(Boolean))];
   }, [adminValues.incomeTypes, adminValues.expenseCategories, form.transactionKind, form.category]);
 
-  const previousMethod = normalizePaymentMethod(initialTransaction?.paymentMethod);
+  const previousMethod = normalizePaymentMethod((initialTransaction || expensePlan || paymentPlan)?.paymentMethod);
   const paymentMethods = useMemo(() => [...new Set([
     ...getCodeListItems('paymentMethods', adminValues.paymentMethods), previousMethod,
   ].filter(Boolean))], [adminValues.paymentMethods, previousMethod]);
@@ -82,8 +97,9 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = [form.date || 'Choose date', form.time || 'No time',
-    form.eventId && 'Moment linked', form.activityId && 'Activity linked'].filter(Boolean).join(' · ');
+  const supportingDetails = (isPlan ? [form.date || 'Choose first due date', REPEAT_OPTIONS[form.repeatFrequency]]
+    : [form.date || 'Choose date', form.time || 'No time',
+      form.eventId && 'Moment linked', form.activityId && 'Activity linked']).filter(Boolean).join(' · ');
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -95,6 +111,7 @@ export default function TransactionForm({
   const handleType = (kind) => {
     setForm((current) => ({
       ...current, transactionKind: kind,
+      repeatFrequency: '',
       category: kind === 'income'
         ? preferences.defaultIncomeType || 'Other'
         : preferences.defaultExpenseCategory || 'Other',
@@ -108,13 +125,16 @@ export default function TransactionForm({
       setError('Enter a title, category, valid positive amount and date.');
       return;
     }
-    try { requirePaymentMethod(form.paymentMethod, adminValues.paymentMethods, previousMethod); }
+    try { if (!isPlan || form.paymentMethod) requirePaymentMethod(form.paymentMethod, adminValues.paymentMethods, previousMethod); }
     catch (paymentError) {
       setError(paymentError.message);
       return;
     }
     setError('');
-    try { await onSubmit({ ...form, title: form.title.trim(), amount }); }
+    try { await onSubmit({ ...form, title: form.title.trim(), amount,
+      repeatFrequency: isPlan ? form.repeatFrequency : '',
+      ...(isPlan ? { eventId: '', activityId: '', time: '' } : {}),
+    }); }
     catch (saveError) { setError(saveError?.message || 'Could not save transaction. Try again.'); }
   };
 
@@ -123,7 +143,7 @@ export default function TransactionForm({
       <div className="dn-transaction-field">
         <span>Transaction Type *</span>
         <DropdownSelect aria-label="Transaction Type" value={form.transactionKind}
-          onChange={(event) => handleType(event.target.value)} disabled={busy}>
+          onChange={(event) => handleType(event.target.value)} disabled={busy || Boolean(expensePlan || paymentPlan)}>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </DropdownSelect>
@@ -147,22 +167,32 @@ export default function TransactionForm({
           {categories.map((category) => <option key={category} value={category}>{category}</option>)}
         </DropdownSelect>
       </div>
-      <fieldset className="dn-payment-method-field" aria-required="true">
-        <legend>Payment method *</legend>
+      <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
+        <legend>{isPlan ? 'Payment method (optional)' : 'Payment method *'}</legend>
         <div className="dn-payment-method-options">
           {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
             <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
               onChange={() => change('paymentMethod', method)} disabled={busy} />
             <span>{method}</span>
           </label>)}
+          {isPlan ? <label className="dn-payment-method-choice">
+            <input type="radio" name="paymentMethod" value="" checked={!form.paymentMethod}
+              onChange={() => change('paymentMethod', '')} disabled={busy} />
+            <span>Choose at payment</span>
+          </label> : null}
         </div>
-        {!paymentMethods.length ? <small>Add a payment method in Settings → Code Lists before saving.</small> : null}
+        {!paymentMethods.length && !isPlan ? <small>Add a payment method in Settings → Code Lists before saving.</small> : null}
         {previousMethod && !getCodeListItems('paymentMethods', adminValues.paymentMethods).includes(previousMethod)
-          ? <small>The saved method is no longer active. Keep it for this transaction or choose an active method.</small> : null}
+          ? <small>The saved method is no longer active. You can keep it here or choose an active method.</small> : null}
         {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
           ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
       </fieldset>
       <FormDisclosure label="More options" hint={supportingDetails}>
+      {canRepeat ? <RepeatField className="dn-transaction-field" value={form.repeatFrequency}
+        onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy} allowOneTime={!expensePlan}>
+        DN counts an expense after you record its payment. Choose any Moment or Activity when you pay.
+      </RepeatField> : null}
+      {!isPlan ? <>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
         <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
@@ -193,10 +223,11 @@ export default function TransactionForm({
             ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
             : null}
       </div>
+      </> : null}
       <div className="activity-date-time-row">
-        <DateField label="Date *" name="date" required value={form.date}
+        <DateField label={isPlan ? 'Due date *' : 'Date *'} name="date" required value={form.date}
           onChange={(event) => change('date', event.target.value)} disabled={busy} />
-        <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
+        {!isPlan ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} /> : null}
       </div>
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
@@ -204,7 +235,7 @@ export default function TransactionForm({
       {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       <div className="form-actions">
         <button className="primaryButton" type="submit" disabled={busy}>
-          {busy ? 'Saving…' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
+          {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
         </button>
         <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
       </div>

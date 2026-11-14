@@ -21,6 +21,8 @@ import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
+import useExpensePlans from '../hooks/useExpensePlans';
+import { getActiveSampleScenario } from '../dev/sampleData';
 import { DEFAULT_CODE_LISTS, serializeCodeListEntries } from '../utils/codeLists';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import RichTextEditor from '../components/common/RichTextEditor';
@@ -61,7 +63,9 @@ const getRecordUsageCount = (listKey, value, state) => {
   }
 };
 
-function CodeListSection({ title, description, listKey, placeholder, allowLabels = false, anchor = true }) {
+const NO_PLANS = Object.freeze([]);
+
+function CodeListSection({ title, description, listKey, placeholder, allowLabels = false, anchor = true, expensePlans = NO_PLANS }) {
   const accountError = useAppStore((state) => state.adminValuesError);
   const accountLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -110,8 +114,9 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   const inactiveEntries = entries.filter((entry) => entry.active === false || entry.isActive === false);
 
   const usageMap = useMemo(() => Object.fromEntries(
-    entries.map((entry) => [entry.value, getRecordUsageCount(listKey, entry.value, { events, expenses, incomes, preferences })]),
-  ), [entries, events, expenses, incomes, preferences, listKey]);
+    entries.map((entry) => [entry.value, getRecordUsageCount(listKey, entry.value,
+      { events, expenses: [...expenses, ...expensePlans], incomes, preferences })]),
+  ), [entries, events, expenses, expensePlans, incomes, preferences, listKey]);
 
   const updateEntries = async (nextEntries) => {
     if (savingRef.current) return false;
@@ -452,7 +457,7 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
   );
 }
 
-function PaymentMethodsSection() {
+function PaymentMethodsSection({ expensePlans }) {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const uid = user?.uid;
@@ -472,19 +477,21 @@ function PaymentMethodsSection() {
     }}>Retry loading payment methods</button>
   </section>;
   if (incomes.loadedFor !== scope || expenses.loadedFor !== scope) return <section className="settings-section" role="status">Loading payment methods…</section>;
-  return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" anchor={false} />;
+  return <CodeListSection title="Payment Methods" description="Add payment choices for new transactions and filters. Disabling or renaming a choice keeps earlier transactions unchanged." listKey="paymentMethods" placeholder="Add payment method" anchor={false} expensePlans={expensePlans} />;
 }
 
 
 export default function CodeLists() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  return <CodeListsContent key={user?.uid || (isGuest ? 'guest' : 'signed-out')} />;
+  const sample = getActiveSampleScenario(user?.uid);
+  return <CodeListsContent key={user?.uid || (isGuest ? sample || 'guest' : 'signed-out')} isGuest={isGuest} sample={sample} />;
 }
 
-function CodeListsContent() {
+function CodeListsContent({ isGuest, sample }) {
   const location = useLocation();
   const user = useAppStore((state) => state.user);
+  const { plans } = useExpensePlans(user?.uid, isGuest, sample);
   const adminValuesLoading = useAppStore((state) => state.adminValuesLoading);
   const adminValuesError = useAppStore((state) => state.adminValuesError);
   const hydrateAdminValuesForUser = useAppStore((state) => state.hydrateAdminValuesForUser);
@@ -548,10 +555,10 @@ function CodeListsContent() {
           </div>
         </nav>
         <CodeListSection title="Moment Types" description="Manage Moment types and choose their Daily, Journal, or Tasks mode, greetings, and Dashboard options." listKey="eventTypes" placeholder="Add moment type" />
-        <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" />
+        <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" expensePlans={plans} />
         <CodeListSection title="Income Types" description="Used for income sources and financial filters." listKey="incomeTypes" placeholder="Add income type" />
         <div id="code-list-paymentMethods" tabIndex={-1} role="group" aria-label="Payment Methods">
-          <PaymentMethodsSection />
+          <PaymentMethodsSection expensePlans={plans} />
         </div>
         <CodeListSection title="Activity Priorities" description="Used for task and activity urgency indicators." listKey="activityPriorities" placeholder="Add priority" allowLabels />
         <CodeListSection title="Reminder Presets" description="Saved presets for the future Notifications feature." listKey="reminderPresets" placeholder="Add reminder time" allowLabels />

@@ -4,6 +4,7 @@ import { normalizeActivityTime } from './activityTime.js';
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
 import { activityOwnsLinkedId } from './activityEntries.js';
+import { nextScheduledDate, normalizeRepeatSchedule, scheduleTimestamp } from './repeatSchedule.js';
 
 export const TASK_STATUSES = Object.freeze(['in-progress', 'completed', 'cancelled']);
 export const TASK_PRIORITIES = Object.freeze(['low', 'medium', 'high']);
@@ -46,9 +47,15 @@ export const normalizeIndependentTask = (raw, { createId } = {}) => {
   const createdAt = timestamp(raw.createdAt, 'creation date');
   const updatedAt = timestamp(raw.updatedAt, 'update date');
   const completedAt = status === 'completed' ? timestamp(raw.completedAt, 'completion date') : null;
+  const repeat = raw.repeat == null ? null : normalizeRepeatSchedule(raw.repeat);
+  const seriesId = repeat && recordId(raw.repeat.seriesId);
+  if (repeat && (!/^[\w-]{1,100}$/.test(seriesId) || !dueDate || dueDate < repeat.anchorDate || status === 'completed')) {
+    throw new Error('This repeating Task needs a valid due date and schedule.');
+  }
   return {
     id, title, notes: String(raw.notes ?? ''), priority, status,
     dueDate, dueTime, momentId, activityId, createdAt, updatedAt, completedAt,
+    ...(repeat ? { repeat: { ...repeat, seriesId } } : {}),
   };
 };
 
@@ -58,6 +65,37 @@ export const taskStatusPatch = (task, target, now = new Date()) => {
   const at = now instanceof Date ? now.toISOString() : timestamp(now, 'update date');
   return { status: target, completedAt: target === 'completed' ? at : null, updatedAt: at };
 };
+
+// An edit to the due date or frequency starts a new schedule from that date.
+export function taskRepeatForDraft(previous, frequency, dueDate, createId) {
+  if (!frequency) return null;
+  if (previous?.repeat?.frequency === frequency && previous.dueDate === dueDate) return previous.repeat;
+  return { ...normalizeRepeatSchedule({ frequency, anchorDate: dueDate }), seriesId: createId() };
+}
+
+export function resolveRepeatingTask(task, action, now = new Date()) {
+  if (!task?.repeat || task.status !== 'in-progress' || !['complete', 'skip'].includes(action)) {
+    throw new Error('This repeating Task changed. Reopen Tasks and try again.');
+  }
+  const current = normalizeIndependentTask({ ...task, repeat: null,
+    ...taskStatusPatch(task, action === 'complete' ? 'completed' : 'cancelled', now),
+    updatedAt: scheduleTimestamp(task.updatedAt, now) });
+  const dueDate = nextScheduledDate(task.repeat, task.dueDate);
+  const next = normalizeIndependentTask({ ...task, dueDate,
+    id: `repeat-${task.repeat.seriesId}-${dueDate}`,
+    momentId: '', activityId: '', createdAt: now.toISOString(), updatedAt: now.toISOString(),
+  });
+  return { current, next };
+}
+
+export function advanceRepeatingTask(tasks, id, action, expectedUpdatedAt) {
+  const task = tasks.find((item) => item.id === id);
+  if (!task || task.updatedAt !== expectedUpdatedAt) throw new Error('This Task changed. Reopen Tasks and try again.');
+  const { current, next } = resolveRepeatingTask(task, action);
+  const entries = tasks.map((item) => item.id === id ? current : item);
+  if (!entries.some((item) => item.id === next.id)) entries.push(next);
+  return { current, entries };
+}
 
 // Parent changes never delete independent Tasks or change their completion.
 export const detachIndependentTaskLinks = (tasks = [], { momentId, activityId, activityIds } = {}) => {

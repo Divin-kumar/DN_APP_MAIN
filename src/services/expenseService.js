@@ -2,14 +2,17 @@
 import {
   addDoc,
   collection,
+  doc,
   getDocs,
+  runTransaction,
 } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { auth, db } from '../firebase/config';
 import { upsertRecord } from '../utils/transactionRelations';
 import { normalizeFinancialRecord, mergeFinancialExpenses } from '../utils/financialRecords.js';
 import { getEventsForUser } from './eventService';
 import { recordId } from '../utils/recordIdentity.js';
 import { deleteAccountFinancialRecord, getAccountTransactions, updateAccountFinancialRecord } from './accountTransactionService';
+import { isPlannedExpenseId } from '../utils/expensePlans.js';
 
 const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
 const GUEST_EVENTS_KEY = 'dn_guest_eventGroups';
@@ -73,9 +76,24 @@ export const getExpensesForUser = async (uid) => {
   return mergeExpenseRecords([...masterExpenses, ...unifiedExpenses, ...nestedExpenses]);
 };
 
-export const createExpense = async (uid, expense) => {
+export const createExpense = async (uid, expense, assertCurrent = () => {}) => {
   const normalized = normalizeExpense(expense);
   const expensesRef = collection(db, 'users', uid, 'expenses');
+  // A backup or Guest transfer can restore a payment before its plan.
+  // Keep the receipt at the same address used when recording it in Finance.
+  if (isPlannedExpenseId(normalized.id)) {
+    const ref = doc(expensesRef, normalized.id);
+    return runTransaction(db, async (transaction) => {
+      assertCurrent();
+      if (auth.currentUser?.uid !== uid) throw new Error('Your account changed before the expense could be saved.');
+      const snapshot = await transaction.get(ref);
+      assertCurrent();
+      if (auth.currentUser?.uid !== uid) throw new Error('Your account changed before the expense could be saved.');
+      if (!snapshot.exists()) transaction.set(ref, normalized);
+      const saved = snapshot.exists() ? normalizeExpense(snapshot.data(), ref.id) : normalized;
+      return { ...saved, firestoreId: ref.id, firestoreCollection: 'expenses' };
+    });
+  }
   const docRef = await addDoc(expensesRef, normalized);
   return { firestoreId: docRef.id, firestoreCollection: 'expenses', ...normalized };
 };

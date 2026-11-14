@@ -107,7 +107,7 @@ test('invalid JSON, duplicate root fields, unsupported versions and broken relat
     '{"x":[}', '{"x":"unterminated}', '{"x":01}', '{"x":1 "y":2}', '{"x":1,"x":2}']) {
     await assert.rejects(readJsonBackupFile(new Blob([source]), { chunkBytes: 9 }), /valid JSON|top-level/);
   }
-  await assert.rejects(readBackupFile(new Blob(['{"backupVersion":5}'])), /Unsupported backup version/);
+  await assert.rejects(readBackupFile(new Blob(['{"backupVersion":6}'])), /Unsupported backup version/);
   const backup = createBackupDocument(input());
   backup.activities[0].momentId = 'absent';
   await assert.rejects(readBackupFile(new Blob([JSON.stringify(backup)])), /references a missing Moment/);
@@ -191,4 +191,19 @@ test('streaming v4 backup round-trip preserves independent Task records and orig
   assert.equal(restored.backup.tasks[0].notes, 'Tamil தமிழ்');
   assert.equal(restored.originalFiles.size, 1);
   assert.equal(buildEventGroupsFromBackup(restored.backup, { originalFiles: restored.originalFiles })[0].activities.length, 1);
+});
+
+test('streaming backup v5 retains Task schedules and unpaid expense plans outside ledger arrays', async () => {
+  const dueDate = '2026-12-31';
+  const repeat = { frequency: 'monthly', anchorDate: dueDate };
+  const task = { id: 'repeat-task', title: 'Read meter', status: 'in-progress', dueDate, repeat: { ...repeat, seriesId: 'meter' } };
+  const plan = { id: 'water', name: 'Water bill', amount: 500, category: 'Home', dueDate, repeat,
+    updatedAt: '2026-11-14T12:00:00.000Z' };
+  const fixture = input();
+  const result = await createBackupFile({ ...fixture, tasks: [task], expensePlans: [plan] });
+  const restored = await readBackupFile(result.blob, { chunkBytes: 47 });
+  assert.equal(restored.backup.backupVersion, 5);
+  assert.deepEqual(restored.backup.tasks[0].repeat, task.repeat);
+  assert.equal(restored.backup.expensePlans[0].name, plan.name);
+  assert.ok(restored.backup.expenses.every((record) => record.id !== plan.id));
 });

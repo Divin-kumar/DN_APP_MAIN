@@ -1,9 +1,12 @@
 // Independent Guest Tasks have their own storage key and never share a
 // Moment's embedded activities or the legacy guest record collections.
-import { detachIndependentTaskLinks, normalizeIndependentTask } from '../utils/independentTasks.js';
+import { advanceRepeatingTask, detachIndependentTaskLinks, normalizeIndependentTask } from '../utils/independentTasks.js';
 import { recordId } from '../utils/recordIdentity.js';
 
 export const GUEST_TASKS_KEY = 'dn_guest_tasks';
+
+export const withGuestTaskLock = (work) => globalThis.navigator?.locks
+  ? globalThis.navigator.locks.request(GUEST_TASKS_KEY, work) : work();
 
 // Explicit session assertion is required even when callers use a synthetic
 // Guest tour. Never let a stale account-triggered callback write Guest Tasks.
@@ -48,10 +51,13 @@ export const createGuestTaskRepository = ({ storage, assertGuest, createId } = {
   };
   return {
     list: read,
-    upsert(input) {
+    upsert(input, { expectedUpdatedAt } = {}) {
       const current = read();
       const requestedId = recordId(input?.id) || recordId(input?.firestoreId);
       const index = current.findIndex((item) => item.id === requestedId);
+      if (expectedUpdatedAt !== undefined && (index < 0 || current[index].updatedAt !== expectedUpdatedAt)) {
+        throw new Error('This Task changed. Reopen Tasks and try again.');
+      }
       const task = normalizeIndependentTask(index < 0 ? input : { ...current[index], ...input },
         { createId: requestedId ? undefined : createId });
       if (index < 0 && current.some((item) => item.id === task.id)) throw new Error('Task ID already exists.');
@@ -61,10 +67,17 @@ export const createGuestTaskRepository = ({ storage, assertGuest, createId } = {
       write(next);
       return task;
     },
-    remove(id) {
+    advance(id, action, expectedUpdatedAt) {
+      const result = advanceRepeatingTask(read(), id, action, expectedUpdatedAt);
+      return { current: result.current, entries: write(result.entries) };
+    },
+    remove(id, expectedUpdatedAt) {
       const key = recordId(id);
       if (!key) throw new Error('Choose a valid Task to remove.');
       const current = read();
+      if (expectedUpdatedAt !== undefined && !current.some((task) => task.id === key && task.updatedAt === expectedUpdatedAt)) {
+        throw new Error('This Task changed. Reopen Tasks and try again.');
+      }
       const next = current.filter((item) => item.id !== key);
       if (next.length !== current.length) write(next);
       return current.length - next.length;
@@ -81,7 +94,12 @@ export const createGuestTaskRepository = ({ storage, assertGuest, createId } = {
         incomingIds.add(task.id);
       });
       const existing = new Set(current.map((task) => task.id));
-      const additions = normalized.filter((task) => !existing.has(task.id));
+      const series = new Set(current.flatMap((task) => task.repeat ? [task.repeat.seriesId] : []));
+      const additions = normalized.filter((task) => {
+        if (existing.has(task.id) || (task.repeat && series.has(task.repeat.seriesId))) return false;
+        if (task.repeat) series.add(task.repeat.seriesId);
+        return true;
+      });
       const conflicts = normalized.length - additions.length;
       const items = additions.length ? write([...current, ...additions]) : current;
       return { items, added: additions.length, conflicts };

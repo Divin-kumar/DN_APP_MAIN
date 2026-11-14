@@ -442,10 +442,12 @@ export default function DashboardLayout() {
     if (!records.isCurrent(context)) throw new Error('Your session changed. Reopen + to add a transaction.');
     transactionSaving.current = true; setTransactionBusy(true); setQuickCreateError('');
     try {
-      await saveTransaction(formData);
+      const saved = await saveTransaction(formData);
       if (transactionMounted.current && records.isCurrent(context)) {
         setQuickCreateType(null); setQuickTransaction(null);
-        showToast('Transaction added', 'success', { label: 'View', to: '/financials/transactions' });
+        showToast(saved.plan ? 'Expense plan saved' : 'Transaction added', 'success', {
+          label: 'View', to: saved.plan ? '/financials/transactions#expense-plans' : '/financials/transactions',
+        });
       }
     } catch (error) {
       if (transactionMounted.current && records.isCurrent(context)) setQuickCreateError(error?.message || 'Could not save this transaction.');

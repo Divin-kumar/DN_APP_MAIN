@@ -2,10 +2,12 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
+import RepeatField from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
+import { REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
 export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
@@ -23,6 +25,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [priority, setPriority] = useState(task?.priority || 'medium');
   const [dueDate, setDueDate] = useState(task?.id ? (task.dueDate || '') : (task?.dueDate || formatMomentDate(new Date())));
   const [dueTime, setDueTime] = useState(task?.dueTime || '');
+  const [repeatFrequency, setRepeatFrequency] = useState(task?.repeat?.frequency || '');
   const [momentId, setMomentId] = useState(recordId(task?.momentId));
   const [activityId, setActivityId] = useState(recordId(task?.activityId));
   const unresolved = resolveIndependentTaskParent({ momentId, activityId }, moments);
@@ -31,7 +34,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const savedAlias = Boolean(activityId && !(parent?.activities || []).some((item) => recordId(item.id) === activityId));
   const save = (event) => {
     event.preventDefault();
-    if (!busy && title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId });
+    if (!busy && title.trim()) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId, repeatFrequency });
   };
 
   if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
@@ -40,6 +43,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       ? `Remove “${task.title}”? Its Moment and Activities will not be changed.`
       : pendingAction === 'restore' ? `Move “${task.title}” back to In progress?`
         : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>
+    {task.repeat && pendingAction !== 'restore' ? <p>{pendingAction === 'delete'
+      ? 'This will end the repeat schedule.' : 'The repeat schedule pauses until you restore this Task.'}</p> : null}
     <p>Unsaved edits will not be saved.</p>
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="dn-task-form-actions">
@@ -56,12 +61,17 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
     </label>
     <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
-      <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy}
+      <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy} required={Boolean(repeatFrequency)}
         onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-    <FormDisclosure label="More options" hint={momentId ? "Linked Moment · priority and notes" : "Priority, links and notes"}>
+    <FormDisclosure label="More options" hint={repeatFrequency ? `Repeats ${REPEAT_OPTIONS[repeatFrequency].toLowerCase()}`
+      : momentId ? "Linked Moment · priority and notes" : "Priority, links and notes"}>
+    {task?.status !== 'completed' ? <RepeatField className="dn-task-field" value={repeatFrequency}
+      onChange={setRepeatFrequency} disabled={busy}>
+      Done or Skip schedules the next Task. Each new occurrence starts without links.
+    </RepeatField> : null}
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
         <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>

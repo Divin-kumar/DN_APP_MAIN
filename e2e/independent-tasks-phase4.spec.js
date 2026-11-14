@@ -55,6 +55,7 @@ for (const width of [320, 390, 1280]) {
     await edit.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await edit.getByLabel('Notes (optional)').fill('Keep the originals');
     await page.getByRole('dialog', { name: 'Edit Task' }).getByRole('button', { name: 'Save Task' }).click();
+    await expect(edit).toHaveCount(0);
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
     expect(saved[0].status).toBe('completed');
     expect(saved[0].notes).toBe('Keep the originals');

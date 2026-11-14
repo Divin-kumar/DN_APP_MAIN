@@ -68,7 +68,7 @@ test('v3 backup preserves independent Moment type Dashboard flags', () => {
 
 test('v3 validator rejects unsupported versions, duplicate IDs, and broken required relationships', () => {
   const backup = fixture();
-  assert.throws(() => parseBackupDocument({ backupVersion: 5 }), /Unsupported backup version/);
+  assert.throws(() => parseBackupDocument({ backupVersion: 6 }), /Unsupported backup version/);
   assert.throws(() => parseBackupDocument({ backupFormatVersion: 99 }), /Unsupported backup format version/);
   assert.throws(() => validateBackupDocument({ ...backup, activities: [...backup.activities, backup.activities[0]] }), /duplicate ID/);
   assert.throws(() => validateBackupDocument({ ...backup, memories: [{ id: 'orphan', momentId: 'missing' }] }), /references a missing Moment/);

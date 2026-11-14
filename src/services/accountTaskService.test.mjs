@@ -43,7 +43,7 @@ async function harness(t) {
     }, load(id) {
       const fixture = `globalThis[${JSON.stringify(key)}]`;
       if (id === '\0task-firestore') return `export const {collection,doc,getDocsFromServer,onSnapshot,runTransaction,writeBatch}=${fixture};`;
-      if (id === '\0task-transfer') return 'export const getGuestExpenses=()=>[],getGuestIncomes=()=>[],getGuestEvents=()=>[],exportAttachmentFiles=async()=>[],restoreAttachmentFiles=async()=>[];';
+      if (id === '\0task-transfer') return 'export const getGuestExpenses=()=>[],createExpense=async()=>{},getGuestIncomes=()=>[],getGuestEvents=()=>[],normalizeEvent=(item)=>item,setGuestEvents=()=>{},getGuestExpenseMasters=()=>[],setGuestExpenses=()=>{},exportAttachmentFiles=async()=>[],restoreAttachmentFiles=async()=>[];';
       if (id === '\0task-config') return `export const auth=${fixture}.auth; export const db={};`;
       if (id === '\0task-sample') return 'export const getActiveSampleScenario=()=>null,requireActiveSampleData=()=>null,saveActiveSampleData=()=>{};';
       if (id === '\0task-app') return `import {create} from 'zustand'; const store=create(()=>({user:{uid:'alice'},isGuest:false})); ${fixture}.app=store; export default store;`;
@@ -53,7 +53,8 @@ async function harness(t) {
   const service = await server.ssrLoadModule('/src/services/accountTaskService.js');
   const { default: store } = await server.ssrLoadModule('/src/store/useTaskStore.js');
   const transfer = await server.ssrLoadModule('/src/services/guestMergeService.js');
-  return { ...api, service, transfer, store, app: api.app, fail: () => { failure = true; }, snapshot };
+  const expensePlans = await server.ssrLoadModule('/src/services/expensePlanService.js');
+  return { ...api, service, transfer, expensePlans, store, app: api.app, fail: () => { failure = true; }, snapshot };
 }
 const task = { id: 'stable', title: 'Keep my task', priority: 'high', dueDate: '2026-11-07', dueTime: '09:30', momentId: 'moment', activityId: 'activity', updatedAt: '2026-11-04T10:00:00.000Z' };
 
@@ -78,6 +79,41 @@ test('owner guard rejects cross-account writes and a session change during a tra
     if (++checks === 3) throw new Error('session changed');
   } }), /session changed/);
   assert.equal(h.rows.size, 0);
+});
+
+test('account Task repeat commits completion and next occurrence together and rejects a stale repeat', async (t) => {
+  const h = await harness(t);
+  const repeating = { ...task, repeat: { frequency: 'weekly', anchorDate: task.dueDate, seriesId: 'weekly-task' } };
+  await h.service.writeAccountTask('alice', repeating, { mode: 'create' });
+  await h.service.writeAccountTask('alice', repeating, { repeatAction: 'complete', expectedUpdatedAt: task.updatedAt });
+  await assert.rejects(h.service.writeAccountTask('alice', repeating, {
+    repeatAction: 'complete', expectedUpdatedAt: task.updatedAt,
+  }), /changed on another device/);
+  const saved = await h.service.listAccountTasks('alice');
+  assert.deepEqual(saved.map((item) => [item.status, item.dueDate]), [['completed', '2026-11-07'], ['in-progress', '2026-11-14']]);
+  const next = saved.find((item) => item.repeat);
+  assert.equal(next.dueTime, '09:30');
+  assert.equal(next.activityId, '');
+});
+
+test('account expense plan keeps a single receipt and advances only on committed payment or skip', async (t) => {
+  const h = await harness(t);
+  const context = { uid: 'alice' };
+  const guard = () => {};
+  const draft = { title: 'Internet', amount: 799, category: 'Home', date: '2026-01-31', repeatFrequency: 'monthly' };
+  const { plan } = await h.expensePlans.saveExpensePlan(context, draft, null, guard);
+  assert.equal(h.rows.size, 1);
+  const payload = { name: draft.title, amount: 749, category: 'Home', paymentMethod: 'Online', date: '2026-02-02' };
+  const paid = await h.expensePlans.recordExpensePlanPayment(context, plan, payload, null, guard);
+  assert.equal(paid.expense.amount, 749);
+  assert.equal(paid.plan.dueDate, '2026-02-28');
+  await assert.rejects(h.expensePlans.recordExpensePlanPayment(context, plan, payload, null, guard), /plan changed/);
+  const skipped = await h.expensePlans.changeExpensePlanDate(context, paid.plan, 'skip', guard);
+  assert.equal(skipped.plan.dueDate, '2026-03-31');
+  h.fail();
+  await assert.rejects(h.expensePlans.recordExpensePlanPayment(context, skipped.plan, payload, null, guard), /permission-denied/);
+  assert.equal(h.rows.size, 2);
+  assert.equal(h.rows.get(`users/alice/expensePlans/${plan.id}`).dueDate, '2026-03-31');
 });
 
 test('live Task store clears on logout and rejects old callbacks after A→B→A', async (t) => {

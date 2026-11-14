@@ -1,0 +1,20 @@
+.dn-expense-plans { margin-block: 12px; scroll-margin-top: 80px; }
+.dn-expense-plan-list { list-style: none; margin: 0; padding: 0; }
+.dn-expense-plan-row { padding: 12px 0 2px; border-bottom: 1px solid var(--color-border); min-width: 0; }
+.dn-expense-plan-row:last-child { border-bottom: 0; }
+.dn-expense-plan-title { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+.dn-expense-plan-title strong { overflow-wrap: anywhere; }
+.dn-expense-plan-title span { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.dn-expense-plan-row small { display: block; margin-top: 4px; font-size: 13px; line-height: 1.5; color: var(--color-text-muted); }
+.dn-expense-plan-actions { display: flex; flex-wrap: wrap; gap: 4px 16px; }
+.dn-expense-plan-actions button {
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--color-primary);
+  font: inherit;
+  font-size: 13px;
+  padding: 0 4px;
+}
+.dn-expense-plan-actions button:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
+.dn-expense-plan-actions button:disabled { opacity: .55; }

@@ -1,7 +1,7 @@
 import { createBackupDocument, parseBackupDocument, validateBackupAttachmentFile, validateBackupDocument } from './backupService.js';
 import { attachmentBlobFromBackup, iterateAttachmentFiles } from './attachmentService.js';
 
-const ARRAY_FIELDS = new Set(['moments', 'activities', 'memories', 'attachments', 'attachmentFiles', 'expenses', 'incomes', 'tasks']);
+const ARRAY_FIELDS = new Set(['moments', 'activities', 'memories', 'attachments', 'attachmentFiles', 'expenses', 'incomes', 'tasks', 'expensePlans']);
 const CHUNK_BYTES = 256 * 1024;
 const whitespace = (byte) => byte === 32 || byte === 9 || byte === 10 || byte === 13;
 const pause = () => new Promise((resolve) => setTimeout(resolve, 0));

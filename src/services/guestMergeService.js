@@ -1,5 +1,6 @@
 import { mergeAccountTasks } from './accountTaskService';
 import { normalizeIndependentTask } from '../utils/independentTasks.js';
+import { GUEST_EXPENSE_PLANS_KEY, isPlannedExpenseId } from '../utils/expensePlans.js';
 import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration';
 /*
   Migrates guest-local records into the signed-in user's Firestore account.
@@ -9,10 +10,11 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 */
 import { collection, doc, writeBatch } from 'firebase/firestore';
 import { auth, db } from '../firebase/config';
-import { getGuestExpenses } from './expenseService';
+import { createExpense, getGuestExpenses } from './expenseService';
 import { getGuestIncomes } from './incomeService';
 import { getGuestEvents } from './eventService';
 import { exportAttachmentFiles, restoreAttachmentFiles } from './attachmentService';
+import { mergeAccountExpensePlans, readGuestExpensePlans } from './expensePlanService';
 
 const GUEST_MODE_KEY = 'dn_guest_mode';
 const GUEST_EXPENSES_KEY = 'dn_guest_expenses';
@@ -28,6 +30,13 @@ export const mergeGuestDataIntoAccount = async (uid) => {
   const incomes = getGuestIncomes();
   const events = getGuestEvents();
   const guestTaskRaw = localStorage.getItem('dn_guest_tasks');
+  const guestPlansRaw = localStorage.getItem(GUEST_EXPENSE_PLANS_KEY);
+  let expensePlans = [];
+  let expensePlansRetainedLocally = false;
+  if (guestPlansRaw) {
+    try { expensePlans = readGuestExpensePlans(); }
+    catch { expensePlansRetainedLocally = true; }
+  }
   let tasksRetainedLocally = 0;
   let tasks = [];
   if (guestTaskRaw) {
@@ -41,7 +50,7 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     }
   }
   // Concurrent Guest changes must not be hidden by account transfer.
-  const guestRecordKeys = [GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY, 'dn_guest_tasks'];
+  const guestRecordKeys = [GUEST_EXPENSES_KEY, GUEST_INCOMES_KEY, GUEST_EVENTS_KEY, 'dn_guest_tasks', GUEST_EXPENSE_PLANS_KEY];
   const readGuestSnapshot = () => JSON.stringify(guestRecordKeys.flatMap((key) => [
     localStorage.getItem(key), localStorage.getItem(LEGACY_STORAGE_PREFIX + key.slice(DN_STORAGE_PREFIX.length)),
   ]));
@@ -61,7 +70,8 @@ export const mergeGuestDataIntoAccount = async (uid) => {
   assertMergeScope();
   const batch = writeBatch(db);
 
-  expenses.forEach((expense) => {
+  const recordedPayments = expenses.filter((expense) => isPlannedExpenseId(expense.id));
+  expenses.filter((expense) => !isPlannedExpenseId(expense.id)).forEach((expense) => {
     const ref = doc(collection(db, 'users', uid, 'expenses'));
     batch.set(ref, removeFirestoreOnlyFields(expense));
   });
@@ -81,6 +91,10 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     await batch.commit();
   }
   assertMergeScope();
+  for (const expense of recordedPayments) {
+    await createExpense(uid, expense, assertMergeScope);
+  }
+  assertMergeScope();
 
   // Preserve IDs and destination edits. On failure retain local Tasks for retry.
   let taskMerge = { added: 0 };
@@ -91,9 +105,21 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     console.warn('Guest Tasks were retained for retry:', error);
   }
   assertMergeScope();
+  if (expensePlans.length) {
+    try { await mergeAccountExpensePlans(uid, expensePlans, assertMergeScope, expenses); }
+    catch (error) {
+      expensePlansRetainedLocally = true;
+      console.warn('Guest expense plans were retained for retry:', error);
+    }
+  }
+  assertMergeScope();
   if (!tasksRetainedLocally && guestTaskRaw) {
     localStorage.removeItem('dn_guest_tasks');
     localStorage.removeItem(LEGACY_STORAGE_PREFIX + 'guest_tasks');
+  }
+  if (!expensePlansRetainedLocally && guestPlansRaw) {
+    localStorage.removeItem(GUEST_EXPENSE_PLANS_KEY);
+    localStorage.removeItem(LEGACY_STORAGE_PREFIX + 'guest_expense_plans');
   }
 
   // Clear both naming generations after the batch commits. Otherwise a later
@@ -109,5 +135,6 @@ export const mergeGuestDataIntoAccount = async (uid) => {
     events: events.length,
     tasks: taskMerge.added,
     tasksRetainedLocally,
+    expensePlansRetainedLocally,
   };
 };

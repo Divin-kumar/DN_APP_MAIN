@@ -6,6 +6,9 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   const demo = buildGuestTourDataset(new Date('2026-10-28T12:00:00Z'));
   assert.equal(demo.scenario, GUEST_TOUR_SCENARIO);
   assert.equal(demo.demoVersion, GUEST_TOUR_VERSION);
+  assert.equal(demo.tasks.find((task) => task.repeat)?.repeat.frequency, 'weekly');
+  assert.equal(demo.expensePlans[0]?.repeat.frequency, 'monthly');
+  assert.ok(!demo.expenses.some((expense) => expense.name === demo.expensePlans[0].name));
   assert.equal(demo.events.length, 3);
   assert.deepEqual(demo.events.map((moment) => moment.type), ['Vacation', 'Diary', 'Project']);
   assert.deepEqual(demo.events.flatMap((moment) => moment.activities).length, 14);

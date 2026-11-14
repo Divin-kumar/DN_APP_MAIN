@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.13.1';
+export const GUEST_TOUR_VERSION = '2026.11.14.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -371,17 +371,24 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
       momentId: '', activityId: '' },
     { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'The square shows date and optional time. A red flag means overdue; a neutral flag means high priority. Dashboard Tasks show days away or overdue and highlight the matching Task in its list, without opening an awkward action sheet or completing a Task. Summary counts follow your filters. Tap or swipe a Task to open actions. Choose Done or Reopen there; choose Edit only when you want to change details. Settings → List defaults also configures Task sorting and filters. In Refine, tap the selected sort again or use Reverse order to change direction; Cancel discards a draft, and Show results applies it. Hold or move the filter grip to lift the filter card, drag over its landing spot and release to reorder; tap +N to reveal remaining applied filters in one horizontal row.',
       status: 'in-progress', priority: 'high', dueDate: date(-3), dueTime: '16:00',
+      repeat: { frequency: 'weekly', anchorDate: date(-3), seriesId: 'dn-tour-library-repeat' },
       momentId: '', activityId: '' },
   ];
+  const expensePlans = [{
+    id: 'dn-tour-internet', name: 'Home internet', category: 'Home', amount: 799,
+    dueDate: date(0), repeat: { frequency: 'monthly', anchorDate: date(0) },
+    updatedAt: reference.toISOString(), paymentMethod: 'Online',
+    notes: 'Open Upcoming expenses in Transactions and choose Record payment. DN counts the cost when you save the payment.',
+  }];
   return { scenario: GUEST_TOUR_SCENARIO, demoVersion: GUEST_TOUR_VERSION,
     generatedAt: reference.toISOString(), anchorDate: date(0), events,
     activities: events.flatMap((event) => event.activities),
     memories: events.flatMap((event) => event.memories), attachments: [],
-    incomes, expenses, tasks, imagesReady: false };
+    incomes, expenses, tasks, expensePlans, imagesReady: false };
 }
 export const canOfferGuestTour = () => {
   if (typeof localStorage === 'undefined' || localStorage.getItem(TOUR_DISMISSED_KEY)) return false;
-  return ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks'].every((key) => {
+  return ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks', 'dn_guest_expense_plans'].every((key) => {
     const value = localStorage.getItem(key);
     if (value === null) return true;
     try { const records = JSON.parse(value); return Array.isArray(records) && records.length === 0; }

@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-530 | Recurring Tasks and expense plans
+
+- **Scope:** Add optional weekly, monthly and yearly repeats inside the independent Task and Expense forms. Task Done and Skip advance one date and keep occurrence history. Transactions has a collapsed Upcoming expenses section for posting payments, editing plans, skipping dates and ending repeats. Use calendar dates so a monthly plan on the 31st falls on February's last day and returns to the 31st in March.
+- **Source-derived:** Keep expense schedules separate from paid ledger entries. Use account transactions and stable occurrence IDs for advancing schedules and recording payments. Include the schedules in version 5 backups, older backup restores, scoped Guest transfers and data removal. Explore DN edition 2026.11.14.1 includes examples for both. Development Hosting uses the existing ExpenseTracker workflow.
+- **Executed:** Node 22 build, lint and 632 Node tests passed. All 34 selected Chromium checks passed, including months with different lengths, Task completion and skip, linked expense payment counted once, ending a plan, v4/v5 backup restore, retry without duplicates, Guest tour isolation and narrow phone layouts.
+- **Unverified:** A physical iPhone and a real signed-in account have separate acceptance paths. Local account transaction checks used an injected transport.
+
 ## CHG-20261113-529 | Recover an interrupted synthetic Account filter setup
 
 - **Executed:** Full Chromium run `43447502764` on `a1a3349` passed 915 checks, including Activity Detail, with 2 skipped and one failure when a document navigation interrupted the synthetic Account setup.

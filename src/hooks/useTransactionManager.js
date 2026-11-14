@@ -7,6 +7,8 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { transactionPayload } from '../utils/transactionFilters';
 import { isNestedOnlyAccountExpense, reconcileExpenseActivities, requireLinkedActivity, sameRecord } from '../utils/transactionRelations';
+import { recordExpensePlanPayment, saveExpensePlan } from '../services/expensePlanService';
+import { mergeFinancialExpenses } from '../utils/financialRecords.js';
 
 // One mutation pathway for Financials and global quick-create. The two existing
 // collections stay intact for backups and account/guest compatibility.
@@ -55,17 +57,20 @@ export default function useTransactionManager() {
     assertContext(context);
   }, [assertContext]);
 
-  const saveTransaction = useCallback(async (form, original = null) => {
+  const saveTransaction = useCallback(async (form, original = null, { expensePlan = null, paymentPlan = null } = {}) => {
     const context = records.capture();
     assertContext(context);
     const settings = useAppStore.getState();
+    if (form.transactionKind === 'expense' && form.repeatFrequency && !original && !paymentPlan) {
+      return saveExpensePlan(context, form, expensePlan, () => assertContext(context));
+    }
     if (settings.adminValuesLoading || settings.adminValuesError
       || settings.adminValuesOwner !== (isGuest ? 'guest' : uid)) {
       throw new Error('Payment methods are still loading. Reload Code Lists before saving.');
     }
     const payload = transactionPayload(form, {
       paymentMethods: settings.adminValues.paymentMethods,
-      previousPaymentMethod: original?.paymentMethod,
+      previousPaymentMethod: (original || paymentPlan)?.paymentMethod,
       original: original || {},
     });
     if (payload.eventId && !isRecordScopeLoaded(useEventStore.getState(), context.scope, context.sample)) {
@@ -77,6 +82,22 @@ export default function useTransactionManager() {
     const oldKind = original?.transactionKind;
     await ensureFinanceScope(context, [nextKind, oldKind]);
     if (payload.eventId) requireLinkedActivity(useEventStore.getState().events, payload);
+    if (paymentPlan) {
+      const moment = useEventStore.getState().events.find((item) => (item.id || item.firestoreId) === payload.eventId);
+      const saved = await recordExpensePlanPayment(context, paymentPlan, payload, moment, () => assertContext(context));
+      assertContext(context);
+      if (saved.moment) useEventStore.setState(({ events }) => ({
+        events: events.map((item) => item.id === saved.moment.id
+          ? reconcileExpenseActivities([item], null, { ...saved.expense, transactionKind: 'expense' })[0] || item
+          : item),
+      }));
+      if (isRecordScopeLoaded(useExpenseStore.getState(), context.scope, context.sample)) {
+        patchLoadedExpenses(mergeFinancialExpenses([
+          saved.expense, ...useExpenseStore.getState().expenses.filter((item) => !sameRecord(item, saved.expense)),
+        ]));
+      }
+      return saved.expense;
+    }
     const current = original && oldKind === nextKind
       ? { ...original, ...payload, transactionKind: nextKind }
       : { ...payload, transactionKind: nextKind };

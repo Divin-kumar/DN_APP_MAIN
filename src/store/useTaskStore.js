@@ -2,9 +2,10 @@ import { watchAccountTasks, writeAccountTask, removeAccountTask } from '../servi
 import { create } from 'zustand';
 import useAppStore from './useAppStore';
 import { getActiveSampleScenario, requireActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
-import { createGuestTaskRepository } from '../services/guestTaskService';
-import { detachIndependentTaskLinks, normalizeIndependentTask, taskStatusPatch } from '../utils/independentTasks.js';
+import { createGuestTaskRepository, withGuestTaskLock } from '../services/guestTaskService';
+import { advanceRepeatingTask, detachIndependentTaskLinks, normalizeIndependentTask, taskRepeatForDraft, taskStatusPatch } from '../utils/independentTasks.js';
 import { recordId } from '../utils/recordIdentity.js';
+import { scheduleTimestamp } from '../utils/repeatSchedule.js';
 
 export const taskScopeKey = ({ user, isGuest } = {}) => user?.uid ? `account:${user.uid}`
   : isGuest ? `guest:${getActiveSampleScenario() || 'private'}` : 'signed-out';
@@ -34,6 +35,11 @@ const repository = (expected) => createGuestTaskRepository({
 let unsubscribe = null;
 let accountEpoch = 0;
 let watchedScope = null;
+let guestEpoch = 0;
+const assertTaskSession = (scope, epoch) => {
+  assertGuestScope(scope);
+  if (epoch !== guestEpoch) throw new Error('Task session changed. Reopen Tasks and try again.');
+};
 const accountGuard = (scope, epoch) => () => {
   if (accountEpoch !== epoch || taskScopeKey(useAppStore.getState()) !== scope) throw new Error('Task session changed. Reopen Tasks.');
 };
@@ -76,63 +82,77 @@ const useTaskStore = create((set, get) => ({
   },
   saveTask: (input, options = {}) => {
     const scope = taskScopeKey(useAppStore.getState());
+    const previous = get().tasks.find((task) => task.id === recordId(input?.id));
+    const expectedUpdatedAt = options.expectedUpdatedAt !== undefined ? options.expectedUpdatedAt : input?.updatedAt;
+    const repeat = input?.repeatFrequency === undefined ? previous?.repeat
+      : taskRepeatForDraft(previous, input.repeatFrequency, input.dueDate, () => crypto.randomUUID());
+    const draft = { ...previous, ...input, repeat };
     if (scope.startsWith('account:')) {
       if (get().loadedFor !== scope || get().error) throw new Error('Tasks are not ready. Reload and try again.');
-      const previous = get().tasks.find((task) => task.id === recordId(input?.id));
-      const now = new Date().toISOString();
-      return writeAccountTask(scope.slice(8), { ...previous, ...input,
+      const now = scheduleTimestamp(previous?.updatedAt);
+      return writeAccountTask(scope.slice(8), { ...draft,
         id: recordId(input?.id) || crypto.randomUUID(), createdAt: previous?.createdAt || now, updatedAt: now,
-      }, { mode: input?.id ? 'edit' : 'create', expectedUpdatedAt: options.expectedUpdatedAt !== undefined ? options.expectedUpdatedAt : input?.updatedAt || previous?.updatedAt || null, assertCurrent: accountGuard(scope, accountEpoch) });
+      }, { mode: input?.id ? 'edit' : 'create', expectedUpdatedAt: expectedUpdatedAt !== undefined
+        ? expectedUpdatedAt : previous?.updatedAt || null, assertCurrent: accountGuard(scope, accountEpoch) });
     }
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace. Reload Tasks and try again.');
     }
-    const previous = get().tasks.find((task) => task.id === recordId(input?.id));
-    const current = new Date().toISOString();
+    const current = scheduleTimestamp(previous?.updatedAt);
     const task = normalizeIndependentTask({
-      ...previous, ...input, id: recordId(input?.id) || crypto.randomUUID(),
+      ...draft, id: recordId(input?.id) || crypto.randomUUID(),
       createdAt: previous?.createdAt || current, updatedAt: current,
     });
-    let tasks;
-    if (scope === 'guest:private') {
-      const reader = repository(scope);
-      reader.upsert(task);
-      tasks = reader.list();
-    } else {
-      const data = requireActiveSampleData(null);
-      const source = sampleTasks(data);
-      const index = source.findIndex((entry) => entry.id === task.id);
-      tasks = [...source];
-      if (index < 0) tasks.push(task);
-      else tasks[index] = task;
-      assertGuestScope(scope);
-      saveActiveSampleData({ ...data, tasks });
-    }
-    assertGuestScope(scope);
-    set({ tasks, error: null });
-    return task;
+    const epoch = guestEpoch;
+    return withGuestTaskLock(() => {
+      assertTaskSession(scope, epoch);
+      let tasks;
+      if (scope === 'guest:private') {
+        const reader = repository(scope);
+        reader.upsert({ ...task, repeat: task.repeat || null }, { expectedUpdatedAt });
+        tasks = reader.list();
+      } else {
+        const data = requireActiveSampleData(null);
+        const source = sampleTasks(data);
+        const index = source.findIndex((entry) => entry.id === task.id);
+        if (expectedUpdatedAt !== undefined && (index < 0 || source[index].updatedAt !== expectedUpdatedAt)) {
+          throw new Error('This Task changed. Reopen Tasks and try again.');
+        }
+        tasks = [...source];
+        if (index < 0) tasks.push(task);
+        else tasks[index] = task;
+        saveActiveSampleData({ ...data, tasks });
+      }
+      set({ tasks, error: null });
+      return task;
+    });
   },
-  removeTask: (id) => {
+  removeTask: (id, expectedUpdatedAt) => {
     const scope = taskScopeKey(useAppStore.getState());
-    if (scope.startsWith('account:')) return removeAccountTask(scope.slice(8), recordId(id), accountGuard(scope, accountEpoch));
+    if (scope.startsWith('account:')) return removeAccountTask(scope.slice(8), recordId(id), accountGuard(scope, accountEpoch), expectedUpdatedAt);
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace.');
     }
-    let tasks;
-    if (scope === 'guest:private') {
-      const reader = repository(scope);
-      reader.remove(id);
-      tasks = reader.list();
-    } else {
-      const data = requireActiveSampleData(null);
-      const source = sampleTasks(data);
-      tasks = source.filter((entry) => entry.id !== recordId(id));
-      assertGuestScope(scope);
-      if (tasks.length !== source.length) saveActiveSampleData({ ...data, tasks });
-    }
-    assertGuestScope(scope);
-    set({ tasks });
-    return tasks;
+    const epoch = guestEpoch;
+    return withGuestTaskLock(() => {
+      assertTaskSession(scope, epoch);
+      let tasks;
+      if (scope === 'guest:private') {
+        const reader = repository(scope);
+        reader.remove(id, expectedUpdatedAt);
+        tasks = reader.list();
+      } else {
+        const data = requireActiveSampleData(null);
+        const source = sampleTasks(data);
+        if (expectedUpdatedAt !== undefined && !source.some((task) => task.id === recordId(id) && task.updatedAt === expectedUpdatedAt)) {
+          throw new Error('This Task changed. Reopen Tasks and try again.');
+        }
+        tasks = source.filter((entry) => entry.id !== recordId(id));
+        if (tasks.length !== source.length) saveActiveSampleData({ ...data, tasks });
+      }
+      set({ tasks });
+      return tasks;
+    });
   },
   // Called only after a Moment/Activity deletion is persisted. Detached Tasks
   // retain their IDs, status, notes and dates; account Tasks are never touched.
@@ -153,13 +173,33 @@ const useTaskStore = create((set, get) => ({
     if (get().loadedFor === scope) set({ tasks, error: null });
     return detached;
   },
-  setTaskStatus: (id, status) => {
+  setTaskStatus: (id, status, expectedUpdatedAt) => {
     const scope = taskScopeKey(useAppStore.getState());
     if (get().loadedFor !== scope || scope === 'signed-out') {
       throw new Error('Task session changed. Reload Tasks.');
     }
     const task = get().tasks.find((item) => item.id === recordId(id));
     if (!task) throw new Error('Task not found in this workspace.');
+    if (expectedUpdatedAt !== undefined && expectedUpdatedAt !== task.updatedAt) {
+      throw new Error('This Task changed. Reopen Tasks and try again.');
+    }
+    if (status === 'skip' || (status === 'completed' && task.repeat && task.status === 'in-progress')) {
+      const action = status === 'skip' ? 'skip' : 'complete';
+      if (scope.startsWith('account:')) {
+        return writeAccountTask(scope.slice(8), task, { repeatAction: action,
+          expectedUpdatedAt: task.updatedAt, assertCurrent: accountGuard(scope, accountEpoch) });
+      }
+      const epoch = guestEpoch;
+      return withGuestTaskLock(() => {
+        assertTaskSession(scope, epoch);
+        const data = scope === 'guest:private' ? null : requireActiveSampleData(null);
+        const result = data ? advanceRepeatingTask(sampleTasks(data), task.id, action, task.updatedAt)
+          : repository(scope).advance(task.id, action, task.updatedAt);
+        if (data) saveActiveSampleData({ ...data, tasks: result.entries });
+        set({ tasks: result.entries, error: null });
+        return result.current;
+      });
+    }
     const patch = taskStatusPatch(task, status);
     return patch ? get().saveTask({ ...task, ...patch }, { expectedUpdatedAt: task.updatedAt }) : task;
   },
@@ -167,7 +207,8 @@ const useTaskStore = create((set, get) => ({
 // Invalidate immediately on every session transition, including A → B → A.
 useAppStore.subscribe((state, previous) => {
   if (state.user?.uid === previous.user?.uid && state.isGuest === previous.isGuest) return;
-  accountEpoch++; unsubscribe?.(); unsubscribe = null; watchedScope = null;
+  accountEpoch++; guestEpoch++;
+  unsubscribe?.(); unsubscribe = null; watchedScope = null;
   useTaskStore.setState({ tasks: [], loadedFor: null, error: null });
 });
 export default useTaskStore;

@@ -41,9 +41,11 @@ export function AuthProvider({ children }) {
           if (revision !== authChangeRevision) return;
 
           let retainedGuestTasks = 0;
+          let retainedExpensePlans = false;
           try {
             const merge = await mergeGuestDataIntoAccount(user.uid);
             retainedGuestTasks = merge.tasksRetainedLocally || 0;
+            retainedExpensePlans = merge.expensePlansRetainedLocally;
           } catch (error) {
             console.error('Failed to merge guest data:', error);
           }
@@ -55,7 +57,11 @@ export function AuthProvider({ children }) {
               displayName: user.displayName,
               photoURL: user.photoURL,
           });
-          if (retainedGuestTasks) showToast(
+          if (retainedExpensePlans) showToast(
+            `Guest expense plans${retainedGuestTasks ? ' and Tasks' : ''} remain on this device. Export a Guest backup before clearing browser data.`,
+            'danger', { label: 'Data & Backup', to: '/settings/data-backup', duration: 9500 },
+          );
+          else if (retainedGuestTasks) showToast(
             `${retainedGuestTasks} Guest ${retainedGuestTasks === 1 ? 'Task remains' : 'Tasks remain'} on this browser, not in your account. Export a Guest backup before clearing device data.`,
             'danger', { label: 'Learn more', to: '/tasks', duration: 9500 },
           );
