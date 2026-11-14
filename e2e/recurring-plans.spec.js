@@ -7,6 +7,12 @@ async function choose(page, form, label, option) {
   await page.getByRole('option', { name: option, exact: true }).click();
 }
 
+async function setRepeat(dialog, frequency) {
+  const trigger = dialog.getByRole('button', { name: 'Repeat', exact: true });
+  if (await trigger.getAttribute('aria-expanded') !== 'true') await trigger.click();
+  await dialog.getByRole('radio', { name: frequency, exact: true }).check();
+}
+
 const readGuest = (page, key) => page.evaluate((name) => JSON.parse(localStorage.getItem(name) || '[]'), key);
 const empty = { moments: [], incomes: [], expenses: [] };
 const more = (dialog) => dialog.locator('summary').filter({ hasText: 'More options' });
@@ -20,9 +26,10 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   const draft = page.getByRole('dialog', { name: 'New Task' });
   await draft.getByLabel('Task title').fill('Read the meter');
   await draft.getByLabel('Due date', { exact: true }).fill('2026-01-31');
-  await expect(draft.getByRole('combobox', { name: 'Repeat', exact: true })).toHaveCount(0);
+  await expect(draft.getByRole('button', { name: 'Repeat', exact: true })).toHaveCount(0);
   await more(draft).click();
-  await choose(page, draft, 'Repeat', 'Monthly');
+  await setRepeat(draft, 'Monthly');
+  await expect(draft.getByRole('status')).toContainText('28 Feb 2026');
   await draft.getByRole('button', { name: 'Create Task' }).click();
   const list = page.locator('.dn-task-list');
   const recurring = list.locator('article').filter({ hasText: 'Repeats monthly' });
@@ -36,6 +43,13 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   ]);
   await recurring.click();
   await page.getByRole('menuitem', { name: 'Skip this occurrence', exact: true }).click();
+  const skip = page.getByRole('dialog', { name: 'Skip this Task?' });
+  await expect(skip).toContainText('31 Mar 2026');
+  await skip.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(list.locator('article')).toHaveCount(2);
+  await recurring.click();
+  await page.getByRole('menuitem', { name: 'Skip this occurrence', exact: true }).click();
+  await skip.getByRole('button', { name: 'Skip occurrence', exact: true }).click();
   await expect(list.locator('article')).toHaveCount(3);
   expect((await readGuest(page, 'dn_guest_tasks')).map((task) => [task.dueDate, task.status])).toEqual([
     ['2026-01-31', 'completed'], ['2026-02-28', 'cancelled'], ['2026-03-31', 'in-progress'],
@@ -44,7 +58,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit Task' });
   await more(edit).click();
-  await choose(page, edit, 'Repeat', 'Doesn’t repeat');
+  await setRepeat(edit, 'Once');
   await edit.getByRole('button', { name: 'Save Task', exact: true }).click();
   await expect(recurring).toHaveCount(0);
   await page.reload();
@@ -69,8 +83,9 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await draft.getByLabel('Amount *', { exact: true }).fill('799');
   await draft.getByLabel('Title *', { exact: true }).fill('Home internet');
   await more(draft).click();
-  await choose(page, draft, 'Repeat', 'Monthly');
+  await setRepeat(draft, 'Monthly');
   await draft.getByLabel('Due date *', { exact: true }).fill('2026-01-31');
+  await expect(draft.getByRole('status')).toContainText('28 Feb 2026');
   await draft.getByRole('button', { name: 'Save expense plan', exact: true }).click();
   await expect(draft).toHaveCount(0);
   await expect(total).toHaveText('₹0');
@@ -78,10 +93,15 @@ test('recurring expenses stay outside totals, then post one editable payment and
   expect((await readGuest(page, 'dn_guest_expense_plans'))[0].dueDate).toBe('2026-01-31');
   const upcoming = page.getByRole('region', { name: 'Expense plans' });
   await upcoming.locator('summary').click();
+  await expect(upcoming.locator('summary')).toContainText('1 overdue');
   await upcoming.getByRole('button', { name: 'Record payment for Home internet' }).click();
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
-  await expect(payment.getByLabel('Amount *', { exact: true })).toHaveValue('799');
-  await payment.getByLabel('Amount *', { exact: true }).fill('825');
+  await expect(payment.getByRole('combobox', { name: 'Transaction Type', exact: true })).toHaveCount(0);
+  await expect(payment.getByLabel('Paid on *', { exact: true })).toBeVisible();
+  await expect(payment).toContainText('After saving, next due 28 Feb 2026');
+  await expect(payment.getByLabel('Title', { exact: true })).toBeHidden();
+  await expect(payment.getByLabel('Amount paid *', { exact: true })).toHaveValue('799');
+  await payment.getByLabel('Amount paid *', { exact: true }).fill('825');
   await payment.getByRole('radio', { name: 'Online' }).check();
   await more(payment).click();
   await choose(page, payment, 'Linked Moment', 'Home plans');
@@ -93,13 +113,20 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(upcoming).toContainText('28 Feb 2026');
   const manage = upcoming.getByRole('button', { name: 'Manage plan for Home internet' });
   await manage.click();
+  const planActions = page.getByRole('dialog', { name: 'Manage expense plan' });
+  await planActions.getByRole('button', { name: 'Edit schedule', exact: true }).click();
   const edit = page.getByRole('dialog', { name: 'Edit expense plan' });
-  await expect(edit.getByLabel('Amount *', { exact: true })).toHaveValue('799');
-  await edit.getByRole('button', { name: 'Skip this occurrence' }).click();
+  await expect(edit.getByLabel('Expected amount *', { exact: true })).toHaveValue('799');
+  await expect(edit.getByLabel('Due date *', { exact: true })).toHaveValue('2026-02-28');
+  await expect(edit.getByRole('status')).toContainText('31 Mar 2026');
+  await edit.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await manage.click();
+  await planActions.getByRole('button', { name: /Skip this occurrence/ }).click();
+  await expect(page.getByRole('dialog', { name: 'Skip this expense?' })).toContainText('Next due 31 Mar 2026');
   await page.getByRole('button', { name: 'Skip occurrence', exact: true }).click();
   await expect(upcoming).toContainText('31 Mar 2026');
   await manage.click();
-  await edit.getByRole('button', { name: 'End repeat', exact: true }).click();
+  await planActions.getByRole('button', { name: 'End repeat', exact: true }).click();
   await page.getByRole('dialog', { name: 'End this expense plan?' }).getByRole('button', { name: 'End repeat', exact: true }).click();
   await expect(upcoming).toHaveCount(0);
   await expect(total).toHaveText('₹825');

@@ -4,7 +4,7 @@ import { normalizeActivityTime } from './activityTime.js';
 import { parseMomentDate } from './momentDates.js';
 import { recordId } from './recordIdentity.js';
 import { activityOwnsLinkedId } from './activityEntries.js';
-import { nextScheduledDate, normalizeRepeatSchedule, scheduleTimestamp } from './repeatSchedule.js';
+import { nextScheduledDate, normalizeRepeatSchedule, repeatScheduleForDraft, scheduleTimestamp } from './repeatSchedule.js';
 
 export const TASK_STATUSES = Object.freeze(['in-progress', 'completed', 'cancelled']);
 export const TASK_PRIORITIES = Object.freeze(['low', 'medium', 'high']);
@@ -70,7 +70,7 @@ export const taskStatusPatch = (task, target, now = new Date()) => {
 export function taskRepeatForDraft(previous, frequency, dueDate, createId) {
   if (!frequency) return null;
   if (previous?.repeat?.frequency === frequency && previous.dueDate === dueDate) return previous.repeat;
-  return { ...normalizeRepeatSchedule({ frequency, anchorDate: dueDate }), seriesId: createId() };
+  return { ...repeatScheduleForDraft(previous, frequency, dueDate), seriesId: createId() };
 }
 
 export function resolveRepeatingTask(task, action, now = new Date()) {

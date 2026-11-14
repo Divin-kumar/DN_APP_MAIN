@@ -99,7 +99,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
 
 export default function TransactionHistory({
   transactions, candidates, totalCount = transactions.length, filters, onFilters, conditions, events, onEdit, onDelete,
-  onResetDefaults, canResetDefaults = false, onExport, savedDefaults,
+  onResetDefaults, canResetDefaults = false, onExport, savedDefaults, hasExpensePlans = false,
 }) {
   const [sortField, sortDirection] = filters.sort.split('-');
   const hasSearch = Boolean(filters.search?.trim());
@@ -120,11 +120,11 @@ export default function TransactionHistory({
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}
           onToggleDirection={() => onFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
         canReset={canResetDefaults} onReset={resetAllFilters}
-        trailingAction={<button className="dn-transactions-export" type="button" onClick={onExport}
+        trailingAction={totalCount > 0 ? <button className="dn-transactions-export" type="button" onClick={onExport}
           disabled={!transactions.length || !onExport} aria-label={`Export ${transactions.length} filtered transactions as CSV`}
           title="Export only matching transactions in their current order">
           <Download size={14} aria-hidden="true" /><span>Export CSV</span>
-        </button>}
+        </button> : null}
         search={<DebouncedFilterInput clearable scopeKey={conditions.editorKey} id="transaction-filter-search" type="search" aria-label="Search transactions" placeholder="Search transactions"
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />
@@ -139,7 +139,8 @@ export default function TransactionHistory({
             <strong>{totalCount ? 'No matching transactions' : 'No transactions yet'}</strong>
             <p>{totalCount
               ? 'Nothing matches your current search or filters.'
-              : 'Transactions you record will appear here.'}</p>
+              : hasExpensePlans ? 'Record a payment from Upcoming expenses to see it here.'
+                : 'Transactions you record will appear here.'}</p>
             {totalCount > 0 && (hasSearch || canRestoreDefaults) ? (
               <div className="dn-empty-recovery-actions">
                 {hasSearch ? (

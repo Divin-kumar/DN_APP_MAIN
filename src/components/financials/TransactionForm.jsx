@@ -10,7 +10,9 @@ import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
 import { normalizePaymentMethod, requirePaymentMethod } from '../../utils/paymentMethod';
-import { REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
+import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
+import { CalendarDays } from 'lucide-react';
+import './ExpensePlans.css';
 
 const today = () => {
   const date = new Date();
@@ -70,6 +72,9 @@ export default function TransactionForm({
   const [error, setError] = useState('');
   const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
+  const planFlow = Boolean(paymentPlan || expensePlan || isPlan);
+  const scheduleHint = isPlan && REPEAT_OPTIONS[form.repeatFrequency];
+  const nextPaymentDate = paymentPlan && formatScheduleDate(previewNextRepeat(paymentPlan, paymentPlan.repeat.frequency, paymentPlan.dueDate));
 
   const sourceRef = useRef([initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date]);
   useEffect(() => {
@@ -97,9 +102,10 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = (isPlan ? [form.date || 'Choose first due date', REPEAT_OPTIONS[form.repeatFrequency]]
-    : [form.date || 'Choose date', form.time || 'No time',
-      form.eventId && 'Moment linked', form.activityId && 'Activity linked']).filter(Boolean).join(' · ');
+  const supportingDetails = paymentPlan ? 'Title, category, time, links and notes'
+    : (isPlan ? [!expensePlan && scheduleHint, 'Notes']
+      : [formatScheduleDate(form.date) || 'Choose date', canRepeat && 'Repeat', !canRepeat && form.time,
+        form.eventId && 'Moment linked', form.activityId && 'Activity linked']).filter(Boolean).join(' · ');
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -138,37 +144,58 @@ export default function TransactionForm({
     catch (saveError) { setError(saveError?.message || 'Could not save transaction. Try again.'); }
   };
 
+  const titleField = <label className="dn-transaction-field">
+    <span>{paymentPlan ? 'Title' : 'Title *'}</span>
+    <input type="text" required={!paymentPlan} maxLength={140} value={form.title}
+      onChange={(event) => change('title', event.target.value)}
+      placeholder="What was this for?" disabled={busy} />
+  </label>;
+  const categoryField = <div className="dn-transaction-field">
+    <span>Category *</span>
+    <DropdownSelect aria-label="Category" value={form.category}
+      onChange={(event) => change('category', event.target.value)} disabled={busy}>
+      {categories.map((category) => <option key={category} value={category}>{category}</option>)}
+    </DropdownSelect>
+  </div>;
+  const dates = <div className="activity-date-time-row">
+    <DateField label={isPlan ? 'Due date *' : paymentPlan ? 'Paid on *' : 'Date *'} name="date" required value={form.date}
+      onChange={(event) => change('date', event.target.value)} disabled={busy} />
+    {!planFlow ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} /> : null}
+  </div>;
+  const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
+    onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
+    dueDate={form.date} previous={expensePlan} allowOneTime={!expensePlan}>
+    {presetLink?.eventId || form.eventId ? 'Choose the Moment or Activity when you record each payment.' : null}
+  </RepeatField> : null;
+
   return (
-    <form className="dn-transaction-form form-surface" onSubmit={handleSubmit}>
-      <div className="dn-transaction-field">
+    <form className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}`} onSubmit={handleSubmit} aria-busy={busy}>
+      {paymentPlan ? <div className="dn-payment-context">
+        <span className="dn-payment-context-icon"><CalendarDays size={19} aria-hidden="true" /></span>
+        <div><strong>{paymentPlan.name}</strong>
+          <p>Scheduled for {formatScheduleDate(paymentPlan.dueDate)} · {REPEAT_OPTIONS[paymentPlan.repeat.frequency]}</p>
+        </div>
+      </div> : null}
+      {!paymentPlan && !expensePlan ? <div className="dn-transaction-field">
         <span>Transaction Type *</span>
         <DropdownSelect aria-label="Transaction Type" value={form.transactionKind}
-          onChange={(event) => handleType(event.target.value)} disabled={busy || Boolean(expensePlan || paymentPlan)}>
+          onChange={(event) => handleType(event.target.value)} disabled={busy}>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </DropdownSelect>
-      </div>
+      </div> : null}
       <label className="dn-transaction-field">
-        <span>Amount *</span>
+        <span>{paymentPlan ? 'Amount paid *' : isPlan ? 'Expected amount *' : 'Amount *'}</span>
         <input type="number" inputMode="decimal" min="0.01" step="0.01" required
           value={form.amount} onChange={(event) => change('amount', event.target.value)}
           placeholder="0.00" disabled={busy} />
       </label>
-      <label className="dn-transaction-field">
-        <span>Title *</span>
-        <input type="text" required maxLength={140} value={form.title}
-          onChange={(event) => change('title', event.target.value)}
-          placeholder="What was this for?" disabled={busy} />
-      </label>
-      <div className="dn-transaction-field">
-        <span>Category *</span>
-        <DropdownSelect aria-label="Category" value={form.category}
-          onChange={(event) => change('category', event.target.value)} disabled={busy}>
-          {categories.map((category) => <option key={category} value={category}>{category}</option>)}
-        </DropdownSelect>
-      </div>
+      {!paymentPlan ? titleField : null}
+      {planFlow ? <div className="dn-plan-form-date">{dates}</div> : null}
+      {expensePlan ? repeatField : null}
+      {!paymentPlan ? categoryField : null}
       <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
-        <legend>{isPlan ? 'Payment method (optional)' : 'Payment method *'}</legend>
+        <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
         <div className="dn-payment-method-options">
           {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
             <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
@@ -187,11 +214,13 @@ export default function TransactionForm({
         {initialTransaction && !normalizePaymentMethod(initialTransaction.paymentMethod)
           ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
       </fieldset>
+      {isPlan ? <p className="dn-plan-form-hint">Spending updates when you record a payment.</p> : null}
+      {nextPaymentDate ? <p className="dn-plan-form-hint">After saving, next due <strong>{nextPaymentDate}</strong>.</p> : null}
       <FormDisclosure label="More options" hint={supportingDetails}>
-      {canRepeat ? <RepeatField className="dn-transaction-field" value={form.repeatFrequency}
-        onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy} allowOneTime={!expensePlan}>
-        DN counts an expense after you record its payment. Choose any Moment or Activity when you pay.
-      </RepeatField> : null}
+      {!expensePlan ? repeatField : null}
+      {paymentPlan ? <>{titleField}{categoryField}
+        <ActivityTimeField subject="Payment" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
+      </> : null}
       {!isPlan ? <>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
@@ -224,11 +253,7 @@ export default function TransactionForm({
             : null}
       </div>
       </> : null}
-      <div className="activity-date-time-row">
-        <DateField label={isPlan ? 'Due date *' : 'Date *'} name="date" required value={form.date}
-          onChange={(event) => change('date', event.target.value)} disabled={busy} />
-        {!isPlan ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} /> : null}
-      </div>
+      {!planFlow ? dates : null}
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       </FormDisclosure>

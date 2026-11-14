@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { nextScheduledDate } from './repeatSchedule.js';
+import { nextScheduledDate, previewNextRepeat } from './repeatSchedule.js';
 import { resolveRepeatingTask, advanceRepeatingTask, taskRepeatForDraft } from './independentTasks.js';
 import { advanceExpensePlan, expensePlanFromDraft, plannedExpenseId } from './expensePlans.js';
 
@@ -44,6 +44,9 @@ test('editing an expense template keeps the anchor and changing due date resets 
   const february = advanceExpensePlan(initial, date);
   const edit = expensePlanFromDraft({ ...draft, date: '2026-02-28', amount: 175 }, february, date, 'water');
   assert.equal(advanceExpensePlan(edit, date).dueDate, '2026-03-31');
+  assert.equal(previewNextRepeat(edit, 'monthly', '2026-02-28'), '2026-03-31');
+  assert.equal(previewNextRepeat(edit, 'monthly', '2026-02-26'), '2026-03-26');
+  assert.equal(previewNextRepeat(edit, 'monthly', ''), '');
   assert.equal(plannedExpenseId(edit), 'plan-payment-water-2026-02-28');
   assert.ok(edit.updatedAt > february.updatedAt);
   const rescheduled = expensePlanFromDraft({ ...draft, date: '2026-02-26' }, edit, date, 'water');

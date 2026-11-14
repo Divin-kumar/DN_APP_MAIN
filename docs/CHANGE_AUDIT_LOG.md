@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-531 | Simplify repeating Tasks and expense plans on phones
+
+- **Scope:** Add inline frequency choices and a calendar preview to the existing Repeat disclosure. Show the next due date in Task and expense skip confirmations and payment feedback. Make due and overdue expense plans easy to scan from the collapsed Transactions section. Give Edit schedule, Skip and End repeat their own Manage sheet, and put amount paid, date and method first in the payment sheet.
+- **Source-derived:** Calendar previews use the save path's anchor and date rules. Payment still uses the existing expense mutation, and the same receipt and schedule IDs persist. Backups and financial calculations keep their existing contracts. Explore DN v2026.11.14.2 updates the two recurrence examples.
+- **Executed:** Node 22 lint and build, 632 Node checks, 29 selected Chromium journeys, and narrow phone screenshot review in both themes. Browser checks cover recurrence, skip cancellation, linked payment totals, v5 restoration, plain Task creation, Finance filters and the Guest tour.
+- **Unverified:** Physical iPhone Safari and VoiceOver.
+
 ## CHG-20261114-530 | Recurring Tasks and expense plans
 
 - **Scope:** Add optional weekly, monthly and yearly repeats inside the independent Task and Expense forms. Task Done and Skip advance one date and keep occurrence history. Transactions has a collapsed Upcoming expenses section for posting payments, editing plans, skipping dates and ending repeats. Use calendar dates so a monthly plan on the 31st falls on February's last day and returns to the 31st in March.

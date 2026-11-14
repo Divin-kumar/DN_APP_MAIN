@@ -1,5 +1,5 @@
 import { normalizePaymentMethod } from './paymentMethod.js';
-import { isScheduleDate, nextScheduledDate, normalizeRepeatSchedule, scheduleTimestamp } from './repeatSchedule.js';
+import { isScheduleDate, nextScheduledDate, normalizeRepeatSchedule, repeatScheduleForDraft, scheduleTimestamp } from './repeatSchedule.js';
 
 export const EXPENSE_PLAN_COLLECTION = 'expensePlans';
 export const GUEST_EXPENSE_PLANS_KEY = 'dn_guest_expense_plans';
@@ -31,8 +31,7 @@ export function normalizeExpensePlans(items) {
 
 export function expensePlanFromDraft(form, previous, now, id) {
   const dueDate = form.date;
-  const repeat = previous?.dueDate === dueDate && previous.repeat.frequency === form.repeatFrequency
-    ? previous.repeat : { frequency: form.repeatFrequency, anchorDate: dueDate };
+  const repeat = repeatScheduleForDraft(previous, form.repeatFrequency, dueDate);
   return normalizeExpensePlan({
     id, name: form.title, category: form.category, amount: form.amount, dueDate,
     repeat, paymentMethod: form.paymentMethod, notes: form.notes, updatedAt: scheduleTimestamp(previous?.updatedAt, now),

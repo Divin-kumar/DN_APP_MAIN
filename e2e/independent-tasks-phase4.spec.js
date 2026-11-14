@@ -85,6 +85,7 @@ test('universal + Task under Activity Detail keeps parent links but never create
   const editor = page.getByRole('dialog', { name: 'New Task' });
   await editor.getByLabel('Task title').fill('Call the hotel separately');
   await editor.getByRole('button', { name: 'Create Task' }).click();
+  await expect(editor).toHaveCount(0);
   const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
   expect(stored).toHaveLength(1);
   expect(stored[0]).toMatchObject({ momentId: 'moment-one', activityId: 'shared' });

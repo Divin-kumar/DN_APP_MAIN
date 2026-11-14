@@ -20,7 +20,8 @@ import { downloadBlob } from '../utils/download';
 import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
-import ExpensePlans from '../components/financials/ExpensePlans';
+import ExpensePlans, { ExpensePlanActions, nextExpenseDate } from '../components/financials/ExpensePlans';
+import { formatScheduleDate } from '../utils/repeatSchedule.js';
 import { changeExpensePlanDate } from '../services/expensePlanService';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -58,7 +59,6 @@ function FinancialsContent() {
   const [busy, setBusy] = useState(false);
   const [savingError, setSavingError] = useState('');
   const [planEditor, setPlanEditor] = useState(null);
-  const [planAction, setPlanAction] = useState('');
   const savingPlanRef = useRef(false);
 
   useEffect(() => {
@@ -132,16 +132,27 @@ function FinancialsContent() {
       throw error;
     } finally { savingPlanRef.current = false; setBusy(false); }
   };
-  const openPlan = (plan, mode) => {
-    setPlanAction('');
+  const openPlan = (plan, mode, trigger) => {
     setSavingError('');
-    setPlanEditor({ plan, mode, context: records.capture() });
+    setPlanEditor({ plan, mode, trigger, context: records.capture() });
+  };
+  const switchPlanView = (mode) => {
+    setSavingError('');
+    setPlanEditor((current) => current ? { ...current, mode } : null);
+  };
+  const restorePlanFocus = (trigger) => {
+    requestAnimationFrame(() => {
+      const target = trigger?.isConnected ? trigger : document.querySelector('#expense-plans summary') || document.querySelector('.dn-finance-summary');
+      target?.focus({ preventScroll: true });
+    });
   };
   const closePlan = () => {
     if (savingPlanRef.current) return;
-    setPlanEditor(null); setPlanAction(''); setSavingError('');
+    const trigger = planEditor?.trigger;
+    setPlanEditor(null); setSavingError('');
+    restorePlanFocus(trigger);
   };
-  const runPlan = async (action, message) => {
+  const runPlan = async (action, message, { errorInForm = false } = {}) => {
     if (savingPlanRef.current || !planEditor) return;
     const assertCurrent = () => {
       if (!records.isCurrent(planEditor.context)) throw new Error('Your session changed. Reopen the expense plan.');
@@ -150,11 +161,13 @@ function FinancialsContent() {
     setBusy(true); setSavingError('');
     try {
       assertCurrent();
-      await action(assertCurrent);
+      const result = await action(assertCurrent);
       assertCurrent();
-      setPlanEditor(null); setPlanAction('');
-      showToast(message, 'success');
+      setPlanEditor(null);
+      restorePlanFocus(planEditor.mode === 'end' ? null : planEditor.trigger);
+      showToast(typeof message === 'function' ? message(result) : message, 'success');
     } catch (error) {
+      if (errorInForm) throw error;
       setSavingError(error?.message || 'Could not save the expense plan. Try again.');
     } finally {
       savingPlanRef.current = false;
@@ -181,7 +194,7 @@ function FinancialsContent() {
       {hasLoadError ? null : (!ready || loadingIncome || loadingExpense)
         ? <LoadingSkeleton rows={4} variant="financial" label="Loading transactions" />
         : <section className="financials-content-panel">
-          <section className="dn-finance-summary" aria-label="Financial totals for matching transactions">
+          <section className="dn-finance-summary" aria-label="Financial totals for matching transactions" tabIndex={-1}>
             <span className="moment-finance-caption">Matching transactions</span>
             <div className="dn-finance-summary-grid">
               <div className="dn-finance-metric dn-finance-metric-income">
@@ -200,11 +213,11 @@ function FinancialsContent() {
           </section>
           {planLoadError ? <div role="alert" className="financial-load-error">Unable to load expense plans.{' '}
             <button type="button" onClick={retryPlans}>Retry plans</button>
-          </div> : <ExpensePlans plans={plans} busy={busy} openFromLink={location.hash === '#expense-plans'}
-            onRecord={(plan) => openPlan(plan, 'payment')} onEdit={(plan) => openPlan(plan, 'edit')} />}
+          </div> : <ExpensePlans plans={plans} busy={busy} openFromLink={location.hash === '#expense-plans' && location.key}
+            onRecord={(plan, trigger) => openPlan(plan, 'payment', trigger)} onManage={(plan, trigger) => openPlan(plan, 'manage', trigger)} />}
           <TransactionHistory transactions={sorted} candidates={searchCandidates} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
-            events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} />
+            events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
         </section>}
       {dialogOpen ? (
         <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"
@@ -214,25 +227,26 @@ function FinancialsContent() {
             onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
         </ModalDialog>
       ) : null}
-      {planEditor && !planAction ? <ModalDialog title={planEditor.mode === 'edit' ? 'Edit expense plan' : 'Record payment'}
-        className="dn-transaction-dialog" onClose={closePlan}>
-        {savingError ? <p className="dn-transaction-form-error" role="alert">{savingError}</p> : null}
+      {planEditor?.mode === 'manage' ? <ExpensePlanActions plan={planEditor.plan} busy={busy} onClose={closePlan}
+        onEdit={() => switchPlanView('edit')} onSkip={() => switchPlanView('skip')} onEnd={() => switchPlanView('end')} /> : null}
+      {planEditor && ['edit', 'payment'].includes(planEditor.mode) ? <ModalDialog title={planEditor.mode === 'edit' ? 'Edit expense plan' : 'Record payment'}
+        className="dn-transaction-dialog" onClose={closePlan} closeDisabled={busy}>
         <TransactionForm key={planEditor.plan.id + planEditor.mode} expensePlan={planEditor.mode === 'edit' ? planEditor.plan : null}
           paymentPlan={planEditor.mode === 'payment' ? planEditor.plan : null} busy={busy} events={events} onCancel={closePlan}
           onSubmit={(form) => runPlan(() => saveTransaction(form, null, planEditor.mode === 'edit'
             ? { expensePlan: planEditor.plan } : { paymentPlan: planEditor.plan }),
-          planEditor.mode === 'edit' ? 'Expense plan saved' : 'Payment recorded. Next expense scheduled.')} />
-        {planEditor.mode === 'edit' ? <div className="dn-expense-plan-actions" role="group" aria-label="Expense plan actions">
-          <button type="button" disabled={busy} onClick={() => setPlanAction('skip')}>Skip this occurrence</button>
-          <button type="button" disabled={busy} onClick={() => setPlanAction('end')}>End repeat</button>
-        </div> : null}
+          planEditor.mode === 'edit' ? 'Expense plan saved' : `Payment recorded. Next due ${nextExpenseDate(planEditor.plan)}.`,
+          { errorInForm: true })} />
       </ModalDialog> : null}
-      {planEditor && planAction ? <ConfirmDialog title={planAction === 'skip' ? 'Skip this expense?' : 'End this expense plan?'}
-        message={planAction === 'skip' ? 'DN will move to the next scheduled date.' : 'This ends future repeats and keeps recorded payments.'}
-        confirmLabel={planAction === 'skip' ? 'Skip occurrence' : 'End repeat'} busy={busy} error={savingError}
-        onCancel={() => { if (!busy) { setPlanAction(''); setSavingError(''); } }}
-        onConfirm={() => runPlan((assertCurrent) => changeExpensePlanDate(planEditor.context, planEditor.plan, planAction, assertCurrent),
-          planAction === 'skip' ? 'Expense skipped. Next occurrence scheduled.' : 'Expense plan ended')} /> : null}
+      {planEditor && ['skip', 'end'].includes(planEditor.mode) ? <ConfirmDialog
+        title={planEditor.mode === 'skip' ? 'Skip this expense?' : 'End this expense plan?'}
+        message={planEditor.mode === 'skip'
+          ? `Skip ${planEditor.plan.name} due ${formatScheduleDate(planEditor.plan.dueDate)}. Next due ${nextExpenseDate(planEditor.plan)}.`
+          : `End future payments for ${planEditor.plan.name}. Recorded payments stay in Transactions.`}
+        confirmLabel={planEditor.mode === 'skip' ? 'Skip occurrence' : 'End repeat'} destructive={planEditor.mode === 'end'}
+        busy={busy} error={savingError} onCancel={() => { if (!busy) switchPlanView('manage'); }}
+        onConfirm={() => runPlan((assertCurrent) => changeExpensePlanDate(planEditor.context, planEditor.plan, planEditor.mode, assertCurrent),
+          planEditor.mode === 'skip' ? ({ plan }) => `Expense skipped. Next due ${formatScheduleDate(plan.dueDate)}.` : 'Expense plan ended')} /> : null}
       {deleteTarget ? <ConfirmDialog title="Delete transaction?"
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
         onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}

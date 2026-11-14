@@ -209,14 +209,14 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   );
 }
 
-export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '' }) {
+export function ConfirmDialog({ title, message, onCancel, onConfirm, confirmLabel = 'Delete', busy = false, error = '', destructive = true }) {
   return (
-    <ModalDialog title={title} onClose={onCancel} swipeDismiss={false}>
+    <ModalDialog title={title} onClose={onCancel} swipeDismiss={false} closeDisabled={busy}>
       <p style={styles.message}>{message}</p>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
       <div className="modal-confirm-actions" style={styles.actions}>
         <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
-        <button type="button" className="modal-danger-button modal-action-button" disabled={busy} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
+        <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
       </div>
     </ModalDialog>
   );

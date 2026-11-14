@@ -349,3 +349,18 @@ html[data-theme] .dn-task-editor .dn-task-time-hint {font-size:13px;line-height:
     font-size:12px;line-height:1.4;
   }
 }
+html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-repeat-context {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+html[data-theme] .dn-task-repeat-context svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+
+@media (max-width: 360px) {
+  html[data-theme] .dn-task-editor .dn-task-date-row :is(input[type="date"], input[type="time"]) {
+    padding-inline: 5px !important;
+  }
+}

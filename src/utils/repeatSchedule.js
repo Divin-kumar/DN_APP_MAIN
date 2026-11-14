@@ -16,6 +16,28 @@ export function normalizeRepeatSchedule(rule) {
   return { frequency: rule.frequency, anchorDate: rule.anchorDate };
 }
 
+export function repeatScheduleForDraft(previous, frequency, dueDate) {
+  if (previous?.repeat?.frequency === frequency && previous.dueDate === dueDate) {
+    return normalizeRepeatSchedule(previous.repeat);
+  }
+  return normalizeRepeatSchedule({ frequency, anchorDate: dueDate });
+}
+
+const scheduleDateFormatter = new Intl.DateTimeFormat('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+
+export function formatScheduleDate(date) {
+  return isScheduleDate(date) ? scheduleDateFormatter.format(parseMomentDate(date)) : '';
+}
+
+export function previewNextRepeat(previous, frequency, dueDate) {
+  if (!isRepeatFrequency(frequency) || !isScheduleDate(dueDate)) return '';
+  try {
+    return nextScheduledDate(repeatScheduleForDraft(previous, frequency, dueDate), dueDate);
+  } catch {
+    return '';
+  }
+}
+
 // Move exactly one slot, even when the current occurrence is overdue.
 // Monthly and yearly schedules retain the original day after a short month.
 export function nextScheduledDate(rule, dueDate) {

@@ -66,11 +66,11 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
     </div>
     {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-    <FormDisclosure label="More options" hint={repeatFrequency ? `Repeats ${REPEAT_OPTIONS[repeatFrequency].toLowerCase()}`
-      : momentId ? "Linked Moment · priority and notes" : "Priority, links and notes"}>
-    {task?.status !== 'completed' ? <RepeatField className="dn-task-field" value={repeatFrequency}
-      onChange={setRepeatFrequency} disabled={busy}>
-      Done or Skip schedules the next Task. Each new occurrence starts without links.
+    <FormDisclosure label="More options" hint={repeatFrequency ? REPEAT_OPTIONS[repeatFrequency]
+      : task?.status !== 'completed' ? 'Repeat, priority, links and notes' : 'Priority, links and notes'}>
+    {task?.status !== 'completed' ? <RepeatField value={repeatFrequency}
+      onChange={setRepeatFrequency} disabled={busy} dueDate={dueDate} previous={task}>
+      {momentId ? 'Moment and Activity links apply to this Task only.' : 'Done or Skip adds the next Task.'}
     </RepeatField> : null}
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
