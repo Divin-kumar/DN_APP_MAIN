@@ -153,7 +153,6 @@ function FinancialsContent() {
     setPlanView({ mode: 'list' });
   };
   const openPlan = (plan, mode) => {
-    setPlanNotice(null);
     setSavingError('');
     setPlanView({ plan, mode, context: records.capture() });
   };

@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-541 | Confirm repeat changes and retain the last payment receipt
+
+- **Scope:** Give repeating Tasks visible pause and resume confirmation. Resume displays the saved due date and optional time. Keep View payment available when leaving another bill form or Manage view via Back or Cancel, and restore focus to its original bill action.
+- **Source-derived:** The next successful bill action replaces the confirmation. The existing schedule, payment, scope and backup logic still handles persistence. Explore DN v2026.11.14.11 describes both confirmations.
+- **Executed:** Reproduced the missing confirmation and receipt link with browser checks, then verified the corrected flows. Reviewed 320px light and 430px dark phone captures. Node 22 lint and build, 632 Node tests, 28 Chromium checks and four focused WebKit checks passed.
+- **Unverified:** Physical iPhone Safari, VoiceOver and live signed-in use.
+
 ## CHG-20261114-540 | Simplify the recurring Task and expense flows
 
 - **Scope:** Give Repeat its own compact row beside the schedule in Task and expense forms. Keep the frequency and next date visible when closed, and show Paused on a paused Task. Show the expense title and amount together, label Record and Manage separately in the bill list, and fit both scheduled dates on a compact payment summary.

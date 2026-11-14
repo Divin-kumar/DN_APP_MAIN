@@ -161,6 +161,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await pause.getByRole('button', { name: 'Pause repeat', exact: true }).click();
   const paused = list.locator('article').filter({ hasText: 'Repeat paused' });
   await expect(paused).toHaveCount(1);
+  await expect(page.locator('.app-toast')).toContainText('Repeat paused.');
   await expect(list.locator('article')).toHaveCount(3);
   expect((await readGuest(page, 'dn_guest_tasks')).at(-1)).toMatchObject({ status: 'cancelled', dueDate: '2026-03-31', dueTime: '18:30' });
   await paused.click();
@@ -174,6 +175,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await expect(pausedEditor.locator('time')).toHaveAttribute('datetime', '2026-03-31T18:30');
   await pausedEditor.getByRole('button', { name: 'Resume repeat', exact: true }).click();
   await expect(recurring).toHaveCount(1);
+  await expect(page.locator('.app-toast')).toContainText('Repeat resumed. Due 31 Mar 2026 · 18:30.');
   expect((await readGuest(page, 'dn_guest_tasks')).at(-1)).toMatchObject({ status: 'in-progress', dueDate: '2026-03-31', dueTime: '18:30' });
   await recurring.click();
   await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
@@ -534,6 +536,14 @@ test('returning to a long expense list keeps the scroll position and shows payme
   await page.getByRole('dialog', { name: 'Payment details' }).getByRole('button', { name: 'Back to upcoming expenses' }).click();
   await expect(viewPayment).toBeFocused();
   expect(await body.evaluate((element) => element.scrollTop)).toBe(beforeSave);
+  await recordPayment.click();
+  await payment.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(recordPayment).toBeFocused();
+  await expect(viewPayment).toBeVisible();
+  await expect(feedback).toHaveText('Payment recorded. Next due 12 Nov 2026.');
+  await viewPayment.click();
+  await expect(page.getByRole('dialog', { name: 'Payment details' })).toContainText('Bill 12');
+  await page.getByRole('dialog', { name: 'Payment details' }).getByRole('button', { name: 'Back to upcoming expenses' }).click();
   await expect(plans.getByRole('region', { name: 'Overdue' }).getByRole('listitem').last()).toContainText('Bill 12');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(['Bill 12']);
   expect(errors).toEqual([]);

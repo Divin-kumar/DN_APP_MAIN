@@ -146,12 +146,15 @@ export function TaskListContent() {
   };
   const statusChange = async (task, status) => {
     const nextDate = ['completed', 'skip'].includes(status) && previewNextRepeat(task, task.repeat?.frequency, task.dueDate);
+    const pausing = task.repeat && status === 'cancelled';
+    const resuming = task.repeat && task.status === 'cancelled' && status === 'in-progress';
     const saved = await run(() => store.setTaskStatus(task.id, status, task.updatedAt),
-      nextDate ? '' : status === 'completed' ? 'Task completed' : 'Task status updated');
+      nextDate || pausing || resuming ? '' : status === 'completed' ? 'Task completed' : 'Task status updated');
     if (!saved) return false;
     setConfirm(null);
     if (task.id === nextTask?.id) setSelection(null);
-    if (nextDate && taskScopeKey(useAppStore.getState()) === scope) {
+    if (taskScopeKey(useAppStore.getState()) !== scope) return true;
+    if (nextDate) {
       const nextTaskId = repeatingTaskOccurrenceId(task.repeat, nextDate);
       const message = `Task ${status === 'skip' ? 'skipped' : 'completed'}. Next due ${taskDueLabel(task, nextDate)}.`;
       toast(message, 'success', { label: 'View next', onClick: () => {
@@ -159,6 +162,10 @@ export function TaskListContent() {
           navigate(`/tasks?task=${encodeURIComponent(nextTaskId)}`, { replace: true, state: { nextTaskId } });
         }
       } });
+    } else if (pausing) {
+      toast('Repeat paused.', 'success');
+    } else if (resuming) {
+      toast(`Repeat resumed. Due ${taskDueLabel(saved)}.`, 'success', { duration: 5000 });
     }
     return true;
   };
@@ -304,9 +311,8 @@ export function TaskListContent() {
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
         busy={busy} onTaskAction={async (action) => {
           const task = editor.value;
-          const result = await run(() => action === 'delete' ? store.removeTask(task.id, task.updatedAt)
-            : store.setTaskStatus(task.id, action === 'restore' ? 'in-progress' : 'cancelled', task.updatedAt),
-          action === 'delete' ? 'Task deleted' : 'Task status updated');
+          const result = action === 'delete' ? await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')
+            : await statusChange(task, action === 'restore' ? 'in-progress' : 'cancelled');
           if (result) setEditor(null);
         }}
         moments={moments} onSave={save} error={error} onClose={() => { if (!busy) { setEditor(null); setError(''); } }} />

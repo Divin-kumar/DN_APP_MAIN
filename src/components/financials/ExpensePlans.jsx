@@ -139,7 +139,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
 
   const selectPlan = (selected, action, button) => {
     const body = button.closest('.dn-modal-body');
-    listReturnRef.current = { planId: selected.id, action, scrollTop: body.scrollTop };
+    listReturnRef.current = { planId: selected.id, action, scrollTop: body.scrollTop, notice };
     onSelect(selected, action);
   };
 
@@ -163,7 +163,8 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     const rows = [...body.querySelectorAll('[data-plan-id]')];
     const previousRow = rows.find((row) => row.dataset.planId === anchor.planId);
     const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"]`);
-    if (!notice && previousButton) {
+    const canRestoreButton = notice === anchor.notice && previousButton;
+    if (canRestoreButton) {
       previousButton.focus({ preventScroll: true });
     }
     body.scrollTop = anchor.scrollTop;
@@ -174,7 +175,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
       const rect = heading.getBoundingClientRect();
       return rect.top <= pinnedTop + 1 && rect.bottom <= bottom ? Math.max(edge, rect.bottom) : edge;
     }, top);
-    if (!notice && previousButton) {
+    if (canRestoreButton) {
       const rect = previousButton.getBoundingClientRect();
       body.scrollTop += rect.top < contentTop ? rect.top - contentTop : Math.max(0, rect.bottom - bottom);
       return;
