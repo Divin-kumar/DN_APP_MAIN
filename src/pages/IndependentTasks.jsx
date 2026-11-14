@@ -3,6 +3,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Flag, Check, ListTodo, Pencil, Repeat, RotateCcw, Search, SkipForward, SlidersHorizontal, X, XCircle } from 'lucide-react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import { RepeatSkipSummary } from '../components/common/RepeatField';
 import SwipeActionCard from '../components/common/SwipeActionCard';
 import TaskEditor from '../components/tasks/TaskEditor';
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
@@ -18,7 +19,7 @@ import useEventStore from '../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
 import { repeatingTaskOccurrenceId, sortIndependentTasks, resolveIndependentTaskParent } from '../utils/independentTasks.js';
 import { formatMomentDate } from '../utils/momentDates.js';
-import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../utils/repeatSchedule.js';
+import { previewNextRepeat, REPEAT_OPTIONS } from '../utils/repeatSchedule.js';
 import { getActiveSampleScenario } from '../dev/sampleData';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import '../components/common/ListControls.css';
@@ -31,7 +32,6 @@ const formatDate = (value) => {
   return new Date(year, month - 1, day).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 };
 const statusLabel = (status) => status === 'in-progress' ? 'In progress' : status === 'completed' ? 'Completed' : 'Cancelled';
-const nextTaskDate = (task) => formatScheduleDate(previewNextRepeat(task, task.repeat?.frequency, task.dueDate));
 const taskDueLabel = (task, date = task.dueDate) => `${formatDate(date)}${task.dueTime ? ` · ${task.dueTime}` : ''}`;
 
 export default function IndependentTasks() {
@@ -177,6 +177,8 @@ export function TaskListContent() {
     </section>
   </div>;
 
+  const isSkip = confirm?.kind === 'skip';
+  const skipNextDate = isSkip && previewNextRepeat(confirm.task, confirm.task.repeat.frequency, confirm.task.dueDate);
   return <div className="dn-tasks-page">
     <div className="dn-task-metrics" aria-label="Task summary">
       <span><strong>{matches.length}</strong> All Tasks</span>
@@ -309,15 +311,19 @@ export function TaskListContent() {
     </ModalDialog> : null}
     {refine ? <TaskRefineSheet current={view} resetDefaults={resetDefaults} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
-    {confirm ? <ConfirmDialog title={confirm.kind === 'delete' ? 'Delete Task?' : confirm.kind === 'skip' ? 'Skip this Task?' : 'Cancel Task?'}
+    {confirm ? <ConfirmDialog title={confirm.kind === 'delete' ? 'Delete Task?' : isSkip ? 'Skip this Task?' : 'Cancel Task?'}
       message={confirm.kind === 'delete'
         ? `Remove "${confirm.task.title}"? ${confirm.task.repeat ? 'This will end the repeat schedule.' : 'Its Moment and Activities will not be changed.'}`
-        : confirm.kind === 'skip'
-          ? `Skip "${confirm.task.title}" due ${formatScheduleDate(confirm.task.dueDate)}. The next Task is due ${nextTaskDate(confirm.task)}.`
+        : isSkip ? undefined
         : `Mark "${confirm.task.title}" as cancelled? ${confirm.task.repeat ? 'Repeats will pause until you restore this Task.' : 'You can restore it later.'}`}
-      confirmLabel={confirm.kind === 'delete' ? 'Delete Task' : confirm.kind === 'skip' ? 'Skip occurrence' : 'Cancel Task'}
-      destructive={confirm.kind !== 'skip'}
+      confirmLabel={confirm.kind === 'delete' ? 'Delete Task' : isSkip ? 'Skip occurrence' : 'Cancel Task'}
+      destructive={!isSkip} confirmDisabled={isSkip && !skipNextDate}
       busy={busy} error={error} onCancel={() => { setConfirm(null); setError(''); }}
-      onConfirm={() => confirm.kind === 'delete' ? remove(confirm.task) : statusChange(confirm.task, confirm.kind === 'skip' ? 'skip' : 'cancelled')} /> : null}
+      onConfirm={() => confirm.kind === 'delete' ? remove(confirm.task) : statusChange(confirm.task, isSkip ? 'skip' : 'cancelled')}>
+      {isSkip ? <RepeatSkipSummary name={confirm.task.title} dueDate={confirm.task.dueDate}
+        nextDate={skipNextDate} dueTime={confirm.task.dueTime}>
+        {skipNextDate ? 'This occurrence goes into Task history as cancelled.' : 'Edit the due date to continue the schedule.'}
+      </RepeatSkipSummary> : null}
+    </ConfirmDialog> : null}
   </div>;
 }

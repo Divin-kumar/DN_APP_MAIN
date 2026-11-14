@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmActions } from '../common/ModalDialog';
+import { RepeatSkipSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
 import { activityTime } from '../../utils/activityTime.js';
 import { formatMomentDate } from '../../utils/momentDates.js';
@@ -84,10 +85,8 @@ function ExpensePlanList({ plans, onSelect }) {
   </div>;
 }
 
-export const nextExpenseDate = (plan) => formatScheduleDate(previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate));
-
 function ExpensePlanActions({ plan, onNavigate }) {
-  const following = nextExpenseDate(plan);
+  const following = formatScheduleDate(previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate));
   return <>
     <div className="dn-expense-plan-sheet-header">
       <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span>{formatAmount.format(plan.amount)}</span></div>
@@ -200,10 +199,14 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={onNavigate} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null} busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}
-    {isSkip || mode === 'end' ? <ConfirmActions message={isSkip
-      ? `Skip ${plan.name} due ${formatScheduleDate(plan.dueDate)}. Next due ${nextExpenseDate(plan)}.`
+    {isSkip || mode === 'end' ? <ConfirmActions message={isSkip ? undefined
       : `End future payments for ${plan.name}. Recorded payments stay in Transactions.`}
       confirmLabel={isSkip ? 'Skip occurrence' : 'End repeat'} destructive={!isSkip}
-      busy={busy} error={error} onCancel={goBack} onConfirm={onConfirm} /> : null}
+      busy={busy} error={error} onCancel={goBack} onConfirm={onConfirm}>
+      {isSkip ? <RepeatSkipSummary name={plan.name} dueDate={plan.dueDate}
+        nextDate={previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate)}>
+        Spending totals reflect recorded payments.
+      </RepeatSkipSummary> : null}
+    </ConfirmActions> : null}
   </ModalDialog>;
 }

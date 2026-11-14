@@ -12,6 +12,7 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'light'],[430,93
     await create.getByRole('button', { name: 'Create Task' }).click();
     const records = () => page.evaluate(() => ['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes'].map(k => localStorage.getItem(k)));
     const tasks = () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_tasks')));
+    await expect(create).toBeHidden();
     const original = await tasks();
     const baseline = await records();
     await page.locator('.dn-independent-task-row').filter({ hasText: 'Keep travel originals' }).click();

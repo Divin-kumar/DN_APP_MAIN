@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-537 | Clarify recurring Task and bill skips and schedule edits
+
+- **Scope:** Use the same two date rows in both Skip confirmations, including any saved Task time. Explain the effect on Task history and how spending totals are calculated. After a due-date or frequency change, show where future repeats start. Selecting Once in a Task previews the end of the schedule, even with More options closed.
+- **Source-derived:** The edit notice and date preview use the calendar rule used by Save. A Task with no available next date directs the user to edit the date. Skip advances one occurrence and the Transaction ledger still counts recorded payments. Explore DN v2026.11.14.8 includes both flows.
+- **Executed:** Node 22 lint and build, 632 Node tests and 52 selected Chromium journeys passed. Checked both Skip and Edit views at 320px light and 430px dark. Tests cover reverting schedule edits, cancelling Skip without a write, Task history, spending totals, month-end dates and backup restore. The existing Task editor test now waits for its create form to close before reading storage.
+- **Unverified:** Physical iPhone Safari, VoiceOver and a real signed-in account.
+
 ## CHG-20261114-536 | Put today's bills first and label recurring Tasks by due date
 
 - **Scope:** Show Due today, Overdue and Later in the Upcoming expenses sheet. Keep each section's heading and bill count visible while scrolling. Show the nearest date in the Transactions summary when all bills are in the future. Put Due today, Overdue or Repeat paused next to the repeat information on Task rows.

@@ -10,7 +10,7 @@ import useAppStore from '../../store/useAppStore';
 import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
 import { normalizePaymentMethod, requirePaymentMethod } from '../../utils/paymentMethod';
-import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
+import { formatScheduleDate, previewNextRepeat, repeatEditNotice, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import { CalendarDays } from 'lucide-react';
 import './ExpensePlans.css';
 
@@ -74,6 +74,7 @@ export default function TransactionForm({
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
   const planFlow = Boolean(paymentPlan || expensePlan || isPlan);
   const nextRepeat = previewNextRepeat(expensePlan, form.repeatFrequency, form.date);
+  const repeatNotice = repeatEditNotice(expensePlan, form.repeatFrequency, form.date, nextRepeat);
   const hasRepeatPreviewInDisclosure = isPlan && !expensePlan;
   const nextPaymentDate = paymentPlan && formatScheduleDate(previewNextRepeat(paymentPlan, paymentPlan.repeat.frequency, paymentPlan.dueDate));
 
@@ -164,7 +165,7 @@ export default function TransactionForm({
   </div>;
   const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
-    nextDate={nextRepeat} dueDate={form.date} allowOneTime={!expensePlan}>
+    nextDate={nextRepeat} dueDate={form.date} notice={repeatNotice} allowOneTime={!expensePlan}>
     {presetLink?.eventId || form.eventId ? 'Choose the Moment or Activity when you record each payment.' : null}
   </RepeatField> : null;
   const amount = <label className="dn-transaction-field">

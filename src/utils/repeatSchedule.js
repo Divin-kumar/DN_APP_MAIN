@@ -16,8 +16,11 @@ export function normalizeRepeatSchedule(rule) {
   return { frequency: rule.frequency, anchorDate: rule.anchorDate };
 }
 
+const usesSavedRepeat = (previous, frequency, dueDate) =>
+  Boolean(previous?.repeat && previous.repeat.frequency === frequency && previous.dueDate === dueDate);
+
 export function repeatScheduleForDraft(previous, frequency, dueDate) {
-  if (previous?.repeat?.frequency === frequency && previous.dueDate === dueDate) {
+  if (usesSavedRepeat(previous, frequency, dueDate)) {
     return normalizeRepeatSchedule(previous.repeat);
   }
   return normalizeRepeatSchedule({ frequency, anchorDate: dueDate });
@@ -36,6 +39,15 @@ export function previewNextRepeat(previous, frequency, dueDate) {
   } catch {
     return '';
   }
+}
+
+export function repeatEditNotice(previous, frequency, dueDate, nextDate) {
+  if (!previous?.repeat) return '';
+  if (!frequency) return 'Saving ends this repeat.';
+  if (nextDate && !usesSavedRepeat(previous, frequency, dueDate)) {
+    return 'Future repeats start from this due date.';
+  }
+  return '';
 }
 
 // Move exactly one slot, even when the current occurrence is overdue.
