@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-538 | Clarify pausing Tasks and ending expense repeats
+
+- **Scope:** Label the existing repeating Task actions Pause repeat and Resume repeat. Show the scheduled date and optional time in the pause, resume-editor and delete confirmations. End repeat for a bill shows its upcoming date and explains that recorded payments stay in Transactions. Back or Cancel from an expense plan action restores focus to the corresponding Manage button.
+- **Source-derived:** The same Task and expense write handlers, dates, storage contracts and financial totals apply. Explore DN v2026.11.14.9 describes the updated actions and retains its explicit Refresh demo flow.
+- **Executed:** Node 22 lint and build, 632 Node tests and 40 targeted Chromium journeys passed. Reviewed the confirmations at 320px light and 430px dark. Checked Task history, pause and resume on the same due date, backing out without a write, payment totals, backup restore and keyboard focus.
+- **Unverified:** Physical iPhone Safari, VoiceOver and live signed-in use.
+
 ## CHG-20261114-537 | Clarify recurring Task and bill skips and schedule edits
 
 - **Scope:** Use the same two date rows in both Skip confirmations, including any saved Task time. Explain the effect on Task history and how spending totals are calculated. After a due-date or frequency change, show where future repeats start. Selecting Once in a Task previews the end of the schedule, even with More options closed.

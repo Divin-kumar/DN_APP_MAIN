@@ -76,7 +76,7 @@ html[data-theme] .dn-repeat-disclosure .dn-repeat-summary-date {
 }
 html[data-theme] .dn-repeat-disclosure > summary > small { line-height: 1.35; }
 html[data-theme] .dn-repeat-disclosure[open] > summary > small { display: none; }
-html[data-theme] .dn-repeat-skip-summary {
+html[data-theme] .dn-repeat-action-summary {
   display: grid;
   gap: 12px;
   margin: 0 0 18px;
@@ -84,22 +84,22 @@ html[data-theme] .dn-repeat-skip-summary {
   font-size: 13px;
   line-height: 1.45;
 }
-html[data-theme] .dn-repeat-skip-summary p { margin: 0; overflow-wrap: anywhere; }
-html[data-theme] .dn-repeat-skip-summary .dn-repeat-skip-name {
+html[data-theme] .dn-repeat-action-summary p { margin: 0; overflow-wrap: anywhere; }
+html[data-theme] .dn-repeat-action-summary .dn-repeat-action-name {
   color: var(--color-text);
   font-size: 16px;
   font-weight: 680;
 }
-html[data-theme] .dn-repeat-skip-summary dl { margin: 0; border-block: 1px solid var(--color-border); }
-html[data-theme] .dn-repeat-skip-summary dl > div {
+html[data-theme] .dn-repeat-action-summary dl { margin: 0; border-block: 1px solid var(--color-border); }
+html[data-theme] .dn-repeat-action-summary dl > div {
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
   gap: 8px;
   align-items: baseline;
   padding-block: 7px;
 }
-html[data-theme] .dn-repeat-skip-summary dl > div + div { border-block-start: 1px solid var(--color-border); }
-html[data-theme] .dn-repeat-skip-summary dd {
+html[data-theme] .dn-repeat-action-summary dl > div + div { border-block-start: 1px solid var(--color-border); }
+html[data-theme] .dn-repeat-action-summary dd {
   margin: 0;
   color: var(--color-text);
   font-weight: 680;

@@ -2,12 +2,24 @@ import { useLayoutEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
-import RepeatField, { RepeatSummary } from '../common/RepeatField';
+import RepeatField, { RepeatActionSummary, RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
 import { resolveIndependentTaskParent } from '../../utils/independentTasks.js';
 import { previewNextRepeat, repeatEditNotice } from '../../utils/repeatSchedule.js';
+
+const repeatActionMessages = {
+  cancel: 'This marks the Task as cancelled and pauses the repeat. Resume repeat brings back this due date.',
+  restore: 'This brings the Task back to In progress on the same due date and resumes the repeat.',
+  delete: 'This removes the Task and ends the repeat. Earlier occurrences stay in Task history.',
+};
+
+export function TaskRepeatActionSummary({ task, action }) {
+  return <RepeatActionSummary name={task.title} dueDate={task.dueDate} dueTime={task.dueTime}>
+    {repeatActionMessages[action]}
+  </RepeatActionSummary>;
+}
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
 export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
@@ -31,6 +43,9 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const nextRepeat = previewNextRepeat(task, repeatFrequency, dueDate);
   const repeatNotice = repeatEditNotice(task, repeatFrequency, dueDate, nextRepeat);
   const canSave = !busy && title.trim() && (!repeatFrequency || nextRepeat);
+  const cancelLabel = task?.repeat ? 'Pause repeat' : 'Cancel Task';
+  const restoreLabel = task?.repeat ? 'Resume repeat' : 'Restore Task';
+  const actionLabel = pendingAction === 'delete' ? 'Delete Task' : pendingAction === 'restore' ? restoreLabel : cancelLabel;
   const unresolved = resolveIndependentTaskParent({ momentId, activityId }, moments);
   const parent = unresolved.moment;
   const momentAlias = parent && (recordId(parent.id) || recordId(parent.firestoreId)) !== momentId;
@@ -41,19 +56,17 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   };
 
   if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
-    <h4 ref={confirmationRef} tabIndex={-1}>{pendingAction === 'delete' ? 'Delete Task?' : pendingAction === 'restore' ? 'Restore Task?' : 'Cancel Task?'}</h4>
-    <p>{pendingAction === 'delete'
+    <h4 ref={confirmationRef} tabIndex={-1}>{actionLabel}?</h4>
+    {task.repeat ? <TaskRepeatActionSummary task={task} action={pendingAction} /> : <p>{pendingAction === 'delete'
       ? `Remove “${task.title}”? Its Moment and Activities will not be changed.`
       : pendingAction === 'restore' ? `Move “${task.title}” back to In progress?`
-        : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>
-    {task.repeat && pendingAction !== 'restore' ? <p>{pendingAction === 'delete'
-      ? 'This will end the repeat schedule.' : 'The repeat schedule pauses until you restore this Task.'}</p> : null}
+        : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>}
     <p>Unsaved edits will not be saved.</p>
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="dn-task-form-actions">
       <button type="button" className="secondaryButton" disabled={busy} onClick={() => setPendingAction(null)}>Keep editing</button>
       <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'} disabled={busy} onClick={() => onTaskAction(pendingAction)}>
-        {pendingAction === 'delete' ? 'Delete Task' : pendingAction === 'restore' ? 'Restore Task' : 'Cancel Task'}
+        {actionLabel}
       </button>
     </div>
   </div>;
@@ -108,8 +121,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     </FormDisclosure>
     {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
       {task.status === 'cancelled'
-        ? <button type="button" disabled={busy} data-task-action="restore" onClick={() => setPendingAction('restore')}>Restore Task…</button>
-        : <button type="button" disabled={busy} data-task-action="cancel" onClick={() => setPendingAction('cancel')}>Cancel Task…</button>}
+        ? <button type="button" disabled={busy} data-task-action="restore" onClick={() => setPendingAction('restore')}>{restoreLabel}…</button>
+        : <button type="button" disabled={busy} data-task-action="cancel" onClick={() => setPendingAction('cancel')}>{cancelLabel}…</button>}
       <button type="button" disabled={busy} data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
     </div> : null}
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}

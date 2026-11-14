@@ -111,6 +111,7 @@ html[data-theme] .dn-task-editor-actions button {
 html[data-theme] .dn-task-editor-actions .is-destructive { color:var(--color-danger,#b34344); }
 html[data-theme] .dn-task-action-confirm :is(h4,p) { margin:0; overflow-wrap:anywhere; }
 html[data-theme] .dn-task-action-confirm p { font-size:14px; line-height:1.6; }
+html[data-theme] .dn-task-action-confirm .dn-repeat-action-summary { margin:0; }
 html[data-theme] .dn-task-action-confirm .dn-task-form-actions { flex-wrap:wrap; }
 html[data-theme] .dn-task-action-confirm button { min-height:44px; }
 @media(max-width:430px) {

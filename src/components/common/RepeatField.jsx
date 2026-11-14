@@ -19,11 +19,13 @@ export function RepeatSummary({ value, dueDate, nextDate, notice, showDueDate = 
   </>;
 }
 
-export function RepeatSkipSummary({ name, dueDate, nextDate, dueTime, children }) {
-  return <div className="dn-repeat-skip-summary">
-    <p className="dn-repeat-skip-name">{name}</p>
+export function RepeatActionSummary({ name, dueDate, nextDate, dueTime, dueLabel = 'Scheduled for', children }) {
+  const dates = [[dueLabel, dueDate]];
+  if (nextDate !== undefined) dates.push(['Next due', nextDate]);
+  return <div className="dn-repeat-action-summary">
+    <p className="dn-repeat-action-name">{name}</p>
     <dl>
-      {[['Scheduled for', dueDate], ['Next due', nextDate]].map(([label, date]) => <div key={label}>
+      {dates.map(([label, date]) => <div key={label}>
         <dt>{label}</dt>
         <dd>{date ? <time dateTime={dueTime ? `${date}T${dueTime}` : date}>
           {formatScheduleDate(date)}{dueTime ? ` · ${dueTime}` : null}

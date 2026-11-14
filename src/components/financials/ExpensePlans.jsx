@@ -1,7 +1,7 @@
 import { useRef } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmActions } from '../common/ModalDialog';
-import { RepeatSkipSummary } from '../common/RepeatField';
+import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
 import { activityTime } from '../../utils/activityTime.js';
 import { formatMomentDate } from '../../utils/momentDates.js';
@@ -93,13 +93,13 @@ function ExpensePlanActions({ plan, onNavigate }) {
       <p>{REPEAT_OPTIONS[plan.repeat.frequency]} · Due {formatScheduleDate(plan.dueDate)}</p>
     </div>
     <div className="dn-expense-plan-menu-actions">
-      <button type="button" onClick={() => onNavigate('edit')}><Pencil size={18} aria-hidden="true" />
+      <button type="button" data-plan-manage-action="edit" onClick={() => onNavigate('edit')}><Pencil size={18} aria-hidden="true" />
         <span>Edit schedule</span><ChevronRight size={16} aria-hidden="true" />
       </button>
-      <button type="button" disabled={!following} onClick={() => onNavigate('skip')}><SkipForward size={18} aria-hidden="true" />
+      <button type="button" data-plan-manage-action="skip" disabled={!following} onClick={() => onNavigate('skip')}><SkipForward size={18} aria-hidden="true" />
         <span>Skip this occurrence{following ? <small>Next due {following}</small> : null}</span><ChevronRight size={16} aria-hidden="true" />
       </button>
-      <button type="button" className="is-danger" onClick={() => onNavigate('end')}><XCircle size={18} aria-hidden="true" />
+      <button type="button" data-plan-manage-action="end" className="is-danger" onClick={() => onNavigate('end')}><XCircle size={18} aria-hidden="true" />
         <span>End repeat</span><ChevronRight size={16} aria-hidden="true" />
       </button>
     </div>
@@ -131,6 +131,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
   const listReturnRef = useRef(null);
+  const manageReturnRef = useRef(null);
   const listBodyRef = useRef(null);
   const viewPaymentRef = useRef(null);
 
@@ -140,8 +141,14 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     onSelect(selected, action);
   };
 
-  const restoreListPosition = (body) => {
+  const restorePosition = (body) => {
+    if (mode === 'manage' && manageReturnRef.current) {
+      body.querySelector(`[data-plan-manage-action="${manageReturnRef.current}"]`)?.focus();
+      manageReturnRef.current = null;
+      return;
+    }
     if (!isList) return;
+    manageReturnRef.current = null;
     listBodyRef.current = body;
     const anchor = listReturnRef.current;
     if (!anchor) return;
@@ -190,23 +197,24 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   </div>;
 
   return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${isList ? ' dn-expense-plan-list-view' : ''}`} viewKey={mode}
-    onViewChange={restoreListPosition}
+    onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
     onClose={onClose} closeDisabled={busy} footer={feedback}>
     {isList && plans.length ? <p className="dn-expense-plan-list-hint">Select a bill to record a payment.</p> : null}
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
-    {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={onNavigate} /> : null}
+    {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={(action) => {
+      manageReturnRef.current = action;
+      onNavigate(action);
+    }} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null} busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}
-    {isSkip || mode === 'end' ? <ConfirmActions message={isSkip ? undefined
-      : `End future payments for ${plan.name}. Recorded payments stay in Transactions.`}
-      confirmLabel={isSkip ? 'Skip occurrence' : 'End repeat'} destructive={!isSkip}
+    {isSkip || mode === 'end' ? <ConfirmActions confirmLabel={isSkip ? 'Skip occurrence' : 'End repeat'} destructive={!isSkip}
       busy={busy} error={error} onCancel={goBack} onConfirm={onConfirm}>
-      {isSkip ? <RepeatSkipSummary name={plan.name} dueDate={plan.dueDate}
-        nextDate={previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate)}>
-        Spending totals reflect recorded payments.
-      </RepeatSkipSummary> : null}
+      <RepeatActionSummary name={plan.name} dueDate={plan.dueDate} dueLabel={isSkip ? 'Scheduled for' : 'Upcoming bill'}
+        nextDate={isSkip ? previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate) : undefined}>
+        {isSkip ? 'Spending totals reflect recorded payments.' : 'This removes the upcoming bill and stops future repeats. Recorded payments stay in Transactions.'}
+      </RepeatActionSummary>
     </ConfirmActions> : null}
   </ModalDialog>;
 }

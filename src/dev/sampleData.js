@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.14.8';
+export const GUEST_TOUR_VERSION = '2026.11.14.9';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -369,7 +369,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-independent-4', title: 'Choose a new bookshelf', notes: 'No deadline yet.',
       status: 'in-progress', priority: 'low', dueDate: '', dueTime: '',
       momentId: '', activityId: '' },
-    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'Repeating Tasks show Due today or Overdue beside their repeat frequency. Use More options in the Task editor to change Repeat. The following date and any schedule change stay visible when you close More options. Tap or swipe the Task for Done or Skip this occurrence. The Skip confirmation shows the scheduled and next due dates with their time. After saving, tap View next to highlight the next Task and see its due date and time. A red flag means overdue; a neutral flag means high priority. Dashboard Tasks show days away or overdue and highlight the matching Task in its list. Summary counts follow your filters. Settings → List defaults configures Task sorting and filters. In Refine, tap the selected sort again or use Reverse order to change direction; Cancel discards a draft, and Show results applies it. Hold or move the filter grip to lift the filter card, drag over its landing spot and release to reorder; tap +N to reveal remaining applied filters in one horizontal row.',
+    { id: 'dn-tour-independent-5', title: 'Return the library book', notes: 'Repeating Tasks show Due today or Overdue beside their repeat frequency. Use More options in the Task editor to change Repeat. The following date and any schedule change stay visible when you close More options. Tap or swipe the Task for Done or Skip this occurrence. The Skip confirmation shows the scheduled and next due dates with their time. Pause repeat keeps the current due date ready for Resume repeat. After saving a completed or skipped occurrence, tap View next to highlight the next Task and see its due date and time. A red flag means overdue; a neutral flag means high priority. Dashboard Tasks show days away or overdue and highlight the matching Task in its list. Summary counts follow your filters. Settings → List defaults configures Task sorting and filters. In Refine, tap the selected sort again or use Reverse order to change direction; Cancel discards a draft, and Show results applies it. Hold or move the filter grip to lift the filter card, drag over its landing spot and release to reorder; tap +N to reveal remaining applied filters in one horizontal row.',
       status: 'in-progress', priority: 'high', dueDate: date(-3), dueTime: '16:00',
       repeat: { frequency: 'weekly', anchorDate: date(-3), seriesId: 'dn-tour-library-repeat' },
       momentId: '', activityId: '' },
@@ -378,7 +378,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-internet', name: 'Home internet', category: 'Home', amount: 799,
       dueDate: date(0), repeat: { frequency: 'monthly', anchorDate: date(0) },
       updatedAt: reference.toISOString(), paymentMethod: 'Online',
-      notes: 'Upcoming expenses shows Due today, Overdue and Later. Select a bill to record its payment. Tap View payment in the confirmation to see the saved amount, payment date and next due date. Manage opens Edit schedule, Skip this occurrence and End repeat. A new due date or frequency shows how future dates will be set. Skip this occurrence shows the bill date and the next due date before you confirm.' },
+      notes: 'Upcoming expenses shows Due today, Overdue and Later. Select a bill to record its payment. Tap View payment in the confirmation to see the saved amount, payment date and next due date. Manage opens Edit schedule, Skip this occurrence and End repeat. A new due date or frequency shows how future dates will be set. Skip shows the bill date and the next due date. End repeat shows which upcoming bill will be removed and keeps recorded payments.' },
     { id: 'dn-tour-electricity', name: 'Electricity bill', category: 'Home', amount: 640,
       dueDate: date(-4), repeat: { frequency: 'monthly', anchorDate: date(-4) },
       updatedAt: reference.toISOString(), paymentMethod: 'Online' },
