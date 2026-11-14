@@ -354,8 +354,12 @@ html[data-theme] .dn-task-editor .dn-task-time-hint {font-size:13px;line-height:
 html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-repeat-context {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 1px 8px;
 }
+html[data-theme] .dn-task-repeat-context > span { display: inline-flex; align-items: center; gap: 4px; }
+html[data-theme] .dn-task-repeat-context .is-today { color: var(--color-primary); font-weight: 680; }
+html[data-theme] .dn-task-repeat-context .is-overdue { color: var(--color-danger); font-weight: 680; }
 html[data-theme] .dn-task-repeat-context svg {
   flex-shrink: 0;
   color: var(--color-primary);

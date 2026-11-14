@@ -12,6 +12,7 @@ import { taskFilterFields, taskViewConditionGroup } from '../utils/taskCondition
 import { filterTaskResults } from '../utils/taskListFilters.js';
 import { configuredConditionGroup, LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES } from '../utils/listViewDefaults.js';
 import usePersistentListState from '../hooks/usePersistentListState';
+import useDashboardClock from '../features/dashboard/useDashboardClock';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
@@ -65,7 +66,7 @@ export function TaskListContent() {
   const [confirm, setConfirm] = useState(null);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
-  const today = formatMomentDate(new Date());
+  const today = formatMomentDate(useDashboardClock());
 
   useEffect(() => { store.loadTasks(); }, [store.loadTasks, scope]);
   useEffect(() => { if (enabled) eventStore.loadEvents(user?.uid, isGuest); }, [enabled, eventStore.loadEvents, scope, user?.uid, isGuest]);
@@ -242,13 +243,19 @@ export function TaskListContent() {
           : parent.kind === 'moment' ? parent.moment.name
             : parent.kind === 'standalone' ? 'Standalone'
               : parent.kind === 'missing-activity' ? `${parent.moment.name || 'Moment'} · Activity unavailable` : 'Moment unavailable';
-        const overdue = task.status === 'in-progress' && task.dueDate && task.dueDate < today;
+        const hasActiveDueDate = task.status === 'in-progress' && Boolean(task.dueDate);
+        const overdue = hasActiveDueDate && task.dueDate < today;
+        const dueToday = hasActiveDueDate && task.dueDate === today;
+        const dueLabel = dueToday ? 'Due today' : overdue ? 'Overdue' : '';
+        const repeatLabel = task.repeat && (task.status === 'cancelled' ? 'Repeat paused' : `Repeats ${REPEAT_OPTIONS[task.repeat.frequency].toLowerCase()}`);
+        const actionDescription = nextTask?.id === task.id ? `Next occurrence, ${taskDueLabel(task)}.`
+          : repeatLabel ? `${[dueLabel, taskDueLabel(task), repeatLabel].filter(Boolean).join('. ')}.` : undefined;
         const edit = () => { setError(''); setEditor({ kind: 'edit', value: task }); };
         return <SwipeActionCard key={task.id} as="article" taskId={task.id}
           className={`dn-independent-task-row${selectedTaskId === task.id ? ' is-dashboard-selected' : ''}`}
           mainClassName="dn-independent-task-row-main"
           label={task.title} role="button" openOnTap disabled={busy || Boolean(store.error)}
-          actionDescription={nextTask?.id === task.id ? `Next occurrence, ${taskDueLabel(task)}.` : undefined}
+          actionDescription={actionDescription}
           otherActions={[
             ...(task.status === 'cancelled' ? [] : [{ label: task.status === 'completed' ? 'Reopen' : 'Done', icon: Check,
               onClick: () => statusChange(task, task.status === 'completed' ? 'in-progress' : 'completed') }]),
@@ -271,8 +278,8 @@ export function TaskListContent() {
             <strong>{task.title}</strong>
             {parent.kind !== 'standalone' ? <small className="dn-task-context">{context}</small> : null}
             {task.repeat ? <small className="dn-task-context dn-task-repeat-context">
-              <Repeat size={14} aria-hidden="true" />
-              {task.status === 'cancelled' ? 'Paused' : `Repeats ${REPEAT_OPTIONS[task.repeat.frequency].toLowerCase()}`}
+              {dueLabel ? <span className={overdue ? 'is-overdue' : 'is-today'}>{dueLabel}</span> : null}
+              <span><Repeat size={14} aria-hidden="true" />{repeatLabel}</span>
             </small> : null}
           </div>
           <span className={`dn-task-signals is-${task.status}`}>

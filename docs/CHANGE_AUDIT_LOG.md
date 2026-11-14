@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-536 | Put today's bills first and label recurring Tasks by due date
+
+- **Scope:** Show Due today, Overdue and Later in the Upcoming expenses sheet. Keep each section's heading and bill count visible while scrolling. Show the nearest date in the Transactions summary when all bills are in the future. Put Due today, Overdue or Repeat paused next to the repeat information on Task rows.
+- **Source-derived:** Due labels use the local calendar day. Bills keep their existing payment, skip and end actions. Back and View payment still return to the list, with focused bill actions kept clear of the pinned heading. Scheduling, spending totals, backups and task sorting keep their existing contracts. Explore DN v2026.11.14.7 demonstrates all three bill sections.
+- **Executed:** Node 22 lint and build, 632 Node tests and 55 selected Chromium journeys passed. The focused long-list check passed eight runs, including saved payment review, scroll restoration and visible bill controls. The browser checks include a local day rollover in Asia/Kolkata, Task filters and dashboard links, and an isolated Guest payment. Visually reviewed 320px light and 430px dark.
+- **Unverified:** Physical iPhone Safari, VoiceOver and use with a real signed-in account.
+
 ## CHG-20261114-535 | Make recurring Task and payment confirmations easier to verify
 
 - **Scope:** Provide View payment after a recorded bill. Show the saved amount, date, method and scheduled and next due dates in the same sheet. Preserve the list's scroll position and focus the payment confirmation's action on Back. Include an optional due time in repeating Task feedback and expose the exact date and time of the Task highlighted by View next.

@@ -23,8 +23,9 @@ const planTitles = {
 function summaryHint(plans, today) {
   const overdue = plans.filter((plan) => plan.dueDate < today).length;
   const dueToday = plans.filter((plan) => plan.dueDate === today).length;
-  if (overdue || dueToday) return [overdue && `${overdue} overdue`, dueToday && `${dueToday} due today`].filter(Boolean).join(' · ');
-  return plans.length === 1 ? `Next ${formatScheduleDate(plans[0].dueDate)}` : `${plans.length} scheduled`;
+  if (overdue || dueToday) return [dueToday && `${dueToday} due today`, overdue && `${overdue} overdue`].filter(Boolean).join(' · ');
+  const next = plans.reduce((first, plan) => plan.dueDate < first ? plan.dueDate : first, plans[0]?.dueDate);
+  return next && `Next ${formatScheduleDate(next)}`;
 }
 
 export default function ExpensePlanEntry({ plans, expanded, buttonRef, onOpen }) {
@@ -42,17 +43,19 @@ function ExpensePlanList({ plans, onSelect }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
   const groups = [
-    ['Due now', sorted.filter((plan) => plan.dueDate <= today)],
-    ['Later', sorted.filter((plan) => plan.dueDate > today)],
+    { timing: 'today', label: 'Due today', items: sorted.filter((plan) => plan.dueDate === today) },
+    { timing: 'overdue', label: 'Overdue', items: sorted.filter((plan) => plan.dueDate < today) },
+    { timing: 'later', label: 'Later', items: sorted.filter((plan) => plan.dueDate > today) },
   ];
 
   if (!sorted.length) return <p className="dn-expense-plan-empty">No upcoming expenses</p>;
   return <div className="dn-expense-plan-groups">
-    {groups.filter(([, items]) => items.length).map(([label, items]) => <section key={label} aria-label={label}>
-      <h4>{label}</h4>
+    {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
+      <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>
+        <span>{label}</span><span>{items.length} {items.length === 1 ? 'bill' : 'bills'}</span>
+      </h4>
       <ul className="dn-expense-plan-list">
         {items.map((plan) => {
-          const dueState = plan.dueDate < today ? 'overdue' : plan.dueDate === today ? 'today' : '';
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
@@ -63,8 +66,8 @@ function ExpensePlanList({ plans, onSelect }) {
               <span className="dn-expense-plan-payment-details">
                 <span className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></span>
                 <span className="dn-expense-plan-meta" id={dateId}>
-                  <span className={dueState ? `dn-expense-plan-${dueState}` : undefined}>
-                    {dueState === 'overdue' ? 'Overdue · ' : dueState === 'today' ? 'Due today · ' : 'Due '}
+                  <span>
+                    <span className="sr-only">{timing === 'later' ? 'Due ' : `${label} · `}</span>
                     <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
                   </span>
                   <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
@@ -157,14 +160,20 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     }
     body.scrollTop = anchor.scrollTop;
     const { top, bottom } = body.getBoundingClientRect();
+    const pinnedTop = top + body.clientTop + parseFloat(getComputedStyle(body).paddingTop);
+    // A pinned heading can cover the first row even when it fits the scroll box.
+    const contentTop = [...body.querySelectorAll('[data-plan-group]')].reduce((edge, heading) => {
+      const rect = heading.getBoundingClientRect();
+      return rect.top <= pinnedTop + 1 && rect.bottom <= bottom ? Math.max(edge, rect.bottom) : edge;
+    }, top);
     if (!notice && previousButton) {
       const rect = previousButton.getBoundingClientRect();
-      body.scrollTop += rect.top < top ? rect.top - top : Math.max(0, rect.bottom - bottom);
+      body.scrollTop += rect.top < contentTop ? rect.top - contentTop : Math.max(0, rect.bottom - bottom);
       return;
     }
     const visibleRow = rows.find((row) => {
       const rect = row.getBoundingClientRect();
-      return rect.top >= top && rect.bottom <= bottom;
+      return rect.top >= contentTop && rect.bottom <= bottom;
     });
     visibleRow?.querySelector('button')?.focus({ preventScroll: true });
     body.scrollTop = anchor.scrollTop;
@@ -181,7 +190,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     }}>View payment</button> : null}
   </div>;
 
-  return <ModalDialog title={planTitles[mode]} className="dn-transaction-dialog dn-expense-plan-dialog" viewKey={mode}
+  return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${isList ? ' dn-expense-plan-list-view' : ''}`} viewKey={mode}
     onViewChange={restoreListPosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
     onClose={onClose} closeDisabled={busy} footer={feedback}>

@@ -114,6 +114,40 @@ test('View next highlights a just-created Task outside the current filters witho
   expect(errors).toEqual([]);
 });
 
+test.describe('Task due labels in Asia/Kolkata', () => {
+  test.use({ timezoneId: 'Asia/Kolkata' });
+
+  test('repeating Tasks show today, overdue and paused states and refresh at the local day boundary', async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 700 });
+    await page.clock.setFixedTime(new Date('2026-11-14T18:29:00.000Z'));
+    const errors = await seedGuest(page, { ...empty, theme: 'dark' });
+    await page.addInitScript(() => {
+      const task = (id, title, dueDate, status = 'in-progress') => ({ id, title, dueDate, status,
+        repeat: { frequency: 'weekly', anchorDate: dueDate, seriesId: id } });
+      localStorage.setItem('dn_guest_tasks', JSON.stringify([
+        task('meter', 'Read the electricity meter', '2026-11-14'),
+        task('water', 'Check the water filter', '2026-11-13'),
+        task('paused', 'Pick up a prescription', '2026-11-13', 'cancelled'),
+      ]));
+    });
+    await page.goto('/tasks');
+    const row = (id) => page.locator(`[data-task-id="${id}"]`);
+    await expect(row('meter')).toContainText('Due today');
+    await expect(row('meter')).toHaveAccessibleDescription(/Due today.*14 Nov 2026.*Repeats weekly/);
+    await expect(row('water').getByText('Overdue', { exact: true })).toBeVisible();
+    await expect(row('paused')).toContainText('Repeat paused');
+    await expect(row('paused').getByText('Overdue', { exact: true })).toHaveCount(0);
+    const stored = await readGuest(page, 'dn_guest_tasks');
+    await page.clock.setFixedTime(new Date('2026-11-14T18:31:00.000Z'));
+    await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+    await expect(row('meter').getByText('Overdue', { exact: true })).toBeVisible();
+    await expect(row('meter')).toHaveAccessibleDescription(/Overdue.*14 Nov 2026.*Repeats weekly/);
+    expect(await readGuest(page, 'dn_guest_tasks')).toEqual(stored);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);
+    expect(errors).toEqual([]);
+  });
+});
+
 test('recurring expenses stay outside totals, then post one editable payment and can skip or end', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
   const errors = await seedGuest(page, { ...empty, moments: [{
@@ -246,27 +280,33 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
   });
   await page.goto('/financials/transactions#expense-plans');
   const plans = page.getByRole('dialog', { name: 'Upcoming expenses', exact: true });
-  const dueNow = plans.getByRole('region', { name: 'Due now' });
+  const dueToday = plans.getByRole('region', { name: 'Due today' });
+  const overdue = plans.getByRole('region', { name: 'Overdue' });
   const later = plans.getByRole('region', { name: 'Later' });
-  await expect(dueNow.getByRole('listitem')).toHaveCount(2);
-  await expect(dueNow.getByRole('listitem').first()).toContainText('Internet');
-  await expect(dueNow.getByRole('listitem').last()).toContainText('Due today');
+  await expect(plans.getByRole('region').first()).toHaveAccessibleName('Due today');
+  await expect(dueToday.getByRole('listitem')).toContainText('Mobile');
+  await expect(dueToday.getByRole('heading')).toHaveText('Due today1 bill');
+  await expect(overdue.getByRole('listitem')).toContainText('Internet');
   await expect(later.getByRole('listitem')).toContainText('Insurance');
   await plans.getByRole('button', { name: 'Close dialog' }).click();
   const trigger = page.getByRole('button', { name: /Upcoming expenses/ });
   await expect(trigger).toBeFocused();
+  await expect(trigger).toContainText('1 due today · 1 overdue');
   await expect(plans).toBeHidden();
   await trigger.click();
-  for (const title of ['Internet', 'Mobile']) {
-    await dueNow.getByRole('button', { name: `Record payment for ${title}` }).click();
+  for (const title of ['Mobile', 'Internet']) {
+    await plans.getByRole('button', { name: `Record payment for ${title}` }).click();
     const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
     await expect(page.getByRole('dialog')).toHaveCount(1);
     await payment.getByRole('button', { name: 'Save payment' }).click();
     await expect(plans.getByRole('status')).toContainText('Payment recorded.');
     await expect(later.getByRole('button', { name: `Record payment for ${title}` })).toBeVisible();
   }
-  await expect(dueNow).toBeHidden();
+  await expect(dueToday).toBeHidden();
+  await expect(overdue).toBeHidden();
   await expect(later.getByRole('listitem')).toHaveCount(3);
+  await expect(later.getByRole('heading')).toContainText('3 bills');
+  await expect(trigger).toContainText('Next 12 Dec 2026');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹200');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(expect.arrayContaining(['Internet', 'Mobile']));
   expect(errors).toEqual([]);
@@ -302,9 +342,19 @@ test('returning to a long expense list keeps the scroll position and shows payme
     const button = element.querySelector('[data-plan-id="bill-12"] [data-plan-action="payment"]');
     element.scrollTop += button.getBoundingClientRect().top - element.getBoundingClientRect().top - 200;
   });
+  const heading = plans.getByRole('region', { name: 'Overdue' }).getByRole('heading');
+  await expect(heading).toBeInViewport({ ratio: 1 });
+  await expect.poll(() => heading.evaluate((element) => {
+    const scrollBody = element.closest('.dn-modal-body');
+    const bodyTop = scrollBody.getBoundingClientRect().top + scrollBody.clientTop + parseFloat(getComputedStyle(scrollBody).paddingTop);
+    return Math.abs(element.getBoundingClientRect().top - bodyTop);
+  })).toBeLessThanOrEqual(1);
   await expect(manage).toBeInViewport({ ratio: 1 });
   await expect(recordPayment).toBeInViewport({ ratio: 1 });
-  const [paymentBox, manageBox] = await Promise.all([recordPayment.boundingBox(), manage.boundingBox()]);
+  const [paymentBox, manageBox] = await recordPayment.evaluate((button) => {
+    const sibling = button.closest('[data-plan-id]').querySelector('[data-plan-action="manage"]');
+    return [button.getBoundingClientRect().toJSON(), sibling.getBoundingClientRect().toJSON()];
+  });
   expect(paymentBox.y + paymentBox.height / 2).toBeCloseTo(manageBox.y + manageBox.height / 2, 0);
   expect(paymentBox.height).toBeGreaterThanOrEqual(44);
   expect(manageBox.height).toBeGreaterThanOrEqual(44);
@@ -336,7 +386,7 @@ test('returning to a long expense list keeps the scroll position and shows payme
   await page.getByRole('dialog', { name: 'Payment details' }).getByRole('button', { name: 'Back to upcoming expenses' }).click();
   await expect(viewPayment).toBeFocused();
   expect(await body.evaluate((element) => element.scrollTop)).toBe(beforeSave);
-  await expect(plans.getByRole('region', { name: 'Due now' }).getByRole('listitem').last()).toContainText('Bill 12');
+  await expect(plans.getByRole('region', { name: 'Overdue' }).getByRole('listitem').last()).toContainText('Bill 12');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(['Bill 12']);
   expect(errors).toEqual([]);
 });

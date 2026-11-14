@@ -16,7 +16,7 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   expect(sample.events).toHaveLength(3);
   expect(sample.incomes.map(x => x.paymentMethod)).toEqual(['Online','Cash']);
   expect(sample.expenses.map(x => x.paymentMethod)).toContain('Cash');
-  expect(sample.expensePlans).toMatchObject([{ name: 'Home internet' }]);
+  expect(sample.expensePlans.map(({ name }) => name)).toEqual(['Home internet', 'Electricity bill', 'Mobile plan']);
   const guestRecords = await page.evaluate(() => ({
     moments: localStorage.getItem('dn_guest_eventGroups'),
     incomes: localStorage.getItem('dn_guest_incomes'),
@@ -29,7 +29,9 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   await page.goto('/financials/transactions');
   await page.getByRole('button', { name: /Upcoming expenses/ }).click();
   const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
-  await plans.getByRole('button', { name: 'Record payment for Home internet' }).getByText('Home internet', { exact: true }).click();
+  await expect(plans.getByRole('region', { name: 'Overdue' })).toContainText('Electricity bill');
+  await expect(plans.getByRole('region', { name: 'Later' })).toContainText('Mobile plan');
+  await plans.getByRole('region', { name: 'Due today' }).getByRole('button', { name: 'Record payment for Home internet' }).click();
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
   await expect(payment.getByLabel('Amount paid *', { exact: true })).toHaveValue('799');
   await payment.getByRole('button', { name: 'Save payment' }).click();
