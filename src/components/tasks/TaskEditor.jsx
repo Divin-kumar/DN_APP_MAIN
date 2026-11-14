@@ -1,7 +1,9 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useId, useLayoutEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
+import { useDialogFormFooter } from '../common/ModalDialog';
 import { RepeatActionSummary, RepeatDisclosure } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
@@ -23,6 +25,8 @@ export function TaskRepeatActionSummary({ task, action }) {
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
 export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
+  const formId = useId();
+  const footer = useDialogFormFooter();
   const [pendingAction, setPendingAction] = useState(null);
   const confirmationRef = useRef(null);
   const actionGroupRef = useRef(null);
@@ -55,6 +59,21 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     if (canSave) onSave({ ...task, title: title.trim(), notes, priority, dueDate, dueTime, momentId, activityId, repeatFrequency });
   };
 
+  const actions = <>
+    {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
+    <div className="form-actions dn-task-form-actions">
+      <button type="button" className="secondaryButton" disabled={busy} onClick={pendingAction ? () => setPendingAction(null) : onClose}>
+        {pendingAction ? 'Keep editing' : 'Cancel'}
+      </button>
+      {pendingAction ? <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'}
+        disabled={busy} onClick={() => onTaskAction(pendingAction)}>{actionLabel}</button>
+        : <button type="submit" form={formId} className="primaryButton" disabled={!canSave}>
+        {busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}
+      </button>}
+    </div>
+  </>;
+  const formActions = footer ? createPortal(actions, footer) : actions;
+
   if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
     <h4 ref={confirmationRef} tabIndex={-1}>{actionLabel}?</h4>
     {task.repeat ? <TaskRepeatActionSummary task={task} action={pendingAction} /> : <p>{pendingAction === 'delete'
@@ -62,16 +81,10 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       : pendingAction === 'restore' ? `Move “${task.title}” back to In progress?`
         : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>}
     <p>Unsaved edits will not be saved.</p>
-    {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
-    <div className="dn-task-form-actions">
-      <button type="button" className="secondaryButton" disabled={busy} onClick={() => setPendingAction(null)}>Keep editing</button>
-      <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'} disabled={busy} onClick={() => onTaskAction(pendingAction)}>
-        {actionLabel}
-      </button>
-    </div>
+    {formActions}
   </div>;
 
-  return <form className="dn-task-editor" onSubmit={save} aria-busy={busy}>
+  return <form id={formId} className="dn-task-editor" onSubmit={save} aria-busy={busy}>
     <label className="dn-task-field">Task title
       <input disabled={busy} required maxLength={500} autoComplete="off" value={title}
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
@@ -122,12 +135,6 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         : <button type="button" disabled={busy} data-task-action="cancel" onClick={() => setPendingAction('cancel')}>{cancelLabel}…</button>}
       <button type="button" disabled={busy} data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
     </div> : null}
-    {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
-    <div className="form-actions dn-task-form-actions">
-      <button type="button" className="secondaryButton" disabled={busy} onClick={onClose}>Cancel</button>
-      <button type="submit" className="primaryButton" disabled={!canSave}>
-        {busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}
-      </button>
-    </div>
+    {formActions}
   </form>;
 }

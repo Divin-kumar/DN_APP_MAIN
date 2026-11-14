@@ -1,6 +1,6 @@
 // This file creates reusable popup dialogs and confirmation windows.
 // It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, useDragControls, usePresence, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, X } from 'lucide-react';
@@ -8,8 +8,15 @@ import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dia
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
+const FormFooterContext = createContext(null);
+
+export function useDialogFormFooter() {
+  return useContext(FormFooterContext);
+}
+
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
-  closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back' }) {
+  closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
+  const [formActions, setFormActions] = useState(null);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   // Every phone-bottom sheet uses one motion path, rather than old CSS entry
@@ -216,7 +223,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
           <button ref={closeButtonRef} type="button" className="modal-close-button" disabled={closeDisabled} onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
         <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
-          onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>{children}</div>
+          onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>
+          <FormFooterContext.Provider value={formFooter ? formActions : null}>{children}</FormFooterContext.Provider>
+        </div>
+        {formFooter ? <div ref={setFormActions} className="dn-modal-fixed-actions dn-modal-form-footer" /> : null}
         {footer}
       </motion.section>
     </motion.div>,

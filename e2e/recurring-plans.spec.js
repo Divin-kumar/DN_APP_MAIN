@@ -17,6 +17,56 @@ const schedule = (dialog) => dialog.locator('.dn-repeat-disclosure > summary');
 test.describe('Recurring sheets on short phone screens', () => {
   test.use({ isMobile: true, hasTouch: true, reducedMotion: 'no-preference' });
 
+  test('Task and transaction save controls stay below the keyboard-sized scroll area', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const errors = await seedGuest(page, empty);
+    await page.goto('/tasks');
+    for (const [kind, title, name, field] of [
+      ['Task', 'New Task', 'Create Task', 'Task title'],
+      ['Transaction', 'Add Transaction', 'Add Transaction', 'Title *'],
+    ]) {
+      await page.getByRole('button', { name: 'Open quick create menu' }).tap();
+      await page.getByRole('button', { name: kind, exact: true }).tap();
+      const dialog = page.getByRole('dialog', { name: title, exact: true });
+      const input = dialog.getByLabel(field, { exact: true });
+      await input.fill('Unsaved draft');
+      if (kind === 'Transaction') await dialog.getByLabel('Amount *', { exact: true }).fill('42');
+      await page.evaluate(() => {
+        Object.defineProperty(visualViewport, 'height', { configurable: true, value: 290 });
+        visualViewport.dispatchEvent(new Event('resize'));
+      });
+      await expect(page.locator('.dn-modal-backdrop')).toHaveAttribute('data-keyboard-open', 'true');
+      const save = dialog.getByRole('button', { name, exact: true });
+      await expect.poll(() => save.evaluate((button) => {
+        const body = button.closest('[role="dialog"]').querySelector('.dn-modal-body');
+        const bounds = button.getBoundingClientRect();
+        return button.form === body.querySelector('form') && !body.contains(button)
+          && body.getBoundingClientRect().bottom <= bounds.top && bounds.bottom <= 291;
+      })).toBe(true);
+      if (kind === 'Transaction') {
+        await save.tap();
+        const error = dialog.getByRole('alert');
+        await expect(error).toContainText('Choose an available payment method.');
+        await expect.poll(() => error.evaluate((alert) => {
+          const bounds = alert.getBoundingClientRect();
+          const footer = alert.parentElement;
+          return footer.classList.contains('dn-modal-form-footer')
+            && footer.previousElementSibling.getBoundingClientRect().bottom <= bounds.top
+            && bounds.bottom <= footer.querySelector('button[type="submit"]').getBoundingClientRect().top;
+        })).toBe(true);
+      }
+      await dialog.getByRole('button', { name: 'Cancel', exact: true }).tap();
+      await expect(dialog).toBeHidden();
+      await page.evaluate(() => {
+        delete visualViewport.height;
+        visualViewport.dispatchEvent(new Event('resize'));
+      });
+    }
+    expect(await readGuest(page, 'dn_guest_tasks')).toEqual([]);
+    expect(await readGuest(page, 'dn_guest_expenses')).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+
   test('long Task titles keep the scheduled date clear of the confirmation buttons', async ({ page }) => {
     await page.setViewportSize({ width: 320, height: 480 });
     const errors = await seedGuest(page, empty);

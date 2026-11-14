@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261114-542 | Keep Task and transaction actions visible on short screens
+
+- **Scope:** Keep Task, Transaction and expense-plan form actions below their scrollable fields. Show form errors with the action buttons, protect the close control while a save is pending, and fit the Transaction date, time and clear action on one line at narrow phone widths.
+- **Source-derived:** Submit buttons still use their native forms, and the same save handlers, date and repeat rules, and data formats apply. Explore DN v2026.11.14.11 still teaches the same controls and sample flows.
+- **Executed:** Reproduced the clipped action area before the fix. Reviewed light 320px and dark 430px browser captures with the forms open and with a simulated 290px keyboard viewport. Node 22 lint, build and 632 Node tests passed. Focused browser checks cover action placement, validation and cancellation without writing records.
+- **Unverified:** Physical iPhone Safari, VoiceOver and live signed-in use.
+
 ## CHG-20261114-541 | Confirm repeat changes and retain the last payment receipt
 
 - **Scope:** Give repeating Tasks visible pause and resume confirmation. Resume displays the saved due date and optional time. Keep View payment available when leaving another bill form or Manage view via Back or Cancel, and restore focus to its original bill action.

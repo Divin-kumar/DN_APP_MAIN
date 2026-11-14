@@ -306,7 +306,7 @@ export function TaskListContent() {
         </SwipeActionCard>;
       })}
     </div>
-    {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog"
+    {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog" formFooter closeDisabled={busy}
       onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
       <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
         busy={busy} onTaskAction={async (action) => {

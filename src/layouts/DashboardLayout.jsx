@@ -449,9 +449,6 @@ export default function DashboardLayout() {
           label: 'View', to: saved.plan ? '/financials/transactions#expense-plans' : '/financials/transactions',
         });
       }
-    } catch (error) {
-      if (transactionMounted.current && records.isCurrent(context)) setQuickCreateError(error?.message || 'Could not save this transaction.');
-      throw error;
     } finally {
       transactionSaving.current = false;
       if (transactionMounted.current) setTransactionBusy(false);
@@ -693,6 +690,7 @@ export default function DashboardLayout() {
       ) : null}
       {quickCreateType === 'task' && !commandHandoff ? (
         <ModalDialog key="quick-task" title="New Task" className="dn-task-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
+          formFooter closeDisabled={quickTaskBusy}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
             busy={quickTaskBusy || taskStore.loadedFor !== quickTaskScope}
@@ -701,8 +699,8 @@ export default function DashboardLayout() {
         </ModalDialog>
       ) : null}
       {quickCreateType === 'transaction' && !commandHandoff && records.isCurrent(quickTransaction?.context) ? (
-        <ModalDialog key="quick-transaction" title="Add Transaction" className="dn-transaction-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={closeQuickTransaction}>
-          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+        <ModalDialog key="quick-transaction" title="Add Transaction" className="dn-transaction-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
+          formFooter closeDisabled={transactionBusy} onClose={closeQuickTransaction}>
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
         </ModalDialog>

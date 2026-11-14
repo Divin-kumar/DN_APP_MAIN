@@ -143,9 +143,6 @@ function FinancialsContent() {
       setDialogOpen(false); setEditing(null);
       showToast(saved.plan ? 'Expense plan saved' : editing ? 'Transaction updated' : 'Transaction added', 'success');
       if (saved.plan) navigate('/financials/transactions#expense-plans', { replace: true });
-    } catch (error) {
-      setSavingError(error?.message || 'Unable to save this transaction.');
-      throw error;
     } finally { savingPlanRef.current = false; setBusy(false); }
   };
   const openPlanList = () => {
@@ -246,9 +243,8 @@ function FinancialsContent() {
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
         </section>}
       {dialogOpen ? (
-        <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog"
+        <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
           onClose={() => { if (!savingPlanRef.current && !busy) { setDialogOpen(false); setEditing(null); } }}>
-          {savingError ? <p className="dn-transaction-form-error" role="alert">{savingError}</p> : null}
           <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
             onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
         </ModalDialog>

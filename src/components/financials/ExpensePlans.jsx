@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
@@ -131,7 +131,6 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
   const isConfirm = isSkip || mode === 'end';
-  const [actionsContainer, setActionsContainer] = useState(null);
   const listReturnRef = useRef(null);
   const manageReturnRef = useRef(null);
   const listBodyRef = useRef(null);
@@ -199,8 +198,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     }}>View payment</button> : null}
   </div>;
 
-  const footer = isForm ? <div ref={setActionsContainer} className="dn-modal-fixed-actions dn-expense-form-actions" />
-    : isConfirm ? <div className="dn-modal-fixed-actions">
+  const footer = isForm ? null : isConfirm ? <div className="dn-modal-fixed-actions">
     <ConfirmButtons confirmLabel={isSkip ? 'Skip occurrence' : 'End repeat'} destructive={!isSkip}
       busy={busy} onCancel={goBack} onConfirm={onConfirm} />
   </div> : feedback;
@@ -208,7 +206,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${isList ? ' dn-expense-plan-list-view' : ''}`} viewKey={mode}
     onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
-    onClose={onClose} closeDisabled={busy} footer={footer}>
+    onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
     {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={(action) => {
@@ -216,7 +214,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
       onNavigate(action);
     }} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
-      paymentPlan={mode === 'payment' ? plan : null} actionsContainer={actionsContainer}
+      paymentPlan={mode === 'payment' ? plan : null}
       busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}
     {isConfirm ? <>
       <RepeatActionSummary name={plan.name} dueDate={plan.dueDate} dueLabel={isSkip ? 'Scheduled for' : 'Upcoming bill'}

@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
+import { useDialogFormFooter } from '../common/ModalDialog';
 import { RepeatDisclosure } from '../common/RepeatField';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
@@ -60,9 +61,10 @@ const paymentDraft = (plan) => ({
 
 export default function TransactionForm({
   initialTransaction = null, defaultKind = 'expense', presetLink = null, events = [], expensePlan = null, paymentPlan = null,
-  onSubmit, onCancel, busy = false, actionsContainer,
+  onSubmit, onCancel, busy = false,
 }) {
   const formId = useId();
+  const actionsContainer = useDialogFormFooter();
   const preferences = useAppStore((state) => state.preferences);
   const adminValues = useAppStore((state) => state.adminValues);
   const [form, setForm] = useState(() => {
@@ -195,12 +197,12 @@ export default function TransactionForm({
       ? <small>Previously not specified. Choose a method before saving changes.</small> : null}
   </fieldset>;
 
-  const actions = <div className="form-actions">
+  const actions = <>{error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}<div className="form-actions">
     <button className="primaryButton" type="submit" form={formId} disabled={busy || (isPlan && !nextRepeat)}>
       {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
     </button>
     <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
-  </div>;
+  </div></>;
 
   return (
     <form id={formId} className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}${paymentPlan ? ' dn-expense-payment-form' : ''}`}
@@ -268,7 +270,6 @@ export default function TransactionForm({
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       </FormDisclosure>
-      {error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}
       {actionsContainer ? createPortal(actions, actionsContainer) : actions}
     </form>
   );
