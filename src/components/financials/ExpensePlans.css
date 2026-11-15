@@ -80,10 +80,9 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-list { list-style: none; margin: 0; padding: 0; }
 .dn-expense-plan-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 5px;
+  gap: 6px;
   min-width: 0;
+  padding: 10px 0 8px;
 }
 .dn-expense-plan-row + .dn-expense-plan-row { border-top: 1px solid var(--color-border); }
 .dn-expense-plan-notice.is-visible {
@@ -155,37 +154,29 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   font: inherit;
   font-size: 13px;
 }
-.dn-expense-plan-row .dn-expense-plan-payment {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 8px;
-  min-width: 0;
-  padding: 10px 3px 10px 0;
-  color: var(--color-text);
-  text-align: start;
-}
 .dn-expense-plan-payment-details { min-width: 0; }
-.dn-expense-plan-payment .dn-expense-plan-title { font-size: 15px; gap: 6px; }
-.dn-expense-plan-payment .dn-expense-plan-meta { gap: 2px 8px; margin-top: 3px; font-size: 12px; }
-.dn-expense-plan-record { color: var(--color-primary); font-weight: 680; }
-@media (max-width: 360px) {
-  .dn-expense-plan-payment-details { display: contents; }
-  .dn-expense-plan-payment .dn-expense-plan-title { grid-column: 1 / -1; }
-  .dn-expense-plan-row .dn-expense-plan-payment { row-gap: 2px; }
-  .dn-expense-plan-payment .dn-expense-plan-meta { margin-top: 0; }
+.dn-expense-plan-payment-details .dn-expense-plan-title { font-size: 15px; gap: 8px; }
+.dn-expense-plan-payment-details .dn-expense-plan-meta { gap: 2px 9px; margin-top: 3px; }
+.dn-expense-plan-row-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.dn-expense-plan-row-actions > button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 76px;
+  padding: 0 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 9px;
+  font-weight: 650;
 }
-.dn-expense-plan-row .dn-expense-plan-manage {
-  min-width: 52px;
-  border-radius: 8px;
-  color: var(--color-text-muted);
-  font-size: 13px;
+.dn-expense-plan-row-actions .dn-expense-plan-record {
+  color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
+  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
 }
-.dn-expense-plan-row button:focus-visible, .dn-expense-plan-menu-actions button:focus-visible { border-radius: 8px; }
 .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
-  .dn-expense-plan-payment:hover .dn-expense-plan-title strong,
-  .dn-expense-plan-row .dn-expense-plan-manage:hover { color: var(--color-primary); }
+  .dn-expense-plan-row-actions > button:hover { background: var(--color-card-raised); }
 }
 .dn-expense-plan-sheet-header { margin-bottom: 10px; }
 .dn-expense-plan-sheet-header p { margin: 4px 0 0; font-size: 13px; color: var(--color-text-muted); }
@@ -218,7 +209,16 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
     padding-inline: 4px !important;
   }
 }
-.dn-payment-context { display: flex; gap: 11px; align-items: flex-start; min-width: 0; }
+.dn-payment-context {
+  display: flex;
+  gap: 9px;
+  align-items: flex-start;
+  min-width: 0;
+  padding: 9px;
+  border: 1px solid var(--color-border);
+  border-radius: 11px;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-card));
+}
 .dn-payment-context-icon {
   display: grid;
   flex: 0 0 38px;
@@ -228,9 +228,12 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
   color: var(--color-primary);
   background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
-.dn-payment-context div { min-width: 0; overflow-wrap: anywhere; }
-.dn-payment-context p { margin: 2px 0 0; color: var(--color-text-muted); font-size: 13px; line-height: 1.45; }
-.dn-payment-context time:last-of-type { color: var(--color-text); font-weight: 650; }
+.dn-payment-context > div { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.dn-payment-context dl { margin: 4px 0 0; }
+.dn-payment-context dl div { display: flex; justify-content: space-between; gap: 3px 8px; flex-wrap: wrap; }
+.dn-payment-context dt, .dn-payment-context dd { margin: 0; font-size: 12px; line-height: 1.5; }
+.dn-payment-context dt { color: var(--color-text-muted); }
+.dn-payment-context dd { color: var(--color-text); font-weight: 650; }
 .dn-expense-draft-fields {
   display: grid;
   grid-template-columns: minmax(0, 1.6fr) minmax(118px, 1fr);

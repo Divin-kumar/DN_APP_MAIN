@@ -210,8 +210,10 @@ export default function TransactionForm({
       {paymentPlan ? <div className="dn-payment-context">
         <span className="dn-payment-context-icon"><CalendarDays size={19} aria-hidden="true" /></span>
         <div><strong>{paymentPlan.name}</strong>
-          <p><time dateTime={paymentPlan.dueDate}>{formatScheduleDate(paymentPlan.dueDate)}</time> due
-            {nextPaymentDate ? <> · Next <time dateTime={nextPaymentDate}>{formatScheduleDate(nextPaymentDate)}</time></> : null}</p>
+          <dl>
+            <div><dt>Scheduled for</dt><dd><time dateTime={paymentPlan.dueDate}>{formatScheduleDate(paymentPlan.dueDate)}</time></dd></div>
+            {nextPaymentDate ? <div><dt>Next due</dt><dd><time dateTime={nextPaymentDate}>{formatScheduleDate(nextPaymentDate)}</time></dd></div> : null}
+          </dl>
         </div>
       </div> : null}
       {!paymentPlan && !expensePlan ? <div className="dn-transaction-field">

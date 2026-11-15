@@ -166,7 +166,7 @@ export default function Insights() {
       <div className="insights-discovery dn-insights-compact-search">
         <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
           resultCount={milestoneCount} resultLabel={milestoneCount === 1 ? 'milestone shown' : 'milestones shown'}
-          summary={search ? `Search: ${search} · Milestone lists only` : 'Milestone lists only'} onReset={resetInsightFilters}
+          summary="Milestone lists only" onReset={resetInsightFilters}
           search={<input id="insights-filter-search" type="search" value={search} onChange={(event) => setSearch(event.target.value)}
             placeholder="Search milestones" aria-label="Search milestones in Insights" />} />
         <button className="insights-export" type="button" onClick={exportInsights}

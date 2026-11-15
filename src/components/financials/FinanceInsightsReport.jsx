@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { CalendarDays, Download } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { downloadBlob } from '../../utils/download';
 import { activityTime } from '../../utils/activityTime';
 import { parseMomentDate } from '../../utils/momentDates';
@@ -23,36 +23,57 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
   const yearMonths = [...months.keys()].filter((month) => month.startsWith(year + '-'));
   const selectedMonth = yearMonths.includes(selection.month) ? selection.month : yearMonths[0];
 
+  const selectedTransactions = months.get(selectedMonth);
+  const totals = selectedTransactions && summarizeTransactions(selectedTransactions);
+
   return (
-    <section className="insights-panel dn-finance-report" aria-labelledby="finance-report-title">
+    <section className="dn-finance-report" aria-labelledby="finance-report-title">
       <div className="dn-finance-report-head">
-        <div className="insights-panel-heading">
-          <span><CalendarDays size={17} aria-hidden="true" /></span>
-          <h2 id="finance-report-title">Monthly finance report</h2>
-        </div>
-        {year ? <label className="dn-finance-year">
-          <span className="sr-only">Report year</span>
-          <select value={year} onChange={(event) => setSelection({ year: event.target.value })}>
-            {years.map((option) => <option key={option}>{option}</option>)}
-          </select>
-        </label> : null}
+        <h2 id="finance-report-title"><CalendarDays size={18} aria-hidden="true" /> Monthly finance</h2>
+        {year ? <div className="dn-finance-period">
+          <label>
+            <span className="sr-only">Report month</span>
+            <select value={selectedMonth} onChange={(event) => setSelection({ year, month: event.target.value })}>
+              {yearMonths.map((month) => <option key={month} value={month}>
+                {monthDate(month).toLocaleDateString('en-GB', { month: 'long' })}
+              </option>)}
+            </select>
+          </label>
+          <label className="dn-finance-year">
+            <span className="sr-only">Report year</span>
+            <select value={year} onChange={(event) => setSelection({ year: event.target.value })}>
+              {years.map((option) => <option key={option}>{option}</option>)}
+            </select>
+          </label>
+        </div> : null}
       </div>
       {selectedMonth ? <>
-        <table className="dn-finance-table dn-finance-months" aria-label={`Monthly finance totals for ${year}`}>
-          <thead><tr><th scope="col">Month</th><th scope="col">Income</th><th scope="col">Expenses</th><th scope="col">Balance</th></tr></thead>
-          <tbody>{yearMonths.map((month) => {
-            const { income, expense, balance } = summarizeTransactions(months.get(month));
-            return <tr key={month} className={month === selectedMonth ? 'is-selected' : undefined}>
-              <th scope="row">
-                <button type="button" aria-label={MONTH_NAME.format(monthDate(month))}
-                  aria-controls="finance-month-details" aria-pressed={month === selectedMonth}
-                  onClick={() => setSelection({ year, month })}>{SHORT_MONTH.format(monthDate(month))}</button>
-              </th>
-              <td>{money(income)}</td><td>{money(expense)}</td><td>{money(balance)}</td>
-            </tr>;
-          })}</tbody>
-        </table>
-        <FinanceMonthDetails key={selectedMonth} month={selectedMonth} transactions={months.get(selectedMonth)} events={events} />
+        <section className="dn-finance-month-summary" aria-labelledby="finance-selected-month">
+          <h3 id="finance-selected-month">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>
+          <dl>
+            <div className="dn-finance-balance"><dt>Balance</dt><dd>{money(totals.balance)}</dd></div>
+            <div><dt><ArrowDownLeft size={15} aria-hidden="true" /> Income</dt><dd>{money(totals.income)}</dd></div>
+            <div><dt><ArrowUpRight size={15} aria-hidden="true" /> Expenses</dt><dd>{money(totals.expense)}</dd></div>
+          </dl>
+        </section>
+        <details className="dn-finance-compare" key={year}>
+          <summary>Compare months <ChevronDown size={16} aria-hidden="true" /></summary>
+          <table className="dn-finance-table dn-finance-months" aria-label={`Monthly finance totals for ${year}`}>
+            <thead><tr><th scope="col">Month</th><th scope="col">Income</th><th scope="col">Expenses</th><th scope="col">Balance</th></tr></thead>
+            <tbody>{yearMonths.map((month) => {
+              const { income, expense, balance } = summarizeTransactions(months.get(month));
+              return <tr key={month} className={month === selectedMonth ? 'is-selected' : undefined}>
+                <th scope="row">
+                  <button type="button" aria-label={MONTH_NAME.format(monthDate(month))}
+                    aria-controls="finance-month-details" aria-pressed={month === selectedMonth}
+                    onClick={() => setSelection({ year, month })}>{SHORT_MONTH.format(monthDate(month))}</button>
+                </th>
+                <td>{money(income)}</td><td>{money(expense)}</td><td>{money(balance)}</td>
+              </tr>;
+            })}</tbody>
+          </table>
+        </details>
+        <FinanceMonthDetails key={selectedMonth} month={selectedMonth} transactions={selectedTransactions} events={events} />
       </> : <p className="insights-muted">Monthly reports appear after you add a dated transaction.</p>}
     </section>
   );
@@ -84,7 +105,6 @@ function FinanceMonthDetails({ month, transactions, events }) {
 
   return (
     <div id="finance-month-details" className="dn-finance-month-details">
-      <h3>{MONTH_NAME.format(monthDate(month))}</h3>
       <div className="dn-finance-breakdown">
         <CategoryBreakdown label="Income by type" kind="income" rows={groups.income} activeFilter={activeFilter} onSelect={selectCategory} />
         <CategoryBreakdown label="Expenses by category" kind="expense" rows={groups.expense} activeFilter={activeFilter} onSelect={selectCategory} />
@@ -129,6 +149,7 @@ function CategoryBreakdown({ label, kind, rows, activeFilter, onSelect }) {
             aria-pressed={activeFilter?.kind === kind && activeFilter.category === category} onClick={() => onSelect(kind, category)}>
             <span>{category}<small>{count} {count === 1 ? 'transaction' : 'transactions'}</small></span>
             <strong>{money(amount)}</strong>
+            <ChevronRight size={15} aria-hidden="true" />
           </button>
         </li>
       ))}</ul> : <p className="insights-muted">{kind === 'income' ? 'No income recorded.' : 'No expenses recorded.'}</p>}

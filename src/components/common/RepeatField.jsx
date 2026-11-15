@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { Repeat } from 'lucide-react';
+import { CalendarDays, Repeat } from 'lucide-react';
 import { formatScheduleDate, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import FormDisclosure from './FormDisclosure';
 import './RepeatField.css';
@@ -7,7 +7,9 @@ import './RepeatField.css';
 const frequencies = Object.entries(REPEAT_OPTIONS);
 
 function RepeatDatePreview({ nextDate, dueDate }) {
-  if (nextDate) return <>Next repeat <strong><time dateTime={nextDate}>{formatScheduleDate(nextDate)}</time></strong></>;
+  if (nextDate) return <span className="dn-repeat-next">
+    <CalendarDays size={16} aria-hidden="true" /><span>Next repeat</span>{' '}<strong><time dateTime={nextDate}>{formatScheduleDate(nextDate)}</time></strong>
+  </span>;
   return dueDate ? 'Choose a date with room for another occurrence.' : 'Choose a due date to repeat.';
 }
 
@@ -15,8 +17,8 @@ export function RepeatDisclosure({ paused = false, ...props }) {
   const { value, dueDate, nextDate, notice } = props;
   return <FormDisclosure label={<><Repeat size={15} aria-hidden="true" /> Repeat</>}
     className="dn-repeat-disclosure"
-    hint={<>{REPEAT_OPTIONS[value] || 'Once'}{value && paused ? ' · Paused' : null}
-      {value && !paused && nextDate ? <> · Next <time dateTime={nextDate}>{formatScheduleDate(nextDate)}</time></> : null}
+    hint={<><span className="dn-repeat-frequency">{value && paused ? `${REPEAT_OPTIONS[value]} · Paused` : REPEAT_OPTIONS[value] || 'Once'}</span>
+      {value && !paused && nextDate ? <span className="dn-repeat-summary-date">Next <time dateTime={nextDate}>{formatScheduleDate(nextDate)}</time></span> : null}
       {notice || (value && !nextDate) ? <span className="dn-repeat-edit-note">
         {notice || <RepeatDatePreview dueDate={dueDate} />}
       </span> : null}</>}>

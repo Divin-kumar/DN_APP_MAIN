@@ -119,6 +119,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261115-544 | Refine Insights and repeating schedules for phones
+
+- **Scope** Give the selected month a dedicated balance, income and expense summary with direct period controls. Make the year table optional under Compare months. Compact the Overview metrics and keep its milestone search scope legible on narrow screens.
+- **Scope** Separate bill details from Record and Manage buttons. Put the scheduled and next due dates on separate lines in Record payment. Highlight the next repeat date in Task and expense editors, and give repeating Tasks clearer due labels.
+- **Source-derived** The same ledgers, amounts, exports, dates, schedule actions and backup formats drive these screens. Guest tour edition 2026.11.15.2 explains the visible controls after explicit refresh.
+- **Executed** Node 22 lint, build and 632 unit tests passed. Reviewed dark 320px and light 430px captures. The five affected browser specs exercised month selection, CSV, Task recurrence, payment entry, restoration and layout. A restored 194-record backup reconciled in all five comparison months.
+- **Unverified** Physical iPhone Safari and live signed-in flows.
+
 ## CHG-20261115-543 | Add monthly Finance reports to Insights
 
 - **Scope** Add a Finance view in Insights with a historical year/month summary, category and income-type drill-down, a paged transaction table and CSV for the selected month or category.

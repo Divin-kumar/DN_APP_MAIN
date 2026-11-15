@@ -412,7 +412,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   const expenseDueDate = edit.getByLabel('Due date *', { exact: true });
   const expensePreview = edit.getByRole('group', { name: 'Repeat', exact: true }).getByRole('status');
   await expect(expenseDueDate).toHaveValue('2026-02-28');
-  await expect(schedule(edit)).toContainText('Monthly · Next 31 Mar 2026');
+  await expect(schedule(edit)).toContainText('Next 31 Mar 2026');
   await schedule(edit).click();
   await expect(expensePreview).toHaveText('Next repeat 31 Mar 2026');
   await repeat(edit, 'Weekly').check();
@@ -555,6 +555,9 @@ test('returning to a long expense list keeps the scroll position and shows payme
     const sibling = button.closest('[data-plan-id]').querySelector('[data-plan-action="manage"]');
     return [button.getBoundingClientRect().toJSON(), sibling.getBoundingClientRect().toJSON()];
   });
+  const billTitleBottom = await recordPayment.evaluate((button) =>
+    button.closest('[data-plan-id]').querySelector('.dn-expense-plan-title').getBoundingClientRect().bottom);
+  expect(paymentBox.y).toBeGreaterThan(billTitleBottom);
   expect(paymentBox.y + paymentBox.height / 2).toBeCloseTo(manageBox.y + manageBox.height / 2, 0);
   expect(paymentBox.height).toBeGreaterThanOrEqual(44);
   expect(manageBox.height).toBeGreaterThanOrEqual(44);

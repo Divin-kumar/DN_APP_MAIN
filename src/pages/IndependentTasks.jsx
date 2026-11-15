@@ -214,7 +214,7 @@ export function TaskListContent() {
         </button>
       </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
-        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown · Tap or swipe for actions</span>
+        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
           maxVisible={showAllTaskFilters ? undefined : 2}
           onShowMore={() => setShowAllTaskFilters(true)}
@@ -289,8 +289,8 @@ export function TaskListContent() {
             <strong>{task.title}</strong>
             {parent.kind !== 'standalone' ? <small className="dn-task-context">{context}</small> : null}
             {task.repeat ? <small className="dn-task-context dn-task-repeat-context">
+              <span className="dn-task-repeat-label"><Repeat size={14} aria-hidden="true" />{repeatLabel}</span>
               {dueLabel ? <span className={overdue ? 'is-overdue' : 'is-today'}>{dueLabel}</span> : null}
-              <span><Repeat size={14} aria-hidden="true" />{repeatLabel}</span>
             </small> : null}
           </div>
           <span className={`dn-task-signals is-${task.status}`}>

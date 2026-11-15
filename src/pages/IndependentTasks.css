@@ -350,16 +350,26 @@ html[data-theme] .dn-task-editor .dn-task-time-hint {font-size:13px;line-height:
     font-size:13px;line-height:1.5;overflow-wrap:anywhere;
   }
   html[data-theme] .dn-tasks-page .dn-task-metrics span {
-    font-size:12px;line-height:1.4;
+    min-height: 52px;
+    padding: 4px 6px;
+    font-size: 12px;
+    line-height: 1.35;
   }
 }
 html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-repeat-context {
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 1px 8px;
+  gap: 3px 8px;
 }
 html[data-theme] .dn-task-repeat-context > span { display: inline-flex; align-items: center; gap: 4px; }
+html[data-theme] .dn-task-repeat-context .dn-task-repeat-label { color: var(--color-text-muted); }
+html[data-theme] .dn-task-repeat-context :is(.is-today, .is-overdue) {
+  padding: 0 6px;
+  border-radius: 7px;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+  font-size: 12px;
+}
 html[data-theme] .dn-task-repeat-context .is-today { color: var(--color-primary); font-weight: 680; }
 html[data-theme] .dn-task-repeat-context .is-overdue { color: var(--color-danger); font-weight: 680; }
 html[data-theme] .dn-task-repeat-context svg {

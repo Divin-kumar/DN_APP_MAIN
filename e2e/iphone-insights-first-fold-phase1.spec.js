@@ -159,13 +159,25 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     const year = page.getByRole('combobox', { name: 'Report year' });
     await expect(year).toHaveValue('2026');
     await year.selectOption('2024');
-    const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024' });
+    const month = page.getByRole('combobox', { name: 'Report month' });
+    await expect(month).toHaveValue('2024-04');
+    const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024', includeHidden: true });
+    await expect(monthly).toBeHidden();
+    const summary = page.getByRole('region', { name: 'April 2024' });
+    await expect(summary).toContainText('₹12,34,567.85');
+    await month.selectOption('2024-03');
+    await expect(page.getByRole('region', { name: 'March 2024' })).toContainText('₹21,752.72');
+    await month.selectOption('2024-04');
+    const compare = page.getByText('Compare months', { exact: true });
+    await compare.click();
     await expect(monthly.getByRole('row')).toHaveCount(4);
     const march = monthly.getByRole('button', { name: 'March 2024' });
     await expect(march.locator('xpath=ancestor::tr').getByRole('cell')).toHaveText(['₹28,278.21', '₹6,525.49', '₹21,752.72']);
     await expect(monthly.getByRole('button', { name: 'April 2024' })).toHaveAttribute('aria-pressed', 'true');
     await expect(monthly.getByRole('row').nth(1)).toContainText('₹12,34,567.85');
     await march.click();
+    await expect(month).toHaveValue('2024-03');
+    await compare.click();
     await expect(page.getByRole('heading', { name: 'March 2024' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Income by type' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
@@ -191,7 +203,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
 
     await page.getByRole('button', { name: 'Show all transactions' }).click();
     await expect(details.getByRole('row')).toHaveCount(5);
-    await monthly.getByRole('button', { name: 'February 2024' }).click();
+    await month.selectOption('2024-02');
     await expect(details).toContainText('29 Feb');
     await expect(details).toContainText('Auto');
     await expect(details).not.toContainText('Lunch');

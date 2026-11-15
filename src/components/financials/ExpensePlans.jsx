@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
+import { CalendarDays, Check, ChevronRight, Pencil, Settings2, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
@@ -60,24 +60,25 @@ function ExpensePlanList({ plans, onSelect }) {
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
-            <button type="button" className="dn-expense-plan-payment" data-plan-action="payment"
-              aria-label={`Record payment for ${plan.name}`}
-              aria-describedby={`${amountId} ${dateId}`}
-              onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>
-              <span className="dn-expense-plan-payment-details">
-                <span className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></span>
-                <span className="dn-expense-plan-meta" id={dateId}>
-                  <span>
-                    <span className="sr-only">{timing === 'later' ? 'Due ' : `${label} · `}</span>
-                    <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
-                  </span>
-                  <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
+            <div className="dn-expense-plan-payment-details">
+              <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></div>
+              <div className="dn-expense-plan-meta" id={dateId}>
+                <span>
+                  <span className="sr-only">{timing === 'later' ? 'Due ' : `${label} · `}</span>
+                  <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
                 </span>
-              </span>
-              <span className="dn-expense-plan-record" aria-hidden="true">Record</span>
-            </button>
-            <button type="button" className="dn-expense-plan-manage" data-plan-action="manage" aria-label={`Manage plan for ${plan.name}`}
-              onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>Manage</button>
+                <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
+              </div>
+            </div>
+            <div className="dn-expense-plan-row-actions">
+              <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
+                aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
+                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><Check size={15} aria-hidden="true" /> <span>Record</span></button>
+              <button type="button" className="dn-expense-plan-manage" data-plan-action="manage"
+                aria-label={`Manage plan for ${plan.name}`} onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>
+                <Settings2 size={15} aria-hidden="true" /> Manage
+              </button>
+            </div>
           </li>;
         })}
       </ul>
