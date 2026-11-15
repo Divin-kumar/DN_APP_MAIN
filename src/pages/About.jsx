@@ -38,6 +38,7 @@ const isDevelopmentHosting = deployEnvironment === 'Firebase development';
 
 // Curated highlights display only while their underlying commits remain unreleased.
 const pendingHighlights = [
+  { subject: 'Lighten Insights and recurring schedule surfaces', text: 'Insights and repeating schedules use lighter rows, rounded controls, and softer frosted sheets on phones.' },
   { subject: 'Refine Insights and repeating schedules for phones', text: 'Finance opens on the selected month. Bill actions, planned dates and repeating Tasks are easier to scan on phones.' },
   { subject: 'Add monthly Finance reports to Insights', text: 'Insights → Finance shows monthly income, expenses, balance and the transactions behind each category, with CSV export.' },
   { commit: '8ed4a6c12a9f92d8f0d886a8414cfd415e5288bb', text: 'Appearance shows which creation defaults need saving and keeps the draft available if a save fails.' },

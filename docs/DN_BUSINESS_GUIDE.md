@@ -1,3 +1,5 @@
+**Frosted Insights and recurring schedules (15 November 2026, development).** Insights puts month selection and totals together. Repeating Tasks and bills use quieter rows and rounded controls, and the mobile sheets have a softer frosted finish.
+
 **Monthly Finance reports (15 November 2026, development).** Go to Profile → Insights → Finance. Pick a month and year to see balance, income and expenses. Open Compare months to see the year table. Tap an income type or expense category to see the payments behind it. CSV downloads the whole selected month or the category you chose. Reports use the dates saved on your transactions, including older transactions restored from a backup.
 
 **Repeating Tasks and bills (15 November 2026, development).** In Upcoming expenses, the name, amount and date sit above separate Record and Manage buttons. Record payment shows the scheduled date and next due date separately. In Tasks, due and overdue labels stand out, and Repeat shows the next date below the frequency choices.

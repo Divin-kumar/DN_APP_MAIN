@@ -211,3 +211,69 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
     box-shadow: 0 -18px 48px rgba(0, 0, 0, .35), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
   }
 }
+
+/* Frost the schedule sheets themselves and let the underlying workspace show through. */
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), .dn-modal:has(.dn-repeat-action-summary))) {
+    --dn-sheet-field: color-mix(in srgb, var(--color-surface) 56%, transparent);
+    --dn-sheet-line: color-mix(in srgb, var(--color-border) 62%, transparent);
+    --dn-sheet-action: color-mix(in srgb, var(--color-primary) 12%, transparent);
+    --dn-sheet-scrim: rgb(28 42 64 / 24%);
+    --dn-sheet-shadow: rgb(25 41 67 / 17%);
+    background: var(--dn-sheet-scrim) !important;
+    -webkit-backdrop-filter: blur(5px) saturate(1.05) !important;
+    backdrop-filter: blur(5px) saturate(1.05) !important;
+  }
+
+  html[data-theme="dark"] .dn-modal-backdrop.dn-modal-slide-scrim:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), .dn-modal:has(.dn-repeat-action-summary))) {
+    --dn-sheet-scrim: rgb(2 6 15 / 43%);
+    --dn-sheet-shadow: rgb(0 0 0 / 36%);
+  }
+
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport.dn-modal-slide-scrim > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) {
+    background: linear-gradient(
+      150deg,
+      color-mix(in srgb, var(--color-glass) 92%, var(--color-card)),
+      color-mix(in srgb, var(--color-card) 82%, transparent)
+    ) !important;
+    border-color: color-mix(in srgb, var(--color-text) 12%, transparent) !important;
+    border-radius: 26px !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.3);
+    backdrop-filter: blur(22px) saturate(1.3);
+    box-shadow: 0 -8px 36px var(--dn-sheet-shadow), inset 0 1px rgb(255 255 255 / 18%) !important;
+  }
+
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-header :is(.modal-close-button, .modal-back-button) {
+    border: 0 !important;
+    border-radius: 50% !important;
+    background: var(--dn-sheet-field) !important;
+  }
+
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure)) .dn-modal-body :is(input:not([type="radio"]), .dropdown-trigger, textarea) {
+    background-color: var(--dn-sheet-field) !important;
+    border-color: var(--dn-sheet-line) !important;
+  }
+
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions :is(.primaryButton, .secondaryButton, .modal-danger-button) {
+    border-color: transparent !important;
+    border-radius: 999px !important;
+    box-shadow: none !important;
+  }
+
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .secondaryButton {
+    background: var(--dn-sheet-field) !important;
+  }
+
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure)) .dn-modal-fixed-actions .primaryButton {
+    background: var(--dn-sheet-action) !important;
+    color: var(--action-ink) !important;
+  }
+
+  @media (prefers-reduced-transparency: reduce) {
+    html[data-theme] body .dn-modal-backdrop.dn-modal-viewport.dn-modal-slide-scrim > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) {
+      background: var(--color-card) !important;
+      -webkit-backdrop-filter: none;
+      backdrop-filter: none;
+    }
+  }
+}

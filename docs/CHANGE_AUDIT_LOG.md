@@ -119,6 +119,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261115-545 | Lighten Insights and recurring schedule surfaces
+
+- **Scope** Use open sections and softer dividers in mobile Insights. Move the Finance period controls into the monthly summary. Reduce the visible weight of Task and bill rows and use rounded controls in recurrence editors.
+- **Scope** Apply a lighter scrim and frosted surface to mobile Task and recurring expense sheets, with an opaque surface for reduced transparency. The shared dialog still handles focus, swipe dismissal, scrolling and fixed action footers.
+- **Source-derived** Guest tour edition 2026.11.15.2 covers the same controls and example records. Existing ledgers, recurrence, exports and backup formats continue to drive the screens.
+- **Executed** Reviewed before and after screenshots at 320px dark and 430px light. All 632 Node tests passed. Focused browser checks covered Insights, repeat actions, Guest restore and phone and desktop payment behavior. The 194-record restore matched all five monthly totals.
+- **Unverified** Physical iPhone Safari and live signed-in flows.
+
 ## CHG-20261115-544 | Refine Insights and repeating schedules for phones
 
 - **Scope** Give the selected month a dedicated balance, income and expense summary with direct period controls. Make the year table optional under Compare months. Compact the Overview metrics and keep its milestone search scope legible on narrow screens.

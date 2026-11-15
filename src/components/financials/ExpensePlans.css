@@ -11,9 +11,9 @@ html[data-theme] .dn-expense-plan-entry {
   width: 100%;
   min-height: 54px;
   padding: 8px 10px;
-  border: 1px solid var(--color-border);
-  border-radius: 14px;
-  background: var(--color-card);
+  border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-glass) 75%, transparent);
   color: var(--color-text);
   text-align: start;
   cursor: pointer;
@@ -68,8 +68,10 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   min-height: 34px;
   margin: 0;
   padding: 4px 0;
-  border-bottom: 1px solid var(--color-border);
-  background: var(--color-card);
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+  background: color-mix(in srgb, var(--color-glass) 72%, transparent);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   color: var(--color-text);
   font-size: 13px;
   font-weight: 680;
@@ -165,14 +167,13 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   gap: 5px;
   min-width: 76px;
   padding: 0 9px;
-  border: 1px solid var(--color-border);
-  border-radius: 9px;
+  border: 0;
+  border-radius: 999px;
   font-weight: 650;
 }
 .dn-expense-plan-row-actions .dn-expense-plan-record {
-  color: var(--color-primary);
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-card));
-  border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
+  color: var(--action-ink);
+  background: color-mix(in srgb, var(--color-primary) 12%, transparent);
 }
 .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
@@ -214,10 +215,8 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
   gap: 9px;
   align-items: flex-start;
   min-width: 0;
-  padding: 9px;
-  border: 1px solid var(--color-border);
-  border-radius: 11px;
-  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-card));
+  padding: 5px 0 8px;
+  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 .dn-payment-context-icon {
   display: grid;
@@ -261,4 +260,18 @@ html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-plan-dialo
   .dn-expense-payment-form > .dn-payment-fields { grid-area: fields; }
   .dn-expense-payment-form > .dn-payment-method-field { grid-area: method; }
   .dn-expense-payment-form > .dn-form-disclosure { grid-area: options; }
+}
+
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-expense-plan-dialog .dn-payment-method-choice span {
+    min-height: 44px;
+    border-color: transparent;
+    border-radius: 999px;
+    background: var(--dn-sheet-field);
+  }
+
+  html[data-theme] .dn-expense-plan-dialog .dn-payment-method-choice input:checked + span {
+    color: var(--action-ink);
+    background: var(--dn-sheet-action);
+  }
 }

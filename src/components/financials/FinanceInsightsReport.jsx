@@ -28,28 +28,26 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
 
   return (
     <section className="dn-finance-report" aria-labelledby="finance-report-title">
-      <div className="dn-finance-report-head">
-        <h2 id="finance-report-title"><CalendarDays size={18} aria-hidden="true" /> Monthly finance</h2>
-        {year ? <div className="dn-finance-period">
-          <label>
-            <span className="sr-only">Report month</span>
-            <select value={selectedMonth} onChange={(event) => setSelection({ year, month: event.target.value })}>
-              {yearMonths.map((month) => <option key={month} value={month}>
-                {monthDate(month).toLocaleDateString('en-GB', { month: 'long' })}
-              </option>)}
-            </select>
-          </label>
-          <label className="dn-finance-year">
-            <span className="sr-only">Report year</span>
-            <select value={year} onChange={(event) => setSelection({ year: event.target.value })}>
-              {years.map((option) => <option key={option}>{option}</option>)}
-            </select>
-          </label>
-        </div> : null}
-      </div>
+      <h2 id="finance-report-title"><CalendarDays size={18} aria-hidden="true" /> Monthly finance</h2>
       {selectedMonth ? <>
         <section className="dn-finance-month-summary" aria-labelledby="finance-selected-month">
-          <h3 id="finance-selected-month">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>
+          <h3 id="finance-selected-month" className="sr-only">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>
+          <div className="dn-finance-period">
+            <label>
+              <span className="sr-only">Report month</span>
+              <select value={selectedMonth} onChange={(event) => setSelection({ year, month: event.target.value })}>
+                {yearMonths.map((month) => <option key={month} value={month}>
+                  {monthDate(month).toLocaleDateString('en-GB', { month: 'long' })}
+                </option>)}
+              </select>
+            </label>
+            <label>
+              <span className="sr-only">Report year</span>
+              <select value={year} onChange={(event) => setSelection({ year: event.target.value })}>
+                {years.map((option) => <option key={option}>{option}</option>)}
+              </select>
+            </label>
+          </div>
           <dl>
             <div className="dn-finance-balance"><dt>Balance</dt><dd>{money(totals.balance)}</dd></div>
             <div><dt><ArrowDownLeft size={15} aria-hidden="true" /> Income</dt><dd>{money(totals.income)}</dd></div>

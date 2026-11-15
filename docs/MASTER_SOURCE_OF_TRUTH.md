@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Frosted Insights and recurrence controls (15 November 2026, OldVersion development)
+
+On phones, Insights Overview uses open sections and quiet dividers. Finance combines the month and year controls and selected totals into one softly tinted panel, above the existing comparison and transaction details. The main Task list uses lighter rows and inline due labels.
+
+Task editors, repeating confirmations and expense-plan sheets use a translucent surface with a lighter scrim. Repeat choices share one control with a distinct selected option and the next date below it. Bill Record and Manage actions remain separate. The existing touch areas, focus, swipe behavior, fixed action footer and financial calculations apply. The same Guest tour edition teaches these controls because the fixtures and interaction paths still apply.
+
 ## Monthly Finance reports in Insights (15 November 2026, OldVersion development)
 
 Insights opens in Overview. Choose Finance for the selected month’s balance, income and expenses, with a month selector and a year selector. Compare months opens the year table. The newest year and month with dated transactions are selected initially. Selecting a month shows the income by type, spending by expense category and the individual transactions. Tapping a category filters the detail table and moves focus to its heading. CSV includes every matching transaction in displayed sort order, including rows beyond the initial 40. The Overview milestone search and JSON export retain their existing scope.

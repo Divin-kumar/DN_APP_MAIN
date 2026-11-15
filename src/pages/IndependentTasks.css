@@ -382,3 +382,24 @@ html[data-theme] .dn-task-repeat-context svg {
     padding-inline: 5px !important;
   }
 }
+
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dn-tasks-page .dn-task-list {
+    --dn-list-fill: color-mix(in srgb, var(--color-glass) 18%, transparent);
+    --dn-list-hover: color-mix(in srgb, var(--color-glass) 36%, transparent);
+    gap: 3px;
+  }
+
+  html[data-theme] .dn-tasks-page .dn-task-list .dn-independent-task-row:not(.is-dashboard-selected) {
+    box-shadow: inset 0 -1px color-mix(in srgb, var(--color-border) 62%, transparent) !important;
+  }
+
+  html[data-theme] .dn-tasks-page .dn-task-list .dn-task-calendar:not(.is-overdue) {
+    background: color-mix(in srgb, var(--color-primary) 6%, transparent);
+  }
+
+  html[data-theme] .dn-task-list .dn-task-repeat-context :is(.is-today, .is-overdue) {
+    padding-inline: 0;
+    background: transparent;
+  }
+}
