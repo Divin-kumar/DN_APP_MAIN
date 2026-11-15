@@ -132,3 +132,94 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [430, 932, 'light'], [
     expect(errors).toEqual([]);
   });
 }
+
+for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
+  test(`Finance Insights reconciles historical months, category details and CSV at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const errors = await seedGuest(page, {
+      theme,
+      incomes: [
+        { id: 'salary', name: 'Salary', type: 'Salary', amount: 27778, date: '2024-03-01' },
+        { id: 'claim', name: 'Expense claim', type: 'Claim', amount: 500.21, date: '2024-03-04' },
+      ],
+      expenses: [
+        { id: 'rent', name: 'Rent', category: 'Housing', amount: 6500, date: '2024-03-01' },
+        { id: 'meal', name: 'Lunch', category: 'Long food and personal expense category', amount: 25.49, date: '2024-03-06', time: '13:15', paymentMethod: 'Cash' },
+        { id: 'auto', name: 'Auto', category: 'Travel', amount: 60, date: '2024-02-29' },
+        { id: 'large', name: 'Home', category: 'Home', amount: 1234567.85, date: '2024-04-01' },
+      ],
+    });
+    await page.goto('/insights');
+    const storage = () => page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)));
+    const before = await storage();
+    await page.getByRole('searchbox', { name: 'Search milestones in Insights' }).fill('Weekend');
+    const views = page.getByRole('group', { name: 'Insights view' });
+    await views.getByRole('button', { name: 'Finance' }).click();
+    await expect(views.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-pressed', 'true');
+    const year = page.getByRole('combobox', { name: 'Report year' });
+    await expect(year).toHaveValue('2026');
+    await year.selectOption('2024');
+    const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024' });
+    await expect(monthly.getByRole('row')).toHaveCount(4);
+    const march = monthly.getByRole('button', { name: 'March 2024' });
+    await expect(march.locator('xpath=ancestor::tr').getByRole('cell')).toHaveText(['₹28,278.21', '₹6,525.49', '₹21,752.72']);
+    await expect(monthly.getByRole('button', { name: 'April 2024' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(monthly.getByRole('row').nth(1)).toContainText('₹12,34,567.85');
+    await march.click();
+    await expect(page.getByRole('heading', { name: 'March 2024' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Income by type' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
+
+    const details = page.getByRole('table', { name: 'Transactions' });
+    await expect(details.getByRole('row')).toHaveCount(5);
+    const food = page.getByRole('button', { name: /Long food and personal expense category/ });
+    await expect(food).toContainText('₹25.49');
+    await food.click();
+    await expect(food).toHaveAttribute('aria-pressed', 'true');
+    await expect(details.getByRole('row')).toHaveCount(2);
+    await expect(details).toContainText('13:15');
+    await expect(details).toContainText('Lunch');
+
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export report transactions as CSV' }).click();
+    const report = await download;
+    expect(report.suggestedFilename()).toBe('dn-finance-2024-03.csv');
+    const csv = await readFile(await report.path(), 'utf8');
+    expect(csv).toContain('"Expense","2024-03-06","13:15","Lunch","Long food and personal expense category","25.49","Cash"');
+    expect(csv).not.toContain('Rent');
+    expect(csv).not.toContain('Salary');
+
+    await page.getByRole('button', { name: 'Show all transactions' }).click();
+    await expect(details.getByRole('row')).toHaveCount(5);
+    await monthly.getByRole('button', { name: 'February 2024' }).click();
+    await expect(details).toContainText('29 Feb');
+    await expect(details).toContainText('Auto');
+    await expect(details).not.toContainText('Lunch');
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
+    await views.getByRole('button', { name: 'Overview' }).click();
+    await expect(page.getByRole('searchbox', { name: 'Search milestones in Insights' })).toHaveValue('Weekend');
+    expect(await storage()).toEqual(before);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('Finance Insights groups history by transaction date and downloads the whole selected month', async ({ page }) => {
+  await seedGuest(page, {
+    moments: [], incomes: [],
+    expenses: Array.from({ length: 41 }, (_, index) => ({
+      id: `expense-${index}`, name: `Expense ${index}`, category: 'Travel',
+      amount: 1.05, date: '2024-06-20', createdAt: '2026-11-14T12:00:00Z',
+    })),
+  });
+  await page.goto('/insights');
+  await page.getByRole('group', { name: 'Insights view' }).getByRole('button', { name: 'Finance' }).click();
+  await expect(page.getByRole('combobox', { name: 'Report year' })).toHaveValue('2024');
+  const table = page.getByRole('table', { name: 'Transactions' });
+  await expect(table.getByRole('row')).toHaveCount(41);
+  const download = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Export report transactions as CSV' }).click();
+  const report = await download;
+  expect((await readFile(await report.path(), 'utf8')).trimEnd().split('\r\n')).toHaveLength(42);
+  await page.getByRole('button', { name: 'Show more transactions' }).click();
+  await expect(table.getByRole('row')).toHaveCount(42);
+});

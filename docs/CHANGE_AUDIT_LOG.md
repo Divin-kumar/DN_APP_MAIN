@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261115-543 | Add monthly Finance reports to Insights
+
+- **Scope** Add a Finance view in Insights with a historical year/month summary, category and income-type drill-down, a paged transaction table and CSV for the selected month or category.
+- **Source-derived** Both ledgers must match the active scope. Reports use the recorded transaction date, including restored history. The existing Overview and JSON export remain available. Guest tour edition 2026.11.15.1 demonstrates multiple months after explicit refresh.
+- **Executed** Node 22 lint, build and all 632 Node tests passed. All 22 focused Chromium tests passed. Reviewed 320px dark and 430px light captures. Restored a historical backup into an isolated browser Guest workspace and reconciled its 194 records across five monthly totals and detail counts.
+- **Unverified** Physical iPhone Safari and live signed-in account behavior.
+
 ## CHG-20261114-542 | Keep Task and transaction actions visible on short screens
 
 - **Scope:** Keep Task, Transaction and expense-plan form actions below their scrollable fields. Show form errors with the action buttons, protect the close control while a save is pending, and fit the Transaction date, time and clear action on one line at narrow phone widths.

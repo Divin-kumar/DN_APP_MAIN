@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.14.11';
+export const GUEST_TOUR_VERSION = '2026.11.15.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -346,8 +346,8 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
   events[2].time = '14:00';
   events[2].notes += ' New Moments, Activities and Transactions start with the current local time when their form opens. Change it or use Clear time if the entry should be untimed; editing an existing untimed entry keeps it untimed. Date filters include the whole day, with saved times ordering same-day entries; choose a Time filter to narrow the results.';
   const incomes = [
-    { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, time: '08:45', paymentMethod: 'Online', date: date(-5) },
-    { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, time: '18:30', paymentMethod: 'Cash', date: date(-2) },
+    { id: 'dn-tour-income-1', name: 'Project fund', type: 'Other', amount: 12500, notes: 'In Insights → Finance, pick a month to see income, expenses and balance. Tap a category to see its transactions and use CSV to save the rows.', time: '08:45', paymentMethod: 'Online', date: date(-5) },
+    { id: 'dn-tour-income-2', name: 'Small refund', type: 'Other', amount: 450, time: '18:30', paymentMethod: 'Cash', date: date(-35) },
   ];
   const expenses = [
     { id: 'dn-tour-expense-1', name: 'Weekend stay', category: 'Travel', amount: 2600, time: '09:00', paymentMethod: 'Online', eventId: j, activityId: 'dn-tour-activity-j1', date: date(-24) },

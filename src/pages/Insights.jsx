@@ -1,16 +1,18 @@
 // This page turns the stored event, income, and expense data into charts and summaries.
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
-import useAppStore from '../store/useAppStore';
-import useEventStore from '../store/useEventStore';
+import useScopedMoments from '../hooks/useScopedMoments';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
 import { downloadBlob } from '../utils/download';
 import ListControls from '../components/common/ListControls';
 import usePersistentListState from '../hooks/usePersistentListState';
+import { isFinancialViewReady } from '../utils/financialLoadScope';
+import FinanceInsightsReport from '../components/financials/FinanceInsightsReport';
 import './Insights.css';
 
+const EMPTY_LEDGER = Object.freeze([]);
 const defaultInsightFilters = Object.freeze({ search: '' });
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
@@ -38,18 +40,24 @@ export default function Insights() {
   const [insightFilters, changeInsightFilters, resetInsightFilters] = usePersistentListState('insights', defaultInsightFilters);
   const search = insightFilters.search;
   const setSearch = (value) => changeInsightFilters({ search: value });
-  const user = useAppStore((state) => state.user);
-  const isGuest = useAppStore((state) => state.isGuest);
-  const { events, loadEvents } = useEventStore();
-  const { expenses, loadExpenses } = useExpenseStore();
-  const { incomes, loadIncomes } = useIncomeStore();
+  const [view, setView] = useState('overview');
+  const { events, uid, isGuest, sample, scope: financialScope, scopeIdentity } = useScopedMoments();
+  const expenseState = useExpenseStore();
+  const incomeState = useIncomeStore();
+  const { loadExpenses } = expenseState;
+  const { loadIncomes } = incomeState;
 
   useEffect(() => {
-    if (!user && !isGuest) return;
-    loadEvents(user?.uid, isGuest);
-    loadExpenses(user?.uid, isGuest);
-    loadIncomes(user?.uid, isGuest);
-  }, [user, isGuest, loadEvents, loadExpenses, loadIncomes]);
+    if (!uid && !isGuest) return;
+    loadExpenses(uid, isGuest);
+    loadIncomes(uid, isGuest);
+  }, [uid, isGuest, sample, loadExpenses, loadIncomes]);
+
+  const financeReady = isFinancialViewReady(incomeState, expenseState, financialScope, sample);
+  const financeError = [incomeState, expenseState].some((state) =>
+    state.activeLoadKey === financialScope && state.activeSample === sample && state.error);
+  const incomes = financeReady ? incomeState.incomes : EMPTY_LEDGER;
+  const expenses = financeReady ? expenseState.expenses : EMPTY_LEDGER;
 
   const activities = useMemo(() => events.flatMap((event) => (event.activities || []).map((activity) => ({ ...activity, eventName: event.name, eventId: event.id || event.firestoreId }))), [events]);
   const completedActivities = activities.filter((activity) => activity.completed).length;
@@ -129,8 +137,32 @@ export default function Insights() {
     );
   };
 
+  const viewSelector = (
+    <div className="dn-insights-views" role="group" aria-label="Insights view">
+      <button type="button" aria-pressed={view === 'overview'} onClick={() => setView('overview')}>Overview</button>
+      <button type="button" aria-pressed={view === 'finance'} onClick={() => setView('finance')}>Finance</button>
+    </div>
+  );
+
+  if (view === 'finance') {
+    let report = <p className="insights-muted" role="status">Loading finance records…</p>;
+    if (financeError) {
+      report = <section className="insights-panel">
+        <p role="alert">Unable to load finance records.</p>
+        <button className="dn-finance-report-action" type="button" onClick={() => {
+          loadIncomes(uid, isGuest);
+          loadExpenses(uid, isGuest);
+        }}>Retry</button>
+      </section>;
+    } else if (financeReady) {
+      report = <FinanceInsightsReport key={scopeIdentity} incomes={incomes} expenses={expenses} events={events} />;
+    }
+    return <div className="insights-page">{viewSelector}{report}</div>;
+  }
+
   return (
     <div className="insights-page">
+      {viewSelector}
       <div className="insights-discovery dn-insights-compact-search">
         <ListControls hasPanel={false} activeCount={Number(Boolean(search))}
           resultCount={milestoneCount} resultLabel={milestoneCount === 1 ? 'milestone shown' : 'milestones shown'}
