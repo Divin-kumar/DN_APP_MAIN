@@ -12,6 +12,7 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
     event.currentTarget.open = true;
     delete event.currentTarget.dataset.closing;
     panel.current.inert = false;
+    delete panel.current.dataset.moving;
   };
 
   const toggle = (event) => {
@@ -25,6 +26,7 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
         details.open = Boolean(details.dataset.closing);
         delete details.dataset.closing;
         region.inert = false;
+        delete region.dataset.moving;
         event.preventDefault();
       }
       return;
@@ -33,17 +35,18 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
     event.preventDefault();
     // Start at the painted height so a second tap reverses without a jump.
     const currentHeight = details.open ? region.offsetHeight : 0;
-    const currentOpacity = details.open ? Number(getComputedStyle(region).opacity) : 0;
+    const currentOpacity = motion.current ? Number(getComputedStyle(region).opacity) : details.open ? 1 : 0;
     motion.current?.cancel();
     details.open = true;
     region.inert = !opening;
     if (opening) delete details.dataset.closing;
     else details.dataset.closing = 'true';
 
+    region.dataset.moving = 'true';
     const targetHeight = opening ? region.scrollHeight : 0;
     const animation = region.animate([
-      { height: `${currentHeight}px`, opacity: currentOpacity, overflow: 'clip' },
-      { height: `${targetHeight}px`, opacity: opening ? 1 : 0, overflow: 'clip' },
+      { height: `${currentHeight}px`, opacity: currentOpacity },
+      { height: `${targetHeight}px`, opacity: opening ? 1 : 0 },
     ], { duration: opening ? 165 : 135, easing: 'cubic-bezier(.2,.65,.32,1)', fill: 'both' });
     motion.current = animation;
     animation.onfinish = () => {
@@ -51,8 +54,13 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
       details.open = opening;
       delete details.dataset.closing;
       region.inert = false;
+      delete region.dataset.moving;
       motion.current = null;
       animation.cancel();
+      // A focused field may have been below the scroll range while clipped.
+      if (opening && region.contains(document.activeElement)) {
+        region.dispatchEvent(new Event('dn:disclosure-settled', { bubbles: true }));
+      }
     };
   };
 

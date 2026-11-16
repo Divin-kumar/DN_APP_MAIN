@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-553 | Open forms without waiting for the create menu
+
+- **Scope:** Open the mobile + menu on the first tap and mount the form during the menu exit. Remove staggered menu tile animations, lighten mobile glass blur and simplify clipping during More options motion. Reserve space for a lazy writing editor and reveal the focused field after a clipped disclosure finishes opening.
+- **Compatibility:** Preserve the 215 ms double-tap Back gesture, drag and redock, keyboard focus, reduced motion, drafts and repeat rules. Guest tour 2026.11.16.9 needs no update because its actions and sample records still apply.
+- **Executed:** Node tests, lint, production build and focused Chromium checks exercise the immediate handoff, create and edit sheets, More options, Repeat, keyboard-sized viewports and dock gestures. Native iPhone Safari frame pacing remains a device check.
+
 ## CHG-20261116-552 | Reduce form delays and smooth changing controls
 
 - **Scope:** Shorten the + recognition wait, create menu handoff, sheet motion and repeat transitions. Animate dropdowns, payment choices and Clear time. Reveal the Task Activity link and custom Moment type fields with short motion.

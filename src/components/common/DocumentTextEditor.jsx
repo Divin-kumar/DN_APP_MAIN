@@ -8,7 +8,6 @@ import { Plugin } from '@tiptap/pm/state';
 import { Bold, Code2, Heading2, Italic, List, ListOrdered, MoreHorizontal, Quote, RemoveFormatting, Strikethrough } from 'lucide-react';
 import { editorDocumentToNote, noteToEditorDocument } from '../../utils/richTextDocument';
 import { hasNoteText, pastePlainNoteText } from '../../utils/documentEditing';
-import './DocumentTextEditor.css';
 
 const FlatListItem = ListItem.extend({
   addKeyboardShortcuts() {

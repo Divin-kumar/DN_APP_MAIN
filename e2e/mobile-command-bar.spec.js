@@ -440,7 +440,7 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light']]) {
  });
 }
 
-test('double-tapping the universal + returns to the previous DN page without opening a sheet', async ({page}) => {
+test('double-tapping the universal + returns to the previous DN page and dismisses the menu', async ({page}) => {
   await page.setViewportSize({width:430,height:932});
   const errors = await seedGuest(page,{theme:'light'});
   await page.goto('/events');
@@ -504,7 +504,7 @@ for(const width of [320,390,430]) test('Navigation tile response preserves recor
  const menu=page.getByRole('dialog',{name:'Navigate & create'});
  const nav=menu.getByRole('navigation',{name:'Main navigation'});
  await expect(nav.getByRole('link',{name:'Moments'})).toHaveAttribute('aria-current','page');
- await expect(nav.getByRole('link',{name:'Home'})).toHaveCSS('animation-name','dn-command-tile-arrive');
+ await expect(nav.getByRole('link',{name:'Home'})).toHaveCSS('animation-name','none');
  await nav.getByRole('link',{name:'Tasks'}).click();
  await expect(page).toHaveURL(/\/tasks$/);await expect(menu).toHaveCount(0);
  expect(await page.evaluate(()=>localStorage.getItem('dn_guest_eventGroups'))).toBe(before);

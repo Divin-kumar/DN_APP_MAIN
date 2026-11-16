@@ -35,7 +35,7 @@ test.describe('Recurring sheets on short phone screens', () => {
         Object.defineProperty(visualViewport, 'height', { configurable: true, value: 290 });
         visualViewport.dispatchEvent(new Event('resize'));
       });
-      await expect(page.locator('.dn-modal-backdrop')).toHaveAttribute('data-keyboard-open', 'true');
+      await expect(page.locator('.dn-modal-viewport').filter({ has: dialog })).toHaveAttribute('data-keyboard-open', 'true');
       const save = dialog.getByRole('button', { name, exact: true });
       await expect.poll(() => save.evaluate((button) => {
         const body = button.closest('[role="dialog"]').querySelector('.dn-modal-body');

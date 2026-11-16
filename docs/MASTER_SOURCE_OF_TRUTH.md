@@ -2,7 +2,7 @@
 
 ## Faster form transitions (16 November 2026, development)
 
-The mobile + uses a 215 ms single-tap recognition window while retaining double-tap Back. Choosing a create action uses a short menu exit, and most sheet dismissals use a short fade and slide. Pulling a sheet down still moves it off-screen. More options and repeat previews use shorter transitions. Form dropdowns animate in and out. The payment-method row makes room for Choose at payment when repeating is enabled, and the Clear time action animates without moving the time field to a separate row.
+The mobile + opens Navigate & create on the first tap. A second tap within 215 ms dismisses it and goes Back inside DN. The menu's choices move with the sheet as a group. A create form mounts as the menu fades, and the exiting menu releases pointer and keyboard interaction to the new form. Mobile sheets use a shorter slide and lighter background blur in both themes. More options animates its height and clips its content during movement. The writing editor reserves its space during first load. Repeat previews, form dropdowns, Choose at payment and Clear time still animate. The date and time remain on the same row.
 
 ## Shared form motion (16 November 2026, development)
 

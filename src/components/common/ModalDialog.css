@@ -125,7 +125,8 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport,
 html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > .dn-modal {
   animation: none !important;
 }
-html[data-theme] .dn-modal-viewport > .dn-modal[data-closing] { pointer-events: none; }
+html[data-theme] .dn-modal-viewport > .dn-modal[data-closing],
+html[data-theme] .dn-modal-viewport[data-handoff] { pointer-events: none; }
 
 /* Native-feeling, opt-in downward dismissal for phone sheets. The title and
    existing visual grabber are the drag surface; body scroll and fields remain

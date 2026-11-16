@@ -1,9 +1,10 @@
 /* One quiet visual editor on phones and desktop; styles appear on selection. */
-html[data-theme] .dn-document-editor { display:grid; gap:7px; min-width:0; width:100%; }
+html[data-theme] .dn-document-editor { display:grid; gap:7px; min-width:0; width:100%; --dn-writing-height:112px; }
 html[data-theme] .dn-document-label { color:var(--color-text); font-size:13px; font-weight:600; cursor:text; }
 html[data-theme] .dn-document-surface { position:relative; min-width:0; border:1px solid var(--color-border); border-radius:13px; background:var(--color-surface); transition:border-color .18s,box-shadow .18s; }
 html[data-theme] .dn-document-surface:focus-within { border-color:color-mix(in srgb,var(--color-primary) 55%,var(--color-border)); box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 9%,transparent); }
-html[data-theme] .dn-document-writing .tiptap { position:relative; box-sizing:border-box; min-height:112px; padding:12px 14px; color:var(--color-text); border-radius:13px 13px 0 0; font-size:15px; font-weight:400; line-height:1.65; overflow-wrap:anywhere; white-space:pre-wrap; outline:none; cursor:text; }
+html[data-theme] .dn-document-loading { min-height:var(--dn-writing-height); }
+html[data-theme] .dn-document-writing .tiptap { position:relative; box-sizing:border-box; min-height:var(--dn-writing-height); padding:12px 14px; color:var(--color-text); border-radius:13px 13px 0 0; font-size:15px; font-weight:400; line-height:1.65; overflow-wrap:anywhere; white-space:pre-wrap; outline:none; cursor:text; }
 html[data-theme] .dn-document-writing .tiptap > * { margin:0; }
 html[data-theme] .dn-document-writing .tiptap p { min-height:1.65em; font:inherit; }
 html[data-theme] .dn-document-writing .tiptap h3 { font-size:1.35em; line-height:1.45; margin:8px 0 4px; font-weight:700; }
@@ -36,7 +37,8 @@ html[data-theme] .dn-document-editor.is-disabled { opacity:.65; }
   html[data-theme] .dn-modal-backdrop.dn-modal-viewport > .dn-modal:has(.dn-document-editor) { width:min(820px,calc(100vw - 64px))!important; max-width:min(820px,calc(100vw - 64px))!important; }
 }
 @media(max-width:1024px) {
-  html[data-theme] .dn-document-writing .tiptap { min-height:96px; font-size:16px!important; padding:11px 12px; }
+  html[data-theme] .dn-document-editor { --dn-writing-height:96px; }
+  html[data-theme] .dn-document-writing .tiptap { font-size:16px!important; padding:11px 12px; }
   html[data-theme] .dn-document-keyboard-hint { display:none; }
 }
 @media(pointer:coarse) {

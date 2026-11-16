@@ -24,7 +24,7 @@ const destinations = [
   ['Activities','/activities',ListChecks], ['Tasks','/tasks',ListTodo],
   ['Finance','/financials/transactions',Receipt],
 ];
-export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, onExitComplete, handingOff, isEntry, activePath }) {
+export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, handingOff, isEntry, activePath }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [position, savePosition, resetPosition] = usePersistentListState('mobile-command', defaults, rules);
@@ -36,15 +36,27 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const [drag, setDrag] = useState(null);
   const pointer = useRef(null);
   const tapTimer = useRef(null);
+  const [tapArmed, setTapArmed] = useState(false);
   const suppressClick = useRef(false);
   const clearPendingTap = () => {
     if (tapTimer.current !== null) window.clearTimeout(tapTimer.current);
     tapTimer.current = null;
+    setTapArmed(false);
   };
-  // Do not open a stale menu after another route navigates or the dock unmounts.
-  useEffect(() => () => {
+  const closeMenu = () => {
+    clearPendingTap();
+    setOpen(false);
+  };
+  const createFromMenu = (event) => {
+    clearPendingTap();
+    onCreate(event.currentTarget.dataset.create, event);
+  };
+  // Cancel a pending second tap when the route changes or the dock unmounts.
+  useEffect(() => {
     window.clearTimeout(tapTimer.current);
     tapTimer.current = null;
+    setTapArmed(false);
+    return () => window.clearTimeout(tapTimer.current);
   }, [location.key]);
   const trigger = useRef(null);
   useEffect(() => {
@@ -168,9 +180,11 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     const p = pointer.current;
     if (!p || p.id !== event.pointerId) return;
     if (!p.moved && Math.hypot(event.clientX-p.startX,event.clientY-p.startY) < 10) return;
+    if (!p.moved && tapTimer.current !== null) {
+      closeMenu();
+    }
     p.moved = true;
     suppressClick.current = true;
-    clearPendingTap();
     setDrag({x:clamp(event.clientX-p.dx,EDGE_PADDING,viewport.width-CREATE_SIZE-EDGE_PADDING),y:clamp(event.clientY-p.dy,viewport.top+76,viewport.top+viewport.height-CREATE_SIZE-24)});
   };
   const pointerEnd = (event, cancelled = false) => {
@@ -189,14 +203,14 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     // resizing the dock during a tap can move its target before activation.
     const focused = document.activeElement;
     if (focused?.matches?.('.dn-command-controls .dn-list-controls-search input')) focused.blur();
-    // Keyboard and assistive-tech activation remains immediate, not delayed.
+    // Keyboard and assistive-tech activations do not participate in double-tap Back.
     if (event.detail === 0) {
       clearPendingTap();
       setOpen(previous => !previous);
       return;
     }
     if (tapTimer.current !== null) {
-      clearPendingTap();
+      closeMenu();
       // React Router history index prevents leaving DN for an external origin.
       if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1);
       else {
@@ -205,17 +219,19 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       }
       return;
     }
-    // Wait briefly so a second tap goes Back without flashing the create sheet.
+    if (open) return;
+    setOpen(true);
+    setTapArmed(true);
     tapTimer.current = window.setTimeout(() => {
       tapTimer.current = null;
-      setOpen(previous => !previous);
+      setTapArmed(false);
     }, DOUBLE_TAP_WINDOW_MS);
   };
   return <div ref={menuRef} className={`dn-command-root${dockInInsights ? ' is-insights-docked' : ''}${floating || activeDrag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
     '--dn-command-keyboard':`${viewport.inset}px`,
     '--dn-command-visual-bottom':`${viewport.visualBottom}px`
   }}>
-    <div className="dn-command-bar" aria-label="Current page controls">
+    <div className={`dn-command-bar${(open && tapArmed) || activeDrag ? ' is-pointer-active' : ''}`} aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">
         <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}`}
@@ -230,23 +246,23 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         </button>
       </div>
     </div>
-    <AnimatePresence initial={false} mode="wait" custom={handingOff} onExitComplete={onExitComplete}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
+    <AnimatePresence initial={false} custom={handingOff}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={closeMenu}>
       <nav aria-label="Main navigation" className="dn-command-destinations">
-        {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={()=>setOpen(false)}>
+        {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={closeMenu}>
           <span className="dn-command-destination-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span><span>{label}</span>
         </Link>)}
       </nav>
       <section role="group" className="dn-command-actions" aria-label="Quick create actions">
         <h3>Create new</h3>
         <div>
-          <button type="button" onClick={event=>onCreate('event',event)}><CalendarDays size={19} aria-hidden="true" />Life moment</button>
-          <button type="button" onClick={event=>onCreate('activity',event)}><ListChecks size={19} aria-hidden="true" />{isEntry?'Add entry':'Activity'}</button>
-          <button type="button" onClick={event=>onCreate('task',event)}><ListTodo size={19} aria-hidden="true" />Task</button>
-          <button type="button" onClick={event=>onCreate('transaction',event)}><Receipt size={19} aria-hidden="true" />Transaction</button>
-          {onAttachment ? <button type="button" onClick={onAttachment}><Upload size={19} aria-hidden="true" />Attachment</button>:null}
+          <button type="button" data-create="event" onClick={createFromMenu}><CalendarDays size={19} aria-hidden="true" />Life moment</button>
+          <button type="button" data-create="activity" onClick={createFromMenu}><ListChecks size={19} aria-hidden="true" />{isEntry?'Add entry':'Activity'}</button>
+          <button type="button" data-create="task" onClick={createFromMenu}><ListTodo size={19} aria-hidden="true" />Task</button>
+          <button type="button" data-create="transaction" onClick={createFromMenu}><Receipt size={19} aria-hidden="true" />Transaction</button>
+          {onAttachment ? <button type="button" onClick={()=>{clearPendingTap();onAttachment();}}><Upload size={19} aria-hidden="true" />Attachment</button>:null}
         </div>
       </section>
-      {!dockInInsights && (position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();setOpen(false);}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
+      {!dockInInsights && (position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();closeMenu();}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
         : <p className="dn-command-hint">Drag the creator to either edge for easier reach.</p>)}
     </ModalDialog> : null}</AnimatePresence>
   </div>;

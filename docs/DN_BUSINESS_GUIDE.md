@@ -1,3 +1,5 @@
+**Faster mobile forms (16 November 2026, development).** The blue + opens the menu as soon as you tap it. Double-tap still goes Back. Choosing an action opens its form while the menu fades. The form moves with a lighter glass effect in both themes. More options and the repeat preview expand and collapse inside the form.
+
 **Simpler recurring controls (16 November 2026, development).** Changing Once to a repeat keeps your form and payment controls in place. Cash, Online and Choose at payment share one row. Manage expands Edit, Skip and End repeat under the bill; there is no separate management screen. Optional time for a new expense is under More options. Dark fields use softer matching borders and backgrounds.
 
 Forms use lighter glass controls and consistent spacing in both themes. In Activity creation, Moment type and Life moment share a row. In Transactions, Title and Amount share a row, as do Type and Category. Date and Time stay together. **More options** opens with a plus and contains Activity Description, and it shows Repeat directly for Tasks and expense plans.

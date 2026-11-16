@@ -11,6 +11,8 @@ import './ModalDialog.css';
 const enterEase = [0.22, 1, 0.36, 1];
 const exitEase = [0.4, 0, 0.7, 1];
 
+const activeDialogSelector = '[role="dialog"][aria-modal="true"]:not([inert])';
+
 const FormFooterContext = createContext(null);
 
 export function useDialogFormFooter() {
@@ -22,7 +24,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const [formActions, setFormActions] = useState(null);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
-  const quickHandoff = usePresenceData() === true;
+  const handingOff = usePresenceData() === true && !isPresent;
   const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
   const [swipeClosing, setSwipeClosing] = useState(false);
@@ -113,30 +115,41 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const previousFocusRef = useRef(typeof document === 'undefined' ? null : document.activeElement);
   const titleId = useId();
 
-  useLayoutEffect(() => observeDialogViewport(window, (viewport, layout) => {
+  useLayoutEffect(() => {
+    if (handingOff) return undefined;
     const backdrop = backdropRef.current;
-    if (!backdrop) return;
-    backdrop.style.setProperty('--dn-dialog-viewport-height', `${viewport.height}px`);
-    backdrop.style.setProperty('--dn-dialog-viewport-width', `${viewport.width}px`);
-    backdrop.style.setProperty('--dn-dialog-viewport-top', `${viewport.top}px`);
-    backdrop.style.setProperty('--dn-dialog-viewport-left', `${viewport.left}px`);
-    backdrop.style.setProperty('--dn-dialog-layout-height', `${layout.height}px`);
-    backdrop.style.setProperty('--dn-dialog-layout-width', `${layout.width}px`);
-    backdrop.style.setProperty('--dn-dialog-inset-bottom', `${Math.max(0, layout.height - viewport.top - viewport.height)}px`);
-    backdrop.style.setProperty('--dn-dialog-inset-right', `${Math.max(0, layout.width - viewport.left - viewport.width)}px`);
-    backdrop.dataset.keyboardOpen = String(viewport.keyboardOpen);
-    const active = document.activeElement;
     const body = bodyRef.current;
-    if (!viewport.keyboardOpen || !body?.contains(active) || !active.matches('input, textarea, [contenteditable="true"]')) return;
-    const field = active.getBoundingClientRect();
-    const visible = body.getBoundingClientRect();
-    const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions');
-    const footerTop = footer && getComputedStyle(footer).position === 'sticky' ? footer.getBoundingClientRect().top : visible.bottom;
-    // A completely hidden long editor needs its beginning revealed; a partly
-    // visible editor keeps its caret position and native internal scrolling.
-    const delta = focusedDialogScrollDelta(field, visible, footerTop);
-    if (delta) body.scrollTop += delta;
-  }), []);
+    const revealFocusedField = () => {
+      const active = document.activeElement;
+      if (backdrop.dataset.keyboardOpen !== 'true' || !body.contains(active) ||
+          !active.matches('input, textarea, [contenteditable="true"]')) return;
+      const field = active.getBoundingClientRect();
+      const visible = body.getBoundingClientRect();
+      const footer = body.querySelector('.event-form-actions, .event-greeting-editor-actions, .form-actions, .dialog-actions, .settings-actions, .modal-confirm-actions');
+      const footerTop = footer && getComputedStyle(footer).position === 'sticky' ? footer.getBoundingClientRect().top : visible.bottom;
+      // A partly visible long editor keeps its caret position. Reveal the start
+      // only when it is completely below the usable region.
+      const delta = focusedDialogScrollDelta(field, visible, footerTop);
+      if (delta) body.scrollTo({ top: body.scrollTop + delta, behavior: 'instant' });
+    };
+    const stopObserving = observeDialogViewport(window, (viewport, layout) => {
+      backdrop.style.setProperty('--dn-dialog-viewport-height', `${viewport.height}px`);
+      backdrop.style.setProperty('--dn-dialog-viewport-width', `${viewport.width}px`);
+      backdrop.style.setProperty('--dn-dialog-viewport-top', `${viewport.top}px`);
+      backdrop.style.setProperty('--dn-dialog-viewport-left', `${viewport.left}px`);
+      backdrop.style.setProperty('--dn-dialog-layout-height', `${layout.height}px`);
+      backdrop.style.setProperty('--dn-dialog-layout-width', `${layout.width}px`);
+      backdrop.style.setProperty('--dn-dialog-inset-bottom', `${Math.max(0, layout.height - viewport.top - viewport.height)}px`);
+      backdrop.style.setProperty('--dn-dialog-inset-right', `${Math.max(0, layout.width - viewport.left - viewport.width)}px`);
+      backdrop.dataset.keyboardOpen = String(viewport.keyboardOpen);
+      revealFocusedField();
+    });
+    body.addEventListener('dn:disclosure-settled', revealFocusedField);
+    return () => {
+      stopObserving();
+      body.removeEventListener('dn:disclosure-settled', revealFocusedField);
+    };
+  }, [handingOff]);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -165,7 +178,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
 
     const handleKeyDown = (event) => {
       // A nested original preview owns focus/Escape until it closes.
-      const activeDialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
+      const activeDialogs = document.querySelectorAll(activeDialogSelector);
       if (activeDialogs[activeDialogs.length - 1] !== dialogRef.current) return;
       if (dialogRef.current.dataset.closing) {
         if (event.key === 'Enter' || event.key === ' ' || event.key === 'Tab' || event.key === 'Escape') event.preventDefault();
@@ -203,19 +216,24 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     return () => {
       unlockScroll();
       document.removeEventListener('keydown', handleKeyDown);
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected) previousFocus.focus({ preventScroll: true });
+      const activeDialogs = document.querySelectorAll(activeDialogSelector);
+      const remainingDialog = activeDialogs[activeDialogs.length - 1];
+      if (previousFocus instanceof HTMLElement && previousFocus.isConnected &&
+          (!remainingDialog || remainingDialog.contains(previousFocus))) {
+        previousFocus.focus({ preventScroll: true });
+      }
     };
   }, []);
 
   const resting = { y: 0, scale: 1, opacity: 1 };
-  const entrance = { y: isSlidingSheet ? 38 : 10, scale: isSlidingSheet ? 1 : .99, opacity: .4 };
-  const exitDuration = reducedMotion ? 0 : quickHandoff && !isPresent ? .075 : .15;
+  const entrance = { y: isSlidingSheet ? 26 : 10, scale: isSlidingSheet ? 1 : .99, opacity: isSlidingSheet ? 1 : .4 };
+  const exitDuration = reducedMotion ? 0 : handingOff ? .07 : .14;
   const moving = isPresent && swipeClosing ? 'close' : 'open';
   const sheetVariants = {
     enter: entrance,
-    open: { ...resting, transition: { duration: reducedMotion ? 0 : .20, ease: enterEase } },
+    open: { ...resting, transition: { duration: reducedMotion ? 0 : .17, ease: enterEase } },
     close: {
-      y: isSlidingSheet ? (pulledToClose.current ? '100%' : 34) : 9,
+      y: handingOff ? 0 : isSlidingSheet ? (pulledToClose.current ? '100%' : 34) : 9,
       scale: isSlidingSheet ? 1 : .99,
       opacity: 0,
       transition: { duration: exitDuration, ease: exitEase },
@@ -231,6 +249,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     <motion.div
       ref={backdropRef}
       className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isSlidingSheet ? ' dn-modal-slide-scrim' : ''}`}
+      data-handoff={handingOff ? 'true' : undefined}
       initial={reducedMotion ? false : 'enter'}
       animate={moving}
       exit="close"
@@ -242,6 +261,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     >
       <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}${allowsSwipe ? ' dn-modal-swipeable' : ''}`}
         role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+        inert={handingOff ? '' : undefined}
         data-closing={!isPresent || swipeClosing ? 'true' : undefined}
         drag={allowsSwipe ? 'y' : false} dragListener={false} dragControls={dragControls}
         dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: .72 }} dragMomentum={false}

@@ -18,21 +18,24 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page, { theme: 'light' });
   await page.goto('/dashboard');
-  await page.getByRole('button', { name: 'Open quick create menu' }).click();
-  const handoff = await page.getByRole('button', { name: 'Task', exact: true }).evaluate(button => new Promise(resolve => {
+  const menu = page.getByRole('dialog', { name: 'Navigate & create' });
+  // dispatchEvent bypasses Playwright's stability wait so the test detects a queued first tap.
+  await page.getByRole('button', { name: 'Open quick create menu' }).dispatchEvent('click', { detail: 1 });
+  expect(await menu.count()).toBe(1);
+  const handoff = await menu.getByRole('button', { name: 'Task', exact: true }).evaluate(async button => {
     const started = performance.now();
-    const observer = new MutationObserver(() => {
-      if (document.querySelector('.dn-task-dialog')) {
-        observer.disconnect();
-        clearTimeout(timeout);
-        resolve(performance.now() - started);
-      }
-    });
-    const timeout = setTimeout(() => { observer.disconnect(); resolve(1500); }, 1500);
-    observer.observe(document.body, { childList: true, subtree: true });
+    const menuSheet = button.closest('section[role="dialog"]');
     button.click();
-  }));
-  expect(handoff).toBeLessThan(300);
+    await new Promise(requestAnimationFrame);
+    return {
+      formMounted: Boolean(document.querySelector('.dn-task-dialog')),
+      menuInert: menuSheet.inert,
+      elapsed: performance.now() - started,
+    };
+  });
+  expect(handoff.formMounted).toBe(true);
+  expect(handoff.menuInert).toBe(true);
+  expect(handoff.elapsed).toBeLessThan(150);
   const dialog = page.getByRole('dialog', { name: 'New Task' });
   await expect.poll(() => dialog.evaluate(node => Math.abs(node.getBoundingClientRect().bottom - innerHeight))).toBeLessThan(16);
 

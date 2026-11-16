@@ -29,10 +29,13 @@ html[data-theme="light"] {
     background: var(--dn-form-glass) !important;
     border-color: var(--dn-form-line) !important;
     box-shadow: 0 16px 42px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight) !important;
-    -webkit-backdrop-filter: blur(22px) saturate(1.24);
-    backdrop-filter: blur(22px) saturate(1.24);
+    -webkit-backdrop-filter: blur(var(--dn-form-blur, 22px)) saturate(1.24);
+    backdrop-filter: blur(var(--dn-form-blur, 22px)) saturate(1.24);
     color: var(--color-text);
   }
+}
+.dn-modal-slide-scrim {
+  --dn-form-blur: 10px;
 }
 /* Preserve each control's sizing, validation and native date/time behavior. */
 html[data-theme] body :is(.dn-modal, form, .settings-page, .dn-pdf-studio-controls) :is(
@@ -98,6 +101,7 @@ html[data-theme] body .dn-form-disclosure > summary > svg {
 @media (prefers-reduced-motion: no-preference) {
   .dn-form-expand > :last-child { transition: opacity 150ms ease; }
 }
+.dn-form-disclosure-panel[data-moving] { overflow: clip; }
 .dn-form-reveal { display: grid; min-width: 0; }
 .dn-form-reveal > div { min-height: 0; min-width: 0; overflow: clip; }
 

@@ -125,8 +125,8 @@ for (const [width, height] of [[320, 640], [390, 844]]) {
       Object.defineProperty(window.visualViewport, 'height', { configurable: true, value: 290 });
       window.visualViewport.dispatchEvent(new Event('resize'));
     });
-    await expect(page.locator('.dn-modal-backdrop')).toHaveAttribute('data-keyboard-open', 'true');
-    await editor.evaluate((node) => { node.closest('.dn-modal-body').scrollTop = 0; });
+    await expect(page.locator('.dn-modal-viewport').filter({ has: dialog })).toHaveAttribute('data-keyboard-open', 'true');
+    await editor.evaluate((node) => { node.closest('.dn-modal-body').scrollTo({ top: 0, behavior: 'instant' }); });
     expect(await editor.evaluate((node) => {
       const visible = node.closest('.dn-modal-body').getBoundingClientRect();
       return node.getBoundingClientRect().top >= visible.bottom - 12;
