@@ -408,8 +408,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await receipt.getByRole('button', { name: 'Back to upcoming expenses' }).click();
   await expect(viewPayment).toBeFocused();
   expect(await readGuest(page, 'dn_guest_expenses')).toHaveLength(1);
-  const manage = plans.getByRole('button', { name: 'Manage plan for Home internet' });
-  await manage.click();
+  await expect(plans.getByRole('button', { name: /Manage plan/ })).toHaveCount(0);
   const planActions = page.getByRole('dialog', { name: 'Upcoming expenses', exact: true });
   const editSchedule = planActions.getByRole('button', { name: 'Edit schedule', exact: true });
   const skipOccurrence = planActions.getByRole('button', { name: /Skip this occurrence/ });
@@ -447,13 +446,11 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await skip.getByRole('button', { name: 'Skip occurrence', exact: true }).click();
   await expect(plans.getByRole('status')).toHaveText('Occurrence skipped. Next due 31 Mar 2026.');
   await expect(plans.getByRole('listitem')).toContainText('31 Mar 2026');
-  await manage.click();
   await editSchedule.click();
   await edit.getByLabel('Expected amount *', { exact: true }).fill('850');
   await edit.getByRole('button', { name: 'Save expense plan', exact: true }).click();
   await expect(plans.getByRole('status')).toHaveText('Expense plan saved.');
   await expect(plans.getByRole('listitem')).toContainText('₹850');
-  await manage.click();
   await endRepeat.click();
   const end = page.getByRole('dialog', { name: 'End this expense plan?' });
   await expect(end.getByText('Home internet', { exact: true })).toBeVisible();
@@ -536,8 +533,6 @@ test('returning to a long expense list keeps the scroll position and shows payme
   const plans = page.getByRole('dialog', { name: 'Upcoming expenses', exact: true });
   const body = plans.locator('.dn-modal-body');
   const recordPayment = plans.getByRole('button', { name: 'Record payment for Bill 12', exact: true });
-  const manage = plans.getByRole('button', { name: 'Manage plan for Bill 12', exact: true });
-  await expect(manage).toBeVisible();
   // Sample the offset when the action fires, after browser actionability scrolling.
   const openedAt = await body.evaluateHandle((element) => {
     const offsets = [];
@@ -557,25 +552,18 @@ test('returning to a long expense list keeps the scroll position and shows payme
     const bodyTop = scrollBody.getBoundingClientRect().top + scrollBody.clientTop + parseFloat(getComputedStyle(scrollBody).paddingTop);
     return Math.abs(element.getBoundingClientRect().top - bodyTop);
   })).toBeLessThanOrEqual(1);
-  await expect(manage).toBeInViewport({ ratio: 1 });
   await expect(recordPayment).toBeInViewport({ ratio: 1 });
-  const [paymentBox, manageBox] = await recordPayment.evaluate((button) => {
-    const sibling = button.closest('[data-plan-id]').querySelector('[data-plan-action="manage"]');
-    return [button.getBoundingClientRect().toJSON(), sibling.getBoundingClientRect().toJSON()];
+  const [paymentBox, amountBox] = await recordPayment.evaluate((button) => {
+    const amount = button.closest('.dn-expense-plan-amount-row').querySelector('span');
+    return [button.getBoundingClientRect().toJSON(), amount.getBoundingClientRect().toJSON()];
   });
-  const billTitleBottom = await recordPayment.evaluate((button) =>
-    button.closest('[data-plan-id]').querySelector('.dn-expense-plan-title').getBoundingClientRect().bottom);
-  expect(paymentBox.y).toBeGreaterThan(billTitleBottom);
-  expect(paymentBox.y + paymentBox.height / 2).toBeCloseTo(manageBox.y + manageBox.height / 2, 0);
+  expect(paymentBox.x).toBeGreaterThan(amountBox.x);
+  expect(paymentBox.y + paymentBox.height / 2).toBeCloseTo(amountBox.y + amountBox.height / 2, 0);
   expect(paymentBox.height).toBeGreaterThanOrEqual(44);
-  expect(manageBox.height).toBeGreaterThanOrEqual(44);
-  await manage.click();
-  const beforeManage = await openedAt.evaluate((offsets) => offsets[0]);
-  expect(beforeManage).toBeGreaterThan(300);
-  await expect(plans.getByRole('button', { name: 'Edit schedule', exact: true })).toBeVisible();
-  await manage.click();
-  await expect(manage).toBeFocused();
-  await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(beforeManage);
+  const edit = plans.locator('[data-plan-id="bill-12"]').getByRole('button', { name: 'Edit schedule', exact: true });
+  await edit.click();
+  await page.getByRole('dialog', { name: 'Edit expense plan' }).getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(edit).toBeFocused();
   await recordPayment.click();
   const beforePayment = await openedAt.evaluate((offsets) => offsets.at(-1));
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
@@ -585,7 +573,7 @@ test('returning to a long expense list keeps the scroll position and shows payme
   await expect(recordPayment).toBeFocused();
   await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(beforePayment);
   await recordPayment.click();
-  const beforeSave = await openedAt.evaluate((offsets) => offsets[2]);
+  const beforeSave = await openedAt.evaluate((offsets) => offsets.at(-1));
   await payment.getByRole('button', { name: 'Save payment' }).click();
   const feedback = plans.getByRole('status');
   await expect(feedback).toHaveText('Payment recorded. Next due 12 Nov 2026.');

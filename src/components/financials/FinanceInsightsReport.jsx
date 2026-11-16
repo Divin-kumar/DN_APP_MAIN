@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { CalendarDays, ChartNoAxesColumn, Download, ListFilter } from 'lucide-react';
+import { ChartNoAxesColumn, Download, ListFilter } from 'lucide-react';
 import { downloadBlob } from '../../utils/download';
 import { activityTime } from '../../utils/activityTime';
 import { parseMomentDate } from '../../utils/momentDates';
@@ -69,22 +69,21 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
     <section className="dn-finance-report" aria-labelledby="finance-report-title">
       <h2 id="finance-report-title" className="sr-only">Monthly finance</h2>
       {selectedMonth ? <>
+        <div className="dn-finance-periods" role="group" aria-label="Report month">
+          {[...monthsByYear].map(([optionYear, reportMonths]) => <div className="dn-finance-year" key={optionYear}>
+            <span>{optionYear}</span>
+            <div role="group" aria-label={`Months in ${optionYear}`}>
+              {reportMonths.map((month) => <button type="button" key={month}
+                aria-label={MONTH_NAME.format(monthDate(month))} aria-pressed={month === selectedMonth}
+                onClick={() => chooseMonth(month)}>{SHORT_MONTH.format(monthDate(month))}</button>)}
+            </div>
+          </div>)}
+        </div>
         <section className="dn-finance-month-summary" aria-labelledby="finance-selected-month">
           <h3 id="finance-selected-month" className="sr-only">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>
           <div className="dn-finance-summary-heading">
             <span id="finance-balance-label">Balance</span>
-            <label className="dn-finance-period">
-              <CalendarDays size={16} aria-hidden="true" />
-              <span aria-hidden="true">{MONTH_NAME.format(monthDate(selectedMonth))}</span>
-              <span className="sr-only">Report month</span>
-              <select value={selectedMonth} onChange={(event) => chooseMonth(event.target.value)}>
-                {[...monthsByYear].map(([optionYear, reportMonths]) => <optgroup key={optionYear} label={optionYear}>
-                  {reportMonths.map((month) => (
-                    <option key={month} value={month}>{MONTH_NAME.format(monthDate(month))}</option>
-                  ))}
-                </optgroup>)}
-              </select>
-            </label>
+            <span className="dn-finance-current-month">{MONTH_NAME.format(monthDate(selectedMonth))}</span>
           </div>
           <div className="dn-finance-balance" aria-labelledby="finance-balance-label" role="group">{money(totals.balance)}</div>
           <dl>

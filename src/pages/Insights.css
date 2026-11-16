@@ -592,3 +592,51 @@ html[data-theme] .insights-page .dn-finance-breakdown button { min-height: 52px;
 html[data-theme] .insights-page .dn-finance-breakdown button[aria-pressed="true"] {
   box-shadow: inset 3px 0 var(--color-primary);
 }
+
+/* Inline months avoid the native popup covering the report on phones. */
+.dn-finance-periods {
+  display: flex; gap: 20px; overflow-x: auto; min-width: 0;
+  padding: 2px 2px 8px; scrollbar-width: none;
+}
+.dn-finance-periods::-webkit-scrollbar { display: none; }
+.dn-finance-year { flex: 0 0 auto; display: grid; gap: 3px; }
+.dn-finance-year > span { color: var(--color-text-muted); font-size: 11px; padding-inline: 12px; }
+.dn-finance-year > div { display: flex; gap: 4px; }
+html[data-theme] .insights-page .dn-finance-periods button {
+  min-width: 52px; min-height: 44px; padding: 8px 12px; border: 0;
+  border-radius: 12px; background: transparent; color: var(--color-text-muted);
+  box-shadow: none; font: inherit; font-size: 13px; cursor: pointer;
+}
+html[data-theme] .insights-page .dn-finance-periods button[aria-pressed="true"] {
+  color: var(--action-ink); background: var(--dn-planning-selected); font-weight: 650;
+}
+.dn-finance-current-month { font-size: 12px; color: var(--color-text-muted); }
+html[data-theme] .insights-page .dn-insights-views {
+  border: 0; padding: 3px; border-radius: 14px; box-shadow: none;
+}
+html[data-theme] .insights-page .dn-insights-views button {
+  min-height: 44px; border: 0; border-radius: 11px; box-shadow: none;
+}
+html[data-theme] .insights-page .dn-finance-month-summary {
+  padding: 16px; border-radius: 18px; box-shadow: none;
+  border-color: var(--dn-planning-line);
+}
+html[data-theme] .insights-page .dn-finance-balance { font-size: clamp(28px, 8vw, 38px); }
+html[data-theme] .insights-page .dn-finance-tools {
+  gap: 4px; padding: 3px; border-radius: 13px; background: var(--dn-planning-field);
+}
+html[data-theme] .insights-page .dn-finance-tools button {
+  min-height: 44px; padding: 8px 6px; border: 0; border-radius: 10px;
+  box-shadow: none; background: transparent; font-size: 13px; font-weight: 550;
+}
+html[data-theme] .insights-page .dn-finance-tools button[aria-expanded="true"] {
+  background: var(--dn-planning-selected); box-shadow: none;
+}
+html[data-theme] .insights-page :is(#finance-compare, #finance-categories):not([hidden]) {
+  border: 0; border-radius: 0; background: transparent; box-shadow: none; padding: 4px 0;
+}
+html[data-theme] .insights-page .dn-finance-detail-head .dn-finance-report-action {
+  border: 0; background: transparent; box-shadow: none; padding: 6px 8px;
+  color: var(--color-text-muted); font-size: 12px;
+}
+html[data-theme] .insights-page .dn-finance-month-summary dl { margin-top: 14px; padding-top: 12px; }

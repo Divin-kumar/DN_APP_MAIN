@@ -1,5 +1,5 @@
-import { useRef, useState } from 'react';
-import { CalendarDays, Check, ChevronRight, Pencil, Settings2, Repeat, SkipForward, XCircle } from 'lucide-react';
+import { useRef } from 'react';
+import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
@@ -40,7 +40,7 @@ export default function ExpensePlanEntry({ plans, expanded, buttonRef, onOpen })
   </section>;
 }
 
-function ExpensePlanList({ plans, onSelect, expandedId, onExpand }) {
+function ExpensePlanList({ plans, onSelect }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
   const single = sorted.length === 1;
@@ -67,7 +67,13 @@ function ExpensePlanList({ plans, onSelect, expandedId, onExpand }) {
               {dueDate ? <small>{billMonth.format(dueDate)} {String(dueDate.getFullYear()).slice(-2)}</small> : null}
             </span>}
             <div className="dn-expense-plan-payment-details">
-              <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></div>
+              <div className="dn-expense-plan-title"><strong>{plan.name}</strong></div>
+              <div className="dn-expense-plan-amount-row">
+                <span id={amountId}>{formatAmount.format(plan.amount)}</span>
+                <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
+                  aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
+                  onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
+              </div>
               <div className="dn-expense-plan-meta" id={dateId}>
                 <span className={single ? 'dn-expense-plan-due-info' : 'sr-only'}>
                   <span className={`dn-expense-plan-status is-${timing}`}>{timing === 'later' ? 'Due' : label}</span>
@@ -76,18 +82,9 @@ function ExpensePlanList({ plans, onSelect, expandedId, onExpand }) {
                 <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
               </div>
             </div>
-            <div className="dn-expense-plan-row-actions">
-              <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
-                aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
-                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><span>Record payment</span></button>
-              <button type="button" className="dn-expense-plan-manage" data-plan-action="manage"
-                aria-label={`Manage plan for ${plan.name}`} aria-expanded={expandedId === plan.id} aria-controls={`plan-actions-${plan.id}`} onClick={() => onExpand(expandedId === plan.id ? null : plan.id)}>
-                <Settings2 size={15} aria-hidden="true" /> Manage
-              </button>
-            </div>
-            {expandedId === plan.id ? <div id={`plan-actions-${plan.id}`} className="dn-expense-plan-inline-actions">
+            <div id={`plan-actions-${plan.id}`} className="dn-expense-plan-inline-actions">
               <ExpensePlanActions plan={plan} onNavigate={(action, button) => onSelect(plan, action, button)} />
-            </div> : null}
+            </div>
           </li>;
         })}
       </ul>
@@ -133,7 +130,6 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const { mode, plan } = view;
   const isList = mode === 'list';
   const previousView = 'list';
-  const [expandedId, setExpandedId] = useState(null);
   const goBack = () => onNavigate(previousView);
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
@@ -163,7 +159,6 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     const previousRow = rows.find((row) => row.dataset.planId === anchor.planId);
     const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"], [data-plan-manage-action="${anchor.action}"]`);
     const canRestoreButton = notice === anchor.notice && previousButton;
-    if (notice !== anchor.notice) setExpandedId(null);
     if (canRestoreButton) {
       previousButton.focus({ preventScroll: true });
     }
@@ -209,7 +204,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel="Back to upcoming expenses"
     onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>
-    {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} expandedId={expandedId} onExpand={setExpandedId} /> : null}
+    {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
     {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null}

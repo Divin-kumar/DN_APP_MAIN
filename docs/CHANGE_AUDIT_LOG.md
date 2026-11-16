@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-519 | Direct bill actions and lighter Insights | 16 November 2026 | OldVersion development
+
+- **Scope:** Remove Manage and expose Edit, Skip and End repeat by default; place a soft-green Record payment beside the amount. Replace the native reporting dropdown with year-grouped month chips. Simplify Finance report/CSV controls, summary typography and report surfaces. Reduce planning shadows and lighten shared secondary buttons plus header theme/profile controls across the app.
+- **Compatibility:** Preserve bill posting, duplicate protection, date anchors, confirmations, return focus/scroll, month/category filtering, CSV, backups and personal records. Guest tour 2026.11.16.5 revises guidance through explicit refresh. No production, version or backend change.
+- **Executed:** 632/632 Node tests passed; production build passed. Updated existing recurring and Finance browser journeys for direct actions and inline months. Desktop browser preview verified inline months and Finance rendering.
+- **Unverified:** Exact-commit mobile browser CI and development publication are tracked with the pushed commit. Native iPhone Safari and VoiceOver still require device acceptance. The app-wide work targets shared presentation controls; it is not a claim that every screen/state has been manually exercised.
+
 ### CHG-518 | Stable repeat forms and simpler inline bill actions | 16 November 2026 | OldVersion development
 
 - **Scope:** Address owner screenshots: remove nested :has() from sheet variable setup, apply theme fields directly, keep new-expense form layout and payment controls stable across Once/Weekly/Monthly/Yearly, move optional new-expense time to More options, reserve repeat preview space and simplify its surfaces. Cash/Online/Choose at payment occupy one row. Manage expands actions inside the bill list, removing the separate management screen; child forms and confirmations return to the expanded list and preserve focus/scroll.

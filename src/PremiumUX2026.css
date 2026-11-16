@@ -856,3 +856,19 @@ html[data-theme] .dn-activity-entry-item:focus-visible { outline:2px solid var(-
     padding-right:7px !important;
   }
 }
+
+/* Quiet secondary surfaces across lists, workspaces and Settings. */
+html[data-theme] body :is(.secondaryButton, .settings-secondary-button, .workspaceButton, .editButton, .expenseButton) {
+  border-color: color-mix(in srgb, var(--color-text) 10%, transparent) !important;
+  background: color-mix(in srgb, var(--color-card-raised) 48%, transparent) !important;
+  box-shadow: none !important;
+  font-weight: 550 !important;
+}
+html[data-theme] body .dn-header :is(.theme-toggle, .profile-trigger) {
+  box-shadow: none !important;
+  border-color: transparent !important;
+  background: color-mix(in srgb, var(--color-card-raised) 45%, transparent) !important;
+}
+html[data-theme] body .dn-header .profile-trigger .avatar {
+  box-shadow: none !important; border-color: transparent !important;
+}

@@ -34,7 +34,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     };
     await page.goto('/insights');
     await page.getByRole('button', { name: 'Finance', exact: true }).click();
-    await expect(page.getByRole('combobox', { name: 'Report month' })).toBeVisible();
+    await expect(page.getByRole('group', { name: 'Report month', exact: true })).toBeVisible();
     await expect(page.locator('.dn-finance-report .lucide-chevron-right, .dn-finance-report .lucide-chevron-down, .dn-finance-report .lucide-arrow-up-right, .dn-finance-report .lucide-arrow-down-left')).toHaveCount(0);
     await capture('finance');
     await page.getByRole('button', { name: 'Compare months', exact: true }).click();
@@ -45,10 +45,9 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await capture('breakdown');
     await page.goto('/financials/transactions#expense-plans');
     await expect(page.getByRole('dialog', { name: 'Upcoming expenses', exact: true })).toBeVisible();
-    const paymentLabel = page.locator('.dn-expense-plan-record > span');
-    expect(await paymentLabel.evaluate(el => el.getBoundingClientRect().height)).toBeLessThan(24);
+    await expect(page.getByRole('button', { name: /Manage plan/ })).toHaveCount(0);
+    await expect(page.getByRole('button', { name: 'Edit schedule', exact: true })).toBeVisible();
     await capture('bill');
-    await page.getByRole('button', { name: 'Manage plan for Home internet' }).click();
     await capture('manage');
     await page.getByRole('button', { name: 'Edit schedule', exact: true }).click();
     await page.locator('.dn-repeat-disclosure > summary').click();
