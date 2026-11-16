@@ -214,7 +214,7 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
 
 /* Frost the schedule sheets themselves and let the underlying workspace show through. */
 @media screen {
-  html[data-theme] .dn-modal-backdrop.dn-modal-viewport:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), .dn-modal:has(.dn-repeat-action-summary))) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog)) {
     --dn-sheet-field: var(--dn-planning-field);
     --dn-sheet-line: var(--dn-planning-line);
     --dn-sheet-action: color-mix(in srgb, var(--color-primary) 12%, transparent);
@@ -225,7 +225,7 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
     backdrop-filter: blur(5px) saturate(1.05) !important;
   }
 
-  html[data-theme="dark"] .dn-modal-backdrop.dn-modal-viewport:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), .dn-modal:has(.dn-repeat-action-summary))) {
+  html[data-theme="dark"] .dn-modal-backdrop.dn-modal-viewport:has(> :is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog)) {
     --dn-sheet-scrim: rgb(2 6 15 / 43%);
     --dn-sheet-shadow: rgb(0 0 0 / 36%);
   }
@@ -289,4 +289,17 @@ html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-pl
 html[data-theme] .dn-modal-viewport .dn-modal:has(.dn-repeat-action-summary) .modal-danger-button {
   background: color-mix(in srgb, var(--color-danger) 12%, var(--color-card)) !important;
   color: var(--color-danger) !important;
+}
+
+/* Define field materials on the sheet itself; avoid nested :has() selectors. */
+html[data-theme] .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog) {
+  --dn-sheet-field: var(--dn-planning-field);
+  --dn-sheet-line: var(--dn-planning-line);
+  --dn-sheet-action: var(--dn-planning-selected);
+}
+html[data-theme] body .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog) .dn-modal-body :is(input:not([type="radio"]):not([type="checkbox"]), .dropdown-trigger, textarea) {
+  background: var(--dn-planning-field) !important;
+  border: 1px solid var(--dn-planning-line) !important;
+  color: var(--color-text) !important;
+  box-shadow: none !important;
 }

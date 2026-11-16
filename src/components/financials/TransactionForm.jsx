@@ -76,7 +76,7 @@ export default function TransactionForm({
   const [error, setError] = useState('');
   const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
-  const planFlow = Boolean(paymentPlan || expensePlan || isPlan);
+  const planFlow = Boolean(paymentPlan || expensePlan || canRepeat);
   const nextRepeat = previewNextRepeat(expensePlan, form.repeatFrequency, form.date);
   const repeatNotice = repeatEditNotice(expensePlan, form.repeatFrequency, form.date, nextRepeat);
   const nextPaymentDate = paymentPlan && previewNextRepeat(paymentPlan, paymentPlan.repeat.frequency, paymentPlan.dueDate);
@@ -108,7 +108,7 @@ export default function TransactionForm({
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
   const supportingDetails = paymentPlan ? 'Title, category, time, links and notes'
-    : isPlan ? 'Default method and notes' : 'Links and notes';
+    : canRepeat ? 'Time, links and notes' : 'Links and notes';
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -168,18 +168,18 @@ export default function TransactionForm({
   const repeatField = canRepeat ? <RepeatDisclosure value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
     nextDate={nextRepeat} dueDate={form.date} notice={repeatNotice} allowOneTime={!expensePlan}>
-    Only recorded payments count as spending. Record or skip each bill to advance its due date.
+    Record each payment when it is paid.
     {presetLink?.eventId || form.eventId ? ' Choose the Moment or Activity when you record each payment.' : null}
   </RepeatDisclosure> : null;
   const amount = <label className="dn-transaction-field">
-    <span>{paymentPlan ? 'Amount paid *' : isPlan ? <>Expected amount&nbsp;*</> : 'Amount *'}</span>
+    <span>{paymentPlan ? 'Amount paid *' : expensePlan ? <>Expected amount&nbsp;*</> : 'Amount *'}</span>
     <input type="number" inputMode="decimal" min="0.01" step="0.01" required
       value={form.amount} onChange={(event) => change('amount', event.target.value)}
       placeholder="0.00" disabled={busy} />
   </label>;
   const paymentMethod = <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
     <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
-    <div className="dn-payment-method-options">
+    <div className="dn-payment-method-options" data-choice-count={paymentMethods.length + (isPlan ? 1 : 0)}>
       {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
         <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
           onChange={() => change('paymentMethod', method)} disabled={busy} />
@@ -229,14 +229,14 @@ export default function TransactionForm({
         : canRepeat ? <div className="dn-expense-draft-fields">{titleField}{amount}</div> : <>{amount}{titleField}</>}
       {!paymentPlan ? <>
         <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
-          <div className={isPlan ? 'dn-plan-form-date' : undefined}>{dates}</div>
+          <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
           {repeatField}
         </div>
         {categoryField}
       </> : null}
-      {!isPlan ? paymentMethod : null}
+      {paymentMethod}
       <FormDisclosure label="More options" hint={supportingDetails}>
-      {isPlan ? paymentMethod : null}
+      {canRepeat && !expensePlan ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} /> : null}
       {paymentPlan ? <>{titleField}{categoryField}
         <ActivityTimeField subject="Payment" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
       </> : null}

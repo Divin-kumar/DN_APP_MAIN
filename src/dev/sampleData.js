@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.16.3';
+export const GUEST_TOUR_VERSION = '2026.11.16.4';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -378,7 +378,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
     { id: 'dn-tour-internet', name: 'Home internet', category: 'Home', amount: 799,
       dueDate: date(0), repeat: { frequency: 'monthly', anchorDate: date(0) },
       updatedAt: reference.toISOString(), paymentMethod: 'Online',
-      notes: 'Upcoming expenses shows Due today, Overdue and Later. Tap Record payment below a bill to enter its payment. Tap View payment in the confirmation to see the saved amount, payment date and next due date. Cancel another bill action to return to the same confirmation. Manage opens Edit schedule, Skip this occurrence and End repeat. A new due date or frequency shows how future dates will be set. Skip shows the bill date and the next due date. End repeat shows which upcoming bill will be removed and keeps recorded payments.' },
+      notes: 'Upcoming expenses shows Due today, Overdue and Later. Tap Record payment below a bill to enter its payment. Tap View payment in the confirmation to see the saved amount, payment date and next due date. Cancel another bill action to return to the same confirmation. Manage reveals Edit, Skip and End repeat directly below the bill. Cash, Online and Choose at payment share one row. A new due date or frequency shows how future dates will be set. Skip shows the bill date and the next due date. End repeat shows which upcoming bill will be removed and keeps recorded payments.' },
     { id: 'dn-tour-electricity', name: 'Electricity bill', category: 'Home', amount: 640,
       dueDate: date(-4), repeat: { frequency: 'monthly', anchorDate: date(-4) },
       updatedAt: reference.toISOString(), paymentMethod: 'Online' },

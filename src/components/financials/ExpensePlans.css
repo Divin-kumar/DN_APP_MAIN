@@ -435,3 +435,30 @@ html[data-theme] .dn-expense-plan-row-actions > button > span { white-space: now
 @media (max-width: 360px) {
   html[data-theme] .dn-expense-plan-row-actions { grid-column: 1 / -1; width: 100%; }
 }
+
+/* Payment choices stay together; the longer third label gets the space it needs. */
+html[data-theme] body .dn-modal .dn-payment-method-options {
+  display: flex; flex-wrap: nowrap; gap: 4px; min-width: 0;
+  overflow-x: auto; scrollbar-width: none;
+}
+html[data-theme] body .dn-modal .dn-payment-method-options::-webkit-scrollbar { display: none; }
+html[data-theme] body .dn-modal .dn-payment-method-choice { flex: 1 0 auto; min-width: 0; }
+html[data-theme] body .dn-modal .dn-payment-method-options[data-choice-count="3"] {
+  display: grid; grid-template-columns: minmax(0, .75fr) minmax(0, .85fr) minmax(0, 1.65fr);
+}
+html[data-theme] body .dn-modal .dn-payment-method-choice span {
+  white-space: nowrap; min-width: 0; min-height: 44px; padding: 6px 3px;
+  font-size: 12px; font-weight: 550; border-radius: 12px;
+}
+.dn-expense-plan-inline-actions { grid-column: 1 / -1; min-width: 0; }
+html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions {
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px;
+  padding-top: 10px; border-top: 1px solid var(--dn-planning-line); margin-top: 10px;
+}
+html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions button {
+  display: flex; justify-content: center; gap: 5px; min-height: 44px;
+  padding: 6px 3px; border: 0; border-radius: 12px; font-size: 12px;
+  background: transparent;
+}
+html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions button svg { width: 14px; height: 14px; flex-shrink: 0; }
+html[data-theme] .dn-expense-plan-manage[aria-expanded="true"] { background: var(--dn-planning-selected); }

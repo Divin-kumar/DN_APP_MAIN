@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Simple recurring forms and inline bill controls (16 November 2026, development)
+
+Switching a new expense between Once and a repeat keeps the same form, amount/title/date layout, category and visible payment controls. Optional transaction time is under More options for new expenses and is disabled while repeating; the draft time is preserved when switching back to Once. The repeat preview reserves its space and uses a simple next-date line. Cash, Online and Choose at payment share one row; longer configured method lists scroll horizontally. Manage now expands Edit, Skip and End repeat under the bill without navigating to a separate menu. Edit/payment and safety confirmations return directly to that expanded list, restoring action focus and list position. Success collapses the inline controls. Repeated payment and skip semantics are unchanged.
+
+Sheet fields define their theme materials directly, avoiding unsupported nested :has() selectors that left field borders/backgrounds unresolved. Dark fields use muted borders and matching surfaces. Guest tour 2026.11.16.4 describes the inline controls after explicit Refresh demo. No saved record or personal data is reset.
+
 ## Recurring action clarity and restrained report controls (16 November 2026, development)
 
 Upcoming bills explicitly label the primary action Record payment. Manage explains what Edit schedule and End repeat do; Skip confirms that it advances the date without recording spending. Expense repeat settings explain that only saved payments count as spending and each payment or skip advances one due date. Task repeat settings explain Done, Skip and Pause. Paused previews consistently show the paused state even when no next date can be calculated. Pausing a repeating Task uses a normal confirmation treatment in both the list and editor; deletion remains destructive. No schedule or payment is processed automatically.

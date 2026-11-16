@@ -410,7 +410,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   expect(await readGuest(page, 'dn_guest_expenses')).toHaveLength(1);
   const manage = plans.getByRole('button', { name: 'Manage plan for Home internet' });
   await manage.click();
-  const planActions = page.getByRole('dialog', { name: 'Manage expense plan' });
+  const planActions = page.getByRole('dialog', { name: 'Upcoming expenses', exact: true });
   const editSchedule = planActions.getByRole('button', { name: 'Edit schedule', exact: true });
   const skipOccurrence = planActions.getByRole('button', { name: /Skip this occurrence/ });
   const endRepeat = planActions.getByRole('button', { name: 'End repeat', exact: true });
@@ -460,7 +460,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(end.locator('dl > div').filter({ hasText: 'Upcoming bill' }).locator('time')).toHaveAttribute('datetime', '2026-03-31');
   await expect(end).toContainText('Recorded payments stay in Transactions.');
   const plansBeforeEnd = await readGuest(page, 'dn_guest_expense_plans');
-  await end.getByRole('button', { name: 'Back to manage expense plan' }).click();
+  await end.getByRole('button', { name: 'Back to upcoming expenses' }).click();
   await expect(endRepeat).toBeFocused();
   expect(await readGuest(page, 'dn_guest_expense_plans')).toEqual(plansBeforeEnd);
   await endRepeat.click();
@@ -572,12 +572,12 @@ test('returning to a long expense list keeps the scroll position and shows payme
   await manage.click();
   const beforeManage = await openedAt.evaluate((offsets) => offsets[0]);
   expect(beforeManage).toBeGreaterThan(300);
-  const manageView = page.getByRole('dialog', { name: 'Manage expense plan', exact: true });
-  await manageView.getByRole('button', { name: 'Back to upcoming expenses' }).click();
+  await expect(plans.getByRole('button', { name: 'Edit schedule', exact: true })).toBeVisible();
+  await manage.click();
   await expect(manage).toBeFocused();
   await expect.poll(() => body.evaluate((element) => element.scrollTop)).toBe(beforeManage);
   await recordPayment.click();
-  const beforePayment = await openedAt.evaluate((offsets) => offsets[1]);
+  const beforePayment = await openedAt.evaluate((offsets) => offsets.at(-1));
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
   const back = payment.getByRole('button', { name: 'Back to upcoming expenses' });
   expect((await back.boundingBox()).height).toBeGreaterThanOrEqual(44);
@@ -648,3 +648,48 @@ test('backup review restores both schedules into Guest and skips an already reco
     }
   } finally { await context.close(); }
 });
+
+for (const width of [320, 430]) {
+  test(`repeat choices preserve the form and three payment options share a row at ${width}px`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width, height: 844 });
+    const errors = await seedGuest(page, { ...empty, theme: 'dark' });
+    await page.goto('/financials/transactions');
+    await page.getByRole('button', { name: 'Open quick create menu' }).click();
+    await page.getByRole('button', { name: 'Transaction', exact: true }).click();
+    const dialog = page.getByRole('dialog', { name: 'Add Transaction', exact: true });
+    await dialog.getByLabel('Title *', { exact: true }).fill('Stable monthly bill');
+    await dialog.getByLabel('Amount *', { exact: true }).fill('450');
+    await schedule(dialog).click();
+    const initialForm = await dialog.locator('form').elementHandle();
+    const category = dialog.getByRole('combobox', { name: 'Category', exact: true });
+    const categoryTop = (await category.boundingBox()).y;
+    for (const frequency of ['Weekly', 'Monthly', 'Yearly', 'Once']) {
+      await repeat(dialog, frequency).check();
+      await expect(repeat(dialog, frequency)).toBeChecked();
+      expect(await initialForm.evaluate(el => el.isConnected)).toBe(true);
+      await expect(dialog.getByLabel('Title *', { exact: true })).toHaveValue('Stable monthly bill');
+      expect(Math.abs((await category.boundingBox()).y - categoryTop)).toBeLessThan(4);
+      if (frequency !== 'Once') {
+        const options = dialog.locator('.dn-payment-method-choice > span');
+        const boxes = await options.evaluateAll(elements => elements.map(el => {
+          const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, width: r.width, scroll: el.scrollWidth, client: el.clientWidth };
+        }));
+        expect(boxes).toHaveLength(3);
+        expect(Math.max(...boxes.map(b => b.top)) - Math.min(...boxes.map(b => b.top))).toBeLessThan(2);
+        for (const box of boxes) expect(box.scroll).toBeLessThanOrEqual(box.client + 1);
+      }
+    }
+    const fields = await dialog.locator('input[type="text"], .dropdown-trigger').evaluateAll(elements => elements.map(el => ({
+      border: getComputedStyle(el).borderTopColor, background: getComputedStyle(el).backgroundColor,
+    })));
+    for (const field of fields) {
+      expect(field.border).not.toBe('rgb(255, 255, 255)');
+      expect(field.background).not.toBe('rgb(255, 255, 255)');
+    }
+    await repeat(dialog, 'Monthly').check();
+    await page.screenshot({ path: testInfo.outputPath(`steady-repeat-${width}.png`) });
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    expect(await readGuest(page, 'dn_guest_expense_plans')).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}

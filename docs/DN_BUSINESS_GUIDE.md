@@ -1,3 +1,5 @@
+**Simpler recurring controls (16 November 2026, development).** Changing Once to a repeat keeps your form and payment controls in place. Cash, Online and Choose at payment share one row. Manage expands Edit, Skip and End repeat under the bill; there is no separate management screen. Optional time for a new expense is under More options. Dark fields use softer matching borders and backgrounds.
+
 **Finance and repeating schedules (16 November 2026, development).** Open Insights → Finance and choose a reporting month. Compare months and Breakdown open the monthly comparison or category details. Transactions are grouped by date, with the category and time beneath the name. The + stays at the bottom on phones while you read the report. Upcoming expenses puts a single bill’s exact due date on its own line below its status.
 
 **Frosted Insights and recurring schedules (15 November 2026, development).** Insights shows the reporting period and totals together. Repeating Tasks and bills use quieter rows and rounded controls, and the mobile sheets have a softer frosted finish.

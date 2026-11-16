@@ -157,3 +157,17 @@ html[data-theme] .dn-repeat-edit-note { margin-top: 6px; font-size: 12px; line-h
 @media (prefers-reduced-motion: no-preference) {
   html[data-theme] .dn-repeat-option > span { transition: background 160ms ease, box-shadow 160ms ease; }
 }
+
+/* Keep frequency changes within one quiet, stable section. */
+html[data-theme] .dn-editor-schedule .dn-repeat-disclosure {
+  padding-inline: 0; border: 0; border-top: 1px solid var(--dn-planning-line);
+  border-radius: 0; background: transparent;
+}
+html[data-theme] .dn-repeat-preview { min-height: 78px; align-content: start; }
+html[data-theme] .dn-repeat-preview[data-active="false"] { padding-top: 8px; }
+html[data-theme] .dn-repeat-next { padding-inline: 0; background: transparent; border-radius: 0; }
+html[data-theme] .dn-repeat-preview > p + p { font-size: 12px; }
+@media (prefers-reduced-motion: no-preference) {
+  .dn-expense-plan-inline-actions { animation: dn-repeat-reveal 160ms ease-out; }
+  @keyframes dn-repeat-reveal { from { opacity: 0; transform: translateY(-3px); } to { opacity: 1; transform: translateY(0); } }
+}

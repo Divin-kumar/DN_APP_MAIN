@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { CalendarDays, Check, ChevronRight, Pencil, Settings2, Repeat, SkipForward, XCircle } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
@@ -14,7 +14,6 @@ const billMonth = new Intl.DateTimeFormat('en-GB', { month: 'short' });
 const formatAmount = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const planTitles = {
   list: 'Upcoming expenses',
-  manage: 'Manage expense plan',
   payment: 'Record payment',
   receipt: 'Payment details',
   edit: 'Edit expense plan',
@@ -41,7 +40,7 @@ export default function ExpensePlanEntry({ plans, expanded, buttonRef, onOpen })
   </section>;
 }
 
-function ExpensePlanList({ plans, onSelect }) {
+function ExpensePlanList({ plans, onSelect, expandedId, onExpand }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
   const single = sorted.length === 1;
@@ -82,10 +81,13 @@ function ExpensePlanList({ plans, onSelect }) {
                 aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
                 onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><span>Record payment</span></button>
               <button type="button" className="dn-expense-plan-manage" data-plan-action="manage"
-                aria-label={`Manage plan for ${plan.name}`} onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>
+                aria-label={`Manage plan for ${plan.name}`} aria-expanded={expandedId === plan.id} aria-controls={`plan-actions-${plan.id}`} onClick={() => onExpand(expandedId === plan.id ? null : plan.id)}>
                 <Settings2 size={15} aria-hidden="true" /> Manage
               </button>
             </div>
+            {expandedId === plan.id ? <div id={`plan-actions-${plan.id}`} className="dn-expense-plan-inline-actions">
+              <ExpensePlanActions plan={plan} onNavigate={(action, button) => onSelect(plan, action, button)} />
+            </div> : null}
           </li>;
         })}
       </ul>
@@ -96,19 +98,15 @@ function ExpensePlanList({ plans, onSelect }) {
 function ExpensePlanActions({ plan, onNavigate }) {
   const following = formatScheduleDate(previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate));
   return <>
-    <div className="dn-expense-plan-sheet-header">
-      <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span>{formatAmount.format(plan.amount)}</span></div>
-      <p>{REPEAT_OPTIONS[plan.repeat.frequency]} · Due {formatScheduleDate(plan.dueDate)}</p>
-    </div>
     <div className="dn-expense-plan-menu-actions">
-      <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" onClick={() => onNavigate('edit')}><Pencil size={18} aria-hidden="true" />
-        <span>Edit schedule<small>Change amount, due date or frequency</small></span>
+      <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" onClick={(event) => onNavigate('edit', event.currentTarget)}><Pencil size={18} aria-hidden="true" />
+        <span>Edit</span>
       </button>
-      <button type="button" data-plan-manage-action="skip" disabled={!following} onClick={() => onNavigate('skip')}><SkipForward size={18} aria-hidden="true" />
-        <span>Skip this occurrence{following ? <small>Next due {following}</small> : null}</span>
+      <button type="button" data-plan-manage-action="skip" aria-label="Skip this occurrence" disabled={!following} onClick={(event) => onNavigate('skip', event.currentTarget)}><SkipForward size={18} aria-hidden="true" />
+        <span>Skip</span>
       </button>
-      <button type="button" data-plan-manage-action="end" aria-label="End repeat" className="is-danger" onClick={() => onNavigate('end')}><XCircle size={18} aria-hidden="true" />
-        <span>End repeat<small>Stop future bills; keep recorded payments</small></span>
+      <button type="button" data-plan-manage-action="end" aria-label="End repeat" className="is-danger" onClick={(event) => onNavigate('end', event.currentTarget)}><XCircle size={18} aria-hidden="true" />
+        <span>End repeat</span>
       </button>
     </div>
   </>;
@@ -134,13 +132,13 @@ function RecordedPayment({ payment }) {
 export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onClose, onSelect, onNavigate, onSave, onConfirm }) {
   const { mode, plan } = view;
   const isList = mode === 'list';
-  const previousView = ['manage', 'payment', 'receipt'].includes(mode) ? 'list' : 'manage';
+  const previousView = 'list';
+  const [expandedId, setExpandedId] = useState(null);
   const goBack = () => onNavigate(previousView);
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
   const isConfirm = isSkip || mode === 'end';
   const listReturnRef = useRef(null);
-  const manageReturnRef = useRef(null);
   const listBodyRef = useRef(null);
   const viewPaymentRef = useRef(null);
 
@@ -151,13 +149,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   };
 
   const restorePosition = (body) => {
-    if (mode === 'manage' && manageReturnRef.current) {
-      body.querySelector(`[data-plan-manage-action="${manageReturnRef.current}"]`)?.focus();
-      manageReturnRef.current = null;
-      return;
-    }
     if (!isList) return;
-    manageReturnRef.current = null;
     listBodyRef.current = body;
     const anchor = listReturnRef.current;
     if (!anchor) return;
@@ -169,8 +161,9 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     }
     const rows = [...body.querySelectorAll('[data-plan-id]')];
     const previousRow = rows.find((row) => row.dataset.planId === anchor.planId);
-    const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"]`);
+    const previousButton = previousRow?.querySelector(`[data-plan-action="${anchor.action}"], [data-plan-manage-action="${anchor.action}"]`);
     const canRestoreButton = notice === anchor.notice && previousButton;
+    if (notice !== anchor.notice) setExpandedId(null);
     if (canRestoreButton) {
       previousButton.focus({ preventScroll: true });
     }
@@ -214,14 +207,10 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const listClass = isList ? ' dn-expense-plan-list-view' + (plans.length === 1 ? ' is-single-plan' : '') : '';
   return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${listClass}`} viewKey={mode}
     onViewChange={restorePosition}
-    onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
+    onBack={isList ? undefined : goBack} backLabel="Back to upcoming expenses"
     onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>
-    {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}
+    {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} expandedId={expandedId} onExpand={setExpandedId} /> : null}
     {mode === 'receipt' && notice?.payment ? <RecordedPayment payment={notice.payment} /> : null}
-    {mode === 'manage' ? <ExpensePlanActions plan={plan} onNavigate={(action) => {
-      manageReturnRef.current = action;
-      onNavigate(action);
-    }} /> : null}
     {isForm ? <TransactionForm key={mode} expensePlan={mode === 'edit' ? plan : null}
       paymentPlan={mode === 'payment' ? plan : null}
       busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}

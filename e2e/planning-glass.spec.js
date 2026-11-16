@@ -51,7 +51,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.locator('.dn-repeat-disclosure > summary').click();
     await expect(page.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Save expense plan' })).toBeInViewport({ ratio: 1 });
-    await expect(page.getByRole('dialog')).toContainText('Only recorded payments count as spending.');
+    await expect(page.getByRole('dialog')).toContainText('Record each payment when it is paid.');
     await capture('repeat');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     await page.getByRole('button', { name: /Skip this occurrence/ }).click();
@@ -61,7 +61,6 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.getByRole('button', { name: 'End repeat', exact: true }).click();
     await capture('end');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await page.getByRole('button', { name: 'Back to upcoming expenses', exact: true }).click();
     await page.getByRole('button', { name: 'Record payment for Home internet' }).click();
     await expect(page.getByRole('button', { name: 'Save payment', exact: true })).toBeInViewport({ ratio: 1 });
     await capture('payment');

@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-518 | Stable repeat forms and simpler inline bill actions | 16 November 2026 | OldVersion development
+
+- **Scope:** Address owner screenshots: remove nested :has() from sheet variable setup, apply theme fields directly, keep new-expense form layout and payment controls stable across Once/Weekly/Monthly/Yearly, move optional new-expense time to More options, reserve repeat preview space and simplify its surfaces. Cash/Online/Choose at payment occupy one row. Manage expands actions inside the bill list, removing the separate management screen; child forms and confirmations return to the expanded list and preserve focus/scroll.
+- **Compatibility:** Existing schedule anchors, payment deduplication, totals, backup and confirmations remain. Draft date, amount, title, time and payment method survive frequency switches. Guest tour 2026.11.16.4 updates instructions only through explicit refresh. No production/backend/version changes.
+- **Executed:** Build passed. Added 320px/430px browser checks for retained form identity, stable category position, non-white dark fields, one-row payment choices and draft preservation; adapted existing recurrence journeys for inline Manage. Browser CI and Node results are reported with the final development commit.
+- **Unverified:** Native iPhone Safari and VoiceOver require device acceptance. Approved development Hosting only.
+
 ### CHG-517 | Clarify recurring actions and refine glass controls | 16 November 2026 | OldVersion development
 
 - **Scope:** Review Task creation/editing, Done/Skip/Pause/Resume, expense scheduling/payment/skip/end, receipts, stale-record guards and backup paths. Label Record payment explicitly; explain schedule advancement and spending effects; make paused previews consistent; use non-destructive styling for reversible repeat pauses. Refine frequency, payment, management, month and report buttons with rounded surfaces, pressed feedback and focus rings. Remove decorative arrows from Insights and management rows.
