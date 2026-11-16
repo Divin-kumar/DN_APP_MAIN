@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-549 | Consistent glass forms and Activity description
+
+- **Scope:** Share the same translucent panel, blur, fields and rounded actions across dialogs in light and dark mode. Remove the competing planning-only and mobile panel styles. Activity create and edit put Description alongside date, time and priority inside More options.
+- **Compatibility:** Keep required-field disclosure, native date and time, draft and save behavior, and opaque accessibility fallbacks. Dated entry composers still open directly into writing. Guest tour 2026.11.16.8 updates the placement guidance through explicit Refresh demo.
+- **Executed:** Production build, lint, 632 Node tests and 53 focused Chromium journeys passed across forms, Activities, recurring payments, Appearance and attachments. Screenshots reviewed at phone widths in both themes. Physical iPhone Safari remains a device check.
+
 ### CHG-521 | Inline time and quieter form controls | 16 November 2026 | OldVersion development
 
 - **Scope:** Keep Time beside Date in transaction create/edit, expense schedules and payments; remove the duplicate time controls from More options. Preserve date-based schedule behavior and draft time. Remove decorative form disclosure/dropdown chevrons, lighten Task/Transaction typography and repeat controls, reduce spare repeat-preview space and unify right-aligned Dashboard Browse links.

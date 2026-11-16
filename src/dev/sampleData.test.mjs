@@ -24,7 +24,7 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.ok(demo.events[0].notes.includes('cancel backup preparation'));
   assert.equal(demo.events[0].activities[0].entries.length, 1);
   assert.equal(demo.events[0].activities[0].entries[0].id, 'dn-tour-entry-j1-continued');
-  assert.ok(demo.events[0].notes.includes('More options'));
+  assert.ok(demo.events[0].notes.includes('More options when creating or editing an Activity to find Description'));
   assert.ok(demo.events[0].notes.includes('Add entry'));
   assert.ok(demo.events[0].notes.includes('double-tap it to go back'));
   assert.ok(demo.events[0].notes.includes('independent'));

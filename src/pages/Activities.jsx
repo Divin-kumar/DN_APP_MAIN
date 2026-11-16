@@ -216,7 +216,6 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
           <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
           <ActivityFormFields namePrefix="activity-editor" value={draft}
             titleLabel="Activity title"
-            mode={getMomentEntryMode(momentsById.get(draft.momentId), adminValues.eventTypes)}
             priorities={adminValues.activityPriorities} disabled={busy}
             onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
           <div className="form-actions"><button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button><button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button></div>

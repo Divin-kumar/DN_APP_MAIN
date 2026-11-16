@@ -3,7 +3,7 @@ import ActivityFormFields from '../components/events/ActivityFormFields';
 import RichTextEditor from '../components/common/RichTextEditor';
 import DateField from '../components/common/DateField';
 import ActivityTimeField from '../components/common/ActivityTimeField';
-import { addUnifiedContentEntry, createStandaloneActivity, getMomentEntryMode, ENTRY_MODES } from '../utils/activityEntries';
+import { addUnifiedContentEntry, createStandaloneActivity, getMomentEntryMode } from '../utils/activityEntries';
 import { detailQuickActivityContext } from '../utils/quickActivityDetailContext';
 /*
   Moment-first app shell for dashboard and workspace navigation.
@@ -143,7 +143,6 @@ export default function DashboardLayout() {
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
   const quickSelectedMoment = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
-  const quickMode = quickSelectedMoment ? getMomentEntryMode(quickSelectedMoment, adminValues.eventTypes) : null;
   // Historical same-day Diary Activities remain intact. New content is added
   // only when the owner explicitly saves inside the opened Activity.
 
@@ -773,7 +772,7 @@ export default function DashboardLayout() {
             </p> : null}
             </div>
 
-            <ActivityFormFields mode={quickMode || ENTRY_MODES.TASKS} namePrefix="dn-quick-activity"
+            <ActivityFormFields namePrefix="dn-quick-activity"
               value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
                 description: quickActivityDescription, priority: quickActivityPriority }}
               priorities={adminValues.activityPriorities} disabled={quickActivityBusy}

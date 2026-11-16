@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Consistent glass forms and Activity description (16 November 2026, development)
+
+Shared dialogs use the same translucent surface, blur, field finish and rounded actions in both themes. Blur is applied on the dialog itself. Inline form controls and portalled dropdowns share the material tokens, with opaque fallback surfaces for reduced transparency or unsupported blur. In Activity create and edit, More options contains the optional Description editor alongside date, time and priority. Adding or editing a dated entry still opens its own writing form. Guest tour 2026.11.16.8 explains the new placement through explicit Refresh demo.
+
 ## Lightweight forms and aligned Dashboard browse actions (16 November 2026, development)
 
 Transaction creation/editing and payment forms keep Time alongside Date, like Tasks and Moments. Expense schedules keep the same date/time row with time disabled because schedules are date-based; the transaction time draft survives changing back to Once. More options retains repeat, links and notes without a decorative down arrow. Shared form dropdowns also omit their decorative chevron while retaining combobox semantics, keyboard controls and selection styling. Repeat controls have quieter weights and less unused vertical space. Empty Moments and Activities Dashboard sections use the same two-column layout, with Browse on the right and the message wrapping in the remaining space. Guest tour 2026.11.16.7 updates guidance through explicit Refresh demo.

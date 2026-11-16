@@ -421,8 +421,7 @@ export default function Events() {
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
             <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
-            <ActivityFormFields mode={getMomentEntryMode(activityChooserEvent, adminValues.eventTypes)}
-               namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
+            <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
                value={{ title: activityTitle, date: activityDate, time: activityTime,
                  priority: activityPriority, description: activityDescription }}
                onChange={(patch) => {

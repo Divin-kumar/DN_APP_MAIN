@@ -16,7 +16,8 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         return action.left >= text.right && action.right <= parent.getBoundingClientRect().right + 1;
       })).toBe(true);
     }
-    for (const kind of ['Task', 'Transaction', 'Moment']) {
+    let transactionMaterial;
+    for (const kind of ['Transaction', 'Task', 'Moment', 'Activity']) {
       await page.getByRole('button', { name: 'Open quick create menu' }).click();
       await page.getByRole('button', { name: kind === 'Moment' ? 'Life moment' : kind, exact: true }).click();
       const dialog = page.getByRole('dialog');
@@ -24,16 +25,20 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       const material = await dialog.evaluate(el => ({
         background: getComputedStyle(el).backgroundImage,
         blur: getComputedStyle(el).backdropFilter,
-        opacity: getComputedStyle(el).opacity,
+        border: getComputedStyle(el).borderTopColor,
+        scrimBlur: getComputedStyle(el.parentElement).backdropFilter,
       }));
       expect(material.background).not.toBe('none');
       expect(material.blur).toContain('blur');
+      expect(material.scrimBlur).toBe('none');
+      if (kind === 'Transaction') transactionMaterial = material;
+      else expect(material).toEqual(transactionMaterial);
       if (kind === 'Task') {
         const title = dialog.getByRole('textbox', { name: 'Task title' });
         expect(await title.evaluate(el => el.getBoundingClientRect().width / el.closest('label').getBoundingClientRect().width)).toBeGreaterThan(.95);
       }
       const date = dialog.locator('input[type="date"]');
-      if (kind !== 'Moment') {
+      if (kind === 'Task' || kind === 'Transaction') {
         const time = dialog.locator('input[type="time"]');
         await expect(time).toBeVisible();
         const dateBox = await date.boundingBox(), timeBox = await time.boundingBox();
@@ -50,6 +55,17 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         await expect(more.locator('summary')).toContainText('Monthly');
         await more.locator('summary').click();
         await expect(more.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
+      }
+      if (kind === 'Activity') {
+        const more = dialog.locator('details.dn-form-disclosure').filter({ has: page.getByText('More options', { exact: true }) });
+        const description = more.getByRole('textbox', { name: 'Description (optional)' });
+        await expect(dialog.locator('summary > span').filter({ hasText: /^Description$/ })).toHaveCount(0);
+        await expect(description).toBeHidden();
+        await more.getByText('More options', { exact: true }).click();
+        await expect(description).toBeVisible();
+        const dateBox = await date.boundingBox(), timeBox = await more.locator('input[type="time"]').boundingBox();
+        expect(Math.abs(dateBox.y - timeBox.y)).toBeLessThan(4);
+        expect(timeBox.x).toBeGreaterThan(dateBox.x);
       }
       expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       await testInfo.attach(`${kind}-${theme}`, { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' });

@@ -42,12 +42,13 @@ for (const [width, height, theme] of [[320, 694, 'dark'], [390, 844, 'light'], [
     await expect(title).toBeVisible();
     await expect(title).not.toBeFocused();
     await expect(dialog.getByRole('textbox', { name: 'Description (optional)' })).toBeHidden();
-    await dialog.locator('details.dn-form-disclosure').filter({ hasText: 'Description' }).first().locator('summary').click();
-    await expect(dialog.getByRole('textbox', { name: 'Description (optional)' })).toBeVisible();
+    const more = dialog.locator('details.dn-form-disclosure');
+    await expect(more).toHaveCount(1);
+    await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeHidden();
+    await more.getByText('More options', { exact: true }).click();
+    await expect(more.getByRole('textbox', { name: 'Description (optional)' })).toBeVisible();
     await expect(dialog.getByRole('combobox', { name: 'Journal entry action' })).toHaveCount(0);
     await expect(dialog.getByRole('combobox', { name: 'Journal append destination' })).toHaveCount(0);
-    await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeHidden();
-    await dialog.getByText('More options', { exact: true }).click();
     await expect(dialog.getByRole('combobox', { name: 'Activity priority' })).toBeVisible();
     await dialog.getByRole('button', { name: 'Cancel' }).click();
     await expect(dialog).toHaveCount(0);

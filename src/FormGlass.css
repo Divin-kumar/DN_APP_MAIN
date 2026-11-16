@@ -1,34 +1,36 @@
-/* Shared form materials: all dialogs, inline forms and Settings editors. */
+/* Shared materials for dialogs, inline editors and settings controls. */
 html[data-theme] {
-  --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 6%), transparent 65%), rgb(19 29 47 / 94%);
-  --dn-form-field: rgb(255 255 255 / 5%);
-  --dn-form-line: rgb(190 210 242 / 15%);
-  --dn-form-highlight: rgb(255 255 255 / 9%);
-  --dn-form-scrim: rgb(3 8 18 / 40%);
-  --dn-form-shadow: rgb(0 0 0 / 28%);
+  --dn-form-glass: linear-gradient(145deg, rgb(126 165 226 / 14%), transparent 68%), rgb(15 24 41 / 78%);
+  --dn-form-field: rgb(210 228 255 / 8%);
+  --dn-form-line: rgb(190 210 242 / 18%);
+  --dn-form-highlight: rgb(223 237 255 / 13%);
+  --dn-form-scrim: rgb(3 8 18 / 37%);
+  --dn-form-shadow: rgb(0 0 0 / 29%);
+  --dn-form-footer: rgb(22 32 51 / 96%);
 }
 html[data-theme="light"] {
-  --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(243 247 253 / 92%));
-  --dn-form-field: rgb(255 255 255 / 62%);
-  --dn-form-line: rgb(51 77 112 / 17%);
-  --dn-form-highlight: rgb(255 255 255 / 90%);
+  --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(231 239 252 / 58%));
+  --dn-form-field: rgb(255 255 255 / 51%);
+  --dn-form-line: rgb(51 77 112 / 18%);
+  --dn-form-highlight: rgb(255 255 255 / 84%);
   --dn-form-scrim: rgb(35 51 77 / 22%);
-  --dn-form-shadow: rgb(34 53 83 / 16%);
+  --dn-form-shadow: rgb(34 53 83 / 17%);
+  --dn-form-footer: rgb(243 247 253 / 97%);
 }
 @media screen {
+  /* Keep blur on the sheet. A filter on the enclosing scrim would limit
+     what the sheet can sample from the workspace behind it. */
   html[data-theme] body .dn-modal-backdrop.dn-modal-viewport {
     background: var(--dn-form-scrim) !important;
-    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
-  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > section.dn-modal[role="dialog"][aria-modal="true"] {
-    --dn-sheet-field: var(--dn-form-field);
-    --dn-sheet-line: var(--dn-form-line);
-    --dn-sheet-action: var(--dn-planning-selected);
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"][aria-modal="true"] {
     background: var(--dn-form-glass) !important;
     border-color: var(--dn-form-line) !important;
-    box-shadow: 0 16px 48px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight) !important;
-    -webkit-backdrop-filter: blur(24px) saturate(1.15);
-    backdrop-filter: blur(24px) saturate(1.15);
+    box-shadow: 0 16px 42px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight) !important;
+    -webkit-backdrop-filter: blur(22px) saturate(1.24);
+    backdrop-filter: blur(22px) saturate(1.24);
     color: var(--color-text);
   }
 }
@@ -83,8 +85,15 @@ html[data-theme] body .dn-modal-viewport .dn-modal .dn-modal-header :is(.modal-c
 }
 html[data-theme] body .dn-modal-viewport .dn-modal-fixed-actions { border-color: var(--dn-form-line); }
 html[data-theme] body .dn-modal-viewport .dn-modal-body :is(.form-actions, .event-form-actions, .event-greeting-editor-actions, .dialog-actions, .settings-actions, .modal-confirm-actions) {
-  background: var(--dn-form-glass) !important; box-shadow: none !important;
-  -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+  box-shadow: none !important;
+}
+@media (max-width: 760px), (max-height: 500px) {
+  html[data-theme] body .dn-modal-viewport .dn-modal-body :is(.form-actions, .event-form-actions, .event-greeting-editor-actions, .dialog-actions, .settings-actions, .modal-confirm-actions) {
+    background: var(--dn-form-footer) !important;
+  }
+}
+html[data-theme] body .dn-modal-viewport .dn-modal :is(.form-actions, .event-form-actions, .event-greeting-editor-actions, .dialog-actions, .settings-actions, .modal-confirm-actions) :is(.primaryButton, .secondaryButton, .settings-primary-button, .settings-secondary-button, .modal-danger-button) {
+  border-radius: 999px !important;
 }
 html[data-theme] body :is(.dn-modal, form, .settings-page, .dn-pdf-studio-controls) :is(.primaryButton, .settings-primary-button) {
   background: var(--dn-planning-selected) !important; color: var(--action-ink) !important;
@@ -103,13 +112,21 @@ html[data-theme] body .dropdown-menu.dropdown-menu-portal {
 html[data-theme] body .dropdown-menu-portal .dropdown-search-wrap {
   background: var(--dn-form-field); border-color: var(--dn-form-line);
 }
-@supports not (backdrop-filter: blur(1px)) {
-  html[data-theme] { --dn-form-glass: var(--color-card); --dn-form-field: var(--color-card-raised); }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  html[data-theme] {
+    --dn-form-glass: var(--color-card);
+    --dn-form-field: var(--color-card-raised);
+    --dn-form-footer: var(--color-card);
+  }
 }
 @media (prefers-reduced-transparency: reduce) {
-  html[data-theme] { --dn-form-glass: var(--color-card); --dn-form-field: var(--color-card-raised); }
-  html[data-theme] body :is(.dn-modal-backdrop.dn-modal-viewport, .dropdown-menu.dropdown-menu-portal),
-  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > section.dn-modal[role="dialog"][aria-modal="true"] {
+  html[data-theme] {
+    --dn-form-glass: var(--color-card);
+    --dn-form-field: var(--color-card-raised);
+    --dn-form-footer: var(--color-card);
+  }
+  html[data-theme] body :is(.dn-login-card, .dropdown-menu.dropdown-menu-portal),
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"][aria-modal="true"] {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
   }
 }
@@ -132,6 +149,15 @@ html[data-theme] body .dn-form-disclosure > summary::after { content: none; disp
 html[data-theme] body :is(.dn-modal, form, .settings-page) .dropdown-trigger > .lucide-chevron-down { display: none; }
 html[data-theme] body .dn-form-disclosure > summary { font-weight: 600; }
 html[data-theme] body .dn-form-disclosure[open] > summary { color: var(--color-text); }
+html[data-theme] body .dn-form-disclosure > summary > span {
+  padding: 4px 10px;
+  border: 1px solid var(--dn-form-line);
+  border-radius: 999px;
+  background: var(--dn-form-field);
+}
+html[data-theme] body .dn-form-disclosure[open] > summary > span {
+  background: var(--dn-planning-selected);
+}
 html[data-theme] body .dn-repeat-preview { min-height: 48px; }
 html[data-theme] body .dn-repeat-options { background: transparent; padding: 0; gap: 6px; }
 html[data-theme] body .dn-repeat-option > span { border-radius: 12px; font-weight: 500; }

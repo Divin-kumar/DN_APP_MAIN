@@ -4,16 +4,14 @@ import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
 import RichTextEditor from '../common/RichTextEditor';
 import { getActiveCodeListMeta } from '../../utils/codeLists';
-import { ENTRY_MODES } from '../../utils/activityEntries';
 
 // Shared Activity editor. All supported Moment modes expose the same writing
 // fields and preserve the same independent Activity storage contract.
 export default function ActivityFormFields({
-  value, onChange, priorities = [], mode = ENTRY_MODES.TASKS, disabled = false,
+  value, onChange, priorities = [], disabled = false,
   namePrefix = 'dn-activity', showDate = true, showPriority = true, dateLocked = false,
   notesLabel, titleLabel: labelOverride, autoFocus = false,
 }) {
-  const isWriting = Object.values(ENTRY_MODES).includes(mode);
   const titleLabel = labelOverride || 'Activity title';
   const options = getActiveCodeListMeta('activityPriorities', priorities);
   const priority = value.priority || 'medium';
@@ -22,7 +20,7 @@ export default function ActivityFormFields({
     showDate ? (value.date || 'Choose date') : null,
     value.time || 'No time',
     showPriority ? options.find((option) => option.value === priority)?.label || priority : null,
-    !isWriting && 'Notes',
+    value.description ? 'Description added' : 'Description',
   ].filter(Boolean).join(' · ');
   return <>
     <label className="dn-activity-create-title" htmlFor={`${namePrefix}-title`}>{titleLabel}
@@ -32,12 +30,6 @@ export default function ActivityFormFields({
         placeholder={titleLabel} autoFocus={autoFocus && typeof window !== 'undefined'
           && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
     </label>
-    {isWriting ? <FormDisclosure label="Description" hint={value.description ? 'Added' : 'Optional'}>
-      <RichTextEditor label={notesLabel || 'Description (optional)'}
-        value={value.description || ''} disabled={disabled}
-        onChange={(description) => onChange({ description })}
-        placeholder="Write what you want to remember" rows={4} />
-    </FormDisclosure> : null}
     <FormDisclosure label="More options" hint={metadata}>
       <div className="activity-date-time-row">
         {showDate ? <DateField label="Date" name={`${namePrefix}-date`} value={value.date || ''}
@@ -56,9 +48,10 @@ export default function ActivityFormFields({
           {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
         </DropdownSelect>
       </div> : null}
-      {!isWriting ? <RichTextEditor label={notesLabel || 'Activity notes (optional)'}
+      <RichTextEditor label={notesLabel || 'Description (optional)'}
         value={value.description || ''} disabled={disabled}
-        onChange={(description) => onChange({ description })} placeholder="Notes (optional)" rows={4} /> : null}
+        onChange={(description) => onChange({ description })}
+        placeholder="Write what you want to remember" rows={4} />
     </FormDisclosure>
   </>;
 }

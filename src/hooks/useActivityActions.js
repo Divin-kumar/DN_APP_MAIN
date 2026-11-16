@@ -5,7 +5,7 @@ import { scopedRecordActions as records } from '../services/scopedRecordActions'
 import { activityCancellationPatch, activityCompletionPatch, activityStatusTransitionPatch } from '../utils/activityDetail';
 import { formatMomentDate, parseMomentDate } from '../utils/momentDates';
 import { assertActivityEditable } from '../utils/scopedRecordActions';
-import { updateActivityEntry, removeActivityEntry, getMomentEntryMode, activityEntries } from '../utils/activityEntries';
+import { updateActivityEntry, removeActivityEntry, activityEntries } from '../utils/activityEntries';
 import { recordId } from '../utils/recordIdentity';
 
 // Shared by the detail page and Dashboard. List/workspace forms use the same
@@ -51,7 +51,6 @@ export default function useActivityActions() {
       assertActivityEditable(activity);
       setError('');
       setDraft({ ...target, momentName: moment.name,
-        entryMode: getMomentEntryMode(moment, useAppStore.getState().adminValues?.eventTypes || []),
         title: activity.title || '',
         time: activityTime(activity), date: formatMomentDate(parseMomentDate(activity.date)),
         originalDate: formatMomentDate(parseMomentDate(activity.date)), priority: activity.priority || 'medium', description: activity.description || '',

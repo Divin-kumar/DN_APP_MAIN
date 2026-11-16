@@ -604,7 +604,7 @@ export function EventWorkspaceContent() {
           <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
             {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
 
-            <ActivityFormFields mode={getMomentEntryMode(event, momentTypes)} namePrefix="dn-workspace-entry"
+            <ActivityFormFields namePrefix="dn-workspace-entry"
                value={{ title: activityTitle, date: activityDate, time: activityTime,
                  description: activityDescription, priority: activityPriority }}
                priorities={adminValues.activityPriorities} disabled={activityBusy}

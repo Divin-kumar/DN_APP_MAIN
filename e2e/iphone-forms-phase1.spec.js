@@ -158,7 +158,7 @@ test('invalid required metadata automatically opens its disclosure before save',
   expect(errors).toEqual([]);
 });
 
-test('Journal Activity Detail edit prioritizes writing without changing its stored record', async ({ page }) => {
+test('Activity Detail keeps Description under More options and Cancel preserves the record', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   await page.goto('/events/moment-one/activities/shared');
@@ -166,8 +166,16 @@ test('Journal Activity Detail edit prioritizes writing without changing its stor
   await activityDetailAction(page, 'Edit');
   const editor = page.getByRole('dialog', { name: 'Edit activity' });
   await expect(editor.getByRole('textbox', { name: 'Activity title' })).toBeVisible();
-  await expect(editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'Description' })).toBeVisible();
-  await expect(editor.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' })).toBeVisible();
+  const more = editor.locator('details.dn-form-disclosure');
+  const description = more.getByRole('textbox', { name: 'Description (optional)' });
+  await expect(more).toHaveCount(1);
+  await expect(description).toBeHidden();
+  await more.getByText('More options', { exact: true }).click();
+  await expect(description).toContainText('Travel notes');
+  await description.fill('Unsaved description');
+  await more.getByText('More options', { exact: true }).click();
+  await more.getByText('More options', { exact: true }).click();
+  await expect(description).toHaveText('Unsaved description');
   await editor.getByRole('button', { name: 'Cancel' }).click();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toEqual(before);
   expect(errors).toEqual([]);
