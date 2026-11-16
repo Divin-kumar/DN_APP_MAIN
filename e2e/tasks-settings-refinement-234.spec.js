@@ -82,7 +82,7 @@ test('Task editor preserves a Moment alias and exposes its Activity options', as
     const moments = events.getState().events;
     events.setState({ events: moments.map((m, index) => index === 0 ? { ...m, firestoreId: 'legacy-moment' } : m) });
     const tasks = (await import('/src/store/useTaskStore.js')).default;
-    tasks.getState().saveTask({ title: 'Alias-linked Task', momentId: 'legacy-moment', activityId: moments[0].activities[0].id });
+    await tasks.getState().saveTask({ title: 'Alias-linked Task', momentId: 'legacy-moment', activityId: moments[0].activities[0].id });
   });
   const row = page.locator('.dn-independent-task-row').filter({ hasText: 'Alias-linked Task' });
   await row.click();

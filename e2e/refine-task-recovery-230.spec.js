@@ -23,6 +23,7 @@ test('Task status failure stays visible and can be retried without data loss',as
  await seedGuest(page);await page.goto('/tasks?create=1');
  await page.getByLabel('Task title').fill('Retry safely');
  await page.getByRole('button',{name:'Create Task'}).click();
+ await expect(page.locator('.dn-independent-task-row').filter({ hasText: 'Retry safely' })).toBeVisible();
  const baseline=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));
  const id=JSON.parse(baseline)[0].id;await page.goto(`/tasks?task=${id}`);
  // A deep link highlights the ordinary Task row; actions open only on tap.

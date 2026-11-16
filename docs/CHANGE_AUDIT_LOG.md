@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-564 | Await Task persistence in release checks
+
+- **Scope:** Wait for persisted Tasks before leaving their page, taking the saved-record baseline or opening the next action. Await direct fixture writes before subsequent checks.
+- **Verification:** The preceding full run passed 940 browser cases. Both failures accessed Guest Tasks before timed asynchronous saves had completed.
+
 ## CHG-20261116-563 | Keep double-tap Back and short expense forms reliable
 
 - **Scope:** Recognize the browser's second click on the open + menu if a busy frame has already cleared the first-tap timer. Scope Task filter choices to the open list and verify that Save expense plan is reachable by scrolling a short sheet.

@@ -108,6 +108,7 @@ test('shared swipe menus animate without CSS-keyframe blinking across Moments Ac
   const editor = page.getByRole('dialog', { name: 'New Task' });
   await editor.getByLabel('Task title').fill('Swipe motion example');
   await editor.getByRole('button', { name: 'Create Task' }).click();
+  await expect(page.locator('.dn-independent-task-row').filter({ hasText: 'Swipe motion example' })).toBeVisible();
   await page.goto('/events');
   const before = await snapshot();
   for (const route of ['/events', '/activities', '/tasks', '/financials/transactions']) {

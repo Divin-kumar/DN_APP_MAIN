@@ -14,7 +14,7 @@ for(const [width,theme] of [[320,'dark'],[430,'dark'],[390,'light']]){
     {title:'Confirm electrician visit',dueDate:future,dueTime:'09:30',priority:'high'},
     {title:'Choose a new bookshelf',priority:'medium'},
     {title:'Measure the window',priority:'low',status:'completed'},
-   ])store.getState().saveTask(item);
+   ])await store.getState().saveTask(item);
   },{past:calendarDate(-2),future:calendarDate(2)});
   // Client-side navigation retains the lazily loaded Story stylesheet.
   await page.getByRole('button',{name:'Open quick create menu'}).click();
