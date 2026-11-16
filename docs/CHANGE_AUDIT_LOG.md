@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-560 | Complete dialog exits after interrupted animations
+
+- **Scope:** Remove closing dialogs immediately when Reduce Motion is active and release the scroll lock if an interrupted animation omits its completion callback. Measure logical touch height without viewport transformation rounding, and select Task filter values from the currently open list.
+- **Evidence:** The preceding full run passed 938 browser cases. Three cases exposed an interrupted Code List exit, subpixel rounding at the filter touch target and an intermittently slow Task Refine journey. Full verification remains required at the new release SHA.
+
 ## CHG-20261116-559 | Keep the narrow navigation labels clear and align full-release checks
 
 - **Scope:** Keep the navigation labels inside their buttons at 320px. Wait for all Guest Task fixture writes before navigation. Measure the dropdown search control before its entrance scale and verify the current glass finish in Task lists and PDF Studio.

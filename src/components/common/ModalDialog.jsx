@@ -241,7 +241,17 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const resting = { y: 0, scale: 1, opacity: 1 };
   const entrance = { y: isSlidingSheet ? 26 : 10, scale: isSlidingSheet ? 1 : .99, opacity: isSlidingSheet ? 1 : .4 };
   const exitDuration = reducedMotion ? 0 : handingOff ? .07 : .14;
-  const moving = isPresent && swipeClosing ? 'close' : 'open';
+  useEffect(() => {
+    if (isPresent) return undefined;
+    // Release the scroll lock even if an interrupted variant skips its completion callback.
+    if (exitDuration === 0) {
+      safeToRemove?.();
+      return undefined;
+    }
+    const cleanup = window.setTimeout(() => safeToRemove?.(), exitDuration * 1000 + 160);
+    return () => window.clearTimeout(cleanup);
+  }, [exitDuration, isPresent, safeToRemove]);
+  const moving = !isPresent || swipeClosing ? 'close' : 'open';
   const sheetVariants = {
     enter: entrance,
     open: { ...resting, transition: { duration: reducedMotion ? 0 : .17, ease: enterEase } },
@@ -265,7 +275,6 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       data-handoff={handingOff ? 'true' : undefined}
       initial={reducedMotion ? false : 'enter'}
       animate={moving}
-      exit="close"
       variants={scrimVariants}
       onAnimationComplete={(phase) => {
         if (phase === 'close' && !isPresent) safeToRemove?.();

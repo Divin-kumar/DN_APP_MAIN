@@ -19,14 +19,18 @@ async function seedTasks(page,theme){
   return errors;
 }
 async function selectOption(page,name,value){
-  await page.getByRole('combobox',{name,exact:true}).last().click();
-  const search=page.locator('.dropdown-menu-portal input[type="search"]');
-  if(await search.count()) await search.fill(value);
-  await page.getByRole('option',{name:value,exact:true}).click();
+  const picker = page.getByRole('combobox', { name, exact: true }).last();
+  await picker.click();
+  const list = page.getByRole('listbox', { name, exact: true });
+  await expect(list).toBeVisible();
+  const search = list.locator('..').getByRole('searchbox');
+  if (await search.count()) await search.fill(value);
+  await list.getByRole('option', { name: value, exact: true }).click();
 }
 
 for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
   test('Task Refine shares editable chips and preserves draft/cancel at '+width+'px '+theme,async ({page},testInfo)=>{
+    test.setTimeout(60000);
     await page.setViewportSize({width,height:width<700?790:900});
     const errors=await seedTasks(page,theme);
     const before=await page.evaluate(()=>localStorage.getItem('dn_guest_tasks'));

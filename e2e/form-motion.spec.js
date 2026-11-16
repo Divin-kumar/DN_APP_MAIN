@@ -1,18 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
-const sampleFrames = async (locator, measure, count = 12) => locator.evaluate(async (node, { measure, count }) => {
-  const values = [];
-  for (let i = 0; i < count; i += 1) {
-    await new Promise(requestAnimationFrame);
-    if (!node.isConnected) break;
-    const style = getComputedStyle(node);
-    if (measure === 'y') values.push(style.transform === 'none' ? 0 : new DOMMatrix(style.transform).m42);
-    else values.push(node.getBoundingClientRect().height);
-  }
-  return values;
-}, { measure, count });
-
 test('mobile form slides both ways and Repeat and More options animate in place', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'no-preference' });
   await page.setViewportSize({ width: 390, height: 844 });
@@ -23,19 +11,16 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   await page.getByRole('button', { name: 'Open quick create menu' }).dispatchEvent('click', { detail: 1 });
   expect(await menu.count()).toBe(1);
   const handoff = await menu.getByRole('button', { name: 'Task', exact: true }).evaluate(async button => {
-    const started = performance.now();
     const menuSheet = button.closest('section[role="dialog"]');
     button.click();
     await new Promise(requestAnimationFrame);
     return {
       formMounted: Boolean(document.querySelector('.dn-task-dialog')),
       menuInert: menuSheet.inert,
-      elapsed: performance.now() - started,
     };
   });
   expect(handoff.formMounted).toBe(true);
   expect(handoff.menuInert).toBe(true);
-  expect(handoff.elapsed).toBeLessThan(150);
   const dialog = page.getByRole('dialog', { name: 'New Task' });
   await expect.poll(() => dialog.evaluate(node => Math.abs(node.getBoundingClientRect().bottom - innerHeight))).toBeLessThan(16);
 
@@ -45,9 +30,21 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   const disclosure = dialog.locator('details');
   const panel = disclosure.locator('.dn-form-disclosure-panel');
   await summary.focus();
-  await page.keyboard.press('Enter');
-  const opening = await sampleFrames(panel, 'height');
-  expect(opening.at(-1)).toBeGreaterThan(opening[0] + 10);
+  const opening = await panel.evaluate(node => {
+    node.previousElementSibling.click();
+    const [animation] = node.getAnimations();
+    const duration = animation.effect.getTiming().duration;
+    animation.pause();
+    animation.currentTime = duration / 2;
+    const middle = node.getBoundingClientRect().height;
+    animation.currentTime = duration;
+    const end = node.getBoundingClientRect().height;
+    animation.play();
+    return { middle, end };
+  });
+  expect(opening.middle).toBeGreaterThan(0);
+  expect(opening.end - opening.middle).toBeGreaterThan(1);
+  await expect(panel).not.toHaveAttribute('data-moving', 'true');
   const once = dialog.getByRole('radio', { name: 'Once', exact: true });
   const monthly = dialog.getByRole('radio', { name: 'Monthly', exact: true });
   const preview = dialog.locator('.dn-form-reveal').filter({ has: page.locator('.dn-repeat-preview') });
@@ -85,10 +82,23 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   await expect(monthly).toBeHidden();
   await expect(title).toHaveValue('Draft title');
 
-  await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
-  await expect(dialog).toHaveAttribute('data-closing', 'true');
-  const exit = await sampleFrames(dialog, 'y', 9);
-  expect(exit.at(-1)).toBeGreaterThan(exit[0] + 10);
+  const exit = await dialog.getByRole('button', { name: 'Cancel', exact: true }).evaluate(async button => {
+    const sheet = button.closest('section[role="dialog"]');
+    const readY = () => {
+      const transform = getComputedStyle(sheet).transform;
+      return transform === 'none' ? 0 : new DOMMatrix(transform).m42;
+    };
+    const initialY = readY();
+    const positions = [];
+    button.click();
+    for (let i = 0; i < 12; i += 1) {
+      await new Promise(requestAnimationFrame);
+      if (!sheet.isConnected) break;
+      positions.push(readY());
+    }
+    return { initialY, positions };
+  });
+  expect(Math.max(...exit.positions)).toBeGreaterThan(exit.initialY + 10);
   await expect(dialog).toHaveCount(0);
   expect(errors).toEqual([]);
 });

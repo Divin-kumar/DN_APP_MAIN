@@ -41,7 +41,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932], [844, 390]]) 
     await expect(sheet.getByRole('button', { name: 'Remove Online' })).toBeVisible();
     const tokens = sheet.locator('.dn-condition-selected-values button');
     const boxes = await tokens.evaluateAll(nodes => nodes.map(node => ({
-      height: node.getBoundingClientRect().height,
+      height: node.offsetHeight,
       text: parseFloat(getComputedStyle(node).fontSize),
     })));
     expect(boxes).toHaveLength(2);
