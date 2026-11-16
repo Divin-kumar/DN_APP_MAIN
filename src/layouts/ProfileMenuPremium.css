@@ -81,13 +81,9 @@ html[data-theme] .dn-header .profile-menu {
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border: 1px solid color-mix(in srgb, var(--color-border) 85%, transparent) !important;
+  border: 1px solid var(--dn-form-line) !important;
   border-radius: 17px !important;
-  background: color-mix(in srgb, var(--color-card) 92%, transparent) !important;
   color: var(--color-text);
-  box-shadow: 0 14px 36px rgba(7, 19, 34, .16), inset 0 1px 0 rgba(255, 255, 255, .11) !important;
-  -webkit-backdrop-filter: blur(20px) saturate(1.12);
-  backdrop-filter: blur(20px) saturate(1.12);
 }
 html[data-theme] .dn-header .profile-menu-account {
   display: grid;
@@ -177,10 +173,4 @@ html[data-theme] .dn-header .profile-menu-danger:focus-visible {
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-header .profile-trigger-chevron,
   html[data-theme] .dn-header .profile-menu { transition: none; animation: none !important; }
-}
-
-/* Subtle dark glass: preserve contrast without a heavy opaque panel. */
-html[data-theme="dark"] .dn-header .profile-menu {
-  background: color-mix(in srgb, var(--color-card) 94%, transparent) !important;
-  box-shadow: 0 16px 38px rgba(0, 0, 0, .31), inset 0 1px 0 rgba(255, 255, 255, .06) !important;
 }

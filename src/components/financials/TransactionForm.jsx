@@ -233,43 +233,42 @@ export default function TransactionForm({
       <FormDisclosure hint={canRepeat && (form.repeatFrequency || repeatNotice)
         ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} notice={repeatNotice} />
         : supportingDetails}>
-      {repeatField}
-      {paymentPlan ? <>{titleField}{categoryField}</> : null}
-      <FormReveal show={!isPlan}>
-      <div className="dn-transaction-links">
-      <div className="dn-transaction-field">
-        <span>Linked Moment (optional)</span>
-        <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
-          onChange={(event) => changeMoment(event.target.value)} disabled={busy}>
-          <option value="">No linked moment</option>
-          {moments.map((moment) => (
-            <option key={moment.value} value={moment.value}>{moment.label}</option>
-          ))}
-          {form.eventId && !selectedMomentExists
-            ? <option value={form.eventId}>Previously linked moment (unavailable)</option> : null}
-        </DropdownSelect>
-      </div>
-      <div className="dn-transaction-field">
-        <span>Linked Activity (optional)</span>
-        <DropdownSelect aria-label="Linked Activity" searchOnDemand searchLabel="Search linked activities" value={form.activityId}
-          onChange={(event) => change('activityId', event.target.value)}
-          disabled={busy || !form.eventId || !selectedMomentExists}
-          placeholder={form.eventId ? 'Choose an activity' : 'Choose a moment first'}>
-          <option value="">No linked activity</option>
-          {activities.map((activity) => (
-            <option key={activity.value} value={activity.value}>{activity.label}</option>
-          ))}
-          {form.activityId && !selectedActivityExists
-            ? <option value={form.activityId}>Previously linked activity (unavailable)</option> : null}
-        </DropdownSelect>
-        {form.eventId && selectedMomentExists && !activities.length
-            ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
-            : null}
-      </div>
-      </div>
-      </FormReveal>
-      <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
-        placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
+        {paymentPlan ? <>{titleField}{categoryField}</> : null}
+        <FormReveal show={!isPlan}>
+          <div className="dn-form-pair">
+            <div className="dn-transaction-field">
+              <span>Moment (optional)</span>
+              <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
+                onChange={(event) => changeMoment(event.target.value)} disabled={busy}>
+                <option value="">No moment</option>
+                {moments.map((moment) => (
+                  <option key={moment.value} value={moment.value}>{moment.label}</option>
+                ))}
+                {form.eventId && !selectedMomentExists
+                  ? <option value={form.eventId}>Previously linked moment (unavailable)</option> : null}
+              </DropdownSelect>
+            </div>
+            <div className="dn-transaction-field">
+              <span>Activity (optional)</span>
+              <DropdownSelect aria-label="Linked Activity" searchOnDemand searchLabel="Search linked activities" value={form.activityId}
+                onChange={(event) => change('activityId', event.target.value)}
+                disabled={busy || !form.eventId || !selectedMomentExists}>
+                <option value="">No activity</option>
+                {activities.map((activity) => (
+                  <option key={activity.value} value={activity.value}>{activity.label}</option>
+                ))}
+                {form.activityId && !selectedActivityExists
+                  ? <option value={form.activityId}>Previously linked activity (unavailable)</option> : null}
+              </DropdownSelect>
+              {form.eventId && selectedMomentExists && !activities.length
+                ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
+                : null}
+            </div>
+          </div>
+        </FormReveal>
+        {repeatField}
+        <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
+          placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       </FormDisclosure>
       {actionsContainer ? createPortal(actions, actionsContainer) : actions}
     </form>

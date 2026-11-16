@@ -36,6 +36,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.getByRole('button', { name: 'Finance', exact: true }).click();
     await expect(page.getByRole('group', { name: 'Report month', exact: true })).toBeVisible();
     await expect(page.locator('.dn-finance-report .lucide-chevron-right, .dn-finance-report .lucide-chevron-down, .dn-finance-report .lucide-arrow-up-right, .dn-finance-report .lucide-arrow-down-left')).toHaveCount(0);
+    const financeGlass = await page.locator('.dn-finance-month-summary').evaluate(el => getComputedStyle(el).backgroundImage);
     await capture('finance');
     await page.getByRole('button', { name: 'Compare months', exact: true }).click();
     await expect(page.getByRole('table')).toBeVisible();
@@ -47,6 +48,8 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await expect(page.getByRole('dialog', { name: 'Upcoming expenses', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /Manage plan/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Edit schedule', exact: true })).toBeVisible();
+    expect(await page.getByRole('dialog', { name: 'Upcoming expenses' })
+      .evaluate(el => getComputedStyle(el).backgroundImage)).toBe(financeGlass);
     await capture('bill');
     await capture('manage');
     await page.getByRole('button', { name: 'Edit schedule', exact: true }).click();

@@ -15,7 +15,7 @@ function RepeatDatePreview({ nextDate, dueDate }) {
 
 export function RepeatSummary({ value, paused = false, dueDate, nextDate, notice }) {
   return <span className="dn-repeat-summary">
-    <span className="dn-repeat-frequency">Repeat: {value && paused ? `${REPEAT_OPTIONS[value]} · Paused` : REPEAT_OPTIONS[value] || 'Once'}</span>
+    <span className="dn-repeat-frequency">{value && paused ? `${REPEAT_OPTIONS[value]} · Paused` : REPEAT_OPTIONS[value] || 'Once'}</span>
     {value && !paused && nextDate ? <span className="dn-repeat-summary-date">Next <time dateTime={nextDate}>{formatScheduleDate(nextDate)}</time></span> : null}
     {notice || (value && !nextDate) ? <span className="dn-repeat-edit-note">
       {notice || <RepeatDatePreview dueDate={dueDate} />}

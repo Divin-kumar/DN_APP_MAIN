@@ -91,9 +91,6 @@ html[data-theme] .dn-task-date-row {
   align-items:start; gap:8px; min-width:0;
 }
 html[data-theme] .dn-task-date-row > * { min-width:0; }
-html[data-theme] .dn-task-fields-row {
-  display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; min-width:0;
-}
 html[data-theme] .dn-task-time-hint {
   margin:0; padding:0 1px;
   color:var(--color-text-muted); font-size:11px; font-weight:450; line-height:1.4;
@@ -124,9 +121,6 @@ html[data-theme] .dn-task-action-confirm button { min-height:44px; }
 }
 @media(max-width:360px) {
   html[data-theme] .dn-task-date-row { grid-template-columns:minmax(0,1fr) minmax(0,1.2fr); gap:6px; }
-}
-@media(max-width:350px) {
-  html[data-theme] .dn-task-fields-row { grid-template-columns:minmax(0,1fr); }
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-task-list .dn-independent-task-row { transition:none; }

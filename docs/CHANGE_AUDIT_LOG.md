@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-556 | Align More options and share the glass finish
+
+- **Scope:** Keep the More options summary on one line. Pair Moment and Activity above Repeat in Task and Transaction forms. Use the DN interface typeface with consistent form label and button weights. Share glass material with quick-create and account menus, Settings navigation, Finance summary and PDF Studio controls.
+- **Compatibility:** Preserve optional links, expense-plan payment linking, repeat eligibility, dates and saved records. Guest tour 2026.11.16.10 describes the revised layout through explicit Refresh demo.
+- **Executed:** 632 Node tests, lint, build and documentation checks passed. Chromium covered the paired links, single-line summary, Repeat order, payment and links, and the glass material in both themes at widths from 320px to desktop. One timing assertion exceeded its threshold in the parallel run and passed three single-worker reruns. Physical iPhone Safari remains a device check.
+
 ## CHG-20261116-555 | Place Save and Cancel with the form fields
 
 - **Scope:** Keep Save and Cancel in the form body in normal view, with equal space and a quiet tint on the primary action. Retain docking for short touch landscape and the phone keyboard. Give disabled Time text a muted color inside a uniform field surface.

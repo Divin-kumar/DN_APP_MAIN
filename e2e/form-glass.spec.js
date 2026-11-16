@@ -20,6 +20,14 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       Transaction: 'Add Transaction', Task: 'New Task', Moment: 'Create a life moment', Activity: 'Add an activity',
     };
     let transactionMaterial;
+    await page.getByRole('button', { name: 'Open profile and account menu' }).click();
+    const profile = page.getByRole('menu', { name: 'Profile and account' });
+    await expect(profile).toBeVisible();
+    const profileGlass = await profile.evaluate(el => getComputedStyle(el).backgroundImage);
+    await profile.getByRole('menuitem', { name: 'Settings', exact: true }).click();
+    await expect(page).toHaveURL(/\/settings$/);
+    const settingsGlass = await page.locator('.settings-navigation-hub').evaluate(el => getComputedStyle(el).backgroundImage);
+    await page.goto('/dashboard');
     for (const kind of ['Transaction', 'Task', 'Moment', 'Activity']) {
       await page.getByRole('button', { name: 'Open quick create menu' }).click();
       await page.getByRole('button', { name: kind === 'Moment' ? 'Life moment' : kind, exact: true }).click();
@@ -34,8 +42,11 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       expect(material.background).not.toBe('none');
       expect(material.blur).toContain('blur');
       expect(material.scrimBlur).toBe('none');
-      if (kind === 'Transaction') transactionMaterial = material;
-      else expect(material).toEqual(transactionMaterial);
+      if (kind === 'Transaction') {
+        transactionMaterial = material;
+        expect(material.background).toBe(profileGlass);
+        expect(material.background).toBe(settingsGlass);
+      } else expect(material).toEqual(transactionMaterial);
       if (kind === 'Task') {
         const title = dialog.getByRole('textbox', { name: 'Task title' });
         expect(await title.evaluate(el => el.getBoundingClientRect().width / el.closest('label').getBoundingClientRect().width)).toBeGreaterThan(.95);
@@ -64,13 +75,42 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         expect(await dialog.locator('summary').evaluate(el => getComputedStyle(el, '::after').content)).toBe('none');
         const more = dialog.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'More options' }) });
         await expect(dialog.getByRole('radio', { name: 'Monthly', exact: true })).toBeHidden();
-        await more.locator('summary').click();
+        const summary = more.locator('summary');
+        const summaryIsInline = () => summary.evaluate(row => {
+          const label = row.querySelector(':scope > span').getBoundingClientRect();
+          const hint = row.querySelector('small');
+          const info = hint.getBoundingClientRect();
+          return Math.abs(label.top - info.top) < 2 && info.left > label.right
+            && info.height <= parseFloat(getComputedStyle(hint).lineHeight) + 1;
+        });
+        expect(await summaryIsInline()).toBe(true);
+        await summary.click();
         await expect(more.locator('details')).toHaveCount(0);
+        const momentName = kind === 'Transaction' ? 'Linked Moment' : 'Moment (optional)';
+        const activityName = kind === 'Transaction' ? 'Linked Activity' : 'Activity (optional)';
+        const moment = more.getByRole('combobox', { name: momentName, exact: true });
+        const activity = more.getByRole('combobox', { name: activityName, exact: true });
+        const [momentBox, activityBox, repeatBox] = await Promise.all([
+          moment.boundingBox(), activity.boundingBox(), more.getByRole('group', { name: 'Repeat', exact: true }).boundingBox(),
+        ]);
+        expect(Math.abs(momentBox.y - activityBox.y)).toBeLessThan(1);
+        expect(Math.abs(momentBox.width - activityBox.width)).toBeLessThan(1);
+        expect(activityBox.x).toBeGreaterThan(momentBox.x);
+        expect(repeatBox.y).toBeGreaterThanOrEqual(activityBox.y + activityBox.height);
+        await expect(activity).toBeDisabled();
+        await expect(activity.locator('.dropdown-label-short')).toHaveText('No activity');
+        expect(await activity.evaluate(el => el.firstElementChild.scrollWidth <= el.firstElementChild.clientWidth + 1)).toBe(true);
+        if (kind === 'Transaction') {
+          await testInfo.attach(`transaction-options-${theme}`, {
+            body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
+          });
+        }
         await expect(more.locator('.dn-repeat-preview')).toHaveCount(0);
         await more.getByRole('radio', { name: 'Monthly', exact: true }).check();
         await expect(more.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
         await more.locator('summary').click();
-        await expect(more.locator('summary')).toContainText('Monthly');
+        await expect(summary).toContainText('Monthly');
+        expect(await summaryIsInline()).toBe(true);
         await more.locator('summary').click();
         await expect(more.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
       }

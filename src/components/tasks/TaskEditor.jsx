@@ -5,7 +5,6 @@ import { createPortal } from 'react-dom';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
-import FormReveal from '../common/FormReveal';
 import { useDialogFormFooter } from '../common/ModalDialog';
 import { RepeatActionSummary, RepeatField, RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
@@ -104,41 +103,42 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       ? <RepeatSummary value={repeatFrequency} paused={task?.status === 'cancelled'}
         dueDate={dueDate} nextDate={nextRepeat} notice={repeatNotice} />
       : task?.status === 'completed' ? 'Priority, links and notes' : 'Once · Priority and notes'}>
+      <div className="dn-task-field">
+        <label htmlFor="dn-task-priority">Priority</label>
+        <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
+          <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+        </DropdownSelect>
+      </div>
+      <div className="dn-form-pair">
+        <div className="dn-task-field">
+          <label htmlFor="dn-task-moment">Moment (optional)</label>
+          <DropdownSelect disabled={busy} id="dn-task-moment" value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
+            <option value="">Standalone Task</option>
+            {moments.map((item) => <option key={recordId(item.id) || recordId(item.firestoreId)}
+              value={recordId(item.id) || recordId(item.firestoreId)}>{item.name || 'Untitled Moment'}</option>)}
+            {momentAlias ? <option value={momentId}>{parent.name || 'Untitled Moment'}</option> : null}
+            {momentId && !parent ? <option value={momentId}>Unavailable Moment (preserve link)</option> : null}
+          </DropdownSelect>
+        </div>
+        <div className="dn-task-field">
+          <label htmlFor="dn-task-activity">Activity (optional)</label>
+          <DropdownSelect disabled={busy || !momentId} id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
+            <option value="">{momentId ? 'Moment only' : 'No activity'}</option>
+            {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
+            {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
+              ? 'Historical Activity link (preserved)' : 'Unavailable Activity (preserve link)'}</option> : null}
+          </DropdownSelect>
+        </div>
+      </div>
       {task?.status !== 'completed' ? <RepeatField value={repeatFrequency} paused={task?.status === 'cancelled'}
         onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
         {task?.status === 'cancelled' ? 'Resume keeps this due date.' : 'Done or Skip creates the next Task. Pause keeps this due date for later.'}
         {momentId ? ' Moment and Activity links apply to this Task only.' : null}
       </RepeatField> : null}
-    <div className="dn-task-fields-row">
-      <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
-        <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
-          <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
-        </DropdownSelect>
-      </div>
-      <div className="dn-task-field"><label htmlFor="dn-task-moment">Moment (optional)</label>
-        <DropdownSelect disabled={busy} id="dn-task-moment" value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
-          <option value="">Standalone Task</option>
-          {moments.map((item) => <option key={recordId(item.id) || recordId(item.firestoreId)}
-            value={recordId(item.id) || recordId(item.firestoreId)}>{item.name || 'Untitled Moment'}</option>)}
-          {momentAlias ? <option value={momentId}>{parent.name || 'Untitled Moment'}</option> : null}
-          {momentId && !parent ? <option value={momentId}>Unavailable Moment (preserve link)</option> : null}
-        </DropdownSelect>
-      </div>
-    </div>
-    <FormReveal show={Boolean(momentId)}>
-    <div className="dn-task-field"><label htmlFor="dn-task-activity">Activity (optional)</label>
-      <DropdownSelect disabled={busy} id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
-        <option value="">Only link to Moment</option>
-        {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
-        {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
-          ? 'Historical Activity link (preserved)' : 'Unavailable Activity (preserve link)'}</option> : null}
-      </DropdownSelect>
-    </div>
-    </FormReveal>
-    <label className="dn-task-field">Notes (optional)
-      <textarea disabled={busy} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
-        placeholder="Helpful details" />
-    </label>
+      <label className="dn-task-field">Notes (optional)
+        <textarea disabled={busy} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
+          placeholder="Helpful details" />
+      </label>
     </FormDisclosure>
     {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
       {task.status === 'cancelled'

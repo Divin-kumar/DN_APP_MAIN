@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Paired form links and shared glass surfaces (16 November 2026, development)
+
+More options places the label, a single-line summary and the expand indicator on one row. Task and Transaction forms pair the optional Moment and Activity links above Repeat. Activity becomes available when its parent Moment is selected. Expense plans hide the links while repeating because each recorded payment owns those links. Labels, selectors and actions use the DN interface typeface and common size and weight tokens. The quick-create and account menus, Settings navigation, Finance summary and PDF Studio controls use the same light and dark glass material as the forms. Guest tour edition 2026.11.16.10 explains the paired links and Repeat placement through explicit Refresh demo.
+
 ## Even form fields and lightweight actions (16 November 2026, development)
 
 Transaction forms use equal columns for Title and Amount and for Transaction Type and Category. The Date and Time controls share equal outer dimensions, with Clear time inside the Time field edge. Cash, Online and Choose at payment share equal-width choices and a common touch height. The longest choice can wrap inside its button on narrow phones. Longer configured method lists scroll horizontally. Shared form action rows use the surrounding surface, with equal space for a plain Cancel and a softly tinted Save. In normal view, these actions follow the fields within the form. Task, Transaction and bill actions dock below the scrollable content when the keyboard is open or a short touch landscape layout needs the space.

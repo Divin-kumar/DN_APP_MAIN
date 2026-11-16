@@ -1,4 +1,4 @@
-/* Shared materials for dialogs, inline editors and settings controls. */
+/* Shared materials for dialogs, menus and workspace controls. */
 html[data-theme] {
   --dn-form-glass: linear-gradient(145deg, rgb(126 165 226 / 14%), transparent 68%), rgb(15 24 41 / 78%);
   --dn-form-field: rgb(210 228 255 / 5%);
@@ -6,9 +6,14 @@ html[data-theme] {
   --dn-form-highlight: rgb(223 237 255 / 13%);
   --dn-form-scrim: rgb(3 8 18 / 37%);
   --dn-form-shadow: rgb(0 0 0 / 25%);
+  --dn-form-gap: 12px;
+  --dn-form-label-size: calc(var(--font-caption) + 1px);
+  --dn-form-label-weight: 500;
+  --dn-form-action-size: calc(var(--font-body) - 1px);
+  --dn-form-action-weight: 550;
 }
 html[data-theme="light"] {
-  --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 90%), rgb(231 239 252 / 58%));
+  --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 76%), transparent), rgb(231 239 252 / 58%);
   --dn-form-field: rgb(255 255 255 / 38%);
   --dn-form-line: rgb(51 77 112 / 16%);
   --dn-form-highlight: rgb(255 255 255 / 84%);
@@ -78,17 +83,36 @@ html[data-theme] body .dn-form-disclosure {
 html[data-theme] body .dn-form-disclosure > summary {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) 16px;
+  align-items: center;
   box-sizing: border-box;
   min-height: 44px;
-  gap: 8px;
+  gap: 7px;
   padding: 7px 2px;
-  font-weight: 600;
+  font-size: var(--dn-form-action-size);
+  font-weight: var(--dn-form-action-weight);
+  line-height: 1.35;
+  white-space: nowrap;
 }
 html[data-theme] body .dn-form-disclosure > summary > small {
   color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 1.4;
-  overflow-wrap: anywhere;
+  font-size: var(--font-caption);
+  font-weight: 450;
+  line-height: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+html[data-theme] body .dn-form-disclosure > summary .dn-repeat-summary {
+  display: inline;
+}
+html[data-theme] body .dn-form-disclosure > summary .dn-repeat-summary > span {
+  display: inline;
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  color: inherit;
+}
+html[data-theme] body .dn-form-disclosure > summary .dn-repeat-summary > span + span::before {
+  content: ' · ';
 }
 html[data-theme] body .dn-form-disclosure > summary > svg {
   grid-column: 3;
@@ -138,8 +162,8 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .code-lists-page) :is
     max-width: 100%;
     padding: 6px 14px !important;
     border-radius: 999px !important;
-    font-size: 13px !important;
-    font-weight: 600 !important;
+    font-size: var(--dn-form-action-size) !important;
+    font-weight: var(--dn-form-action-weight) !important;
     line-height: 1.25 !important;
     white-space: normal;
     text-align: center;
@@ -182,10 +206,36 @@ html[data-theme] body :is(
     margin: 0;
   }
 }
-html[data-theme] body .dropdown-menu.dropdown-menu-portal {
-  background: var(--dn-form-glass) !important; border-color: var(--dn-form-line) !important;
-  box-shadow: 0 12px 32px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight);
-  -webkit-backdrop-filter: blur(24px); backdrop-filter: blur(24px);
+@media screen {
+  html[data-theme] body :is(.dropdown-menu.dropdown-menu-portal, .dn-header .profile-menu, .dn-quick-create-menu) {
+    background: var(--dn-form-glass) !important;
+    border-color: var(--dn-form-line) !important;
+    box-shadow: 0 12px 32px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight) !important;
+    -webkit-backdrop-filter: blur(20px) saturate(1.24);
+    backdrop-filter: blur(20px) saturate(1.24);
+  }
+  html[data-theme] body :is(
+    .insights-page .dn-finance-month-summary, .dn-pdf-studio-controls, .dn-settings-redesign .settings-navigation-hub
+  ) {
+    background: var(--dn-form-glass) !important;
+    border-color: var(--dn-form-line);
+    box-shadow: inset 0 1px var(--dn-form-highlight);
+  }
+  html[data-theme] body .dn-settings-redesign .settings-navigation-hub {
+    padding-inline: 10px;
+    border: 1px solid var(--dn-form-line);
+    border-radius: 16px;
+  }
+  html[data-theme] body .dn-settings-redesign .settings-navigation-hub > .settings-hub-card:last-child {
+    border-bottom: 0 !important;
+  }
+}
+html[data-theme] body .dn-command-dialog :is(
+  .dn-command-destinations a:not([aria-current="page"]) .dn-command-destination-icon,
+  .dn-command-actions button svg
+) {
+  background: var(--dn-form-field);
+  box-shadow: inset 0 0 0 1px var(--dn-form-line);
 }
 html[data-theme] body .dropdown-menu-portal .dropdown-search-wrap {
   background: var(--dn-form-field); border-color: var(--dn-form-line);
@@ -201,7 +251,10 @@ html[data-theme] body .dropdown-menu-portal .dropdown-search-wrap {
     --dn-form-glass: var(--color-card);
     --dn-form-field: var(--color-card-raised);
   }
-  html[data-theme] body :is(.dn-login-card, .dropdown-menu.dropdown-menu-portal),
+  html[data-theme] body :is(
+    .dn-login-card, .dropdown-menu.dropdown-menu-portal, .dn-header .profile-menu,
+    .dn-quick-create-menu, .insights-page .dn-finance-month-summary
+  ),
   html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"][aria-modal="true"] {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
   }
@@ -225,12 +278,15 @@ html[data-theme] body .dn-form-disclosure > summary::after { content: none; disp
 html[data-theme] body :is(.dn-modal, form, .settings-page) .dropdown-trigger > .lucide-chevron-down { display: none; }
 html[data-theme] body .dn-form-disclosure[open] > summary { color: var(--color-text); }
 html[data-theme] body .dn-repeat-options { background: transparent; padding: 0; gap: 6px; }
-html[data-theme] body .dn-repeat-option > span { border-radius: 12px; font-weight: 500; }
+html[data-theme] body .dn-repeat-option > span {
+  border-radius: 12px;
+  font-size: var(--dn-form-action-size);
+  font-weight: var(--dn-form-action-weight);
+}
 
 /* Common field rhythm. Keep the native controls and their existing hit areas. */
-html[data-theme] {
-  --dn-form-gap: 12px;
-  --dn-form-label-size: 13px;
+html[data-theme] body :is(.dn-modal, form.form-surface, form.dn-task-editor, .settings-page, .dn-pdf-studio-controls) {
+  font-family: var(--font-family-ui);
 }
 html[data-theme] body :is(form.form-surface, form.dn-task-editor, form.dn-activity-create-form) {
   gap: var(--dn-form-gap);
@@ -240,10 +296,11 @@ html[data-theme] body :is(form, .dn-modal, .settings-page, .dn-pdf-studio-contro
 ) { font-weight: 500; }
 html[data-theme] body :is(form.form-surface, form.dn-task-editor, form.dn-activity-create-form) :is(
   label:not(:has(input[type="radio"], input[type="checkbox"])),
-  .dn-transaction-field > span, .dn-payment-method-field > legend, .dn-document-label
+  .dn-transaction-field > span, .dn-payment-method-field > legend, .dn-repeat-field > legend,
+  .dn-document-label, .dn-rich-editor-label
 ) {
   font-size: var(--dn-form-label-size);
-  font-weight: 550;
+  font-weight: var(--dn-form-label-weight);
   line-height: 1.35;
   color: var(--color-text-muted);
 }
@@ -258,6 +315,10 @@ html[data-theme] body .dn-form-pair {
   align-items: start;
   gap: 8px;
   min-width: 0;
+}
+html[data-theme] body .dn-form-pair .dropdown-trigger {
+  font-size: var(--font-body) !important;
+  padding-inline: 10px !important;
 }
 html[data-theme] body .dn-form-pair.dn-activity-create-moment-fields { grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); }
 html[data-theme] body .activity-date-time-row {
@@ -293,7 +354,7 @@ html[data-theme] body .activity-date-time-row > :is(.date-field, .activity-time-
 html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-time-field > label) {
   margin: 0;
   font-size: var(--dn-form-label-size);
-  font-weight: 550;
+  font-weight: var(--dn-form-label-weight);
   line-height: 1.35;
   color: var(--color-text-muted);
 }
