@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-563 | Keep double-tap Back and short expense forms reliable
+
+- **Scope:** Recognize the browser's second click on the open + menu if a busy frame has already cleared the first-tap timer. Scope Task filter choices to the open list and verify that Save expense plan is reachable by scrolling a short sheet.
+- **Verification:** The previous full run passed 938 cases. The three remaining cases covered a late second click, a stale filter portal and Save below the fold.
+
 ## CHG-20261116-562 | Keep the Task draft in place across confirmations
 
 - **Scope:** Open Task confirmations at the top of the current sheet with a brief fade. Keep editing restores the open fields, prior scroll position and action focus. Long Task Moment and Activity lists adopt the Transaction form's on-demand search.

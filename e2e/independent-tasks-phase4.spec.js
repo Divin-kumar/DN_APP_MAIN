@@ -3,9 +3,11 @@ import { seedGuest, accountScope } from './fixtures.js';
 
 async function choose(page, name, value) {
   await page.getByRole('combobox', { name, exact: true }).last().click();
-  const search = page.locator('.dropdown-menu-portal input[type="search"]');
+  const list = page.getByRole('listbox', { name, exact: true });
+  await expect(list).toBeVisible();
+  const search = list.locator('..').getByRole('searchbox');
   if (await search.count()) await search.fill(value);
-  await page.getByRole('option', { name: value, exact: true }).click();
+  await list.getByRole('option', { name: value, exact: true }).click();
 }
 async function addStatusRule(page, sheet, value) {
   await sheet.getByRole('button', { name: 'Add filter', exact: true }).click();

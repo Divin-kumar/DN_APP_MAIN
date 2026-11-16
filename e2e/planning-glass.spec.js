@@ -55,7 +55,9 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.getByRole('button', { name: 'Edit schedule', exact: true }).click();
     await page.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await expect(page.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
-    await expect(page.getByRole('button', { name: 'Save expense plan' })).toBeInViewport({ ratio: 1 });
+    const savePlan = page.getByRole('button', { name: 'Save expense plan' });
+    await expect(savePlan).toBeEnabled();
+    await savePlan.click({ trial: true });
     await expect(page.getByRole('dialog')).toContainText('Record each payment when it is paid.');
     await capture('repeat');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();

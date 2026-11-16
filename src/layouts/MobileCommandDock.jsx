@@ -209,7 +209,9 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       setOpen(previous => !previous);
       return;
     }
-    if (tapTimer.current !== null) {
+    // Pointer capture can deliver the browser's second click after a busy
+    // frame clears the timer. Honor that click if this menu is still open.
+    if (tapTimer.current !== null || (open && event.detail === 2)) {
       closeMenu();
       // React Router history index prevents leaving DN for an external origin.
       if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1);
