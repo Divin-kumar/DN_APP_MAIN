@@ -333,7 +333,7 @@ html[data-theme] .dn-finance-months button {
 
 html[data-theme] .dn-finance-breakdown button {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, auto) 15px;
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
   width: 100%;
   align-items: center;
   gap: 6px;
@@ -533,7 +533,7 @@ html[data-theme] .insights-page .dn-finance-period {
 html[data-theme] .insights-page .dn-finance-period:hover { background: var(--dn-planning-field); }
 html[data-theme] .insights-page .dn-finance-tools button {
   border-color: var(--dn-planning-line); background: var(--dn-planning-surface);
-  border-radius: 14px; box-shadow: inset 0 1px rgb(255 255 255 / 8%);
+  border-radius: 999px; box-shadow: var(--dn-planning-shadow);
 }
 html[data-theme] .insights-page .dn-finance-tools button[aria-expanded="true"] {
   background: var(--dn-planning-selected); border-color: color-mix(in srgb, var(--color-primary) 40%, transparent);
@@ -576,4 +576,19 @@ html[data-theme] .insights-page .insights-panel-heading > span { border-radius: 
   html[data-theme] .insights-page :is(.dn-insights-views, .dn-finance-month-summary) {
     -webkit-backdrop-filter: none; backdrop-filter: none;
   }
+}
+
+/* Quiet, tactile report controls; selection is communicated without arrows. */
+html[data-theme] .insights-page .dn-finance-period {
+  border: 1px solid var(--dn-planning-line); background: var(--dn-planning-field);
+  border-radius: 999px; margin-block: 6px;
+}
+html[data-theme] .insights-page .dn-finance-report-action {
+  min-height: 44px; padding: 8px 12px; border-radius: 999px;
+  border: 1px solid var(--dn-planning-line); background: var(--dn-planning-field);
+  color: var(--color-text); font-weight: 600;
+}
+html[data-theme] .insights-page .dn-finance-breakdown button { min-height: 52px; }
+html[data-theme] .insights-page .dn-finance-breakdown button[aria-pressed="true"] {
+  box-shadow: inset 3px 0 var(--color-primary);
 }

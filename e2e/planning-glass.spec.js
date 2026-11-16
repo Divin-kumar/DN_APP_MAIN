@@ -32,6 +32,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.goto('/insights');
     await page.getByRole('button', { name: 'Finance', exact: true }).click();
     await expect(page.getByRole('combobox', { name: 'Report month' })).toBeVisible();
+    await expect(page.locator('.dn-finance-report .lucide-chevron-right, .dn-finance-report .lucide-chevron-down, .dn-finance-report .lucide-arrow-up-right, .dn-finance-report .lucide-arrow-down-left')).toHaveCount(0);
     await capture('finance');
     await page.getByRole('button', { name: 'Compare months', exact: true }).click();
     await expect(page.getByRole('table')).toBeVisible();
@@ -48,6 +49,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.locator('.dn-repeat-disclosure > summary').click();
     await expect(page.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Save expense plan' })).toBeInViewport({ ratio: 1 });
+    await expect(page.getByRole('dialog')).toContainText('Only recorded payments count as spending.');
     await capture('repeat');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     await page.getByRole('button', { name: /Skip this occurrence/ }).click();
@@ -83,6 +85,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await task.click();
     await page.getByRole('menuitem', { name: 'Pause repeat', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Pause repeat?', exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Pause repeat', exact: true })).not.toHaveClass(/modal-danger-button/);
     await capture('task-pause');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(errors).toEqual([]);

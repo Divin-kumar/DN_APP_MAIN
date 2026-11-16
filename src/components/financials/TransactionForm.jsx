@@ -168,7 +168,8 @@ export default function TransactionForm({
   const repeatField = canRepeat ? <RepeatDisclosure value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
     nextDate={nextRepeat} dueDate={form.date} notice={repeatNotice} allowOneTime={!expensePlan}>
-    {presetLink?.eventId || form.eventId ? 'Choose the Moment or Activity when you record each payment.' : null}
+    Only recorded payments count as spending. Record or skip each bill to advance its due date.
+    {presetLink?.eventId || form.eventId ? ' Choose the Moment or Activity when you record each payment.' : null}
   </RepeatDisclosure> : null;
   const amount = <label className="dn-transaction-field">
     <span>{paymentPlan ? 'Amount paid *' : isPlan ? <>Expected amount&nbsp;*</> : 'Amount *'}</span>

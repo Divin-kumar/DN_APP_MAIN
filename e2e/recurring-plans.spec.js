@@ -362,7 +362,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(plans.locator('..')).toHaveCSS('backdrop-filter', 'none');
   await expect(recordPayment).toHaveCSS('min-height', '44px');
   await expect(recordPayment).toHaveAccessibleDescription(/₹799 Overdue.*31 Jan 2026.*Monthly/);
-  await recordPayment.getByText('Record', { exact: true }).click();
+  await recordPayment.getByText('Record payment', { exact: true }).click();
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
   await expect(payment.getByRole('heading', { name: 'Record payment' })).toBeFocused();
   expect(await sheet.getAttribute('aria-labelledby')).toBe(await payment.getByRole('heading').getAttribute('id'));
@@ -438,7 +438,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(skip.getByText('Home internet', { exact: true })).toBeVisible();
   await expect(skip.locator('dl > div').filter({ hasText: 'Scheduled for' }).locator('time')).toHaveAttribute('datetime', '2026-02-28');
   await expect(skip.locator('dl > div').filter({ hasText: 'Next due' }).locator('time')).toHaveAttribute('datetime', '2026-03-31');
-  await expect(skip.getByText('Spending totals reflect recorded payments.')).toBeVisible();
+  await expect(skip.getByText('Move to the next due date without recording a payment. Spending totals stay unchanged.')).toBeVisible();
   const plansBeforeSkip = await readGuest(page, 'dn_guest_expense_plans');
   await skip.getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(skipOccurrence).toBeFocused();

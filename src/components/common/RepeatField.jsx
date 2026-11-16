@@ -57,7 +57,7 @@ function RepeatField({ value, onChange, disabled, nextDate, dueDate, notice, chi
     </div>
     {value || notice ? <div className="dn-repeat-preview">
       <p role="status">
-        {value ? paused && nextDate ? 'Repeat paused.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : null}
+        {value ? paused ? 'Repeat paused. Resume it from Task actions.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : null}
         {notice ? <span className="dn-repeat-edit-note">{notice}</span> : null}
       </p>
       {value && children ? <p>{children}</p> : null}

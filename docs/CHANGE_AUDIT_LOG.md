@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-517 | Clarify recurring actions and refine glass controls | 16 November 2026 | OldVersion development
+
+- **Scope:** Review Task creation/editing, Done/Skip/Pause/Resume, expense scheduling/payment/skip/end, receipts, stale-record guards and backup paths. Label Record payment explicitly; explain schedule advancement and spending effects; make paused previews consistent; use non-destructive styling for reversible repeat pauses. Refine frequency, payment, management, month and report buttons with rounded surfaces, pressed feedback and focus rings. Remove decorative arrows from Insights and management rows.
+- **Compatibility:** Preserve date anchors, one-occurrence advancement, payment deduplication, filters, exports, fixed footers, focus/scroll return and storage. Guest tour 2026.11.16.3 updates its button label only via explicit Refresh demo. No personal-data reset, production/version or backend change.
+- **Executed:** Production build passed. Initial Node suite: 630/632 passed; moved the shared control rules before the iPhone field-size safeguards, then all 22 affected UX contract tests passed. Source review covered weekly/yearly/month-end dates, duplicate payment protection and history. Expanded mobile tests check arrow removal, schedule guidance and non-destructive pause, with existing recurring and Finance journeys in the opt-in CI lane.
+- **Unverified:** Local preview routing returned a blank page, so visual acceptance is deferred to CI screenshots. Native Safari and VoiceOver require device review. Development publication follows the standing authorization.
+
 ### CHG-516 | Consistent glass across Finance and recurring workflows | 16 November 2026 | OldVersion development
 
 - **Scope:** Shared light/dark materials for Insights tabs, summary, comparisons, category breakdown, Overview panels, recurring Task rows, schedule fields, frequency/payment choices, bill lists, management actions, payment forms, confirmations, feedback and receipts. Apply the sheet material on desktop as well as phones; resolve missing desktop field colour variables.

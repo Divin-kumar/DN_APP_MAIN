@@ -247,7 +247,7 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-menu-actions button {
   width: 100%;
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr) 16px;
+  grid-template-columns: 18px minmax(0, 1fr);
   align-items: center;
   gap: 12px;
   min-height: 54px;
@@ -386,11 +386,11 @@ html[data-theme] .dn-expense-plan-heading {
 }
 html[data-theme] .dn-expense-plan-row + .dn-expense-plan-row { border-top-color: var(--dn-planning-line); }
 html[data-theme] .dn-expense-plan-row-actions {
-  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-  width: min(100%, 260px); gap: 6px;
+  display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
+  width: min(100%, 300px); gap: 8px;
 }
 html[data-theme] .dn-expense-plan-row-actions > button {
-  min-width: 0; padding-inline: 4px; border-radius: 13px; border: 1px solid var(--dn-planning-line);
+  min-width: 0; padding-inline: 4px; border-radius: 999px; border: 1px solid var(--dn-planning-line);
   background: var(--dn-planning-field); color: var(--color-text); font-weight: 600;
 }
 html[data-theme] .dn-expense-plan-row-actions .dn-expense-plan-record { background: var(--dn-planning-selected); color: var(--action-ink); }
@@ -401,7 +401,7 @@ html[data-theme] .dn-payment-context {
 }
 html[data-theme] .dn-expense-plan-menu-actions { gap: 6px; }
 html[data-theme] .dn-expense-plan-menu-actions button {
-  padding: 10px; border: 1px solid transparent; border-radius: 14px;
+  padding: 14px 12px; border: 1px solid var(--dn-planning-line); border-radius: 16px;
   background: var(--dn-planning-field);
 }
 html[data-theme] .dn-expense-plan-menu-actions button.is-danger { background: color-mix(in srgb, var(--color-danger) 5%, transparent); }

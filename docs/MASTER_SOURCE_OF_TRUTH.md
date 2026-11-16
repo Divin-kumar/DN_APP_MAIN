@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Recurring action clarity and restrained report controls (16 November 2026, development)
+
+Upcoming bills explicitly label the primary action Record payment. Manage explains what Edit schedule and End repeat do; Skip confirms that it advances the date without recording spending. Expense repeat settings explain that only saved payments count as spending and each payment or skip advances one due date. Task repeat settings explain Done, Skip and Pause. Paused previews consistently show the paused state even when no next date can be calculated. Pausing a repeating Task uses a normal confirmation treatment in both the list and editor; deletion remains destructive. No schedule or payment is processed automatically.
+
+Insights removes decorative trend arrows, month chevrons and category-row arrows. The labelled calendar month control remains selectable; selected report and category controls retain their visible tint. Rounded glass report, payment and frequency controls include pressed and keyboard-focus states. Guest tour edition 2026.11.16.3 updates the Record payment label after explicit Refresh demo; existing personal/demo records are not reset. Storage, calendar anchors, payment deduplication, backup and report totals are unchanged.
+
 ## Consistent glass for Finance and planning (16 November 2026, development)
 
 Finance navigation, the monthly summary, comparison and category reports, recurring Task rows, expense-plan entry, payment method choices, schedule editors, confirmation date summaries and payment receipts share theme-aware glass materials. Both desktop dialogs and phone sheets use the same field, border and action colours. Selected controls retain a visible tint and border, and due/overdue labels retain their semantic colours. Save and confirmation actions stay below the scrollable body. Reduced-transparency preferences use opaque materials. Guest tour 2026.11.16.2 still describes these unchanged interactions; no refresh is needed for the visual update.

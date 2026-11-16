@@ -1,7 +1,7 @@
 // This page turns the stored event, income, and expense data into charts and summaries.
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, Archive, ArrowDownRight, ArrowUpRight, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
+import { Activity, Archive, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
@@ -208,7 +208,7 @@ export default function Insights() {
         <section className="insights-panel">
           <PanelHeading icon={Activity} title="Monthly activity" detail="New activity by month · last six months" />
           <div className="insights-bar-chart">{monthlyActivity.map((month) => <div className="insights-bar-column" key={month.label}><span>{month.count}</span><i><b style={{ height: `${Math.max(5, (month.count / activityMax) * 100)}%` }} /></i><small>{month.label}</small></div>)}</div>
-          <div className="insights-summary-line"><span>Completion rate</span><strong>{activities.length ? `${Math.round((completedActivities / activities.length) * 100)}%` : '—'}</strong><span className="insights-summary-icon"><ArrowUpRight size={15} /></span></div>
+          <div className="insights-summary-line"><span>Completion rate</span><strong>{activities.length ? `${Math.round((completedActivities / activities.length) * 100)}%` : '—'}</strong></div>
         </section>
 
         <section className="insights-panel">
@@ -219,12 +219,12 @@ export default function Insights() {
 
         <section className="insights-panel">
           <PanelHeading icon={WalletCards} title="Financial overview" detail="Income and expenses in context" />
-          <div className="financial-insight-totals"><div><span><ArrowUpRight size={14} /> Income</span><strong>{money(totalIncome)}</strong></div><div><span><ArrowDownRight size={14} /> Expenses</span><strong>{money(totalExpenses)}</strong></div><div><span>Balance</span><strong>{money(totalIncome - totalExpenses)}</strong></div></div>
+          <div className="financial-insight-totals"><div><span>Income</span><strong>{money(totalIncome)}</strong></div><div><span>Expenses</span><strong>{money(totalExpenses)}</strong></div><div><span>Balance</span><strong>{money(totalIncome - totalExpenses)}</strong></div></div>
           <div className="insights-bar-chart insights-expense-chart">{monthlyExpenses.map((month) => <div className="insights-bar-column" key={month.label}><span>{month.amount ? money(month.amount) : '—'}</span><i><b style={{ height: `${Math.max(5, (month.amount / expenseMax) * 100)}%` }} /></i><small>{month.label}</small></div>)}</div>
         </section>
 
         <section className="insights-panel">
-          <PanelHeading icon={ArrowDownRight} title="Spending by category" detail="Where expenses are recorded" />
+          <PanelHeading icon={WalletCards} title="Spending by category" detail="Where expenses are recorded" />
           {expenseCategoryRows.length ? <div className="category-insight-list">{expenseCategoryRows.map(([category, amount]) => <div key={category} className="category-insight-row"><span>{category}</span><i aria-hidden="true"><b style={{ width: `${Math.max(8, (amount / Math.max(1, totalExpenses)) * 100)}%` }} /></i><strong>{money(amount)}</strong></div>)}</div> : <p className="insights-muted">Add expenses to see your spending breakdown.</p>}
         </section>
 

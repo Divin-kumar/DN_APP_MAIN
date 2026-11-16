@@ -65,7 +65,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <button type="button" className="secondaryButton" disabled={busy} onClick={pendingAction ? () => setPendingAction(null) : onClose}>
         {pendingAction ? 'Keep editing' : 'Cancel'}
       </button>
-      {pendingAction ? <button type="button" className={pendingAction === 'restore' ? 'primaryButton' : 'modal-danger-button'}
+      {pendingAction ? <button type="button" className={pendingAction === 'delete' || (pendingAction === 'cancel' && !task?.repeat) ? 'modal-danger-button' : 'primaryButton'}
         disabled={busy} onClick={() => onTaskAction(pendingAction)}>{actionLabel}</button>
         : <button type="submit" form={formId} className="primaryButton" disabled={!canSave}>
         {busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}
@@ -98,7 +98,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
       {task?.status !== 'completed' ? <RepeatDisclosure value={repeatFrequency} paused={task?.status === 'cancelled'}
         onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
-        {momentId ? 'Moment and Activity links apply to this Task only.' : null}
+        {task?.status === 'cancelled' ? 'Resume keeps this due date.' : 'Done or Skip creates the next Task. Pause keeps this due date for later.'}
+        {momentId ? ' Moment and Activity links apply to this Task only.' : null}
       </RepeatDisclosure> : null}
     </div>
     <FormDisclosure label="More options" hint="Priority, links and notes">

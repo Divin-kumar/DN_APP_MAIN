@@ -324,7 +324,7 @@ export function TaskListContent() {
         ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`
         : `Mark "${confirm.task.title}" as cancelled? You can restore it later.`}
       confirmLabel={confirmLabel}
-      destructive={!isSkip} confirmDisabled={isSkip && !skipNextDate}
+      destructive={isDelete || (!isSkip && !confirm.task.repeat)} confirmDisabled={isSkip && !skipNextDate}
       busy={busy} error={error} onCancel={() => { setConfirm(null); setError(''); }}
       onConfirm={() => isDelete ? remove(confirm.task) : statusChange(confirm.task, isSkip ? 'skip' : 'cancelled')}>
       {isSkip ? <RepeatActionSummary name={confirm.task.title} dueDate={confirm.task.dueDate}

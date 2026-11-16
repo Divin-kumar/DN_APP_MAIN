@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChartNoAxesColumn, ChevronDown, ChevronRight, Download, ListFilter } from 'lucide-react';
+import { CalendarDays, ChartNoAxesColumn, Download, ListFilter } from 'lucide-react';
 import { downloadBlob } from '../../utils/download';
 import { activityTime } from '../../utils/activityTime';
 import { parseMomentDate } from '../../utils/momentDates';
@@ -76,7 +76,6 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
             <label className="dn-finance-period">
               <CalendarDays size={16} aria-hidden="true" />
               <span aria-hidden="true">{MONTH_NAME.format(monthDate(selectedMonth))}</span>
-              <ChevronDown size={14} aria-hidden="true" />
               <span className="sr-only">Report month</span>
               <select value={selectedMonth} onChange={(event) => chooseMonth(event.target.value)}>
                 {[...monthsByYear].map(([optionYear, reportMonths]) => <optgroup key={optionYear} label={optionYear}>
@@ -89,8 +88,8 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
           </div>
           <div className="dn-finance-balance" aria-labelledby="finance-balance-label" role="group">{money(totals.balance)}</div>
           <dl>
-            <div className="dn-finance-income"><dt><ArrowDownLeft size={14} aria-hidden="true" /> Income</dt><dd>{money(totals.income)}</dd></div>
-            <div className="dn-finance-expense"><dt><ArrowUpRight size={14} aria-hidden="true" /> Expenses</dt><dd>{money(totals.expense)}</dd></div>
+            <div className="dn-finance-income"><dt>Income</dt><dd>{money(totals.income)}</dd></div>
+            <div className="dn-finance-expense"><dt>Expenses</dt><dd>{money(totals.expense)}</dd></div>
           </dl>
         </section>
 
@@ -188,7 +187,6 @@ function CategoryBreakdown({ label, kind, rows, activeFilter, onSelect }) {
             aria-pressed={activeFilter?.kind === kind && activeFilter.category === category} onClick={() => onSelect(kind, category)}>
             <span>{category}<small>{count} {count === 1 ? 'transaction' : 'transactions'}</small></span>
             <strong>{money(amount)}</strong>
-            <ChevronRight size={15} aria-hidden="true" />
           </button>
         </li>
       ))}</ul> : <p className="insights-muted">{kind === 'income' ? 'No income recorded.' : 'No expenses recorded.'}</p>}

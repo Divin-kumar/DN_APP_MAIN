@@ -80,7 +80,7 @@ function ExpensePlanList({ plans, onSelect }) {
             <div className="dn-expense-plan-row-actions">
               <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
                 aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
-                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><Check size={15} aria-hidden="true" /> <span>Record</span></button>
+                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><Check size={15} aria-hidden="true" /> <span>Record payment</span></button>
               <button type="button" className="dn-expense-plan-manage" data-plan-action="manage"
                 aria-label={`Manage plan for ${plan.name}`} onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>
                 <Settings2 size={15} aria-hidden="true" /> Manage
@@ -101,14 +101,14 @@ function ExpensePlanActions({ plan, onNavigate }) {
       <p>{REPEAT_OPTIONS[plan.repeat.frequency]} · Due {formatScheduleDate(plan.dueDate)}</p>
     </div>
     <div className="dn-expense-plan-menu-actions">
-      <button type="button" data-plan-manage-action="edit" onClick={() => onNavigate('edit')}><Pencil size={18} aria-hidden="true" />
-        <span>Edit schedule</span><ChevronRight size={16} aria-hidden="true" />
+      <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" onClick={() => onNavigate('edit')}><Pencil size={18} aria-hidden="true" />
+        <span>Edit schedule<small>Change amount, due date or frequency</small></span>
       </button>
       <button type="button" data-plan-manage-action="skip" disabled={!following} onClick={() => onNavigate('skip')}><SkipForward size={18} aria-hidden="true" />
-        <span>Skip this occurrence{following ? <small>Next due {following}</small> : null}</span><ChevronRight size={16} aria-hidden="true" />
+        <span>Skip this occurrence{following ? <small>Next due {following}</small> : null}</span>
       </button>
-      <button type="button" data-plan-manage-action="end" className="is-danger" onClick={() => onNavigate('end')}><XCircle size={18} aria-hidden="true" />
-        <span>End repeat</span><ChevronRight size={16} aria-hidden="true" />
+      <button type="button" data-plan-manage-action="end" aria-label="End repeat" className="is-danger" onClick={() => onNavigate('end')}><XCircle size={18} aria-hidden="true" />
+        <span>End repeat<small>Stop future bills; keep recorded payments</small></span>
       </button>
     </div>
   </>;
@@ -228,7 +228,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
     {isConfirm ? <>
       <RepeatActionSummary name={plan.name} dueDate={plan.dueDate} dueLabel={isSkip ? 'Scheduled for' : 'Upcoming bill'}
         nextDate={isSkip ? previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate) : undefined}>
-        {isSkip ? 'Spending totals reflect recorded payments.' : 'This removes the upcoming bill and stops future repeats. Recorded payments stay in Transactions.'}
+        {isSkip ? 'Move to the next due date without recording a payment. Spending totals stay unchanged.' : 'This removes the upcoming bill and stops future repeats. Recorded payments stay in Transactions.'}
       </RepeatActionSummary>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
     </> : null}

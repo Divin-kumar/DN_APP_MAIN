@@ -2748,6 +2748,28 @@ html[data-theme] .event-activity-copy > .dn-rich-text { margin-top:4px; color:va
   html[data-theme] .mobile-tabbar::before { filter: none; }
 }
 
+/* Shared tactile controls for recurring plans and reports. */
+html[data-theme] body :is(.dn-expense-plan-row-actions, .dn-expense-plan-menu-actions, .dn-task-editor-actions, .dn-finance-tools) button,
+html[data-theme] body .dn-finance-report-action {
+  -webkit-tap-highlight-color: transparent;
+  box-shadow: inset 0 1px rgb(255 255 255 / 14%), 0 2px 8px rgb(0 0 0 / 3%);
+}
+html[data-theme] body :is(.dn-expense-plan-row-actions, .dn-expense-plan-menu-actions, .dn-task-editor-actions, .dn-finance-tools) button:active:not(:disabled),
+html[data-theme] body .dn-finance-report-action:active:not(:disabled) {
+  background: var(--dn-planning-selected);
+  box-shadow: inset 0 1px 4px rgb(0 0 0 / 10%);
+}
+html[data-theme] body :is(.dn-expense-plan-row-actions, .dn-expense-plan-menu-actions, .dn-task-editor-actions, .dn-finance-tools, .dn-finance-breakdown) button:focus-visible,
+html[data-theme] body .dn-finance-report-action:focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] body :is(.dn-expense-plan-row-actions, .dn-expense-plan-menu-actions, .dn-task-editor-actions, .dn-finance-tools) button,
+  html[data-theme] body .dn-finance-report-action {
+    transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+  }
+}
+
 /* v2.15.4: iPhone Safari Greeting Template anti-zoom specificity repair.
    Moment type editors override the generic 16px floor with their own
    14px !important body token. Match those selectors at equal specificity

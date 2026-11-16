@@ -136,8 +136,8 @@ html[data-theme] .dn-editor-schedule .dn-repeat-disclosure {
   background: var(--dn-planning-field); padding-inline: 10px;
 }
 html[data-theme] .dn-editor-schedule .dn-repeat-disclosure > summary { min-height: 52px; }
-html[data-theme] .dn-repeat-options { background: color-mix(in srgb, var(--color-text) 4%, transparent); border-radius: 14px; }
-html[data-theme] .dn-repeat-option > span { border-radius: 11px; font-weight: 600; }
+html[data-theme] .dn-repeat-options { background: color-mix(in srgb, var(--color-text) 4%, transparent); border-radius: 999px; }
+html[data-theme] .dn-repeat-option > span { border-radius: 999px; font-weight: 600; }
 html[data-theme] .dn-repeat-option input:checked + span {
   background: var(--dn-planning-selected); border-color: var(--dn-planning-line);
   box-shadow: inset 0 1px rgb(255 255 255 / 12%);
