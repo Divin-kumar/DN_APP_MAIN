@@ -5,6 +5,7 @@ import { createPortal } from 'react-dom';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
+import FormReveal from '../common/FormReveal';
 import { useDialogFormFooter } from '../common/ModalDialog';
 import { RepeatActionSummary, RepeatField, RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
@@ -124,14 +125,16 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         </DropdownSelect>
       </div>
     </div>
-    {momentId ? <div className="dn-task-field"><label htmlFor="dn-task-activity">Activity (optional)</label>
+    <FormReveal show={Boolean(momentId)}>
+    <div className="dn-task-field"><label htmlFor="dn-task-activity">Activity (optional)</label>
       <DropdownSelect disabled={busy} id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
         <option value="">Only link to Moment</option>
         {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
         {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
           ? 'Historical Activity link (preserved)' : 'Unavailable Activity (preserve link)'}</option> : null}
       </DropdownSelect>
-    </div> : null}
+    </div>
+    </FormReveal>
     <label className="dn-task-field">Notes (optional)
       <textarea disabled={busy} rows={3} value={notes} onChange={(event) => setNotes(event.target.value)}
         placeholder="Helpful details" />

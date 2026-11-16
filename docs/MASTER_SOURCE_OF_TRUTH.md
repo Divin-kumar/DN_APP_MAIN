@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Faster form transitions (16 November 2026, development)
+
+The mobile + uses a 215 ms single-tap recognition window while retaining double-tap Back. Choosing a create action uses a short menu exit, and most sheet dismissals use a short fade and slide. Pulling a sheet down still moves it off-screen. More options and repeat previews use shorter transitions. Form dropdowns animate in and out. The payment-method row makes room for Choose at payment when repeating is enabled, and the Clear time action animates without moving the time field to a separate row.
+
 ## Shared form motion (16 November 2026, development)
 
 Mobile creation and page-local edit sheets ease up and slide down on dismissal. Desktop forms use a short fade and lift. The backdrop remains while the sheet exits. More options grows and collapses in place and its fields keep their draft values. Repeat choices reveal or collapse the schedule preview, and bill actions transition to the selected step inside the same dialog. Keyboard navigation, required-field disclosure and the device's Reduce Motion setting remain supported.

@@ -10,7 +10,7 @@ const defaults = Object.freeze({ floating: false, edge: 'right', y: .65 });
 const rules = Object.freeze({ edge: ['left','right'], y: value => Number.isFinite(value) && value >= 0 && value <= 1 });
 const CREATE_SIZE = 52;
 const EDGE_PADDING = 10;
-const DOUBLE_TAP_WINDOW_MS = 320;
+const DOUBLE_TAP_WINDOW_MS = 215;
 
 // On a direct deep link there is no safe in-app history to pop.
 const fallbackBackPath = pathname => {
@@ -24,7 +24,7 @@ const destinations = [
   ['Activities','/activities',ListChecks], ['Tasks','/tasks',ListTodo],
   ['Finance','/financials/transactions',Receipt],
 ];
-export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, onExitComplete, isEntry, activePath }) {
+export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen, onCreate, onAttachment, onExitComplete, handingOff, isEntry, activePath }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [position, savePosition, resetPosition] = usePersistentListState('mobile-command', defaults, rules);
@@ -230,7 +230,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         </button>
       </div>
     </div>
-    <AnimatePresence initial={false} mode="wait" onExitComplete={onExitComplete}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
+    <AnimatePresence initial={false} mode="wait" custom={handingOff} onExitComplete={onExitComplete}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={()=>setOpen(false)}>
       <nav aria-label="Main navigation" className="dn-command-destinations">
         {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={()=>setOpen(false)}>
           <span className="dn-command-destination-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span><span>{label}</span>

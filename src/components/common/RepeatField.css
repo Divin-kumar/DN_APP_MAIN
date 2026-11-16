@@ -159,9 +159,9 @@ html[data-theme] .dn-repeat-edit-note { margin-top: 6px; font-size: 12px; line-h
   html[data-theme] .dn-repeat-option > span {
     transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
   }
-  .dn-repeat-preview-message { animation: dn-repeat-message-in 200ms ease both; }
+  .dn-repeat-preview-message { animation: dn-repeat-message-in 125ms ease both; }
   @keyframes dn-repeat-message-in {
-    from { opacity: .45; }
+    from { opacity: .7; }
     to { opacity: 1; }
   }
 }

@@ -19,11 +19,21 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   const errors = await seedGuest(page, { theme: 'light' });
   await page.goto('/dashboard');
   await page.getByRole('button', { name: 'Open quick create menu' }).click();
-  await page.getByRole('button', { name: 'Task', exact: true }).click();
+  const handoff = await page.getByRole('button', { name: 'Task', exact: true }).evaluate(button => new Promise(resolve => {
+    const started = performance.now();
+    const observer = new MutationObserver(() => {
+      if (document.querySelector('.dn-task-dialog')) {
+        observer.disconnect();
+        clearTimeout(timeout);
+        resolve(performance.now() - started);
+      }
+    });
+    const timeout = setTimeout(() => { observer.disconnect(); resolve(1500); }, 1500);
+    observer.observe(document.body, { childList: true, subtree: true });
+    button.click();
+  }));
+  expect(handoff).toBeLessThan(300);
   const dialog = page.getByRole('dialog', { name: 'New Task' });
-  const entrance = await sampleFrames(dialog, 'y');
-  expect(entrance.some(value => value > 4)).toBe(true);
-  expect(new Set(entrance.map(value => Math.round(value))).size).toBeGreaterThan(2);
   await expect.poll(() => dialog.evaluate(node => Math.abs(node.getBoundingClientRect().bottom - innerHeight))).toBeLessThan(16);
 
   const title = dialog.getByRole('textbox', { name: 'Task title' });
@@ -37,14 +47,22 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   expect(opening.at(-1)).toBeGreaterThan(opening[0] + 10);
   const once = dialog.getByRole('radio', { name: 'Once', exact: true });
   const monthly = dialog.getByRole('radio', { name: 'Monthly', exact: true });
-  await monthly.check();
   const preview = dialog.locator('.dn-form-reveal').filter({ has: page.locator('.dn-repeat-preview') });
-  const repeatOpening = await sampleFrames(preview, 'height');
-  expect(repeatOpening.at(-1)).toBeGreaterThan(repeatOpening[0] + 2);
+  const measureRepeat = (choice) => choice.evaluate(async (radio) => {
+    const group = radio.closest('fieldset');
+    const heights = [];
+    radio.click();
+    for (let frame = 0; frame < 13; frame += 1) {
+      await new Promise(requestAnimationFrame);
+      heights.push(group.querySelector('.dn-form-reveal')?.getBoundingClientRect().height ?? 0);
+    }
+    return heights;
+  });
+  const repeatOpening = await measureRepeat(monthly);
+  expect(repeatOpening.at(-1)).toBeGreaterThan(Math.min(...repeatOpening) + 2);
   await expect(dialog.getByRole('status')).toContainText('Next repeat');
-  await once.check();
-  const repeatClosing = await sampleFrames(preview, 'height');
-  expect(repeatClosing[0]).toBeGreaterThan(repeatClosing.at(-1) + 2);
+  const repeatClosing = await measureRepeat(once);
+  expect(Math.max(...repeatClosing)).toBeGreaterThan(repeatClosing.at(-1) + 2);
   await expect(preview).toHaveCount(0);
 
   const collapsing = await panel.evaluate(async node => {

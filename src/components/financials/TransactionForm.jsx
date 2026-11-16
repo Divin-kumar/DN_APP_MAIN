@@ -186,15 +186,15 @@ export default function TransactionForm({
   </label>;
   const paymentMethod = <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
     <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
-    <div className="dn-payment-method-options" data-choice-count={paymentMethods.length + (isPlan ? 1 : 0)}>
+    <div className="dn-payment-method-options" data-method-count={paymentMethods.length} data-optional={isPlan}>
       {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
         <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
           onChange={() => change('paymentMethod', method)} disabled={busy} />
         <span>{method}</span>
       </label>)}
-      {isPlan ? <label className="dn-payment-method-choice dn-payment-method-optional">
-        <input type="radio" name="paymentMethod" value="" checked={!form.paymentMethod}
-          onChange={() => change('paymentMethod', '')} disabled={busy} />
+      {canRepeat ? <label className="dn-payment-method-choice dn-payment-method-optional" aria-hidden={!isPlan}>
+        <input type="radio" name="paymentMethod" value="" checked={isPlan && !form.paymentMethod}
+          onChange={() => change('paymentMethod', '')} disabled={busy || !isPlan} />
         <span>Choose at payment</span>
       </label> : null}
     </div>

@@ -653,7 +653,7 @@ export default function DashboardLayout() {
 
       {mobileShell ? <MobileCommandDock controlsRef={setMobileControlsTarget} menuRef={quickCreateMobileRef}
         open={quickCreateOpen} setOpen={setQuickCreateOpen} onCreate={beginQuickCreate}
-        onExitComplete={() => setCommandHandoff(false)}
+        handingOff={commandHandoff} onExitComplete={() => setCommandHandoff(false)}
         onAttachment={(workspaceMoment || openedActivityContext?.moment) ? () => beginMomentCreate('attachment') : null}
         isEntry={Boolean(activityDetailMatch)} activePath={activeNavigationPath} /> : null}
 

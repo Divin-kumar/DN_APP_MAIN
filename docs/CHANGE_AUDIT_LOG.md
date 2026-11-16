@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-552 | Reduce form delays and smooth changing controls
+
+- **Scope:** Shorten the + recognition wait, create menu handoff, sheet motion and repeat transitions. Animate dropdowns, payment choices and Clear time. Reveal the Task Activity link and custom Moment type fields with short motion.
+- **Compatibility:** Retain double-tap Back, native clock behavior, swipe and keyboard handling, form drafts and schedule behavior. The Guest tour stays at 2026.11.16.9 because the workflows and sample records are unaffected.
+- **Executed:** 632 Node tests, build and lint. Chromium coverage includes mobile form handoff, Repeat, dropdown search and keyboard focus, narrow date/time rows and three inline payment options. Native iPhone Safari performance remains a device check.
+
 ## CHG-20261116-551 | Animate form sheets, More options and Repeat
 
 - **Scope:** Coordinate the shared form panel and backdrop on open and close. Retain page-local editors through their exit. Animate More options, repeat previews and conditional transaction links. Transition payment steps inside the same sheet.

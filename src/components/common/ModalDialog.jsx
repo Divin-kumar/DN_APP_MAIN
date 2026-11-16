@@ -2,7 +2,7 @@
 // It keeps the app's modal behavior consistent and helps prevent focus or page-scroll issues during form flows.
 import { createContext, useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { motion, useDragControls, usePresence, useReducedMotion } from 'framer-motion';
+import { motion, useDragControls, usePresence, usePresenceData, useReducedMotion } from 'framer-motion';
 import { ChevronLeft, X } from 'lucide-react';
 import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dialogViewport';
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
@@ -22,10 +22,12 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const [formActions, setFormActions] = useState(null);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
+  const quickHandoff = usePresenceData() === true;
   const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
   const [swipeClosing, setSwipeClosing] = useState(false);
   const dismissRequested = useRef(false);
+  const pulledToClose = useRef(false);
   const dragControls = useDragControls();
   const bodySwipe = useRef(null);
   const isSlidingSheet = isMobileSheet;
@@ -60,7 +62,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     if (!start || !touch || bodyRef.current?.scrollTop > 1 || swipeClosing) return;
     const dx = touch.clientX - start.x;
     const dy = touch.clientY - start.y;
-    if (dy >= 118 && dy > Math.abs(dx) * 1.6) setSwipeClosing(true);
+    if (dy >= 118 && dy > Math.abs(dx) * 1.6) {
+      pulledToClose.current = true;
+      setSwipeClosing(true);
+    }
   };
   const startSheetDrag = (event) => {
     if (!allowsSwipe || swipeClosing || event.button !== 0 || !event.isPrimary) return;
@@ -71,6 +76,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   };
   const endSheetDrag = (_, info) => {
     if (info.offset.y > 125 || (info.offset.y > 48 && info.velocity.y > 850)) {
+      pulledToClose.current = true;
       setSwipeClosing(true);
     }
     // Short pulls automatically spring to origin within the drag constraints.
@@ -83,6 +89,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       if (dialogRef.current && isPresent) {
         setSwipeClosing(false);
         dismissRequested.current = false;
+        pulledToClose.current = false;
       }
     }, 750);
     return () => window.clearTimeout(id);
@@ -146,7 +153,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     onViewChange?.(bodyRef.current);
     if (!changed || reducedMotion) return;
     const entrance = bodyRef.current.animate?.([{ opacity: .45 }, { opacity: 1 }], {
-      duration: 185, easing: 'ease-out',
+      duration: 120, easing: 'ease-out',
     });
     return () => entrance?.cancel();
   }, [viewKey, reducedMotion]);
@@ -170,7 +177,8 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
         return;
       }
 
-      if (event.key !== 'Tab') return;
+      // Portalled dropdowns manage their own search and option keyboard flow.
+      if (event.defaultPrevented || event.key !== 'Tab') return;
       const focusable = [...(dialogRef.current?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') || [])]
         .filter((element) => element.getAttribute('aria-hidden') !== 'true' && !element.closest('[inert]') && element.getClientRects().length > 0);
       if (!focusable.length) {
@@ -200,17 +208,23 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   }, []);
 
   const resting = { y: 0, scale: 1, opacity: 1 };
-  const offscreen = isSlidingSheet ? { y: '100%', scale: 1, opacity: 1 }
-    : { y: variant === 'drawer' ? 34 : 16, scale: variant === 'drawer' ? 1 : .985, opacity: 0 };
+  const entrance = { y: isSlidingSheet ? 38 : 10, scale: isSlidingSheet ? 1 : .99, opacity: .4 };
+  const exitDuration = reducedMotion ? 0 : quickHandoff && !isPresent ? .075 : .15;
+  const moving = isPresent && swipeClosing ? 'close' : 'open';
   const sheetVariants = {
-    enter: offscreen,
-    open: { ...resting, transition: { duration: reducedMotion ? 0 : isSlidingSheet ? .34 : .24, ease: enterEase } },
-    close: { ...offscreen, transition: { duration: reducedMotion ? 0 : isSlidingSheet ? .25 : .18, ease: exitEase } },
+    enter: entrance,
+    open: { ...resting, transition: { duration: reducedMotion ? 0 : .20, ease: enterEase } },
+    close: {
+      y: isSlidingSheet ? (pulledToClose.current ? '100%' : 34) : 9,
+      scale: isSlidingSheet ? 1 : .99,
+      opacity: 0,
+      transition: { duration: exitDuration, ease: exitEase },
+    },
   };
   const scrimVariants = {
     enter: { opacity: 0 },
-    open: { opacity: 1, transition: { duration: reducedMotion ? 0 : .22, ease: enterEase } },
-    close: { opacity: 0, transition: { duration: reducedMotion ? 0 : .15, delay: reducedMotion ? 0 : isSlidingSheet ? .14 : .06, ease: exitEase } },
+    open: { opacity: 1, transition: { duration: reducedMotion ? 0 : .14, ease: enterEase } },
+    close: { opacity: 0, transition: { duration: exitDuration, ease: exitEase } },
   };
 
   return createPortal(
@@ -218,7 +232,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       ref={backdropRef}
       className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isSlidingSheet ? ' dn-modal-slide-scrim' : ''}`}
       initial={reducedMotion ? false : 'enter'}
-      animate={swipeClosing ? 'close' : 'open'}
+      animate={moving}
       exit="close"
       variants={scrimVariants}
       onAnimationComplete={(phase) => {

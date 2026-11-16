@@ -11,7 +11,7 @@ function RevealPanel({ children }) {
   useLayoutEffect(() => { panel.current.inert = !isPresent; }, [isPresent]);
   return <motion.div ref={panel} className="dn-form-reveal"
     initial={collapsed} animate={expanded} exit={collapsed}
-    transition={{ duration: reduceMotion ? 0 : .22, ease: [0.24, 0.72, 0.26, 1] }}>
+    transition={{ duration: reduceMotion ? 0 : .145, ease: [0.24, 0.72, 0.26, 1] }}>
     <div>{children}</div>
   </motion.div>;
 }

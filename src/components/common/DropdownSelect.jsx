@@ -1,6 +1,7 @@
 // Shared viewport-aware select used in filters and forms.
 // The portal avoids clipping by cards, scroll panes, modals, and bottom navigation.
 import { Children, isValidElement, useCallback, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { AnimatePresence, motion, useIsPresent, useReducedMotion } from 'framer-motion';
 import { createPortal } from 'react-dom';
 import { Check, ChevronDown, Search, X } from 'lucide-react';
 import { computeOverlayPlacement, getVisibleViewport } from '../../utils/overlayPosition';
@@ -11,6 +12,23 @@ const getOptionLabel = (children) => Children.toArray(children)
   .join('');
 const SEARCH_LIMIT = 10;
 const ROW_HEIGHT = 44;
+
+function DropdownMenu({ menuRef, style, onKeyDown, children }) {
+  const present = useIsPresent();
+  const reducedMotion = useReducedMotion();
+  useLayoutEffect(() => {
+    if (menuRef.current) menuRef.current.inert = !present;
+  }, [menuRef, present]);
+  return <motion.div ref={menuRef} className="dropdown-menu dropdown-menu-portal"
+    initial={reducedMotion ? false : { opacity: .45, scale: .985 }}
+    animate={{ opacity: 1, scale: 1 }}
+    exit={{ opacity: 0, scale: .99, transition: { duration: reducedMotion ? 0 : .085 } }}
+    transition={{ duration: reducedMotion ? 0 : .13, ease: 'easeOut' }}
+    aria-hidden={!present || undefined}
+    style={style} onKeyDown={onKeyDown}>
+    {children}
+  </motion.div>;
+}
 
 export default function DropdownSelect({
   id, name, value, onChange, children, disabled = false, required = false,
@@ -110,17 +128,21 @@ export default function DropdownSelect({
       next.top = viewport.top + 8;
       next.maxHeight = Math.max(90, viewport.height - 16);
     }
-    setPlacement(next);
+    setPlacement(previous => previous && Object.keys(next).every(key => previous[key] === next[key]) ? previous : next);
   }, [close, options.length, searchVisible, searchOnDemand, searchable, menuMinWidth]);
 
   useLayoutEffect(() => {
     if (!open) return undefined;
     reposition();
+    let frame;
     const onViewportChange = (event) => {
       // The options list scrolls independently. Repositioning it on its own
       // scroll event would repeatedly jump back to the highlighted option.
-      if (event?.target && menuRef.current?.contains(event.target)) return;
-      reposition();
+      if (event?.target instanceof Node && menuRef.current?.contains(event.target)) return;
+      if (frame === undefined) frame = requestAnimationFrame(() => {
+        frame = undefined;
+        reposition();
+      });
     };
     // Capture nested page/modal scrolling, but ignore the menu's own scrollbar.
     window.addEventListener('resize', onViewportChange);
@@ -132,6 +154,7 @@ export default function DropdownSelect({
     if (triggerRef.current) observer?.observe(triggerRef.current);
     return () => {
       observer?.disconnect();
+      if (frame !== undefined) cancelAnimationFrame(frame);
       window.removeEventListener('resize', onViewportChange);
       window.removeEventListener('scroll', onViewportChange, true);
       window.removeEventListener('orientationchange', onViewportChange);
@@ -291,8 +314,8 @@ export default function DropdownSelect({
         </span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
-      {open && placement ? createPortal(
-        <div ref={menuRef} className="dropdown-menu dropdown-menu-portal"
+      {createPortal(<AnimatePresence initial={false}>
+      {open && placement ? <DropdownMenu menuRef={menuRef}
           style={{ position: 'fixed', top: placement.top, left: placement.left,
             width: placement.width, maxHeight: placement.maxHeight, right: 'auto', bottom: 'auto' }}
           onKeyDown={onKeyDown}>
@@ -340,8 +363,8 @@ export default function DropdownSelect({
             {virtual && virtualEnd < visibleIndices.length ? <div role="presentation" style={{ height: (visibleIndices.length - virtualEnd) * ROW_HEIGHT }} /> : null}
             {!visibleIndices.length ? <div className="dropdown-no-results" role="status">No matching options. Clear search to see all choices.</div> : null}
           </div>
-        </div>, document.body,
-      ) : null}
+        </DropdownMenu> : null}
+      </AnimatePresence>, document.body)}
     </span>
   );
 }

@@ -17,6 +17,7 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
   const toggle = (event) => {
     const details = event.currentTarget.parentElement;
     const region = panel.current;
+    const opening = !details.open || Boolean(details.dataset.closing);
     if (!region.animate || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       if (motion.current) {
         motion.current.cancel();
@@ -30,7 +31,6 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
     }
 
     event.preventDefault();
-    const opening = !details.open || Boolean(details.dataset.closing);
     // Start at the painted height so a second tap reverses without a jump.
     const currentHeight = details.open ? region.offsetHeight : 0;
     const currentOpacity = details.open ? Number(getComputedStyle(region).opacity) : 0;
@@ -44,7 +44,7 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
     const animation = region.animate([
       { height: `${currentHeight}px`, opacity: currentOpacity, overflow: 'clip' },
       { height: `${targetHeight}px`, opacity: opening ? 1 : 0, overflow: 'clip' },
-    ], { duration: opening ? 240 : 200, easing: 'cubic-bezier(.24,.72,.26,1)', fill: 'both' });
+    ], { duration: opening ? 165 : 135, easing: 'cubic-bezier(.2,.65,.32,1)', fill: 'both' });
     motion.current = animation;
     animation.onfinish = () => {
       if (motion.current !== animation) return;

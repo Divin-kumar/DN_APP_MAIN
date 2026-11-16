@@ -227,7 +227,7 @@ html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-
 }
 @media (max-width: 360px) {
   html[data-theme] body .activity-date-time-row :is(input[type="date"], input[type="time"]) { padding-inline: 4px !important; }
-  html[data-theme] body .activity-date-time-row:has(.activity-time-clear) {
+  html[data-theme] body .activity-date-time-row:has(.activity-time-clear[aria-hidden="false"]) {
     grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr);
     gap: 6px;
   }
@@ -236,4 +236,24 @@ html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-
 @media (max-width: 300px) {
   html[data-theme] body .dn-form-pair,
   html[data-theme] body .dn-form-pair:is(.dn-expense-draft-fields, .dn-activity-create-moment-fields) { grid-template-columns: minmax(0, 1fr); }
+}
+
+
+html[data-theme] body .activity-time-control > .activity-time-clear[aria-hidden="true"] {
+  flex-basis: 0;
+  width: 0;
+  min-width: 0;
+  margin-inline-start: -3px;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: no-preference) {
+  html[data-theme] body .activity-time-control > .activity-time-clear {
+    transition: flex-basis 135ms ease-out, margin-inline-start 135ms ease-out, opacity 100ms ease-out;
+  }
+  html[data-theme] body .activity-date-time-row { transition: grid-template-columns 135ms ease-out; }
+  html[data-theme] body .activity-time-control > input:disabled {
+    transition: opacity 135ms ease-out;
+  }
 }

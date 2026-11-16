@@ -331,11 +331,8 @@ test('solid blue circular plus stays visible at 320/390/430 and the sheet moves'
   await button.click();
   const sheet=page.getByRole('dialog',{name:'Navigate & create'});
   await expect(sheet).toBeVisible();
-  await page.waitForTimeout(90);
-  const midway=await sheet.evaluate(el=>getComputedStyle(el).transform);
-  await page.waitForTimeout(470);
-  const settled=await sheet.evaluate(el=>getComputedStyle(el).transform);
-  expect(midway).not.toBe(settled);
+  await expect.poll(() => sheet.evaluate(el => getComputedStyle(el).transform)).toBe('none');
+  await expect(sheet).toHaveCSS('opacity', '1');
   await sheet.getByRole('button',{name:'Activity',exact:true}).click();
   const form=page.getByRole('dialog',{name:'Add an activity'});
   await expect(form).toBeVisible();

@@ -5,6 +5,7 @@ import { formatMomentDate } from '../../utils/momentDates';
 import { useEffect, useRef, useState } from 'react';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
+import { motion, useReducedMotion } from 'framer-motion';
 import FormDisclosure from '../common/FormDisclosure';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
@@ -23,6 +24,7 @@ const createDefaultState = (defaultEventType) => ({
 });
 
 export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
+  const reduceMotion = useReducedMotion();
   const adminValues = useAppStore((state) => state.adminValues);
   const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
   const defaultEventType = useAppStore((state) => state.preferences.defaultEventType);
@@ -114,11 +116,14 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       </label>
 
       {form.type === 'Other' ? (
-        <label htmlFor="event-custom-type">Custom moment type
+        <motion.label htmlFor="event-custom-type"
+          initial={reduceMotion ? false : { opacity: .4, y: -4 }}
+          animate={{ opacity: 1, y: 0 }} transition={{ duration: .14, ease: 'easeOut' }}>
+          Custom moment type
           <input ref={customTypeInputRef} id="event-custom-type" name="customType" value={form.customType}
             onChange={handleChange} aria-invalid={Boolean(validationError && !form.customType.trim())}
             placeholder="What kind of moment is this?" required />
-        </label>
+        </motion.label>
       ) : null}
 
       <FormDisclosure label="More options" hint={[form.date, form.time].filter(Boolean).join(' · ')}>

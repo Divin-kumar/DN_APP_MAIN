@@ -660,12 +660,12 @@ for (const width of [320, 430]) {
       expect(Math.abs(await categoryOffset() - categoryTop)).toBeLessThan(4);
       if (frequency !== 'Once') {
         const options = dialog.locator('.dn-payment-method-choice > span');
-        const boxes = await options.evaluateAll(elements => elements.map(el => {
-          const r = el.getBoundingClientRect(); return { top: r.top, bottom: r.bottom, width: r.width, scroll: el.scrollWidth, client: el.clientWidth };
-        }));
-        expect(boxes).toHaveLength(3);
-        expect(Math.max(...boxes.map(b => b.top)) - Math.min(...boxes.map(b => b.top))).toBeLessThan(2);
-        for (const box of boxes) expect(box.scroll).toBeLessThanOrEqual(box.client + 1);
+        await expect(options).toHaveCount(3);
+        await expect.poll(() => options.evaluateAll(elements => {
+          const rows = elements.map(element => element.getBoundingClientRect().top);
+          return Math.max(...rows) - Math.min(...rows) < 2
+            && elements.every(element => element.scrollWidth <= element.clientWidth + 1);
+        })).toBe(true);
       }
     }
     const fields = await dialog.locator('input[type="text"], .dropdown-trigger').evaluateAll(elements => elements.map(el => ({

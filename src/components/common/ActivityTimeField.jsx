@@ -10,10 +10,10 @@ export default function ActivityTimeField({ value = '', onChange, disabled = fal
     <div className="activity-time-control">
       <input id={id} type="time" step="60" aria-label={`${subject} time`} value={value} disabled={disabled}
         onChange={(event) => onChange(event.target.value)} />
-      {value ? <button type="button" className="activity-time-clear" aria-label={`Clear ${subject.toLowerCase()} time`}
-        title="Clear time" disabled={disabled} onClick={() => onChange('')}>
+      <button type="button" className="activity-time-clear" aria-label={`Clear ${subject.toLowerCase()} time`}
+        title="Clear time" aria-hidden={!value} disabled={disabled || !value} onClick={() => onChange('')}>
         <X size={17} strokeWidth={1.8} aria-hidden="true" />
-      </button> : null}
+      </button>
     </div>
   </div>;
 }
