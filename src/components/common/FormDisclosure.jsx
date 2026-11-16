@@ -1,3 +1,5 @@
+import { Minus, Plus } from 'lucide-react';
+
 // Progressive disclosure keeps contextual defaults editable but out of the way.
 // Native details supports keyboard interaction and screen-reader navigation.
 export default function FormDisclosure({ label = 'More options', hint = '', children, className = '' }) {
@@ -7,7 +9,12 @@ export default function FormDisclosure({ label = 'More options', hint = '', chil
       // Reveal the invalid field before the browser attempts to focus it.
       event.currentTarget.open = true;
     }}>
-    <summary><span>{label}</span>{hint ? <small>{hint}</small> : null}</summary>
+    <summary>
+      <span>{label}</span>
+      {hint ? <small>{hint}</small> : null}
+      <Plus size={16} className="dn-form-expand" aria-hidden="true" />
+      <Minus size={16} className="dn-form-collapse" aria-hidden="true" />
+    </summary>
     <div className="dn-form-disclosure-content">{children}</div>
   </details>;
 }

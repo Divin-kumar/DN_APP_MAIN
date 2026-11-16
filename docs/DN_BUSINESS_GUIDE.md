@@ -1,6 +1,6 @@
 **Simpler recurring controls (16 November 2026, development).** Changing Once to a repeat keeps your form and payment controls in place. Cash, Online and Choose at payment share one row. Manage expands Edit, Skip and End repeat under the bill; there is no separate management screen. Optional time for a new expense is under More options. Dark fields use softer matching borders and backgrounds.
 
-Date and Time stay together in forms. More options and form selectors use quiet styling without decorative down arrows. Dashboard Browse Moments and Browse Activities share right-aligned links. Forms use consistent glass surfaces, readable fields and clear focus states in both light and dark appearance, including create/edit sheets, Settings and confirmations.
+Forms use lighter glass controls and consistent spacing in both themes. In Activity creation, Moment type and Life moment share a row. In Transactions, Title and Amount share a row, as do Type and Category. Date and Time stay together. **More options** opens with a plus and contains Activity Description, and it shows Repeat directly for Tasks and expense plans.
 
 **Finance and repeating schedules (16 November 2026, development).** Open Insights → Finance and choose a reporting month. Compare months and Breakdown open the monthly comparison or category details. Transactions are grouped by date, with the category and time beneath the name. The + stays at the bottom on phones while you read the report. Upcoming expenses puts a single bill’s exact due date on its own line below its status.
 

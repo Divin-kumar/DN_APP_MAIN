@@ -218,7 +218,10 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             titleLabel="Activity title"
             priorities={adminValues.activityPriorities} disabled={busy}
             onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
-          <div className="form-actions"><button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button><button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button></div>
+          <div className="form-actions">
+            <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
+            <button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
+          </div>
         </form>
       </ModalDialog> : null}
       {deleteTarget ? <ConfirmDialog title="Delete activity?" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}

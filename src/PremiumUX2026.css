@@ -582,23 +582,6 @@ html[data-theme] .dn-activity-entry-actions > button:focus-visible {
   html[data-theme] .dn-activity-entry-actions > button { transition: none !important; }
 }
 
-/* Activity Detail universal +: a quiet confirmation of inherited destination. */
-html[data-theme] .quick-create-activity-form .dn-quick-activity-context {
-  margin: 1px 0 3px;
-  padding: 9px 11px;
-  border-inline-start: 2px solid var(--color-primary);
-  border-radius: 6px 11px 11px 6px;
-  background: color-mix(in srgb, var(--color-primary) 6%, transparent);
-  color: var(--color-text-muted);
-  font-size: 13px;
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-}
-html[data-theme] .quick-create-activity-form .dn-quick-activity-context strong {
-  color: var(--color-text);
-  font-weight: 700;
-}
-
 /* CHG-238: one quiet field hierarchy for the universal + and Moment composer.
    Never turn quick creation into stacked cards or a second page. */
 html[data-theme] .dn-activity-create-form {
@@ -636,19 +619,6 @@ html[data-theme] .dn-activity-create-form .dn-activity-create-title > input {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 12px;
-}
-html[data-theme] .dn-activity-create-form .dn-activity-create-destination {
-  display: grid;
-  gap: 8px;
-  padding-bottom: 11px;
-  border-bottom: 1px solid var(--dn-quiet-outline);
-  min-width: 0;
-}
-html[data-theme] .dn-activity-create-form .dn-activity-create-moment-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 9px;
-  min-width: 0;
 }
 html[data-theme] .dn-activity-create-form .dn-entry-mode-picker {
   gap: 7px;
@@ -690,9 +660,6 @@ html[data-theme] .dn-activity-create-form :is(
 @media (max-width: 760px) {
   html[data-theme] .dn-activity-create-form {
     gap: 10px;
-  }
-  html[data-theme] .dn-activity-create-form .dn-activity-create-destination {
-    padding-bottom: 9px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -753,8 +720,6 @@ html[data-theme] .dn-form-disclosure-content {
   padding: 9px 0 14px;
   min-width: 0;
 }
-html[data-theme] .dn-activity-moment-disclosure { border: 0; }
-html[data-theme] .dn-activity-moment-disclosure > summary { padding-block: 6px; }
 html[data-theme] .dn-form-context { margin: 0; font-size: 12px; color: var(--color-text-muted); }
 html[data-theme] .dn-form-context strong { color: var(--color-text); }
 

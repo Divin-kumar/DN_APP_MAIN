@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Lightweight form layout (16 November 2026, development)
+
+Create and edit forms share quieter field labels, flat translucent controls, consistent spacing and a compact More options row with plus and minus indicators. The Activity composer displays its title first, then Moment type and Life moment side by side. Its Description, Date, Time and Priority sit together under More options. Transactions pair Title with Amount and Type with Category, including income and existing one-time transactions. Dates and times share a row. A one-time schedule uses no repeat preview until there is a next date, pause status, edit notice or validation message to show. Task and payment actions stay accessible below the scrollable fields. Guest tour 2026.11.16.9 reflects the Activity layout through explicit Refresh demo.
+
 ## Consistent glass forms and Activity description (16 November 2026, development)
 
 Shared dialogs use the same translucent surface, blur, field finish and rounded actions in both themes. Blur is applied on the dialog itself. Inline form controls and portalled dropdowns share the material tokens, with opaque fallback surfaces for reduced transparency or unsupported blur. In Activity create and edit, More options contains the optional Description editor alongside date, time and priority. Adding or editing a dated entry still opens its own writing form. Guest tour 2026.11.16.8 explains the new placement through explicit Refresh demo.

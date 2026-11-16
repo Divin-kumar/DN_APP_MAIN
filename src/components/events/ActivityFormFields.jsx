@@ -8,7 +8,7 @@ import { getActiveCodeListMeta } from '../../utils/codeLists';
 // Shared Activity editor. All supported Moment modes expose the same writing
 // fields and preserve the same independent Activity storage contract.
 export default function ActivityFormFields({
-  value, onChange, priorities = [], disabled = false,
+  value, onChange, priorities = [], disabled = false, children,
   namePrefix = 'dn-activity', showDate = true, showPriority = true, dateLocked = false,
   notesLabel, titleLabel: labelOverride, autoFocus = false,
 }) {
@@ -18,9 +18,8 @@ export default function ActivityFormFields({
   // Show existing editable values before expanding More options.
   const metadata = [
     showDate ? (value.date || 'Choose date') : null,
-    value.time || 'No time',
-    showPriority ? options.find((option) => option.value === priority)?.label || priority : null,
-    value.description ? 'Description added' : 'Description',
+    value.time,
+    value.description && 'Description added',
   ].filter(Boolean).join(' · ');
   return <>
     <label className="dn-activity-create-title" htmlFor={`${namePrefix}-title`}>{titleLabel}
@@ -30,7 +29,8 @@ export default function ActivityFormFields({
         placeholder={titleLabel} autoFocus={autoFocus && typeof window !== 'undefined'
           && window.matchMedia('(min-width: 761px) and (hover: hover) and (pointer: fine)').matches} />
     </label>
-    <FormDisclosure label="More options" hint={metadata}>
+    {children}
+    <FormDisclosure hint={metadata}>
       <div className="activity-date-time-row">
         {showDate ? <DateField label="Date" name={`${namePrefix}-date`} value={value.date || ''}
           onChange={(event) => onChange({ date: event.target.value })} disabled={disabled || dateLocked} required /> : null}

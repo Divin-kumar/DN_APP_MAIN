@@ -1,5 +1,5 @@
 import { useId } from 'react';
-import { CalendarDays, Repeat } from 'lucide-react';
+import { CalendarDays } from 'lucide-react';
 import { formatScheduleDate, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import './RepeatField.css';
 
@@ -43,7 +43,7 @@ export function RepeatField({ value, onChange, disabled, nextDate, dueDate, noti
   const id = useId();
   const options = allowOneTime ? [['', 'Once'], ...frequencies] : frequencies;
   return <fieldset className="dn-repeat-field" disabled={disabled}>
-    <legend><Repeat size={15} aria-hidden="true" /> Repeat</legend>
+    <legend>Repeat</legend>
     <div className="dn-repeat-options" data-options={options.length}>
       {options.map(([frequency, label]) => <label key={frequency} className="dn-repeat-option">
         <input type="radio" name={id} value={frequency} checked={frequency === value}
@@ -51,12 +51,12 @@ export function RepeatField({ value, onChange, disabled, nextDate, dueDate, noti
         <span>{label}</span>
       </label>)}
     </div>
-    <div className="dn-repeat-preview" data-active={Boolean(value || notice)}>
+    {value || notice ? <div className="dn-repeat-preview">
       <p role="status">
-        {value ? paused ? 'Repeat paused. Resume it from Task actions.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : notice ? null : 'Does not repeat.'}
+        {value ? paused ? 'Repeat paused. Resume it from Task actions.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : null}
         {notice ? <span className="dn-repeat-edit-note">{notice}</span> : null}
       </p>
       {value && children ? <p>{children}</p> : null}
-    </div>
+    </div> : null}
   </fieldset>;
 }

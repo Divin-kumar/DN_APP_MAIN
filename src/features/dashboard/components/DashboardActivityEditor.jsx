@@ -12,8 +12,8 @@ export default function DashboardActivityEditor({ draft, priorities, busy, error
         titleLabel="Activity title" namePrefix="dashboard-activity"
         dateLocked={false} />
       <div className="form-actions">
-        <button type="submit" className="primaryButton" disabled={busy}>{busy ? 'Saving…' : 'Save activity'}</button>
         <button type="button" className="secondaryButton" disabled={busy} onClick={onClose}>Cancel</button>
+        <button type="submit" className="primaryButton" disabled={busy}>{busy ? 'Saving…' : 'Save activity'}</button>
       </div>
     </form>
   </ModalDialog>;

@@ -98,8 +98,6 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
 
   return (
     <form className="form-surface event-form" onSubmit={handleSubmit}>
-      <p className="event-form-intro">Add the details that make this moment easy to remember.</p>
-
       <label htmlFor="event-name">Moment name
         <input ref={nameInputRef} id="event-name" name="name" value={form.name} onChange={handleChange}
           aria-invalid={Boolean(validationError && !form.name.trim())}
@@ -123,30 +121,30 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         </label>
       ) : null}
 
-      <FormDisclosure label="More options" hint="Date, time, repeat, notes">
+      <FormDisclosure label="More options" hint={[form.date, form.time].filter(Boolean).join(' · ')}>
         <div className="activity-date-time-row">
           <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
           <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
         </div>
 
-      <label htmlFor="event-recurrence">Repeat
-        <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
-          <option value="none">Does not repeat</option>
-          <option value="monthly">Every month</option>
-          <option value="yearly">Every year</option>
-        </DropdownSelect>
-      </label>
+        <label htmlFor="event-recurrence">Repeat
+          <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
+            <option value="none">Does not repeat</option>
+            <option value="monthly">Every month</option>
+            <option value="yearly">Every year</option>
+          </DropdownSelect>
+        </label>
 
-      <RichTextEditor label="Notes (optional)" id="event-notes" name="notes" value={form.notes}
-        onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
+        <RichTextEditor label="Notes (optional)" id="event-notes" name="notes" value={form.notes}
+          onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
       </FormDisclosure>
 
       {validationError ? <p className="event-form-validation" role="alert">{validationError}</p> : null}
       <div className="event-form-actions">
-        <button type="submit" className="primaryButton">{submitLabel}</button>
         {onCancel ? (
           <button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button>
         ) : null}
+        <button type="submit" className="primaryButton">{submitLabel}</button>
       </div>
     </form>
   );

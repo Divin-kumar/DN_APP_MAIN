@@ -13,7 +13,6 @@ import { getCodeListItems } from '../../utils/codeLists';
 import { getMomentActivities, getTransactionMoments } from '../../utils/transactionRelations';
 import { normalizePaymentMethod, requirePaymentMethod } from '../../utils/paymentMethod';
 import { formatScheduleDate, previewNextRepeat, repeatEditNotice } from '../../utils/repeatSchedule.js';
-import { CalendarDays } from 'lucide-react';
 import './ExpensePlans.css';
 
 const today = () => {
@@ -107,7 +106,7 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = paymentPlan ? 'Title, category, links and notes' : 'Links and notes';
+  const supportingDetails = paymentPlan ? 'Title, category and notes' : canRepeat ? 'Repeat, links and notes' : 'Links and notes';
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -159,6 +158,14 @@ export default function TransactionForm({
       {categories.map((category) => <option key={category} value={category}>{category}</option>)}
     </DropdownSelect>
   </div>;
+  const transactionType = !paymentPlan && !expensePlan ? <div className="dn-transaction-field">
+    <span>Transaction Type *</span>
+    <DropdownSelect aria-label="Transaction Type" value={form.transactionKind}
+      onChange={(event) => handleType(event.target.value)} disabled={busy}>
+      <option value="income">Income</option>
+      <option value="expense">Expense</option>
+    </DropdownSelect>
+  </div> : null;
   const dates = <div className="activity-date-time-row">
     <DateField label={isPlan ? 'Due date *' : paymentPlan ? 'Paid on *' : 'Date *'} name="date" required value={form.date}
       onChange={(event) => change('date', event.target.value)} disabled={busy} />
@@ -198,45 +205,33 @@ export default function TransactionForm({
   </fieldset>;
 
   const actions = <>{error ? <p className="dn-transaction-form-error" role="alert">{error}</p> : null}<div className="form-actions">
+    <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
     <button className="primaryButton" type="submit" form={formId} disabled={busy || (isPlan && !nextRepeat)}>
       {busy ? 'Saving…' : isPlan ? 'Save expense plan' : paymentPlan ? 'Save payment' : initialTransaction ? 'Save Changes' : 'Add Transaction'}
     </button>
-    <button className="secondaryButton" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
   </div></>;
 
   return (
     <form id={formId} className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}${paymentPlan ? ' dn-expense-payment-form' : ''}`}
       onSubmit={handleSubmit} aria-busy={busy}>
       {paymentPlan ? <div className="dn-payment-context">
-        <span className="dn-payment-context-icon"><CalendarDays size={19} aria-hidden="true" /></span>
-        <div><strong>{paymentPlan.name}</strong>
-          <dl>
-            <div><dt>Scheduled for</dt><dd><time dateTime={paymentPlan.dueDate}>{formatScheduleDate(paymentPlan.dueDate)}</time></dd></div>
-            {nextPaymentDate ? <div><dt>Next due</dt><dd><time dateTime={nextPaymentDate}>{formatScheduleDate(nextPaymentDate)}</time></dd></div> : null}
-          </dl>
-        </div>
+        <strong>{paymentPlan.name}</strong>
+        <dl>
+          <div><dt>Scheduled for</dt><dd><time dateTime={paymentPlan.dueDate}>{formatScheduleDate(paymentPlan.dueDate)}</time></dd></div>
+          {nextPaymentDate ? <div><dt>Next due</dt><dd><time dateTime={nextPaymentDate}>{formatScheduleDate(nextPaymentDate)}</time></dd></div> : null}
+        </dl>
       </div> : null}
-      {!paymentPlan && !expensePlan ? <div className="dn-transaction-field">
-        <span>Transaction Type *</span>
-        <DropdownSelect aria-label="Transaction Type" value={form.transactionKind}
-          onChange={(event) => handleType(event.target.value)} disabled={busy}>
-          <option value="income">Income</option>
-          <option value="expense">Expense</option>
-        </DropdownSelect>
-      </div> : null}
-      {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div>
-        : canRepeat ? <div className="dn-expense-draft-fields">{titleField}{amount}</div> : <>{amount}{titleField}</>}
-      {!paymentPlan ? <>
+      {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div> : <>
+        <div className="dn-form-pair dn-expense-draft-fields">{titleField}{amount}</div>
         <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
           <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
         </div>
-        {categoryField}
-      </> : null}
+        {transactionType ? <div className="dn-form-pair">{transactionType}{categoryField}</div> : categoryField}
+      </>}
       {paymentMethod}
-      <FormDisclosure label="More options" hint={<>
-        {canRepeat ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} notice={repeatNotice} /> : null}
-        <span>{supportingDetails}</span>
-      </>}>
+      <FormDisclosure hint={canRepeat && (form.repeatFrequency || repeatNotice)
+        ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} notice={repeatNotice} />
+        : supportingDetails}>
       {repeatField}
       {paymentPlan ? <>{titleField}{categoryField}</> : null}
       {!isPlan ? <>
@@ -265,8 +260,7 @@ export default function TransactionForm({
           {form.activityId && !selectedActivityExists
             ? <option value={form.activityId}>Previously linked activity (unavailable)</option> : null}
         </DropdownSelect>
-        {!form.eventId ? <small className="dn-transaction-field-hint">Select a moment to see only its activities.</small>
-          : selectedMomentExists && !activities.length
+        {form.eventId && selectedMomentExists && !activities.length
             ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
             : null}
       </div>

@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-550 | Normalize and simplify form layouts
+
+- **Scope:** Lighten common field surfaces and labels, use a flat More options row, pair related transaction and Activity fields, simplify payment context and show repeat guidance when it has information to add. Keep Activity Description inside More options and use Cancel before the primary action across the core forms.
+- **Compatibility:** Native date and time, optional controls, validation, schedule previews, save and keyboard behavior remain supported. Guest tour 2026.11.16.9 explains the Activity destination row through explicit Refresh demo.
+- **Executed:** Build, lint and 632 Node tests passed. Focused Chromium runs verified create/edit forms in both themes at 320–430px, recurring Task and bill workflows, the payment sheet in touch landscape, Story and formatting. Physical Safari remains a device check.
+
 ## CHG-20261116-549 | Consistent glass forms and Activity description
 
 - **Scope:** Share the same translucent panel, blur, fields and rounded actions across dialogs in light and dark mode. Remove the competing planning-only and mobile panel styles. Activity create and edit put Description alongside date, time and priority inside More options.

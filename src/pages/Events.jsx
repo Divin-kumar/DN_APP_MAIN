@@ -419,7 +419,7 @@ export default function Events() {
       {activityChooserEvent ? (
         <ModalDialog title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
           <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
-            <p className="activity-target-moment">For <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
+            <p className="dn-form-context">Moment · <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
             <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
                value={{ title: activityTitle, date: activityDate, time: activityTime,
@@ -431,7 +431,10 @@ export default function Events() {
                  if (patch.description !== undefined) setActivityDescription(patch.description);
                  if (patch.priority !== undefined) setActivityPriority(patch.priority);
                }} />
-             <div className="form-actions"><button className="primaryButton" type="submit">Save activity</button><button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button></div>
+            <div className="form-actions">
+              <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
+              <button className="primaryButton" type="submit">Save activity</button>
+            </div>
           </form>
         </ModalDialog>
       ) : null}

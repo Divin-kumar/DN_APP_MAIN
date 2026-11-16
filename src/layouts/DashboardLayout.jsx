@@ -142,7 +142,6 @@ export default function DashboardLayout() {
   const shellBackPath = shellSettingsBackPath(location.pathname);
   const quickActivityTypes = activityMomentTypes(activityMoments, adminValues.eventTypes);
   const filteredActivityMoments = filterActivityMoments(activityMoments, quickActivityType);
-  const quickSelectedMoment = filteredActivityMoments.find((item) => momentId(item) === quickActivityEventId);
   // Historical same-day Diary Activities remain intact. New content is added
   // only when the owner explicitly saves inside the opened Activity.
 
@@ -732,46 +731,6 @@ export default function DashboardLayout() {
         <ModalDialog key="quick-activity" title="Add an activity" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
           {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
           <form className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>
-            <div className="dn-activity-create-destination">
-              <details className="dn-form-disclosure dn-activity-moment-disclosure"
-                key={quickActivityEventId || 'choose'} open={!quickSelectedMoment}>
-                <summary><span>{quickSelectedMoment
-                  ? `Moment · ${quickSelectedMoment.name || 'This Moment'}` : 'Choose a Moment'}</span>
-                  <small>{quickSelectedMoment ? 'Change destination' : 'Select where this Activity belongs'}</small></summary>
-                <div className="dn-form-disclosure-content">
-                <div className="dn-activity-create-moment-fields">
-                <div className="dn-activity-create-field">
-                  <label htmlFor="quick-activity-type">Moment type</label>
-            <DropdownSelect id="quick-activity-type" value={quickActivityType} onChange={(changeEvent) => {
-              const nextType = changeEvent.target.value;
-              setQuickActivityType(nextType);
-              if (!filterActivityMoments(activityMoments, nextType).some((event) => momentId(event) === quickActivityEventId)) {
-                setQuickActivityEventId('');
-              }
-            }} aria-label="Moment type" disabled={eventsLoading}>
-              <option value="">All moment types</option>
-              {quickActivityTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
-              {quickActivityType && !quickActivityTypes.some((type) => type.value === quickActivityType) ? <option value={quickActivityType}>Saved moment type (unavailable)</option> : null}
-                </DropdownSelect>
-                </div>
-                <div className="dn-activity-create-field">
-                  <label htmlFor="quick-activity-moment">Life moment</label>
-            <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} onChange={(event) => setQuickActivityEventId(event.target.value)} aria-label="Life moment" placeholder="Choose a life moment" disabled={eventsLoading}>
-              <option value="">Choose a life moment</option>
-              {filteredActivityMoments.map((event) => <option key={momentId(event)} value={momentId(event)}>{event.name || 'Untitled moment'}{event.archived ? ' (Archived)' : ''}</option>)}
-                </DropdownSelect>
-                </div>
-                </div>
-                </div>
-              </details>
-            {eventsLoading ? <p role="status">Loading moments…</p> : eventsError ? <p role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p> : !filteredActivityMoments.length ? <p role="status">No moments in this type. Choose another type or create a moment first.</p> : null}
-            {activityDetailMatch && quickSelectedMoment ? <p className="dn-quick-activity-context">
-              {'New Activity under '}
-              <strong>{quickSelectedMoment.name || 'this Moment'}</strong>
-
-            </p> : null}
-            </div>
-
             <ActivityFormFields namePrefix="dn-quick-activity"
               value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
                 description: quickActivityDescription, priority: quickActivityPriority }}
@@ -782,7 +741,41 @@ export default function DashboardLayout() {
                 if (patch.time !== undefined) setQuickActivityTime(patch.time);
                 if (patch.description !== undefined) setQuickActivityDescription(patch.description);
                 if (patch.priority !== undefined) setQuickActivityPriority(patch.priority);
-              }} />
+              }}>
+              <div className="dn-form-pair dn-activity-create-moment-fields">
+                <div className="dn-activity-create-field">
+                  <label htmlFor="quick-activity-type">Moment type</label>
+                  <DropdownSelect id="quick-activity-type" value={quickActivityType} disabled={quickActivityBusy || eventsLoading}
+                    onChange={(event) => {
+                      const nextType = event.target.value;
+                      setQuickActivityType(nextType);
+                      if (!filterActivityMoments(activityMoments, nextType).some((moment) => momentId(moment) === quickActivityEventId)) {
+                        setQuickActivityEventId('');
+                      }
+                    }}>
+                    <option value="">All moment types</option>
+                    {quickActivityTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}
+                    {quickActivityType && !quickActivityTypes.some((type) => type.value === quickActivityType)
+                      ? <option value={quickActivityType}>Saved moment type (unavailable)</option> : null}
+                  </DropdownSelect>
+                </div>
+                <div className="dn-activity-create-field">
+                  <label htmlFor="quick-activity-moment">Life moment</label>
+                  <DropdownSelect id="quick-activity-moment" value={quickActivityEventId} placeholder="Choose a life moment"
+                    disabled={quickActivityBusy || eventsLoading} onChange={(event) => setQuickActivityEventId(event.target.value)}>
+                    <option value="">Choose a life moment</option>
+                    {filteredActivityMoments.map((moment) => <option key={momentId(moment)} value={momentId(moment)}>
+                      {moment.name || 'Untitled moment'}{moment.archived ? ' (Archived)' : ''}
+                    </option>)}
+                  </DropdownSelect>
+                </div>
+              </div>
+              {eventsLoading ? <p className="dn-form-context" role="status">Loading moments…</p>
+                : eventsError ? <p className="dn-form-context" role="alert">{eventsError} <button type="button" className="secondaryButton" onClick={() => loadEvents(user?.uid, isGuest)}>Retry</button></p>
+                : !filteredActivityMoments.length ? <p className="dn-form-context" role="status">
+                  {activityMoments.length ? 'No matching moments. Try a different type.' : 'Create a Moment to add an Activity.'}
+                </p> : null}
+            </ActivityFormFields>
             <div className="form-actions dn-activity-create-actions"><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : 'Save activity'}</button></div>
           </form>
         </ModalDialog>

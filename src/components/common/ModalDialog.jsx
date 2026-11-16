@@ -42,7 +42,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     bodySwipe.current = null;
     const body = bodyRef.current;
     if (!allowsSwipe || swipeClosing || event.touches.length !== 1 || !body || body.scrollTop > 1) return;
-    if (event.target.closest?.('button,a,input,textarea,select,label,[contenteditable="true"],[role="button"],[role="textbox"],[role="slider"],[role="listbox"],[data-swipe-ignore]')) return;
+    if (event.target.closest?.('button,a,input,textarea,select,label,[contenteditable="true"],[role="button"],[role="textbox"],[role="slider"],[role="listbox"],summary,[data-swipe-ignore]')) return;
     let node = event.target;
     while (node && node !== body) {
       if (node instanceof Element && node.scrollHeight > node.clientHeight + 3 &&

@@ -119,14 +119,14 @@ for (const { width, theme } of [
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
     }
-    // The same iPhone text hierarchy should apply to shared form guidance.
+    // The same iPhone text hierarchy should apply to the Moment name label.
     await page.goto('/events');
     await page.getByRole('button', { name: 'Open quick create menu' }).click();
     await page.getByRole('button', { name: 'Life moment', exact: true }).click();
     const modal = page.getByRole('dialog', { name: 'Create a life moment' });
-    const guidance = modal.locator('.event-form-intro');
-    await expect(guidance).toBeVisible();
-    expect(await guidance.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
+    const label = modal.locator('label[for="event-name"]');
+    await expect(label).toBeVisible();
+    expect(await label.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
       .toBeGreaterThanOrEqual(12.95);
     await modal.getByRole('button', { name: 'Cancel', exact: true }).click();
     await expect(modal).toHaveCount(0);

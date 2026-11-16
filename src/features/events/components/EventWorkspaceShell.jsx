@@ -587,15 +587,16 @@ export function EventWorkspaceContent() {
       ) : null}
 
       {attachmentDraft ? <ModalDialog title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
-        <form className="form-surface" onSubmit={saveAttachment} style={{ display: 'grid', gap: '12px' }}>
+        <form className="form-surface" onSubmit={saveAttachment}>
           <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
           <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
           {attachmentError ? <p className="quick-create-error" role="alert">{attachmentError}</p> : null}
-          <label htmlFor="attachment-activity">Keep with</label>
-          <DropdownSelect id="attachment-activity" value={attachmentActivityId} disabled={attachmentBusy} onChange={(changeEvent) => setAttachmentActivityId(changeEvent.target.value)}>
-            <option value="">This Moment</option>
-            {activities.map((activity) => <option key={activity.id} value={recordId(activity.id)}>{activity.title || 'Untitled activity'}</option>)}
-          </DropdownSelect>
+          <label htmlFor="attachment-activity">Keep with
+            <DropdownSelect id="attachment-activity" value={attachmentActivityId} disabled={attachmentBusy} onChange={(changeEvent) => setAttachmentActivityId(changeEvent.target.value)}>
+              <option value="">This Moment</option>
+              {activities.map((activity) => <option key={activity.id} value={recordId(activity.id)}>{activity.title || 'Untitled activity'}</option>)}
+            </DropdownSelect>
+          </label>
           <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
         </form>
       </ModalDialog> : null}
@@ -624,7 +625,7 @@ export function EventWorkspaceContent() {
       ) : null}
       {notesDialogOpen ? (
         <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
-          <form onSubmit={saveNotes} style={{ display: 'grid', gap: '12px' }}>
+          <form className="form-surface" onSubmit={saveNotes}>
             <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
             <div className="dialog-actions" style={styles.dialogActions}>
               <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>

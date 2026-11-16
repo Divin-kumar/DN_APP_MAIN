@@ -16,11 +16,14 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         return action.left >= text.right && action.right <= parent.getBoundingClientRect().right + 1;
       })).toBe(true);
     }
+    const titles = {
+      Transaction: 'Add Transaction', Task: 'New Task', Moment: 'Create a life moment', Activity: 'Add an activity',
+    };
     let transactionMaterial;
     for (const kind of ['Transaction', 'Task', 'Moment', 'Activity']) {
       await page.getByRole('button', { name: 'Open quick create menu' }).click();
       await page.getByRole('button', { name: kind === 'Moment' ? 'Life moment' : kind, exact: true }).click();
-      const dialog = page.getByRole('dialog');
+      const dialog = page.getByRole('dialog', { name: titles[kind], exact: true });
       await expect(dialog).toBeVisible();
       const material = await dialog.evaluate(el => ({
         background: getComputedStyle(el).backgroundImage,
@@ -37,18 +40,29 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         const title = dialog.getByRole('textbox', { name: 'Task title' });
         expect(await title.evaluate(el => el.getBoundingClientRect().width / el.closest('label').getBoundingClientRect().width)).toBeGreaterThan(.95);
       }
-      const date = dialog.locator('input[type="date"]');
+      const expectSameRow = async (first, second) => {
+        const positions = await dialog.evaluate((element, selectors) => selectors.map(selector => {
+          const box = element.querySelector(selector).getBoundingClientRect();
+          return { x: box.x, y: box.y, height: box.height };
+        }), [first, second]);
+        expect(Math.abs(positions[0].y - positions[1].y)).toBeLessThan(4);
+        expect(positions[1].x).toBeGreaterThan(positions[0].x);
+        expect(Math.min(...positions.map(box => box.height))).toBeGreaterThanOrEqual(42);
+      };
+      if (kind === 'Transaction') {
+        await expectSameRow('input[type="text"]', 'input[type="number"]');
+        await expectSameRow('[aria-label="Transaction Type"]', '[aria-label="Category"]');
+      }
       if (kind === 'Task' || kind === 'Transaction') {
         const time = dialog.locator('input[type="time"]');
         await expect(time).toBeVisible();
-        const dateBox = await date.boundingBox(), timeBox = await time.boundingBox();
-        expect(Math.abs(dateBox.y - timeBox.y)).toBeLessThan(4);
-        expect(timeBox.x).toBeGreaterThan(dateBox.x);
+        await expectSameRow('input[type="date"]', 'input[type="time"]');
         expect(await dialog.locator('summary').evaluate(el => getComputedStyle(el, '::after').content)).toBe('none');
         const more = dialog.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'More options' }) });
         await expect(dialog.getByRole('radio', { name: 'Monthly', exact: true })).toBeHidden();
         await more.locator('summary').click();
         await expect(more.locator('details')).toHaveCount(0);
+        await expect(more.locator('.dn-repeat-preview')).toHaveCount(0);
         await more.getByRole('radio', { name: 'Monthly', exact: true }).check();
         await expect(more.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
         await more.locator('summary').click();
@@ -63,10 +77,13 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         await expect(description).toBeHidden();
         await more.getByText('More options', { exact: true }).click();
         await expect(description).toBeVisible();
-        const dateBox = await date.boundingBox(), timeBox = await more.locator('input[type="time"]').boundingBox();
-        expect(Math.abs(dateBox.y - timeBox.y)).toBeLessThan(4);
-        expect(timeBox.x).toBeGreaterThan(dateBox.x);
+        await expectSameRow('input[type="date"]', 'input[type="time"]');
+        await expectSameRow('#quick-activity-type', '#quick-activity-moment');
+        await expect(dialog.locator('form details')).toHaveCount(1);
       }
+      const actions = dialog.locator('button[type="submit"]').locator('..');
+      const actionOrder = await actions.getByRole('button').allTextContents();
+      expect(actionOrder[0]).toBe('Cancel');
       expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       await testInfo.attach(`${kind}-${theme}`, { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' });
       await dialog.getByRole('button', { name: 'Close dialog' }).click();

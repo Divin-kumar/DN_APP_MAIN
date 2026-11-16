@@ -163,8 +163,7 @@ html[data-theme] .dn-editor-schedule .dn-repeat-disclosure {
   padding-inline: 0; border: 0; border-top: 1px solid var(--dn-planning-line);
   border-radius: 0; background: transparent;
 }
-html[data-theme] .dn-repeat-preview { min-height: 78px; align-content: start; }
-html[data-theme] .dn-repeat-preview[data-active="false"] { padding-top: 8px; }
+html[data-theme] .dn-repeat-preview { align-content: start; }
 html[data-theme] .dn-repeat-next { padding-inline: 0; background: transparent; border-radius: 0; }
 html[data-theme] .dn-repeat-preview > p + p { font-size: 12px; }
 @media (prefers-reduced-motion: no-preference) {
@@ -174,5 +173,6 @@ html[data-theme] .dn-repeat-preview > p + p { font-size: 12px; }
 
 /* Repeat is a permanent field inside More options, with no nested disclosure. */
 html[data-theme] .dn-form-disclosure-content > .dn-repeat-field { margin: 0; padding: 0; min-width: 0; }
-html[data-theme] .dn-repeat-field > legend { display: flex; align-items: center; gap: 5px; padding: 0 0 8px; font-size: 13px; font-weight: 600; color: var(--color-text); }
-html[data-theme] .dn-repeat-summary { display: grid; gap: 3px; }
+html[data-theme] .dn-repeat-field > legend { padding: 0 0 5px; font-size: 13px; font-weight: 600; color: var(--color-text); }
+html[data-theme] .dn-repeat-summary { display: flex; flex-wrap: wrap; column-gap: 8px; }
+html[data-theme] .dn-repeat-summary .dn-repeat-edit-note { flex-basis: 100%; margin-top: 2px; }

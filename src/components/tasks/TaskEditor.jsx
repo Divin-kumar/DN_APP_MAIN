@@ -99,11 +99,10 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       </div>
       {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
     </div>
-    <FormDisclosure label="More options" hint={<>
-      {task?.status !== 'completed' ? <RepeatSummary value={repeatFrequency} paused={task?.status === 'cancelled'}
-        dueDate={dueDate} nextDate={nextRepeat} notice={repeatNotice} /> : null}
-      <span>Priority, links and notes</span>
-    </>}>
+    <FormDisclosure hint={repeatFrequency || repeatNotice
+      ? <RepeatSummary value={repeatFrequency} paused={task?.status === 'cancelled'}
+        dueDate={dueDate} nextDate={nextRepeat} notice={repeatNotice} />
+      : task?.status === 'completed' ? 'Priority, links and notes' : 'Once · Priority and notes'}>
       {task?.status !== 'completed' ? <RepeatField value={repeatFrequency} paused={task?.status === 'cancelled'}
         onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
         {task?.status === 'cancelled' ? 'Resume keeps this due date.' : 'Done or Skip creates the next Task. Pause keeps this due date for later.'}

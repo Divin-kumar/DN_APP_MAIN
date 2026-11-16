@@ -85,14 +85,14 @@ test('universal Activity creation saves its clock time and the next draft captur
     await page.getByRole('button',{name:'Activity',exact:true}).click();
   };
   await open();
-  await page.getByRole('dialog').locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary:has-text("More options")').click();
+  await page.getByRole('dialog').locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await page.getByRole('textbox',{name:'Activity title',exact:true}).fill('Lunch entry');
   await page.getByLabel('Activity time',{exact:true}).fill('12:45');
   await page.getByRole('button',{name:'Save activity',exact:true}).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].activities.find(a=>a.title==='Lunch entry').time)).toBe('12:45');
   await open();
-  await page.getByRole('dialog').locator('.dn-form-disclosure:not(.dn-activity-moment-disclosure) > summary:has-text("More options")').click();
+  await page.getByRole('dialog').locator('.dn-form-disclosure > summary:has-text("More options")').click();
   await expect(page.getByLabel('Activity time',{exact:true})).toHaveValue(/^[0-2]\d:[0-5]\d$/);
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
   expect(errors).toEqual([]);

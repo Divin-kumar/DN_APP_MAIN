@@ -367,7 +367,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(payment.getByRole('heading', { name: 'Record payment' })).toBeFocused();
   expect(await sheet.getAttribute('aria-labelledby')).toBe(await payment.getByRole('heading').getAttribute('id'));
   await page.keyboard.press('Shift+Tab');
-  await expect(payment.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
+  await expect(payment.getByRole('button', { name: 'Save payment', exact: true })).toBeFocused();
   await payment.getByRole('heading', { name: 'Record payment' }).focus();
   await page.keyboard.press('Tab');
   await expect(payment.getByRole('button', { name: 'Back to upcoming expenses' })).toBeFocused();
