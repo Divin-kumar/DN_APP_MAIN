@@ -10,8 +10,11 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.addInitScript(() => {
       if (!localStorage.getItem('dn_glass_seeded')) {
         localStorage.setItem('dn_guest_expense_plans', JSON.stringify([{ id: 'internet', name: 'Home internet', amount: 799,
-          category: 'Home', dueDate: '2026-11-16', paymentMethod: 'Online',
+          category: 'Home', dueDate: '2026-11-16', paymentMethod: 'Online', updatedAt: '2026-11-15T12:00:00Z',
           repeat: { frequency: 'monthly', anchorDate: '2026-11-16' } }]));
+        localStorage.setItem('dn_guest_tasks', JSON.stringify([{ id: 'weekly', title: 'Review weekly expenses',
+          dueDate: '2026-11-16', status: 'in-progress',
+          repeat: { frequency: 'weekly', anchorDate: '2026-11-16', seriesId: 'weekly' } }]));
         localStorage.setItem('dn_glass_seeded', 'true');
       }
     });
@@ -64,6 +67,24 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await page.getByRole('button', { name: 'View payment', exact: true }).click();
     await expect(page.getByRole('dialog', { name: 'Payment details', exact: true })).toContainText('₹799');
     await capture('receipt');
+    await page.getByRole('button', { name: 'Close dialog', exact: true }).click();
+    await page.goto('/tasks');
+    const task = page.locator('[data-task-id="weekly"]');
+    await expect(task).toBeVisible();
+    // Guard against the older shared list rule silently erasing the new surface.
+    expect(await task.evaluate(el => getComputedStyle(el).backgroundImage)).not.toBe('none');
+    await capture('tasks');
+    await task.click();
+    await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+    await page.locator('.dn-repeat-disclosure > summary').click();
+    await expect(page.getByRole('radio', { name: 'Weekly', exact: true })).toBeChecked();
+    await capture('task-repeat');
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await task.click();
+    await page.getByRole('menuitem', { name: 'Pause repeat', exact: true }).click();
+    await expect(page.getByRole('dialog', { name: 'Pause repeat?', exact: true })).toBeVisible();
+    await capture('task-pause');
+    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     expect(errors).toEqual([]);
   });
 }

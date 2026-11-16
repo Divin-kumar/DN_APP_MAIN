@@ -405,7 +405,7 @@ html[data-theme] .dn-task-repeat-context svg {
 }
 
 html[data-theme] .dn-tasks-page .dn-task-list { gap: 8px; }
-html[data-theme] .dn-tasks-page .dn-task-list .dn-independent-task-row:not(.is-dashboard-selected) {
+html[data-theme] body .dn-tasks-page .dn-task-list .dn-independent-task-row.dn-swipe-surface:not(.is-dashboard-selected) {
   --dn-list-fill: transparent;
   border: 1px solid var(--dn-planning-line) !important; border-radius: 18px;
   background: var(--dn-planning-surface) !important; box-shadow: var(--dn-planning-shadow) !important;

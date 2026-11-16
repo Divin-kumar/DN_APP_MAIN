@@ -380,12 +380,17 @@ html[data-theme] .dn-expense-plan-entry-icon,
 html[data-theme] .dn-expense-plan-day,
 html[data-theme] .dn-payment-context-icon { background: var(--dn-planning-selected); border: 1px solid var(--dn-planning-line); }
 html[data-theme] .dn-expense-plan-heading {
-  background: color-mix(in srgb, var(--color-card) 90%, transparent);
+  background: var(--dn-planning-field);
+  border-radius: 8px; padding-inline: 6px;
   border-bottom-color: var(--dn-planning-line); font-weight: 600;
 }
 html[data-theme] .dn-expense-plan-row + .dn-expense-plan-row { border-top-color: var(--dn-planning-line); }
+html[data-theme] .dn-expense-plan-row-actions {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  width: min(100%, 260px); gap: 6px;
+}
 html[data-theme] .dn-expense-plan-row-actions > button {
-  padding-inline: 14px; border-radius: 13px; border: 1px solid var(--dn-planning-line);
+  min-width: 0; padding-inline: 4px; border-radius: 13px; border: 1px solid var(--dn-planning-line);
   background: var(--dn-planning-field); color: var(--color-text); font-weight: 600;
 }
 html[data-theme] .dn-expense-plan-row-actions .dn-expense-plan-record { background: var(--dn-planning-selected); color: var(--action-ink); }
