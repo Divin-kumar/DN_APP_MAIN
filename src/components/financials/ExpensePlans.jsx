@@ -4,12 +4,13 @@ import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
 import { activityTime } from '../../utils/activityTime.js';
-import { formatMomentDate } from '../../utils/momentDates.js';
+import { formatMomentDate, parseMomentDate } from '../../utils/momentDates.js';
 import { paymentMethodLabel } from '../../utils/paymentMethod.js';
 import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import useDashboardClock from '../../features/dashboard/useDashboardClock';
 import './ExpensePlans.css';
 
+const billMonth = new Intl.DateTimeFormat('en-GB', { month: 'short' });
 const formatAmount = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const planTitles = {
   list: 'Upcoming expenses',
@@ -59,13 +60,18 @@ function ExpensePlanList({ plans, onSelect }) {
         {items.map((plan) => {
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
+          const dueDate = parseMomentDate(plan.dueDate);
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
+            <span className="dn-expense-plan-day" aria-hidden="true">
+              <strong>{dueDate?.getDate() ?? '—'}</strong>
+              {dueDate ? <small>{billMonth.format(dueDate)} {String(dueDate.getFullYear()).slice(-2)}</small> : null}
+            </span>
             <div className="dn-expense-plan-payment-details">
               <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></div>
               <div className="dn-expense-plan-meta" id={dateId}>
                 <span>
                   <span className="sr-only">{timing === 'later' ? 'Due ' : `${label} · `}</span>
-                  <time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+                  <time className="sr-only" dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
                 </span>
                 <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
               </div>

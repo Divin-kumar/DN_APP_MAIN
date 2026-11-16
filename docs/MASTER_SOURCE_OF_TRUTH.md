@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Finance report and recurring layout (16 November 2026, OldVersion development)
+
+Finance puts the selected period and totals first, followed by Compare months and Income and expense breakdown. Both disclosures start closed so the monthly transaction table and CSV action are visible earlier. Opening the breakdown exposes the existing category drill-down. The open breakdown stays visible while a category filters the table. Switching month shows the full ledger for that month and resets its disclosure.
+
+The Upcoming expenses sheet uses a compact date tile with day, month and year beside each bill. Its frequency, exact amount, Record and Manage stay on the same row group. Task and expense forms group the existing date and Repeat controls, including the next planned date when expanded. Guest tour edition 2026.11.16.1 explains the breakdown disclosure after explicit Refresh demo.
+
 ## Frosted Insights and recurrence controls (15 November 2026, OldVersion development)
 
 On phones, Insights Overview uses open sections and quiet dividers. Finance combines the month and year controls and selected totals into one softly tinted panel, above the existing comparison and transaction details. The main Task list uses lighter rows and inline due labels.

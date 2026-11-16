@@ -98,7 +98,7 @@ html[data-theme] .dn-insights-views {
 
 html[data-theme] .dn-insights-views button,
 html[data-theme] .dn-finance-report button,
-.dn-finance-compare summary {
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure) summary {
   min-height: 44px;
   background: transparent;
   color: var(--color-text);
@@ -138,7 +138,7 @@ html[data-theme] .insights-page .insights-panel-heading > span {
 
 .dn-finance-report {
   display: grid;
-  gap: 14px;
+  gap: 4px;
   min-width: 0;
 }
 
@@ -158,34 +158,31 @@ html[data-theme] .insights-page .insights-panel-heading > span {
   line-height: 1.3;
 }
 
-.dn-finance-report h2 {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 17px;
-}
-.dn-finance-report h2 svg { color: var(--color-primary); flex: none; }
 .dn-finance-report h4 { font-size: 14px; }
 
 .dn-finance-period {
   display: grid;
-  grid-template-columns: minmax(100px, max-content) auto;
-  justify-content: start;
-  gap: 8px;
+  grid-template-columns: minmax(90px, max-content) auto;
+  align-self: start;
+  justify-self: start;
+  gap: 0;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-glass) 46%, transparent);
 }
 
 html[data-theme] .dn-finance-period select {
   width: 100%;
   min-height: 44px;
   padding: 0 12px;
-  border: 1px solid color-mix(in srgb, var(--color-border) 70%, transparent);
+  border: 0;
   border-radius: 999px !important;
-  background-color: color-mix(in srgb, var(--color-glass) 55%, transparent) !important;
+  background-color: transparent !important;
   font-size: 16px;
   font-weight: 600;
 }
 
 .dn-finance-month-summary {
+  display: grid;
   min-width: 0;
   padding: 13px 16px 15px;
   border: 1px solid color-mix(in srgb, var(--color-primary) 12%, var(--color-border));
@@ -199,8 +196,8 @@ html[data-theme] .dn-finance-period select {
 .dn-finance-month-summary dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  margin: 12px 0 0;
+  gap: 8px 14px;
+  margin: 8px 0 0;
 }
 
 .dn-finance-month-summary dt {
@@ -224,8 +221,8 @@ html[data-theme] .dn-finance-period select {
 
 .dn-finance-balance {
   grid-column: 1 / -1;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--dn-insights-divider);
 }
 
 .dn-finance-balance dd {
@@ -234,24 +231,24 @@ html[data-theme] .dn-finance-period select {
   letter-spacing: -.035em;
 }
 
-.dn-finance-compare {
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure) {
   min-width: 0;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--dn-insights-divider);
 }
 
-.dn-finance-compare summary {
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure) summary {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 4px;
-  color: var(--color-primary);
-  font-size: 14px;
-  font-weight: 680;
+  color: var(--action-ink);
+  font-size: 13px;
+  font-weight: 650;
   list-style: none;
 }
 
-.dn-finance-compare summary::-webkit-details-marker { display: none; }
-.dn-finance-compare[open] summary svg { transform: rotate(180deg); }
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure) summary::-webkit-details-marker { display: none; }
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure)[open] summary svg { transform: rotate(180deg); }
 
 .dn-finance-table {
   width: 100%;
@@ -298,17 +295,18 @@ html[data-theme] .dn-finance-months button {
 
 .dn-finance-report button:focus-visible,
 .dn-insights-views button:focus-visible,
-.dn-finance-compare summary:focus-visible {
+:is(.dn-finance-compare, .dn-finance-breakdown-disclosure) summary:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
 
-.dn-finance-month-details { display: grid; gap: 12px; min-width: 0; }
+.dn-finance-month-details { display: grid; gap: 8px; min-width: 0; }
 
 .dn-finance-breakdown {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  padding-block: 4px 8px;
 }
 
 .dn-finance-breakdown section { min-width: 0; }

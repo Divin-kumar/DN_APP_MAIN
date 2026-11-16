@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import { ArrowDownLeft, ArrowUpRight, CalendarDays, ChevronDown, ChevronRight, Download } from 'lucide-react';
+import { ArrowDownLeft, ArrowUpRight, ChevronDown, ChevronRight, Download } from 'lucide-react';
 import { downloadBlob } from '../../utils/download';
 import { activityTime } from '../../utils/activityTime';
 import { parseMomentDate } from '../../utils/momentDates';
@@ -28,7 +28,7 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
 
   return (
     <section className="dn-finance-report" aria-labelledby="finance-report-title">
-      <h2 id="finance-report-title"><CalendarDays size={18} aria-hidden="true" /> Monthly finance</h2>
+      <h2 id="finance-report-title" className="sr-only">Monthly finance</h2>
       {selectedMonth ? <>
         <section className="dn-finance-month-summary" aria-labelledby="finance-selected-month">
           <h3 id="finance-selected-month" className="sr-only">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>
@@ -103,10 +103,13 @@ function FinanceMonthDetails({ month, transactions, events }) {
 
   return (
     <div id="finance-month-details" className="dn-finance-month-details">
-      <div className="dn-finance-breakdown">
-        <CategoryBreakdown label="Income by type" kind="income" rows={groups.income} activeFilter={activeFilter} onSelect={selectCategory} />
-        <CategoryBreakdown label="Expenses by category" kind="expense" rows={groups.expense} activeFilter={activeFilter} onSelect={selectCategory} />
-      </div>
+      <details className="dn-finance-breakdown-disclosure">
+        <summary>Income and expense breakdown <ChevronDown size={16} aria-hidden="true" /></summary>
+        <div className="dn-finance-breakdown">
+          <CategoryBreakdown label="Income by type" kind="income" rows={groups.income} activeFilter={activeFilter} onSelect={selectCategory} />
+          <CategoryBreakdown label="Expenses by category" kind="expense" rows={groups.expense} activeFilter={activeFilter} onSelect={selectCategory} />
+        </div>
+      </details>
       <div className="dn-finance-detail-head">
         <div>
           <h4 id="finance-transactions" ref={transactionHeading} tabIndex={-1}>Transactions</h4>

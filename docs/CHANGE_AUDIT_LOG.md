@@ -119,6 +119,13 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261116-546 | Bring finance transactions and repeat dates forward
+
+- **Scope** Keep the selected month and totals together. Collapse the month comparison and category breakdown above the existing transactions and CSV. Group date and Repeat in the editors. Put each upcoming bill next to its due-date tile.
+- **Source-derived** Existing report totals, schedule behavior, Record and Manage buttons, focus restoration and ledger formats drive the same actions. The updated Guest tour explains the breakdown disclosure on explicit refresh.
+- **Executed** Reviewed 320px dark and 430px light browser captures. Ran Node tests, lint, build and affected browser specs. Restored 194 records into an isolated Guest session and reconciled all five reporting months.
+- **Unverified** Physical iPhone Safari and signed-in account use.
+
 ## CHG-20261115-545 | Lighten Insights and recurring schedule surfaces
 
 - **Scope** Use open sections and softer dividers in mobile Insights. Move the Finance period controls into the monthly summary. Reduce the visible weight of Task and bill rows and use rounded controls in recurrence editors.

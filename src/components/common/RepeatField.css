@@ -1,3 +1,22 @@
+html[data-theme] .dn-editor-schedule {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+html[data-theme] .dn-editor-schedule:has(.dn-repeat-disclosure) {
+  padding: 8px 6px 0;
+  border-radius: 16px;
+  background: color-mix(in srgb, var(--color-glass) 42%, transparent);
+}
+@media (max-width: 360px) {
+  html[data-theme] .dn-editor-schedule:has(.dn-repeat-disclosure) {
+    padding-inline: 0;
+  }
+}
+html[data-theme] .dn-editor-schedule .dn-repeat-disclosure {
+  border-top-color: color-mix(in srgb, var(--color-border) 64%, transparent);
+}
+
 html[data-theme] .dn-repeat-field {
   min-width: 0;
   margin: 0;
@@ -65,9 +84,8 @@ html[data-theme] .dn-repeat-preview strong { color: var(--color-text); text-alig
   grid-template-columns: 16px minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
-  min-height: 44px;
+  min-height: 36px;
   padding: 4px 6px;
-  border-bottom: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
 }
 .dn-repeat-next svg { color: var(--color-primary); }
 .dn-repeat-frequency { font-weight: 680; color: var(--color-text); }

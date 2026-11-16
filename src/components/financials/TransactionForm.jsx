@@ -227,8 +227,10 @@ export default function TransactionForm({
       {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div>
         : canRepeat ? <div className="dn-expense-draft-fields">{titleField}{amount}</div> : <>{amount}{titleField}</>}
       {!paymentPlan ? <>
-        <div className={isPlan ? 'dn-plan-form-date' : undefined}>{dates}</div>
-        {repeatField}
+        <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
+          <div className={isPlan ? 'dn-plan-form-date' : undefined}>{dates}</div>
+          {repeatField}
+        </div>
         {categoryField}
       </> : null}
       {!isPlan ? paymentMethod : null}

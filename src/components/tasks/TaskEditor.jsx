@@ -89,16 +89,18 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <input disabled={busy} required maxLength={500} autoComplete="off" value={title}
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
     </label>
-    <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
-      <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy} required={Boolean(repeatFrequency)}
-        onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
-      <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
+    <div className="dn-editor-schedule">
+      <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
+        <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy} required={Boolean(repeatFrequency)}
+          onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
+        <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
+      </div>
+      {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
+      {task?.status !== 'completed' ? <RepeatDisclosure value={repeatFrequency} paused={task?.status === 'cancelled'}
+        onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
+        {momentId ? 'Moment and Activity links apply to this Task only.' : null}
+      </RepeatDisclosure> : null}
     </div>
-    {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-    {task?.status !== 'completed' ? <RepeatDisclosure value={repeatFrequency} paused={task?.status === 'cancelled'}
-      onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
-      {momentId ? 'Moment and Activity links apply to this Task only.' : null}
-    </RepeatDisclosure> : null}
     <FormDisclosure label="More options" hint="Priority, links and notes">
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>

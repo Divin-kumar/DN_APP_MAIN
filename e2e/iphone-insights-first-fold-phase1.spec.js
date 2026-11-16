@@ -179,6 +179,10 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     await expect(month).toHaveValue('2024-03');
     await compare.click();
     await expect(page.getByRole('heading', { name: 'March 2024' })).toBeVisible();
+    const breakdown = page.getByText('Income and expense breakdown', { exact: true });
+    await expect(page.getByRole('heading', { name: 'Income by type' })).toHaveCount(0);
+    await expect(page.getByRole('table', { name: 'Transactions' })).toBeVisible();
+    await breakdown.click();
     await expect(page.getByRole('heading', { name: 'Income by type' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
 
