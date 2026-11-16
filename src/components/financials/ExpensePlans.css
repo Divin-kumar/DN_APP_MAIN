@@ -426,3 +426,12 @@ html[data-theme] .dn-modal .dn-transaction-form .dn-payment-method-choice input:
 @media (prefers-reduced-transparency: reduce) {
   html[data-theme] .dn-expense-plan-entry { -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
+
+/* Keep the payment label on one line, including date-tile bill lists. */
+html[data-theme] body .dn-expense-plan-row-actions > button {
+  font-size: 13px; font-weight: 600; letter-spacing: 0;
+}
+html[data-theme] .dn-expense-plan-row-actions > button > span { white-space: nowrap; }
+@media (max-width: 360px) {
+  html[data-theme] .dn-expense-plan-row-actions { grid-column: 1 / -1; width: 100%; }
+}

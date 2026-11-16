@@ -42,6 +42,8 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await capture('breakdown');
     await page.goto('/financials/transactions#expense-plans');
     await expect(page.getByRole('dialog', { name: 'Upcoming expenses', exact: true })).toBeVisible();
+    const paymentLabel = page.locator('.dn-expense-plan-record > span');
+    expect(await paymentLabel.evaluate(el => el.getBoundingClientRect().height)).toBeLessThan(24);
     await capture('bill');
     await page.getByRole('button', { name: 'Manage plan for Home internet' }).click();
     await capture('manage');

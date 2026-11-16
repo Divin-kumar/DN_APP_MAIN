@@ -80,7 +80,7 @@ function ExpensePlanList({ plans, onSelect }) {
             <div className="dn-expense-plan-row-actions">
               <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
                 aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
-                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><Check size={15} aria-hidden="true" /> <span>Record payment</span></button>
+                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><span>Record payment</span></button>
               <button type="button" className="dn-expense-plan-manage" data-plan-action="manage"
                 aria-label={`Manage plan for ${plan.name}`} onClick={(event) => onSelect(plan, 'manage', event.currentTarget)}>
                 <Settings2 size={15} aria-hidden="true" /> Manage
