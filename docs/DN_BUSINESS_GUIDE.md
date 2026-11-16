@@ -1,3 +1,5 @@
+**Task editor (16 November 2026, development).** Tap Keep editing after opening a Task confirmation to return to the same spot with your draft and More options as you left them. In a long Moment or Activity list, tap Search when you need the keyboard.
+
 **Paired Moment and Activity links (16 November 2026, development).** In Task and Transaction forms, More options shows its summary on the same line. Open it to see Moment and Activity next to each other, with Repeat below when available. Repeating expenses link to a Moment or Activity when you record each payment. Forms use the DN typeface, and the profile and create menus, Settings navigation, Finance summary and PDF Studio controls share their glass finish in both themes.
 
 **Even fields and lighter buttons (16 November 2026, development).** Title and Amount align with Date and Time in the transaction form. Payment choices have matching widths. Cancel and Save sit evenly below the last field. Cancel is plain text and Save has a soft tint. In Task and expense sheets, the actions stay visible when the phone keyboard is open or in short landscape.

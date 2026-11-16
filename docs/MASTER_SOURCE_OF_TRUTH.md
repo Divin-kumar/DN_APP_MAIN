@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Task editor confirmations and linked record search (16 November 2026, development)
+
+Task editor confirmations open at the top of the same sheet with a brief fade that respects Reduce Motion. Keep editing restores the draft, More options state, scroll position and focus on the action that opened the confirmation. Long Task Moment and Activity pickers open to choices and offer Search on demand, matching Transaction forms. The search keyboard opens only when requested. Guest tour edition 2026.11.16.12 describes the editor through explicit Refresh demo.
+
 ## Paired form links and shared glass surfaces (16 November 2026, development)
 
 More options places the label, a single-line summary and the expand indicator on one row. Task and Transaction forms pair the optional Moment and Activity links above Repeat. Activity becomes available when its parent Moment is selected. Expense plans hide the links while repeating because each recorded payment owns those links. Labels, selectors and actions use the DN interface typeface and common size and weight tokens. The quick-create and account menus, Settings navigation, Finance summary and PDF Studio controls use the same light and dark glass material as the forms. Guest tour edition 2026.11.16.10 explains the paired links and Repeat placement through explicit Refresh demo.

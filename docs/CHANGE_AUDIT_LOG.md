@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-562 | Keep the Task draft in place across confirmations
+
+- **Scope:** Open Task confirmations at the top of the current sheet with a brief fade. Keep editing restores the open fields, prior scroll position and action focus. Long Task Moment and Activity lists adopt the Transaction form's on-demand search.
+- **Compatibility:** Existing Task statuses, repeat schedules, links and save rules are preserved. Guest tour 2026.11.16.12 explains the controls through explicit Refresh demo.
+- **Executed:** 632 Node tests, lint, build and 22 focused Chromium checks passed. Tests cover confirmation return at five viewport sizes, light and dark glass forms, repeat schedules, linked-record search and saved Guest data. Physical iPhone Safari remains unverified.
+
 ## CHG-20261116-561 | Make historical Finance reports easier to browse
 
 - **Scope:** Add inline year buttons when several years have transactions. Jump to the latest populated month of the selected year and wrap that year's months within the screen using the light and dark glass controls. Switching years resets the open report and active category.

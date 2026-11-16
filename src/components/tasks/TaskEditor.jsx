@@ -31,13 +31,25 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const footer = useDialogFormFooter();
   const [pendingAction, setPendingAction] = useState(null);
   const confirmationRef = useRef(null);
-  const actionGroupRef = useRef(null);
-  const previousActionRef = useRef(null);
+  const editorPosition = useRef(null);
   useLayoutEffect(() => {
-    if (pendingAction) confirmationRef.current?.focus();
-    else if (previousActionRef.current) actionGroupRef.current?.querySelector(`[data-task-action="${previousActionRef.current}"]`)?.focus();
-    previousActionRef.current = pendingAction;
+    const position = editorPosition.current;
+    if (!position) return;
+    if (pendingAction) {
+      if (position.body) position.body.scrollTop = 0;
+      confirmationRef.current?.focus({ preventScroll: true });
+    } else {
+      if (position.body) position.body.scrollTop = position.scrollTop;
+      position.button.focus({ preventScroll: true });
+      editorPosition.current = null;
+    }
   }, [pendingAction]);
+  const confirmAction = (event, action) => {
+    const button = event.currentTarget;
+    const body = button.closest('.dn-modal-body');
+    editorPosition.current = { button, body, scrollTop: body?.scrollTop ?? 0 };
+    setPendingAction(action);
+  };
   const [title, setTitle] = useState(task?.title || '');
   const [notes, setNotes] = useState(task?.notes || '');
   const [priority, setPriority] = useState(task?.priority || 'medium');
@@ -76,7 +88,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   </>;
   const formActions = footer ? createPortal(actions, footer) : actions;
 
-  if (pendingAction) return <div className="dn-task-editor dn-task-action-confirm">
+  const confirmation = pendingAction ? <div className="dn-task-editor dn-task-action-confirm">
     <h4 ref={confirmationRef} tabIndex={-1}>{actionLabel}?</h4>
     {task.repeat ? <TaskRepeatActionSummary task={task} action={pendingAction} /> : <p>{pendingAction === 'delete'
       ? `Remove “${task.title}”? Its Moment and Activities will not be changed.`
@@ -84,9 +96,9 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         : `Mark “${task.title}” as cancelled? You can restore it later.`}</p>}
     <p>Unsaved edits will not be saved.</p>
     {formActions}
-  </div>;
+  </div> : null;
 
-  return <form id={formId} className="dn-task-editor" onSubmit={save} aria-busy={busy}>
+  return <><form id={formId} className="dn-task-editor" onSubmit={save} aria-busy={busy} hidden={Boolean(pendingAction)}>
     <label className="dn-task-field">Task title
       <input disabled={busy} required maxLength={500} autoComplete="off" value={title}
         onChange={(event) => setTitle(event.target.value)} placeholder="What needs doing?" />
@@ -112,7 +124,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       <div className="dn-form-pair">
         <div className="dn-task-field">
           <label htmlFor="dn-task-moment">Moment (optional)</label>
-          <DropdownSelect disabled={busy} id="dn-task-moment" value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
+          <DropdownSelect disabled={busy} id="dn-task-moment" searchOnDemand searchLabel="Search linked moments"
+            value={momentId} onChange={(event) => { setMomentId(event.target.value); setActivityId(''); }}>
             <option value="">Standalone Task</option>
             {moments.map((item) => <option key={recordId(item.id) || recordId(item.firestoreId)}
               value={recordId(item.id) || recordId(item.firestoreId)}>{item.name || 'Untitled Moment'}</option>)}
@@ -122,7 +135,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         </div>
         <div className="dn-task-field">
           <label htmlFor="dn-task-activity">Activity (optional)</label>
-          <DropdownSelect disabled={busy || !momentId} id="dn-task-activity" value={activityId} onChange={(event) => setActivityId(event.target.value)}>
+          <DropdownSelect disabled={busy || !momentId} id="dn-task-activity" searchOnDemand searchLabel="Search linked activities"
+            value={activityId} onChange={(event) => setActivityId(event.target.value)}>
             <option value="">{momentId ? 'Moment only' : 'No activity'}</option>
             {(parent?.activities || []).map((item) => <option key={recordId(item.id)} value={recordId(item.id)}>{item.title || 'Untitled Activity'}</option>)}
             {savedAlias ? <option value={activityId}>{unresolved?.kind === 'activity'
@@ -140,12 +154,12 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
           placeholder="Helpful details" />
       </label>
     </FormDisclosure>
-    {task?.id && onTaskAction ? <div ref={actionGroupRef} className="dn-task-editor-actions" role="group" aria-label="Task actions">
+    {task?.id && onTaskAction ? <div className="dn-task-editor-actions" role="group" aria-label="Task actions">
       {task.status === 'cancelled'
-        ? <button type="button" disabled={busy} data-task-action="restore" onClick={() => setPendingAction('restore')}>{restoreLabel}…</button>
-        : <button type="button" disabled={busy} data-task-action="cancel" onClick={() => setPendingAction('cancel')}>{cancelLabel}…</button>}
-      <button type="button" disabled={busy} data-task-action="delete" className="is-destructive" onClick={() => setPendingAction('delete')}>Delete Task…</button>
+        ? <button type="button" disabled={busy} onClick={(event) => confirmAction(event, 'restore')}>{restoreLabel}…</button>
+        : <button type="button" disabled={busy} onClick={(event) => confirmAction(event, 'cancel')}>{cancelLabel}…</button>}
+      <button type="button" disabled={busy} className="is-destructive" onClick={(event) => confirmAction(event, 'delete')}>Delete Task…</button>
     </div> : null}
-    {formActions}
-  </form>;
+    {!pendingAction ? formActions : null}
+  </form>{confirmation}</>;
 }
