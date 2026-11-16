@@ -86,13 +86,17 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         expect(await summaryIsInline()).toBe(true);
         await summary.click();
         await expect(more.locator('details')).toHaveCount(0);
-        const momentName = kind === 'Transaction' ? 'Linked Moment' : 'Moment (optional)';
         const activityName = kind === 'Transaction' ? 'Linked Activity' : 'Activity (optional)';
-        const moment = more.getByRole('combobox', { name: momentName, exact: true });
         const activity = more.getByRole('combobox', { name: activityName, exact: true });
-        const [momentBox, activityBox, repeatBox] = await Promise.all([
-          moment.boundingBox(), activity.boundingBox(), more.getByRole('group', { name: 'Repeat', exact: true }).boundingBox(),
-        ]);
+        await expect(more.getByRole('group', { name: 'Repeat', exact: true })).toBeVisible();
+        // Measure all three boxes in one browser frame, including during sheet motion.
+        const [momentBox, activityBox, repeatBox] = await more.evaluate((node) => {
+          const links = node.querySelectorAll('.dn-form-pair [role="combobox"]');
+          return [...links, node.querySelector('.dn-repeat-field')].map((element) => {
+            const { x, y, width, height } = element.getBoundingClientRect();
+            return { x, y, width, height };
+          });
+        });
         expect(Math.abs(momentBox.y - activityBox.y)).toBeLessThan(1);
         expect(Math.abs(momentBox.width - activityBox.width)).toBeLessThan(1);
         expect(activityBox.x).toBeGreaterThan(momentBox.x);

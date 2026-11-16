@@ -87,9 +87,12 @@ test.describe('Recurring sheets on short phone screens', () => {
     await expect(date).toHaveAttribute('datetime', '2026-11-14T18:30');
     await expect(date).toBeInViewport({ ratio: 1 });
     await expect.poll(() => date.evaluate((element) => {
-      const bounds = element.getBoundingClientRect();
-      const hit = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
-      return element.contains(hit);
+      // A wrapped date has blank space between its line boxes.
+      const text = document.createRange();
+      text.selectNodeContents(element);
+      const lines = [...text.getClientRects()].filter(({ width, height }) => width > 0 && height > 0);
+      return lines.length > 0 && lines.every(({ x, y, width, height }) =>
+        element.contains(document.elementFromPoint(x + width / 2, y + height / 2)));
     })).toBe(true);
     expect((await date.boundingBox()).y).toBeLessThan((await cancel.boundingBox()).y);
     const before = await readGuest(page, 'dn_guest_tasks');

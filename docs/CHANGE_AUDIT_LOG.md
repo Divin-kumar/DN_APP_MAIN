@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-558 | Stabilize browser geometry checks for the production candidate
+
+- **Scope:** Measure Moment, Activity and Repeat in one browser frame. Hit-test the actual text lines of a wrapped Task confirmation date. These checks retain the alignment, field order and visible confirmation requirements.
+- **Evidence:** The prior targeted GitHub run showed aligned fields and a visible wrapped date in its screenshots, while assertions sampled different animation frames or the blank area between text lines. Run the full verification at the resulting release SHA.
+
 ## CHG-20261116-557 | Prepare the DN 2.3.12 production release
 
 - **Scope:** Package reviewed OldVersion development build `1b638bf` for dn-10.web.app after owner authorization. Update the installed About entry and matching release coverage for shared glass forms, recurring Tasks and expenses, and monthly Finance reports.
