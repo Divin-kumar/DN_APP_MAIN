@@ -1,5 +1,11 @@
 # DN — Change Log
 
+### CHG-521 | Inline time and quieter form controls | 16 November 2026 | OldVersion development
+
+- **Scope:** Keep Time beside Date in transaction create/edit, expense schedules and payments; remove the duplicate time controls from More options. Preserve date-based schedule behavior and draft time. Remove decorative form disclosure/dropdown chevrons, lighten Task/Transaction typography and repeat controls, reduce spare repeat-preview space and unify right-aligned Dashboard Browse links.
+- **Compatibility:** Existing save, payment, repeat anchors, required validation and keyboard semantics remain. Guest tour 2026.11.16.7 changes instructions only via explicit Refresh demo.
+- **Validation:** Targeted browser coverage includes 320px/430px light/dark date/time alignment, arrow removal and both empty Dashboard browse links, alongside existing form/recurrence journeys. Results are reported with the development commit; native Safari remains a device check.
+
 ### CHG-520 | Shared glass forms and Repeat inside More options | 16 November 2026 | OldVersion development
 
 - **Scope:** Move existing Task and expense-plan repeat controls into More options for create/edit, including shared universal-add forms. Remove the nested Repeat disclosure; keep frequency, next date, paused state and edit warning in the outer summary. Preserve eligibility, draft values, schedule anchors, payments and fixed Save/Cancel controls.

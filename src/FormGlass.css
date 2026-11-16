@@ -126,3 +126,23 @@ html[data-theme] body .settings-page input[type="file"]::file-selector-button {
   border: 1px solid var(--dn-form-line); border-radius: 10px; padding: 10px 12px;
   background: var(--dn-form-field); color: var(--color-text); font: inherit; cursor: pointer;
 }
+
+/* Quiet controls without decorative disclosure arrows. */
+html[data-theme] body .dn-form-disclosure > summary::after { content: none; display: none; }
+html[data-theme] body :is(.dn-modal, form, .settings-page) .dropdown-trigger > .lucide-chevron-down { display: none; }
+html[data-theme] body .dn-form-disclosure > summary { font-weight: 600; }
+html[data-theme] body .dn-form-disclosure[open] > summary { color: var(--color-text); }
+html[data-theme] body .dn-repeat-preview { min-height: 48px; }
+html[data-theme] body .dn-repeat-options { background: transparent; padding: 0; gap: 6px; }
+html[data-theme] body .dn-repeat-option > span { border-radius: 12px; font-weight: 500; }
+html[data-theme] body :is(.dn-task-editor, .dn-transaction-form) .dropdown-trigger { font-weight: 500; box-shadow: none !important; }
+html[data-theme] body :is(.dn-task-field, .dn-transaction-field) { font-weight: 600; }
+html[data-theme] body .dn-transaction-form .activity-date-time-row {
+  display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 8px; align-items: start;
+}
+html[data-theme] body .dn-transaction-form .activity-date-time-row > * { min-width: 0; }
+html[data-theme] body .dn-transaction-form .activity-date-time-row :is(input[type="date"], input[type="time"]) { width: 100%; min-width: 0; font-size: 16px; }
+@media (max-width: 600px) {
+  html[data-theme] body .dn-payment-fields { grid-template-columns: minmax(0, 1fr); }
+}
+html[data-theme] body :is(.dn-modal, form) :is(.event-form-actions, .event-greeting-editor-actions) { border-radius: 12px; }

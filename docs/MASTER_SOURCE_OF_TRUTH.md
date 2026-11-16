@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Lightweight forms and aligned Dashboard browse actions (16 November 2026, development)
+
+Transaction creation/editing and payment forms keep Time alongside Date, like Tasks and Moments. Expense schedules keep the same date/time row with time disabled because schedules are date-based; the transaction time draft survives changing back to Once. More options retains repeat, links and notes without a decorative down arrow. Shared form dropdowns also omit their decorative chevron while retaining combobox semantics, keyboard controls and selection styling. Repeat controls have quieter weights and less unused vertical space. Empty Moments and Activities Dashboard sections use the same two-column layout, with Browse on the right and the message wrapping in the remaining space. Guest tour 2026.11.16.7 updates guidance through explicit Refresh demo.
+
 ## Shared form materials (16 November 2026, development)
 
 A shared light/dark material layer covers modal editors and confirmations, inline forms, Settings controls, PDF controls, login and portalled dropdowns. The source inventory includes Moments, Activities and entries, Tasks, transactions/plans/payments, attachments, greeting editors, filters, Code Lists, Appearance and data operations. It gives surfaces a restrained glass gradient, muted borders and consistent fields, writing areas, action bars and keyboard focus. Existing field sizing, validation, save behavior, destructive semantics and native date/time behavior remain. Reduced-transparency and unsupported-blur fallbacks use opaque theme surfaces. Browser acceptance is separate from this source-derived coverage.
@@ -14,7 +18,7 @@ Upcoming expenses always exposes Edit, Skip and End repeat. Record payment is a 
 
 ## Simple recurring forms and inline bill controls (16 November 2026, development)
 
-Switching a new expense between Once and a repeat keeps the same form, amount/title/date layout, category and visible payment controls. Optional transaction time is under More options for new expenses and is disabled while repeating; the draft time is preserved when switching back to Once. The repeat preview reserves its space and uses a simple next-date line. Cash, Online and Choose at payment share one row; longer configured method lists scroll horizontally. Edit, Skip and End repeat are always visible under each bill; there is no Manage button. Edit/payment and safety confirmations return directly to that expanded list, restoring action focus and list position. Success keeps the bill actions available. Repeated payment and skip semantics are unchanged.
+Switching a new expense between Once and a repeat keeps the same form, amount/title/date layout, category and visible payment controls. Optional transaction time remains beside Date for new expenses and is disabled while repeating; the draft time is preserved when switching back to Once. The repeat preview reserves its space and uses a simple next-date line. Cash, Online and Choose at payment share one row; longer configured method lists scroll horizontally. Edit, Skip and End repeat are always visible under each bill; there is no Manage button. Edit/payment and safety confirmations return directly to that expanded list, restoring action focus and list position. Success keeps the bill actions available. Repeated payment and skip semantics are unchanged.
 
 Sheet fields define their theme materials directly, avoiding unsupported nested :has() selectors that left field borders/backgrounds unresolved. Dark fields use muted borders and matching surfaces. Guest tour 2026.11.16.4 describes the inline controls after explicit Refresh demo. No saved record or personal data is reset.
 

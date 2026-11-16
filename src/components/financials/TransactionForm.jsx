@@ -107,8 +107,7 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = paymentPlan ? 'Title, category, time, links and notes'
-    : canRepeat ? 'Time, links and notes' : 'Links and notes';
+  const supportingDetails = paymentPlan ? 'Title, category, links and notes' : 'Links and notes';
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -163,7 +162,7 @@ export default function TransactionForm({
   const dates = <div className="activity-date-time-row">
     <DateField label={isPlan ? 'Due date *' : paymentPlan ? 'Paid on *' : 'Date *'} name="date" required value={form.date}
       onChange={(event) => change('date', event.target.value)} disabled={busy} />
-    {!planFlow ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} /> : null}
+    <ActivityTimeField subject={paymentPlan ? 'Payment' : 'Transaction'} value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} />
   </div>;
   const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
@@ -239,10 +238,7 @@ export default function TransactionForm({
         <span>{supportingDetails}</span>
       </>}>
       {repeatField}
-      {canRepeat && !expensePlan ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} /> : null}
-      {paymentPlan ? <>{titleField}{categoryField}
-        <ActivityTimeField subject="Payment" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />
-      </> : null}
+      {paymentPlan ? <>{titleField}{categoryField}</> : null}
       {!isPlan ? <>
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>

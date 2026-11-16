@@ -414,3 +414,12 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-list-container:focus-vis
   outline-offset:-2px;
   border-radius:10px;
 }
+
+/* Both empty sections keep their matching browse action on the right. */
+html[data-theme] .dashboard-compact .dashboard-empty-browse {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+}
+html[data-theme] .dashboard-compact .dashboard-empty-browse > p { margin: 0; min-width: 0; line-height: 1.5; }
+html[data-theme] .dashboard-compact .dashboard-empty-browse > a {
+  justify-self: end; margin: 0; padding: 0; white-space: nowrap; font-size: 12px; font-weight: 600; text-decoration: none;
+}
