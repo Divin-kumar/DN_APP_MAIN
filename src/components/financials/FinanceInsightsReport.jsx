@@ -69,15 +69,20 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
     <section className="dn-finance-report" aria-labelledby="finance-report-title">
       <h2 id="finance-report-title" className="sr-only">Monthly finance</h2>
       {selectedMonth ? <>
-        <div className="dn-finance-periods" role="group" aria-label="Report month">
-          {[...monthsByYear].map(([optionYear, reportMonths]) => <div className="dn-finance-year" key={optionYear}>
-            <span>{optionYear}</span>
-            <div role="group" aria-label={`Months in ${optionYear}`}>
-              {reportMonths.map((month) => <button type="button" key={month}
-                aria-label={MONTH_NAME.format(monthDate(month))} aria-pressed={month === selectedMonth}
-                onClick={() => chooseMonth(month)}>{SHORT_MONTH.format(monthDate(month))}</button>)}
-            </div>
-          </div>)}
+        <div className="dn-finance-periods">
+          {monthsByYear.size > 1 && <div className="dn-finance-years" role="group" aria-label="Report year">
+            {[...monthsByYear].map(([optionYear, [latestMonth]]) => (
+              <button type="button" key={optionYear} aria-pressed={optionYear === year}
+                aria-controls="finance-report-months" onClick={() => {
+                  if (optionYear !== year) chooseMonth(latestMonth);
+                }}>{optionYear}</button>
+            ))}
+          </div>}
+          <div id="finance-report-months" className="dn-finance-month-options" role="group" aria-label="Report month">
+            {monthsByYear.get(year).map((month) => <button type="button" key={month}
+              aria-label={MONTH_NAME.format(monthDate(month))} aria-pressed={month === selectedMonth}
+              aria-controls="finance-month-details" onClick={() => chooseMonth(month)}>{SHORT_MONTH.format(monthDate(month))}</button>)}
+          </div>
         </div>
         <section className="dn-finance-month-summary" aria-labelledby="finance-selected-month">
           <h3 id="finance-selected-month" className="sr-only">{MONTH_NAME.format(monthDate(selectedMonth))}</h3>

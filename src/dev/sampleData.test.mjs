@@ -17,6 +17,7 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   const statuses = demo.events[2].activities.map((activity) => activity.status);
   assert.ok(statuses.includes('in-progress') && statuses.includes('completed') && statuses.includes('cancelled'));
   assert.deepEqual(new Set([...demo.incomes, ...demo.expenses].map((item) => item.paymentMethod)), new Set(['Cash', 'Online']));
+  assert.match(demo.incomes[0].notes, /pick a year when several years are available, then tap a month/);
   assert.ok(demo.expenses.every((item) => demo.events.some((moment) => moment.id === item.eventId
     && moment.activities.some((activity) => activity.id === item.activityId))));
   for (const destination of ['Story', 'Gallery', 'PDF Studio']) assert.ok(demo.events[0].notes.includes(destination));

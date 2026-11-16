@@ -147,6 +147,10 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
         { id: 'meal', name: 'Lunch', category: 'Long food and personal expense category', amount: 25.49, date: '2024-03-06', time: '13:15', paymentMethod: 'Cash' },
         { id: 'auto', name: 'Auto', category: 'Travel', amount: 60, date: '2024-02-29' },
         { id: 'large', name: 'Home', category: 'Home', amount: 1234567.85, date: '2024-04-01' },
+        ...Array.from({ length: 12 }, (_, index) => ({
+          id: `history-${index}`, name: 'Past expense', category: 'Other', amount: 10,
+          date: `2025-${String(index + 1).padStart(2, '0')}-01`,
+        })),
       ],
     });
     await page.goto('/insights');
@@ -157,9 +161,31 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     await views.getByRole('button', { name: 'Finance' }).click();
     await expect(views.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-pressed', 'true');
     const month = page.getByRole('group', { name: 'Report month', exact: true });
+    const years = page.getByRole('group', { name: 'Report year', exact: true });
     await expect(month.locator('button[aria-pressed="true"]')).toHaveAttribute('aria-label', /2026/);
-    await expect(month.getByRole('group', { name: 'Months in 2024' }).getByRole('button')).toHaveCount(3);
-    await month.getByRole('button', { name: 'April 2024', exact: true }).click();
+    await expect(years.getByRole('button', { name: '2026' })).toHaveAttribute('aria-pressed', 'true');
+    await years.getByRole('button', { name: '2025' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(years.getByRole('button', { name: '2025' })).toBeFocused();
+    await expect(month.getByRole('button', { name: 'December 2025' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(month.getByRole('button')).toHaveCount(12);
+    const monthLayout = await month.evaluate((group) => {
+      const bounds = group.getBoundingClientRect();
+      const buttons = [...group.querySelectorAll('button')].map((button) => button.getBoundingClientRect());
+      return {
+        contained: buttons.every((button) => button.left >= bounds.left - 1 && button.right <= bounds.right + 1),
+        touchSized: buttons.every((button) => button.width >= 44 && button.height >= 44),
+        rows: new Set(buttons.map((button) => Math.round(button.top))).size,
+      };
+    });
+    expect(monthLayout.contained).toBe(true);
+    expect(monthLayout.touchSized).toBe(true);
+    expect(monthLayout.rows).toBeGreaterThanOrEqual(width <= 430 ? 2 : 1);
+    await page.getByRole('button', { name: 'Compare months' }).click();
+    await expect(page.getByRole('table', { name: 'Monthly finance totals for 2025' }).getByRole('row')).toHaveCount(13);
+    await years.getByRole('button', { name: '2024' }).click();
+    await expect(years.getByRole('button', { name: '2024' })).toHaveAttribute('aria-pressed', 'true');
+    await expect(month.getByRole('button')).toHaveCount(3);
     await expect(month.getByRole('button', { name: 'April 2024' })).toHaveAttribute('aria-pressed', 'true');
     const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024' });
     await expect(monthly).toBeHidden();
@@ -235,6 +261,7 @@ test('Finance Insights groups history by transaction date and downloads the whol
   });
   await page.goto('/insights');
   await page.getByRole('group', { name: 'Insights view' }).getByRole('button', { name: 'Finance' }).click();
+  await expect(page.getByRole('group', { name: 'Report year', exact: true })).toHaveCount(0);
   await expect(page.getByRole('group', { name: 'Report month', exact: true }).getByRole('button', { name: 'June 2024' })).toHaveAttribute('aria-pressed', 'true');
   const ledger = page.getByRole('list', { name: /20 Jun/ });
   await expect(ledger.getByRole('listitem')).toHaveCount(40);

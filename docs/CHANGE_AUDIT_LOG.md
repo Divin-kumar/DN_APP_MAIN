@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-561 | Make historical Finance reports easier to browse
+
+- **Scope:** Add inline year buttons when several years have transactions. Jump to the latest populated month of the selected year and wrap that year's months within the screen using the light and dark glass controls. Switching years resets the open report and active category.
+- **Compatibility:** Existing totals, CSV exports and saved transactions use the same data. Guest tour 2026.11.16.11 explains the year and month choices through explicit Refresh demo.
+- **Executed:** 632 Node tests, 14 Insights Chromium cases, lint and build passed. The browser cases include keyboard year selection, 12-month wrapping and touch targets at 320px and 430px, desktop, restored dates, category totals and CSV. Physical iPhone Safari remains unverified.
+
 ## CHG-20261116-560 | Complete dialog exits after interrupted animations
 
 - **Scope:** Remove closing dialogs immediately when Reduce Motion is active and release the scroll lock if an interrupted animation omits its completion callback. Measure logical touch height without viewport transformation rounding, and select Task filter values from the currently open list.

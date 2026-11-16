@@ -8,7 +8,7 @@
 
 Forms use lighter glass controls and consistent spacing in both themes. In Activity creation, Moment type and Life moment share a row. In Transactions, Title and Amount share a row, as do Type and Category. Date and Time stay together. **More options** opens with a plus and contains Activity Description, and it shows Repeat directly for Tasks and expense plans.
 
-**Finance and repeating schedules (16 November 2026, development).** Open Insights → Finance and choose a reporting month. Compare months and Breakdown open the monthly comparison or category details. Transactions are grouped by date, with the category and time beneath the name. The + stays at the bottom on phones while you read the report. Upcoming expenses puts a single bill’s exact due date on its own line below its status.
+**Finance and repeating schedules (16 November 2026, development).** Open Insights → Finance. If your records span several years, tap a year to jump to its latest month with transactions. The month buttons fit across the available width and wrap on smaller screens. Compare months and Breakdown open the monthly comparison or category details. Transactions are grouped by date, with the category and time beneath the name. The + stays at the bottom on phones while you read the report. Upcoming expenses puts a single bill’s exact due date on its own line below its status.
 
 **Frosted Insights and recurring schedules (15 November 2026, development).** Insights shows the reporting period and totals together. Repeating Tasks and bills use quieter rows and rounded controls, and the mobile sheets have a softer frosted finish.
 

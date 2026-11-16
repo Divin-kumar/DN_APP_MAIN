@@ -159,28 +159,6 @@ html[data-theme] .insights-page .insights-panel-heading > span {
 
 .dn-finance-report h4 { font-size: 14px; }
 
-.dn-finance-period {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  min-height: 44px;
-  padding-inline: 4px;
-  border-radius: 8px;
-  color: var(--action-ink);
-  font-size: 14px;
-  font-weight: 650;
-}
-
-html[data-theme] .dn-finance-period select {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0;
-  cursor: pointer;
-}
-
 .dn-finance-month-summary {
   display: grid;
   min-width: 0;
@@ -312,8 +290,7 @@ html[data-theme] .dn-finance-months button {
 }
 
 .dn-finance-report button:focus-visible,
-.dn-insights-views button:focus-visible,
-.dn-finance-period:has(select:focus-visible) {
+.dn-insights-views button:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
@@ -526,11 +503,6 @@ html[data-theme] .insights-page .dn-finance-month-summary {
   box-shadow: var(--dn-planning-shadow);
   -webkit-backdrop-filter: blur(20px) saturate(1.2); backdrop-filter: blur(20px) saturate(1.2);
 }
-html[data-theme] .insights-page .dn-finance-period {
-  padding-inline: 10px; margin-right: -8px; border-radius: 12px;
-  font-size: 13px; font-weight: 600;
-}
-html[data-theme] .insights-page .dn-finance-period:hover { background: var(--dn-planning-field); }
 html[data-theme] .insights-page .dn-finance-tools button {
   border-color: var(--dn-planning-line); background: var(--dn-planning-surface);
   border-radius: 999px; box-shadow: var(--dn-planning-shadow);
@@ -579,10 +551,6 @@ html[data-theme] .insights-page .insights-panel-heading > span { border-radius: 
 }
 
 /* Quiet, tactile report controls; selection is communicated without arrows. */
-html[data-theme] .insights-page .dn-finance-period {
-  border: 1px solid var(--dn-planning-line); background: var(--dn-planning-field);
-  border-radius: 999px; margin-block: 6px;
-}
 html[data-theme] .insights-page .dn-finance-report-action {
   min-height: 44px; padding: 8px 12px; border-radius: 999px;
   border: 1px solid var(--dn-planning-line); background: var(--dn-planning-field);
@@ -593,22 +561,42 @@ html[data-theme] .insights-page .dn-finance-breakdown button[aria-pressed="true"
   box-shadow: inset 3px 0 var(--color-primary);
 }
 
-/* Inline months avoid the native popup covering the report on phones. */
 .dn-finance-periods {
-  display: flex; gap: 20px; overflow-x: auto; min-width: 0;
-  padding: 2px 2px 8px; scrollbar-width: none;
+  display: grid;
+  justify-items: start;
+  gap: 4px;
+  min-width: 0;
 }
-.dn-finance-periods::-webkit-scrollbar { display: none; }
-.dn-finance-year { flex: 0 0 auto; display: grid; gap: 3px; }
-.dn-finance-year > span { color: var(--color-text-muted); font-size: 11px; padding-inline: 12px; }
-.dn-finance-year > div { display: flex; gap: 4px; }
+
+.dn-finance-periods :is(.dn-finance-years, .dn-finance-month-options) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  max-width: 100%;
+}
+
+.dn-finance-years {
+  padding: 2px;
+  border-radius: 14px;
+  background: var(--dn-planning-field);
+}
+
 html[data-theme] .insights-page .dn-finance-periods button {
-  min-width: 52px; min-height: 44px; padding: 8px 12px; border: 0;
-  border-radius: 12px; background: transparent; color: var(--color-text-muted);
-  box-shadow: none; font: inherit; font-size: 13px; cursor: pointer;
+  min-width: 44px;
+  padding: 4px 8px;
+  border: 1px solid transparent;
+  border-radius: 11px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
+
+html[data-theme] .insights-page .dn-finance-years button { min-width: 56px; }
+
 html[data-theme] .insights-page .dn-finance-periods button[aria-pressed="true"] {
-  color: var(--action-ink); background: var(--dn-planning-selected); font-weight: 650;
+  border-color: var(--dn-planning-line);
+  background: var(--dn-planning-selected);
+  color: var(--action-ink);
 }
 .dn-finance-current-month { font-size: 12px; color: var(--color-text-muted); }
 html[data-theme] .insights-page .dn-insights-views {
