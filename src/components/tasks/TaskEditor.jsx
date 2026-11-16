@@ -1,4 +1,6 @@
 import { useId, useLayoutEffect, useRef, useState } from 'react';
+// Universal creation mounts this editor before the Tasks route is loaded.
+import '../../pages/IndependentTasks.css';
 import { createPortal } from 'react-dom';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';

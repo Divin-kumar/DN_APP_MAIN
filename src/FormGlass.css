@@ -20,7 +20,7 @@ html[data-theme="light"] {
     background: var(--dn-form-scrim) !important;
     -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
   }
-  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"] {
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > section.dn-modal[role="dialog"][aria-modal="true"] {
     --dn-sheet-field: var(--dn-form-field);
     --dn-sheet-line: var(--dn-form-line);
     --dn-sheet-action: var(--dn-planning-selected);
@@ -109,7 +109,7 @@ html[data-theme] body .dropdown-menu-portal .dropdown-search-wrap {
 @media (prefers-reduced-transparency: reduce) {
   html[data-theme] { --dn-form-glass: var(--color-card); --dn-form-field: var(--color-card-raised); }
   html[data-theme] body :is(.dn-modal-backdrop.dn-modal-viewport, .dropdown-menu.dropdown-menu-portal),
-  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"] {
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > section.dn-modal[role="dialog"][aria-modal="true"] {
     -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
   }
 }

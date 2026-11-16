@@ -5,7 +5,7 @@ for (const theme of ['light', 'dark']) {
   test(`Shared form surfaces and permanent Repeat under More options: ${theme}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     const errors = await seedGuest(page, { theme });
-    await page.goto('/tasks');
+    await page.goto('/dashboard');
     for (const kind of ['Task', 'Transaction', 'Moment']) {
       await page.getByRole('button', { name: 'Open quick create menu' }).click();
       await page.getByRole('button', { name: kind === 'Moment' ? 'Life moment' : kind, exact: true }).click();
@@ -18,6 +18,10 @@ for (const theme of ['light', 'dark']) {
       }));
       expect(material.background).not.toBe('none');
       expect(material.blur).toContain('blur');
+      if (kind === 'Task') {
+        const title = dialog.getByRole('textbox', { name: 'Task title' });
+        expect(await title.evaluate(el => el.getBoundingClientRect().width / el.closest('label').getBoundingClientRect().width)).toBeGreaterThan(.95);
+      }
       if (kind !== 'Moment') {
         const more = dialog.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'More options' }) });
         await expect(dialog.getByRole('radio', { name: 'Monthly', exact: true })).toBeHidden();
