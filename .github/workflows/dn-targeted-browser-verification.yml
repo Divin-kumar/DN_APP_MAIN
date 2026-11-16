@@ -112,6 +112,7 @@ jobs:
       - run: >-
           npx playwright test
           e2e/iphone-insights-first-fold-phase1.spec.js
+          e2e/recurring-plans.spec.js
           e2e/iphone-route-header-density.spec.js
           --workers=2
 

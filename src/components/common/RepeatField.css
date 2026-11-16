@@ -4,9 +4,9 @@ html[data-theme] .dn-editor-schedule {
   gap: 5px;
 }
 html[data-theme] .dn-editor-schedule:has(.dn-repeat-disclosure) {
-  padding: 8px 6px 0;
-  border-radius: 16px;
-  background: color-mix(in srgb, var(--color-glass) 42%, transparent);
+  padding: 4px 0 0;
+  border-radius: 0;
+  background: transparent;
 }
 @media (max-width: 360px) {
   html[data-theme] .dn-editor-schedule:has(.dn-repeat-disclosure) {
@@ -26,8 +26,8 @@ html[data-theme] .dn-repeat-field {
 html[data-theme] .dn-repeat-options {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 2px;
-  padding: 3px;
+  gap: 4px;
+  padding: 4px;
   border-radius: 999px;
   background: color-mix(in srgb, var(--color-text) 5%, transparent);
 }
@@ -63,9 +63,9 @@ html[data-theme] .dn-repeat-option > span {
 }
 html[data-theme] .dn-repeat-option input:checked + span {
   background: color-mix(in srgb, var(--color-glass) 78%, var(--color-card));
-  border-color: var(--color-border);
+  border-color: transparent;
   color: var(--action-ink);
-  box-shadow: 0 2px 5px rgb(18 31 54 / 9%);
+  box-shadow: 0 1px 4px rgb(18 31 54 / 6%);
 }
 html[data-theme] .dn-repeat-option input:focus-visible + span { outline: 2px solid var(--color-primary); outline-offset: 1px; }
 html[data-theme] .dn-repeat-option input:disabled + span { opacity: .56; cursor: default; }

@@ -137,7 +137,7 @@ html[data-theme] .insights-page .insights-panel-heading > span {
 
 .dn-finance-report {
   display: grid;
-  gap: 4px;
+  gap: 14px;
   min-width: 0;
 }
 
@@ -184,8 +184,8 @@ html[data-theme] .dn-finance-period select {
 .dn-finance-month-summary {
   display: grid;
   min-width: 0;
-  padding: 0 14px 13px;
-  border-radius: 17px;
+  padding: 8px 20px 20px;
+  border-radius: 22px;
   background: linear-gradient(120deg,
     color-mix(in srgb, var(--color-glass) 82%, transparent),
     color-mix(in srgb, var(--color-primary) 7%, transparent));
@@ -205,8 +205,10 @@ html[data-theme] .dn-finance-period select {
 .dn-finance-month-summary dl {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 12px;
-  margin: 9px 0 0;
+  gap: 8px 20px;
+  margin: 18px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--dn-insights-divider);
 }
 
 .dn-finance-month-summary dt {
@@ -224,8 +226,8 @@ html[data-theme] .dn-finance-period select {
 .dn-finance-month-summary dd {
   margin: 1px 0 0;
   color: var(--color-text);
-  font-size: 15px;
-  font-weight: 680;
+  font-size: 18px;
+  font-weight: 650;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
@@ -235,7 +237,7 @@ html[data-theme] .dn-finance-period select {
   font-weight: 720;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
-  font-size: clamp(27px, 7.1vw, 33px);
+  font-size: clamp(30px, 7.5vw, 40px);
   line-height: 1.2;
   letter-spacing: -.035em;
 }
@@ -243,9 +245,8 @@ html[data-theme] .dn-finance-period select {
 .dn-finance-tools {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 4px;
-  padding-block: 3px;
-  border-bottom: 1px solid var(--dn-insights-divider);
+  gap: 8px;
+  padding: 0;
 }
 
 html[data-theme] .dn-finance-tools button {
@@ -253,9 +254,10 @@ html[data-theme] .dn-finance-tools button {
   justify-content: center;
   align-items: center;
   gap: 6px;
-  padding: 3px 4px;
-  border: 0;
-  border-radius: 10px;
+  padding: 6px 8px;
+  border: 1px solid var(--dn-insights-divider);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--color-glass) 45%, transparent);
   color: var(--action-ink);
   font-size: 13px;
   font-weight: 650;
@@ -316,7 +318,7 @@ html[data-theme] .dn-finance-months button {
   outline-offset: -2px;
 }
 
-.dn-finance-month-details { display: grid; gap: 8px; min-width: 0; }
+.dn-finance-month-details { display: grid; gap: 12px; min-width: 0; }
 
 .dn-finance-breakdown {
   display: grid;
@@ -394,9 +396,9 @@ html[data-theme] .dn-finance-report-action {
   min-width: 0;
 }
 .dn-finance-ledger-day h4 {
-  padding-block: 5px;
+  padding-block: 9px 3px;
   color: var(--color-text-muted);
-  border-bottom: 1px solid var(--dn-insights-divider);
+  border-bottom: 0;
   font-size: 12px;
   font-weight: 600;
 }
@@ -410,7 +412,7 @@ html[data-theme] .dn-finance-report-action {
   grid-template-columns: minmax(0, 1fr) fit-content(48%);
   align-items: baseline;
   gap: 10px;
-  padding-block: 7px;
+  padding-block: 12px;
   color: var(--color-text);
   font-size: 14px;
   line-height: 1.32;
@@ -460,8 +462,8 @@ html[data-theme] .insights-page .dn-finance-detail-head .dn-finance-report-actio
     background: transparent;
     box-shadow: none;
   }
-  .dn-finance-report { gap: 3px; }
-  .dn-finance-month-details { gap: 4px; }
+  .dn-finance-report { gap: 12px; }
+  .dn-finance-month-details { gap: 8px; }
   .dn-finance-breakdown { grid-template-columns: minmax(0, 1fr); }
   .dn-finance-table :is(td, th) { padding-inline: 4px; }
   .dn-finance-months { font-size: 12px; }
@@ -491,4 +493,14 @@ html[data-theme] .insights-page .dn-finance-detail-head .dn-finance-report-actio
     overflow: visible;
     white-space: normal;
   }
+}
+
+/* Keep the financial reading column close enough to scan on wider screens. */
+@media (min-width: 900px) {
+  .dn-finance-report { max-width: 900px; }
+  .dn-finance-month-summary dl { max-width: 520px; }
+  .dn-finance-tools { max-width: 420px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dn-finance-tools button { transition: background 160ms ease, border-color 160ms ease; }
 }

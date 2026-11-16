@@ -10,9 +10,9 @@ html[data-theme] .dn-expense-plan-entry {
   align-items: center;
   width: 100%;
   min-height: 54px;
-  padding: 8px 10px;
+  padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--color-border) 65%, transparent);
-  border-radius: 999px;
+  border-radius: 18px;
   background: color-mix(in srgb, var(--color-glass) 75%, transparent);
   color: var(--color-text);
   text-align: start;
@@ -29,9 +29,10 @@ html[data-theme] .dn-expense-plan-entry {
 }
 .dn-expense-plan-entry-text {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2px 12px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 4px;
   flex-wrap: wrap;
   min-width: 0;
 }
@@ -86,7 +87,7 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   align-items: start;
   gap: 0 10px;
   min-width: 0;
-  padding: 11px 0 5px;
+  padding: 16px 0 12px;
 }
 .dn-expense-plan-day {
   grid-row: span 2;
@@ -176,9 +177,9 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   font-size: 13px;
 }
 .dn-expense-plan-payment-details { min-width: 0; }
-.dn-expense-plan-payment-details .dn-expense-plan-title { font-size: 15px; gap: 8px; }
+.dn-expense-plan-payment-details .dn-expense-plan-title { font-size: 16px; gap: 12px; }
 .dn-expense-plan-payment-details .dn-expense-plan-meta { gap: 2px 9px; margin-top: 3px; }
-.dn-expense-plan-row-actions { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+.dn-expense-plan-row-actions { grid-column: 2; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
 .dn-expense-plan-row-actions > button {
   display: inline-flex;
   align-items: center;
@@ -197,7 +198,7 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-list-view.is-single-plan .dn-expense-plan-row {
   grid-template-columns: minmax(0, 1fr);
   gap: 4px;
-  padding-block: 0;
+  padding-block: 8px;
 }
 .dn-expense-plan-list-view.is-single-plan .dn-expense-plan-meta {
   display: grid;
@@ -232,8 +233,9 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   font-size: 12px;
 }
 .dn-expense-plan-list-view.is-single-plan .dn-expense-plan-row-actions {
-  gap: 8px;
-  margin-top: 4px;
+  grid-column: 1;
+  gap: 12px;
+  margin-top: 16px;
 }
 .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
@@ -349,4 +351,22 @@ html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-plan-dialo
     color: var(--action-ink);
     background: var(--dn-sheet-action);
   }
+}
+
+.dn-expense-plan-list-view.is-single-plan .dn-expense-plan-title {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+.dn-expense-plan-list-view.is-single-plan .dn-expense-plan-title > span {
+  max-width: 100%;
+  font-size: clamp(26px, 7vw, 34px);
+  line-height: 1.2;
+  letter-spacing: -.025em;
+  text-align: start;
+}
+.dn-expense-plan-list-view.is-single-plan .dn-expense-plan-meta {
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid var(--color-border);
 }

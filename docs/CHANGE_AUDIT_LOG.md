@@ -1,5 +1,15 @@
 # DN — Change Log
 
+### CHG-515 | Finance and recurrence visual hierarchy | 16 November 2026 | OldVersion development
+
+- **Scope:** Give Finance balance and totals breathing room, use quiet report buttons, space date-grouped ledger rows, and cap the desktop reading width. Upcoming expenses uses a two-line entry and a prominent single-bill amount. Multi-bill Record/Manage actions occupy the details column. Shared Task/expense repeat editors remove the nested schedule surface and soften the frequency selection.
+- **Compatibility:** CSS presentation only; handlers, calculations, filters, CSV, dates, storage, backup and recurrence are unchanged. Reviewed Guest tour 2026.11.16.2: its fixtures and instructions remain accurate, so no refresh/version bump is needed.
+- **Executed:** Production build and documentation inventory passed; diff whitespace check passed. Local browser suite could not launch because the Playwright Chromium executable is absent; no application assertions ran. Add existing recurrence journeys to the opt-in Insights CI lane for verification on the pushed SHA.
+- **Unverified:** Native iPhone/Safari appearance. Approved automatic ExpenseTracker development preview only; no production or version change.
+
+### CHG-514 | Dashboard date switches and Activity context reading | 13 November 2026 | OldVersion development
+
+
 ### CHG-514 | Dashboard date switches and Activity context reading | 13 November 2026 | OldVersion development
 
 - **Dashboard:** Improve Upcoming/On This Day date-view label visibility (13px on phones), Hide/Show caption floor (12.5px), and show focus when keyboard users enter nested Moment/Activity scroll regions. Keep the 44px date toggles, Dashboard Task-first/Moment-second/Activity-third order, default-collapsed Tasks, nested scrolling and all existing view-state business logic unchanged. No PDF/Story edit.
