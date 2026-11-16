@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import { listAccountTasks, mergeAccountTasks } from '../services/accountTaskService';
 import { clearDnLocalData } from '../utils/storageMigration';
 import { listStateScope } from '../utils/listStateMemory';
@@ -999,9 +1000,9 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   // All operations and their established dialogs share one controller.
   // The normal Settings page no longer mounts these forms or danger actions.
   const dataDialogs = (
-    <>
+    <AnimatePresence initial={false}>
       {pendingBackup ? (
-        <ModalDialog title="Review backup restore" onClose={() => { if (!importingBackup) setPendingBackup(null); }}>
+        <ModalDialog key="backup-review" title="Review backup restore" onClose={() => { if (!importingBackup) setPendingBackup(null); }}>
           <div className="settings-reset-warning">
             <p><strong>File:</strong> {pendingBackup.fileName}</p>
             <p><strong>Format:</strong> {pendingBackup.legacySettingsOnly ? 'Legacy settings-only backup' : `Version ${pendingBackup.backup.backupVersion}`}</p>
@@ -1042,7 +1043,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       ) : null}
 
       {confirmCloudDeleteUid ? (
-        <ModalDialog title="Delete online Firebase data?" className="dn-cloud-delete-modal" onClose={closeCloudDelete}>
+        <ModalDialog key="cloud-delete" title="Delete online Firebase data?" className="dn-cloud-delete-modal" onClose={closeCloudDelete}>
           <div className="dn-cloud-delete-warning">
             <span className="dn-cloud-delete-warning-icon"><CloudOff size={22} aria-hidden="true" /></span>
             <div><strong>This permanently deletes online records</strong>
@@ -1077,7 +1078,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       ) : null}
 
       {confirmClearData ? (
-        <ModalDialog title="Clear local DN data?" className="dn-local-clear-modal" onClose={() => setConfirmClearData(false)}>
+        <ModalDialog key="local-clear" title="Clear local DN data?" className="dn-local-clear-modal" onClose={() => setConfirmClearData(false)}>
           <p className="settings-helper">This removes Guest records, expense plans, preferences and local backups from this browser. Stored original files and account data are retained. This action cannot be undone.</p>
           <div className="settings-actions">
             <button type="button" className="settings-secondary-button" onClick={() => setConfirmClearData(false)}>Keep my data</button>
@@ -1086,7 +1087,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </ModalDialog>
       ) : null}
 
-    </>
+    </AnimatePresence>
   );
 
   if (dataBackupOnly) {
@@ -1280,29 +1281,31 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </button>
       </section>
 
-      {confirmResetSettings ? (
-        <ModalDialog title="Reset all settings?" className="settings-reset-dialog" onClose={() => { if (!resettingSettings) setConfirmResetSettings(false); }}>
-          <div className="settings-reset-warning">
-            <p>This restores DN configuration only:</p>
-            <ul>
-              <li>Theme and appearance, including Story and PDF designs</li>
-              <li>Currency and default Moment, income, and expense selections</li>
-              <li>Saved preferences; Notifications remain a coming-soon feature</li>
-              <li>Greeting types and templates</li>
-              <li>All Code Lists and their system default values</li>
-              <li>Saved default sorting and filters for Moments, Activities, Transactions and Tasks</li>
-            </ul>
-            <p>Unused custom Code List values will be removed. Values referenced by existing records will remain available as inactive values.</p>
-            <p><strong>Your events, expenses, income, activities, memories, attachments, and account data will not be deleted or edited.</strong></p>
-          </div>
-          <div className="settings-actions">
-            <button type="button" className="settings-secondary-button" onClick={() => setConfirmResetSettings(false)} disabled={resettingSettings}>Cancel</button>
-            <button type="button" className="settings-primary-button" onClick={resetAllSettingsSafely} disabled={resettingSettings}>
-              {resettingSettings ? 'Checking records…' : 'Reset all settings'}
-            </button>
-          </div>
-        </ModalDialog>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {confirmResetSettings ? (
+          <ModalDialog key="reset-settings" title="Reset all settings?" className="settings-reset-dialog" onClose={() => { if (!resettingSettings) setConfirmResetSettings(false); }}>
+            <div className="settings-reset-warning">
+              <p>This restores DN configuration only:</p>
+              <ul>
+                <li>Theme and appearance, including Story and PDF designs</li>
+                <li>Currency and default Moment, income, and expense selections</li>
+                <li>Saved preferences; Notifications remain a coming-soon feature</li>
+                <li>Greeting types and templates</li>
+                <li>All Code Lists and their system default values</li>
+                <li>Saved default sorting and filters for Moments, Activities, Transactions and Tasks</li>
+              </ul>
+              <p>Unused custom Code List values will be removed. Values referenced by existing records will remain available as inactive values.</p>
+              <p><strong>Your events, expenses, income, activities, memories, attachments, and account data will not be deleted or edited.</strong></p>
+            </div>
+            <div className="settings-actions">
+              <button type="button" className="settings-secondary-button" onClick={() => setConfirmResetSettings(false)} disabled={resettingSettings}>Cancel</button>
+              <button type="button" className="settings-primary-button" onClick={resetAllSettingsSafely} disabled={resettingSettings}>
+                {resettingSettings ? 'Checking records…' : 'Reset all settings'}
+              </button>
+            </div>
+          </ModalDialog>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

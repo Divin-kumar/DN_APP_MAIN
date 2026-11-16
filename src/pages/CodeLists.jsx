@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 /**
  * CodeLists.jsx
  *
@@ -343,103 +344,105 @@ function CodeListSection({ title, description, listKey, placeholder, allowLabels
         ) : null}
       </div>
 
-      {editingValue ? (
-        <ModalDialog title="Edit value" className="code-list-rename-dialog" closeDisabled={saving} onClose={() => { if (!savingRef.current) setEditingValue(null); }}>
-          <div className="code-list-editor-modal">
-            <label className="settings-input-block">
-              <span>Value</span>
-              <input
-                className="code-list-rename-input"
-                autoFocus
-                disabled={saving}
-                value={editingValue.label}
-                onChange={(event) => setEditingValue({ ...editingValue, label: event.target.value })}
-                placeholder="Enter a value"
-              />
-            </label>
-            {saveFeedback}
-            <div className="settings-actions">
-              <button type="button" className="settings-secondary-button" disabled={saving} onClick={() => setEditingValue(null)}>Cancel</button>
-              <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !editingValue.label.trim()} onClick={() => handleRename(editingValue, editingValue.label)}>{saving ? 'Saving…' : 'Save changes'}</button>
-            </div>
-          </div>
-        </ModalDialog>
-      ) : null}
-
-      {momentTypeEditor ? (
-        <ModalDialog title={entries.some((entry) => entry.value === (momentTypeEditor.existingValue || momentTypeEditor.title)) ? 'Edit moment type' : 'New moment type'} className="code-list-rename-dialog moment-type-dialog" onClose={() => setMomentTypeEditor(null)}>
-          <div className="moment-type-form">
-            <label className="settings-input-block">
-              <span>Title</span>
-              <input
-                ref={momentTypeTitleRef}
-                autoFocus
-                value={momentTypeEditor.title}
-                onChange={(event) => setMomentTypeEditor((current) => ({ ...current, title: event.target.value }))}
-                placeholder="Enter a title"
-              />
-            </label>
-
-            <div className="settings-input-block moment-type-story-setting">
-              <label htmlFor="moment-type-story-presentation">Activity mode (required)</label>
-              <DropdownSelect id="moment-type-story-presentation" value={momentTypeEditor.storyPresentation}
-                onChange={(changeEvent) => setMomentTypeEditor((current) => ({ ...current, storyPresentation: changeEvent.target.value }))}>
-                <option value="" disabled>Choose one of three modes</option>
-                {ENTRY_MODE_LABELS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
-              </DropdownSelect>
-              <small className="settings-helper" aria-live="polite">
-                {momentTypeEditor.storyPresentation
-                  ? `Diary, Journal and Tasks all create independent Activities. Each Activity supports dated content entries. This choice controls the Story presentation, not Activity creation.`
-                  : 'Select one mode to enable this Moment type. No unconfigured creation mode is allowed.'}
-              </small>
-            </div>
-
-            <div className="moment-type-switch-list">
-              <div className="moment-type-switch-row">
-                <span>Show Moments on Dashboard</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Show Moments on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
-                  <span className="moment-type-switch-thumb" />
-                </button>
-              </div>
-              <div className="moment-type-switch-row">
-                <span>Show Activities on Dashboard</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Show Activities on Dashboard" aria-checked={momentTypeEditor.showActivitiesOnDashboard} onClick={() => setMomentTypeEditor((current) => ({ ...current, showActivitiesOnDashboard: !current.showActivitiesOnDashboard }))}>
-                  <span className="moment-type-switch-thumb" />
-                </button>
-              </div>
-              <div className="moment-type-switch-row">
-                <span>Greeting Cards</span>
-                <button type="button" className="moment-type-switch" role="switch" aria-label="Greeting Cards" aria-checked={momentTypeEditor.canGenerateGreetingCards} onClick={() => setMomentTypeEditor((current) => ({ ...current, canGenerateGreetingCards: !current.canGenerateGreetingCards }))}>
-                  <span className="moment-type-switch-thumb" />
-                </button>
+      <AnimatePresence initial={false}>
+        {editingValue ? (
+          <ModalDialog key="value-editor" title="Edit value" className="code-list-rename-dialog" closeDisabled={saving} onClose={() => { if (!savingRef.current) setEditingValue(null); }}>
+            <div className="code-list-editor-modal">
+              <label className="settings-input-block">
+                <span>Value</span>
+                <input
+                  className="code-list-rename-input"
+                  autoFocus
+                  disabled={saving}
+                  value={editingValue.label}
+                  onChange={(event) => setEditingValue({ ...editingValue, label: event.target.value })}
+                  placeholder="Enter a value"
+                />
+              </label>
+              {saveFeedback}
+              <div className="settings-actions">
+                <button type="button" className="settings-secondary-button" disabled={saving} onClick={() => setEditingValue(null)}>Cancel</button>
+                <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !editingValue.label.trim()} onClick={() => handleRename(editingValue, editingValue.label)}>{saving ? 'Saving…' : 'Save changes'}</button>
               </div>
             </div>
+          </ModalDialog>
+        ) : null}
 
-            {momentTypeEditor.canGenerateGreetingCards ? (
-              <div className="moment-type-template-field">
-                <div className="settings-input-block">
-                  <RichTextEditor label="Greeting Template" value={momentTypeEditor.greetingTemplate}
-                    onChange={(greetingTemplate) => setMomentTypeEditor((current) => ({ ...current, greetingTemplate }))}
-                    placeholder="Happy {ordinal} {eventName} {name}" />
-                  <small className="settings-placeholder-guide">Supported placeholders: {'{name}'}, {'{eventName}'}, {'{ordinal}'}</small>
+        {momentTypeEditor ? (
+          <ModalDialog key="moment-type-editor" title={entries.some((entry) => entry.value === (momentTypeEditor.existingValue || momentTypeEditor.title)) ? 'Edit moment type' : 'New moment type'} className="code-list-rename-dialog moment-type-dialog" onClose={() => setMomentTypeEditor(null)}>
+            <div className="moment-type-form">
+              <label className="settings-input-block">
+                <span>Title</span>
+                <input
+                  ref={momentTypeTitleRef}
+                  autoFocus
+                  value={momentTypeEditor.title}
+                  onChange={(event) => setMomentTypeEditor((current) => ({ ...current, title: event.target.value }))}
+                  placeholder="Enter a title"
+                />
+              </label>
+
+              <div className="settings-input-block moment-type-story-setting">
+                <label htmlFor="moment-type-story-presentation">Activity mode (required)</label>
+                <DropdownSelect id="moment-type-story-presentation" value={momentTypeEditor.storyPresentation}
+                  onChange={(changeEvent) => setMomentTypeEditor((current) => ({ ...current, storyPresentation: changeEvent.target.value }))}>
+                  <option value="" disabled>Choose one of three modes</option>
+                  {ENTRY_MODE_LABELS.map(({ value, label }) => <option key={value} value={value}>{label}</option>)}
+                </DropdownSelect>
+                <small className="settings-helper" aria-live="polite">
+                  {momentTypeEditor.storyPresentation
+                    ? `Diary, Journal and Tasks all create independent Activities. Each Activity supports dated content entries. This choice controls the Story presentation, not Activity creation.`
+                    : 'Select one mode to enable this Moment type. No unconfigured creation mode is allowed.'}
+                </small>
+              </div>
+
+              <div className="moment-type-switch-list">
+                <div className="moment-type-switch-row">
+                  <span>Show Moments on Dashboard</span>
+                  <button type="button" className="moment-type-switch" role="switch" aria-label="Show Moments on Dashboard" aria-checked={momentTypeEditor.showInDashboardUpcoming} onClick={() => setMomentTypeEditor((current) => ({ ...current, showInDashboardUpcoming: !current.showInDashboardUpcoming }))}>
+                    <span className="moment-type-switch-thumb" />
+                  </button>
                 </div>
-
-                <div className="moment-type-preview" aria-live="polite">
-                  <span>Preview</span>
-                  <RichText className="free-text-preview is-truncated" value={getGreetingTemplatePreview(momentTypeEditor.greetingTemplate)} />
+                <div className="moment-type-switch-row">
+                  <span>Show Activities on Dashboard</span>
+                  <button type="button" className="moment-type-switch" role="switch" aria-label="Show Activities on Dashboard" aria-checked={momentTypeEditor.showActivitiesOnDashboard} onClick={() => setMomentTypeEditor((current) => ({ ...current, showActivitiesOnDashboard: !current.showActivitiesOnDashboard }))}>
+                    <span className="moment-type-switch-thumb" />
+                  </button>
+                </div>
+                <div className="moment-type-switch-row">
+                  <span>Greeting Cards</span>
+                  <button type="button" className="moment-type-switch" role="switch" aria-label="Greeting Cards" aria-checked={momentTypeEditor.canGenerateGreetingCards} onClick={() => setMomentTypeEditor((current) => ({ ...current, canGenerateGreetingCards: !current.canGenerateGreetingCards }))}>
+                    <span className="moment-type-switch-thumb" />
+                  </button>
                 </div>
               </div>
-            ) : null}
 
-            <div className="settings-actions">
-              <button type="button" className="settings-secondary-button" onClick={() => setMomentTypeEditor(null)}>Cancel</button>
-              <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !momentTypeEditor.title.trim() || !momentTypeEditor.storyPresentation} onClick={saveMomentTypeEditor}>{saving ? 'Saving…' : 'Save moment type'}</button>
+              {momentTypeEditor.canGenerateGreetingCards ? (
+                <div className="moment-type-template-field">
+                  <div className="settings-input-block">
+                    <RichTextEditor label="Greeting Template" value={momentTypeEditor.greetingTemplate}
+                      onChange={(greetingTemplate) => setMomentTypeEditor((current) => ({ ...current, greetingTemplate }))}
+                      placeholder="Happy {ordinal} {eventName} {name}" />
+                    <small className="settings-placeholder-guide">Supported placeholders: {'{name}'}, {'{eventName}'}, {'{ordinal}'}</small>
+                  </div>
+
+                  <div className="moment-type-preview" aria-live="polite">
+                    <span>Preview</span>
+                    <RichText className="free-text-preview is-truncated" value={getGreetingTemplatePreview(momentTypeEditor.greetingTemplate)} />
+                  </div>
+                </div>
+              ) : null}
+
+              <div className="settings-actions">
+                <button type="button" className="settings-secondary-button" onClick={() => setMomentTypeEditor(null)}>Cancel</button>
+                <button type="button" className="settings-primary-button" disabled={saving || accountLoading || Boolean(accountError) || !momentTypeEditor.title.trim() || !momentTypeEditor.storyPresentation} onClick={saveMomentTypeEditor}>{saving ? 'Saving…' : 'Save moment type'}</button>
+              </div>
+              {saveFeedback}
             </div>
-            {saveFeedback}
-          </div>
-        </ModalDialog>
-      ) : null}
+          </ModalDialog>
+        ) : null}
 
+      </AnimatePresence>
       {warningValue ? (
         <ModalDialog title="Value is currently in use" closeDisabled={saving} onClose={() => { if (!savingRef.current) setWarningValue(null); }}>
           <div className="settings-helper" style={{ marginBottom: '16px' }}>

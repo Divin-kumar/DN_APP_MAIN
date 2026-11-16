@@ -139,7 +139,8 @@ html[data-theme] .dn-editor-schedule .dn-repeat-disclosure > summary { min-heigh
 html[data-theme] .dn-repeat-options { background: color-mix(in srgb, var(--color-text) 4%, transparent); border-radius: 999px; }
 html[data-theme] .dn-repeat-option > span { border-radius: 999px; font-weight: 600; }
 html[data-theme] .dn-repeat-option input:checked + span {
-  background: var(--dn-planning-selected); border-color: var(--dn-planning-line);
+  background: color-mix(in srgb, var(--color-primary) 15%, transparent);
+  border-color: var(--dn-planning-line);
   box-shadow: inset 0 1px rgb(255 255 255 / 12%);
 }
 html[data-theme] .dn-repeat-next {
@@ -155,7 +156,14 @@ html[data-theme] .dn-repeat-action-summary dl > div { padding-block: 8px; }
 html[data-theme] .dn-repeat-action-summary dl > div + div { border-top: 1px solid var(--dn-planning-line); }
 html[data-theme] .dn-repeat-edit-note { margin-top: 6px; font-size: 12px; line-height: 1.5; }
 @media (prefers-reduced-motion: no-preference) {
-  html[data-theme] .dn-repeat-option > span { transition: background 160ms ease, box-shadow 160ms ease; }
+  html[data-theme] .dn-repeat-option > span {
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+  }
+  .dn-repeat-preview-message { animation: dn-repeat-message-in 200ms ease both; }
+  @keyframes dn-repeat-message-in {
+    from { opacity: .45; }
+    to { opacity: 1; }
+  }
 }
 
 /* Keep frequency changes within one quiet, stable section. */

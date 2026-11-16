@@ -2,6 +2,7 @@ import { useId } from 'react';
 import { CalendarDays } from 'lucide-react';
 import { formatScheduleDate, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import './RepeatField.css';
+import FormReveal from './FormReveal';
 
 const frequencies = Object.entries(REPEAT_OPTIONS);
 
@@ -51,12 +52,14 @@ export function RepeatField({ value, onChange, disabled, nextDate, dueDate, noti
         <span>{label}</span>
       </label>)}
     </div>
-    {value || notice ? <div className="dn-repeat-preview">
-      <p role="status">
-        {value ? paused ? 'Repeat paused. Resume it from Task actions.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : null}
-        {notice ? <span className="dn-repeat-edit-note">{notice}</span> : null}
-      </p>
-      {value && children ? <p>{children}</p> : null}
-    </div> : null}
+    <FormReveal show={Boolean(value || notice)}>
+      <div className="dn-repeat-preview">
+        <p role="status"><span key={value || 'once'} className="dn-repeat-preview-message">
+          {value ? paused ? 'Repeat paused. Resume it from Task actions.' : <RepeatDatePreview nextDate={nextDate} dueDate={dueDate} /> : null}
+          {notice ? <span className="dn-repeat-edit-note">{notice}</span> : null}
+        </span></p>
+        {value && children ? <p>{children}</p> : null}
+      </div>
+    </FormReveal>
   </fieldset>;
 }

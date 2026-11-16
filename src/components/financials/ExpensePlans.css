@@ -496,3 +496,10 @@ html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions b
   .dn-expense-plan-amount-row > span { font-size: 20px; }
   html[data-theme] .dn-modal .dn-expense-plan-amount-row .dn-expense-plan-record { padding-inline: 8px; }
 }
+
+
+.dn-transaction-links { display: grid; gap: var(--dn-form-gap); min-width: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .dn-payment-method-optional { animation: dn-payment-choice-in 200ms ease-out both; }
+  @keyframes dn-payment-choice-in { from { opacity: 0; } to { opacity: 1; } }
+}

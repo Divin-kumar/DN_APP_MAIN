@@ -94,9 +94,13 @@ html[data-theme] body .dn-form-disclosure > summary > svg {
   grid-row: 1;
   color: var(--color-primary);
 }
-.dn-form-disclosure .dn-form-collapse,
-.dn-form-disclosure[open] .dn-form-expand { display: none; }
-.dn-form-disclosure[open] .dn-form-collapse { display: block; }
+.dn-form-disclosure[open]:not([data-closing]) .dn-form-expand > :last-child { opacity: 0; }
+@media (prefers-reduced-motion: no-preference) {
+  .dn-form-expand > :last-child { transition: opacity 150ms ease; }
+}
+.dn-form-reveal { display: grid; min-width: 0; }
+.dn-form-reveal > div { min-height: 0; min-width: 0; overflow: clip; }
+
 html[data-theme] body .dn-form-disclosure-content { gap: var(--dn-form-gap); padding-block: 5px 8px; }
 html[data-theme] body .dn-modal-viewport .dn-modal .dn-modal-header :is(.modal-close-button, .modal-back-button) {
   background: var(--dn-form-field) !important; border-color: transparent !important;

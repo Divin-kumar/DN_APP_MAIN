@@ -8,6 +8,9 @@ import { focusedDialogScrollDelta, observeDialogViewport } from '../../utils/dia
 import { lockDialogScroll } from '../../utils/dialogScrollLock';
 import './ModalDialog.css';
 
+const enterEase = [0.22, 1, 0.36, 1];
+const exitEase = [0.4, 0, 0.7, 1];
+
 const FormFooterContext = createContext(null);
 
 export function useDialogFormFooter() {
@@ -19,8 +22,6 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const [formActions, setFormActions] = useState(null);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
-  // Every phone-bottom sheet uses one motion path, rather than old CSS entry
-  // keyframes fighting Framer's exit. Desktop dialogs stay unchanged.
   const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
   const [swipeClosing, setSwipeClosing] = useState(false);
@@ -135,12 +136,20 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     closeDisabledRef.current = closeDisabled;
   }, [onClose, closeDisabled]);
 
+  const previousView = useRef(viewKey);
   useLayoutEffect(() => {
     if (!viewKey) return;
+    const changed = previousView.current !== viewKey;
+    previousView.current = viewKey;
     bodyRef.current.scrollTop = 0;
     titleRef.current?.focus({ preventScroll: true });
     onViewChange?.(bodyRef.current);
-  }, [viewKey]);
+    if (!changed || reducedMotion) return;
+    const entrance = bodyRef.current.animate?.([{ opacity: .45 }, { opacity: 1 }], {
+      duration: 185, easing: 'ease-out',
+    });
+    return () => entrance?.cancel();
+  }, [viewKey, reducedMotion]);
 
   useEffect(() => {
     const previousFocus = previousFocusRef.current;
@@ -151,6 +160,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       // A nested original preview owns focus/Escape until it closes.
       const activeDialogs = document.querySelectorAll('[role="dialog"][aria-modal="true"]');
       if (activeDialogs[activeDialogs.length - 1] !== dialogRef.current) return;
+      if (dialogRef.current.dataset.closing) {
+        if (event.key === 'Enter' || event.key === ' ' || event.key === 'Tab' || event.key === 'Escape') event.preventDefault();
+        return;
+      }
       if (event.key === 'Escape') {
         event.preventDefault();
         requestClose();
@@ -158,8 +171,8 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       }
 
       if (event.key !== 'Tab') return;
-      const focusable = [...(dialogRef.current?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])') || [])]
-        .filter((element) => element.getAttribute('aria-hidden') !== 'true' && element.getClientRects().length > 0);
+      const focusable = [...(dialogRef.current?.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), summary, [tabindex]:not([tabindex="-1"])') || [])]
+        .filter((element) => element.getAttribute('aria-hidden') !== 'true' && !element.closest('[inert]') && element.getClientRects().length > 0);
       if (!focusable.length) {
         event.preventDefault();
         return;
@@ -186,32 +199,42 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     };
   }, []);
 
+  const resting = { y: 0, scale: 1, opacity: 1 };
+  const offscreen = isSlidingSheet ? { y: '100%', scale: 1, opacity: 1 }
+    : { y: variant === 'drawer' ? 34 : 16, scale: variant === 'drawer' ? 1 : .985, opacity: 0 };
+  const sheetVariants = {
+    enter: offscreen,
+    open: { ...resting, transition: { duration: reducedMotion ? 0 : isSlidingSheet ? .34 : .24, ease: enterEase } },
+    close: { ...offscreen, transition: { duration: reducedMotion ? 0 : isSlidingSheet ? .25 : .18, ease: exitEase } },
+  };
+  const scrimVariants = {
+    enter: { opacity: 0 },
+    open: { opacity: 1, transition: { duration: reducedMotion ? 0 : .22, ease: enterEase } },
+    close: { opacity: 0, transition: { duration: reducedMotion ? 0 : .15, delay: reducedMotion ? 0 : isSlidingSheet ? .14 : .06, ease: exitEase } },
+  };
+
   return createPortal(
     <motion.div
       ref={backdropRef}
       className={`dn-modal-backdrop dn-modal-viewport${variant === 'drawer' ? ' dn-modal-backdrop-drawer' : ''}${isSlidingSheet ? ' dn-modal-slide-scrim' : ''}`}
-      initial={reducedMotion ? false : { opacity: 0 }}
-      animate={{ opacity: isPresent || isSlidingSheet ? 1 : 0 }}
-      exit={{ opacity: 0, transition: reducedMotion ? { duration: 0 } : isSlidingSheet ? { delay: .37, duration: .14 } : { duration: .19 } }}
-      transition={{ duration: reducedMotion ? 0 : 0.19 }}
-      onAnimationComplete={() => { if (!isPresent) safeToRemove?.(); }}
+      initial={reducedMotion ? false : 'enter'}
+      animate={swipeClosing ? 'close' : 'open'}
+      exit="close"
+      variants={scrimVariants}
+      onAnimationComplete={(phase) => {
+        if (phase === 'close' && !isPresent) safeToRemove?.();
+      }}
       onMouseDown={(event) => { if (event.target === event.currentTarget) requestClose(); }}
     >
       <motion.section ref={dialogRef} className={`dn-modal${variant === 'drawer' ? ' dn-modal-drawer' : ''}${className ? ` ${className}` : ''}${allowsSwipe ? ' dn-modal-swipeable' : ''}`}
         role="dialog" aria-modal="true" aria-labelledby={titleId} tabIndex={-1}
+        data-closing={!isPresent || swipeClosing ? 'true' : undefined}
         drag={allowsSwipe ? 'y' : false} dragListener={false} dragControls={dragControls}
         dragConstraints={{ top: 0, bottom: 0 }} dragElastic={{ top: 0, bottom: .72 }} dragMomentum={false}
         onPointerDown={startSheetDrag} onDragEnd={endSheetDrag}
-        initial={reducedMotion ? false : isSlidingSheet ? { opacity: 1, scale: 1, y: '100%' } : { opacity: .8, scale: variant === 'drawer' ? 1 : .98, y: variant === 'drawer' ? 148 : 20 }}
-        animate={{ opacity: isSlidingSheet ? 1 : (isPresent ? 1 : .85), scale: isSlidingSheet || isPresent ? 1 : .98, y: isPresent && !swipeClosing ? 0 : (isSlidingSheet ? '100%' : (variant === 'drawer' ? 148 : 20)) }}
-        exit={{ opacity: isSlidingSheet ? 1 : .85, scale: isSlidingSheet ? 1 : .98, y: isSlidingSheet ? '100%' : (variant === 'drawer' ? 148 : 20) }}
-        transition={reducedMotion ? { duration: 0 } : {
-          duration: isSlidingSheet ? .37 : (variant === 'drawer' ? .45 : .32),
-          ease: [0.22, 1, 0.36, 1],
-          opacity: { duration: isSlidingSheet ? 0 : .28 },
-        }}
-        onAnimationComplete={() => {
-          if (!swipeClosing || dismissRequested.current || !isPresent) return;
+        variants={sheetVariants}
+        onAnimationComplete={(phase) => {
+          if (phase !== 'close' || !swipeClosing || dismissRequested.current || !isPresent) return;
           dismissRequested.current = true;
           onCloseRef.current();
         }}>

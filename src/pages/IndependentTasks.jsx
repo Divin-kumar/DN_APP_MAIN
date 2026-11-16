@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import MobileControlsSlot from '../components/common/MobileControlsSlot';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Flag, Check, ListTodo, Pencil, Repeat, RotateCcw, Search, SkipForward, SlidersHorizontal, X, XCircle } from 'lucide-react';
@@ -306,17 +307,19 @@ export function TaskListContent() {
         </SwipeActionCard>;
       })}
     </div>
-    {editor ? <ModalDialog title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog" formFooter closeDisabled={busy}
-      onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
-      <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
-        busy={busy} onTaskAction={async (action) => {
-          const task = editor.value;
-          const result = action === 'delete' ? await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')
-            : await statusChange(task, action === 'restore' ? 'in-progress' : 'cancelled');
-          if (result) setEditor(null);
-        }}
-        moments={moments} onSave={save} error={error} onClose={() => { if (!busy) { setEditor(null); setError(''); } }} />
-    </ModalDialog> : null}
+    <AnimatePresence initial={false}>
+      {editor ? <ModalDialog key="task-editor" title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog" formFooter closeDisabled={busy}
+        onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
+        <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
+          busy={busy} onTaskAction={async (action) => {
+            const task = editor.value;
+            const result = action === 'delete' ? await run(() => store.removeTask(task.id, task.updatedAt), 'Task deleted')
+              : await statusChange(task, action === 'restore' ? 'in-progress' : 'cancelled');
+            if (result) setEditor(null);
+          }}
+          moments={moments} onSave={save} error={error} onClose={() => { if (!busy) { setEditor(null); setError(''); } }} />
+      </ModalDialog> : null}
+    </AnimatePresence>
     {refine ? <TaskRefineSheet current={view} resetDefaults={resetDefaults} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
     {confirm ? <ConfirmDialog title={isSkip ? 'Skip this Task?' : `${confirmLabel}?`}

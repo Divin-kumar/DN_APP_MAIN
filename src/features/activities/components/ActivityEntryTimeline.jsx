@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import { useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
@@ -74,22 +75,24 @@ export default function ActivityEntryTimeline({ activity, moment, actions, targe
         </div>
       </article>;
     })}</div> : <p className="dn-content-empty">No entries yet. Use + and choose Add entry to write your first update.</p>}
-    {draft ? <ModalDialog title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
-      <form className="form-surface dn-entry-edit-form" aria-busy={actions.busy} onSubmit={save}>
-        <RichTextEditor label="Entry content" value={draft.description || ''} rows={5}
-          disabled={actions.busy} onChange={(description) => setDraft((previous) => ({ ...previous, description }))} />
-        <div className="activity-date-time-row">
-          <DateField label="Date" name="dn-edit-entry-date" value={draft.date || activity.date}
-            disabled={actions.busy} required onChange={(event) => setDraft((previous) => ({ ...previous, date: event.target.value }))} />
-          <ActivityTimeField value={draft.time || ''} disabled={actions.busy}
-            onChange={(time) => setDraft((previous) => ({ ...previous, time }))} />
-        </div>
-        <div className="dialog-actions">
-          <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
-          <button type="submit" className="primaryButton" disabled={actions.busy || !draft.description.trim()}>Save entry</button>
-        </div>
-      </form>
-    </ModalDialog> : null}
+    <AnimatePresence initial={false}>
+      {draft ? <ModalDialog key="entry-editor" title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
+        <form className="form-surface dn-entry-edit-form" aria-busy={actions.busy} onSubmit={save}>
+          <RichTextEditor label="Entry content" value={draft.description || ''} rows={5}
+            disabled={actions.busy} onChange={(description) => setDraft((previous) => ({ ...previous, description }))} />
+          <div className="activity-date-time-row">
+            <DateField label="Date" name="dn-edit-entry-date" value={draft.date || activity.date}
+              disabled={actions.busy} required onChange={(event) => setDraft((previous) => ({ ...previous, date: event.target.value }))} />
+            <ActivityTimeField value={draft.time || ''} disabled={actions.busy}
+              onChange={(time) => setDraft((previous) => ({ ...previous, time }))} />
+          </div>
+          <div className="dialog-actions">
+            <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
+            <button type="submit" className="primaryButton" disabled={actions.busy || !draft.description.trim()}>Save entry</button>
+          </div>
+        </form>
+      </ModalDialog> : null}
+    </AnimatePresence>
     {deleting ? <ConfirmDialog title="Delete entry?" message="Remove only this entry? The Activity, other entries, transactions and original attachment files remain."
       busy={actions.busy} onCancel={() => setDeleting(null)}
       onConfirm={() => actions.deleteEntry(target, deleting.id).then((changed) => { if (changed) setDeleting(null); }).catch(() => {})} /> : null}

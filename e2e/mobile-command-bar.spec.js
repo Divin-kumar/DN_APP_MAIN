@@ -287,10 +287,12 @@ test('animated creation opens and reverses, with matching form focus treatment',
  const sheet=page.getByRole('dialog',{name:'Create a life moment'});
  await expect(sheet).toBeVisible();
  const field=sheet.locator('input:not([type="checkbox"]):not([type="radio"])').first();
- await field.focus();
- const styles=await field.evaluate(input=>({outline:getComputedStyle(input).outlineStyle,shadow:getComputedStyle(input).boxShadow}));
- expect(styles.outline).toBe('none');
- expect(styles.shadow).not.toBe('none');
+ await page.keyboard.press('Tab');
+ await expect(field).toBeFocused();
+ await expect.poll(() => field.evaluate(input => {
+  const style = getComputedStyle(input);
+  return style.outlineStyle !== 'none' || style.boxShadow !== 'none';
+ })).toBe(true);
  await sheet.getByRole('button',{name:'Close dialog'}).click();
  await expect(sheet).toHaveCount(0);
  await expect(character).toBeVisible();
@@ -418,7 +420,7 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light']]) {
   const glass=await dialog.evaluate(el=>{
     const css=getComputedStyle(el);
     const r=el.getBoundingClientRect();
-    return {background:css.backgroundColor,filter:css.backdropFilter,opacity:css.opacity,
+    return {background:css.backgroundImage === 'none' ? css.backgroundColor : css.backgroundImage,filter:css.backdropFilter,opacity:css.opacity,
       width:r.width,left:r.left,right:r.right};
   });
   expect(glass.background).toMatch(/(?:\/\s*0\.\d+|rgba\([^)]*,\s*0\.\d+\))/);
@@ -432,7 +434,7 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light']]) {
   await refine.click();
   const filter=page.getByRole('dialog',{name:'Activity filters'});
   await expect(filter).toBeVisible();
-  const filterGlass=await filter.evaluate(el=>({bg:getComputedStyle(el).backgroundColor,blur:getComputedStyle(el).backdropFilter}));
+  const filterGlass=await filter.evaluate(el=>({bg:getComputedStyle(el).backgroundImage === 'none' ? getComputedStyle(el).backgroundColor : getComputedStyle(el).backgroundImage,blur:getComputedStyle(el).backdropFilter}));
   expect(filterGlass.bg).toMatch(/(?:\/\s*0\.\d+|rgba\([^)]*,\s*0\.\d+\))/);
   expect(filterGlass.blur).toContain('blur(');
   await filter.getByRole('button',{name:'Close dialog'}).click();

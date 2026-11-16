@@ -45,7 +45,7 @@ import MomentStory from './MomentStory';
 import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { momentVisualName } from '../../../utils/visualTransitions';
 import './MomentWorkspaceNav.css';
 
@@ -571,69 +571,71 @@ export function EventWorkspaceContent() {
         {renderSectionContent()}
       </section>
 
-      {greetingDialogOpen ? (
-        <ModalDialog title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
-          <GreetingCard title={greetingTitleDraft} body={greetingBodyDraft} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} />
-          <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
-            <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
-            <RichTextEditor label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
-            <div className="event-greeting-editor-actions">
-              <button type="button" className="secondaryButton" onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
-              <button type="button" className="event-greeting-close-button" onClick={() => setGreetingDialogOpen(false)}><X size={15} /> Close</button>
-              <button type="submit" className="primaryButton"><Save size={15} /> Save greeting</button>
-            </div>
-          </form>
-        </ModalDialog>
-      ) : null}
+      <AnimatePresence initial={false}>
+        {greetingDialogOpen ? (
+          <ModalDialog key="greeting-editor" title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
+            <GreetingCard title={greetingTitleDraft} body={greetingBodyDraft} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} />
+            <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
+              <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
+              <RichTextEditor label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
+              <div className="event-greeting-editor-actions">
+                <button type="button" className="secondaryButton" onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
+                <button type="button" className="event-greeting-close-button" onClick={() => setGreetingDialogOpen(false)}><X size={15} /> Close</button>
+                <button type="submit" className="primaryButton"><Save size={15} /> Save greeting</button>
+              </div>
+            </form>
+          </ModalDialog>
+        ) : null}
 
-      {attachmentDraft ? <ModalDialog title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
-        <form className="form-surface" onSubmit={saveAttachment}>
-          <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
-          <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
-          {attachmentError ? <p className="quick-create-error" role="alert">{attachmentError}</p> : null}
-          <label htmlFor="attachment-activity">Keep with
-            <DropdownSelect id="attachment-activity" value={attachmentActivityId} disabled={attachmentBusy} onChange={(changeEvent) => setAttachmentActivityId(changeEvent.target.value)}>
-              <option value="">This Moment</option>
-              {activities.map((activity) => <option key={activity.id} value={recordId(activity.id)}>{activity.title || 'Untitled activity'}</option>)}
-            </DropdownSelect>
-          </label>
-          <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
-        </form>
-      </ModalDialog> : null}
-      {activityDialogOpen ? (
-        <ModalDialog title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
-          <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
-            {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
+        {attachmentDraft ? <ModalDialog key="attachment-editor" title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
+          <form className="form-surface" onSubmit={saveAttachment}>
+            <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
+            <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
+            {attachmentError ? <p className="quick-create-error" role="alert">{attachmentError}</p> : null}
+            <label htmlFor="attachment-activity">Keep with
+              <DropdownSelect id="attachment-activity" value={attachmentActivityId} disabled={attachmentBusy} onChange={(changeEvent) => setAttachmentActivityId(changeEvent.target.value)}>
+                <option value="">This Moment</option>
+                {activities.map((activity) => <option key={activity.id} value={recordId(activity.id)}>{activity.title || 'Untitled activity'}</option>)}
+              </DropdownSelect>
+            </label>
+            <div className="form-actions"><button type="button" className="secondaryButton" disabled={attachmentBusy} onClick={() => setAttachmentDraft(null)}>Cancel</button><button type="submit" className="primaryButton" disabled={attachmentBusy}>{attachmentBusy ? 'Saving original…' : 'Save attachment'}</button></div>
+          </form>
+        </ModalDialog> : null}
+        {activityDialogOpen ? (
+          <ModalDialog key="activity-editor" title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
+            <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
+              {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
 
-            <ActivityFormFields namePrefix="dn-workspace-entry"
-               value={{ title: activityTitle, date: activityDate, time: activityTime,
-                 description: activityDescription, priority: activityPriority }}
-               priorities={adminValues.activityPriorities} disabled={activityBusy}
-               onChange={(patch) => {
-                 if (patch.title !== undefined) setActivityTitle(patch.title);
-                 if (patch.date !== undefined) setActivityDate(patch.date);
-                 if (patch.time !== undefined) setActivityTime(patch.time);
-                 if (patch.description !== undefined) setActivityDescription(patch.description);
-                 if (patch.priority !== undefined) setActivityPriority(patch.priority);
-               }} />
-             <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
-              <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-              <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
-            </div>
-          </form>
-        </ModalDialog>
-      ) : null}
-      {notesDialogOpen ? (
-        <ModalDialog title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
-          <form className="form-surface" onSubmit={saveNotes}>
-            <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
-            <div className="dialog-actions" style={styles.dialogActions}>
-              <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
-              <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
-            </div>
-          </form>
-        </ModalDialog>
-      ) : null}
+              <ActivityFormFields namePrefix="dn-workspace-entry"
+                 value={{ title: activityTitle, date: activityDate, time: activityTime,
+                   description: activityDescription, priority: activityPriority }}
+                 priorities={adminValues.activityPriorities} disabled={activityBusy}
+                 onChange={(patch) => {
+                   if (patch.title !== undefined) setActivityTitle(patch.title);
+                   if (patch.date !== undefined) setActivityDate(patch.date);
+                   if (patch.time !== undefined) setActivityTime(patch.time);
+                   if (patch.description !== undefined) setActivityDescription(patch.description);
+                   if (patch.priority !== undefined) setActivityPriority(patch.priority);
+                 }} />
+               <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
+                <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
+                <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
+              </div>
+            </form>
+          </ModalDialog>
+        ) : null}
+        {notesDialogOpen ? (
+          <ModalDialog key="notes-editor" title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
+            <form className="form-surface" onSubmit={saveNotes}>
+              <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
+              <div className="dialog-actions" style={styles.dialogActions}>
+                <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
+                <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
+              </div>
+            </form>
+          </ModalDialog>
+        ) : null}
+      </AnimatePresence>
       <ActivityActionDialogs actions={listActivityActions} />
       {pendingTaskCancellation ? <ConfirmDialog title="Cancel task?"
         message={`Cancel “${pendingTaskCancellation.title}”? You can restore it later by changing its status.`}

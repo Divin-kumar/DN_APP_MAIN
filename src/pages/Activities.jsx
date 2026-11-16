@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
 import { useEffect, useMemo, useRef, useState } from 'react';
@@ -210,20 +211,22 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             )}
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
-      {draft ? <ModalDialog title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
-        <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
-          {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
-          <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
-          <ActivityFormFields namePrefix="activity-editor" value={draft}
-            titleLabel="Activity title"
-            priorities={adminValues.activityPriorities} disabled={busy}
-            onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
-          <div className="form-actions">
-            <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
-            <button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
-          </div>
-        </form>
-      </ModalDialog> : null}
+      <AnimatePresence initial={false}>
+        {draft ? <ModalDialog key="activity-editor" title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
+          <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
+            {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
+            <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
+            <ActivityFormFields namePrefix="activity-editor" value={draft}
+              titleLabel="Activity title"
+              priorities={adminValues.activityPriorities} disabled={busy}
+              onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
+            <div className="form-actions">
+              <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
+              <button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
+            </div>
+          </form>
+        </ModalDialog> : null}
+      </AnimatePresence>
       {deleteTarget ? <ConfirmDialog title="Delete activity?" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}
         busy={busy} error={saveError} onConfirm={() => runAction(() => records.mutateActivity(mutationContext, deleteTarget.momentId, deleteTarget.activityId, () => null), () => setDeleteTarget(null))} /> : null}
 

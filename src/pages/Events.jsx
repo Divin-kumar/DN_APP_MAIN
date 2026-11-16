@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
 import { activityTime } from '../utils/activityTime.js';
@@ -395,49 +396,51 @@ export default function Events() {
       )}
 
       {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
-      {drawer === 'event' ? <Drawer editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
-      {activityChooserOpen ? (
-        <ModalDialog title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
-          {events.length ? (
-            <div className="activity-event-picker">
-              <p>Activities belong to an event. Choose the moment this next step will help with.</p>
-              <label className="activity-event-search"><Search size={16} /><input value={activityEventSearch} onChange={(changeEvent) => setActivityEventSearch(changeEvent.target.value)} placeholder="Search your moments" aria-label="Search moments for activity" /></label>
-              <div className="activity-event-picker-results">
-                {pickerSuggested && !pickerQuery ? <section className="activity-picker-group"><div className="activity-picker-label">A good place to begin <span>Suggested</span></div><ActivityEventOption event={pickerSuggested} badge="Next up" favorite={favoriteEventIds.includes(pickerSuggested.id || pickerSuggested.firestoreId)} onChoose={() => chooseEventForActivity(pickerSuggested)} onToggleFavorite={() => toggleFavoriteEvent(pickerSuggested)} /></section> : null}
-                {pickerFavorites.length ? <section className="activity-picker-group"><div className="activity-picker-label">Favorites</div>{pickerFavorites.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
-                {pickerRecent.length ? <section className="activity-picker-group"><div className="activity-picker-label">Recently opened</div>{pickerRecent.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} badge="Recent" favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
-                <section className="activity-picker-group activity-picker-all"><div className="activity-picker-label">{pickerQuery ? 'Search results' : 'All moments'} <span>{pickerAll.length + (pickerSuggested ? 1 : 0)}</span></div>
-                  {pickerAll.length || (pickerSuggested && pickerQuery) ? [...pickerAll, ...(pickerSuggested && pickerQuery && !pickerAll.includes(pickerSuggested) ? [pickerSuggested] : [])].map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />) : !pickerSuggested && !pickerFavorites.length && !pickerRecent.length ? <p className="activity-picker-no-results">No matching moments. Try another search.</p> : null}
-                </section>
+      <AnimatePresence initial={false}>
+        {drawer === 'event' ? <Drawer key="moment-editor" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
+        {activityChooserOpen ? (
+          <ModalDialog key="activity-picker" title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
+            {events.length ? (
+              <div className="activity-event-picker">
+                <p>Activities belong to an event. Choose the moment this next step will help with.</p>
+                <label className="activity-event-search"><Search size={16} /><input value={activityEventSearch} onChange={(changeEvent) => setActivityEventSearch(changeEvent.target.value)} placeholder="Search your moments" aria-label="Search moments for activity" /></label>
+                <div className="activity-event-picker-results">
+                  {pickerSuggested && !pickerQuery ? <section className="activity-picker-group"><div className="activity-picker-label">A good place to begin <span>Suggested</span></div><ActivityEventOption event={pickerSuggested} badge="Next up" favorite={favoriteEventIds.includes(pickerSuggested.id || pickerSuggested.firestoreId)} onChoose={() => chooseEventForActivity(pickerSuggested)} onToggleFavorite={() => toggleFavoriteEvent(pickerSuggested)} /></section> : null}
+                  {pickerFavorites.length ? <section className="activity-picker-group"><div className="activity-picker-label">Favorites</div>{pickerFavorites.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
+                  {pickerRecent.length ? <section className="activity-picker-group"><div className="activity-picker-label">Recently opened</div>{pickerRecent.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} badge="Recent" favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
+                  <section className="activity-picker-group activity-picker-all"><div className="activity-picker-label">{pickerQuery ? 'Search results' : 'All moments'} <span>{pickerAll.length + (pickerSuggested ? 1 : 0)}</span></div>
+                    {pickerAll.length || (pickerSuggested && pickerQuery) ? [...pickerAll, ...(pickerSuggested && pickerQuery && !pickerAll.includes(pickerSuggested) ? [pickerSuggested] : [])].map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />) : !pickerSuggested && !pickerFavorites.length && !pickerRecent.length ? <p className="activity-picker-no-results">No matching moments. Try another search.</p> : null}
+                  </section>
+                </div>
               </div>
-            </div>
-          ) : (
-            <div className="activity-event-picker-empty"><p>Start with a life moment. Activities will live inside its story.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}><Plus size={16} aria-hidden="true" /> Create a life moment</button></div>
-          )}
-        </ModalDialog>
-      ) : null}
-      {activityChooserEvent ? (
-        <ModalDialog title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
-          <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
-            <p className="dn-form-context">Moment · <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
+            ) : (
+              <div className="activity-event-picker-empty"><p>Start with a life moment. Activities will live inside its story.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}><Plus size={16} aria-hidden="true" /> Create a life moment</button></div>
+            )}
+          </ModalDialog>
+        ) : null}
+        {activityChooserEvent ? (
+          <ModalDialog key="activity-editor" title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
+            <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
+              <p className="dn-form-context">Moment · <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
-            <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
-               value={{ title: activityTitle, date: activityDate, time: activityTime,
-                 priority: activityPriority, description: activityDescription }}
-               onChange={(patch) => {
-                 if (patch.title !== undefined) setActivityTitle(patch.title);
-                 if (patch.date !== undefined) setActivityDate(patch.date);
-                 if (patch.time !== undefined) setActivityTime(patch.time);
-                 if (patch.description !== undefined) setActivityDescription(patch.description);
-                 if (patch.priority !== undefined) setActivityPriority(patch.priority);
-               }} />
-            <div className="form-actions">
-              <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
-              <button className="primaryButton" type="submit">Save activity</button>
-            </div>
-          </form>
-        </ModalDialog>
-      ) : null}
+              <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
+                 value={{ title: activityTitle, date: activityDate, time: activityTime,
+                   priority: activityPriority, description: activityDescription }}
+                 onChange={(patch) => {
+                   if (patch.title !== undefined) setActivityTitle(patch.title);
+                   if (patch.date !== undefined) setActivityDate(patch.date);
+                   if (patch.time !== undefined) setActivityTime(patch.time);
+                   if (patch.description !== undefined) setActivityDescription(patch.description);
+                   if (patch.priority !== undefined) setActivityPriority(patch.priority);
+                 }} />
+              <div className="form-actions">
+                <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
+                <button className="primaryButton" type="submit">Save activity</button>
+              </div>
+            </form>
+          </ModalDialog>
+        ) : null}
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-551 | Animate form sheets, More options and Repeat
+
+- **Scope:** Coordinate the shared form panel and backdrop on open and close. Retain page-local editors through their exit. Animate More options, repeat previews and conditional transaction links. Transition payment steps inside the same sheet.
+- **Compatibility:** Keep form layout, draft state, validation, scroll and save behavior. Respect Reduce Motion. Guest tour 2026.11.16.9 remains accurate because layouts, sample records and actions use the same instructions.
+- **Executed:** Unit suite, build and lint passed. Chromium checks covered intermediate animation frames, keyboard and swipe dismissal, reduced motion, recurring Tasks and bills, and page-local editors. Physical Safari timing remains unverified.
+
 ## CHG-20261116-550 | Normalize and simplify form layouts
 
 - **Scope:** Lighten common field surfaces and labels, use a flat More options row, pair related transaction and Activity fields, simplify payment context and show repeat guidance when it has information to add. Keep Activity Description inside More options and use Cancel before the primary action across the core forms.

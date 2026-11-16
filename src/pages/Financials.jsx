@@ -1,3 +1,4 @@
+import { AnimatePresence } from 'framer-motion';
 // Single financial workspace. Existing Firestore and guest collections remain unchanged.
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -242,15 +243,17 @@ function FinancialsContent() {
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
             events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
         </section>}
-      {dialogOpen ? (
-        <ModalDialog title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
-          onClose={() => { if (!savingPlanRef.current && !busy) { setDialogOpen(false); setEditing(null); } }}>
-          <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
-            onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
-        </ModalDialog>
-      ) : null}
-      {planView ? <ExpensePlanSheet view={planView} plans={plans} events={events} busy={busy} error={savingError} notice={planNotice}
-        onClose={closePlan} onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
+      <AnimatePresence initial={false}>
+        {dialogOpen ? (
+          <ModalDialog key="transaction-editor" title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
+            onClose={() => { if (!savingPlanRef.current && !busy) { setDialogOpen(false); setEditing(null); } }}>
+            <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
+              onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); setEditing(null); }} />
+          </ModalDialog>
+        ) : null}
+        {planView ? <ExpensePlanSheet key="expense-plans" view={planView} plans={plans} events={events} busy={busy} error={savingError} notice={planNotice}
+          onClose={closePlan} onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
+      </AnimatePresence>
       {deleteTarget ? <ConfirmDialog title="Delete transaction?"
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
         onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}

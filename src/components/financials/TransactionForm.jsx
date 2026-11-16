@@ -4,6 +4,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
+import FormReveal from '../common/FormReveal';
 import { useDialogFormFooter } from '../common/ModalDialog';
 import { RepeatField, RepeatSummary } from '../common/RepeatField';
 import DateField from '../common/DateField';
@@ -191,7 +192,7 @@ export default function TransactionForm({
           onChange={() => change('paymentMethod', method)} disabled={busy} />
         <span>{method}</span>
       </label>)}
-      {isPlan ? <label className="dn-payment-method-choice">
+      {isPlan ? <label className="dn-payment-method-choice dn-payment-method-optional">
         <input type="radio" name="paymentMethod" value="" checked={!form.paymentMethod}
           onChange={() => change('paymentMethod', '')} disabled={busy} />
         <span>Choose at payment</span>
@@ -234,7 +235,8 @@ export default function TransactionForm({
         : supportingDetails}>
       {repeatField}
       {paymentPlan ? <>{titleField}{categoryField}</> : null}
-      {!isPlan ? <>
+      <FormReveal show={!isPlan}>
+      <div className="dn-transaction-links">
       <div className="dn-transaction-field">
         <span>Linked Moment (optional)</span>
         <DropdownSelect aria-label="Linked Moment" searchOnDemand searchLabel="Search linked moments" value={form.eventId}
@@ -264,7 +266,8 @@ export default function TransactionForm({
             ? <small className="dn-transaction-field-hint">No activities in this moment. Linking just the moment is fine.</small>
             : null}
       </div>
-      </> : null}
+      </div>
+      </FormReveal>
       <RichTextEditor label="Notes" value={form.notes} onChange={(notes) => change('notes', notes)}
         placeholder="Add details (optional)" disabled={busy} className="dn-transaction-field" />
       </FormDisclosure>
