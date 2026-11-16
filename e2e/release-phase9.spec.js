@@ -13,7 +13,9 @@ for (const [width, theme] of [[390, 'dark'], [1280, 'light']]) {
     const release = page.locator('.settings-section').filter({ has:page.getByRole('heading', { name:`What's New in v${version}`, exact:true }) });
     // What's New describes the installed release; earlier DN 2.0 features belong in expandable Version History.
     // Release notes describe the installed build, not historic 2.0 features.
-    for (const text of (version === '2.3.11'
+    for (const text of (version === '2.3.12'
+      ? ['More options', 'glass finish', 'recurring Tasks and expense plans', 'category breakdowns']
+      : version === '2.3.11'
       ? ['Search and Refine', 'Data & Backup', 'Insights', 'PDF Studio']
       : version === '2.3.10'
       ? ['Bottom sheets', 'profile dropdown', 'Action menus', 'Search']

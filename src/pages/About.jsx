@@ -72,6 +72,23 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.12',
+    title: 'Glassy forms, recurring schedules and Finance reports',
+    summary: 'Task and Transaction forms are easier to scan, with repeat controls and clearer monthly Finance reports.',
+    highlights: [
+      'More options and its summary sit on one line. Moment and Activity sit side by side, with Repeat directly below when available.',
+      'Form labels and buttons match the app typography. Menus, Settings navigation, the Finance summary and PDF Studio controls share the glass finish in light and dark mode.',
+      'Set up recurring Tasks and expense plans. Record payments from Upcoming expenses and review the next due date.',
+      'Insights → Finance shows month-by-month totals, category breakdowns and transactions grouped by date, with CSV export.',
+    ],
+    changes: [
+      'Task and Transaction forms pair their Moment and Activity links. Date and Time stay together, and More options expands in place.',
+      'On phones, create sheets open from the + menu with a quick handoff. Save and Cancel sit below the fields and stay reachable when the keyboard opens.',
+      'Complete or skip a repeating Task to move to its next occurrence. Upcoming expenses keeps Record payment, Edit, Skip and End repeat within one sheet.',
+      'Finance reports show recorded transactions for the selected month. Compare months for a year view or open a category to review the matching transactions.',
+    ],
+  },
+  {
     version: '2.3.11',
     title: 'Easier search, settings and reading on iPhone',
     summary: 'The latest development refinements for finding records, changing defaults and reading your memories.',

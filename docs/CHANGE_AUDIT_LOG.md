@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-557 | Prepare the DN 2.3.12 production release
+
+- **Scope:** Package reviewed OldVersion development build `1b638bf` for dn-10.web.app after owner authorization. Update the installed About entry and matching release coverage for shared glass forms, recurring Tasks and expenses, and monthly Finance reports.
+- **Verification:** The production workflow requires the independent full pre-release workflow at the exact release SHA and verifies the published Hosting build byte-for-byte. A successful publication refreshes the development About ledger. Physical iPhone Safari remains a device check.
+
 ## CHG-20261116-556 | Align More options and share the glass finish
 
 - **Scope:** Keep the More options summary on one line. Pair Moment and Activity above Repeat in Task and Transaction forms. Use the DN interface typeface with consistent form label and button weights. Share glass material with quick-create and account menus, Settings navigation, Finance summary and PDF Studio controls.
