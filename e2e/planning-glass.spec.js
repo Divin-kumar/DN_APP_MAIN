@@ -19,6 +19,9 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
       }
     });
     const capture = async (name) => {
+      await page.evaluate(async () => {
+        await Promise.allSettled(document.getAnimations().filter(animation => animation.effect?.getTiming().iterations !== Infinity).map(animation => animation.finished));
+      });
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);
       const dialog = page.getByRole('dialog');
       if (await dialog.count()) {
