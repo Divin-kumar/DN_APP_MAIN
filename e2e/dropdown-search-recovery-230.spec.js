@@ -31,9 +31,8 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     await expect(menu.getByRole('status')).toContainText('No matching options');
     const clear = menu.getByRole('button', { name: 'Clear search filters' });
     await expect(clear).toBeVisible();
+    await expect.poll(() => clear.evaluate(el => Math.min(el.offsetWidth, el.offsetHeight))).toBeGreaterThanOrEqual(44);
     const hit = await clear.boundingBox();
-    expect(hit.width).toBeGreaterThanOrEqual(43.9);
-    expect(hit.height).toBeGreaterThanOrEqual(43.9);
     expect(hit.x).toBeGreaterThanOrEqual(-1);
     expect(hit.x + hit.width).toBeLessThanOrEqual(width + 1);
 

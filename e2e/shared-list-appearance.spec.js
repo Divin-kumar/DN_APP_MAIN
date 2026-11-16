@@ -22,9 +22,13 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light'],[1280,'da
       await page.goto(route);
       const row = page.locator(selector).first();
       await expect(row).toBeVisible();
-      const style = await row.evaluate(node => { const s=getComputedStyle(node);return {border:s.borderTopWidth, shadow:s.boxShadow}; });
-      expect(style.border, name).toBe('0px');
-      expect(style.shadow, name).toBe('none');
+      const style = await row.evaluate(node => {
+        const computed = getComputedStyle(node);
+        return { border: computed.borderTopWidth, shadow: computed.boxShadow, glass: computed.backgroundImage };
+      });
+      expect(style.border, name).toBe(name === 'tasks' ? '1px' : '0px');
+      if (name === 'tasks') expect(style.glass).toContain('gradient');
+      else expect(style.shadow, name).toBe('none');
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),name).toBe(true);
       if(name==='moments') {
         const preview=row.locator('.dn-v2-moment-activity');

@@ -44,7 +44,8 @@ test('Dashboard Tasks begin hidden, show four rows and scroll without chrome', a
   await page.evaluate(async (dates) => {
     const store = (await import('/src/store/useTaskStore.js')).default;
     store.getState().loadTasks();
-    dates.forEach((date, index) => store.getState().saveTask({ title: 'Preview task ' + index, dueDate: date }));
+    await Promise.all(dates.map((date, index) =>
+      store.getState().saveTask({ title: 'Preview task ' + index, dueDate: date })));
   }, dates);
   await page.goto('/dashboard');
   const panel = page.locator('.dn-dashboard-tasks');

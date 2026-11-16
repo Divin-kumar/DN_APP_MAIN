@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261116-559 | Keep the narrow navigation labels clear and align full-release checks
+
+- **Scope:** Keep the navigation labels inside their buttons at 320px. Wait for all Guest Task fixture writes before navigation. Measure the dropdown search control before its entrance scale and verify the current glass finish in Task lists and PDF Studio.
+- **Evidence:** The first full run exposed clipped narrow navigation labels, an asynchronous fixture race and assertions for the older Task and PDF surfaces. Preserve the original touch-area, route, record-immutability and layout checks.
+
 ## CHG-20261116-558 | Stabilize browser geometry checks for the production candidate
 
 - **Scope:** Measure Moment, Activity and Repeat in one browser frame. Hit-test the actual text lines of a wrapped Task confirmation date. These checks retain the alignment, field order and visible confirmation requirements.

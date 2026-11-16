@@ -56,7 +56,7 @@ for(const [width,height,theme] of [
       detail:el.querySelector('.dn-task-calendar').getBoundingClientRect().width,
       right:el.getBoundingClientRect().right,
     }));
-    expect(appearance.border).toBe('0px');
+    expect(appearance.border).toBe('1px');
     expect(parseFloat(appearance.radius)).toBeGreaterThanOrEqual(14);
     // Independent Tasks and Dashboard use a shared compact phone title scale.
     expect(appearance.heading).toBeGreaterThanOrEqual(width <= 360 ? 13.5 : 14);

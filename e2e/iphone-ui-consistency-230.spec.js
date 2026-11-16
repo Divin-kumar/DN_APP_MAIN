@@ -16,6 +16,8 @@ for (const [width, height, theme] of [
     await expect(page.getByRole('link', { name: 'Open Appearance & preferences' })).toBeVisible();
     expect(await size(page.locator('.dn-settings-redesign .settings-navigation-hub .settings-hub-copy small').first()))
       .toBeGreaterThanOrEqual(12);
+    const settingsGlass = await page.locator('.settings-navigation-hub').evaluate(el => getComputedStyle(el).backgroundImage);
+    expect(settingsGlass).toContain('gradient');
     await page.getByRole('link', { name: 'Open Appearance & preferences' }).tap();
     await expect(page).toHaveURL(/\/settings\/appearance$/);
     expect(await size(page.locator('.dn-appearance-more > a small').first())).toBeGreaterThanOrEqual(12);
@@ -36,10 +38,10 @@ for (const [width, height, theme] of [
       .toBeEnabled({ timeout: 30000 });
     const panel = await studio.locator('.dn-pdf-studio-controls').evaluate((el) => ({
       border: getComputedStyle(el).borderTopWidth,
-      background: getComputedStyle(el).backgroundColor,
+      background: getComputedStyle(el).backgroundImage,
     }));
     expect(panel.border).toBe('0px');
-    expect(panel.background).toBe('rgba(0, 0, 0, 0)');
+    expect(panel.background).toBe(settingsGlass);
     const style = studio.getByRole('button', { name: 'PDF design Minimal' });
     await style.tap();
     await expect(style).toHaveAttribute('aria-pressed', 'true');

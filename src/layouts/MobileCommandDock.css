@@ -85,6 +85,9 @@ html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:ce
   html[data-theme] .dn-command-destinations { margin-inline:-3px; }
 }
 html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;letter-spacing:-.15px;white-space:nowrap; }
+@media (max-width:360px) {
+  html[data-theme] .dn-command-destinations a > span:last-child { font-size:11px; }
+}
 /* DN 2.3.6: detach + from the glass discovery treatment. */
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
  html[data-theme] .dn-command-root .dn-command-bar {
