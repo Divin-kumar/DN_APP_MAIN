@@ -2,9 +2,9 @@
 
 ## Finance report and recurring layout (16 November 2026, OldVersion development)
 
-Finance puts the selected period and totals first, followed by Compare months and Income and expense breakdown. Both disclosures start closed so the monthly transaction table and CSV action are visible earlier. Opening the breakdown exposes the existing category drill-down. The open breakdown stays visible while a category filters the table. Switching month shows the full ledger for that month and resets its disclosure.
+Finance puts the selected period and totals first, followed by Compare months and Income and expense breakdown. Both disclosures start closed so the monthly transaction table and CSV action are visible earlier. Opening the breakdown exposes the existing category drill-down. The open breakdown stays visible while a category filters the table. Switching month shows the full ledger for that month and resets its disclosure. On narrow phones, the transaction name and amount share a line, with the date, saved time and category below. Mobile Insights keeps the universal + below the report. The saved floating position returns when leaving Insights.
 
-The Upcoming expenses sheet uses a compact date tile with day, month and year beside each bill. Its frequency, exact amount, Record and Manage stay on the same row group. Task and expense forms group the existing date and Repeat controls, including the next planned date when expanded. Guest tour edition 2026.11.16.1 explains the breakdown disclosure after explicit Refresh demo.
+Upcoming expenses shows a single bill with its status, full due date and repeat frequency together, followed by Record and Manage. Lists of multiple bills use the same date tiles and status groups. On phones, the sheet surface is frosted and the page behind it is lightly dimmed. Task and expense forms group the existing date and Repeat controls, including the next planned date when expanded. Guest tour edition 2026.11.16.1 explains the breakdown disclosure after explicit Refresh demo.
 
 ## Frosted Insights and recurrence controls (15 November 2026, OldVersion development)
 

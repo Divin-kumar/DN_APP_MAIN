@@ -40,12 +40,14 @@ export default function FinanceInsightsReport({ incomes, expenses, events }) {
                   {monthDate(month).toLocaleDateString('en-GB', { month: 'long' })}
                 </option>)}
               </select>
+              <ChevronDown size={14} aria-hidden="true" />
             </label>
             <label>
               <span className="sr-only">Report year</span>
               <select value={year} onChange={(event) => setSelection({ year: event.target.value })}>
                 {years.map((option) => <option key={option}>{option}</option>)}
               </select>
+              <ChevronDown size={14} aria-hidden="true" />
             </label>
           </div>
           <dl>
@@ -121,15 +123,23 @@ function FinanceMonthDetails({ month, transactions, events }) {
       </div>
       {activeFilter ? <button className="dn-finance-report-action" type="button" onClick={clearCategory}>Show all transactions</button> : null}
       <table className="dn-finance-table dn-finance-transactions" id="finance-transaction-rows" aria-labelledby="finance-transactions">
-        <thead><tr><th scope="col">Date</th><th scope="col">Transaction</th><th scope="col">Amount</th></tr></thead>
+        <thead><tr><th className="dn-finance-date-column" scope="col">Date</th><th scope="col">Transaction</th><th scope="col">Amount</th></tr></thead>
         <tbody>{rows.slice(0, limit).map((item) => {
           const income = item.transactionKind === 'income';
           const date = parseMomentDate(item.date);
           const time = activityTime(item);
+          const dateLabel = date ? SHORT_DATE.format(date) : item.date;
+          const dateTime = time ? `${item.date}T${time}` : item.date;
           const amount = Number(item.amount);
           return <tr key={item.stableTransactionKey}>
-            <td><time dateTime={time ? `${item.date}T${time}` : item.date}>{date ? SHORT_DATE.format(date) : item.date}{time ? <small>{time}</small> : null}</time></td>
-            <td><strong>{item.name || item.title || (income ? 'Income' : 'Expense')}</strong><small>{income ? 'Income' : 'Expense'} · {financeReportCategory(item)}</small></td>
+            <td className="dn-finance-date-column"><time dateTime={dateTime}>{dateLabel}{time ? <small>{time}</small> : null}</time></td>
+            <td>
+              <strong>{item.name || item.title || (income ? 'Income' : 'Expense')}</strong>
+              <small className="dn-finance-transaction-meta">
+                <time className="dn-finance-inline-date" dateTime={dateTime}>{dateLabel}{time ? ` · ${time}` : ''}</time>
+                <span>{income ? 'Income' : 'Expense'} · {financeReportCategory(item)}</span>
+              </small>
+            </td>
             <td>{Number.isFinite(amount) ? money(amount) : '—'}</td>
           </tr>;
         })}</tbody>

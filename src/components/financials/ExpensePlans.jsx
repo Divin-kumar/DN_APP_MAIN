@@ -44,6 +44,7 @@ export default function ExpensePlanEntry({ plans, expanded, buttonRef, onOpen })
 function ExpensePlanList({ plans, onSelect }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
+  const single = sorted.length === 1;
   const groups = [
     { timing: 'today', label: 'Due today', items: sorted.filter((plan) => plan.dueDate === today) },
     { timing: 'overdue', label: 'Overdue', items: sorted.filter((plan) => plan.dueDate < today) },
@@ -53,25 +54,25 @@ function ExpensePlanList({ plans, onSelect }) {
   if (!sorted.length) return <p className="dn-expense-plan-empty">No upcoming expenses</p>;
   return <div className="dn-expense-plan-groups">
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
-      <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>
+      {!single && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>
         <span>{label}</span><span>{items.length} {items.length === 1 ? 'bill' : 'bills'}</span>
-      </h4>
+      </h4>}
       <ul className="dn-expense-plan-list">
         {items.map((plan) => {
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
           const dueDate = parseMomentDate(plan.dueDate);
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
-            <span className="dn-expense-plan-day" aria-hidden="true">
+            {!single && <span className="dn-expense-plan-day" aria-hidden="true">
               <strong>{dueDate?.getDate() ?? '—'}</strong>
               {dueDate ? <small>{billMonth.format(dueDate)} {String(dueDate.getFullYear()).slice(-2)}</small> : null}
-            </span>
+            </span>}
             <div className="dn-expense-plan-payment-details">
               <div className="dn-expense-plan-title"><strong>{plan.name}</strong><span id={amountId}>{formatAmount.format(plan.amount)}</span></div>
               <div className="dn-expense-plan-meta" id={dateId}>
-                <span>
-                  <span className="sr-only">{timing === 'later' ? 'Due ' : `${label} · `}</span>
-                  <time className="sr-only" dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+                <span className={single ? 'dn-expense-plan-due-info' : 'sr-only'}>
+                  <span className={`dn-expense-plan-status is-${timing}`}>{timing === 'later' ? 'Due' : label}</span>
+                  {' '}<time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
                 </span>
                 <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
               </div>
@@ -210,7 +211,8 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
       busy={busy} onCancel={goBack} onConfirm={onConfirm} />
   </div> : feedback;
 
-  return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${isList ? ' dn-expense-plan-list-view' : ''}`} viewKey={mode}
+  const listClass = isList ? ' dn-expense-plan-list-view' + (plans.length === 1 ? ' is-single-plan' : '') : '';
+  return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${listClass}`} viewKey={mode}
     onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel={previousView === 'list' ? 'Back to upcoming expenses' : 'Back to manage expense plan'}
     onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>

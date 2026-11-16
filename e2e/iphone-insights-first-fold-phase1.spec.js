@@ -195,6 +195,15 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     await expect(details.getByRole('row')).toHaveCount(2);
     await expect(details).toContainText('13:15');
     await expect(details).toContainText('Lunch');
+    if (width < 560) {
+      const date = details.locator('time.dn-finance-inline-date');
+      await expect(date).toBeVisible();
+      await expect(date).toHaveText('6 Mar · 13:15');
+      await expect(date).toHaveCSS('white-space', 'nowrap');
+      await expect(details.getByRole('columnheader', { name: 'Date' })).toHaveCount(0);
+    } else {
+      await expect(details.getByRole('columnheader', { name: 'Date' })).toBeVisible();
+    }
 
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export report transactions as CSV' }).click();

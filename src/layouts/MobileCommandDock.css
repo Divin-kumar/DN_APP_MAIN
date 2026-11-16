@@ -276,6 +276,13 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     padding-bottom:calc(114px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px))) !important;
     scroll-padding-bottom:calc(114px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
   }
+  html[data-theme] .dn-shell:has(> .dn-command-root.is-insights-docked .dn-command-controls:empty) > .dn-main {
+    padding-bottom: calc(58px + max(17px, var(--dn-safe-area-bottom, env(safe-area-inset-bottom, 0px)))) !important;
+  }
+  html[data-theme] .dn-shell:has(> .dn-command-root.is-insights-docked .dn-command-controls:empty) .dn-content {
+    scroll-padding-bottom: 12px;
+  }
+  html[data-theme] .dn-command-root.is-insights-docked .dn-command-trigger { touch-action: manipulation; }
 }
 @media (prefers-reduced-motion:reduce) {
  html[data-theme] .dn-command-root .dn-command-trigger {transition:none !important;}

@@ -150,14 +150,15 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     };
   }, []);
   const clamp = (value, low, high) => Math.max(low, Math.min(value, Math.max(low, high)));
-  // Temporarily dock the movable + alongside Search while the keyboard is
-  // active; restore its saved edge position after focus/keyboard dismissal.
-  const floating = position.floating && !searchFocused && !viewport.keyboardOpen;
+  // Insights uses right-aligned report controls and amounts in the scroll area.
+  const dockInInsights = /^\/insights\/?$/.test(location.pathname);
+  const floating = position.floating && !dockInInsights && !searchFocused && !viewport.keyboardOpen;
+  const activeDrag = dockInInsights ? null : drag;
   const x = drag?.x ?? (position.edge === 'left' ? EDGE_PADDING : viewport.width - CREATE_SIZE - EDGE_PADDING);
   const verticalTravel = Math.max(1, viewport.height - (CREATE_SIZE + 116));
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
-    if (event.button !== 0 || !event.isPrimary) return;
+    if (dockInInsights || event.button !== 0 || !event.isPrimary) return;
     const rect = event.currentTarget.getBoundingClientRect();
     pointer.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, dx: event.clientX-rect.x, dy: event.clientY-rect.y, moved: false };
     suppressClick.current = false;
@@ -210,17 +211,17 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       setOpen(previous => !previous);
     }, DOUBLE_TAP_WINDOW_MS);
   };
-  return <div ref={menuRef} className={`dn-command-root${floating || drag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
+  return <div ref={menuRef} className={`dn-command-root${dockInInsights ? ' is-insights-docked' : ''}${floating || activeDrag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
     '--dn-command-keyboard':`${viewport.inset}px`,
     '--dn-command-visual-bottom':`${viewport.visualBottom}px`
   }}>
     <div className="dn-command-bar" aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">
-        <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${drag?' is-dragging':''}`}
-          style={floating || drag ? {position:'fixed',left:x,top:y}:undefined}
+        <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}`}
+          style={floating || activeDrag ? {position:'fixed',left:x,top:y}:undefined}
           aria-label={open?'Close quick create menu':'Open quick create menu'}
-          aria-description="Tap once for navigation and creation, double-tap to go back. Drag to move; return to dock from the menu."
+          aria-description={'Tap once for navigation and creation, double-tap to go back.' + (dockInInsights ? '' : ' Drag to move; return to dock from the menu.')}
           aria-haspopup="dialog" aria-expanded={open}
           onPointerDown={pointerDown} onPointerMove={pointerMove} onPointerUp={event=>pointerEnd(event)}
           onPointerCancel={event=>pointerEnd(event,true)}
@@ -245,8 +246,8 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           {onAttachment ? <button type="button" onClick={onAttachment}><Upload size={19} aria-hidden="true" />Attachment</button>:null}
         </div>
       </section>
-      {position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();setOpen(false);}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
-        : <p className="dn-command-hint">Drag the creator to either edge for easier reach.</p>}
+      {!dockInInsights && (position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();setOpen(false);}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
+        : <p className="dn-command-hint">Drag the creator to either edge for easier reach.</p>)}
     </ModalDialog> : null}</AnimatePresence>
   </div>;
 }

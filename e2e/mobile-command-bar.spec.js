@@ -44,6 +44,36 @@ test('drag snaps, persists, clamps on rotation and can return to dock',async({pa
  await plus.click();await expect(page.getByRole('dialog',{name:'Navigate & create'})).toHaveCSS('opacity','1');await expect(page.locator('.dn-modal-backdrop')).toHaveCSS('opacity','1');await page.screenshot({path:test.info().outputPath('command-panel-mobile.png')});await page.getByRole('button',{name:'Return to dock'}).click();await expect(plus).not.toHaveCSS('position','fixed');
  await page.reload();await expect(plus).not.toHaveCSS('position','fixed');expect(errors).toEqual([]);
 });
+test('Insights keeps report controls clear of the saved floating plus', async ({ page }) => {
+  await page.setViewportSize({ width: 430, height: 745 });
+  await seedGuest(page, { theme: 'dark' });
+  await page.goto('/financials/transactions');
+  const plus = page.locator('.dn-command-trigger');
+  const start = await plus.boundingBox();
+  await page.mouse.move(start.x + start.width / 2, start.y + start.height / 2);
+  await page.mouse.down();
+  await page.mouse.move(410, 365, { steps: 12 });
+  await page.mouse.up();
+  await page.mouse.move(200, 64);
+  await expect(plus).toHaveCSS('position', 'fixed');
+  const saved = await plus.evaluate(button => [button.style.left, button.style.top]);
+  await page.goto('/insights');
+  await page.getByRole('group', { name: 'Insights view' }).getByRole('button', { name: 'Finance' }).click();
+  await expect(plus).not.toHaveCSS('position', 'fixed');
+  const reportBottom = await page.locator('.dn-content').evaluate(node => node.getBoundingClientRect().bottom);
+  expect((await plus.boundingBox()).y).toBeGreaterThanOrEqual(reportBottom);
+  for (const label of ['Compare months', 'Income and expense breakdown']) {
+    const control = page.getByText(label, { exact: true });
+    const rect = await control.boundingBox();
+    await page.mouse.click(rect.x + rect.width - 12, rect.y + rect.height / 2);
+    await expect(control.locator('..')).toHaveJSProperty('open', true);
+    await page.mouse.click(rect.x + rect.width - 12, rect.y + rect.height / 2);
+    await expect(control.locator('..')).toHaveJSProperty('open', false);
+  }
+  await page.goto('/financials/transactions');
+  await expect(plus).toHaveCSS('position', 'fixed');
+  expect(await plus.evaluate(button => [button.style.left, button.style.top])).toEqual(saved);
+});
 test('desktop controls and navigation remain in-page',async({page})=>{
  await page.setViewportSize({width:1280,height:900});await seedGuest(page);await page.goto('/events');
  await expect(page.locator('.dn-command-root')).toHaveCount(0);await expect(page.locator('.dn-list-controls').getByRole('searchbox',{name:'Search moments'})).toBeVisible();await expect(page.locator('.dn-sidebar').getByRole('link',{name:'Tasks'})).toBeVisible();

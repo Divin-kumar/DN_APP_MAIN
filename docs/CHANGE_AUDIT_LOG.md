@@ -119,6 +119,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261116-547 | Clear report controls and compact the single-bill sheet
+
+- **Scope** Keep the universal + below the mobile Finance report and restore its saved position when leaving Insights. Use quieter Insights tabs, a lighter monthly summary and a compact ledger with the saved date and time beneath each transaction name.
+- **Scope** Give a single bill one row with its due status, full date and frequency. Keep Record and Manage visible and replace background blur with light dimming on the upcoming expense list.
+- **Source-derived** The existing totals, CSV, scheduler, payment actions and backup formats drive these views. The current Guest tour already covers the same destinations and controls with a grouped bill example.
+- **Executed** Reviewed light 320px and dark 430px phone captures and ran targeted browser checks, Node tests, lint and build. An isolated Guest restore reconciled all 194 transactions across five months.
+- **Unverified** Physical iPhone Safari, VoiceOver and signed-in account use.
+
 ## CHG-20261116-546 | Bring finance transactions and repeat dates forward
 
 - **Scope** Keep the selected month and totals together. Collapse the month comparison and category breakdown above the existing transactions and CSV. Group date and Repeat in the editors. Put each upcoming bill next to its due-date tile.
