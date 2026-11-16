@@ -114,6 +114,13 @@ jobs:
           e2e/iphone-insights-first-fold-phase1.spec.js
           e2e/recurring-plans.spec.js
           e2e/planning-glass.spec.js
+          e2e/iphone-creation-defaults-compact-230.spec.js
+          e2e/iphone-appearance-legibility-230.spec.js
+          e2e/code-list-save-recovery-230.spec.js
+          e2e/form-glass.spec.js
+          e2e/form-polish-230.spec.js
+          e2e/iphone-forms-phase1.spec.js
+          e2e/local-attachments-readonly.spec.js
           e2e/iphone-route-header-density.spec.js
           --workers=2
       - uses: actions/upload-artifact@v4

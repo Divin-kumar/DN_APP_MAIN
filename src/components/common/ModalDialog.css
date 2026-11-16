@@ -230,7 +230,7 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
     --dn-sheet-shadow: rgb(0 0 0 / 36%);
   }
 
-  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) {
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) {
     background: var(--dn-planning-surface) !important;
     border-color: color-mix(in srgb, var(--color-text) 12%, transparent) !important;
     border-radius: 26px !important;
@@ -239,34 +239,34 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
     box-shadow: 0 -8px 36px var(--dn-sheet-shadow), inset 0 1px rgb(255 255 255 / 18%) !important;
   }
 
-  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-header :is(.modal-close-button, .modal-back-button) {
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-header :is(.modal-close-button, .modal-back-button) {
     border: 0 !important;
     border-radius: 50% !important;
     background: var(--dn-sheet-field) !important;
   }
 
-  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure)) .dn-modal-body :is(input:not([type="radio"]), .dropdown-trigger, textarea) {
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field)) .dn-modal-body :is(input:not([type="radio"]), .dropdown-trigger, textarea) {
     background-color: var(--dn-sheet-field) !important;
     border-color: var(--dn-sheet-line) !important;
   }
 
-  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions :is(.primaryButton, .secondaryButton, .modal-danger-button) {
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions :is(.primaryButton, .secondaryButton, .modal-danger-button) {
     border-color: transparent !important;
     border-radius: 999px !important;
     box-shadow: none !important;
   }
 
-  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .secondaryButton {
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .secondaryButton {
     background: var(--dn-sheet-field) !important;
   }
 
-  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .primaryButton {
+  html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .primaryButton {
     background: var(--dn-sheet-action) !important;
     color: var(--action-ink) !important;
   }
 
   @media (prefers-reduced-transparency: reduce) {
-    html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) {
+    html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-modal[role="dialog"]:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) {
       background: var(--color-card) !important;
       -webkit-backdrop-filter: none;
       backdrop-filter: none;
@@ -275,13 +275,13 @@ html[data-theme] .dn-modal-backdrop.dn-modal-slide-scrim { animation:none!import
 }
 
 /* All steps share the same fields, navigation and fixed action footer. */
-html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions {
+html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions {
   border-top-color: var(--dn-planning-line);
 }
-html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure)) .dn-modal-body :is(input:not([type="radio"]):not([type="checkbox"]), .dropdown-trigger, textarea) {
+html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field)) .dn-modal-body :is(input:not([type="radio"]):not([type="checkbox"]), .dropdown-trigger, textarea) {
   border-radius: 13px !important; box-shadow: inset 0 1px rgb(255 255 255 / 8%);
 }
-html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-disclosure), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .primaryButton {
+html[data-theme] .dn-modal-viewport .dn-modal:is(.dn-task-dialog, .dn-expense-plan-dialog, .dn-transaction-dialog:has(.dn-repeat-field), :has(.dn-repeat-action-summary)) .dn-modal-fixed-actions .primaryButton {
   background: var(--dn-planning-selected) !important;
   border: 1px solid color-mix(in srgb, var(--color-primary) 32%, transparent) !important;
   box-shadow: inset 0 1px rgb(255 255 255 / 15%) !important;

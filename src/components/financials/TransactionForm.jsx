@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
 import { useDialogFormFooter } from '../common/ModalDialog';
-import { RepeatDisclosure } from '../common/RepeatField';
+import { RepeatField, RepeatSummary } from '../common/RepeatField';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
 import useAppStore from '../../store/useAppStore';
@@ -165,12 +165,12 @@ export default function TransactionForm({
       onChange={(event) => change('date', event.target.value)} disabled={busy} />
     {!planFlow ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy} /> : null}
   </div>;
-  const repeatField = canRepeat ? <RepeatDisclosure value={form.repeatFrequency}
+  const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
     nextDate={nextRepeat} dueDate={form.date} notice={repeatNotice} allowOneTime={!expensePlan}>
     Record each payment when it is paid.
     {presetLink?.eventId || form.eventId ? ' Choose the Moment or Activity when you record each payment.' : null}
-  </RepeatDisclosure> : null;
+  </RepeatField> : null;
   const amount = <label className="dn-transaction-field">
     <span>{paymentPlan ? 'Amount paid *' : expensePlan ? <>Expected amount&nbsp;*</> : 'Amount *'}</span>
     <input type="number" inputMode="decimal" min="0.01" step="0.01" required
@@ -230,12 +230,15 @@ export default function TransactionForm({
       {!paymentPlan ? <>
         <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
           <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
-          {repeatField}
         </div>
         {categoryField}
       </> : null}
       {paymentMethod}
-      <FormDisclosure label="More options" hint={supportingDetails}>
+      <FormDisclosure label="More options" hint={<>
+        {canRepeat ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} notice={repeatNotice} /> : null}
+        <span>{supportingDetails}</span>
+      </>}>
+      {repeatField}
       {canRepeat && !expensePlan ? <ActivityTimeField subject="Transaction" value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} /> : null}
       {paymentPlan ? <>{titleField}{categoryField}
         <ActivityTimeField subject="Payment" value={form.time} onChange={(time) => change('time', time)} disabled={busy} />

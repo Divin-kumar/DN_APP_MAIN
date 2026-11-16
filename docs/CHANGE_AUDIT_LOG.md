@@ -1,5 +1,13 @@
 # DN — Change Log
 
+### CHG-520 | Shared glass forms and Repeat inside More options | 16 November 2026 | OldVersion development
+
+- **Scope:** Move existing Task and expense-plan repeat controls into More options for create/edit, including shared universal-add forms. Remove the nested Repeat disclosure; keep frequency, next date, paused state and edit warning in the outer summary. Preserve eligibility, draft values, schedule anchors, payments and fixed Save/Cancel controls.
+- **Form review:** Source inventory covers Moment/Activity/entry editors, Tasks, transactions and plans, attachments, greetings, filters, Code Lists, Appearance, PDF controls, login and data confirmations. Shared light/dark materials now cover dialogs, fields, writing surfaces, dropdown portals, action bars and focus/disabled states. Reduced-transparency fallbacks remain; field sizing, validation and destructive semantics are preserved.
+- **Guest tour:** Edition 2026.11.16.6 teaches the new placement via explicit Refresh demo; personal records remain untouched.
+- **Executed:** 632/632 Node tests and production build passed. Updated existing browser journeys for the shared More options entry. Also corrected one stale native-select assertion from CHG-519 (the previous run passed 33/36 cases; three viewport variants failed on that assertion). Dashboard/Activities browser verification passed on the prior deployment.
+- **Unverified:** Local managed browser preview returned a blank page; mobile acceptance and screenshots run in CI with the development commit. Source inventory is not a claim that every form/state has been manually exercised. Native iPhone Safari remains a device check.
+
 ### CHG-519 | Direct bill actions and lighter Insights | 16 November 2026 | OldVersion development
 
 - **Scope:** Remove Manage and expose Edit, Skip and End repeat by default; place a soft-green Record payment beside the amount. Replace the native reporting dropdown with year-grouped month chips. Simplify Finance report/CSV controls, summary typography and report surfaces. Reduce planning shadows and lighten shared secondary buttons plus header theme/profile controls across the app.

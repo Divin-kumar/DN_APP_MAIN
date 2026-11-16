@@ -176,7 +176,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     await expect(monthly.getByRole('button', { name: 'April 2024' })).toHaveAttribute('aria-pressed', 'true');
     await expect(monthly.getByRole('row').nth(1)).toContainText('₹12,34,567.85');
     await march.click();
-    await expect(month).toHaveValue('2024-03');
+    await expect(month.getByRole('button', { name: 'March 2024', exact: true })).toHaveAttribute('aria-pressed', 'true');
     await expect(page.getByRole('heading', { name: 'March 2024' })).toBeVisible();
     const breakdown = page.getByRole('button', { name: 'Breakdown' });
     await expect(page.getByRole('heading', { name: 'Income by type' })).toHaveCount(0);

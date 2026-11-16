@@ -12,7 +12,7 @@ const repeat = (dialog, frequency) => dialog.getByRole('radio', { name: frequenc
 const readGuest = (page, key) => page.evaluate((name) => JSON.parse(localStorage.getItem(name) || '[]'), key);
 const empty = { moments: [], incomes: [], expenses: [] };
 const more = (dialog) => dialog.locator('summary').filter({ hasText: 'More options' });
-const schedule = (dialog) => dialog.locator('.dn-repeat-disclosure > summary');
+const schedule = (dialog) => dialog.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' });
 
 test.describe('Recurring sheets on short phone screens', () => {
   test.use({ isMobile: true, hasTouch: true, reducedMotion: 'no-preference' });
@@ -147,7 +147,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await schedule(draft).click();
   await expect(repeat(draft, 'Once')).toBeChecked();
   await repeat(draft, 'Monthly').check();
-  await expect(draft.getByLabel('Notes (optional)')).toBeHidden();
+  await expect(draft.getByLabel('Notes (optional)')).toBeVisible();
   await expect(draft.getByRole('status')).toContainText('28 Feb 2026');
   await draft.getByLabel('Due date', { exact: true }).fill('');
   const createTask = draft.getByRole('button', { name: 'Create Task' });
@@ -650,13 +650,14 @@ for (const width of [320, 430]) {
     await schedule(dialog).click();
     const initialForm = await dialog.locator('form').elementHandle();
     const category = dialog.getByRole('combobox', { name: 'Category', exact: true });
-    const categoryTop = (await category.boundingBox()).y;
+    const categoryOffset = () => category.evaluate(el => el.getBoundingClientRect().top - el.closest('form').getBoundingClientRect().top);
+    const categoryTop = await categoryOffset();
     for (const frequency of ['Weekly', 'Monthly', 'Yearly', 'Once']) {
       await repeat(dialog, frequency).check();
       await expect(repeat(dialog, frequency)).toBeChecked();
       expect(await initialForm.evaluate(el => el.isConnected)).toBe(true);
       await expect(dialog.getByLabel('Title *', { exact: true })).toHaveValue('Stable monthly bill');
-      expect(Math.abs((await category.boundingBox()).y - categoryTop)).toBeLessThan(4);
+      expect(Math.abs(await categoryOffset() - categoryTop)).toBeLessThan(4);
       if (frequency !== 'Once') {
         const options = dialog.locator('.dn-payment-method-choice > span');
         const boxes = await options.evaluateAll(elements => elements.map(el => {

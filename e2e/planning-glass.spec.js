@@ -50,7 +50,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await capture('bill');
     await capture('manage');
     await page.getByRole('button', { name: 'Edit schedule', exact: true }).click();
-    await page.locator('.dn-repeat-disclosure > summary').click();
+    await page.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await expect(page.getByRole('radio', { name: 'Monthly', exact: true })).toBeChecked();
     await expect(page.getByRole('button', { name: 'Save expense plan' })).toBeInViewport({ ratio: 1 });
     await expect(page.getByRole('dialog')).toContainText('Record each payment when it is paid.');
@@ -81,7 +81,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await capture('tasks');
     await task.click();
     await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
-    await page.locator('.dn-repeat-disclosure > summary').click();
+    await page.locator('.dn-form-disclosure > summary').filter({ hasText: 'More options' }).click();
     await expect(page.getByRole('radio', { name: 'Weekly', exact: true })).toBeChecked();
     await capture('task-repeat');
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();

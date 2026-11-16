@@ -4,7 +4,7 @@ import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
 import { useDialogFormFooter } from '../common/ModalDialog';
-import { RepeatActionSummary, RepeatDisclosure } from '../common/RepeatField';
+import { RepeatActionSummary, RepeatField, RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
 import { recordId } from '../../utils/recordIdentity.js';
@@ -96,13 +96,17 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
         <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
       </div>
       {!dueDate ? <p className="dn-task-time-hint">Choose a due date to set a time.</p> : null}
-      {task?.status !== 'completed' ? <RepeatDisclosure value={repeatFrequency} paused={task?.status === 'cancelled'}
+    </div>
+    <FormDisclosure label="More options" hint={<>
+      {task?.status !== 'completed' ? <RepeatSummary value={repeatFrequency} paused={task?.status === 'cancelled'}
+        dueDate={dueDate} nextDate={nextRepeat} notice={repeatNotice} /> : null}
+      <span>Priority, links and notes</span>
+    </>}>
+      {task?.status !== 'completed' ? <RepeatField value={repeatFrequency} paused={task?.status === 'cancelled'}
         onChange={setRepeatFrequency} disabled={busy} nextDate={nextRepeat} dueDate={dueDate} notice={repeatNotice}>
         {task?.status === 'cancelled' ? 'Resume keeps this due date.' : 'Done or Skip creates the next Task. Pause keeps this due date for later.'}
         {momentId ? ' Moment and Activity links apply to this Task only.' : null}
-      </RepeatDisclosure> : null}
-    </div>
-    <FormDisclosure label="More options" hint="Priority, links and notes">
+      </RepeatField> : null}
     <div className="dn-task-fields-row">
       <div className="dn-task-field"><label htmlFor="dn-task-priority">Priority</label>
         <DropdownSelect disabled={busy} id="dn-task-priority" value={priority} onChange={(event) => setPriority(event.target.value)}>
