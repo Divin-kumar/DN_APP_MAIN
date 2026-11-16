@@ -356,6 +356,9 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(plans.locator('time')).toBeVisible();
   await expect(plans.locator('time')).toHaveText('31 Jan 2026');
   await expect(plans.locator('.dn-expense-plan-status')).toHaveText('Overdue');
+  const dateRow = await plans.locator('time').boundingBox();
+  const statusRow = await plans.locator('.dn-expense-plan-status').boundingBox();
+  expect(dateRow.y).toBeGreaterThanOrEqual(statusRow.y + statusRow.height);
   await expect(plans.locator('..')).toHaveCSS('backdrop-filter', 'none');
   await expect(recordPayment).toHaveCSS('min-height', '44px');
   await expect(recordPayment).toHaveAccessibleDescription(/₹799 Overdue.*31 Jan 2026.*Monthly/);

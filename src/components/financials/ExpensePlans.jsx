@@ -72,7 +72,7 @@ function ExpensePlanList({ plans, onSelect }) {
               <div className="dn-expense-plan-meta" id={dateId}>
                 <span className={single ? 'dn-expense-plan-due-info' : 'sr-only'}>
                   <span className={`dn-expense-plan-status is-${timing}`}>{timing === 'later' ? 'Due' : label}</span>
-                  {' '}<time dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+                  {' '}<time dateTime={plan.dueDate}>{single && <CalendarDays size={14} aria-hidden="true" />}{formatScheduleDate(plan.dueDate)}</time>
                 </span>
                 <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
               </div>

@@ -119,6 +119,14 @@
 
 **Historical coverage limitation:** Earlier repository history has not been fully reconstructed. Existing records are preserved evidence and may describe superseded behavior or policies.
 
+## CHG-20261116-548 | Simplify Finance report controls and show dates once
+
+- **Scope** Use one reporting month picker organized by year. Place Compare months and Breakdown side by side, open one report at a time, and group the ledger by saved date. Keep the category and any saved time under each transaction, with its signed amount to the right.
+- **Scope** Give a single upcoming bill’s exact due date its own line below the status. Keep the existing payment actions and grouped layout for multiple bills. Update the Guest tour wording for the new reporting controls through explicit Refresh demo.
+- **Source-derived** Existing balances, ledger records, CSV scope and sorting, recurring schedules, restore formats and universal + behavior carry through.
+- **Executed** Reviewed 320px light and 430px dark browser captures and ran Node tests, build, lint and browser checks for period selection, category filters, export and bill actions. Reconciled all 194 restored legacy records across five months in isolated Guest storage.
+- **Unverified** Physical iPhone Safari, VoiceOver and signed-in account use.
+
 ## CHG-20261116-547 | Clear report controls and compact the single-bill sheet
 
 - **Scope** Keep the universal + below the mobile Finance report and restore its saved position when leaving Insights. Use quieter Insights tabs, a lighter monthly summary and a compact ledger with the saved date and time beneath each transaction name.

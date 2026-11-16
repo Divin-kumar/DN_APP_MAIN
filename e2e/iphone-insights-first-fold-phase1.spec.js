@@ -156,19 +156,19 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     const views = page.getByRole('group', { name: 'Insights view' });
     await views.getByRole('button', { name: 'Finance' }).click();
     await expect(views.getByRole('button', { name: 'Finance' })).toHaveAttribute('aria-pressed', 'true');
-    const year = page.getByRole('combobox', { name: 'Report year' });
-    await expect(year).toHaveValue('2026');
-    await year.selectOption('2024');
     const month = page.getByRole('combobox', { name: 'Report month' });
+    await expect(month).toHaveValue(/^2026-/);
+    await expect(month.locator('optgroup[label="2024"] option')).toHaveCount(3);
+    await month.selectOption({ label: 'April 2024' });
     await expect(month).toHaveValue('2024-04');
-    const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024', includeHidden: true });
+    const monthly = page.getByRole('table', { name: 'Monthly finance totals for 2024' });
     await expect(monthly).toBeHidden();
     const summary = page.getByRole('region', { name: 'April 2024' });
     await expect(summary).toContainText('₹12,34,567.85');
     await month.selectOption('2024-03');
     await expect(page.getByRole('region', { name: 'March 2024' })).toContainText('₹21,752.72');
     await month.selectOption('2024-04');
-    const compare = page.getByText('Compare months', { exact: true });
+    const compare = page.getByRole('button', { name: 'Compare months' });
     await compare.click();
     await expect(monthly.getByRole('row')).toHaveCount(4);
     const march = monthly.getByRole('button', { name: 'March 2024' });
@@ -177,33 +177,28 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     await expect(monthly.getByRole('row').nth(1)).toContainText('₹12,34,567.85');
     await march.click();
     await expect(month).toHaveValue('2024-03');
-    await compare.click();
     await expect(page.getByRole('heading', { name: 'March 2024' })).toBeVisible();
-    const breakdown = page.getByText('Income and expense breakdown', { exact: true });
+    const breakdown = page.getByRole('button', { name: 'Breakdown' });
     await expect(page.getByRole('heading', { name: 'Income by type' })).toHaveCount(0);
-    await expect(page.getByRole('table', { name: 'Transactions' })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Transactions', exact: true })).toBeVisible();
     await breakdown.click();
+    await expect(compare).toHaveAttribute('aria-expanded', 'false');
+    await expect(monthly).toBeHidden();
     await expect(page.getByRole('heading', { name: 'Income by type' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Expenses by category' })).toBeVisible();
 
-    const details = page.getByRole('table', { name: 'Transactions' });
-    await expect(details.getByRole('row')).toHaveCount(5);
+    const details = page.getByRole('region', { name: 'Transactions', exact: true });
+    await expect(details.getByRole('listitem')).toHaveCount(4);
     const food = page.getByRole('button', { name: /Long food and personal expense category/ });
     await expect(food).toContainText('₹25.49');
     await food.click();
     await expect(food).toHaveAttribute('aria-pressed', 'true');
-    await expect(details.getByRole('row')).toHaveCount(2);
+    await expect(details.getByRole('listitem')).toHaveCount(1);
     await expect(details).toContainText('13:15');
     await expect(details).toContainText('Lunch');
-    if (width < 560) {
-      const date = details.locator('time.dn-finance-inline-date');
-      await expect(date).toBeVisible();
-      await expect(date).toHaveText('6 Mar · 13:15');
-      await expect(date).toHaveCSS('white-space', 'nowrap');
-      await expect(details.getByRole('columnheader', { name: 'Date' })).toHaveCount(0);
-    } else {
-      await expect(details.getByRole('columnheader', { name: 'Date' })).toBeVisible();
-    }
+    await expect(details.getByRole('list', { name: /6 Mar/ })).toBeVisible();
+    await expect(details.getByRole('listitem')).toContainText('-₹25.49');
+    await expect(details.locator('li time')).toHaveAttribute('datetime', '2024-03-06T13:15');
 
     const download = page.waitForEvent('download');
     await page.getByRole('button', { name: 'Export report transactions as CSV' }).click();
@@ -215,7 +210,9 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light'], [1280, 'dark']]) {
     expect(csv).not.toContain('Salary');
 
     await page.getByRole('button', { name: 'Show all transactions' }).click();
-    await expect(details.getByRole('row')).toHaveCount(5);
+    await expect(details.getByRole('listitem')).toHaveCount(4);
+    await expect(details.getByRole('list', { name: /1 Mar/ }).getByRole('listitem')).toHaveCount(2);
+    await expect(details.getByText('+₹27,778', { exact: true })).toBeVisible();
     await month.selectOption('2024-02');
     await expect(details).toContainText('29 Feb');
     await expect(details).toContainText('Auto');
@@ -238,13 +235,14 @@ test('Finance Insights groups history by transaction date and downloads the whol
   });
   await page.goto('/insights');
   await page.getByRole('group', { name: 'Insights view' }).getByRole('button', { name: 'Finance' }).click();
-  await expect(page.getByRole('combobox', { name: 'Report year' })).toHaveValue('2024');
-  const table = page.getByRole('table', { name: 'Transactions' });
-  await expect(table.getByRole('row')).toHaveCount(41);
+  await expect(page.getByRole('combobox', { name: 'Report month' })).toHaveValue('2024-06');
+  const ledger = page.getByRole('list', { name: /20 Jun/ });
+  await expect(ledger.getByRole('listitem')).toHaveCount(40);
   const download = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Export report transactions as CSV' }).click();
   const report = await download;
   expect((await readFile(await report.path(), 'utf8')).trimEnd().split('\r\n')).toHaveLength(42);
   await page.getByRole('button', { name: 'Show more transactions' }).click();
-  await expect(table.getByRole('row')).toHaveCount(42);
+  await expect(ledger.getByRole('listitem')).toHaveCount(41);
+  await expect(page.getByRole('list', { name: /20 Jun/ })).toHaveCount(1);
 });

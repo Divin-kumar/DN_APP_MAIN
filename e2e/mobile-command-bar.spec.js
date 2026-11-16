@@ -62,13 +62,13 @@ test('Insights keeps report controls clear of the saved floating plus', async ({
   await expect(plus).not.toHaveCSS('position', 'fixed');
   const reportBottom = await page.locator('.dn-content').evaluate(node => node.getBoundingClientRect().bottom);
   expect((await plus.boundingBox()).y).toBeGreaterThanOrEqual(reportBottom);
-  for (const label of ['Compare months', 'Income and expense breakdown']) {
-    const control = page.getByText(label, { exact: true });
+  for (const label of ['Compare months', 'Breakdown']) {
+    const control = page.getByRole('button', { name: label, exact: true });
     const rect = await control.boundingBox();
     await page.mouse.click(rect.x + rect.width - 12, rect.y + rect.height / 2);
-    await expect(control.locator('..')).toHaveJSProperty('open', true);
+    await expect(control).toHaveAttribute('aria-expanded', 'true');
     await page.mouse.click(rect.x + rect.width - 12, rect.y + rect.height / 2);
-    await expect(control.locator('..')).toHaveJSProperty('open', false);
+    await expect(control).toHaveAttribute('aria-expanded', 'false');
   }
   await page.goto('/financials/transactions');
   await expect(plus).toHaveCSS('position', 'fixed');
