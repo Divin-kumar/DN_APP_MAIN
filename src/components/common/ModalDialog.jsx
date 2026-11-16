@@ -14,6 +14,7 @@ const exitEase = [0.4, 0, 0.7, 1];
 const activeDialogSelector = '[role="dialog"][aria-modal="true"]:not([inert])';
 
 const FormFooterContext = createContext(null);
+const compactActionMedia = '(orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
 
 export function useDialogFormFooter() {
   return useContext(FormFooterContext);
@@ -22,6 +23,17 @@ export function useDialogFormFooter() {
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
   closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
   const [formActions, setFormActions] = useState(null);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+  const [compactActions, setCompactActions] = useState(() => window.matchMedia(compactActionMedia).matches);
+  const pinFormActions = formFooter && (keyboardOpen || compactActions);
+  useEffect(() => {
+    if (!formFooter) return undefined;
+    const media = window.matchMedia(compactActionMedia);
+    const update = () => setCompactActions(media.matches);
+    update();
+    media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, [formFooter]);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   const handingOff = usePresenceData() === true && !isPresent;
@@ -142,6 +154,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       backdrop.style.setProperty('--dn-dialog-inset-bottom', `${Math.max(0, layout.height - viewport.top - viewport.height)}px`);
       backdrop.style.setProperty('--dn-dialog-inset-right', `${Math.max(0, layout.width - viewport.left - viewport.width)}px`);
       backdrop.dataset.keyboardOpen = String(viewport.keyboardOpen);
+      if (formFooter) setKeyboardOpen(viewport.keyboardOpen);
       revealFocusedField();
     });
     body.addEventListener('dn:disclosure-settled', revealFocusedField);
@@ -149,7 +162,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
       stopObserving();
       body.removeEventListener('dn:disclosure-settled', revealFocusedField);
     };
-  }, [handingOff]);
+  }, [formFooter, handingOff]);
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -281,9 +294,9 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
         </div>
         <div className="dn-modal-body" ref={bodyRef} onTouchStartCapture={startBodySwipe}
           onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>
-          <FormFooterContext.Provider value={formFooter ? formActions : null}>{children}</FormFooterContext.Provider>
+          <FormFooterContext.Provider value={pinFormActions ? formActions : null}>{children}</FormFooterContext.Provider>
         </div>
-        {formFooter ? <div ref={setFormActions} className="dn-modal-fixed-actions dn-modal-form-footer" /> : null}
+        {pinFormActions ? <div ref={setFormActions} className="dn-modal-fixed-actions dn-modal-form-footer" /> : null}
         {footer}
       </motion.section>
     </motion.div>,

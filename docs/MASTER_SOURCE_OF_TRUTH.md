@@ -2,7 +2,7 @@
 
 ## Even form fields and lightweight actions (16 November 2026, development)
 
-Transaction forms use equal columns for Title and Amount and for Transaction Type and Category. The Date and Time controls share equal outer dimensions, with Clear time inside the Time field edge. Cash, Online and Choose at payment share equal-width choices and a common touch height. The longest choice can wrap inside its button on narrow phones. Longer configured method lists scroll horizontally. Shared form action rows use the surrounding surface, with plain Cancel and a softly tinted Save. Task, Transaction and bill sheets keep fixed controls below the scrollable body so the keyboard leaves them reachable.
+Transaction forms use equal columns for Title and Amount and for Transaction Type and Category. The Date and Time controls share equal outer dimensions, with Clear time inside the Time field edge. Cash, Online and Choose at payment share equal-width choices and a common touch height. The longest choice can wrap inside its button on narrow phones. Longer configured method lists scroll horizontally. Shared form action rows use the surrounding surface, with equal space for a plain Cancel and a softly tinted Save. In normal view, these actions follow the fields within the form. Task, Transaction and bill actions dock below the scrollable content when the keyboard is open or a short touch landscape layout needs the space.
 
 ## Faster form transitions (16 November 2026, development)
 

@@ -117,7 +117,7 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .dn-pdf-studio-contro
   background: var(--dn-form-field) !important; border-color: var(--dn-form-line) !important;
   box-shadow: none !important;
 }
-/* Keep fixed action placement for short sheets and use the sheet's own surface. */
+/* Keep the same flat action treatment when a short viewport needs pinned controls. */
 html[data-theme] body .dn-modal-viewport .dn-modal-fixed-actions {
   background: transparent !important;
   border: 0 !important;
@@ -138,17 +138,17 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .code-lists-page) :is
     max-width: 100%;
     padding: 6px 14px !important;
     border-radius: 999px !important;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 1.25;
+    font-size: 13px !important;
+    font-weight: 600 !important;
+    line-height: 1.25 !important;
     white-space: normal;
     text-align: center;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
   }
   > button:is(.primaryButton, .settings-primary-button) {
-    background: color-mix(in srgb, var(--color-primary) 13%, transparent) !important;
-    border-color: color-mix(in srgb, var(--color-primary) 28%, transparent) !important;
+    background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
+    border-color: transparent !important;
     box-shadow: none !important;
   }
   > button:is(.primaryButton, .settings-primary-button):is(:hover, :focus-visible):not(:disabled) {
@@ -162,6 +162,24 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .code-lists-page) :is
   > button:is(.secondaryButton, .settings-secondary-button):is(:hover, :focus-visible):not(:disabled) {
     background: var(--dn-form-field) !important;
     color: var(--color-text) !important;
+    transform: none;
+  }
+}
+/* Match paired form actions even when the primary label is longer. */
+html[data-theme] body :is(
+  :is(.dn-modal, form) :is(.form-actions, .event-form-actions, .event-greeting-editor-actions, .dialog-actions):has(> button[type="submit"]),
+  :is(.dn-modal, .settings-page, .code-lists-page) .settings-actions:has(> .settings-primary-button)
+):has(> button:nth-child(2):last-child) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  gap: 8px;
+  width: min(100%, 304px);
+  margin-inline-start: auto;
+
+  > button {
+    min-width: 0;
+    margin: 0;
   }
 }
 html[data-theme] body .dropdown-menu.dropdown-menu-portal {
@@ -255,9 +273,13 @@ html[data-theme] body .activity-date-time-row .activity-time-control {
   gap: 0;
 }
 html[data-theme] body .activity-date-time-row .activity-time-control > input[type="time"] {
+  opacity: 1;
   margin: 0;
   border: 0 !important;
   background: transparent !important;
+}
+html[data-theme] body .activity-date-time-row .activity-time-control > input[type="time"]:disabled {
+  color: var(--color-text-muted) !important;
 }
 html[data-theme] body .activity-date-time-row input[type="date"] {
   height: 46px !important;

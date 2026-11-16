@@ -96,7 +96,8 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
             && style.borderTopWidth === '0px' && style.boxShadow === 'none';
         };
         const [cancel, save] = [...row.querySelectorAll('button')].map(button => button.getBoundingClientRect());
-        return transparent(row) && (!parent || transparent(parent)) && Math.abs(cancel.top - save.top) < 1
+        return transparent(row) && !parent && Boolean(row.closest('form'))
+          && Math.abs(cancel.top - save.top) < 1 && Math.abs(cancel.width - save.width) < 1
           && cancel.height >= 44 && save.height >= 44;
       })).toBe(true);
       expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);

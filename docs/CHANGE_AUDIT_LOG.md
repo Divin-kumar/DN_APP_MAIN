@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-555 | Place Save and Cancel with the form fields
+
+- **Scope:** Keep Save and Cancel in the form body in normal view, with equal space and a quiet tint on the primary action. Retain docking for short touch landscape and the phone keyboard. Give disabled Time text a muted color inside a uniform field surface.
+- **Compatibility:** Keep form draft, keyboard reachability, validation and cancellation behavior. Guest tour 2026.11.16.9 remains accurate because the actions and sample records stay the same.
+- **Validation:** Chromium coverage measures paired actions, confirms inline placement and tests keyboard and landscape docking. Native iPhone Safari remains a device check.
+
 ## CHG-20261116-554 | Align transaction controls and flatten form actions
 
 - **Scope:** Equalize transaction columns, integrate Clear time inside the shared Time field, and give standard payment methods equal-width buttons. Remove the separate action strip and style form Save and Cancel consistently across themes.

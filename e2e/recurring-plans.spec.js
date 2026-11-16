@@ -28,6 +28,8 @@ test.describe('Recurring sheets on short phone screens', () => {
       await page.getByRole('button', { name: 'Open quick create menu' }).tap();
       await page.getByRole('button', { name: kind, exact: true }).tap();
       const dialog = page.getByRole('dialog', { name: title, exact: true });
+      const save = dialog.getByRole('button', { name, exact: true });
+      await expect.poll(() => save.evaluate(button => Boolean(button.closest('form')))).toBe(true);
       const input = dialog.getByLabel(field, { exact: true });
       await input.fill('Unsaved draft');
       if (kind === 'Transaction') await dialog.getByLabel('Amount *', { exact: true }).fill('42');
@@ -36,7 +38,6 @@ test.describe('Recurring sheets on short phone screens', () => {
         visualViewport.dispatchEvent(new Event('resize'));
       });
       await expect(page.locator('.dn-modal-viewport').filter({ has: dialog })).toHaveAttribute('data-keyboard-open', 'true');
-      const save = dialog.getByRole('button', { name, exact: true });
       await expect.poll(() => save.evaluate((button) => {
         const body = button.closest('[role="dialog"]').querySelector('.dn-modal-body');
         const bounds = button.getBoundingClientRect();
