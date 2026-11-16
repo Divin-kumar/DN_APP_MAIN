@@ -1,5 +1,12 @@
 # DN — Change Log
 
+### CHG-516 | Consistent glass across Finance and recurring workflows | 16 November 2026 | OldVersion development
+
+- **Scope:** Shared light/dark materials for Insights tabs, summary, comparisons, category breakdown, Overview panels, recurring Task rows, schedule fields, frequency/payment choices, bill lists, management actions, payment forms, confirmations, feedback and receipts. Apply the sheet material on desktop as well as phones; resolve missing desktop field colour variables.
+- **Compatibility:** Presentation only. Existing month/category filtering, export, recurrence, payment posting, backup, focus return, scroll restoration and fixed Save footer handlers remain unchanged. Guest tour 2026.11.16.2 fixtures/instructions reviewed and still accurate; no sample reset or version bump. Opaque reduced-transparency fallback retained.
+- **Executed:** Production build and diff whitespace check passed. Browser review of the local bill list, payment and schedule editor; added a 320px dark/430px light end-to-end visual journey covering reports, bill list, management, repeat editing, skip/end cancellation, payment, success and receipt, with screenshots and overflow/footer checks. Run alongside existing Insights, recurrence and header suites in CI.
+- **Unverified:** Native Safari and VoiceOver require device acceptance. Development publication only; no production/version/backend changes.
+
 ### CHG-515 | Finance and recurrence visual hierarchy | 16 November 2026 | OldVersion development
 
 - **Scope:** Give Finance balance and totals breathing room, use quiet report buttons, space date-grouped ledger rows, and cap the desktop reading width. Upcoming expenses uses a two-line entry and a prominent single-bill amount. Multi-bill Record/Manage actions occupy the details column. Shared Task/expense repeat editors remove the nested schedule surface and soften the frequency selection.

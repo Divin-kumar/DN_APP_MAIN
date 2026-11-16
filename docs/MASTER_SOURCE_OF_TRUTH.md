@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Consistent glass for Finance and planning (16 November 2026, development)
+
+Finance navigation, the monthly summary, comparison and category reports, recurring Task rows, expense-plan entry, payment method choices, schedule editors, confirmation date summaries and payment receipts share theme-aware glass materials. Both desktop dialogs and phone sheets use the same field, border and action colours. Selected controls retain a visible tint and border, and due/overdue labels retain their semantic colours. Save and confirmation actions stay below the scrollable body. Reduced-transparency preferences use opaque materials. Guest tour 2026.11.16.2 still describes these unchanged interactions; no refresh is needed for the visual update.
+
 ## Finance report and recurring layout (16 November 2026, OldVersion development)
 
 Finance uses a larger balance, separated income and expense totals, quiet report buttons, and spacious date-grouped transaction rows. On wide screens the reading column is capped at 900px. Finance shows balance, income and expenses, with a single month-and-year picker grouped by year. Compare months and Breakdown sit side by side. Open either report to see its details above the transaction ledger. The ledger groups records by transaction date and puts the category and saved time below the name, with signed amounts aligned on the right. Tapping a category filters the current month and focuses the ledger heading. Switching months clears the category filter. Mobile Insights keeps the universal + below the report and restores its saved floating position when leaving Insights.

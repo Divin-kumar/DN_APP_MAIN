@@ -113,8 +113,15 @@ jobs:
           npx playwright test
           e2e/iphone-insights-first-fold-phase1.spec.js
           e2e/recurring-plans.spec.js
+          e2e/planning-glass.spec.js
           e2e/iphone-route-header-density.spec.js
           --workers=2
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: planning-glass-browser-results
+          path: .verification/browser-results
+          retention-days: 7
 
   dashboard-activities-iphone:
     # CHG-514: actual Dashboard/Activities phone layouts and original gestures.
