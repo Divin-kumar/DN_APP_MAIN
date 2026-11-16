@@ -262,16 +262,6 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
 .dn-expense-plan-menu-actions button.is-danger svg:first-child { color: var(--color-danger); }
 .dn-expense-plan-menu-actions button small { display: block; color: var(--color-text-muted); font-size: 12px; line-height: 1.4; }
 html[data-theme] .dn-plan-transaction-form { gap: 12px; }
-html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-columns: minmax(0, 1fr); }
-@media (max-width: 360px) {
-  html[data-theme] .dn-transaction-form:not(.dn-plan-transaction-form) .activity-date-time-row {
-    grid-template-columns: minmax(0, .9fr) minmax(0, 1fr);
-    gap: 6px;
-  }
-  html[data-theme] .dn-transaction-form:not(.dn-plan-transaction-form) .activity-date-time-row input {
-    padding-inline: 4px !important;
-  }
-}
 .dn-payment-context {
   display: grid;
   gap: 4px;
@@ -285,23 +275,11 @@ html[data-theme] .dn-plan-form-date .activity-date-time-row { grid-template-colu
 .dn-payment-context dt, .dn-payment-context dd { margin: 0; font-size: 12px; line-height: 1.5; }
 .dn-payment-context dt { color: var(--color-text-muted); }
 .dn-payment-context dd { color: var(--color-text); font-weight: 650; }
-.dn-expense-draft-fields {
-  display: grid;
-  grid-template-columns: minmax(0, 1.6fr) minmax(118px, 1fr);
-  align-items: end;
-  gap: 10px;
-}
 .dn-payment-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 1.25fr); align-items: start; gap: 10px; }
 .dn-payment-fields .dn-plan-form-date { min-width: 0; }
 @media (max-width: 300px) {
   .dn-payment-fields { grid-template-columns: minmax(0, 1fr); }
 }
-html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-plan-dialog .dn-modal-form-footer) .form-actions {
-  display: grid;
-  grid-template-columns: max-content minmax(0, 1fr);
-  align-items: stretch;
-}
-html[data-theme] .dn-modal :is(.dn-plan-transaction-form, .dn-expense-plan-dialog .dn-modal-form-footer) .form-actions > button { margin: 0; }
 @media (min-width: 520px) and (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   html[data-theme] .dn-expense-plan-dialog .dn-expense-payment-form {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
@@ -432,31 +410,49 @@ html[data-theme] .dn-expense-plan-row-actions > button > span { white-space: now
   html[data-theme] .dn-expense-plan-row-actions { grid-column: 1 / -1; width: 100%; }
 }
 
-/* Payment choices stay together; the longer third label gets the space it needs. */
-html[data-theme] body .dn-modal .dn-payment-method-options {
-  display: flex; flex-wrap: nowrap; min-width: 0;
-  overflow-x: auto; scrollbar-width: none;
+/* Equal tracks for the usual two or three methods. Additional configured
+   methods can scroll horizontally without compressing their labels. */
+html[data-theme] body .dn-transaction-form .dn-payment-method-options {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: flex-start;
+  min-width: 0;
+  gap: 0;
+  --dn-payment-choice-width: 76px;
+  overflow-x: auto;
+  scrollbar-width: none;
 }
-html[data-theme] body .dn-modal .dn-payment-method-options::-webkit-scrollbar { display: none; }
-html[data-theme] body .dn-modal .dn-payment-method-choice { flex: 1 0 auto; min-width: 0; }
-html[data-theme] body .dn-modal .dn-payment-method-choice + .dn-payment-method-choice { margin-inline-start: 4px; }
-html[data-theme] body .dn-modal .dn-payment-method-options[data-method-count="2"] > label:not(.dn-payment-method-optional) { flex-basis: 0; min-width: 52px; }
-html[data-theme] body .dn-modal .dn-payment-method-options[data-method-count="2"] > :nth-child(2) { flex-grow: 1.12; }
-html[data-theme] body .dn-modal .dn-payment-method-options .dn-payment-method-optional {
-  flex: 2.2 0 0;
-  min-width: 128px;
-  overflow: hidden;
+html[data-theme] body .dn-transaction-form .dn-payment-method-options::-webkit-scrollbar { display: none; }
+html[data-theme] body .dn-transaction-form .dn-payment-method-options:has(> :nth-child(4):not([aria-hidden="true"])) {
+  --dn-payment-choice-width: 104px;
 }
-html[data-theme] body .dn-modal .dn-payment-method-options[data-optional="false"] .dn-payment-method-optional {
+html[data-theme] body .dn-transaction-form .dn-payment-method-choice {
+  flex: 1 0 0;
+  min-width: var(--dn-payment-choice-width);
+}
+html[data-theme] body .dn-transaction-form .dn-payment-method-choice + .dn-payment-method-choice { margin-inline-start: 6px; }
+html[data-theme] body .dn-transaction-form .dn-payment-method-optional { overflow: clip; }
+html[data-theme] body .dn-transaction-form .dn-payment-method-options[data-optional="false"] .dn-payment-method-optional {
   flex-grow: 0;
   min-width: 0;
   margin-inline-start: 0;
   opacity: 0;
   visibility: hidden;
+  pointer-events: none;
 }
-html[data-theme] body .dn-modal .dn-payment-method-choice span {
-  white-space: nowrap; min-width: 0; min-height: 44px; padding: 6px 3px;
-  font-size: 12px; font-weight: 550; border-radius: 12px;
+html[data-theme] body .dn-transaction-form .dn-payment-method-choice > span {
+  box-sizing: border-box;
+  height: 44px;
+  min-width: 0;
+  min-height: 44px;
+  padding: 5px 4px;
+  font-size: 12px;
+  font-weight: 550;
+  line-height: 1.2;
+  border-radius: 12px;
+}
+html[data-theme] body .dn-transaction-form .dn-payment-method-choice input:focus-visible + span {
+  outline-offset: -3px;
 }
 .dn-expense-plan-inline-actions { grid-column: 1 / -1; min-width: 0; }
 html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions {
@@ -512,13 +508,10 @@ html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions b
 
 .dn-transaction-links { display: grid; gap: var(--dn-form-gap); min-width: 0; }
 @media (prefers-reduced-motion: no-preference) {
-  html[data-theme] body .dn-modal .dn-payment-method-choice {
+  html[data-theme] body .dn-transaction-form .dn-payment-method-choice {
     transition: flex-grow 145ms ease-out, min-width 145ms ease-out, margin-inline-start 145ms ease-out, opacity 115ms ease-out, visibility 145ms;
   }
-  html[data-theme] body .dn-modal .dn-payment-method-choice > span {
+  html[data-theme] body .dn-transaction-form .dn-payment-method-choice > span {
     transition: background-color 125ms ease, border-color 125ms ease, color 125ms ease;
-  }
-  html[data-theme] body .dn-modal .dn-payment-method-options[data-optional="false"] .dn-payment-method-optional {
-    pointer-events: none;
   }
 }

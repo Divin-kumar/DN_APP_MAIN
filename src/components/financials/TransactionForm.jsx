@@ -186,7 +186,7 @@ export default function TransactionForm({
   </label>;
   const paymentMethod = <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
     <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
-    <div className="dn-payment-method-options" data-method-count={paymentMethods.length} data-optional={isPlan}>
+    <div className="dn-payment-method-options" data-optional={isPlan}>
       {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
         <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
           onChange={() => change('paymentMethod', method)} disabled={busy} />
@@ -223,7 +223,7 @@ export default function TransactionForm({
         </dl>
       </div> : null}
       {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div> : <>
-        <div className="dn-form-pair dn-expense-draft-fields">{titleField}{amount}</div>
+        <div className="dn-form-pair">{titleField}{amount}</div>
         <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
           <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
         </div>

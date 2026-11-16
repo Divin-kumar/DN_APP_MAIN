@@ -43,20 +43,24 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       const expectSameRow = async (first, second) => {
         const positions = await dialog.evaluate((element, selectors) => selectors.map(selector => {
           const box = element.querySelector(selector).getBoundingClientRect();
-          return { x: box.x, y: box.y, height: box.height };
+          return { x: box.x, y: box.y, height: box.height, width: box.width };
         }), [first, second]);
         expect(Math.abs(positions[0].y - positions[1].y)).toBeLessThan(4);
         expect(positions[1].x).toBeGreaterThan(positions[0].x);
         expect(Math.min(...positions.map(box => box.height))).toBeGreaterThanOrEqual(42);
+        return positions;
       };
       if (kind === 'Transaction') {
-        await expectSameRow('input[type="text"]', 'input[type="number"]');
+        const [title, amount] = await expectSameRow('input[type="text"]', 'input[type="number"]');
+        expect(Math.abs(title.width - amount.width)).toBeLessThan(1);
         await expectSameRow('[aria-label="Transaction Type"]', '[aria-label="Category"]');
       }
       if (kind === 'Task' || kind === 'Transaction') {
         const time = dialog.locator('input[type="time"]');
         await expect(time).toBeVisible();
-        await expectSameRow('input[type="date"]', 'input[type="time"]');
+        const [date, clock] = await expectSameRow('input[type="date"]', '.activity-time-control');
+        expect(Math.abs(date.width - clock.width)).toBeLessThan(1);
+        expect(Math.abs(date.height - clock.height)).toBeLessThan(1);
         expect(await dialog.locator('summary').evaluate(el => getComputedStyle(el, '::after').content)).toBe('none');
         const more = dialog.locator('details').filter({ has: page.locator('summary').filter({ hasText: 'More options' }) });
         await expect(dialog.getByRole('radio', { name: 'Monthly', exact: true })).toBeHidden();
@@ -84,6 +88,17 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       const actions = dialog.locator('button[type="submit"]').locator('..');
       const actionOrder = await actions.getByRole('button').allTextContents();
       expect(actionOrder[0]).toBe('Cancel');
+      expect(await actions.evaluate(row => {
+        const parent = row.closest('.dn-modal-fixed-actions');
+        const transparent = node => {
+          const style = getComputedStyle(node);
+          return style.backgroundColor === 'rgba(0, 0, 0, 0)' && style.backgroundImage === 'none'
+            && style.borderTopWidth === '0px' && style.boxShadow === 'none';
+        };
+        const [cancel, save] = [...row.querySelectorAll('button')].map(button => button.getBoundingClientRect());
+        return transparent(row) && (!parent || transparent(parent)) && Math.abs(cancel.top - save.top) < 1
+          && cancel.height >= 44 && save.height >= 44;
+      })).toBe(true);
       expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       await testInfo.attach(`${kind}-${theme}`, { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' });
       await dialog.getByRole('button', { name: 'Close dialog' }).click();

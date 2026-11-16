@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Even form fields and lightweight actions (16 November 2026, development)
+
+Transaction forms use equal columns for Title and Amount and for Transaction Type and Category. The Date and Time controls share equal outer dimensions, with Clear time inside the Time field edge. Cash, Online and Choose at payment share equal-width choices and a common touch height. The longest choice can wrap inside its button on narrow phones. Longer configured method lists scroll horizontally. Shared form action rows use the surrounding surface, with plain Cancel and a softly tinted Save. Task, Transaction and bill sheets keep fixed controls below the scrollable body so the keyboard leaves them reachable.
+
 ## Faster form transitions (16 November 2026, development)
 
 The mobile + opens Navigate & create on the first tap. A second tap within 215 ms dismisses it and goes Back inside DN. The menu's choices move with the sheet as a group. A create form mounts as the menu fades, and the exiting menu releases pointer and keyboard interaction to the new form. Mobile sheets use a shorter slide and lighter background blur in both themes. More options animates its height and clips its content during movement. The writing editor reserves its space during first load. Repeat previews, form dropdowns, Choose at payment and Clear time still animate. The date and time remain on the same row.

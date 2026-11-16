@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261116-554 | Align transaction controls and flatten form actions
+
+- **Scope:** Equalize transaction columns, integrate Clear time inside the shared Time field, and give standard payment methods equal-width buttons. Remove the separate action strip and style form Save and Cancel consistently across themes.
+- **Compatibility:** Keep the fixed Task, Transaction and bill actions reachable below scrollable content. Preserve validation, payment and repeat actions, and destructive styling. Guest tour 2026.11.16.9 still describes the same controls and sample records.
+- **Validation:** Browser checks cover action row surfaces and touch sizes, paired fields, payment widths, recurring save/cancel, and short viewports. Physical iPhone Safari remains a device check.
+
 ## CHG-20261116-553 | Open forms without waiting for the create menu
 
 - **Scope:** Open the mobile + menu on the first tap and mount the form during the menu exit. Remove staggered menu tile animations, lighten mobile glass blur and simplify clipping during More options motion. Reserve space for a lazy writing editor and reveal the focused field after a clipped disclosure finishes opening.

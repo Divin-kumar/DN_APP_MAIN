@@ -662,8 +662,14 @@ for (const width of [320, 430]) {
         const options = dialog.locator('.dn-payment-method-choice > span');
         await expect(options).toHaveCount(3);
         await expect.poll(() => options.evaluateAll(elements => {
-          const rows = elements.map(element => element.getBoundingClientRect().top);
+          const bounds = elements.map(element => element.getBoundingClientRect());
+          const rows = bounds.map(box => box.top);
+          const widths = bounds.map(box => box.width);
+          const heights = bounds.map(box => box.height);
           return Math.max(...rows) - Math.min(...rows) < 2
+            && Math.max(...widths) - Math.min(...widths) < 1
+            && Math.max(...heights) - Math.min(...heights) < 1
+            && heights.every(height => height >= 44 && height <= 46)
             && elements.every(element => element.scrollWidth <= element.clientWidth + 1);
         })).toBe(true);
       }
