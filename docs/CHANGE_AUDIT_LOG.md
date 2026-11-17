@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261117-572 | Go Back without showing quick create
+
+- **Scope.** Restore the previous mobile quick-create sheet and shared dialog behavior. The + waits 215 ms to distinguish a single pointer tap from two. Double-tap goes Back without mounting the sheet. Keyboard activation and selecting a form remain immediate.
+- **Executed.** All 60 focused Chromium browser cases passed, including the menu-mount checks on docked and floating + buttons. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-571 | Match Dashboard cards and separate + gestures
 
 - **Scope.** Use shared Dashboard row styling, square date tiles and browse links across Tasks, Moments and Activities. Align all three cards in equal columns on wide screens. Keep the four-row Task preview and its internal scroll.

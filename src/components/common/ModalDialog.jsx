@@ -21,7 +21,7 @@ export function useDialogFormFooter() {
 }
 
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
-  closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false, deferClose = true }) {
+  closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
   const [formActions, setFormActions] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [compactActions, setCompactActions] = useState(() => window.matchMedia(compactActionMedia).matches);
@@ -119,7 +119,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   // Re-evaluate the media query for the Escape listener installed on mount.
   const requestClose = () => {
     if (closeDisabledRef.current) return;
-    if (deferClose && swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
+    if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
     else onCloseRef.current();
   };
   // Capture before portal children mount: React autoFocus can run before this

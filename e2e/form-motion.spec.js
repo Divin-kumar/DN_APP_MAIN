@@ -7,9 +7,8 @@ test('mobile form slides both ways and Repeat and More options animate in place'
   const errors = await seedGuest(page, { theme: 'light' });
   await page.goto('/dashboard');
   const menu = page.getByRole('dialog', { name: 'Navigate & create' });
-  // dispatchEvent bypasses Playwright's stability wait so the test detects a queued first tap.
   await page.getByRole('button', { name: 'Open quick create menu' }).dispatchEvent('click', { detail: 1 });
-  expect(await menu.count()).toBe(1);
+  await expect(menu).toBeVisible();
   const handoff = await menu.getByRole('button', { name: 'Task', exact: true }).evaluate(async button => {
     const menuSheet = button.closest('section[role="dialog"]');
     button.click();

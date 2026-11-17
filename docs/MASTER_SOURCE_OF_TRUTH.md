@@ -4,7 +4,7 @@
 
 Dashboard Tasks, Moments and Activities use matching card widths, row spacing, date tiles and empty-state links. They stack on phones and use three equal columns when the content is wide enough. Task previews still open on request and fit four rows before scrolling.
 
-A tap on the mobile + opens Navigate & create immediately. Back requires a second pointer tap that starts on the same + within 215 ms. The menu stays clear of the docked or floating button, and each create action opens its form as soon as selected. A later tap on the open + closes the menu, and a closed menu can reopen during its exit animation. Guest tour edition 2026.11.17.1 describes the gesture and form selection through Refresh demo.
+The mobile + uses the previous Navigate & create layout. A single pointer tap waits 215 ms for a second tap on the same +. A quick double-tap goes Back without opening the sheet. Keyboard activation and selection of a create action are immediate. Starting a drag, using another control, pressing Escape or changing routes cancels a pending tap. Guest tour edition 2026.11.17.2 describes the gesture through Refresh demo.
 
 ## More compact Settings navigation (17 November 2026, development)
 

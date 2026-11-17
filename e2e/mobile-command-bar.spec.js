@@ -440,7 +440,7 @@ for (const [width, theme] of [[320,'light'],[390,'dark'],[430,'light']]) {
  });
 }
 
-test('double-tapping the universal + returns to the previous DN page and dismisses the menu', async ({page}) => {
+test('double-tapping the universal + returns to the previous DN page without showing the menu', async ({page}) => {
   await page.setViewportSize({width:430,height:932});
   const errors = await seedGuest(page,{theme:'light'});
   await page.goto('/events');
@@ -478,7 +478,7 @@ test('double-tap on a directly opened deep link stays inside DN; keyboard single
   expect(errors).toEqual([]);
 });
 
-test.describe('command sheet touch targets', () => {
+test.describe('quick create touch gestures', () => {
   test.use({ hasTouch: true, isMobile: true });
   for (const [width, edge, action, title] of [
     [320, 'right', 'Transaction', 'Add Transaction'],
@@ -502,11 +502,6 @@ test.describe('command sheet touch targets', () => {
       await tapPlus();
       const menu = page.getByRole('dialog', { name: 'Navigate & create' });
       await expect(menu).toBeVisible();
-      const [{ x, y, width: buttonWidth, height: buttonHeight }, sheet] = await Promise.all([
-        plus.boundingBox(), menu.boundingBox(),
-      ]);
-      expect(sheet.x + sheet.width <= x || x + buttonWidth <= sheet.x ||
-        sheet.y + sheet.height <= y || y + buttonHeight <= sheet.y).toBe(true);
       await menu.getByRole('button', { name: action, exact: true }).tap();
       const form = page.getByRole('dialog', { name: title, exact: true });
       await expect(form).toBeVisible();
@@ -515,25 +510,41 @@ test.describe('command sheet touch targets', () => {
       await form.getByRole('button', { name: 'Close dialog' }).tap();
       await expect(form).toHaveCount(0);
 
-      await tapPlus();
-      await tapPlus();
+      await page.evaluate(() => {
+        window.commandSheetMounts = 0;
+        const observer = new MutationObserver(records => {
+          for (const record of records) {
+            for (const node of record.addedNodes) {
+              if (node instanceof Element &&
+                (node.matches('.dn-command-dialog') || node.querySelector('.dn-command-dialog'))) window.commandSheetMounts += 1;
+            }
+          }
+        });
+        observer.observe(document.body, { childList: true, subtree: true });
+      });
+      const box = await plus.boundingBox();
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
       await expect(page).toHaveURL(/\/dashboard$/);
+      await page.waitForTimeout(250);
       await expect(page.getByRole('dialog')).toHaveCount(0);
+      expect(await page.evaluate(() => window.commandSheetMounts)).toBe(0);
       expect(errors).toEqual([]);
     });
   }
 });
 
-test('a later tap on the open + closes the menu without changing the page', async ({ page }) => {
+test('using another control cancels a pending + tap', async ({ page }) => {
   await seedGuest(page);
   await page.goto('/activities');
   const plus = page.locator('.dn-command-trigger');
-  await plus.click();
-  const menu = page.getByRole('dialog', { name: 'Navigate & create' });
-  await expect(menu).toBeVisible();
+  const profile = page.getByRole('button', { name: 'Open profile and account menu' });
+  const [plusBox, profileBox] = await Promise.all([plus.boundingBox(), profile.boundingBox()]);
+  await page.mouse.click(plusBox.x + plusBox.width / 2, plusBox.y + plusBox.height / 2);
+  await page.mouse.click(profileBox.x + profileBox.width / 2, profileBox.y + profileBox.height / 2);
+  await expect(page.getByRole('menu', { name: 'Profile and account' })).toBeVisible();
   await page.waitForTimeout(250);
-  await plus.click();
-  await expect(menu).toHaveCount(0);
+  await expect(page.getByRole('dialog', { name: 'Navigate & create' })).toHaveCount(0);
   await expect(page).toHaveURL(/\/activities$/);
 });
 
