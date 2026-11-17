@@ -32,6 +32,12 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     // Date switches remain 44px touch targets, visibly readable on phones
     // and within each section header, never forcing horizontal scrolling.
     for (const segment of [momentDates, activityDates]) {
+      const actionsFit = await segment.evaluate(node => {
+        const actions = node.parentElement;
+        const heading = actions.parentElement.getBoundingClientRect();
+        return actions.lastElementChild.getBoundingClientRect().right <= heading.right + 1;
+      });
+      expect(actionsFit).toBe(true);
       for (const button of await segment.getByRole('button').all()) {
         const style = await button.evaluate((node) => {
           const buttonBox = node.getBoundingClientRect();

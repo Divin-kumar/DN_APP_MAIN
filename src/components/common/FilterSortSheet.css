@@ -65,6 +65,11 @@ html[data-theme] .dn-list-controls-footer .dn-refine-apply:hover {
   html[data-theme] .dn-refine-sheet .dn-modal-body { gap: 14px; }
   html[data-theme] .dn-refine-sheet .dn-condition-children { max-height: min(33svh, 280px); }
 }
+@media(max-width:360px) {
+  html[data-theme] .dn-list-controls-footer > button {
+    padding-inline: 3px; font-size: calc(var(--dn-form-action-size) - 1px);
+  }
+}
 html[data-theme] .dn-refine-sheet .dn-refine-preview-count {
   margin: 0 0 5px;
   font-size: var(--dn-type-caption); font-weight: 550; line-height: 1.5; color: var(--color-text-muted);

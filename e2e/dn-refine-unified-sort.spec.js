@@ -66,6 +66,12 @@ for (const width of [320, 390, 430]) {
       }
       expect(actions[1].fill).toBe(actions[0].fill);
       expect(actions[2].fill).not.toBe(actions[0].fill);
+      const applyLines = await footer.getByRole('button', { name: 'Show results' }).evaluate(button => {
+        const label = document.createRange();
+        label.selectNodeContents(button);
+        return label.getClientRects().length;
+      });
+      expect(applyLines).toBe(1);
       const selected = sorts.locator('button[aria-pressed="true"]');
       await expect(selected).toHaveCount(1);
       const initial = await selected.getAttribute('aria-label');

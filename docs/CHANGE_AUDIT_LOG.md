@@ -1,5 +1,10 @@
 # DN — Change Log
 
+## CHG-20261117-567 | Keep Dashboard and Refine labels aligned at 320px
+
+- **Scope:** Keep the Dashboard collapse control inside its header and the Refine Show results label on one line on narrow phones. All existing touch areas retain their height.
+- **Executed:** 22 Chromium checks passed across 320px, 390px, 430px and short landscape layouts. Guest tour guidance still applies.
+
 ## CHG-20261117-566 | Move between applied filters with the keyboard
 
 - **Scope:** Left and Right move the focused applied-filter rail to the neighboring chip so scroll snapping cannot return it to the current position.
