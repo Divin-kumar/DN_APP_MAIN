@@ -1,3 +1,5 @@
+**Dashboard and quick create (17 November 2026, development).** Tasks, Moments and Activities use matching cards and square date tiles. On wide screens they sit in three equal columns. An empty card offers a link to its list. Tap the blue + once to open the menu, tap it twice quickly to go Back, or choose an item in the menu to open its form immediately. The menu stays clear of the + whether it is docked or floating.
+
 **Task editor (16 November 2026, development).** Tap Keep editing after opening a Task confirmation to return to the same spot with your draft and More options as you left them. In a long Moment or Activity list, tap Search when you need the keyboard.
 
 **Paired Moment and Activity links (16 November 2026, development).** In Task and Transaction forms, More options shows its summary on the same line. Open it to see Moment and Activity next to each other, with Repeat below when available. Repeating expenses link to a Moment or Activity when you record each payment. Forms use the DN typeface, and the profile and create menus, Settings navigation, Finance summary and PDF Studio controls share their glass finish in both themes.

@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Consistent Dashboard cards and separate + gestures (17 November 2026, development)
+
+Dashboard Tasks, Moments and Activities use matching card widths, row spacing, date tiles and empty-state links. They stack on phones and use three equal columns when the content is wide enough. Task previews still open on request and fit four rows before scrolling.
+
+A tap on the mobile + opens Navigate & create immediately. Back requires a second pointer tap that starts on the same + within 215 ms. The menu stays clear of the docked or floating button, and each create action opens its form as soon as selected. A later tap on the open + closes the menu, and a closed menu can reopen during its exit animation. Guest tour edition 2026.11.17.1 describes the gesture and form selection through Refresh demo.
+
 ## More compact Settings navigation (17 November 2026, development)
 
 Settings places all five destinations directly below the current workspace. Each row uses a short description that screen readers can read with the link, with icons and chevrons aligned in fixed columns. The Guest demo has a single heading inside its own section. Appearance opens with its main heading and a short description.

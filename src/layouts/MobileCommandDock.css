@@ -76,7 +76,6 @@ html[data-theme] .dn-command-actions button svg {
 }
 html[data-theme] .dn-command-actions button:active, html[data-theme] .dn-command-redock:active { background:var(--color-surface)!important; }
 html[data-theme] .dn-command-redock { margin-top:14px;width:100%;justify-content:center;min-height:44px;font-size:12px;color:var(--color-text-muted)!important; }
-html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:center;color:var(--color-text-muted);margin:16px 0 0; }
 @media (min-width:375px) { html[data-theme] .dn-command-destinations a { font-size:12px; } }
 @media (prefers-reduced-motion:reduce) { html[data-theme] .dn-command-destination-icon,html[data-theme] .dn-command-destinations a { transition:none; } }
 
@@ -84,9 +83,51 @@ html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:ce
   html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-modal.dn-command-dialog { padding-inline:12px!important; }
   html[data-theme] .dn-command-destinations { margin-inline:-3px; }
 }
+
+/* Keep the + reachable beside the command sheet without covering its actions.
+   Leave room below a docked + sheet for the sheet's entrance movement. */
+html[data-theme] .dn-modal-viewport:has(> .dn-command-dialog[data-closing]) { pointer-events:none; }
+@media (max-width:620px) {
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-command-dialog.is-docked {
+    --dn-command-bottom-clearance: calc(85px + max(17px, var(--dn-safe-area-bottom, env(safe-area-inset-bottom, 0px))));
+    margin: auto auto var(--dn-command-bottom-clearance) !important;
+    max-height: calc(var(--dn-dialog-viewport-height, 100dvh) - 16px - var(--dn-command-bottom-clearance)) !important;
+  }
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-command-dialog:is(.is-floating-left, .is-floating-right) {
+    width: calc(100% - 62px) !important;
+    padding-inline: 8px !important;
+  }
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-command-dialog.is-floating-left {
+    margin: auto 0 0 62px !important;
+  }
+  html[data-theme] .dn-modal-backdrop.dn-modal-viewport[data-keyboard-open] > .dn-command-dialog.is-floating-right {
+    margin: auto 62px 0 0 !important;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-actions button {
+    min-width: 0; gap: 5px; overflow-wrap: anywhere;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-actions button svg {
+    padding: 5px;
+  }
+}
 html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;letter-spacing:-.15px;white-space:nowrap; }
 @media (max-width:360px) {
   html[data-theme] .dn-command-destinations a > span:last-child { font-size:11px; }
+  html[data-theme] .dn-modal-viewport .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-modal-header h3 {
+    font-size:17px!important;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-destinations {
+    display:flex; flex-wrap:wrap; justify-content:center;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-destinations a {
+    flex:0 0 33.33%; min-height:61px; gap:5px;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-destination-icon {
+    width:36px; height:36px;
+  }
+  html[data-theme] .dn-command-dialog:is(.is-floating-left, .is-floating-right) .dn-command-actions button {
+    flex-direction:column; justify-content:center; text-align:center; overflow-wrap:normal;
+  }
 }
 /* DN 2.3.6: detach + from the glass discovery treatment. */
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
@@ -292,7 +333,7 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
 }
 
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
- /* Keep the second tap and drag reachable while the command sheet is entering. */
+ /* Only the + stays interactive above the command sheet and scrim. */
  html[data-theme] .dn-command-root .dn-command-bar.is-pointer-active {
    z-index:1001; pointer-events:none;
  }

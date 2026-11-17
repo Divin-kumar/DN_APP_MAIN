@@ -44,8 +44,9 @@ for (const width of [320, 390, 768, 1440]) {
       const title = await header.locator('span').first().boundingBox();
       const controls = [header.getByRole('group', { name: dates, exact: true }),
         header.getByRole('button', { name: `Hide ${section} on dashboard`, exact: true })];
-      expect((await controls[0].boundingBox()).height).toBeLessThanOrEqual(30);
-      expect((await controls[0].getByRole('button', { name: 'Upcoming', exact: true }).boundingBox()).height).toBeGreaterThanOrEqual(43.9);
+      const upcoming = controls[0].getByRole('button', { name: 'Upcoming', exact: true });
+      expect((await upcoming.boundingBox()).height).toBeGreaterThanOrEqual(43.9);
+      expect(await upcoming.evaluate(el => parseFloat(getComputedStyle(el, '::before').height))).toBeLessThanOrEqual(30);
       for (const control of controls) {
         const bounds = await control.boundingBox();
         // Browser font/layout rasterization varies by a fraction of a CSS pixel.
@@ -61,9 +62,13 @@ for (const width of [320, 390, 768, 1440]) {
     await expect(page.getByRole('button', { name: 'Open Today’s task', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Open Archived task', exact: true })).toHaveCount(0);
     if (width === 1440) {
+      const taskPanel = await page.getByRole('region', { name: 'Independent Tasks', exact: true }).boundingBox();
       const momentPanel = await page.getByRole('region', { name: 'Moments', exact: true }).boundingBox();
       const activityPanel = await page.getByRole('region', { name: 'Activities', exact: true }).boundingBox();
       expect(Math.abs(momentPanel.y - activityPanel.y)).toBeLessThan(2);
+      expect(Math.abs(taskPanel.y - momentPanel.y)).toBeLessThan(2);
+      expect(Math.abs(taskPanel.width - momentPanel.width)).toBeLessThan(1);
+      expect(Math.abs(activityPanel.width - momentPanel.width)).toBeLessThan(1);
     }
     expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual(moments);
     expect(errors).toEqual([]);

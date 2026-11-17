@@ -1,4 +1,10 @@
-html[data-theme] .dashboard-overview.dashboard-compact { gap:12px !important; }
+html[data-theme] .dashboard-page-shell { container-type: inline-size; }
+html[data-theme] .dashboard-overview.dashboard-compact {
+  --dn-dashboard-date-size: 52px;
+  --dn-dashboard-row-height: 62px;
+  --dn-dashboard-row-gap: 6px;
+  gap: 11px !important;
+}
 /* Empty-period navigation is a quiet text affordance, not another dashboard button. */
 html[data-theme] .dashboard-compact .dashboard-upcoming-empty a {
   display:inline-flex; align-items:center; min-height:44px;
@@ -9,9 +15,7 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-empty a:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:2px; border-radius:5px;
 }
 
-html[data-theme] .dashboard-compact .dashboard-upcoming-card { min-width:0; align-content:start; padding:12px 14px; gap:5px; border-radius:16px; }
 html[data-theme] .dashboard-compact .dashboard-upcoming-empty { margin:6px 0; font-size:13px; }
-html[data-theme] .dashboard-compact .dashboard-upcoming-row { min-height:54px; }
 html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
   display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; min-width:0; min-height:44px; gap:6px;
 }
@@ -37,17 +41,18 @@ html[data-theme] .dashboard-section-actions .dashboard-section-toggle {
 }
 html[data-theme] .dashboard-section-actions .dashboard-section-toggle:hover { color:var(--color-text); background:var(--color-surface); }
 html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
-@media(min-width:820px) {
-  html[data-theme] .dashboard-overview.dashboard-compact { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:1120px; }
+@container (min-width: 960px) {
+  html[data-theme] .dashboard-overview.dashboard-compact {
+    grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; max-width:1120px;
+  }
 }
 
 
 /* DN 2.1 Home: photo-led Moments and Activities without oversized dashboard
    panels. The record's original image decorates its date, never replaces text. */
-html[data-theme] .dashboard-overview.dashboard-compact {
-  gap: 11px !important;
-}
 html[data-theme] .dashboard-compact .dashboard-upcoming-card {
+  min-width: 0;
+  align-content: start;
   gap: 9px;
   padding: 12px;
   border-color: var(--dn-form-line);
@@ -65,16 +70,15 @@ html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-sect
   letter-spacing: -.02em;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-list {
-  gap: 7px !important;
+  gap: var(--dn-dashboard-row-gap) !important;
 }
-html[data-theme] .dashboard-compact .dashboard-moment-row,
-html[data-theme] .dashboard-compact .dashboard-activity-card {
+html[data-theme] .dashboard-compact :is(.dashboard-moment-row, .dashboard-activity-card, .dn-dashboard-task-row) {
   display: flex;
   align-items: stretch;
   min-width: 0;
-  min-height: 62px;
+  min-height: var(--dn-dashboard-row-height);
   gap: 1px;
-  padding: 3px;
+  padding: 4px 7px;
   border: 1px solid transparent;
   border-radius: 14px;
   background: var(--dn-form-field);
@@ -85,17 +89,18 @@ html[data-theme] .dashboard-compact .dashboard-activity-card .dn-swipe-main {
   align-items: stretch;
   width: 100%;
   min-width: 0;
+  background: transparent;
 }
 html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
 html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
   display: grid;
-  grid-template-columns: 49px minmax(0,1fr) 12px;
+  grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr) 12px;
   flex: 1 1 0;
   width: 0;
   min-width: 0;
-  min-height: 56px;
+  min-height: var(--dn-dashboard-date-size);
   gap: 9px;
-  padding: 2px 4px;
+  padding: 0;
   border: 0;
   border-radius: 11px;
   background: transparent;
@@ -108,29 +113,33 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-date {
   display: grid;
   align-content: center;
   justify-items: center;
-  width: 49px;
-  min-width: 49px;
-  min-height: 50px;
+  width: var(--dn-dashboard-date-size);
+  height: var(--dn-dashboard-date-size);
+  min-width: var(--dn-dashboard-date-size);
+  min-height: var(--dn-dashboard-date-size);
   gap: 1px;
   padding: 3px;
   overflow: hidden;
-  border: 1px solid color-mix(in srgb, var(--color-border) 75%, transparent);
-  border-radius: 11px;
-  background: var(--color-card);
+  border: 0;
+  border-radius: 12px;
+  color: var(--color-text);
+  background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card));
+  font-variant-numeric: tabular-nums;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-date :is(strong,small) {
   position: relative;
   z-index: 2;
+  color: inherit;
   line-height: 1.15;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-date strong {
-  font-size: 17px;
-  font-weight: 730;
+  font-size: 19px;
+  font-weight: 760;
   letter-spacing: -.045em;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-date small {
-  font-size: 10px;
-  font-weight: 700;
+  font-size: 10.5px;
+  font-weight: 680;
   text-transform: uppercase;
   letter-spacing: .04em;
 }
@@ -169,13 +178,13 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-copy strong {
   overflow: hidden;
   white-space: normal;
   overflow-wrap: anywhere;
-  font-size: 13px;
-  font-weight: 670;
-  line-height: 1.35;
+  font-size: 14px;
+  font-weight: 690;
+  line-height: 1.2;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-copy small {
-  font-size: 11px;
-  line-height: 1.4;
+  font-size: 11.5px;
+  line-height: 1.3;
 }
 html[data-theme] .dashboard-compact .dashboard-moment-greeting-button,
 html[data-theme] .dashboard-compact .dashboard-activity-card .dn-record-menu-trigger {
@@ -206,20 +215,14 @@ html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashbo
   html[data-theme] .dashboard-compact .dashboard-upcoming-card {
     padding: 10px;
   }
-  html[data-theme] .dashboard-compact .dashboard-moment-row,
-  html[data-theme] .dashboard-compact .dashboard-activity-card {
+  html[data-theme] .dashboard-compact :is(.dashboard-moment-row, .dashboard-activity-card, .dn-dashboard-task-row) {
     gap: 0;
-    padding: 2px;
+    padding-inline: 5px;
   }
   html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
   html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
-    grid-template-columns: 45px minmax(0,1fr) 10px;
+    grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr) 10px;
     gap: 6px;
-    padding-inline: 2px;
-  }
-  html[data-theme] .dashboard-compact .dashboard-upcoming-date {
-    width: 45px;
-    min-width: 45px;
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -228,178 +231,54 @@ html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashbo
   }
 }
 
-/* DN 2.3 Dashboard: editorial Task rows echo Moment/Activity hierarchy
-   without a second stack of boxed cards or redundant Done controls. */
-html[data-theme] .dashboard-compact .dn-dashboard-tasks {
-  grid-column:1/-1; gap:8px;
-}
 html[data-theme] .dn-dashboard-tasks-link {
-  display:inline-flex; align-items:center; min-height:44px; padding:0 7px;
-  color:var(--color-primary); font-size:12px; font-weight:700; text-decoration:none;
+  display: inline-flex; align-items: center; min-height: 44px; padding: 0 6px;
+  color: var(--color-primary); font-size: var(--dn-type-caption); font-weight: 650;
+  text-decoration: none;
 }
-html[data-theme] .dn-dashboard-tasks-link:hover { text-decoration:underline; }
-html[data-theme] .dn-dashboard-tasks-rows { display:grid; gap:0; min-width:0; }
-html[data-theme] .dn-dashboard-task-row {
-  display:grid; grid-template-columns:45px minmax(0,1fr) max-content;
-  align-items:center; column-gap:10px; min-width:0; min-height:68px;
-  padding:7px 1px;
-  border:0; border-bottom:1px solid color-mix(in srgb,var(--color-border) 76%,transparent);
-  background:transparent;
+html[data-theme] .dn-dashboard-tasks-link:hover { text-decoration: underline; }
+html[data-theme] .dashboard-compact .dn-dashboard-task-row {
+  display: grid;
+  grid-template-columns: var(--dn-dashboard-date-size) minmax(0, 1fr) 24px;
+  align-items: center; gap: 9px; height: var(--dn-dashboard-row-height);
+  color: var(--color-text); text-decoration: none;
 }
-html[data-theme] .dn-dashboard-task-row:last-child { border-bottom:0; }
-html[data-theme] .dn-dashboard-task-date {
-  display:grid; place-items:center; align-content:center;
-  gap:2px; min-width:45px; min-height:48px; padding:4px;
-  border-radius:11px; color:var(--color-text);
-  background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
-  font-variant-numeric:tabular-nums;
+html[data-theme] .dashboard-compact .dn-dashboard-task-date[data-overdue="true"] {
+  color: var(--color-danger, #c84545);
+  background: color-mix(in srgb, var(--color-danger, #c84545) 8%, var(--color-card));
 }
-html[data-theme] .dn-dashboard-task-date strong {
-  font-size:18px; font-weight:760; line-height:1.1; letter-spacing:-.035em;
+html[data-theme] .dashboard-compact :is(.dashboard-upcoming-copy .is-overdue, .dn-dashboard-task-flag.is-overdue) {
+  color: var(--color-danger, #c84545);
 }
-html[data-theme] .dn-dashboard-task-date small {
-  font-size:10px; font-weight:690; line-height:1.2; text-transform:uppercase;
-}
-html[data-theme] .dn-dashboard-task-date[data-overdue="true"] {
-  color:var(--color-danger,#b34344);
-  background:color-mix(in srgb,var(--color-danger,#b34344) 8%,var(--color-card));
-}
-html[data-theme] .dn-dashboard-task-text {
-  display:grid; align-content:center; gap:5px; min-width:0;
-}
-html[data-theme] .dn-dashboard-task-name {
-  display:block; min-width:0; color:var(--color-text);
-  font-size:13px; line-height:1.35; font-weight:680;
-  text-decoration:none; overflow-wrap:anywhere;
-}
-html[data-theme] .dn-dashboard-task-name:hover { color:var(--color-primary); }
-html[data-theme] .dn-dashboard-task-text small {
-  display:block; min-width:0; color:var(--color-text-muted);
-  font-size:11px; line-height:1.45; overflow-wrap:anywhere;
-}
-html[data-theme] .dn-dashboard-task-text small .is-overdue,
-html[data-theme] .dn-dashboard-task-text [data-priority="high"] {
-  color:var(--color-danger,#b34344);
-}
-html[data-theme] .dn-dashboard-task-text [data-priority] { text-transform:capitalize; }
-html[data-theme] .dn-dashboard-task-separator { color:var(--color-text-muted); opacity:.55; }
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check {
-  display:inline-flex; align-items:center; justify-content:center; gap:6px; flex:none;
-  width:auto; min-width:64px; height:44px; min-height:44px;
-  padding:0 11px; border:1px solid color-mix(in srgb,var(--color-primary) 22%,var(--color-border));
-  border-radius:999px;
-  background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
-  color:var(--color-primary); box-shadow:none; cursor:pointer;
-  font:inherit; font-size:12px; font-weight:700; white-space:nowrap;
-}
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check:focus-visible {
-  border-color:color-mix(in srgb,var(--color-primary) 46%,var(--color-border));
-  background:color-mix(in srgb,var(--color-primary) 14%,var(--color-card));
-}
-html[data-theme] .dn-dashboard-tasks :is(button,a):focus-visible {
-  outline:2px solid var(--color-primary); outline-offset:2px;
-}
-@media(max-width:360px) {
-  html[data-theme] .dn-dashboard-task-row { grid-template-columns:42px minmax(0,1fr) max-content; column-gap:7px; }
-  html[data-theme] .dn-dashboard-task-date { min-width:42px; }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check { min-width:58px; padding-inline:9px; }
-}
-@media(prefers-reduced-motion:reduce) {
-  html[data-theme] .dn-dashboard-task-row { transition:none; }
+html[data-theme] .dn-dashboard-task-flag { display: grid; place-items: center; }
+html[data-theme] .dn-dashboard-tasks :is(button, a):focus-visible {
+  outline: 2px solid var(--color-primary); outline-offset: -2px;
 }
 
-/* Quiet action text with a full touch target, without a repeated pill. */
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-check {
-  border:0; background:transparent; box-shadow:none; border-radius:10px;
-  min-width:44px; padding-inline:4px; gap:4px; font-size:12px;
-}
-
-/* Owner-approved Dashboard Task preview is a read-only navigation row.
-   Priority matches the Task module's red-overdue / high-priority flag system. */
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row {
-  grid-template-columns:45px minmax(0,1fr) 24px;
-  color:var(--color-text); text-decoration:none; cursor:pointer;
-}
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row:hover .dn-dashboard-task-name { color:var(--color-primary); }
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row:focus-visible {
-  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:10px;
-}
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag {
-  display:flex; align-items:center; justify-content:center;
-  color:var(--color-text-muted);
-}
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag.is-overdue { color:var(--color-danger,#cb4848); }
-html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-flag.is-high { color:var(--color-text); }
-@media(max-width:360px) {
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row { grid-template-columns:42px minmax(0,1fr) 24px; }
-}
-
-/* Four Tasks visible; remaining items scroll inside this region, without chrome. */
+/* Keep four complete Task rows in view, with further rows in the same scroll area. */
 html[data-theme] .dn-dashboard-tasks-rows {
-  max-height:272px; overflow-y:auto; overflow-x:hidden;
-  overscroll-behavior-y:contain; -webkit-overflow-scrolling:touch;
-  scrollbar-width:none; scroll-behavior:smooth;
+  display: grid; align-content: start; gap: var(--dn-dashboard-row-gap); min-width: 0;
+  max-height: calc(4 * var(--dn-dashboard-row-height) + 3 * var(--dn-dashboard-row-gap));
+  overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
-html[data-theme] .dn-dashboard-tasks-rows::-webkit-scrollbar { display:none; }
-html[data-theme] .dn-dashboard-tasks-rows .dn-dashboard-task-row {
-  height:68px; min-height:68px; box-sizing:border-box;
-}
+html[data-theme] .dn-dashboard-tasks-rows::-webkit-scrollbar { display: none; }
 html[data-theme] .dn-dashboard-tasks-rows:focus-visible {
-  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:10px;
+  outline: 2px solid var(--color-primary); outline-offset: -2px; border-radius: 10px;
 }
-@media(prefers-reduced-motion:reduce) {
-  html[data-theme] .dn-dashboard-tasks-rows { scroll-behavior:auto; }
+@media (max-width: 380px) {
+  html[data-theme] .dashboard-compact .dn-dashboard-task-row { gap: 6px; }
+}
+@media (max-width: 360px) {
+  html[data-theme] .dashboard-overview.dashboard-compact { --dn-dashboard-date-size: 48px; }
 }
 
 /* Expanded panels only: the header and surrounding cards never translate. */
 html[data-theme] .dashboard-compact .dn-dashboard-reveal {
-  min-width:0; width:100%; overflow:hidden; transform-origin:top center;
+  min-width: 0; width: 100%; overflow: hidden; transform-origin: top center;
 }
 html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
-  display:grid; min-width:0; gap:7px;
-}
-
-/* Phone Task preview and full Task list share a truly square date tile,
-   matching text hierarchy without adding controls or affecting four-row scroll. */
-@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
-  html[data-theme] .dashboard-overview {--dn-phone-task-date:52px;}
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row {
-    grid-template-columns:var(--dn-phone-task-date) minmax(0,1fr) 24px;
-    column-gap:10px; padding-inline:1px; min-width:0;
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-date {
-    width:var(--dn-phone-task-date); min-width:var(--dn-phone-task-date);
-    height:var(--dn-phone-task-date); min-height:var(--dn-phone-task-date);
-    box-sizing:border-box; gap:1px; padding:3px; border-radius:12px;
-    color:var(--color-text);
-    background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-date[data-overdue="true"] {
-    color:var(--color-danger,#c84545);
-    background:color-mix(in srgb,var(--color-danger,#c84545) 8%,var(--color-card));
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-date strong {
-    font-size:19px; font-weight:760; line-height:1.08;
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-date small {
-    font-size:10.5px; font-weight:680; line-height:1.15;
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-text {gap:3px;min-width:0;}
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-name {
-    font-size:14px; font-weight:690; line-height:1.25; overflow-wrap:anywhere;
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-text small {
-    font-size:11.5px; line-height:1.25; overflow-wrap:anywhere;
-  }
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row:active {
-    background:color-mix(in srgb,var(--color-primary) 5%,transparent);
-    border-radius:10px;
-  }
-}
-@media (max-width:360px) {
-  html[data-theme] .dashboard-overview {--dn-phone-task-date:48px;}
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-row {column-gap:8px;}
-  html[data-theme] .dn-dashboard-tasks .dn-dashboard-task-name {font-size:13.5px;}
+  display: grid; min-width: 0; gap: 7px;
 }
 
 /* CHG-514: clearer Dashboard date switches and visible keyboard scroll focus

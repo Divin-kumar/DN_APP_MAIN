@@ -207,6 +207,12 @@ function GreetingCardModal({ event, greeting, dateLabel, onClose, onCopy }) {
   );
 }
 
+function DashboardEmpty({ children, to, label }) {
+  return <div className="dashboard-upcoming-empty dashboard-empty-browse">
+    <p>{children}</p><Link to={to}>{label}</Link>
+  </div>;
+}
+
 export default function DashboardOverview() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
@@ -256,6 +262,7 @@ export function DashboardOverviewContent() {
   const dashboardTasks = useMemo(() => (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
     ? selectUpcomingIndependentTasks(taskStore.tasks, today) : [],
   [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
+  const isTaskSectionEmpty = taskStore.loadedFor === taskScope && !taskStore.error && dashboardTasks.length === 0;
   const getMomentGreeting = (event) => {
     const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;
     return event.greetingCard?.title ? event.greetingCard : getGreetingMessage(greetingSource, greetingTemplates, momentTypes);
@@ -279,7 +286,7 @@ export function DashboardOverviewContent() {
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Tasks</span>
             <div className="dashboard-section-actions">
-              <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link>
+              {!sections.tasks || !isTaskSectionEmpty ? <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link> : null}
               <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
                 aria-label={sections.tasks ? 'Hide Tasks on dashboard' : 'Show Tasks on dashboard'}
                 onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
@@ -294,11 +301,11 @@ export function DashboardOverviewContent() {
                   const dueLabel = dashboardTaskDueLabel(task.dueDate, today);
                   return <Link className="dn-dashboard-task-row" to={`/tasks?task=${encodeURIComponent(task.id)}`}
                     aria-label={`Open Task ${task.title}`} key={task.id}>
-                    <span className="dn-dashboard-task-date" data-overdue={overdue ? 'true' : undefined} aria-hidden="true">
-                      <strong>{date.getDate()}</strong>
+                    <span className="dashboard-upcoming-date dn-dashboard-task-date" data-overdue={overdue ? 'true' : undefined} aria-hidden="true">
+                      <strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong>
                       <small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small>
                     </span>
-                    <span className="dn-dashboard-task-text">
+                    <span className="dashboard-upcoming-copy">
                       <strong className="dn-dashboard-task-name">{task.title}</strong>
                       <small><span className={overdue ? 'is-overdue' : ''}>{dueLabel}</span>
                         {task.dueTime ? ` · ${task.dueTime}` : ''}
@@ -310,7 +317,7 @@ export function DashboardOverviewContent() {
                     </span> : <span aria-hidden="true" />}
                   </Link>;
                 })}
-              </div> : <p className="dashboard-upcoming-empty">No upcoming or overdue Tasks. <Link to="/tasks">View all Tasks</Link></p>}
+              </div> : <DashboardEmpty to="/tasks" label="Browse Tasks">No upcoming or overdue Tasks.</DashboardEmpty>}
           </DashboardReveal>
         </section> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
@@ -354,7 +361,7 @@ export function DashboardOverviewContent() {
               </div>
             </div>
           ) : (
-            <div className="dashboard-upcoming-empty dashboard-empty-browse"><p>{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</p><Link to="/events">Browse Moments</Link></div>
+            <DashboardEmpty to="/events" label="Browse Moments">{momentView === 'upcoming' ? 'No moments in the next 30 days.' : 'No moments on this day in previous years.'}</DashboardEmpty>
           )}
           </></DashboardReveal>
         </section>
@@ -407,7 +414,7 @@ export function DashboardOverviewContent() {
               </div>
             </div>
           ) : (
-            <div className="dashboard-upcoming-empty dashboard-empty-browse"><p>{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</p><Link to="/activities">Browse Activities</Link></div>
+            <DashboardEmpty to="/activities" label="Browse Activities">{activityView === 'upcoming' ? 'No pending activities in the next 30 days.' : 'No activities on this day in previous years.'}</DashboardEmpty>
           )}
           {activityActions.error && !activityActions.draft ? <p className="dashboard-activity-action-error" role="alert">{activityActions.error}</p> : null}
 

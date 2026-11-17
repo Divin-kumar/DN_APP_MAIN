@@ -35,13 +35,12 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const focusBaselineRef = useRef(0);
   const [drag, setDrag] = useState(null);
   const pointer = useRef(null);
-  const tapTimer = useRef(null);
-  const [tapArmed, setTapArmed] = useState(false);
+  const firstTapAt = useRef(null);
+  const secondTap = useRef(false);
   const suppressClick = useRef(false);
   const clearPendingTap = () => {
-    if (tapTimer.current !== null) window.clearTimeout(tapTimer.current);
-    tapTimer.current = null;
-    setTapArmed(false);
+    firstTapAt.current = null;
+    secondTap.current = false;
   };
   const closeMenu = () => {
     clearPendingTap();
@@ -51,12 +50,9 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     clearPendingTap();
     onCreate(event.currentTarget.dataset.create, event);
   };
-  // Cancel a pending second tap when the route changes or the dock unmounts.
   useEffect(() => {
-    window.clearTimeout(tapTimer.current);
-    tapTimer.current = null;
-    setTapArmed(false);
-    return () => window.clearTimeout(tapTimer.current);
+    firstTapAt.current = null;
+    secondTap.current = false;
   }, [location.key]);
   const trigger = useRef(null);
   useEffect(() => {
@@ -170,19 +166,21 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const verticalTravel = Math.max(1, viewport.height - (CREATE_SIZE + 116));
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
-    if (dockInInsights || event.button !== 0 || !event.isPrimary) return;
+    if (event.button !== 0 || !event.isPrimary) return;
+    // A second activation must start on the + itself, within the gesture window.
+    const elapsed = firstTapAt.current === null ? Infinity : event.timeStamp - firstTapAt.current;
+    secondTap.current = open && elapsed >= 0 && elapsed <= DOUBLE_TAP_WINDOW_MS;
+    suppressClick.current = false;
+    if (dockInInsights) return;
     const rect = event.currentTarget.getBoundingClientRect();
     pointer.current = { id: event.pointerId, startX: event.clientX, startY: event.clientY, dx: event.clientX-rect.x, dy: event.clientY-rect.y, moved: false };
-    suppressClick.current = false;
     event.currentTarget.setPointerCapture(event.pointerId);
   };
   const pointerMove = event => {
     const p = pointer.current;
     if (!p || p.id !== event.pointerId) return;
     if (!p.moved && Math.hypot(event.clientX-p.startX,event.clientY-p.startY) < 10) return;
-    if (!p.moved && tapTimer.current !== null) {
-      closeMenu();
-    }
+    if (!p.moved && open) closeMenu();
     p.moved = true;
     suppressClick.current = true;
     setDrag({x:clamp(event.clientX-p.dx,EDGE_PADDING,viewport.width-CREATE_SIZE-EDGE_PADDING),y:clamp(event.clientY-p.dy,viewport.top+76,viewport.top+viewport.height-CREATE_SIZE-24)});
@@ -192,27 +190,25 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (!p || p.id !== event.pointerId) return;
     if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+CREATE_SIZE/2 < viewport.width/2 ? 'left':'right',
       y: clamp((drag.y-viewport.top-76)/verticalTravel,0,1) });
-    if (cancelled) suppressClick.current = false;
+    if (cancelled) {
+      secondTap.current = false;
+      suppressClick.current = false;
+    }
     pointer.current = null;
     setDrag(null);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
   const onTriggerClick = event => {
+    const goBack = event.detail !== 0 && secondTap.current;
+    secondTap.current = false;
     if (suppressClick.current) { suppressClick.current = false; return; }
     // Close Search's iOS keyboard only after pointerup/click, otherwise
     // resizing the dock during a tap can move its target before activation.
     const focused = document.activeElement;
     if (focused?.matches?.('.dn-command-controls .dn-list-controls-search input')) focused.blur();
-    // Keyboard and assistive-tech activations do not participate in double-tap Back.
-    if (event.detail === 0) {
-      clearPendingTap();
-      setOpen(previous => !previous);
-      return;
-    }
-    // Pointer capture can deliver the browser's second click after a busy
-    // frame clears the timer. Honor that click if this menu is still open.
-    if (tapTimer.current !== null || (open && event.detail === 2)) {
+    if (open) {
       closeMenu();
+      if (!goBack) return;
       // React Router history index prevents leaving DN for an external origin.
       if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1);
       else {
@@ -221,19 +217,14 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       }
       return;
     }
-    if (open) return;
+    firstTapAt.current = event.detail === 0 ? null : event.timeStamp;
     setOpen(true);
-    setTapArmed(true);
-    tapTimer.current = window.setTimeout(() => {
-      tapTimer.current = null;
-      setTapArmed(false);
-    }, DOUBLE_TAP_WINDOW_MS);
   };
   return <div ref={menuRef} className={`dn-command-root${dockInInsights ? ' is-insights-docked' : ''}${floating || activeDrag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
     '--dn-command-keyboard':`${viewport.inset}px`,
     '--dn-command-visual-bottom':`${viewport.visualBottom}px`
   }}>
-    <div className={`dn-command-bar${(open && tapArmed) || activeDrag ? ' is-pointer-active' : ''}`} aria-label="Current page controls">
+    <div className={`dn-command-bar${open || activeDrag ? ' is-pointer-active' : ''}`} aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">
         <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}`}
@@ -248,7 +239,8 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
         </button>
       </div>
     </div>
-    <AnimatePresence initial={false} custom={handingOff}>{open ? <ModalDialog key="mobile-command" title="Navigate & create" className="dn-command-dialog" variant="drawer" onClose={closeMenu}>
+    <AnimatePresence initial={false} custom={handingOff}>{open ? <ModalDialog key="mobile-command" title="Navigate & create"
+      className={`dn-command-dialog ${floating ? 'is-floating-' + position.edge : 'is-docked'}`} variant="drawer" onClose={closeMenu} deferClose={false}>
       <nav aria-label="Main navigation" className="dn-command-destinations">
         {destinations.map(([label,path,Icon])=><Link key={path} to={path} aria-current={activePath===path?'page':undefined} onClick={closeMenu}>
           <span className="dn-command-destination-icon"><Icon size={21} strokeWidth={1.8} aria-hidden="true" /></span><span>{label}</span>
@@ -264,8 +256,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           {onAttachment ? <button type="button" onClick={()=>{clearPendingTap();onAttachment();}}><Upload size={19} aria-hidden="true" />Attachment</button>:null}
         </div>
       </section>
-      {!dockInInsights && (position.floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();closeMenu();}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button>
-        : <p className="dn-command-hint">Drag the creator to either edge for easier reach.</p>)}
+      {floating ? <button type="button" className="dn-command-redock" onClick={()=>{resetPosition();closeMenu();}}><PanelBottom size={18} aria-hidden="true" />Return to dock</button> : null}
     </ModalDialog> : null}</AnimatePresence>
   </div>;
 }

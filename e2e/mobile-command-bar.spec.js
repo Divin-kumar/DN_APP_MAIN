@@ -478,6 +478,65 @@ test('double-tap on a directly opened deep link stays inside DN; keyboard single
   expect(errors).toEqual([]);
 });
 
+test.describe('command sheet touch targets', () => {
+  test.use({ hasTouch: true, isMobile: true });
+  for (const [width, edge, action, title] of [
+    [320, 'right', 'Transaction', 'Add Transaction'],
+    [320, 'left', 'Life moment', 'Create a life moment'],
+    [390, null, 'Activity', 'Add an activity'],
+    [430, 'right', 'Task', 'New Task'],
+  ]) {
+    test(`${action} and double-tap Back stay separate with the + ${edge || 'docked'} at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 720 });
+      const errors = await seedGuest(page);
+      if (edge) await page.addInitScript(value => localStorage.setItem(
+        'dn_list_state_guest_mobile-command', JSON.stringify({ floating: true, edge: value, y: 0.85 })
+      ), edge);
+      await page.goto('/activities');
+      const plus = page.locator('.dn-command-trigger');
+      await expect(plus).toBeVisible();
+      const tapPlus = async () => {
+        const box = await plus.boundingBox();
+        await page.touchscreen.tap(box.x + box.width / 2, box.y + box.height / 2);
+      };
+      await tapPlus();
+      const menu = page.getByRole('dialog', { name: 'Navigate & create' });
+      await expect(menu).toBeVisible();
+      const [{ x, y, width: buttonWidth, height: buttonHeight }, sheet] = await Promise.all([
+        plus.boundingBox(), menu.boundingBox(),
+      ]);
+      expect(sheet.x + sheet.width <= x || x + buttonWidth <= sheet.x ||
+        sheet.y + sheet.height <= y || y + buttonHeight <= sheet.y).toBe(true);
+      await menu.getByRole('button', { name: action, exact: true }).tap();
+      const form = page.getByRole('dialog', { name: title, exact: true });
+      await expect(form).toBeVisible();
+      await expect(page).toHaveURL(/\/activities$/);
+      await expect(menu).toHaveCount(0);
+      await form.getByRole('button', { name: 'Close dialog' }).tap();
+      await expect(form).toHaveCount(0);
+
+      await tapPlus();
+      await tapPlus();
+      await expect(page).toHaveURL(/\/dashboard$/);
+      await expect(page.getByRole('dialog')).toHaveCount(0);
+      expect(errors).toEqual([]);
+    });
+  }
+});
+
+test('a later tap on the open + closes the menu without changing the page', async ({ page }) => {
+  await seedGuest(page);
+  await page.goto('/activities');
+  const plus = page.locator('.dn-command-trigger');
+  await plus.click();
+  const menu = page.getByRole('dialog', { name: 'Navigate & create' });
+  await expect(menu).toBeVisible();
+  await page.waitForTimeout(250);
+  await plus.click();
+  await expect(menu).toHaveCount(0);
+  await expect(page).toHaveURL(/\/activities$/);
+});
+
 test('starting to drag during single-tap recognition cancels menu opening', async ({page}) => {
   await page.setViewportSize({width:390,height:844});
   const errors = await seedGuest(page);

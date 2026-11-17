@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-571 | Match Dashboard cards and separate + gestures
+
+- **Scope.** Use shared Dashboard row styling, square date tiles and browse links across Tasks, Moments and Activities. Align all three cards in equal columns on wide screens. Keep the four-row Task preview and its internal scroll.
+- **Interaction.** Open the command menu immediately on a single + tap. Recognize Back only from a second quick tap on the same button. Create actions open their forms on selection. The command sheet leaves room for the + and can reopen while its previous exit animation finishes. Refresh demo includes the updated gesture guidance.
+- **Executed.** Build, lint and all 632 Node tests passed. The broad Chromium run passed 103 cases. The 14-case follow-up checked the compact Dashboard headers, the rapid close and reopen fix, form animations and touch gestures across widths and passed. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-570 | Make Settings destinations easier to reach
 
 - **Scope:** Shorten the five Settings descriptions, align icons and chevrons, and place the menu directly below the workspace. Expose each description to screen readers. Give the Guest demo one heading and simplify the Appearance intro.

@@ -54,14 +54,16 @@ test('Dashboard Tasks begin hidden, show four rows and scroll without chrome', a
   await expect(panel.locator('.dn-dashboard-task-row')).toHaveCount(7);
   const metrics = await panel.locator('.dn-dashboard-tasks-rows').evaluate((node) => {
     const css = getComputedStyle(node);
-    return { height: node.clientHeight, scrollHeight: node.scrollHeight, scrollbar: css.scrollbarWidth, visible: node.clientHeight / 68 };
+    const rowHeight = node.firstElementChild.getBoundingClientRect().height;
+    const gap = parseFloat(css.rowGap);
+    return { height: node.clientHeight, scrollHeight: node.scrollHeight, scrollbar: css.scrollbarWidth,
+      visible: (node.clientHeight + gap) / (rowHeight + gap) };
   });
-  expect(metrics.height).toBe(272);
   expect(metrics.scrollHeight).toBeGreaterThan(metrics.height);
   expect(metrics.scrollbar).toBe('none');
   expect(metrics.visible).toBe(4);
   await panel.locator('.dn-dashboard-tasks-rows').evaluate((node) => { node.scrollTop = node.scrollHeight; });
-  await expect(panel.locator('.dn-dashboard-tasks-rows')).toHaveJSProperty('scrollTop', 204);
+  await expect(panel.locator('.dn-dashboard-tasks-rows')).toHaveJSProperty('scrollTop', metrics.scrollHeight - metrics.height);
   expect(errors).toEqual([]);
 });
 

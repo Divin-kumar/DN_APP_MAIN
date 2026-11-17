@@ -6,7 +6,8 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
     await page.setViewportSize({ width, height: 844 });
     const errors = await seedGuest(page, { theme, moments: [], incomes: [], expenses: [] });
     await page.goto('/dashboard');
-    for (const name of ['Browse Moments', 'Browse Activities']) {
+    await page.getByRole('button', { name: 'Show Tasks on dashboard' }).click();
+    for (const name of ['Browse Tasks', 'Browse Moments', 'Browse Activities']) {
       const link = page.getByRole('link', { name, exact: true });
       await expect(link).toBeVisible();
       expect(await link.evaluate(el => {
@@ -16,6 +17,7 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         return action.left >= text.right && action.right <= parent.getBoundingClientRect().right + 1;
       })).toBe(true);
     }
+    await expect(page.getByRole('region', { name: 'Independent Tasks' }).getByRole('link', { name: 'View all' })).toHaveCount(0);
     const titles = {
       Transaction: 'Add Transaction', Task: 'New Task', Moment: 'Create a life moment', Activity: 'Add an activity',
     };
