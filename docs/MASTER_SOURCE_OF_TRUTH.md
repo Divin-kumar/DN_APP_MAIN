@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## More compact Settings navigation (17 November 2026, development)
+
+Settings places all five destinations directly below the current workspace. Each row uses a short description that screen readers can read with the link, with icons and chevrons aligned in fixed columns. The Guest demo has a single heading inside its own section. Appearance opens with its main heading and a short description.
+
 ## Lighter Transactions ledger (17 November 2026, development)
 
 Matching Income, Expense and Balance remain in three centered columns on one compact surface. Individual transaction rows use the available list width. Date, category and payment method wrap together with their separators, and the Details chevron aligns to the right. The ledger retains its own mobile scroll area and continues to use the same filtered records for totals and CSV export.

@@ -9,10 +9,6 @@ html[data-theme] .settings-page.dn-settings-appearance {
 html[data-theme] .dn-appearance-intro {
   display:grid; justify-items:start; min-width:0; gap:7px; padding:2px 0 8px;
 }
-html[data-theme] .dn-appearance-eyebrow {
-  color:var(--color-primary); font-size:10px; font-weight:760;
-  letter-spacing:.11em; text-transform:uppercase;
-}
 html[data-theme] .dn-appearance-intro h2 {
   margin:0; font-size:clamp(23px,4vw,32px); font-weight:780;
   line-height:1.17; letter-spacing:-.04em;
@@ -160,12 +156,12 @@ html[data-theme] .dn-settings-redesign :is(button,a):focus-visible {
 
 /* Settings is a navigation hub; account/demo details must not bury navigation. */
 html[data-theme] .settings-page.dn-settings-home.dn-settings-redesign {
-  display:grid; align-content:start; gap:16px !important;
+  display:grid; align-content:start; gap:14px !important;
   width:min(100%,860px); min-width:0;
 }
 html[data-theme] .dn-settings-redesign .dn-settings-account-summary {
   display:flex; align-items:center; gap:11px; min-width:0;
-  padding:5px 2px 12px; border-bottom:1px solid var(--color-border);
+  padding:4px 3px 6px;
 }
 html[data-theme] .dn-settings-account-summary > svg { flex:0 0 auto; color:var(--color-primary); }
 html[data-theme] .dn-settings-account-summary > span { display:grid; gap:3px; min-width:0; }
@@ -179,8 +175,9 @@ html[data-theme] .dn-settings-redesign .settings-navigation-hub {
   display:grid; gap:0; margin:0;
 }
 html[data-theme] .dn-settings-redesign .settings-navigation-hub > .settings-hub-card {
-  display:flex; align-items:center; min-height:68px; min-width:0;
-  padding:10px 5px !important;
+  display:grid; grid-template-columns:32px minmax(0,1fr) 16px;
+  align-items:center; gap:9px; min-height:64px; min-width:0;
+  padding:8px 6px !important;
   border:0 !important; border-bottom:1px solid var(--color-border) !important;
   border-radius:0 !important; background:transparent !important; box-shadow:none !important;
 }
@@ -188,7 +185,13 @@ html[data-theme] .dn-settings-redesign .settings-navigation-hub > .settings-hub-
   background:color-mix(in srgb,var(--color-primary) 4%,transparent) !important;
 }
 html[data-theme] .dn-settings-redesign .settings-navigation-hub > .settings-hub-card .settings-hub-icon {
-  width:38px; min-width:38px; height:38px;
+  width:32px; min-width:32px; height:32px; border-radius:10px;
+}
+html[data-theme] .dn-settings-redesign .settings-hub-arrow {
+  width:16px; height:24px;
+}
+html[data-theme] .dn-settings-redesign .settings-hub-copy {
+  overflow-wrap:anywhere;
 }
 html[data-theme] .dn-settings-redesign .dn-settings-future-note {
   display:flex; align-items:center; gap:10px; min-height:56px;
@@ -198,10 +201,6 @@ html[data-theme] .dn-settings-future-note svg { color:var(--color-text-muted); f
 html[data-theme] .dn-settings-future-note span { display:grid; gap:3px; min-width:0; }
 html[data-theme] .dn-settings-future-note strong { font-size:12px; }
 html[data-theme] .dn-settings-future-note small { font-size:11px; line-height:1.45; }
-html[data-theme] .dn-settings-redesign .dn-settings-explore-header {
-  margin:4px 0 -3px; color:var(--color-text-muted);
-  font-size:10px; font-weight:750; letter-spacing:.085em; text-transform:uppercase;
-}
 html[data-theme] .dn-settings-redesign .settings-reset-card { min-width:0; }
 @media(max-width:580px) {
   html[data-theme] .settings-page.dn-settings-appearance { gap:14px; padding:12px; }
@@ -243,14 +242,10 @@ html[data-theme] .dn-settings-redesign .settings-reset-card { min-width:0; }
 }
 
 
-html[data-theme] .dn-settings-redesign .dn-settings-overview-note {
-  margin:-7px 0 0; padding:0 2px;
-  color:var(--color-text-muted); font-size:12px; line-height:1.5;
-}
 html[data-theme] .dn-settings-redesign .dn-guest-tour-panel {
   margin-top:0; min-width:0;
 }
-html[data-theme] .dn-settings-redesign .dn-settings-explore-header + .dn-guest-tour-panel { margin-top:0; }
+html[data-theme] .dn-settings-redesign .dn-guest-tour-panel h3 { margin:0; }
 
 /* Keep Creation defaults and Save actions together instead of stretching
    unused CSS grid tracks across the entire iPhone section. */
@@ -295,5 +290,4 @@ html[data-theme] .dn-appearance-default-fields {
   }
   html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong,
   html[data-theme] .dn-appearance-more > a strong {font-size:14px;line-height:1.4;}
-  html[data-theme] .dn-settings-redesign .dn-settings-explore-header {font-size:11px;}
 }

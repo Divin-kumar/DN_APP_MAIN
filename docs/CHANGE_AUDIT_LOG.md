@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-570 | Make Settings destinations easier to reach
+
+- **Scope:** Shorten the five Settings descriptions, align icons and chevrons, and place the menu directly below the workspace. Expose each description to screen readers. Give the Guest demo one heading and simplify the Appearance intro.
+- **Compatibility:** Keep the existing Settings links, preferences, demo actions and backup behavior. The Guest tour's sample records and guidance still apply.
+- **Executed:** Build, lint, 632 Node tests and 55 Chromium cases passed. All five Settings links fit on the first screen at 320px, 390px and 430px in both themes. Three workspace cases failed to load modules in the first browser run and passed in an isolated rerun. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-569 | Give the Transactions ledger more room
 
 - **Scope:** Compact the totals strip and align the ledger rows with it. Remove the duplicated colored edge on each row, attach metadata separators to their fields, and align the Details chevron at the right.

@@ -222,7 +222,7 @@ html[data-theme] body :is(
     box-shadow: inset 0 1px var(--dn-form-highlight);
   }
   html[data-theme] body .dn-settings-redesign .settings-navigation-hub {
-    padding-inline: 10px;
+    padding-inline: 8px;
     border: 1px solid var(--dn-form-line);
     border-radius: 16px;
   }

@@ -17,16 +17,25 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         const nav = home.getByRole('navigation',{name:'Settings destinations'});
         const links = nav.locator('.settings-hub-card');
         await expect(links).toHaveCount(5);
+        await expect(nav).toBeInViewport({ratio:1});
+        await expect(links.last()).toHaveAccessibleName('Open About page');
+        await expect(links.last()).toHaveAccessibleDescription('Version, guide and release notes');
+        await expect(nav.getByRole('link',{name:'Open List defaults'}))
+          .toHaveAccessibleDescription('Saved filters and sorting');
         await expect(home.locator('.settings-accordion-toggle')).toHaveCount(0);
         const positions = await links.evaluateAll((items) => items.map((el) => {
           const rect=el.getBoundingClientRect();
-          return {left:rect.left,right:rect.right,height:rect.height};
+          const icon=el.querySelector('.settings-hub-icon').getBoundingClientRect();
+          const arrow=el.querySelector('.settings-hub-arrow').getBoundingClientRect();
+          return {left:rect.left,right:rect.right,height:rect.height,icon:icon.left,arrow:arrow.right};
         }));
         expect(positions.every((item)=>item.height>=60 && item.left>=-1 && item.right<=width+1)).toBe(true);
+        expect(positions.every((item)=>item.icon===positions[0].icon && item.arrow===positions[0].arrow)).toBe(true);
         const demo = home.getByRole('region',{name:'Explore DN guest demo'});
         if(await demo.count()){
           const navRect = await nav.boundingBox(), demoRect = await demo.boundingBox();
           expect(navRect.y).toBeLessThan(demoRect.y);
+          await expect(home.getByRole('heading',{name:'Explore DN',exact:true})).toHaveCount(1);
         }
         await testInfo.attach('Settings-hub-'+width+'-'+theme,{
           body:await page.screenshot({animations:'disabled'}),contentType:'image/png',

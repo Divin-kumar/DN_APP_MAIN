@@ -11,7 +11,7 @@ import './AppearancePreferences.css';
 import StoryDesignSettings from '../components/settings/StoryDesignSettings';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
-import { UserCircle, Settings2, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud, FileJson, LockKeyhole, BookOpen } from 'lucide-react';
+import { UserCircle, Settings2, Palette, ListChecks, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud, FileJson, LockKeyhole, BookOpen } from 'lucide-react';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import { signOut } from 'firebase/auth';
@@ -1162,7 +1162,6 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
   if (appearanceOnly) {
     return <div className="settings-page feature-page dn-settings-appearance">
       <header className="dn-appearance-intro">
-        <span className="dn-appearance-eyebrow">Personalize your space</span>
         <h2>Make DN yours</h2>
         <p>Theme, new-record defaults and Story/PDF styles.</p>
       </header>
@@ -1178,52 +1177,54 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <small>{isGuest ? 'Guest workspace · stored on this device' : user?.uid ? 'Signed-in account' : 'Signed out'}</small>
         </span>
       </section>
-      <p className="dn-settings-overview-note">Personalize DN, manage your lists and keep your memories safe.</p>
       <nav className="settings-navigation-hub settings-about-footer" aria-label="Settings destinations">
         <Link to="/settings/appearance" className="settings-hub-card dn-settings-appearance-link"
-          aria-label="Open Appearance & preferences">
-          <span className="settings-hub-icon"><Settings2 size={18} aria-hidden="true" /></span>
+          aria-label="Open Appearance & preferences" aria-describedby="settings-appearance-description">
+          <span className="settings-hub-icon" aria-hidden="true"><Palette size={17} /></span>
           <span className="settings-hub-copy">
             <strong>Appearance & preferences</strong>
-            <small>Theme, new-record defaults and Story/PDF designs</small>
+            <small id="settings-appearance-description">Theme, defaults and Story/PDF styles</small>
           </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={16} /></span>
         </Link>
-        <Link to="/settings/data-backup" className="settings-hub-card dn-settings-data-link" aria-label="Open Data & Backup page">
-          <span className="settings-hub-icon"><Database size={18} aria-hidden="true" /></span>
+        <Link to="/settings/data-backup" className="settings-hub-card dn-settings-data-link"
+          aria-label="Open Data & Backup page" aria-describedby="settings-data-description">
+          <span className="settings-hub-icon" aria-hidden="true"><Database size={17} /></span>
           <span className="settings-hub-copy">
             <strong>Data & Backup</strong>
-            <small>Export and restore records, understand storage and manage browser or Firebase data</small>
+            <small id="settings-data-description">Export, restore and manage storage</small>
           </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={16} /></span>
         </Link>
 
         <Link to="/settings/list-defaults" className="settings-hub-card dn-settings-list-defaults-link"
-          aria-label="Open List defaults">
-          <span className="settings-hub-icon"><SlidersHorizontal size={18} /></span>
+          aria-label="Open List defaults" aria-describedby="settings-defaults-description">
+          <span className="settings-hub-icon" aria-hidden="true"><SlidersHorizontal size={17} /></span>
           <span className="settings-hub-copy">
             <strong>List defaults</strong>
-            <small>Choose what Reset restores in Moments, Activities, Transactions and Tasks</small>
+            <small id="settings-defaults-description">Saved filters and sorting</small>
           </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={16} /></span>
         </Link>
 
-        <Link to="/settings/code-lists" className="settings-hub-card" aria-label="Open Code Lists page">
-          <span className="settings-hub-icon"><Settings2 size={18} /></span>
+        <Link to="/settings/code-lists" className="settings-hub-card"
+          aria-label="Open Code Lists page" aria-describedby="settings-code-lists-description">
+          <span className="settings-hub-icon" aria-hidden="true"><ListChecks size={17} /></span>
           <span className="settings-hub-copy">
             <strong>Code Lists</strong>
-            <small>Manage Moment types, transaction categories, priorities and reusable choices</small>
+            <small id="settings-code-lists-description">Types, categories and priorities</small>
           </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={16} /></span>
         </Link>
 
-        <Link to="/settings/about" className="settings-hub-card" aria-label="Open About page">
-          <span className="settings-hub-icon"><Info size={18} /></span>
+        <Link to="/settings/about" className="settings-hub-card"
+          aria-label="Open About page" aria-describedby="settings-about-description">
+          <span className="settings-hub-icon" aria-hidden="true"><Info size={17} /></span>
           <span className="settings-hub-copy">
             <strong>About</strong>
-            <small>Application overview, version, guide, and release notes</small>
+            <small id="settings-about-description">Version, guide and release notes</small>
           </span>
-          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={18} /></span>
+          <span className="settings-hub-arrow" aria-hidden="true"><ChevronRight size={16} /></span>
         </Link>
       </nav>
 
@@ -1232,14 +1233,13 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         <span><strong>Notifications</strong>
           <small>Coming later. No alerts or reminders are currently sent by DN.</small></span>
       </section>
-      {isGuest && !user ? <h3 className="dn-settings-explore-header">Explore DN</h3> : null}
       {isGuest && !user ? (
         <section className="dev-sample-panel dn-guest-tour-panel" aria-label="Explore DN guest demo">
           <div>
-            <span className="settings-section-heading"><Database size={17} /> Explore DN · Guided demo</span>
+            <h3 className="settings-section-heading"><Database size={17} aria-hidden="true" /> Explore DN</h3>
             <p>{activeSampleScenario === GUEST_TOUR_SCENARIO
-              ? 'You are exploring isolated example Moments, Activities, Journal photos, Diary writing, Tasks and Cash/Online transactions. Your own Guest records remain separate.'
-              : 'Explore sample Moments, a photo Journal, monthly Diary, Tasks and linked finances without touching your own Guest records.'}</p>
+              ? 'You’re viewing sample records. Your personal Guest records are stored separately.'
+              : 'Try sample Moments, Journal and Diary entries, Tasks and Transactions. Your Guest records stay separate.'}</p>
             <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
               ? ' · Updated examples available' : ''}</small>
           </div>
