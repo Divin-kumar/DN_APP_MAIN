@@ -63,7 +63,7 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewpo
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-main-viewport { overflow: hidden; }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   display: flex !important; width: 100%; min-width: 0; min-height: 174px !important;
-  align-items: stretch; gap: 0 !important; padding: 0 52px 0 0 !important;
+  align-items: stretch; gap: 0 !important; padding: 0 !important;
   border: 0; border-radius: 0; background: var(--color-card) !important;
   text-align: left; color: var(--color-text);
 }
@@ -101,35 +101,26 @@ html[data-theme] .life-timeline-page .dn-v2-moment-cover-date small {
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-copy {
   display: flex; flex: 1; flex-direction: column; min-width: 0; gap: 6px;
-  padding: 14px 4px 13px 13px; overflow: hidden; overflow-wrap: anywhere;
+  padding: 13px; overflow: hidden; overflow-wrap: anywhere;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-heading {
-  display: flex; flex-wrap: wrap; align-items: center; min-width: 0; gap: 6px;
+  display: flex; align-items: flex-start; justify-content: space-between; min-width: 0; gap: 6px;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-meta {
   display: inline-flex; min-width: 0; max-width: 100%; width: auto;
-  padding: 0; color: var(--color-primary); font-size: .7rem; font-weight: 760;
+  padding: 0; color: var(--color-text-muted); font-size: .75rem; font-weight: 600;
+  line-height: 1.4;
   text-transform: none; overflow-wrap: anywhere;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status {
   position: static !important; inset: auto; width: auto !important; height: auto !important;
-  max-width: 100%; min-width: 0; min-height: 0; padding: 3px 6px !important;
-  border: 1px solid var(--color-border); border-radius: 99px;
-  background: var(--color-card-raised); color: var(--color-text-muted);
-  box-shadow: none; font-size: .6rem !important; font-weight: 700;
-  line-height: 1.2; letter-spacing: 0; text-transform: none; overflow: visible;
-}
-html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-completed {
-  background: color-mix(in srgb,var(--color-success) 13%,var(--color-card));
-  color: var(--color-success);
-}
-html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-in-progress {
-  background: color-mix(in srgb,var(--color-primary) 10%,var(--color-card));
-  color: var(--color-primary);
+  flex: 0 0 auto; min-width: 0; min-height: 0; padding: 0 !important;
+  border: 0; background: transparent; color: var(--color-text-muted);
+  box-shadow: none; font-size: 11px !important; font-weight: 600;
+  line-height: 1.5; letter-spacing: 0; text-transform: none; white-space: nowrap;
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.status-cancelled {
-  background: color-mix(in srgb,var(--color-danger) 10%,var(--color-card));
-  color: var(--color-danger);
+  color: color-mix(in srgb, var(--color-danger) 80%, var(--color-text));
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy > strong {
   display: -webkit-box; min-width: 0; max-width: 100%;
@@ -145,13 +136,11 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-date {
 }
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-date svg { flex: 0 0 auto; }
 html[data-theme] .life-timeline-page .dn-v2-moment-activity {
-  display: grid; min-width: 0; gap: 3px; margin-top: auto;
-  padding: 8px 9px; border: 1px solid var(--color-border); border-radius: 10px;
-  background: var(--color-surface); overflow: hidden;
+  display: grid; min-width: 0; gap: 3px;
+  padding: 4px 0; overflow: hidden;
 }
 html[data-theme] .life-timeline-page .dn-v2-activity-kicker {
-  color: var(--color-primary); font-size: .6rem; font-weight: 750;
-  letter-spacing: .03em;
+  color: var(--color-text-muted); font-size: .69rem; font-weight: 600;
 }
 html[data-theme] .life-timeline-page .dn-v2-activity-title {
   display: -webkit-box; min-width: 0; overflow: hidden;
@@ -215,9 +204,8 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { min-height: 156px; flex-basis: 106px; width: 106px; }
 }
 @media (max-width: 400px) {
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { padding-right: 49px !important; }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover { flex-basis: 80px; width: 80px; }
-  html[data-theme] .life-timeline-page .dn-v2-moment-copy { padding: 10px 2px 10px 9px; gap: 5px; }
+  html[data-theme] .life-timeline-page .dn-v2-moment-copy { padding: 10px; gap: 5px; }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger { width: 44px; height: 44px; min-width: 44px; min-height: 44px; right: 3px; }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -242,19 +230,7 @@ html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-tim
   html[data-theme] .events-page .dn-guest-tour-notice button { width:auto; min-height:40px; padding:0 11px; }
 }
 
-/* DN 2.3 small-phone card: the 44px overflow menu occupies the top corner
-   only. Previously every row surrendered that width, clipping the Moment
-   name and activity preview unnecessarily. Keep heading space for the menu. */
 @media(max-width:580px) {
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
-    padding-right:0 !important;
-  }
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy {
-    padding-right:10px;
-  }
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-heading {
-    min-height:44px;padding-right:44px;align-content:start;
-  }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-copy > strong {
     -webkit-line-clamp:3;
   }
@@ -263,7 +239,7 @@ html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-tim
 /* Completed Moments display a lightweight green tick without a heavy badge. */
 html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.is-completion-tick {
   display:inline-flex; align-items:center; justify-content:center;
-  min-width:24px; width:24px; min-height:24px; padding:0 !important;
+  width:17px; min-height:17px; padding:0 !important;
   border:0 !important; background:transparent !important;
   color:var(--color-success) !important; box-shadow:none !important;
 }

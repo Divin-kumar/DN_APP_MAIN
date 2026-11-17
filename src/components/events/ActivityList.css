@@ -46,20 +46,13 @@ html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-co
 }
 html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status {
   position:static; inset:auto; z-index:auto; justify-self:end; align-self:start; display:inline-flex;
-  max-width:100%; min-height:22px; padding:3px 8px !important;
-  border:1px solid var(--color-border); border-radius:999px;
-  background:var(--color-card-raised); color:var(--color-text-muted) !important;
-  font-size:11px !important; line-height:1.2; font-weight:650; letter-spacing:0;
+  max-width:100%; min-height:20px; padding:2px 0 !important;
+  border:0; background:transparent; color:var(--color-text-muted) !important;
+  font-size:11px !important; line-height:1.5; font-weight:600; letter-spacing:0;
   text-transform:none; white-space:nowrap;
 }
-html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status.complete {
-  border-color:color-mix(in srgb,var(--color-success) 28%,var(--color-border));
-  background:color-mix(in srgb,var(--color-success) 9%,var(--color-card));
-  /* Muted success hue with readable text weight in both light and dark palettes. */
-  color:color-mix(in srgb,var(--color-success) 70%,var(--color-text) 30%) !important;
-}
 html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-status.cancelled {
-  color:var(--color-text-muted) !important; background:var(--color-surface);
+  color:color-mix(in srgb, var(--color-danger) 80%, var(--color-text)) !important;
 }
 html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .event-activity-card .event-activity-context > span:first-child {
   overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--color-text-muted);
@@ -163,9 +156,6 @@ html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-co
   }
   html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-title-row {
     column-gap:5px;
-  }
-  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .event-activity-status {
-    padding:3px 5px !important;
   }
 }
 @media(prefers-reduced-motion:reduce) {

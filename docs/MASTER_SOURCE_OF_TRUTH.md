@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## More compact Moment and Activity cards (17 November 2026, development)
+
+Moment cards place type and status above the title and use the full space beside the cover. Activity cards show a plain status label alongside the title in both the Activities list and a Moment's Activities tab. Completed cards show a green check. Swipe actions and photo controls retain their existing behavior.
+
 ## Lighter Dashboard and Refine controls (17 November 2026, development)
 
 Dashboard section panels use a soft theme-aware gradient. Moment and Activity rows use a single tint, and the active date view has its own pill with a full touch target. Browse actions stay aligned on the right. Refine sheets group sorting into evenly spaced columns and use one row of equal-width Reset, Cancel and Show results actions. The result count remains visible while the filter body scrolls.

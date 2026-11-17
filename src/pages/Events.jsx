@@ -121,7 +121,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
           </span> : event.notes ? <RichText inline className="event-story-note free-text-preview is-truncated" value={event.notes} /> : <span className="dn-v2-activity-empty">No activities yet</span>}
           <span className="event-story-details">
             <span><Clock3 size={13} /> {activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
-            {memories.length ? <span><BookHeart size={13} /> {memories.length} reflections</span> : null}
+            {memories.length ? <span><BookHeart size={13} /> {memories.length} {memories.length === 1 ? 'reflection' : 'reflections'}</span> : null}
             {attachments.length ? <span><FileText size={13} /> {attachments.length} files</span> : null}
             {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
           </span>

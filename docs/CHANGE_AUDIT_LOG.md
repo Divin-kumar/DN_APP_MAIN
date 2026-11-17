@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-568 | Make Moment and Activity cards easier to scan
+
+- **Scope:** Bring the Moment title closer to its type and align status at the right edge. Use lighter inline status text on Moment and Activity cards, including Activities inside a Moment. Display the singular reflection count where applicable.
+- **Compatibility:** Keep the photo controls, green completion checks, saved record content and swipe actions. The Guest tour still covers these lists and uses the same sample records.
+- **Executed:** Build, lint, 632 Node tests and 74 Chromium checks passed. The browser checks covered light and dark themes, narrow and wide layouts, long titles, photo selection, swiping, keyboard navigation and Guest record preservation. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-567 | Keep Dashboard and Refine labels aligned at 320px
 
 - **Scope:** Keep the Dashboard collapse control inside its header and the Refine Show results label on one line on narrow phones. All existing touch areas retain their height.

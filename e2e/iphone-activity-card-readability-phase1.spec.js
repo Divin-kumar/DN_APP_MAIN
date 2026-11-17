@@ -45,6 +45,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
         copyRight: copy.getBoundingClientRect().right,
         contextTop: node.querySelector('.event-activity-context').getBoundingClientRect().top,
         statusSize: parseFloat(getComputedStyle(status).fontSize),
+        statusFill: getComputedStyle(status).backgroundColor,
         momentSize: parseFloat(getComputedStyle(moment).fontSize),
         dueSize: parseFloat(getComputedStyle(due).fontSize),
         titleWrap: getComputedStyle(title).whiteSpace,
@@ -66,6 +67,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     expect(metrics.statusBottom).toBeLessThanOrEqual(metrics.titleTop + 30);
     expect(metrics.contextTop).toBeGreaterThanOrEqual(metrics.titleBottom - 1);
     expect(metrics.statusSize).toBeGreaterThanOrEqual(11);
+    expect(metrics.statusFill).toBe('rgba(0, 0, 0, 0)');
     expect(metrics.momentSize).toBeGreaterThanOrEqual(13);
     expect(metrics.dueSize).toBeGreaterThanOrEqual(13);
     expect(metrics.momentWrap).toBe('normal');
