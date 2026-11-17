@@ -35,7 +35,7 @@ for (const [width,height] of [[320,640],[390,844],[430,932]]) for (const theme o
         };
       });
       const styles=getComputedStyle(rail);
-      return { tiles,borderRadius:parseFloat(styles.borderTopLeftRadius),
+      return { tiles,borderRadius:parseFloat(styles.borderTopLeftRadius), shadow:styles.boxShadow,
         railLeft:railRect.left,railRight:railRect.right,railHeight:railRect.height,
         pageWidth:document.documentElement.scrollWidth };
     });
@@ -44,7 +44,8 @@ for (const [width,height] of [[320,640],[390,844],[430,932]]) for (const theme o
     expect(geometry.tiles[0].right).toBeLessThanOrEqual(geometry.tiles[1].x+1);
     expect(geometry.tiles[1].right).toBeLessThanOrEqual(geometry.tiles[2].x+1);
     expect(Math.max(...geometry.tiles.map(t=>t.width))-Math.min(...geometry.tiles.map(t=>t.width))).toBeLessThan(2);
-    expect(geometry.railHeight).toBeLessThanOrEqual(130);
+    expect(geometry.railHeight).toBeLessThanOrEqual(76);
+    expect(geometry.shadow).toBe('none');
     for (const tile of geometry.tiles) {
       expect(Math.abs(tile.headingMid-tile.tileMid)).toBeLessThanOrEqual(2);
       expect(Math.abs(tile.valueMid-tile.tileMid)).toBeLessThanOrEqual(2);

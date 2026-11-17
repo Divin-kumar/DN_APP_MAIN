@@ -45,9 +45,7 @@ html[data-theme] :is(.activities-page, .workspace-activities)
   outline-offset: 2px;
 }
 
-/* Income and Expense cards receive the same quiet structure: a hairline
-   semantic edge, a refined icon tile, and an easy-to-read amount. Nothing
-   changes the approved title/amount lead row or metadata/detail order. */
+/* Signed amounts and compact icons carry direction on both themes. */
 html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card {
   --dn-record-accent: var(--color-danger);
   position: relative;
@@ -63,28 +61,10 @@ html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-ca
 html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card.is-income {
   --dn-record-accent: var(--color-success);
 }
-html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card::before {
-  position: absolute;
-  top: 16px;
-  bottom: 16px;
-  left: 0;
-  z-index: 2;
-  width: 3px;
-  border-radius: 0 4px 4px 0;
-  background: color-mix(in srgb, var(--dn-record-accent) 78%, var(--color-card));
-  pointer-events: none;
-  content: '';
-}
 html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
   .dn-transaction-icon {
   border: 1px solid color-mix(in srgb, var(--dn-record-accent) 16%, var(--color-border));
   box-shadow: inset 0 1px 0 color-mix(in srgb, var(--color-card) 75%, transparent);
-}
-html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
-  .dn-transaction-card-core {
-  /* The surface remains flat and calm: the semantic icon/edge provide
-     distinction instead of another heavy gradient panel. */
-  background: transparent !important;
 }
 html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-card
   .dn-transaction-copy > strong {

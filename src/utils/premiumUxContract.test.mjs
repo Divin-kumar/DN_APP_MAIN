@@ -152,7 +152,6 @@ test('finance density has one-row totals and universal-only transaction creation
   assert.match(layout, /onClick=\{\(event\) => beginQuickCreate\('transaction', event\)\}/);
   assert.match(layout, /quickCreateType === 'transaction'[\s\S]*?<TransactionForm events=\{activityMoments\} onSubmit=\{saveQuickTransaction\}/);
   assert.match(css, /\.dn-financial-workspace \.dn-finance-summary-grid \{[^}]*grid-template-columns:repeat\(3,minmax\(0,1fr\)\) !important/);
-  assert.match(css, /\.transactions-panel\.dn-transactions-page \{ padding:12px !important/);
   assert.doesNotMatch(css, /\.dn-transactions-page \.dn-transaction-add/);
 });
 test('Moment hero retains Greeting and attachment quick create while retiring Memory creation', () => {
@@ -176,10 +175,9 @@ test('Moment hero retains Greeting and attachment quick create while retiring Me
   assert.match(css, /\.dn-moment-hero-swipe \.event-moment-top-actions \.event-moment-copy-action \{[\s\S]*?min-height:44px !important/);
 });
 
-test('compact transaction panel padding applies to the panel element itself', () => {
+test('the transactions results use the workspace background', () => {
   const css = read('../design-system.css');
-  assert.match(css, /\.transactions-panel\.dn-transactions-page \{ padding:12px !important/);
-  assert.doesNotMatch(css, /\.dn-transactions-page \.transactions-panel \{ padding:12px !important/);
+  assert.match(css, /\.transactions-panel\.dn-transactions-page \{[^}]*background: transparent/);
 });
 
 test('mobile editors avoid Safari focus zoom across forms without inflating other controls', () => {

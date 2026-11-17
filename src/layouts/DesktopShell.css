@@ -110,7 +110,6 @@
     html[data-theme] .dn-shell .dn-pdf-update-rail { top: 0; flex-shrink: 0; }
     html[data-theme] .dn-shell .dn-pdf-studio-controls > * { flex-shrink: 0; }
   }
-  html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-card::before { display: none; }
   html[data-theme] .dn-shell .dn-transactions-page .dn-transaction-card-core {
     padding: 14px 16px !important;
     align-items: start;

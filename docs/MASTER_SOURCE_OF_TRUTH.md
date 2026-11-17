@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Lighter Transactions ledger (17 November 2026, development)
+
+Matching Income, Expense and Balance remain in three centered columns on one compact surface. Individual transaction rows use the available list width. Date, category and payment method wrap together with their separators, and the Details chevron aligns to the right. The ledger retains its own mobile scroll area and continues to use the same filtered records for totals and CSV export.
+
 ## More compact Moment and Activity cards (17 November 2026, development)
 
 Moment cards place type and status above the title and use the full space beside the cover. Activity cards show a plain status label alongside the title in both the Activities list and a Moment's Activities tab. Completed cards show a green check. Swipe actions and photo controls retain their existing behavior.

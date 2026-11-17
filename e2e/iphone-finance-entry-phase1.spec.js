@@ -73,6 +73,8 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     await expect(card.locator('.dn-transaction-value')).toContainText('12,34,567');
     await expect(card.locator('.dn-transaction-meta')).toContainText('Travel');
     await expect(card.locator('.dn-transaction-meta')).toContainText('Online');
+    await expect(card.locator('.dn-transaction-meta > span')).toHaveText(['24 Oct 2026', 'Travel', 'Online']);
+    await expect(page.locator('.dn-transactions-page')).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
     const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
     const metrics = await card.evaluate((node) => {
@@ -103,6 +105,10 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     const details = card.locator('.dn-transaction-details > summary');
     await expect(details).toBeVisible();
     expect((await details.boundingBox()).height).toBeGreaterThanOrEqual(43.9);
+    expect(await details.evaluate(node => {
+      const arrow = node.querySelector('svg').getBoundingClientRect();
+      return node.getBoundingClientRect().right - arrow.right;
+    })).toBeLessThanOrEqual(2);
     await details.click();
     await expect(card.locator('.dn-transaction-details-content')).toContainText('Kept for the trip.');
     await details.click();

@@ -75,9 +75,7 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
           </div>
           <span className="dn-transaction-meta">
             <span>{dateLabel(transaction.date)}{activityTime(transaction) ? ` · ${activityTime(transaction)}` : ''}</span>
-            <span aria-hidden="true" className="dn-transaction-meta-separator">·</span>
             <span>{category || 'Other'}</span>
-            <span aria-hidden="true" className="dn-transaction-meta-separator">·</span>
             <span>{paymentMethodLabel(transaction.paymentMethod)}</span>
           </span>
           {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}

@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-569 | Give the Transactions ledger more room
+
+- **Scope:** Compact the totals strip and align the ledger rows with it. Remove the duplicated colored edge on each row, attach metadata separators to their fields, and align the Details chevron at the right.
+- **Compatibility:** Preserve the ledger scroll area, payment labels, filtered totals and export, and edit and swipe actions. The Guest tour still describes the same actions and uses the same records.
+- **Executed:** Build, lint, 632 Node tests and 59 Chromium checks passed. A 320px Guest export confirmed that the CSV and totals reflect the same filtered records. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-568 | Make Moment and Activity cards easier to scan
 
 - **Scope:** Bring the Moment title closer to its type and align status at the right edge. Use lighter inline status text on Moment and Activity cards, including Activities inside a Moment. Display the singular reflection count where applicable.
