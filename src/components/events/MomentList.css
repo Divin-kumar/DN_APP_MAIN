@@ -212,11 +212,15 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   html[data-theme] .life-timeline-page .dn-v2-moment-card { transition: none; }
 }
 
-html[data-theme] .dn-guest-tour-notice{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;padding:14px 17px;margin:0 0 15px;border:1px solid color-mix(in srgb,var(--color-primary) 20%,var(--color-border));background:color-mix(in srgb,var(--color-primary) 5%,var(--color-card));border-radius:15px;}
+html[data-theme] .dn-guest-tour-notice {
+  display:flex; justify-content:space-between; align-items:center;
+  gap:8px; padding:10px 12px; margin:0 0 10px;
+  border:1px solid var(--dn-panel-edge); border-radius:var(--dn-premium-radius);
+  background:var(--dn-panel-fill);
+}
 html[data-theme] .dn-guest-tour-notice strong{font-size:.87rem;color:var(--color-text);}
 html[data-theme] .dn-guest-tour-notice p{font-size:.76rem;color:var(--color-text-muted);line-height:1.55;margin:5px 0 0;max-width:700px;}
-html[data-theme] .dn-guest-tour-notice button{min-height:40px;flex-shrink:0;font-size:.75rem;}
-@media(max-width:550px){html[data-theme] .dn-guest-tour-notice button{width:100%;}}
+html[data-theme] .dn-guest-tour-notice button { min-width:0; min-height:44px; flex-shrink:0; font-size:.75rem; }
 
 /* Cards own the visual hierarchy; one lean title, then search and photos. */
 html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-timeline-heading {
@@ -227,7 +231,7 @@ html[data-theme] .events-page.life-timeline-page:not(.activities-page) .life-tim
 }
 @media(max-width:550px) {
   html[data-theme] .events-page .dn-guest-tour-notice { padding:10px 12px; margin:0; gap:7px 10px; }
-  html[data-theme] .events-page .dn-guest-tour-notice button { width:auto; min-height:40px; padding:0 11px; }
+  html[data-theme] .events-page .dn-guest-tour-notice button { width:auto; min-height:44px; padding:0 9px; }
 }
 
 @media(max-width:580px) {

@@ -506,7 +506,6 @@ export default function About() {
           <span className="settings-accordion-icon"><Info size={18} /></span>
           <div>
             <h3>Version Information</h3>
-            <p>Application details</p>
           </div>
         </div>
 
@@ -527,11 +526,6 @@ export default function About() {
             <span className="about-summary-label">Environment</span>
             <strong>{deployEnvironment}</strong>
           </div>
-        </div>
-
-        <div className="about-description">
-          DN is a personal life and finance companion built to keep important moments, planning details, memories,
-          and financial patterns connected in one place.
         </div>
 
         <div className="about-refresh-row">

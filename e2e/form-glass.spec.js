@@ -35,6 +35,7 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       await page.getByRole('button', { name: kind === 'Moment' ? 'Life moment' : kind, exact: true }).click();
       const dialog = page.getByRole('dialog', { name: titles[kind], exact: true });
       await expect(dialog).toBeVisible();
+      await expect(page.locator('.dn-command-bar')).toHaveCSS('opacity', '0');
       const material = await dialog.evaluate(el => ({
         background: getComputedStyle(el).backgroundImage,
         blur: getComputedStyle(el).backdropFilter,

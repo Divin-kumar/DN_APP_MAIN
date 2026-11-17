@@ -73,20 +73,14 @@ export default function LoginPage() {
             <span className="dn-login-brand-name">DN</span>
           </div>
           <div className="dn-login-story-copy">
-            <p className="dn-login-eyebrow">Your personal life space</p>
             <h1 id="dn-login-headline">Life happens.<br /><span>Keep the moments.</span></h1>
-            <p className="dn-login-description">Bring your moments, plans, memories and finances together in one thoughtful place.</p>
-            <div className="dn-login-topics" aria-label="What you can organize">
-              <span>Moments</span><span>Activities</span><span>Finances</span><span>Memories</span>
-            </div>
+            <p className="dn-login-description">Keep your moments, tasks and transactions together.</p>
           </div>
         </section>
 
         <section className="dn-login-card" aria-labelledby="dn-login-welcome">
           <div className="dn-login-card-top">
-            <p className="dn-login-card-kicker">WELCOME TO DN</p>
             <h2 id="dn-login-welcome">Your space starts here.</h2>
-            <p>Choose how you’d like to continue.</p>
           </div>
           <div className="dn-login-actions">
             <button type="button" className="dn-login-google" onClick={handleGoogleSignIn} disabled={busy} aria-busy={busy}>
@@ -105,7 +99,6 @@ export default function LoginPage() {
           <p className="dn-login-privacy">Guest records stay in this browser. They aren’t automatically transferred to your Google account.</p>
         </section>
       </div>
-      <p className="dn-login-footer">A quieter home for everything that matters.</p>
     </main>
   );
 }

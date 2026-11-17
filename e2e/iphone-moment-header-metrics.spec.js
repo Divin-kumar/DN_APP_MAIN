@@ -28,6 +28,9 @@ test.describe('Moment hero premium three-metric strip', () => {
           expect(await caption.evaluate((node) => parseFloat(getComputedStyle(node).fontSize)))
             .toBeGreaterThanOrEqual(11.95);
         }
+        expect(await metrics.nth(1).locator('small').evaluate(node =>
+          node.getBoundingClientRect().height <= parseFloat(getComputedStyle(node).lineHeight) + 1
+        )).toBe(true);
         await expect(metrics.nth(0).locator('strong')).toHaveText('3');
         await expect(metrics.nth(1).locator('strong')).toHaveText('1');
         const expectedMoney = new Intl.NumberFormat('en-IN', {

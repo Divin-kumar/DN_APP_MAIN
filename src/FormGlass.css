@@ -20,6 +20,19 @@ html[data-theme="light"] {
   --dn-form-scrim: rgb(35 51 77 / 22%);
   --dn-form-shadow: rgb(34 53 83 / 14%);
 }
+@media screen and (prefers-reduced-transparency: no-preference) {
+  html[data-theme="dark"] body .dn-modal[aria-modal="true"]:not(.dn-command-dialog) {
+    --dn-form-glass: linear-gradient(145deg, rgb(126 165 226 / 14%), transparent 68%), rgb(15 24 41 / 89%);
+  }
+  html[data-theme="light"] body .dn-modal[aria-modal="true"]:not(.dn-command-dialog) {
+    --dn-form-glass: linear-gradient(145deg, rgb(255 255 255 / 76%), transparent), rgb(231 239 252 / 82%);
+  }
+}
+/* Keep the launcher from shining through an active modal's glass. */
+html[data-theme] body:has(.dn-modal-viewport > .dn-modal[aria-modal="true"]:not(.dn-command-dialog, [data-closing]))
+  .dn-shell :is(.dn-command-bar, .dn-quick-create) {
+  opacity: 0;
+}
 @media screen {
   /* Keep blur on the sheet. A filter on the enclosing scrim would limit
      what the sheet can sample from the workspace behind it. */
@@ -206,6 +219,12 @@ html[data-theme] body :is(
     margin: 0;
   }
 }
+@media (max-width: 360px) {
+  html[data-theme] body .dn-modal :is(.form-actions, .event-form-actions, .dialog-actions)
+    > button:is(.primaryButton, .secondaryButton) {
+    padding-inline: 8px !important;
+  }
+}
 @media screen {
   html[data-theme] body :is(.dropdown-menu.dropdown-menu-portal, .dn-header .profile-menu, .dn-quick-create-menu) {
     background: var(--dn-form-glass) !important;
@@ -267,6 +286,11 @@ html[data-theme] body .dn-login-card {
 html[data-theme] body .dn-login-actions :is(.dn-login-google, .dn-login-guest) {
   background: var(--dn-form-field) !important; border-color: var(--dn-form-line) !important;
   color: var(--color-text) !important; box-shadow: none !important;
+}
+html[data-theme] body .dn-login-actions .dn-login-google {
+  background: var(--action-fill) !important;
+  border-color: var(--action-border) !important;
+  color: var(--action-ink) !important;
 }
 html[data-theme] body .settings-page input[type="file"]::file-selector-button {
   border: 1px solid var(--dn-form-line); border-radius: 10px; padding: 10px 12px;

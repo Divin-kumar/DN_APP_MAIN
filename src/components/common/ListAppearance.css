@@ -2,7 +2,7 @@
    surfaces: swipe transforms, record layout, selection logic and hit areas stay
    owned by their components. Specificity keeps lazy-route CSS consistent. */
 html[data-theme] {
-  --dn-list-fill: color-mix(in srgb, var(--color-text) 3%, var(--color-card));
+  --dn-list-fill: var(--dn-panel-fill);
   --dn-list-selected: color-mix(in srgb, var(--color-primary) 8%, var(--color-card));
   --dn-list-hover: color-mix(in srgb, var(--color-text) 5%, var(--color-card));
   --dn-list-radius: 14px;
@@ -33,7 +33,7 @@ html[data-theme] body :is(.dn-task-list .dn-independent-task-row.is-dashboard-se
 html[data-theme] body :is(.dn-task-list,.life-journey-items,.event-activity-list,.code-list-rows) { gap:8px; }
 html[data-theme] body :is(.dn-task-copy strong,.dn-v2-moment-copy > strong,
   .event-activity-title-row > strong,.dn-transaction-copy > strong,.code-list-text) {
-  font-weight:600 !important; letter-spacing:-.015em;
+  font-weight:650 !important; letter-spacing:-.018em;
 }
 html[data-theme] body .code-lists-page .code-list-rows .code-list-row {
   display:flex; align-items:center; gap:12px; min-height:52px; padding:12px !important;
@@ -63,6 +63,12 @@ html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-co
 }
 html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) .dn-attachment-open small { font-size:12px; }
 html[data-theme] body .dn-attachment-open[aria-pressed="true"] { background:var(--dn-list-selected) !important; }
+@media (min-width: 1000px) {
+  html[data-theme] body .workspace-resource-list .dn-attachment-gallery:not(.is-compact) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px 16px;
+  }
+}
 /* Choices show quiet selected rows and existing bare ticks/direction arrows.
    Do not change virtualized dropdown row geometry or filter drag coordinates. */
 html[data-theme] body .dropdown-menu-portal .dropdown-option { border:0; border-radius:10px; box-shadow:none; font-weight:450; }
@@ -73,7 +79,7 @@ html[data-theme] body .dn-refine-sort-chips > button {
   background:transparent !important; color:var(--color-text-muted); font-weight:500;
 }
 html[data-theme] body .dn-refine-sort-chips > button.is-selected { background:var(--dn-list-selected) !important; color:var(--color-text); }
-html[data-theme] body .dn-condition-chip { border-radius:12px !important; border-color:transparent !important; box-shadow:none !important; background:var(--dn-list-fill) !important; }
+html[data-theme] body .dn-condition-chip { border-radius:999px !important; border-color:transparent !important; box-shadow:none !important; background:var(--dn-list-selected) !important; }
 html[data-theme] body :is(.dashboard-upcoming-row,.settings-hub-card) {
   box-shadow:none !important; border-color:transparent !important; border-radius:var(--dn-list-radius); background:var(--dn-list-fill);
 }

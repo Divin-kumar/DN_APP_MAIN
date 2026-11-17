@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-573 | Give DN a consistent visual treatment
+
+- **Scope.** Bring the app shell, Dashboard, Task and Finance summaries, record lists and settings into a shared surface style. Simplify sign-in, the Guest sample banner and About. Show all Code Lists and Backup shortcuts together on phones. Make the active Moment section clearer, improve Gallery and Story on desktop, and reduce visual bleed behind active sheets.
+- **Compatibility.** Continue using the existing quick-create and double-tap Back gestures, document export, form actions and settings. Guest tour 2026.11.17.3 gives the sample Journal a shorter introduction.
+- **Executed.** Lint and build passed. Browser verification covered 270 distinct Chromium cases, including both development About ledger cases. The initial launcher selector and Finance summary shadow failures passed on rerun. The last 73-case run covered form sheets, upcoming expenses, Moment highlights, PDF controls and the + gestures. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-572 | Go Back without showing quick create
 
 - **Scope.** Restore the previous mobile quick-create sheet and shared dialog behavior. The + waits 215 ms to distinguish a single pointer tap from two. Double-tap goes Back without mounting the sheet. Keyboard activation and selecting a form remain immediate.

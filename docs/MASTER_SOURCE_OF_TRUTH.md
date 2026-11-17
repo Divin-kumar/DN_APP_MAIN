@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Shared screen styling and easier access to controls (17 November 2026, development)
+
+The app shell uses a soft background tint in both themes. Dashboard cards, Task and Finance totals, record rows, settings and reporting panels share a lighter surface treatment. Sign-in shows its two entry paths and Guest storage notice with less copy. The demo banner leaves more room for Moments, and About puts build and update information first.
+
+Code Lists shows all six section links in two rows on phones and one row on desktop. The links retain their section URLs and move keyboard focus to the selected section. The three Backup shortcuts share a row on narrow phones. Appearance highlights the selected theme, and List defaults highlights the open filter editor. The selected Moment section is tinted, Gallery uses two columns where there is room, and desktop Story text uses a shorter line length. PDF Studio applies the same selected treatment to preview controls. Active modal sheets use denser glass and hide the launcher beneath them. Navigate & create retains its current material. Guest tour edition 2026.11.17.3 uses a shorter sample Journal introduction.
+
 ## Consistent Dashboard cards and separate + gestures (17 November 2026, development)
 
 Dashboard Tasks, Moments and Activities use matching card widths, row spacing, date tiles and empty-state links. They stack on phones and use three equal columns when the content is wide enough. Task previews still open on request and fit four rows before scrolling.

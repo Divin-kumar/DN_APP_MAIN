@@ -36,11 +36,6 @@ html[data-theme] .dn-login-brand-mark {
   font-size: 15px; font-weight: 900; letter-spacing: -.15em;
 }
 html[data-theme] .dn-login-brand-mark span { transform: translateY(2px); }
-html[data-theme] .dn-login-eyebrow,
-html[data-theme] .dn-login-card-kicker {
-  margin: 0; color: var(--dn-login-accent-ink); font-size: 11px; font-weight: 800;
-  line-height: 1.5; letter-spacing: .13em; text-transform: uppercase;
-}
 html[data-theme] .dn-login-story h1 {
   margin: 13px 0 16px; max-width: 600px;
   color: var(--color-text); font-size: clamp(36px, 4.3vw, 58px);
@@ -51,25 +46,19 @@ html[data-theme] .dn-login-description {
   max-width: 430px; margin: 0; color: var(--color-text-muted);
   font-size: clamp(14px, 1.35vw, 16px); line-height: 1.65;
 }
-html[data-theme] .dn-login-topics {
-  display: flex; flex-wrap: wrap; gap: 5px 12px; margin-top: 21px;
-  color: var(--color-text-muted); font-size: 12px; font-weight: 650; letter-spacing: .01em;
-}
-html[data-theme] .dn-login-topics span + span::before { content: "·"; margin-right: 12px; color: var(--color-primary); }
 html[data-theme] .dn-login-card {
   width: 100%; min-width: 0; padding: clamp(24px, 3vw, 36px);
-  background: color-mix(in srgb, var(--color-card) 93%, transparent);
+  background: var(--dn-form-glass);
   border: 1px solid var(--dn-login-line); border-radius: 26px;
   box-shadow: 0 24px 65px color-mix(in srgb, var(--color-bg) 65%, #000 12%);
   -webkit-backdrop-filter: blur(18px);
   backdrop-filter: blur(18px);
 }
 html[data-theme] .dn-login-card h2 {
-  margin: 9px 0 7px; color: var(--color-text);
+  margin: 0; color: var(--color-text);
   font-size: clamp(24px, 2.5vw, 29px); font-weight: 750;
   line-height: 1.18; letter-spacing: -.055em;
 }
-html[data-theme] .dn-login-card-top > p:last-child { margin: 0; color: var(--color-text-muted); font-size: 14px; line-height: 1.5; }
 html[data-theme] .dn-login-actions { display: grid; gap: 11px; margin-top: 26px; }
 html[data-theme] .dn-login-actions button {
   display: flex; align-items: center; justify-content: center; gap: 12px;
@@ -99,10 +88,6 @@ html[data-theme] .dn-login-error {
   color: var(--color-danger); font-size: 13px; line-height: 1.4;
 }
 html[data-theme] .dn-login-error svg { flex: 0 0 17px; }
-html[data-theme] .dn-login-footer {
-  width: min(100%, 1000px); margin: 22px auto 0;
-  color: var(--color-text-muted); font-size: 11px; letter-spacing: .02em;
-}
 @media (max-width: 760px) {
   html[data-theme] .dn-login { justify-content: flex-start; padding: max(20px, env(safe-area-inset-top, 0px)) 18px max(20px, env(safe-area-inset-bottom, 0px)); }
   html[data-theme] .dn-login-layout { display: flex; flex-direction: column; align-items: stretch; gap: 26px; max-width: 480px; margin: auto; }
@@ -111,11 +96,8 @@ html[data-theme] .dn-login-footer {
   html[data-theme] .dn-login-brand-mark { width: 40px; height: 40px; border-radius: 13px; }
   html[data-theme] .dn-login-story h1 { margin: 9px 0 9px; font-size: clamp(32px, 8.5vw, 42px); line-height: 1.1; }
   html[data-theme] .dn-login-description { font-size: 14px; line-height: 1.5; }
-  html[data-theme] .dn-login-topics { margin-top: 12px; font-size: 11px; gap: 4px 8px; }
-  html[data-theme] .dn-login-topics span + span::before { margin-right: 8px; }
   html[data-theme] .dn-login-card { padding: 22px 19px; border-radius: 22px; }
   html[data-theme] .dn-login-actions { margin-top: 19px; }
-  html[data-theme] .dn-login-footer { max-width: 480px; margin: 18px auto 0; text-align: center; }
 }
 @media (max-width: 360px) {
   html[data-theme] .dn-login { padding-inline: 14px; }

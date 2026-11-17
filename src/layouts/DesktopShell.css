@@ -11,10 +11,10 @@
     padding: 0 12px !important;
     border: 1px solid var(--color-border) !important;
     border-radius: 18px;
-    background: var(--color-surface) !important;
+    background: var(--dn-panel-fill) !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
-    box-shadow: none !important;
+    box-shadow: var(--dn-panel-shadow) !important;
   }
   html[data-theme] .dn-header > div:first-child { width: 100%; max-width: 100% !important; gap: 8px !important; }
   html[data-theme] .dn-header .dn-route-brand { min-width: 0; gap: 7px; }
@@ -30,6 +30,8 @@
     margin-top: 72px;
     padding: 24px 16px 100px !important;
     gap: 8px !important;
+    background: var(--dn-panel-fill) !important;
+    box-shadow: var(--dn-panel-shadow) !important;
   }
   html[data-theme] .dn-sidebar.dn-sidebar-collapsed {
     width: 88px !important;
@@ -86,6 +88,11 @@
     border-color: transparent !important;
     transition: background .16s ease, color .16s ease;
   }
+  html[data-theme] .dn-sidebar .dn-nav-link[aria-current="page"] {
+    color: var(--action-ink) !important;
+    background: var(--action-fill) !important;
+  }
+  html[data-theme] .dn-sidebar .dn-nav-link[aria-current="page"] .dn-nav-icon { color: var(--dn-accent-ink); }
   html[data-theme] .dn-sidebar .dn-nav-link:hover { transform: none; }
   html[data-theme] .dn-shell .dn-quick-create-trigger {
     width: 56px !important;

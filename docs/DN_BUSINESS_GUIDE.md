@@ -1,3 +1,5 @@
+**App appearance (17 November 2026, development).** Dashboard, Tasks, Transactions, Settings and Insights share a lighter look. Sign-in gives Guest and Google entry more room. All six Code Lists shortcuts and all three Backup shortcuts fit on a phone without side scrolling. In a Moment, the current section is easier to spot, the Gallery has two columns on wide screens, and Story paragraphs are easier to follow on desktop. When you open a form, the blue + no longer shows through its footer.
+
 **Dashboard and quick create (17 November 2026, development).** Tasks, Moments and Activities use matching cards and square date tiles. On wide screens they sit in three equal columns. An empty card offers a link to its list. Tap the blue + once and the menu opens after a brief pause. Tap it twice quickly to go Back without showing the menu. Choose any item in the menu to open its form immediately.
 
 **Task editor (16 November 2026, development).** Tap Keep editing after opening a Task confirmation to return to the same spot with your draft and More options as you left them. In a long Moment or Activity list, tap Search when you need the keyboard.

@@ -470,3 +470,14 @@ html[data-theme] .activity-attachment-hint {
     padding-bottom:calc(78px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
   }
 }
+
+/* Treat the record details as a continuous reading surface. */
+html[data-theme] .activity-detail-page .activity-detail-content .activity-detail-section {
+  border-color: var(--dn-panel-edge);
+}
+html[data-theme] .activity-detail-page .activity-cover-controls button,
+html[data-theme] .activity-detail-page .activity-cover-back {
+  border-color: var(--dn-panel-edge);
+  background: var(--dn-panel-fill);
+  box-shadow: var(--dn-panel-shadow);
+}

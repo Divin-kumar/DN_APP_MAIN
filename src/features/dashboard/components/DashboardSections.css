@@ -55,7 +55,9 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-card {
   align-content: start;
   gap: 9px;
   padding: 12px;
-  border-color: var(--dn-form-line);
+  border-color: var(--dn-panel-edge);
+  background: var(--dn-panel-fill);
+  box-shadow: var(--dn-panel-shadow);
   border-radius: 18px;
   background: linear-gradient(155deg, var(--dn-form-field), transparent 82%), var(--color-surface);
   box-shadow: none;

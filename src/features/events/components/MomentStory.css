@@ -55,7 +55,7 @@ html[data-theme] .dn-v2-story-reflections p {margin:0;}
 /* JOURNAL: borderless album spreads with large, clickable original pictures.
    There are no timeline rails, stop markers or boxed Activity cards. */
 html[data-theme] .dn-v2-story[data-presentation="journey"] {gap:31px;}
-html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-header {border:0;background:linear-gradient(130deg,color-mix(in srgb,var(--color-primary) 10%,var(--color-card)),var(--color-card));padding:24px;}
+html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-header {border:0;background:var(--dn-panel-fill);padding:24px;}
 html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-header h3 {font-family:Georgia,"Times New Roman",serif;font-weight:600;font-size:clamp(1.7rem,4vw,2.35rem);letter-spacing:-.025em;}
 html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-intro {border:0;border-radius:0;background:transparent;padding:14px 0;gap:17px;}
 html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-v2-story-intro-text {font-family:Georgia,"Times New Roman",serif;font-size:clamp(.94rem,2vw,1.15rem);line-height:1.83;}
@@ -495,5 +495,12 @@ html[data-theme] .dn-v2-story[data-presentation="diary"] .dn-story-writing-part 
 @media(max-width:680px) and (hover:none) {
   html[data-theme] .dn-v2-story[data-presentation="journey"] .dn-journal-gallery .dn-attachment-open:hover img {
     filter:none;
+  }
+}
+
+/* A readable measure for the opening page. Original photos stay full-width. */
+@media (min-width: 761px) {
+  html[data-theme] .dn-v2-story :is(.dn-v2-story-intro-text, .dn-v2-story-entry-description) {
+    max-inline-size: 68ch;
   }
 }

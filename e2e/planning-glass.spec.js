@@ -46,6 +46,7 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await capture('breakdown');
     await page.goto('/financials/transactions#expense-plans');
     await expect(page.getByRole('dialog', { name: 'Upcoming expenses', exact: true })).toBeVisible();
+    await expect(page.locator('.dn-command-bar')).toHaveCSS('opacity', '0');
     await expect(page.getByRole('button', { name: /Manage plan/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Edit schedule', exact: true })).toBeVisible();
     expect(await page.getByRole('dialog', { name: 'Upcoming expenses' })

@@ -16,24 +16,21 @@ const waitForReadablePage = async (page, selector) => {
 for (const [width, height, theme] of [
   [320, 740, 'dark'], [390, 844, 'light'], [390, 844, 'dark'],
 ]) {
-  test('Code Lists sections are discoverable and keyboard/scroll reachable at ' + width + 'px ' + theme, async ({ page }, testInfo) => {
+  test('Code Lists sections are discoverable and keyboard reachable at ' + width + 'px ' + theme, async ({ page }, testInfo) => {
     const errors = await seedGuest(page, { theme });
     await page.setViewportSize({ width, height });
     await page.goto('/settings/code-lists');
     const source = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     const nav = page.getByRole('navigation', { name: 'Code List sections' });
-    const rail = nav.locator('.dn-code-list-index-scroll');
-    await expect(rail.locator('a')).toHaveCount(6);
+    const links = nav.getByRole('link');
+    await expect(links).toHaveCount(6);
+    for (const link of await links.all()) await expect(link).toBeInViewport({ ratio: 1 });
     await expect(nav.getByRole('button')).toHaveCount(0);
     await waitForReadablePage(page, '.dn-premium-code-lists');
     await testInfo.attach('CodeListsNav-' + width + '-' + theme,
       { body: await page.screenshot(), contentType: 'image/png' });
-    const before = await rail.evaluate((node) => node.scrollLeft);
-    await rail.focus();
-    await page.keyboard.press('ArrowRight');
-    await expect.poll(() => rail.evaluate((node) => node.scrollLeft)).toBeGreaterThan(before + 10);
-    await expect(nav.getByRole('button')).toHaveCount(0);
-    await nav.getByRole('link', { name: 'Payment Methods' }).click();
+    await nav.getByRole('link', { name: 'Payment Methods' }).focus();
+    await page.keyboard.press('Enter');
     await expect(page).toHaveURL(/#code-list-paymentMethods$/);
     await expect(page.locator('#code-list-paymentMethods')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width + 1);

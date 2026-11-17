@@ -17,7 +17,7 @@ for (const width of [320,430]) {
     const rect=await add.boundingBox();
     const sectionRect=await page.locator('#code-list-eventTypes').boundingBox();
     expect(rect.x+rect.width).toBeLessThanOrEqual(sectionRect.x+sectionRect.width+1);
-    const rail=page.locator('.dn-code-list-index-scroll');
+    const rail=page.getByRole('navigation',{name:'Code List sections'});
     await expect(page.locator('.dn-code-list-nav-arrow')).toHaveCount(0);
     expect(await rail.evaluate(el=>el.clientWidth)).toBeGreaterThan(150);
     expect(await page.locator('.code-list-item').first().evaluate(el=>parseFloat(getComputedStyle(el).borderRadius))).toBe(14);

@@ -2468,12 +2468,9 @@ html[data-theme] .dn-financial-workspace .dn-finance-summary > .moment-finance-c
 html[data-theme] .dn-financial-workspace .dn-finance-summary-grid {
   display:grid !important; grid-template-columns:repeat(3,minmax(0,1fr)) !important;
   gap:0 !important; min-width:0; overflow:hidden;
-  border:1px solid var(--dn-form-line);
-  border-radius:17px;
-  background:linear-gradient(150deg,
-    color-mix(in srgb,var(--color-primary) 3%,var(--color-card)),
-    var(--color-card) 60%,
-    color-mix(in srgb,var(--color-primary) 2%,var(--color-card)));
+  border:1px solid var(--dn-panel-edge);
+  border-radius:var(--dn-premium-radius);
+  background:var(--dn-panel-fill);
   box-shadow:none;
 }
 html[data-theme] .dn-financial-workspace .dn-finance-summary-grid .dn-finance-metric {

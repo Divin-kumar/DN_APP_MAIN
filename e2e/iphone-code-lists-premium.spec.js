@@ -19,7 +19,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(page.locator('.dn-code-list-editor-section')).toHaveCount(6);
 
       const layout = await page.evaluate(() => {
-        const rail = document.querySelector('.dn-code-list-index-scroll');
+        const rail = document.querySelector('.dn-code-list-index');
         const inputs = [...document.querySelectorAll('.dn-premium-code-lists .code-list-add-row.has-labels')];
         const rect = (element) => {
           const { x, y, width, height } = element.getBoundingClientRect();
@@ -28,7 +28,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         return {
           pageWidth: document.documentElement.scrollWidth,
           railWidth: rail.clientWidth, railContentWidth: rail.scrollWidth,
-          railHeight: rect(rail).height,
+          links: [...rail.querySelectorAll('a')].map(link => ({ box: rect(link), lineOverflow: link.scrollWidth > link.clientWidth })),
+          index: rect(rail),
           editors: inputs.map((editor) => {
             const [value, label] = editor.querySelectorAll('input');
             const button = editor.querySelector('button');
@@ -43,8 +44,11 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         };
       });
       expect(layout.pageWidth).toBeLessThanOrEqual(width + 1);
-      expect(layout.railContentWidth).toBeGreaterThan(layout.railWidth);
-      expect(layout.railHeight).toBeGreaterThanOrEqual(43.9);
+      expect(layout.railContentWidth).toBeLessThanOrEqual(layout.railWidth + 1);
+      expect(new Set(layout.links.map(({ box }) => Math.round(box.y))).size).toBe(2);
+      expect(layout.links.every(({ box, lineOverflow }) =>
+        box.height >= 43.9 && box.x >= layout.index.x && box.x + box.width <= layout.index.x + layout.index.width + 1
+        && !lineOverflow)).toBe(true);
       expect(layout.editors).toHaveLength(2);
       for (const row of layout.editors) {
         // Chromium may report 43.99976px for a CSS 44px control. Allow sub-pixel rounding only.

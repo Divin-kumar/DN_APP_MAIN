@@ -359,8 +359,8 @@ export default function Events() {
     <div className="events-page life-timeline-page">
       {isGuest && getActiveSampleScenario(user?.uid) === 'tour' ? (
         <section className="dn-guest-tour-notice" aria-label="Explore DN sample data">
-          <div><strong>You're exploring DN with example data</strong>
-            <p>Try the photo Journal, monthly Diary, Tasks, transactions and PDF Studio. Nothing here is copied into your own Guest records.</p></div>
+          <div><strong>Sample data</strong>
+            <p>Separate from your Guest records.</p></div>
           <button type="button" className="secondaryButton" onClick={() => navigate('/settings')}>Manage demo</button>
         </section>
       ) : null}

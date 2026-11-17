@@ -42,9 +42,8 @@ for(const [width,theme] of [[320,'dark'],[430,'dark'],[390,'light']]){
   await expect(metrics).toHaveText(['0','0','0']);
   await page.goto('/settings/code-lists');
   await expect(page.locator('.dn-code-list-nav-arrow')).toHaveCount(0);
-  const rail=page.locator('.dn-code-list-index-scroll');
-  await rail.evaluate(el=>{el.scrollLeft=el.scrollWidth;});
-  await expect(rail.getByRole('link',{name:'Reminder Presets'})).toBeInViewport();
+  const sections=page.getByRole('navigation',{name:'Code List sections'});
+  await expect(sections.getByRole('link',{name:'Reminder Presets'})).toBeInViewport({ratio:1});
   await page.goto('/activities');
   await page.getByRole('button',{name:/Filters and sort/}).click();
   const sort=page.locator('.dn-refine-sort-chips');

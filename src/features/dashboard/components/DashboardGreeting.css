@@ -86,12 +86,12 @@ html[data-theme] .dashboard-compact .dashboard-greeting-topline {
 html[data-theme] .dashboard-compact .dashboard-greeting-title {
   font-size: clamp(23px, 4.8vw, 31px);
   line-height: 1.18;
-  font-weight: 710;
+  font-weight: 760;
   letter-spacing: -.045em;
 }
 html[data-theme] .dashboard-compact .dashboard-greeting-date {
-  margin-top: 4px;
-  font-size: 12px;
+  margin-top: 5px;
+  font-size: 12.5px;
 }
 @media (max-width: 480px) {
   html[data-theme] .dashboard-compact .dashboard-greeting.dashboard-greeting-compact {

@@ -505,7 +505,6 @@ function CodeListsContent({ isGuest, sample }) {
     if (!adminValuesLoading && !adminValuesError) setHasLoaded(true);
   }, [adminValuesLoading, adminValuesError]);
   const showSections = hasLoaded || (!adminValuesLoading && !adminValuesError);
-  const railRef = useRef(null);
   const sectionId = location.hash.slice(1);
   useEffect(() => {
     if (!showSections || !CODE_LIST_SECTIONS.some(([id]) => id === sectionId)) return undefined;
@@ -514,14 +513,6 @@ function CodeListsContent({ isGuest, sample }) {
       if (!section) return;
       section.scrollIntoView({ block: 'start' });
       section.focus({ preventScroll: true });
-      const rail = railRef.current;
-      const link = rail?.querySelector('[aria-current="location"]');
-      if (link) {
-        const railBounds = rail.getBoundingClientRect();
-        const linkBounds = link.getBoundingClientRect();
-        if (linkBounds.left < railBounds.left) rail.scrollLeft += linkBounds.left - railBounds.left;
-        if (linkBounds.right > railBounds.right) rail.scrollLeft += linkBounds.right - railBounds.right;
-      }
     });
     return () => cancelAnimationFrame(frame);
   }, [location.key, sectionId, showSections]);
@@ -551,11 +542,10 @@ function CodeListsContent({ isGuest, sample }) {
       ) : null}
       {showSections ? <>
         <nav className="dn-code-list-index" aria-label="Code List sections">
-          <div className="dn-code-list-index-scroll" ref={railRef} tabIndex={0}
-            aria-label="Scroll Code List sections horizontally">
-            {CODE_LIST_SECTIONS.map(([id, title]) => <Link key={id} to={{ search: location.search, hash: `#${id}` }}
-              aria-current={sectionId === id ? 'location' : undefined}>{title}</Link>)}
-          </div>
+          {CODE_LIST_SECTIONS.map(([id, title]) => <Link key={id} to={{ search: location.search, hash: `#${id}` }}
+            aria-current={sectionId === id ? 'location' : undefined}>
+            {title}
+          </Link>)}
         </nav>
         <CodeListSection title="Moment Types" description="Manage Moment types and choose their Daily, Journal, or Tasks mode, greetings, and Dashboard options." listKey="eventTypes" placeholder="Add moment type" />
         <CodeListSection title="Expense Categories" description="Used by expense tracking and reporting filters." listKey="expenseCategories" placeholder="Add expense category" expensePlans={plans} />

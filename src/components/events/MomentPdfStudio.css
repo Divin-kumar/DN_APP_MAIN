@@ -608,3 +608,12 @@ html[data-theme] .dn-pdf-page-announcement {
   position:absolute;width:1px;height:1px;overflow:hidden;
   clip-path:inset(50%);white-space:nowrap;
 }
+
+html[data-theme] .dn-pdf-preview-tools button[aria-pressed="true"] {
+  border-color: var(--action-border);
+  color: var(--action-ink);
+  background: var(--action-fill);
+}
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-intro > svg {
+  color: var(--dn-accent-ink);
+}

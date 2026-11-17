@@ -127,6 +127,7 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metr
 }
 @media(max-width:360px) {
   html[data-theme] .dn-moment-hero-swipe .event-moment-content .event-moment-stat-line {
+    grid-template-columns:minmax(0,.72fr) minmax(0,1.23fr) minmax(0,1.38fr);
     margin-top:9px !important; padding-top:8px;
   }
   html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line > .dn-moment-metric {
@@ -183,4 +184,13 @@ html[data-theme] .dn-moment-nav .dn-moment-nav-motion-underline {
     font-size:12px !important;line-height:1.4;
     white-space:normal;overflow-wrap:anywhere;
   }
+}
+
+/* Keep the current section legible on both sides of an image-led workspace. */
+html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"] {
+  color: var(--action-ink) !important;
+  background: color-mix(in srgb, var(--action-fill) 68%, transparent) !important;
+}
+html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"] > svg {
+  color: var(--action-ink);
 }

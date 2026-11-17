@@ -48,13 +48,13 @@ html[data-theme] .dn-appearance-theme-pick {
   display:grid; grid-template-columns:68px minmax(0,1fr) 22px;
   align-items:center; gap:10px; min-width:0; min-height:90px;
   padding:12px; border:1px solid var(--color-border);
-  border-radius:15px; background:var(--color-card);
+  border-radius:var(--dn-premium-radius); background:var(--dn-panel-fill);
   color:var(--color-text); text-align:left; cursor:pointer;
   font:inherit; transition:border-color .14s ease,background-color .14s ease;
 }
 html[data-theme] .dn-appearance-theme-pick[aria-pressed="true"] {
-  border-color:color-mix(in srgb,var(--color-primary) 55%,var(--color-border));
-  background:color-mix(in srgb,var(--color-primary) 5%,var(--color-card));
+  border-color:var(--action-border);
+  background:var(--action-fill);
 }
 /* iPhone Safari may latch a hover appearance after tapping. */
 @media(hover:hover) and (pointer:fine) {

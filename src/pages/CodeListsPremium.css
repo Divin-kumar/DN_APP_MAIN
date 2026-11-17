@@ -7,29 +7,13 @@ html[data-theme] .dn-premium-code-lists {
   margin-inline:auto;
   gap:14px !important;
 }
-html[data-theme] .dn-premium-code-lists .dn-code-list-index {
-  display:flex;
-  align-items:stretch;
-  min-width:0;
-  max-width:100%;
-  padding:0 1px;
-  border-bottom:1px solid var(--color-border);
+html[data-theme] .code-lists-page .dn-code-list-index {
+  position: sticky; top: 0; z-index: 9;
+  display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 2px;
+  min-width: 0; padding: 4px 0;
+  border-bottom: 1px solid var(--dn-panel-edge);
+  background: var(--color-bg);
 }
-html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll {
-  display:flex;
-  align-items:stretch;
-  flex:1 1 auto;
-  gap:3px;
-  min-width:0;
-  max-width:100%;
-  overflow-x:auto;
-  overflow-y:hidden;
-  overscroll-behavior-x:contain;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:none;
-  scroll-padding-inline:4px;
-}
-html[data-theme] .dn-premium-code-lists .dn-code-list-index-scroll::-webkit-scrollbar { display:none; }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index a {
   display:inline-flex;
   align-items:center;
@@ -44,7 +28,8 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-index a {
   font-weight:630;
   line-height:1.25;
   text-decoration:none;
-  white-space:nowrap;
+  white-space:normal;
+  text-align:center;
   transition:color .16s ease,background-color .16s ease;
 }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index a[aria-current="location"] {
@@ -56,7 +41,7 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-index a:hover {
   background:color-mix(in srgb,var(--color-primary) 6%,transparent);
   color:var(--color-text);
 }
-html[data-theme] .dn-premium-code-lists .dn-code-list-index :is(a,.dn-code-list-index-scroll):focus-visible {
+html[data-theme] .dn-premium-code-lists .dn-code-list-index a:focus-visible {
   outline:2px solid var(--color-primary);
   outline-offset:-3px;
   color:var(--color-text);
@@ -405,14 +390,12 @@ html[data-theme] .dn-list-defaults-page #list-order {
     padding-top:11px;
   }
 }
-/* The category rail stays below the fixed app header inside scrollable content. */
-html[data-theme] .code-lists-page .dn-code-list-index {
-  position:sticky; top:0; z-index:9;
-  background:var(--color-bg); padding:4px 1px;
-}
-html[data-theme] .code-lists-page .dn-code-list-editor-section,
-html[data-theme] .code-lists-page #code-list-paymentMethods {
-  scroll-margin-top:76px;
+/* Anchor targets clear the sticky index in both layouts. */
+html[data-theme] .code-lists-page :is(.dn-code-list-editor-section, #code-list-paymentMethods) { scroll-margin-top: 68px; }
+@media (max-width: 760px) {
+  html[data-theme] .code-lists-page .dn-code-list-index { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  html[data-theme] .code-lists-page :is(.dn-code-list-editor-section, #code-list-paymentMethods) { scroll-margin-top: 110px; }
+  html[data-theme] .code-lists-page .dn-code-list-index a { padding-inline: 3px; }
 }
 html[data-theme] .code-lists-page :is(.dn-code-list-editor-section, #code-list-paymentMethods):focus-visible {
   outline:none;
