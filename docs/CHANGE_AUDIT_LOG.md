@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-565 | Lighten Dashboard panels and align Refine controls
+
+- **Scope:** Give Dashboard panels and date views a lighter treatment in both themes. Align Refine sorting into columns and keep the match count above the equal-width Reset, Cancel and Show results buttons.
+- **Compatibility:** Dashboard dates, links and swipe actions keep their existing behavior. Refine continues to apply only when Show results is selected. Guest tour 2026.11.16.12 still describes these actions and uses the same sample records.
+- **Executed:** 632 Node tests, lint and build passed on Node 22. The focused browser checks cover selected date views, touch targets, the Refine action row and draft recovery. Native iPhone Safari remains a device check.
+
 ## CHG-20261116-564 | Await Task persistence in release checks
 
 - **Scope:** Wait for persisted Tasks before leaving their page, taking the saved-record baseline or opening the next action. Await direct fixture writes before subsequent checks.

@@ -49,7 +49,6 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
   };
   return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}
     footer={<RefineActions count={draftCount} resultLabel={resultLabel} onReset={resetDraft} onCancel={onClose} onApply={apply} />}>
-    <p className="dn-refine-sheet-intro">Changes apply when you select Show results.</p>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
       <SortChips field={draft.field} direction={draft.direction} options={sort.options}

@@ -39,17 +39,22 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
           return {
             font: parseFloat(getComputedStyle(node).fontSize),
             height: buttonBox.height,
+            width: buttonBox.width,
             right: buttonBox.right,
             cardRight: parentBox.right,
           };
         });
         expect(style.font).toBeGreaterThanOrEqual(13);
         expect(style.height).toBeGreaterThanOrEqual(43.9);
+        expect(style.width).toBeGreaterThanOrEqual(43.9);
         expect(style.right).toBeLessThanOrEqual(style.cardRight + 1);
       }
     }
     await activities.getByRole('button', { name: 'On This Day' }).click();
     await expect(activities.getByRole('button', { name: 'On This Day' })).toHaveAttribute('aria-pressed','true');
+    const fills = await activityDates.getByRole('button').evaluateAll(buttons =>
+      buttons.map(button => getComputedStyle(button, '::before').backgroundColor));
+    expect(fills[1]).not.toBe(fills[0]);
     await activities.getByRole('button', { name: 'Upcoming' }).click();
 
     await moments.getByRole('button', { name: 'On This Day' }).click();

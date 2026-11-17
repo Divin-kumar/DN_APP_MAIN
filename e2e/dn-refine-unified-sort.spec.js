@@ -13,7 +13,7 @@ for (const width of [320, 390, 430]) {
   for (const { route, trigger } of routes) {
     test(`${route}: two-column sorts, reversible draft and safe Cancel at ${width}px`, async ({ page }) => {
       await page.setViewportSize({ width, height: width === 320 ? 640 : width === 390 ? 844 : 932 });
-      const errors = await seedGuest(page);
+      const errors = await seedGuest(page, { theme: width === 430 ? 'light' : 'dark' });
       await page.goto(route);
       const snapshot = () => page.evaluate(() => ({
         records: ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks']
@@ -53,6 +53,19 @@ for (const width of [320, 390, 430]) {
         expect(item.left).toBeGreaterThanOrEqual(geometry.bounds.left - 1);
         expect(item.right).toBeLessThanOrEqual(geometry.bounds.right + 1);
       }
+      const footer = sheet.getByRole('group', { name: 'Apply or discard Refine changes' });
+      const actions = await footer.getByRole('button').evaluateAll(buttons => buttons.map(button => {
+        const { width, top, height } = button.getBoundingClientRect();
+        return { width, top, height, fill: getComputedStyle(button).backgroundColor };
+      }));
+      expect(actions).toHaveLength(3);
+      for (const action of actions) {
+        expect(Math.abs(action.width - actions[0].width)).toBeLessThanOrEqual(1);
+        expect(Math.abs(action.top - actions[0].top)).toBeLessThanOrEqual(1);
+        expect(action.height).toBeGreaterThanOrEqual(43.9);
+      }
+      expect(actions[1].fill).toBe(actions[0].fill);
+      expect(actions[2].fill).not.toBe(actions[0].fill);
       const selected = sorts.locator('button[aria-pressed="true"]');
       await expect(selected).toHaveCount(1);
       const initial = await selected.getAttribute('aria-label');

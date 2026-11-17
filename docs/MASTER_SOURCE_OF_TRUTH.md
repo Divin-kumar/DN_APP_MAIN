@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Lighter Dashboard and Refine controls (17 November 2026, development)
+
+Dashboard section panels use a soft theme-aware gradient. Moment and Activity rows use a single tint, and the active date view has its own pill with a full touch target. Browse actions stay aligned on the right. Refine sheets group sorting into evenly spaced columns and use one row of equal-width Reset, Cancel and Show results actions. The result count remains visible while the filter body scrolls.
+
 ## Task editor confirmations and linked record search (16 November 2026, development)
 
 Task editor confirmations open at the top of the same sheet with a brief fade that respects Reduce Motion. Keep editing restores the draft, More options state, scroll position and focus on the action that opened the confirmation. Long Task Moment and Activity pickers open to choices and offer Search on demand, matching Transaction forms. The search keyboard opens only when requested. Guest tour edition 2026.11.16.12 describes the editor through explicit Refresh demo.

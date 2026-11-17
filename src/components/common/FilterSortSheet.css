@@ -35,20 +35,27 @@ html[data-theme] .dn-refine-actions {
   flex: 0 0 auto;
   min-width: 0;
   padding: 8px 0 max(2px, env(safe-area-inset-bottom));
-  border-top: 1px solid var(--color-border);
+  border-top: 1px solid var(--dn-form-line);
 }
 html[data-theme] .dn-list-controls-footer {
-  display: flex; gap: 8px;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px;
 }
 html[data-theme] .dn-list-controls-footer > button {
   display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-  min-height: 44px; padding: 8px 12px; color: var(--color-text);
-  background: var(--color-surface); border: 1px solid var(--color-border);
-  border-radius: 12px; font: inherit; font-size: 13px; font-weight: 650; cursor: pointer;
+  min-width: 0; min-height: 44px; padding: 6px 8px; color: var(--color-text-muted);
+  background: transparent; border: 1px solid transparent;
+  border-radius: 999px; font: inherit; font-size: var(--dn-form-action-size);
+  font-weight: var(--dn-form-action-weight); line-height: 1.25; text-align: center;
+  box-shadow: none; cursor: pointer;
 }
-html[data-theme] .dn-list-controls-footer .dn-refine-reset { margin-right: auto; }
 html[data-theme] .dn-list-controls-footer .dn-refine-apply {
-  color: var(--action-ink); background: var(--action-fill); border-color: var(--action-border);
+  color: var(--action-ink); background: var(--action-fill);
+}
+html[data-theme] .dn-list-controls-footer > button:hover {
+  color: var(--color-text); background: var(--dn-form-field);
+}
+html[data-theme] .dn-list-controls-footer .dn-refine-apply:hover {
+  color: var(--action-ink); background: color-mix(in srgb, var(--action-fill) 76%, var(--dn-form-highlight));
 }
 @media(max-width:760px) {
   html[data-theme] .dn-modal-viewport > .dn-modal.dn-refine-sheet {
@@ -58,23 +65,19 @@ html[data-theme] .dn-list-controls-footer .dn-refine-apply {
   html[data-theme] .dn-refine-sheet .dn-modal-body { gap: 14px; }
   html[data-theme] .dn-refine-sheet .dn-condition-children { max-height: min(33svh, 280px); }
 }
-@media(max-width:360px) {
-  html[data-theme] .dn-list-controls-footer > button { padding-inline: 9px; font-size: 12px; }
-}
-
 html[data-theme] .dn-refine-sheet .dn-refine-preview-count {
-  margin: 0 0 4px;
-  font-size: 13px; font-weight: 700; line-height: 1.5; color: var(--color-text);
+  margin: 0 0 5px;
+  font-size: var(--dn-type-caption); font-weight: 550; line-height: 1.5; color: var(--color-text-muted);
 }
 
 /* DN 2.3: shared visual language for every Refine sheet. Keep advanced
    AND/OR filtering intact; this is styling, not a change to its semantics. */
 html[data-theme] .dn-refine-sheet .dn-modal-body { gap:16px; }
-html[data-theme] .dn-refine-sheet .dn-refine-sheet-intro {
-  margin:0; font-size:12px; line-height:1.55; color:var(--color-text-muted);
-}
 html[data-theme] .dn-refine-sheet .dn-refine-sheet-section {
   gap:12px; padding:0 0 16px; border-bottom:1px solid color-mix(in srgb,var(--color-border) 75%,transparent);
+}
+html[data-theme] .dn-refine-sheet .dn-refine-sheet-section:last-child {
+  padding-bottom: 4px; border-bottom: 0;
 }
 html[data-theme] .dn-refine-sheet .dn-refine-sheet-section > h4 {
   margin:0; font-size:13px; font-weight:740; line-height:1.35; letter-spacing:-.01em;
@@ -104,12 +107,9 @@ html[data-theme] .dn-refine-sheet .dn-task-refine-field > legend {
   font-size:11px; font-weight:700; color:var(--color-text-muted);
 }
 html[data-theme] .dn-refine-sheet .dn-refine-choice-row { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
-html[data-theme] .dn-refine-sheet .dn-list-controls-footer > button { border-radius:12px; font-weight:700; }
-html[data-theme] .dn-refine-sheet .dn-list-controls-footer .dn-refine-apply { min-width:116px; }
 @media(max-width:390px) {
   html[data-theme] .dn-refine-sheet .dn-refine-choice-row { gap:5px; }
   html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button { padding-inline:10px; }
-  html[data-theme] .dn-refine-sheet .dn-list-controls-footer > button { padding-inline:9px; font-size:12px; }
 }
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button,
@@ -120,7 +120,11 @@ html[data-theme] .dn-refine-sheet .dn-list-controls-footer .dn-refine-apply { mi
 /* DN 2.3: sorting/filter configuration uses typography and restrained
    underlines across all Refine sheets, never a nested grid of boxed chips. */
 html[data-theme] .dn-refine-sheet .dn-refine-sort-chips {
-  align-items:stretch; gap:10px; padding:0; 
+  display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,112px),1fr));
+  align-items:stretch; width:100%; gap:2px 8px; padding:0; overflow:visible;
+}
+html[data-theme] .dn-task-refine .dn-refine-sort-chips {
+  grid-template-columns:repeat(3,minmax(0,1fr));
 }
 html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button,
 html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button {
@@ -128,7 +132,13 @@ html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button {
   border:0 !important; border-bottom:2px solid transparent !important;
   border-radius:0 !important; background:transparent !important;
   box-shadow:none !important; color:var(--color-text-muted) !important;
-  font-size:12px; font-weight:600;
+  font-size:var(--dn-type-caption); font-weight:600;
+}
+html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button {
+  min-width:0; white-space:normal;
+}
+html[data-theme] .dn-refine-sheet .dn-sort-choice-content > span {
+  min-width:0; overflow-wrap:anywhere; line-height:1.4;
 }
 html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button:is(.is-selected,[aria-pressed="true"]),
 html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button[aria-pressed="true"] {
@@ -139,16 +149,6 @@ html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button:hover,
 html[data-theme] .dn-refine-sheet .dn-refine-choice-row > button:hover {
   color:var(--color-text) !important;
 }
-html[data-theme] .dn-refine-sheet .dn-list-controls-footer > :is(.dn-refine-reset,.dn-refine-cancel) {
-  border:0; background:transparent; color:var(--color-text-muted);
-}
-html[data-theme] .dn-refine-sheet .dn-list-controls-footer > :is(.dn-refine-reset,.dn-refine-cancel):hover {
-  color:var(--color-primary);
-}
-html[data-theme] .dn-task-refine .dn-refine-sort-chips {
-  flex-wrap:wrap; overflow:visible; gap:2px 12px;
-}
-html[data-theme] .dn-task-refine .dn-refine-sort-chips > button { flex:0 1 auto; }
 html[data-theme] .dn-task-refine .dn-task-filter-heading {
   display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between;
   gap:8px;
@@ -165,13 +165,10 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
 /* Keep six Task sorts in the same two-column phone layout as other Refine sheets. */
 @media (max-width:760px), (max-height:500px) and (pointer:coarse) {
   html[data-theme] .dn-task-refine .dn-refine-sort-chips {
-    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-    gap:2px 8px; width:100%; overflow:visible;
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
   html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
-    display:inline-flex; width:100%; min-width:0;
-    justify-content:center; padding:8px 2px;
-    min-height:44px; line-height:1.35; white-space:normal;
+    padding-inline: 4px;
   }
   html[data-theme] .dn-task-refine .dn-task-filter-help {
     font-size:12px; line-height:1.5;
@@ -197,14 +194,10 @@ html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static;
 /* All phone Refine sheets expose every sort without sideways discovery. */
 @media(max-width:580px) {
   html[data-theme] .dn-refine-sheet .dn-refine-sort-chips {
-    display:grid; grid-template-columns:repeat(2,minmax(0,1fr));
-    width:100%; gap:2px 8px; overflow:visible;
+    grid-template-columns:repeat(2,minmax(0,1fr));
   }
   html[data-theme] .dn-refine-sheet .dn-refine-sort-chips > button {
-    width:100%; min-width:0; white-space:normal; padding:8px 4px;
-  }
-  html[data-theme] .dn-refine-sheet .dn-sort-choice-content > span {
-    min-width:0; overflow-wrap:anywhere; line-height:1.4;
+    padding-inline:4px;
   }
 }
 

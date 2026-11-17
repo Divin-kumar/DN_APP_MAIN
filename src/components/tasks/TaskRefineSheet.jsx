@@ -35,7 +35,6 @@ export default function TaskRefineSheet({ current, resetDefaults = TASK_VIEW_DEF
   });
   return <ModalDialog title="Refine Tasks" className="dn-refine-sheet dn-task-refine" onClose={onClose}
     footer={<RefineActions count={count} resultLabel="Tasks" onReset={resetDraft} onCancel={onClose} onApply={() => onApply(draft)} />}>
-    <p className="dn-refine-sheet-intro">Changes apply when you select Show results.</p>
     <div className="dn-refine-sheet-section">
       <h4>Sort by</h4>
       <SortChips label="Sort Tasks" field={draft.field} direction={draft.direction}
