@@ -41,7 +41,8 @@ for (const width of [320, 390, 1280]) {
     await page.getByRole('button', { name: 'Refine', exact: true }).click();
     const refine = page.getByRole('dialog', { name: 'Refine Tasks' });
     await expect(refine.getByRole('heading', { name: 'Group by' })).toHaveCount(0);
-    await expect(refine.locator('.dn-refine-sheet-intro')).toBeVisible();
+    await expect(refine.getByRole('heading', { name: 'Sort by', exact: true })).toBeVisible();
+    await expect(refine.getByRole('heading', { name: 'Filters', exact: true })).toBeVisible();
     await addStatusRule(page, refine, 'Completed');
     await expect(refine.getByRole('status')).toContainText('0 matching Tasks');
     await expect(page.getByText('Remember the travel documents', { exact: true })).toBeVisible();
