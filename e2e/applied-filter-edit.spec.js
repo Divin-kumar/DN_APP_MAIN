@@ -162,6 +162,9 @@ for (const width of [320, 390]) {
     const earlier = await rail.evaluate((el) => el.scrollLeft);
     await rail.press('ArrowLeft');
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeLessThan(earlier);
+    const previous = await rail.evaluate((el) => el.scrollLeft);
+    await rail.press('ArrowRight');
+    await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(previous);
     await less.click();
     await expect(chips).toHaveCount(2);
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBe(0);

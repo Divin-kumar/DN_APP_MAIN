@@ -355,7 +355,15 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
       onKeyDown={(event) => {
         if (event.target !== event.currentTarget || !['ArrowLeft', 'ArrowRight'].includes(event.key)) return;
         event.preventDefault();
-        railRef.current?.scrollBy({ left: event.key === 'ArrowRight' ? 88 : -88, behavior: 'instant' });
+        const rail = event.currentTarget;
+        const start = rail.getBoundingClientRect().left + rail.clientLeft;
+        const offsets = Array.from(rail.children, chip => chip.getBoundingClientRect().left - start);
+        const forward = event.key === 'ArrowRight';
+        // Target a chip's snap point so the browser cannot snap back to the current chip.
+        const offset = forward ? offsets.find(value => value > 1) : offsets.filter(value => value < -1).at(-1);
+        const boundary = forward ? rail.scrollWidth - rail.clientWidth : 0;
+        const left = offset === undefined ? boundary : rail.scrollLeft + offset;
+        rail.scrollTo({ left, behavior: 'instant' });
       }}>
       <AnimatePresence initial={false}>
         {visible.map((chip) => <AppliedCondition key={`${filter.editorKey}:${chip.id}`}

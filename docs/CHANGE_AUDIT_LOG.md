@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261117-566 | Move between applied filters with the keyboard
+
+- **Scope:** Left and Right move the focused applied-filter rail to the neighboring chip so scroll snapping cannot return it to the current position.
+- **Verification:** The first dev run passed Dashboard checks and 71 of 72 Refine checks. The failing 390px rail case reproduced locally. After the fix, both arrow directions passed three runs each at 320px and 390px, including the +N reveal, Less and page-position checks.
+- **Compatibility:** The Guest tour still describes the same applied filters and sample records.
+
 ## CHG-20261117-565 | Lighten Dashboard panels and align Refine controls
 
 - **Scope:** Give Dashboard panels and date views a lighter treatment in both themes. Align Refine sorting into columns and keep the match count above the equal-width Reset, Cancel and Show results buttons.
