@@ -50,6 +50,7 @@ html[data-theme] .dn-list-controls-footer > button {
 }
 html[data-theme] .dn-list-controls-footer .dn-refine-apply {
   color: var(--action-ink); background: var(--action-fill);
+  border-color: var(--action-border); font-weight: 650;
 }
 html[data-theme] .dn-list-controls-footer > button:hover {
   color: var(--color-text); background: var(--dn-form-field);

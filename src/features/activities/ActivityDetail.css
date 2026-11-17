@@ -481,3 +481,18 @@ html[data-theme] .activity-detail-page .activity-cover-back {
   background: var(--dn-panel-fill);
   box-shadow: var(--dn-panel-shadow);
 }
+
+html[data-theme] .activity-detail-page .activity-detail-facts {
+  gap:6px 10px;
+}
+html[data-theme] .activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
+  padding-inline-start:10px;
+  border-inline-start:1px solid var(--dn-panel-edge);
+  color:var(--color-text-muted);
+}
+html[data-theme] .activity-detail-page .activity-detail-due {
+  color:var(--color-text-muted); font-variant-numeric:tabular-nums;
+}
+html[data-theme] .activity-detail-page .dn-content-row-time {
+  color:var(--dn-accent-ink); font-variant-numeric:tabular-nums;
+}

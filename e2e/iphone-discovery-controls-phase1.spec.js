@@ -28,7 +28,7 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         b = filter.getBoundingClientRect();
       return {
         railBorder: getComputedStyle(rail).borderTopWidth,
-        railBackground: getComputedStyle(rail).backgroundColor,
+        railBackground: getComputedStyle(rail).backgroundImage,
         searchUnderline: getComputedStyle(search).borderBottomWidth,
         innerBorder: getComputedStyle(input).borderTopWidth,
         refineLabel:filter.querySelector('span:not(.dn-list-controls-badge)').textContent,
@@ -40,9 +40,9 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
         pageWidth:document.documentElement.scrollWidth,
       };
     });
-    expect(measures.railBorder).toBe('0px');
-    expect(measures.railBackground).toBe('rgba(0, 0, 0, 0)');
-    expect(measures.searchUnderline).toBe('1px');
+    expect(measures.railBorder).toBe('1px');
+    expect(measures.railBackground).toContain('gradient');
+    expect(measures.searchUnderline).toBe('0px');
     expect(measures.innerBorder).toBe('0px');
     expect(measures.refineLabel).toBe('Refine');
     expect(measures.iconVisible).toBe(true);

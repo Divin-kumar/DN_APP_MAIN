@@ -34,6 +34,18 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         documentWidth: document.documentElement.scrollWidth,
       };
     });
+    const toolbar = page.locator('.dn-transactions-page .dn-list-controls-topline');
+    const info = await toolbar.evaluate(node => {
+      return [...node.children].map(child => {
+        const box = child.getBoundingClientRect();
+        return { left: box.left, right: box.right, center: box.y + box.height / 2 };
+      });
+    });
+    expect(info).toHaveLength(3);
+    expect(info[0].right).toBeLessThan(info[1].left);
+    expect(info[1].right).toBeLessThan(info[2].left);
+    expect(Math.max(...info.map(item => item.center)) - Math.min(...info.map(item => item.center))).toBeLessThan(1);
+
     let geometry = await measure();
     expect(geometry.listHeight).toBeGreaterThan(30);
     expect(geometry.listBottom).toBeLessThanOrEqual(geometry.dockTop - 4);

@@ -215,7 +215,7 @@ export function TaskListContent() {
         </button>
       </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
-        <span aria-live="polite">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
+        <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
           maxVisible={showAllTaskFilters ? undefined : 2}
           onShowMore={() => setShowAllTaskFilters(true)}

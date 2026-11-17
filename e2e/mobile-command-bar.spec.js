@@ -108,8 +108,12 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    await expect(page.locator('.dn-command-controls .dn-list-controls-search input')).toBeVisible();
    const box=await page.locator('.dn-command-bar').evaluate(e=>{
     const st=getComputedStyle(e),search=e.querySelector('.dn-list-controls-search');
+    const row=search.closest('.dn-list-controls-row');
+    const refine=e.querySelector('.dn-list-controls-trigger');
     return {h:e.getBoundingClientRect().height,bg:st.backgroundColor,border:st.borderTopWidth,
-      searchH:search.getBoundingClientRect().height,glass:getComputedStyle(search).backgroundImage,
+      searchH:search.getBoundingClientRect().height,glass:getComputedStyle(row).backgroundImage,
+      searchBackground:getComputedStyle(search).backgroundImage,
+      between:refine.getBoundingClientRect().left-search.getBoundingClientRect().right,
       plus:e.querySelector('.dn-command-trigger').getBoundingClientRect().width,
       refine:e.querySelector('.dn-list-controls-trigger').getBoundingClientRect().height,
       centers:['.dn-list-controls-search','.dn-list-controls-trigger','.dn-command-trigger'].map(selector=>{
@@ -122,6 +126,8 @@ for (const width of [320,390,430]) for(const theme of ['light','dark']){
    expect(box.bg).toBe('rgba(0, 0, 0, 0)');
    expect(box.searchH).toBeGreaterThanOrEqual(49);
    expect(box.glass).toContain('gradient');
+   expect(box.searchBackground).toBe('none');
+   expect(Math.abs(box.between)).toBeLessThanOrEqual(1);
    expect(box.plus).toBeGreaterThanOrEqual(51);expect(box.plus).toBeLessThanOrEqual(53);
    expect(box.refine).toBeGreaterThanOrEqual(49);
    // All three controls must share a centerline; independent translation of
@@ -165,9 +171,10 @@ test('iPhone search focus keeps its page canvas and one glass focus halo',async(
  expect(Math.abs(after.top-before.top)).toBeLessThanOrEqual(1);
  const focus=await input.evaluate(el=>({
   outline:getComputedStyle(el).outlineStyle,
-  shadow:getComputedStyle(el.closest('.dn-list-controls-search')).boxShadow,
+  shadow:getComputedStyle(el.closest('.dn-list-controls-row')).boxShadow,
+  innerShadow:getComputedStyle(el.closest('.dn-list-controls-search')).boxShadow,
  }));
- expect(focus.outline).toBe('none');expect(focus.shadow).not.toBe('none');
+ expect(focus.outline).toBe('none');expect(focus.shadow).not.toBe('none');expect(focus.innerShadow).toBe('none');
  await input.blur();await expect(page.locator('html')).not.toHaveClass(/dn-command-search-focused/);
  expect(errors).toEqual([]);
 });

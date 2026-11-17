@@ -81,7 +81,12 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
           {showActivity ? <span className="dn-transaction-activity-label">{isIncome ? 'Income' : 'Expense'}{activityTitle ? ` · ${activityTitle}` : ''}</span> : null}
           {transaction.eventId || activityTitle || transaction.notes || transaction.description ? (
             <details className="dn-transaction-details" onClick={(event) => event.stopPropagation()}>
-              <summary><span>Details{eventTitle ? ` · ${eventTitle}` : ''}</span><ChevronDown size={12} aria-hidden="true" /></summary>
+              <summary>
+                <span className="dn-transaction-details-label">Details
+                  {eventTitle ? <small title={eventTitle}> · {eventTitle}</small> : null}
+                </span>
+                <ChevronDown size={13} aria-hidden="true" />
+              </summary>
               <div className="dn-transaction-details-content">
                 {transaction.eventId ? <small>Moment: {eventTitle}</small> : null}
                 {activityTitle ? <small>Activity: {activity && event ? <Link to={activityDetailPath(event.id || event.firestoreId, activity.id)}>{activityTitle}</Link> : activityTitle}</small> : null}

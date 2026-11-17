@@ -252,6 +252,39 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
   html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger {
     width:50px !important;min-width:50px !important;height:50px !important;min-height:50px !important;
   }
+
+  /* Search and Refine share one surface. The standalone + keeps its own hit target. */
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search):has(> .dn-list-controls-trigger) {
+    gap:0; border:1px solid var(--dn-form-line) !important; border-radius:18px;
+    background:var(--dn-form-glass);
+    box-shadow:0 5px 18px var(--dn-form-shadow), inset 0 1px var(--dn-form-highlight);
+    backdrop-filter:blur(18px) saturate(1.2);
+    -webkit-backdrop-filter:blur(18px) saturate(1.2);
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-trigger) > .dn-list-controls-search,
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger {
+    border:0 !important; background:transparent !important; box-shadow:none !important;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger {
+    margin:0; border-radius:0 17px 17px 0 !important;
+    position:relative;
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger::before {
+    position:absolute; content:''; inset:12px auto 12px 0;
+    width:1px; background:var(--dn-form-line);
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger:is(.is-active,[aria-expanded="true"]) {
+    background:color-mix(in srgb,var(--color-primary) 10%,transparent) !important;
+    color:var(--dn-accent-ink);
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search:focus-within):has(> .dn-list-controls-trigger) {
+    border-color:color-mix(in srgb,var(--color-primary) 55%,var(--color-border)) !important;
+    box-shadow:0 0 0 2px color-mix(in srgb,var(--color-primary) 19%,transparent);
+  }
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-badge {
+    top:3px; right:4px;
+  }
   html[data-theme] .dn-command-root .dn-command-trigger,
   html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)),
   html[data-theme] .dn-command-root .dn-command-trigger.is-dragging {
@@ -320,4 +353,10 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
  html[data-theme] .dn-modal-viewport .dn-command-dialog .dn-command-actions button{
   animation:none!important;transition:none!important;transform:none!important;
  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search):has(> .dn-list-controls-trigger) {
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
 }

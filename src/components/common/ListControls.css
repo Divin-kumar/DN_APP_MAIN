@@ -278,15 +278,18 @@ html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-
   outline:2px solid var(--color-primary); outline-offset:-3px;
 }
 html[data-theme] .dn-list-controls-topline {
-  min-height:15px; padding-inline:3px; gap:8px;
+  min-height:24px; padding:0 3px; gap:6px 10px;
   align-items:center; justify-content:space-between;
 }
 html[data-theme] .dn-list-controls-context,
 html[data-theme] .dn-list-controls-summary {
-  color:var(--color-text-muted); font-size:11px; font-weight:450;
-  line-height:1.4; letter-spacing:.01em;
+  color:var(--color-text-muted); font-size:11.5px;
+  line-height:1.4;
 }
-html[data-theme] .dn-list-controls-summary { opacity:.84; }
+html[data-theme] .dn-list-controls-context { color:var(--color-text); font-weight:650; }
+html[data-theme] .dn-list-controls-summary {
+  text-align:end; white-space:normal; overflow-wrap:anywhere;
+}
 html[data-theme] .dn-list-controls-panel {
   margin-top:5px; padding:11px 12px;
   border:1px solid color-mix(in srgb,var(--color-border) 72%,transparent);
@@ -516,11 +519,16 @@ html[data-theme] .dn-list-controls-panel:has(.dn-list-controls-builder) .dn-list
 }
 
 /* Filtered export uses the quiet result row, not the compact search rail. */
-html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) { gap: 5px 9px; flex-wrap: wrap; }
-html[data-theme] .dn-list-controls-topline .dn-list-controls-tail-action { margin-left: auto; flex: 0 0 auto; }
+html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) {
+  display:grid; grid-template-columns:auto minmax(0,1fr) auto;
+}
+html[data-theme] .dn-list-controls-topline .dn-list-controls-tail-action { justify-self:end; }
+html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) .dn-list-controls-summary {
+  min-width:0; text-align:start; overflow-wrap:normal;
+}
 html[data-theme] .dn-transactions-export {
   display: inline-flex; gap: 5px; align-items: center; justify-content: center;
-  min-height: 38px; padding: 0 9px; border: 0; border-radius: 9px;
+  min-height: 44px; padding: 0 7px; border: 0; border-radius: 10px;
   background: transparent; color: var(--color-primary); font: inherit;
   font-size: 12px; font-weight: 670; cursor: pointer;
 }
@@ -528,7 +536,8 @@ html[data-theme] .dn-transactions-export:hover { background: var(--action-fill);
 html[data-theme] .dn-transactions-export:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 html[data-theme] .dn-transactions-export:disabled { color: var(--color-text-muted); opacity: .55; cursor: not-allowed; }
 @media(max-width:360px) {
-  html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) .dn-list-controls-summary { order: 3; flex-basis: 100%; }
+  html[data-theme] .dn-list-controls-topline:has(.dn-list-controls-tail-action) { column-gap:6px; }
+  html[data-theme] .dn-transactions-export { padding-inline:3px; }
 }
 
 html[data-theme] .dn-empty-recovery-actions {

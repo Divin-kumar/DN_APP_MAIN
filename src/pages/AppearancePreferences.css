@@ -291,3 +291,17 @@ html[data-theme] .dn-appearance-default-fields {
   html[data-theme] .dn-settings-redesign .settings-navigation-hub .settings-hub-copy strong,
   html[data-theme] .dn-appearance-more > a strong {font-size:14px;line-height:1.4;}
 }
+
+@media (min-width: 1100px) and (min-height: 501px) {
+  html[data-theme] .dn-settings-redesign .settings-navigation-hub {
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:1px 14px;
+    padding-block:5px;
+  }
+  html[data-theme] .dn-settings-redesign .settings-navigation-hub > .settings-hub-card {
+    min-height:66px;
+  }
+  html[data-theme] .dn-settings-redesign .settings-navigation-hub > .settings-hub-card:nth-last-child(-n+2) {
+    border-bottom:0 !important;
+  }
+}

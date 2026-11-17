@@ -184,9 +184,10 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .code-lists-page) :is
     backdrop-filter: none;
   }
   > button:is(.primaryButton, .settings-primary-button) {
-    background: color-mix(in srgb, var(--color-primary) 10%, transparent) !important;
-    border-color: transparent !important;
+    background: color-mix(in srgb, var(--color-primary) 12%, transparent) !important;
+    border-color: color-mix(in srgb, var(--color-primary) 22%, transparent) !important;
     box-shadow: none !important;
+    font-weight: 650 !important;
   }
   > button:is(.primaryButton, .settings-primary-button):is(:hover, :focus-visible):not(:disabled) {
     background: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;

@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261118-574 | Make list controls and forms easier to scan
+
+- **Scope.** Join Search and Refine in one mobile surface with a shared focus ring. Put list counts and sort order above applied filters. Keep the Transactions count, sort and CSV action together, and give the Details label room beside long Moment names. Improve button emphasis in forms and Refine, align Activity Detail metadata, share a surface across Dashboard and empty states, and improve wide Settings navigation and the selected PDF thumbnail.
+- **Compatibility.** The existing Guest tour still covers the workflows. Single-tap on + opens the existing menu, a quick double-tap goes Back without opening that menu, and choosing a create action opens its form immediately.
+- **Executed.** Lint, build and 632 Node tests passed. Chromium checks covered 145 distinct cases, including Search and Refine at 320, 390 and 430 px in both themes. The interface was reviewed across 25 screens and states at phone and desktop widths in light and dark themes. Native iPhone Safari remains unverified.
+
 ## CHG-20261117-573 | Give DN a consistent visual treatment
 
 - **Scope.** Bring the app shell, Dashboard, Task and Finance summaries, record lists and settings into a shared surface style. Simplify sign-in, the Guest sample banner and About. Show all Code Lists and Backup shortcuts together on phones. Make the active Moment section clearer, improve Gallery and Story on desktop, and reduce visual bleed behind active sheets.

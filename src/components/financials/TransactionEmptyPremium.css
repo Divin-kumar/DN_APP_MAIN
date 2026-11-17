@@ -13,7 +13,7 @@ html[data-theme] .dn-transactions-page .dn-transactions-results .transactions-em
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--color-border) 83%, transparent);
   border-radius: 17px;
-  background: color-mix(in srgb, var(--color-card) 92%, var(--color-card-raised));
+  background: var(--dn-panel-fill);
   box-shadow: none;
   color: var(--color-text-muted);
   text-align: center;

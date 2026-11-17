@@ -109,12 +109,12 @@ export default function ListControls({
           </div> : null}
         </div>}
       </section> : null}
-      {displayChips}
       <div className="dn-list-controls-topline">
         {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}
         {trailingAction ? <span className="dn-list-controls-tail-action">{trailingAction}</span> : null}
       </div>
+      {displayChips}
     </div>
   );
 }

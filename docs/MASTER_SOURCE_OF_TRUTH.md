@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Clearer browsing and controls (18 November 2026, development)
+
+On phone lists with filters, Search and Refine share one glass surface and an internal divider. Search keeps its keyboard focus ring on the whole surface. The result count and sort order sit ahead of the applied filters. The Transactions toolbar fits the count, sort order and filtered CSV action together, with a separate, readable Details label on transaction rows.
+
+Form submission and Show results get stronger text and a soft outline. Activity Detail brings its entry count, date and entry times into the same rhythm. Dashboard panels and empty list states use the shared surface. Settings destinations form two columns on wide desktop screens, and the current PDF thumbnail has a highlighted page number. The current Guest tour already covers Search, Refine and quick create.
+
 ## Shared screen styling and easier access to controls (17 November 2026, development)
 
 The app shell uses a soft background tint in both themes. Dashboard cards, Task and Finance totals, record rows, settings and reporting panels share a lighter surface treatment. Sign-in shows its two entry paths and Guest storage notice with less copy. The demo banner leaves more room for Moments, and About puts build and update information first.

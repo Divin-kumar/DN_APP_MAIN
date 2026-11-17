@@ -142,3 +142,16 @@ html[data-theme] .dn-transactions-page .dn-transaction-card.dn-v2-transaction-ca
     font-size:13px;line-height:1.5;
   }
 }
+
+html[data-theme] .dn-transaction-details > summary > .dn-transaction-details-label {
+  display:flex; align-items:baseline; gap:4px; min-width:0;
+  color:var(--dn-accent-ink); font-weight:620;
+}
+html[data-theme] .dn-transaction-details-label > small {
+  min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  color:var(--color-text-muted); font:inherit; font-weight:450;
+}
+html[data-theme] .dn-transaction-details[open] .dn-transaction-details-content {
+  padding-block-start:7px;
+  border-top:1px solid var(--dn-panel-edge);
+}
