@@ -14,6 +14,7 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     await expect(download).toBeEnabled({ timeout: 30000 });
     await expect(header).toContainText('Journal');
     await expect(rail.getByText('Preview is up to date')).toBeVisible();
+    await expect(rail).toHaveCSS('position', 'static');
     await expect(studio.getByRole('button', { name: 'Update preview' })).toHaveCount(0);
     const saved = await page.evaluate(() => [
       localStorage.getItem('dn_guest_eventGroups'),
@@ -27,6 +28,7 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     await expect(studio.getByRole('combobox', { name: 'PDF story format' })).toContainText('Diary');
     await expect(download).toBeDisabled();
     await expect(rail.getByText('Preview needs updating')).toBeVisible();
+    await expect(rail).toHaveCSS('position', 'sticky');
     await expect(header).toContainText('Journal');
     await expect(header).not.toContainText('Diary');
     const update = rail.getByRole('button', { name: 'Update preview' });

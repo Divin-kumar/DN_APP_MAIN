@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-579 | Give Moment Story and PDF Studio more room
+
+- **Scope.** Align the Moment workspace beside desktop navigation. Give Story and PDF Studio the available width on phones, shorten the Journal and Diary headings area, and tighten the Journal introduction. Give the desktop PDF preview and settings more room, contain the design samples within their tiles, and add Design and Preview shortcuts when the panels stack.
+- **Compatibility.** The shortcuts move focus below the pinned tabs and preserve pending PDF settings. Update preview still regenerates the export. The Guest tour uses the same sample records and its existing PDF instructions still apply.
+- **Executed.** Build, lint and 632 Node tests passed. The final 24 Chromium acceptance checks passed, including both shortcut directions and Story photo preview. Earlier checks covered Gallery, PDF page navigation, content selection and responsive Moment routes. Two Story contrast journeys with intermittent route errors passed in an isolated rerun. The built app passed WebKit checks at 320, 430, 1280 and 1920 px. Physical iPhone Safari remains unverified.
+
 ## CHG-20261119-578 | Use more of the desktop workspace and phone screen
 
 - **Scope.** Align the desktop browsing pages beside navigation and widen the available workspace. Place Tasks across the row above Moments and Activities on medium desktop panes, and use three columns with taller Moments and Activities previews on wide panes. Reclaim side space on phones, keep dates and times ahead of clipped context, compact empty Dashboard sections and give the final row clearance above the floating create button.

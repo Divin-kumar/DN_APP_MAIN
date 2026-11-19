@@ -59,8 +59,12 @@ for (const { width, theme } of [
       expect(await introAction.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
       expect(await summary.evaluate((node) => getComputedStyle(node).borderTopWidth)).toBe('0px');
       const caption = story.locator('.dn-v2-story-header p');
-      await expect(caption).toBeVisible();
-      expect(await caption.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
+      if (variant.presentation === 'chronicle') {
+        await expect(caption).toBeVisible();
+        expect(await caption.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);
+      } else {
+        await expect(caption).toHaveCount(0);
+      }
       const continuation = story.locator('.dn-story-writing-heading').first();
       await expect(continuation).toBeVisible();
       expect(await continuation.evaluate((node) => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(12.95);

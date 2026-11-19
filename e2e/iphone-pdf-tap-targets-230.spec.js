@@ -62,6 +62,22 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     await close.tap();
     await expect(viewer).not.toBeVisible();
 
+    if (width <= 430) {
+      const design = studio.getByRole('region', { name: 'PDF customization' });
+      const preview = studio.getByRole('region', { name: 'PDF page preview' });
+      const jump = studio.getByRole('button', { name: 'Go to PDF design' });
+      expect((await jump.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      await jump.tap();
+      await expect(design).toBeFocused();
+      const back = design.getByRole('button', { name: 'Back to PDF preview' });
+      await expect(back).toBeInViewport({ ratio: 1 });
+      const tabs = await page.locator('.dn-moment-nav').boundingBox();
+      expect((await back.boundingBox()).y).toBeGreaterThanOrEqual(tabs.y + tabs.height - 1);
+      await back.tap();
+      await expect(preview).toBeFocused();
+      await expect(jump).toBeInViewport();
+    }
+
     await studio.getByRole('button', { name: 'PDF design Minimal' }).tap();
     const restore = studio.getByRole('button', { name: 'Use saved default' });
     await expect(restore).toBeVisible();

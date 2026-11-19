@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Moment workspace and PDF Studio spacing (19 November 2026, development)
+
+The Moment workspace aligns with the desktop browsing pages and uses up to 1,280 px beside navigation. Phone Story and PDF Studio use the full width between the workspace gutters. The Journal introduction and the Journal and Diary headings use less vertical space above the saved content.
+
+Side-by-side PDF Studio has a larger preview and more room for the three book design samples. Stacked layouts offer Design and Preview shortcuts that move focus to the selected section, with clearance below the Moment tabs. Preview changes still require Update preview before downloading.
+
 ## Responsive workspace spacing (19 November 2026, development)
 
 Desktop Dashboard, Moments, Activities, Tasks, Transactions, Insights and the Settings home align along the workspace edge beside the sidebar. The main browsing pages can use up to 1,520 px. Dashboard adapts to the width available after navigation. At medium workspace widths, Tasks spans the row above Moments and Activities. Wide workspaces display three equal columns. Expanded Moments and Activities can show up to five standard rows in wide columns and three in compact layouts before scrolling. The Tasks preview keeps its four-row limit.

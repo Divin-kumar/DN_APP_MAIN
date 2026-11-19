@@ -3,6 +3,18 @@
 html[data-theme] .event-workspace-shell.dn-moment-workspace {
   gap:12px !important;
 }
+@media (min-width:1024px) and (min-height:501px) {
+  html[data-theme] .dn-route-transition > .event-workspace-shell.dn-moment-workspace {
+    width:100%;
+    max-width:1280px;
+    margin-inline:0 auto;
+  }
+}
+@media (max-width:430px) {
+  html[data-theme] .dn-moment-workspace .dn-moment-panel:is(.event-section-story,.event-section-pdf) {
+    padding-inline:0 !important;
+  }
+}
 html[data-theme] .event-workspace-nav.dn-moment-nav {
   display:flex !important; flex-wrap:nowrap !important; align-items:stretch;
   position:sticky; top:var(--space-xs); z-index:8;

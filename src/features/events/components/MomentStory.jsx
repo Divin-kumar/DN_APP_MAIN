@@ -13,14 +13,12 @@ import './MomentStoryDesign.css';
 const editions = {
   [STORY_PRESENTATIONS.JOURNEY]: {
     label: 'Journal', icon: BookHeart, heading: 'A book of beautiful memories',
-    description: 'Photographs, places and the little details worth keeping.',
     intro: 'The opening page', recorded: 'Pages from our story',
     upcoming: 'Memories in the making',
     empty: 'The first page is waiting for a memory',
   },
   [STORY_PRESENTATIONS.DIARY]: {
     label: 'Diary', icon: NotebookPen, heading: 'My monthly diary',
-    description: 'A quiet place for the words behind each day.',
     intro: 'A note to begin', recorded: 'This month, day by day',
     upcoming: 'Notes for later',
     empty: 'The first diary entry is waiting',
@@ -217,15 +215,17 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
   const isJournal = story.presentation === STORY_PRESENTATIONS.JOURNEY;
   const recorded = story.timeline.reduce((sum, month) => sum + month.days.reduce((count, day) => count + day.entries.length, 0), 0);
   const total = recorded + story.upcoming.length + story.undated.length;
+  const recordCount = isTask ? total : recorded;
+  const recordLabel = isTask ? (recordCount === 1 ? 'task' : 'tasks') : (recordCount === 1 ? 'activity' : 'activities');
   const entries = (items, key) => items.map((entry, i) => <Chapter key={entry.id || key + '-' + i} entry={entry}
     momentId={story.momentId} uid={uid} isGuest={isGuest} presentation={story.presentation} />);
   return <div className="dn-v2-story" data-presentation={story.presentation}
     data-design-style={designs[story.presentation] || 'editorial'}>
     <header className="dn-v2-story-header">
       <div><span className="dn-v2-story-kicker"><EditionIcon size={16} /> {edition.label}</span>
-        <h3>{edition.heading}</h3><p>{edition.description}</p></div>
+        <h3>{edition.heading}</h3>{edition.description ? <p>{edition.description}</p> : null}</div>
       <div className="dn-v2-story-stats">
-        <span><strong>{isTask ? total : recorded}</strong> {isTask ? 'tasks' : 'activities'}</span>
+        <span><strong>{recordCount}</strong> {recordLabel}</span>
         {!isTask && story.upcoming.length ? <span><strong>{story.upcoming.length}</strong> upcoming</span> : null}
       </div>
     </header>
@@ -248,8 +248,7 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
         completionBlocked={Boolean(moment?.archived || ['archived', 'cancelled'].includes(moment?.status))} />
     </section> : <>
       {story.timeline.length ? <section className="dn-v2-story-recorded" aria-label="Recorded chapters">
-        <div className="dn-v2-story-section-head"><h3>{edition.recorded}</h3>
-          <small>{isJournal ? 'A memory book, not a checklist' : 'One Moment for this month'}</small></div>
+        <div className="dn-v2-story-section-head"><h3>{edition.recorded}</h3></div>
         {isJournal ? <RecordedJournal story={story} entries={entries} /> : <RecordedDiary story={story} entries={entries} />}
       </section> : !total ? <div className="dn-v2-story-empty"><BookOpenText size={23}/>
         <strong>{edition.empty}</strong><Link to={'/events/' + encodeURIComponent(story.momentId) + '/activities'}>

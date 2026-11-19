@@ -67,6 +67,14 @@ export default function MomentPdfStudio({ event }) {
   const thumbnailRef = useRef(null);
   const pageViewportRef = useRef(null);
   const fullscreenViewportRef = useRef(null);
+  const previewSectionRef = useRef(null);
+  const designSectionRef = useRef(null);
+
+  const jumpToSection = (section) => {
+    if (!section) return;
+    section.focus({ preventScroll: true });
+    section.scrollIntoView({ block: 'start' });
+  };
 
   const renderPreview = useCallback(async (next) => {
     const id = ++requestRef.current;
@@ -259,9 +267,10 @@ export default function MomentPdfStudio({ event }) {
     </span>
   </nav>;
 
+  const previewNeedsUpdate = dirty || busy;
   return <section className="dn-pdf-studio-page" aria-label="PDF Studio">
     <div className="dn-pdf-studio">
-      <section className="dn-pdf-studio-preview" aria-label="PDF page preview">
+      <section ref={previewSectionRef} tabIndex={-1} className="dn-pdf-studio-preview" aria-label="PDF page preview">
         <div className="dn-pdf-studio-preview-head">
           <div><strong>Your memory book</strong>
             <small>{PDF_STYLE_NAMES[preview?.options.visualStyle || settings.visualStyle]}
@@ -272,8 +281,12 @@ export default function MomentPdfStudio({ event }) {
                   item.value === preview?.options.pageQuality)?.label || '') : ''}
               {preview?.options.searchableText ? ' · Searchable text' : ''}</small>
           </div>
-          {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length}
-            {preview.pageUrls.length === 1 ? ' page' : ' pages'}</span> : null}
+          <div className="dn-pdf-preview-summary">
+            {preview ? <span className="dn-pdf-page-count">{preview.pageUrls.length}
+              {preview.pageUrls.length === 1 ? ' page' : ' pages'}</span> : null}
+            <button type="button" className="dn-pdf-section-jump" aria-label="Go to PDF design"
+              onClick={() => jumpToSection(designSectionRef.current)}>Design</button>
+          </div>
         </div>
         {error ? <p className="dn-pdf-studio-error" role="alert">{error}</p> : null}
         {dirty && preview ? <p className="dn-pdf-studio-stale" role="status">Settings changed. Update the preview to download.</p> : null}
@@ -332,14 +345,15 @@ export default function MomentPdfStudio({ event }) {
         </div>
       </section>
 
-      <section className="dn-pdf-studio-controls" aria-label="PDF customization">
+      <section ref={designSectionRef} tabIndex={-1} className="dn-pdf-studio-controls" aria-label="PDF customization">
         <div className="dn-pdf-studio-intro">
           <SlidersHorizontal size={19} aria-hidden="true" />
-          <div><strong>Design your PDF</strong>
-            <p>Customize the book. Preview before downloading.</p></div>
+          <strong>Design your PDF</strong>
+          <button type="button" className="dn-pdf-section-jump" aria-label="Back to PDF preview"
+            onClick={() => jumpToSection(previewSectionRef.current)}>Preview</button>
         </div>
-        <div className="dn-pdf-update-rail" aria-label="PDF preview update status">
-          {dirty || busy ? <>
+        <div className={`dn-pdf-update-rail${previewNeedsUpdate ? '' : ' is-current'}`} aria-label="PDF preview update status">
+          {previewNeedsUpdate ? <>
             <small role="status">{busy ? 'Rendering your pages…' : 'Preview needs updating'}</small>
             <button type="button" className="secondaryButton dn-pdf-update-button"
               onClick={() => renderPreview(settings)} disabled={busy}>

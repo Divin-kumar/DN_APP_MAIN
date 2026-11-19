@@ -116,11 +116,21 @@ for (const theme of ['light','dark']) test(`desktop PDF scroll and transaction h
   expect(Math.abs(amount.y-title.y)).toBeLessThan(30);
   await card.locator('summary').click();
   await expect(card.locator('details')).toHaveAttribute('open','');
+  await page.setViewportSize({width:1920,height:1080});
   await page.goto('/events/moment-one/pdf');
   await expect(page.getByRole('button',{name:'Download customized PDF'})).toBeEnabled({timeout:30000});
+  const workspace = await page.locator('.dn-moment-workspace').boundingBox();
+  expect(workspace.x).toBeLessThan(320);
+  expect(workspace.width).toBeGreaterThan(1120);
+  await expect(page.getByRole('button', { name: 'Go to PDF design' })).toBeHidden();
   const preview=await page.locator('.dn-pdf-studio-preview').boundingBox();
   const controls=page.locator('.dn-pdf-studio-controls');
   const panel=await controls.boundingBox();
+  expect(await controls.locator('.dn-pdf-style-swatch').evaluateAll(swatches => swatches.every(swatch => {
+    const tile = swatch.parentElement.getBoundingClientRect();
+    const sample = swatch.getBoundingClientRect();
+    return sample.left >= tile.left && sample.right <= tile.right;
+  }))).toBe(true);
   expect(Math.abs(preview.y-panel.y)).toBeLessThan(1);
   expect(Math.abs(preview.height-panel.height)).toBeLessThan(1);
   expect(await controls.evaluate(e=>e.scrollHeight>e.clientHeight)).toBe(true);
