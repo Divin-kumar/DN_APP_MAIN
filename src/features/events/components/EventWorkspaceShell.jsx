@@ -5,7 +5,7 @@ import { createStandaloneActivity, getMomentEntryMode } from '../../../utils/act
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, CalendarDays, Download, FileText, Images, ListChecks, Pencil, Receipt, Save, Search, Sparkles, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
@@ -42,7 +42,6 @@ import useMomentFinance from '../../../hooks/useMomentFinance';
 import LinkedTransactions from '../../finance/components/LinkedTransactions';
 import MomentContents from './MomentContents';
 import MomentStory from './MomentStory';
-import MomentPdfStudio from '../../../components/events/MomentPdfStudio';
 import { formatMomentDate, getNextBirthdayAge, getNextOccurrenceDate } from '../../../utils/momentDates';
 import LoadingSkeleton from '../../../components/common/LoadingSkeleton';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -58,6 +57,7 @@ const ACTIVITY_LIST_OPTIONS = Object.freeze({
 });
 
 const formatDate = activityDateLabel;
+const MomentPdfStudio = lazy(() => import('../../../components/events/MomentPdfStudio'));
 
 export default function EventWorkspaceShell() {
   const { eventId } = useParams();
@@ -499,7 +499,9 @@ export function EventWorkspaceContent() {
       );
     }
 
-    return <MomentPdfStudio key={eventId} event={event} />;
+    return <Suspense fallback={<LoadingSkeleton rows={3} label="Loading PDF Studio" />}>
+      <MomentPdfStudio key={eventId} event={event} />
+    </Suspense>;
   };
 
   return (

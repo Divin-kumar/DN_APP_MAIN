@@ -15,10 +15,13 @@ import { mergeFinancialExpenses } from '../utils/financialRecords.js';
 export default function useTransactionManager() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  const incomeActions = useIncomeStore();
-  const expenseActions = useExpenseStore();
-  const { addIncome, updateIncomeItem, deleteIncomeItem } = incomeActions;
-  const { addExpense, updateExpenseItem, deleteExpenseItem, patchLoadedExpenses } = expenseActions;
+  const addIncome = useIncomeStore((state) => state.addIncome);
+  const updateIncomeItem = useIncomeStore((state) => state.updateIncomeItem);
+  const deleteIncomeItem = useIncomeStore((state) => state.deleteIncomeItem);
+  const addExpense = useExpenseStore((state) => state.addExpense);
+  const updateExpenseItem = useExpenseStore((state) => state.updateExpenseItem);
+  const deleteExpenseItem = useExpenseStore((state) => state.deleteExpenseItem);
+  const patchLoadedExpenses = useExpenseStore((state) => state.patchLoadedExpenses);
   const uid = user?.uid;
 
   const assertContext = useCallback((context) => {

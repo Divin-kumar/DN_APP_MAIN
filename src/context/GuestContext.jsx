@@ -8,7 +8,6 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 */
 import { createContext, useContext, useEffect } from 'react';
 import useAppStore from '../store/useAppStore';
-import useEventStore from '../store/useEventStore';
 import { activateSampleScenario, canOfferGuestTour, clearActiveSampleScenario, getActiveSampleScenario, hydrateGuestTourPhotos, GUEST_TOUR_SCENARIO } from '../dev/sampleData';
 
 const GuestContext = createContext(null);
@@ -24,8 +23,10 @@ export function GuestProvider({ children }) {
   useEffect(() => {
     if (!isGuest || getActiveSampleScenario() !== GUEST_TOUR_SCENARIO) return;
     let live = true;
-    hydrateGuestTourPhotos().then((data) => {
+    hydrateGuestTourPhotos().then(async (data) => {
       if (live && data && getActiveSampleScenario() === GUEST_TOUR_SCENARIO) {
+        const { default: useEventStore } = await import('../store/useEventStore');
+        if (!live || getActiveSampleScenario() !== GUEST_TOUR_SCENARIO || !useAppStore.getState().isGuest) return;
         // The scoped loader owns loadedFor/activeSample markers. Refresh only
         // the data projection when that exact Guest tour scope is still active.
         useEventStore.setState((state) => state.loadedFor === 'guest:anonymous'

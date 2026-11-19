@@ -15,7 +15,7 @@ import { BrowserRouter } from 'react-router-dom';
 import App from './App';
 import useAppStore from './store/useAppStore';
 import { readServiceWorkerVersion, shouldPromptForServiceWorkerUpdate } from './utils/serviceWorkerUpdate';
-import { initializeFirebaseAnalytics } from './firebase/config';
+import { initializeFirebaseAnalytics } from './firebase/session';
 import './index.css';
 import './design-system.css';
 import './PremiumUX2026.css';

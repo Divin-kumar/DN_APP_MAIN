@@ -9,7 +9,6 @@
 */
 import { createContext, useContext, useEffect } from 'react';
 import { authService } from '../services/firebase';
-import { mergeGuestDataIntoAccount } from '../services/guestMergeService';
 import useAppStore from '../store/useAppStore';
 
 const AuthContext = createContext(null);
@@ -43,6 +42,8 @@ export function AuthProvider({ children }) {
           let retainedGuestTasks = 0;
           let retainedExpensePlans = false;
           try {
+            const { mergeGuestDataIntoAccount } = await import('../services/guestMergeService');
+            if (revision !== authChangeRevision) return;
             const merge = await mergeGuestDataIntoAccount(user.uid);
             retainedGuestTasks = merge.tasksRetainedLocally || 0;
             retainedExpensePlans = merge.expensePlansRetainedLocally;

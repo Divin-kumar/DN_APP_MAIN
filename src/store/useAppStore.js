@@ -11,7 +11,6 @@ import { migrateLegacyStorage } from '../utils/storageMigration';
 */
 import { create } from 'zustand';
 import { DEFAULT_CODE_LISTS, LEGACY_CODE_LISTS_STORAGE_KEY, LEGACY_CODE_LISTS_VERSION_KEY, resetCodeListsPreservingReferences, serializeCodeListEntries, readGuestCodeListSettings, writeGuestCodeListSettings } from '../utils/codeLists';
-import { loadCodeListsForUser, saveCodeListsForUser } from '../services/codeListService';
 
 // Default app preferences such as theme, currency, and notification settings.
 const defaultPreferences = {
@@ -94,6 +93,8 @@ const useAppStore = create((set, get) => ({
     });
 
     try {
+      const { loadCodeListsForUser } = await import('../services/codeListService');
+      if (revision !== adminLoadRevision) return;
       const adminValues = await loadCodeListsForUser(uid);
       if (revision === adminLoadRevision) {
         persistedAdminValues = adminValues;
@@ -144,7 +145,10 @@ const useAppStore = create((set, get) => ({
     }
 
     set({ adminValues: merged, adminValuesError: null });
-    const write = adminWriteQueue.catch(() => undefined).then(() => saveCodeListsForUser(owner, merged));
+    const write = adminWriteQueue.catch(() => undefined).then(async () => {
+      const { saveCodeListsForUser } = await import('../services/codeListService');
+      return saveCodeListsForUser(owner, merged);
+    });
     adminWriteQueue = write;
 
     return write.then((saved) => {

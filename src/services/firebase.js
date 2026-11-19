@@ -4,7 +4,7 @@
   This file is a simple wrapper around Firebase so the app can sign in with Google,
   sign out, and listen for auth state changes without writing Firebase code everywhere.
 */
-import { auth, db, googleProvider } from '../firebase/config';
+import { auth, googleProvider } from '../firebase/session';
 import {
   signInWithPopup,
   signOut,
@@ -16,5 +16,3 @@ export const authService = {
   signOutUser: () => signOut(auth),
   onAuthChange: (callback) => onAuthStateChanged(auth, callback),
 };
-
-export const firebaseDb = db;

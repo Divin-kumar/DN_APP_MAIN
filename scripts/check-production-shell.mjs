@@ -31,6 +31,13 @@ try {
   await expect(page.locator('h1')).toHaveCount(1);
   await expect(page.locator('.dn-moment-hero-swipe h1')).toContainText('Weekend in Ooty');
   await page.waitForFunction(() => navigator.serviceWorker.controller);
+  const studioAsset = /\/assets\/MomentPdfStudio-[^/]+\.(js|css)$/;
+  const openedStudioAssets = [];
+  page.on('request', (request) => {
+    if (studioAsset.test(new URL(request.url()).pathname)) openedStudioAssets.push(request.url());
+  });
+  const initialResources = await page.evaluate(() => performance.getEntriesByType('resource').map(({ name }) => name));
+  expect(initialResources.some((url) => studioAsset.test(new URL(url).pathname))).toBe(false);
   const manifest = await page.evaluate(async () => (await fetch('/manifest.webmanifest')).json());
   await page.getByRole('button', { name:'Open quick create menu', exact:true }).click();
   const chooser = page.waitForEvent('filechooser');
@@ -41,8 +48,12 @@ try {
   await expect(page.getByRole('dialog')).toHaveCount(0);
   const before = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k => localStorage.getItem(k)));
   for (const route of ['/dashboard','/activities','/events/moment-one/story','/events/moment-one/activities/shared','/events/moment-one/transactions','/financials/transactions','/insights','/settings/code-lists','/settings/about','/events/moment-one/pdf']) {
+    if (route.endsWith('/pdf')) expect(openedStudioAssets).toHaveLength(0);
     await page.goto(route); await expect(page.locator('h1:visible,h2:visible').first()).toBeVisible();
-    if (route.endsWith('/pdf')) await expect(page.getByRole('button', { name:'Download customized PDF' })).toBeEnabled({ timeout:20000 });
+    if (route.endsWith('/pdf')) {
+      await expect(page.getByRole('button', { name:'Download customized PDF' })).toBeEnabled({ timeout:20000 });
+      expect(openedStudioAssets.length).toBeGreaterThan(0);
+    }
   }
   await context.setOffline(true);
   await page.goto('/events/moment-one/story');
@@ -63,9 +74,13 @@ try {
   const pdf = await readFile(await (await pdfDownload).path());
   expect(pdf.subarray(0,8).toString()).toBe('%PDF-1.4');
   await page.screenshot({ path:resolve(output, 'offline-pdf-390.png') });
+  await page.goto('/dashboard');
+  await page.getByRole('button', { name:'Open quick create menu', exact:true }).click();
+  await page.getByRole('button', { name:'Life moment', exact:true }).click();
+  await expect(page.getByRole('dialog', { name:'Create a life moment' }).getByRole('button', { name:'Save moment' })).toBeVisible();
   const after = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k => localStorage.getItem(k)));
   expect(after).toEqual(before); expect(errors).toEqual([]);
-  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, recordsUnchanged:true, pageErrors:errors };
+  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
   await writeFile(resolve(output, 'results.json'), JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }

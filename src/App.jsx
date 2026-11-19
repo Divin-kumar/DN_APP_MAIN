@@ -14,12 +14,16 @@ import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';
 import ProtectedRoute from './routes/ProtectedRoute';
-import DashboardLayout from './layouts/DashboardLayout';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import useAppStore from './store/useAppStore';
 
 const LoginPage = lazy(() => import('./pages/LoginPage'));
-const DashboardHome = lazy(() => import('./pages/DashboardHome'));
+const loadDashboardHome = () => import('./pages/DashboardHome');
+const DashboardHome = lazy(loadDashboardHome);
+const DashboardLayout = lazy(() => {
+  if (['/', '/dashboard'].includes(window.location.pathname)) void loadDashboardHome().catch(() => {});
+  return import('./layouts/DashboardLayout');
+});
 const Events = lazy(() => import('./pages/Events'));
 const Activities = lazy(() => import('./pages/Activities'));
 const IndependentTasks = lazy(() => import('./pages/IndependentTasks'));
@@ -151,7 +155,7 @@ export default function App() {
             path="/"
             element={
               <ProtectedRoute>
-                <DashboardLayout />
+                {loadScreen(<DashboardLayout />, 'workspace')}
               </ProtectedRoute>
             }
           >

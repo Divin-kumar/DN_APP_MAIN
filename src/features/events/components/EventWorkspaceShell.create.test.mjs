@@ -114,7 +114,7 @@ const openWorkspace = async (t) => {
       },
       load(id) {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
-        if (id === '\0workspace-create-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useEffect=${fixture}.effect; export const useLayoutEffect=()=>{},useMemo=(fn)=>fn(),useCallback=(fn)=>fn();`;
+        if (id === '\0workspace-create-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useEffect=${fixture}.effect; export const useLayoutEffect=()=>{},useMemo=(fn)=>fn(),useCallback=(fn)=>fn(),lazy=(load)=>({load}),Suspense="Suspense";`;
         if (id === '\0workspace-create-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
         if (id === '\0workspace-create-router') return `export const Link="Link",useLocation=()=>${fixture}.location,useNavigate=()=>${fixture}.navigate,useParams=()=>${fixture}.params;`;
         if (id === '\0workspace-create-icons') return 'export const Archive="icon",ArchiveRestore="icon",ArrowLeft="icon",BookHeart="icon",CalendarDays="icon",Check="icon",CircleCheck="icon",Clock3="icon",Download="icon",FileText="icon",Heart="icon",Images="icon",ListChecks="icon",Pencil="icon",Plus="icon",Receipt="icon",Save="icon",Search="icon",Sparkles="icon",Trash2="icon",Upload="icon",X="icon";';

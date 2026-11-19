@@ -17,14 +17,16 @@ const pwaShellPlugin = () => ({
       if (entryFiles.has(fileName)) return;
       entryFiles.add(fileName);
       const output = bundle[fileName];
-      if (output?.type === 'chunk') output.imports.forEach(addEntryAndImports);
+      if (output?.type === 'chunk') {
+        output.imports.forEach(addEntryAndImports);
+        output.viteMetadata?.importedCss.forEach((css) => entryFiles.add(css));
+      }
     };
     Object.values(bundle)
-      .filter((output) => output.type === 'chunk' && output.isEntry)
+      .filter((output) => output.type === 'chunk' && (
+        output.isEntry || output.facadeModuleId?.endsWith('/src/layouts/DashboardLayout.jsx')
+      ))
       .forEach((output) => addEntryAndImports(output.fileName));
-    Object.keys(bundle)
-      .filter((fileName) => fileName.startsWith('assets/') && fileName.endsWith('.css'))
-      .forEach((fileName) => entryFiles.add(fileName));
     const entryAssets = [...entryFiles].map((fileName) => `/${fileName}`);
     const precacheUrls = [...new Set(['/', '/index.html', '/manifest.webmanifest', '/dn-icon.svg', ...entryAssets])];
     const workerSource = `

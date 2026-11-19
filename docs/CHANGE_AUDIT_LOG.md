@@ -1,5 +1,12 @@
 # DN — Change Log
 
+## CHG-20261119-581 | Reduce sign-in and offline startup downloads
+
+- **Scope.** Load the protected workspace, Firestore, Guest tour photo updates and account services when their paths need them. Start the Dashboard home module alongside the workspace on direct entry. Load PDF Studio separately from the rest of a Moment. Subscribe the shell and transaction coordinator to the Task and Finance store values they use.
+- **Compatibility.** Keep global create forms in the workspace bundle for immediate keyboard focus and offline use. Story and PDF Studio use the existing records and export controls, so the public Guest tour needs no sample or version change. Open PDF Studio online after an update to cache its assets for offline export.
+- **Executed.** Compared with `a3eaf6b`, a fresh Chromium session at 430 px requested about 118 kB of gzip-equivalent JavaScript on sign-in, down from 346 kB, with offline installation excluded. The initial offline JS and CSS cache fell from 478 kB to 438 kB. The cold Dashboard route rose from 456 kB to 473 kB of JavaScript and CSS. Build, lint and all 632 Node tests passed. The production build test verified that Story and Gallery skip the PDF Studio assets, then confirmed an offline Story, the exact original attachment, a customized offline PDF and Quick Create without changing Guest records. WebKit verified Dashboard, Quick Create, Story and PDF Studio at 320, 430 and 1440 px. Physical iPhone Safari and live Google account sign-in remain unverified.
+- **Executed.** Chromium covered 87 responsive and interaction cases, including keyboard focus and single-tap, double-tap and drag behavior for the mobile + control. The 430 px light-mode Story target assertion passed on retry after a subpixel difference in the first measurement. Documentation inventory and historical preservation checks passed.
+
 ## CHG-20261119-580 | Clean up Refine, applied filters and entry forms
 
 - **Scope.** Move the sort direction and Reverse order beside the Sort by heading, remove repeated copy from Task Refine, and keep the first applied filter and +N control fully reachable on narrow screens. Tighten the phone form spacing, balance paired form actions, and narrow the desktop Transaction editor.

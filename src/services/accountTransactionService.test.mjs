@@ -98,7 +98,7 @@ test('account financial readers include unified transactions, retain source rout
         if (id === '\0financial-hook-event') return `const useStore = () => globalThis[${JSON.stringify(fixtureKey)}].hook.eventState; useStore.getState = useStore; export default useStore;`;
         if (['\0financial-hook-income', '\0financial-hook-expense'].includes(id)) {
           const store = id.endsWith('income') ? 'incomeStore' : 'expenseStore';
-          return `const useStore = () => globalThis[${JSON.stringify(fixtureKey)}].hook.${store}.getState(); useStore.getState = useStore; export default useStore;`;
+          return `const getState = () => globalThis[${JSON.stringify(fixtureKey)}].hook.${store}.getState(); const useStore = (select) => select(getState()); useStore.getState = getState; export default useStore;`;
         }
         return null;
       },

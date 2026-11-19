@@ -65,7 +65,9 @@ export default function DashboardLayout() {
   const setPreferences = useAppStore((state) => state.setPreferences);
   const showToast = useAppStore((state) => state.showToast);
   const eventState = useEventStore();
-  const taskStore = useTaskStore();
+  const loadTasks = useTaskStore((state) => state.loadTasks);
+  const tasksLoaded = useTaskStore((state) => state.loadedFor);
+  const taskLoadError = useTaskStore((state) => state.error);
   const { events, loadedFor, activeLoadKey, loading: eventsLoading, error: eventsError, loadEvents, addEvent } = eventState;
   const { saveTransaction } = useTransactionManager();
   const { exitGuestMode } = useGuest();
@@ -344,7 +346,7 @@ export default function DashboardLayout() {
       quickTaskScopeRef.current = taskScopeKey(useAppStore.getState());
       setQuickCreateError('');
       setQuickTaskBusy(false);
-      taskStore.loadTasks();
+      loadTasks();
       setQuickCreateOpen(false);
       // Universal Task creation stays on the invoking screen until View is selected.
       setQuickCreateType('task');
@@ -688,8 +690,8 @@ export default function DashboardLayout() {
           formFooter closeDisabled={quickTaskBusy}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
-            busy={quickTaskBusy || taskStore.loadedFor !== quickTaskScope}
-            error={quickCreateError || taskStore.error || ''}
+            busy={quickTaskBusy || tasksLoaded !== quickTaskScope}
+            error={quickCreateError || taskLoadError || ''}
             onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }} />
         </ModalDialog>
       ) : null}
