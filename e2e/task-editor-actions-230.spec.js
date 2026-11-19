@@ -92,7 +92,7 @@ test('Task Moment and Activity pickers open to choices with search on demand', a
     await expect(page.getByRole('listbox')).toBeVisible();
     const option = page.getByRole('option', { name: longName, exact: true });
     await expect(option).toBeVisible();
-    const menu = page.locator('.dropdown-menu-portal');
+    const menu = page.locator('.dropdown-menu-portal:not([aria-hidden="true"])');
     await expect(menu).toHaveCSS('width', '304px');
     await expect(menu).toHaveCSS('left', '8px');
     await expect(option).toHaveCSS('height', '44px');
