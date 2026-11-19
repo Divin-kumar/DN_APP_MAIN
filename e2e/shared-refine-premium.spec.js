@@ -21,6 +21,9 @@ for (const [route, label] of [
       const sort = sheet.locator('.dn-refine-sort-chips');
       const footer = sheet.locator('.dn-list-controls-footer');
       await expect(sort).toBeVisible();
+      const direction = sheet.getByRole('group', { name: 'Sort direction' });
+      await expect(direction.getByRole('heading', { name: 'Sort by' })).toBeVisible();
+      expect((await direction.boundingBox()).y).toBeLessThan((await sort.boundingBox()).y);
       await expect(sheet.locator('.dn-conditions')).toBeVisible();
       await expect(footer.getByRole('button', { name: 'Reset' })).toBeVisible();
       await expect(footer.getByRole('button', { name: 'Cancel' })).toBeVisible();

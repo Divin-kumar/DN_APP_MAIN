@@ -94,9 +94,11 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
     localStorage.setItem('dn_list_state_guest_conditions%3Aactivities',JSON.stringify({group,migrationVersion:1}));localStorage.setItem('dn_applied_or_seed','true');
   });
   await page.goto('/activities');const original=await records(page);const before=await saved(page,'activities');
+  await page.getByRole('button', { name: 'Show 1 more active filter', exact: true }).click();
   const chips=page.locator('.dn-condition-chip');await expect(chips).toHaveCount(2);
   const boxes=await chips.evaluateAll(nodes=>nodes.map(n=>{const r=n.getBoundingClientRect();return {x:r.x,y:r.y,w:r.width,h:r.height};}));
-  expect(boxes[1].y).toBe(boxes[0].y);expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x+boxes[0].w);
+  expect(Math.abs(boxes[1].y - boxes[0].y)).toBeLessThan(1);
+  expect(boxes[1].x).toBeGreaterThanOrEqual(boxes[0].x + boxes[0].w - 1);
   await chips.filter({hasText:'Completed'}).getByRole('combobox',{name:'Change Status filter'}).click();await page.getByRole('option',{name:'Cancelled',exact:true}).click();
   const changed=await saved(page,'activities');expect(changed).toEqual({...before,children:before.children.map(n=>n.id==='completed-filter'?{...n,value:'cancelled'}:n)});
   await page.goto('/settings/list-defaults');const preferences=page.getByRole('region',{name:'List sorting and filters preferences'});
@@ -116,7 +118,7 @@ test('side-by-side applied filters retain OR logic, share Code Lists changes and
 
 // When +N reveals a long strip, do not skip straight to the last chip or pan
 // the full page. Less returns to the first applied rule, including on phones.
-for (const width of [320, 390]) {
+for (const width of [320, 390, 430]) {
   test(`applied filter +N reveals the next chip without a page jump at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 844 });
     const errors = await seedGuest(page);
@@ -133,9 +135,9 @@ for (const width of [320, 390]) {
     await page.goto('/activities');
     const rail = page.locator('.dn-condition-chip-rail');
     const chips = rail.locator('.dn-condition-chip');
-    await expect(chips).toHaveCount(2);
+    await expect(chips).toHaveCount(1);
     const beforePageY = await page.evaluate(() => window.scrollY);
-    const more = page.getByRole('button', { name: 'Show 3 more active filters' });
+    const more = page.getByRole('button', { name: 'Show 4 more active filters' });
     const moreBox = await more.boundingBox();
     await more.click();
     await expect(chips).toHaveCount(5);
@@ -146,27 +148,27 @@ for (const width of [320, 390]) {
     // after the rail reaches it, rather than measuring an in-flight frame.
     await expect.poll(() => rail.evaluate((el) => {
       const box = el.getBoundingClientRect();
-      const third = el.children[2].getBoundingClientRect();
-      return third.left < box.right && third.right > box.left;
+      const revealed = el.children[1].getBoundingClientRect();
+      return revealed.left < box.right && revealed.right > box.left;
     })).toBe(true);
     const positions = await rail.evaluate((el) => {
       const box = el.getBoundingClientRect();
-      const third = el.children[2].getBoundingClientRect();
-      return { left: box.left, right: box.right, thirdLeft: third.left, thirdRight: third.right };
+      const revealed = el.children[1].getBoundingClientRect();
+      return { left: box.left, right: box.right, revealedLeft: revealed.left };
     });
-    expect(positions.thirdLeft).toBeGreaterThanOrEqual(positions.left - 12);
-    expect(positions.thirdLeft).toBeLessThan(positions.right);
+    expect(positions.revealedLeft).toBeGreaterThanOrEqual(positions.left - 12);
+    expect(positions.revealedLeft).toBeLessThan(positions.right);
     const lessBox = await less.boundingBox();
     expect(Math.abs(lessBox.x - moreBox.x)).toBeLessThanOrEqual(2);
-    await rail.focus();
+    await rail.evaluate((el) => el.focus({ preventScroll: true }));
     const earlier = await rail.evaluate((el) => el.scrollLeft);
-    await rail.press('ArrowLeft');
+    await page.keyboard.press('ArrowLeft');
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeLessThan(earlier);
     const previous = await rail.evaluate((el) => el.scrollLeft);
-    await rail.press('ArrowRight');
+    await page.keyboard.press('ArrowRight');
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBeGreaterThan(previous);
     await less.click();
-    await expect(chips).toHaveCount(2);
+    await expect(chips).toHaveCount(1);
     await expect.poll(() => rail.evaluate((el) => el.scrollLeft)).toBe(0);
     expect(await page.evaluate(() => window.scrollY)).toBe(beforePageY);
     expect(await page.evaluate(() => document.documentElement.scrollWidth))

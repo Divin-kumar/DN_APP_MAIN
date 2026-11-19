@@ -88,6 +88,7 @@ test('Applied filter motion keeps OR semantics and never mutates records', async
   await page.goto('/activities');
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
   const chips = page.locator('.dn-condition-chip-rail .dn-condition-chip');
+  await page.getByRole('button', { name: 'Show 1 more active filter', exact: true }).click();
   await expect(chips).toHaveCount(2);
   await chips.first().getByRole('button', { name: /^Remove filter/ }).click();
   await expect(chips).toHaveCount(1);

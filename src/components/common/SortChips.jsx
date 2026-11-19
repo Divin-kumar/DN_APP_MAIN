@@ -14,11 +14,23 @@ const directionDescription = (field, direction) => {
   return descending ? 'Descending' : 'Ascending';
 };
 
-export default function SortChips({ field, direction, options, onChange, label = 'Sort by' }) {
+export default function SortChips({ field, direction, options, onChange, label = 'Sort by', heading }) {
   const pick = (nextField) => onChange(nextField,
     nextField === field ? (direction === 'asc' ? 'desc' : 'asc') : 'asc');
   const description = directionDescription(field, direction);
+  const directionControls = <div className="dn-refine-sort-direction" role="group" aria-label="Sort direction">
+      <div className="dn-refine-sort-direction-current">
+        {heading ? <h4>{heading}</h4> : null}
+        <span>{description}</span>
+      </div>
+      <button type="button" className="dn-refine-sort-reverse"
+        aria-label={`Reverse sort direction, currently ${description}`}
+        onClick={() => onChange(field, direction === 'asc' ? 'desc' : 'asc')}>
+        <ArrowDownUp size={15} aria-hidden="true" />Reverse order
+      </button>
+    </div>;
   return <div className="dn-refine-sort-control">
+    {heading ? directionControls : null}
     <div className="dn-refine-sort-chips" role="group" aria-label={label}>
       {options.map((option) => {
         const selected = field === option.value;
@@ -32,13 +44,6 @@ export default function SortChips({ field, direction, options, onChange, label =
         </button>;
       })}
     </div>
-    <div className="dn-refine-sort-direction" role="group" aria-label="Sort direction">
-      <span className="dn-refine-sort-direction-current"><span>Direction</span><strong>{description}</strong></span>
-      <button type="button" className="dn-refine-sort-reverse"
-        aria-label={`Reverse sort direction, currently ${description}`}
-        onClick={() => onChange(field, direction === 'asc' ? 'desc' : 'asc')}>
-        <ArrowDownUp size={15} aria-hidden="true" />Reverse order
-      </button>
-    </div>
+    {heading ? null : directionControls}
   </div>;
 }

@@ -168,8 +168,7 @@ html[data-theme] .dn-task-refine .dn-task-filter-heading {
 html[data-theme] .dn-task-refine .dn-task-filter-heading h4 {
   margin:0; font-size:13px; font-weight:740;
 }
-html[data-theme] .dn-task-refine .dn-task-filter-heading span,
-html[data-theme] .dn-task-refine .dn-task-filter-help {
+html[data-theme] .dn-task-refine .dn-task-filter-heading span {
   margin:0; color:var(--color-text-muted);
   font-size:11px; line-height:1.5;
 }
@@ -181,9 +180,6 @@ html[data-theme] .dn-task-refine .dn-task-filter-help {
   }
   html[data-theme] .dn-task-refine .dn-refine-sort-chips > button {
     padding-inline: 4px;
-  }
-  html[data-theme] .dn-task-refine .dn-task-filter-help {
-    font-size:12px; line-height:1.5;
   }
 }
 
@@ -221,17 +217,17 @@ html[data-theme] .dn-sort-choice-content > svg { grid-column:3; position:static;
 }
 
 /* Lightweight shared direction action. Existing field chips stay borderless. */
-html[data-theme] .dn-refine-sort-control { display:grid; gap:5px; min-width:0; }
+html[data-theme] .dn-refine-sort-control { display:grid; gap:2px; min-width:0; }
 html[data-theme] .dn-refine-sort-direction {
   display:flex; align-items:center; justify-content:space-between;
   gap:10px; min-width:0; padding:1px 0 0;
 }
-html[data-theme] .dn-refine-sort-direction-current {
-  display:flex; align-items:baseline; flex-wrap:wrap; gap:4px 8px;
-  min-width:0; color:var(--color-text-muted); font-size:11px;
+html[data-theme] .dn-refine-sort-direction-current { display:grid; gap:2px; min-width:0; }
+html[data-theme] .dn-refine-sort-direction-current > h4 {
+  margin:0; color:var(--color-text); font-size:13px; font-weight:740; line-height:1.35;
 }
-html[data-theme] .dn-refine-sort-direction-current strong {
-  color:var(--color-text); font-size:12px; font-weight:700;
+html[data-theme] .dn-refine-sort-direction-current > span {
+  color:var(--color-text-muted); font-size:12px; font-weight:620; line-height:1.35;
 }
 html[data-theme] .dn-refine-sort-reverse {
   display:inline-flex; align-items:center; justify-content:center;

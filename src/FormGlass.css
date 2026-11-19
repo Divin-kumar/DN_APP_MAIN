@@ -141,6 +141,24 @@ html[data-theme] body .dn-form-disclosure > summary > svg {
 .dn-form-reveal > div { min-height: 0; min-width: 0; overflow: clip; }
 
 html[data-theme] body .dn-form-disclosure-content { gap: var(--dn-form-gap); padding-block: 5px 8px; }
+@media (min-width: 761px) and (min-height: 501px) {
+  html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > .dn-modal:has(form.dn-transaction-form) {
+    width: min(680px, calc(100vw - 64px)) !important;
+    max-width: min(680px, calc(100vw - 64px)) !important;
+  }
+}
+@media (max-width: 570px) {
+  html[data-theme] body .dn-modal:has(form:is(.dn-activity-create-form, .dn-task-editor, .dn-transaction-form, .event-form)) {
+    --dn-form-gap: 10px;
+  }
+  html[data-theme] body .dn-modal-viewport .dn-modal:has(form:is(.dn-activity-create-form, .dn-task-editor, .dn-transaction-form, .event-form)) .dn-modal-header {
+    margin-bottom: 8px !important;
+  }
+  html[data-theme] body .dn-modal:has(form:is(.dn-activity-create-form, .dn-task-editor, .dn-transaction-form, .event-form)) :is(.form-actions, .event-form-actions):has(> button[type="submit"]):has(> button:nth-child(2):last-child) {
+    width: 100%;
+    margin-top: 0;
+  }
+}
 html[data-theme] body .dn-modal-viewport .dn-modal .dn-modal-header :is(.modal-close-button, .modal-back-button) {
   background: var(--dn-form-field) !important; border-color: transparent !important;
   border-radius: 50% !important; box-shadow: none !important;

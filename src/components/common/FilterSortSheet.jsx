@@ -50,8 +50,7 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
   return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}
     footer={<RefineActions count={draftCount} resultLabel={resultLabel} onReset={resetDraft} onCancel={onClose} onApply={apply} />}>
     <div className="dn-refine-sheet-section">
-      <h4>Sort by</h4>
-      <SortChips field={draft.field} direction={draft.direction} options={sort.options}
+      <SortChips heading="Sort by" field={draft.field} direction={draft.direction} options={sort.options}
         label={sort.label || 'Sort by'} onChange={(field, direction) => setDraft((current) => ({ ...current, field, direction }))} />
     </div>
     <div className="dn-refine-sheet-section">

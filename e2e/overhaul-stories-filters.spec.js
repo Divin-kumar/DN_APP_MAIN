@@ -120,6 +120,7 @@ test('numeric ranges keep both boundaries and existing nested OR rules retain th
   await page.getByRole('spinbutton', { name: 'Value for Amount', exact: true }).fill('50');
   await page.getByRole('button', { name: 'Show results', exact: true }).click();
   await expect(page.getByRole('button', { name: /Remove filter Amount Between 99 – 101/ })).toBeVisible();
+  await page.getByRole('button', { name: 'Show 1 more active filter', exact: true }).click();
   await expect(page.getByRole('button', { name: /Remove filter AND › OR · Amount Greater than 50/ })).toBeVisible();
 });
 

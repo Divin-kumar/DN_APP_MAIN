@@ -287,8 +287,9 @@ for (const width of [320, 390, 1280]) {
     await page.goto('/financials');
     const original = await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)));
     const chips = page.getByRole('region', { name: 'Active filters' });
-    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
-    const overflow = page.getByRole('button', { name: 'Show 6 more active filters' });
+    const compactCount = width < 440 ? 1 : 2;
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(compactCount);
+    const overflow = page.getByRole('button', { name: `Show ${8 - compactCount} more active filters` });
     await expect(overflow).toBeVisible();
     const disclosure = await overflow.evaluate((button) => {
       const outer = button.closest('.dn-condition-chips').getBoundingClientRect();
@@ -309,23 +310,27 @@ for (const width of [320, 390, 1280]) {
     expect(geometry.moreRight).toBeLessThanOrEqual(geometry.right + 1);
     expect(geometry.height).toBeGreaterThanOrEqual(44);
     expect(geometry.height).toBeLessThanOrEqual(60);
+    if (compactCount === 1) {
+      const remove = await chips.getByRole('button', { name: /^Remove filter/ }).boundingBox();
+      expect(remove.x + remove.width).toBeLessThanOrEqual(geometry.railRight + 1);
+    }
     await overflow.click();
     await expect(chips.locator('.dn-condition-chip')).toHaveCount(8);
     await chips.getByRole('button', { name: 'Show fewer active filters' }).click();
-    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(compactCount);
 
     const first = chips.locator('.dn-condition-chip').first();
     await first.getByRole('button', { name: 'Change Title filter', exact: true }).click();
     const editor = page.getByRole('dialog', { name: 'Change Title filter', exact: true });
     await expect(editor.getByRole('textbox', { name: 'Value for Title', exact: true })).toHaveValue(/Detailed saved condition 0/);
     await editor.getByRole('button', { name: 'Cancel', exact: true }).click();
-    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(compactCount);
     await chips.locator('.dn-condition-chip').last().getByRole('button', { name: /^Remove filter/ }).click();
-    await expect(chips.locator('.dn-condition-chip')).toHaveCount(2);
-    await expect(page.getByRole('button', { name: 'Show 5 more active filters' })).toBeVisible();
+    await expect(chips.locator('.dn-condition-chip')).toHaveCount(compactCount);
+    await expect(page.getByRole('button', { name: `Show ${7 - compactCount} more active filters` })).toBeVisible();
     await page.reload();
-    await expect(page.locator('.dn-condition-chip')).toHaveCount(2);
-    await expect(page.getByRole('button', { name: 'Show 5 more active filters' })).toBeVisible();
+    await expect(page.locator('.dn-condition-chip')).toHaveCount(compactCount);
+    await expect(page.getByRole('button', { name: `Show ${7 - compactCount} more active filters` })).toBeVisible();
     expect(await page.evaluate(() => ['dn_guest_incomes', 'dn_guest_expenses'].map((key) => localStorage.getItem(key)))).toEqual(original);
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
     expect(errors).toEqual([]);

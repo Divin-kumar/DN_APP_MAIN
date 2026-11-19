@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-580 | Clean up Refine, applied filters and entry forms
+
+- **Scope.** Move the sort direction and Reverse order beside the Sort by heading, remove repeated copy from Task Refine, and keep the first applied filter and +N control fully reachable on narrow screens. Tighten the phone form spacing, balance paired form actions, and narrow the desktop Transaction editor.
+- **Compatibility.** +N still reveals the next filter in the same row and the visible strip supports keyboard scrolling, editing, removal and drag ordering. Existing draft, finance, and recurring workflows use the same actions. The Guest tour already explains Reverse order and +N and uses the same sample records.
+- **Executed.** Build, lint and 632 Node tests passed. Chromium covered 100 distinct browser cases across the main run and the focused filter rerun. The built app passed WebKit journeys at 320, 430 and 1440 px that checked filter disclosure, sort direction and recurring form controls. Physical iPhone Safari remains unverified.
+
 ## CHG-20261119-579 | Give Moment Story and PDF Studio more room
 
 - **Scope.** Align the Moment workspace beside desktop navigation. Give Story and PDF Studio the available width on phones, shorten the Journal and Diary headings area, and tighten the Journal introduction. Give the desktop PDF preview and settings more room, contain the design samples within their tiles, and add Design and Preview shortcuts when the panels stack.

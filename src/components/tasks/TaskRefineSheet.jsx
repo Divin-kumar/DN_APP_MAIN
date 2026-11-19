@@ -36,17 +36,15 @@ export default function TaskRefineSheet({ current, resetDefaults = TASK_VIEW_DEF
   return <ModalDialog title="Refine Tasks" className="dn-refine-sheet dn-task-refine" onClose={onClose}
     footer={<RefineActions count={count} resultLabel="Tasks" onReset={resetDraft} onCancel={onClose} onApply={() => onApply(draft)} />}>
     <div className="dn-refine-sheet-section">
-      <h4>Sort by</h4>
-      <SortChips label="Sort Tasks" field={draft.field} direction={draft.direction}
+      <SortChips heading="Sort by" label="Sort Tasks" field={draft.field} direction={draft.direction}
         options={TASK_SORT_OPTIONS} onChange={(field, direction) => change({ field, direction })} />
     </div>
     <div className="dn-refine-sheet-section">
       <div className="dn-task-filter-heading">
         <h4>Filters</h4>
-        <span>{activeCount ? activeCount + ' selected' : 'All Tasks'}</span>
+        {activeCount ? <span>{activeCount} selected</span> : null}
       </div>
       <ConditionBuilder filter={conditionFilter} title="Task conditions" immediate />
-      <p className="dn-task-filter-help">Status, priority, due timing, dates, linked Moments, notes and more.</p>
     </div>
   </ModalDialog>;
 }

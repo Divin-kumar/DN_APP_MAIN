@@ -269,7 +269,7 @@ function AppliedCondition({ filter, chip, node, reducedMotion }) {
     onKeyDownCapture: (event) => {
       if (!['ArrowLeft', 'ArrowRight'].includes(event.key) || event.currentTarget.getAttribute('aria-expanded') === 'true') return;
       event.preventDefault(); event.stopPropagation();
-      const rail = event.currentTarget.closest('.dn-condition-chips');
+      const rail = event.currentTarget.closest('.dn-condition-chip-rail');
       const target = rail?.scrollWidth > rail?.clientWidth ? rail : event.currentTarget.querySelector('.dn-condition-chip-label');
       target?.scrollBy({ left: event.key === 'ArrowLeft' ? -80 : 80, behavior: 'instant' });
     },
@@ -315,15 +315,29 @@ function AppliedCondition({ filter, chip, node, reducedMotion }) {
 }
 export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
   const reducedMotion = useReducedMotion();
+  const stripRef = useRef(null);
   const railRef = useRef(null);
+  const [narrowStrip, setNarrowStrip] = useState(false);
   const chips = conditionChipEntries(filter.state.group, filter.schema);
+  const hasChips = chips.length > 0;
+  const canExpand = Boolean(onShowMore);
+  useLayoutEffect(() => {
+    const strip = stripRef.current;
+    if (!strip || !hasChips || !canExpand) return;
+    const updateWidth = () => setNarrowStrip(strip.clientWidth < 440);
+    updateWidth();
+    if (typeof ResizeObserver !== 'function') return;
+    const observer = new ResizeObserver(updateWidth);
+    observer.observe(strip);
+    return () => observer.disconnect();
+  }, [hasChips, canExpand]);
   const nodes = useMemo(() => {
     const byId = new Map();
     const visit = (node) => { if (node.kind === 'group') node.children.forEach(visit); else byId.set(node.id, node); };
     visit(filter.state.group); return byId;
   }, [filter.state.group]);
   const compact = Number.isInteger(maxVisible) && maxVisible > 0;
-  const visible = compact ? chips.slice(0, maxVisible) : chips;
+  const visible = compact ? chips.slice(0, narrowStrip && canExpand ? 1 : maxVisible) : chips;
   const overflow = chips.length - visible.length;
   const expanded = !compact && Boolean(onShowLess);
   const priorVisibility = useRef({ expanded, count: visible.length });
@@ -349,7 +363,7 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
       });
     }
   }, [expanded, visible.length, reducedMotion]);
-  return chips.length ? <div className="dn-condition-chips" role="region" aria-label="Active filters">
+  return hasChips ? <div ref={stripRef} className="dn-condition-chips" role="region" aria-label="Active filters">
     <div ref={railRef} className="dn-condition-chip-rail" role="group"
       aria-label="Applied filters, horizontally scrollable" tabIndex={chips.length > 1 ? 0 : undefined}
       onKeyDown={(event) => {
@@ -370,7 +384,8 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
           filter={filter} chip={chip} node={nodes.get(chip.id)} reducedMotion={reducedMotion} />)}
       </AnimatePresence>
     </div>
-    {overflow > 0 ? <button type="button" className="dn-condition-more" aria-label={`Show ${overflow} more active filters`}
+    {overflow > 0 ? <button type="button" className="dn-condition-more"
+      aria-label={`Show ${overflow} more active ${overflow === 1 ? 'filter' : 'filters'}`}
       onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"
         onClick={onShowLess}>Less</button> : null}
   </div> : null;

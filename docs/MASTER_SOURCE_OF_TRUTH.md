@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Compact Refine and entry forms (19 November 2026, development)
+
+Refine groups the Sort by heading, current direction and Reverse order action above the choices. The draft count and actions stay below the scrolling editor. In a collapsed applied-filter strip narrower than 440 px, the first filter stays in view with a +N control for the remaining filters. Expanding reveals the next filter in the same horizontal strip. Filters still support direct editing, removal and reordering.
+
+Phone Moment, Activity, Task and Transaction sheets use tighter field and header spacing and give paired actions equal space. The desktop Transaction form uses a narrower width for easier scanning.
+
 ## Moment workspace and PDF Studio spacing (19 November 2026, development)
 
 The Moment workspace aligns with the desktop browsing pages and uses up to 1,280 px beside navigation. Phone Story and PDF Studio use the full width between the workspace gutters. The Journal introduction and the Journal and Diary headings use less vertical space above the saved content.

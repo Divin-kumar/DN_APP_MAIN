@@ -629,7 +629,7 @@ html[data-theme] .dn-condition-chips > .dn-condition-chip-rail {
 html[data-theme] .dn-condition-chip-rail::-webkit-scrollbar { display:none; }
 html[data-theme] .dn-condition-chip-rail > .dn-condition-chip {
   display:inline-flex; flex:0 0 auto !important;
-  min-width:0; width:max-content !important; max-width:min(75vw,440px) !important;
+  min-width:0; width:max-content !important; max-width:min(100%,75vw,440px) !important;
   scroll-snap-align:start;
 }
 html[data-theme] .dn-condition-chips > .dn-condition-more {
