@@ -25,8 +25,18 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       const subpage = page.locator('.dn-data-page');
       await expect(page.locator('.dn-header').getByRole('heading', { name: 'Data & Backup' })).toBeVisible();
       await expect(subpage.getByText('Guest · this device')).toBeVisible();
-      await expect(subpage.getByRole('button', { name: 'Export backup' })).toBeVisible();
-      await expect(subpage.getByText('Restore backup', { exact: true })).toBeVisible();
+      const exportButton = subpage.getByRole('button', { name: 'Export backup' });
+      const restorePicker = subpage.getByText('Restore backup', { exact: true });
+      await expect(exportButton).toBeInViewport({ ratio: 1 });
+      await expect(restorePicker).toBeInViewport({ ratio: 1 });
+      const [exportBox, restoreBox] = await subpage.locator('.dn-data-action-button').evaluateAll((buttons) => (
+        buttons.map((button) => {
+          const { y, width } = button.getBoundingClientRect();
+          return { y, width };
+        })
+      ));
+      expect(Math.abs(exportBox.y - restoreBox.y)).toBeLessThanOrEqual(1);
+      expect(Math.abs(exportBox.width - restoreBox.width)).toBeLessThanOrEqual(1);
       await expect(subpage.getByRole('button', { name: 'Clear local' })).toBeVisible();
       await expect(subpage.getByRole('button', { name: 'Delete online' })).toHaveCount(0);
       await expect(subpage.getByRole('region', { name: 'Backup and restore' })).toBeVisible();

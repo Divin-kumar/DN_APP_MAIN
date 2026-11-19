@@ -66,10 +66,32 @@ for (const [width, height, theme] of [
     await testInfo.attach(`list-defaults-overview-${width}-${theme}`, {
       body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png',
     });
+    const navigation = section.getByRole('navigation', { name: 'List default sections' });
+    const activityLink = navigation.getByRole('link', { name: 'Activities', exact: true });
+    const taskLink = navigation.getByRole('link', { name: 'Tasks', exact: true });
+    await expect(activityLink).toBeInViewport({ ratio: 1 });
+    await expect(taskLink).toBeInViewport({ ratio: 1 });
+    const navRows = await navigation.getByRole('link').evaluateAll((links) => (
+      new Set(links.map((link) => Math.round(link.getBoundingClientRect().top))).size
+    ));
+    expect(navRows).toBe(1);
+    await taskLink.tap();
+    await expect(page).toHaveURL(/#defaults-tasks$/);
+    const tasks = section.getByRole('region', { name: 'Tasks defaults', exact: true });
+    await expect(tasks).toBeFocused();
+    await expect(taskLink).toHaveAttribute('aria-current', 'location');
+    await expect(taskLink).toBeInViewport({ ratio: 1 });
+    await expect(tasks.locator('.dn-defaults-sort-label strong')).toBeInViewport({ ratio: 1 });
+    await activityLink.tap();
+    const activity = section.getByRole('region', { name: 'Activities defaults', exact: true });
+    await expect(activity).toBeFocused();
+    await expect(activityLink).toHaveAttribute('aria-current', 'location');
+    const heading = await activity.locator('.dn-defaults-sort-label strong').boundingBox();
+    const navigationBox = await navigation.boundingBox();
+    expect(heading.y).toBeGreaterThanOrEqual(navigationBox.y + navigationBox.height - 1);
     await section.getByRole('button', { name: 'Activities filters' }).tap();
     const editor = section.locator('.dn-code-list-filter-editor');
     await expect(editor).toBeVisible();
-    const activity = section.getByRole('region', { name: 'Activities defaults', exact: true });
     await expect(activity.locator('.dn-code-list-filter-editor')).toBeVisible();
     await expect(activity.getByRole('group', { name: 'Sort Activities in settings' })).toBeVisible();
     const reset = activity.getByRole('button', { name: 'Restore built-in defaults for Activities' });

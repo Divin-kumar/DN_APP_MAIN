@@ -130,3 +130,29 @@ test('Creation defaults keeps a failed save available for retry', async ({ page 
   await expect(status).toHaveText('Defaults saved.');
   expect(errors).toEqual([]);
 });
+
+test('Appearance section links focus their target and preserve an unsaved draft through history', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/settings/appearance#appearance-creation');
+  const shortcuts = page.getByRole('navigation', { name: 'Appearance sections' });
+  const defaults = page.getByRole('region', { name: 'Defaults for new records' });
+  await expect(defaults).toBeFocused();
+  await pick(page, 'Default currency', 'USD · US dollar ($)');
+  const storyLink = shortcuts.getByRole('link', { name: 'Story & PDF', exact: true });
+  await expect(storyLink).toBeInViewport({ ratio: 1 });
+  await storyLink.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(/#appearance-story$/);
+  const story = page.getByRole('region', { name: 'Story & PDF design', exact: true });
+  await expect(story).toBeFocused();
+  await expect(story.getByRole('heading')).toBeInViewport({ ratio: 1 });
+  await expect(storyLink).toHaveAttribute('aria-current', 'location');
+  await page.goBack();
+  await expect(defaults).toBeFocused();
+  await expect(shortcuts.getByRole('link', { name: 'Creation defaults' })).toHaveAttribute('aria-current', 'location');
+  await expect(defaults.getByRole('combobox', { name: 'Default currency' })).toContainText('USD');
+  await expect(defaults.getByRole('status')).toHaveText('Save defaults to apply your changes.');
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem('dn_preferences')).currency)).not.toBe('USD');
+  expect(errors).toEqual([]);
+});

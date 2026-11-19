@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-576 | Make Settings sections easier to reach
+
+- **Scope.** Add sticky phone shortcuts and bookmarkable sections to Appearance and List defaults. Move focus to the selected section, trim duplicate Story and PDF copy, and clear the docked create button at the end of Settings pages. Put the workspace label and paired Export and Restore actions near the top of Data & Backup.
+- **Compatibility.** Appearance shortcuts and browser history retain unsaved defaults. List preferences, backup and restore use the existing saves, scopes and confirmations. The public Guest tour describes the same backup steps and needs no refresh for this layout change.
+- **Executed.** Build, lint and Node tests passed. Browser journeys exercised navigation, draft retention, backup preview, cancellation and original-file restoration. The narrow layouts were checked in light and dark themes in Chromium and WebKit. Physical iPhone Safari remains unverified.
+
 ## CHG-20261119-575 | Make mobile filters, linked choices and previews easier to read
 
 - **Scope.** Wrap narrow Refine labels and paired form choices. Give searchable linked-record menus the available phone width, with two-line options in long lists and accessible descriptions for selected values. Space Dashboard date controls and upcoming expense actions, shorten a few form hints, and reclaim space above Story and PDF previews. Fit the five PDF preview controls in one row at 320 px with 44 px targets. Let the last Gallery attachment scroll clear of the floating create button.

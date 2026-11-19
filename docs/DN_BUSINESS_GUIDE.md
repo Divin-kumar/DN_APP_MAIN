@@ -1,3 +1,5 @@
+**Easier Settings navigation (19 November 2026, development).** Jump straight to Theme, Creation defaults or Story & PDF in Appearance, or to any of the four lists in List defaults. These shortcuts stay visible while you scroll on a phone. Data & Backup shows the current workspace and puts Export and Restore side by side on phones from 320 px.
+
 **Mobile readability (19 November 2026, development).** Long filter labels have room to wrap. Searching for a linked Moment or Activity gives long names more room, and screen readers can read the selected option in a named dropdown. The Dashboard date switches and upcoming expense actions have clearer spacing on small phones. Story and PDF Studio show the document sooner. The last Gallery item can be scrolled clear of the blue create button.
 
 **Browsing and forms (18 November 2026, development).** Search and Refine share one glass strip on filtered phone lists. Transactions shows its count, sort order and CSV action together. Save and Show results are easier to distinguish at a glance. Settings destinations use two columns on wide screens, and PDF Studio clearly marks the current thumbnail.

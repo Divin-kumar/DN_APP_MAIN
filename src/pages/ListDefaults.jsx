@@ -12,6 +12,7 @@ import useConditionFilters from '../hooks/useConditionFilters';
 import usePersistentListState from '../hooks/usePersistentListState';
 import SortChips from '../components/common/SortChips';
 import ConditionBuilder from '../components/common/ConditionBuilder';
+import SettingsSectionLinks from '../components/settings/SettingsSectionLinks';
 import { momentConditionRecord, activityEntryConditionRecord } from '../utils/listConditionMigration';
 import { projectActivities } from '../utils/activityRecords';
 import { toTransactions } from '../utils/transactionFilters';
@@ -119,6 +120,7 @@ const LISTS = [
   { domain: 'transactions', label: 'Transactions', defaults: TRANSACTION_LIST_DEFAULTS, rules: TRANSACTION_LIST_RULES, options: TRANSACTION_SORT_OPTIONS },
   { domain: 'tasks', label: 'Tasks', defaults: TASK_VIEW_DEFAULTS, rules: TASK_VIEW_RULES, options: TASK_SORT_OPTIONS },
 ];
+const listSections = LISTS.map(({ domain, label }) => ({ id: `defaults-${domain}`, label }));
 
 function ListPreferences({ config, expanded, onToggle }) {
   const { domain, label, defaults, rules, options } = config;
@@ -138,7 +140,8 @@ function ListPreferences({ config, expanded, onToggle }) {
     // Cancel any delayed editor input when restoring, as ConditionBuilder.restore does.
     setRevision((value) => value + 1);
   };
-  return <section className="dn-defaults-domain" aria-label={`${label} defaults`}>
+  return <section className="dn-defaults-domain dn-settings-section-target" id={`defaults-${domain}`}
+    tabIndex={-1} aria-label={`${label} defaults`}>
     <div className="settings-input-block dn-defaults-sort-card" data-sort-count={options.length}>
       <div className="dn-defaults-sort-label"><strong>{label}</strong><small>{summary}</small></div>
       <SortChips label={`Sort ${label} in settings`} field={field} direction={direction}
@@ -170,6 +173,7 @@ function ListOrderingPreferences() {
       <p>In any list, open <strong>Refine</strong> and tap <strong>Reset</strong> to load these defaults.</p>
       <p className="dn-defaults-saved">Changes save automatically in this browser.</p>
     </div>
+    <SettingsSectionLinks label="List default sections" sections={listSections} />
     <div className="dn-defaults-domains">
       {LISTS.map((config) => <ListPreferences key={config.domain} config={config}
         expanded={editingFilters === config.domain}

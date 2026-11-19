@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Easier navigation through Settings (19 November 2026, development)
+
+Appearance links directly to Theme, Creation defaults and Story & PDF. List defaults links directly to Moments, Activities, Transactions and Tasks. These links stay at the top while scrolling on phones and move focus to the chosen section. The section can be bookmarked. Using the links or browser history within Appearance keeps unsaved choices available. The final Settings, Appearance and List defaults controls have clearance above the docked create button.
+
+Data & Backup shows the current workspace in a compact line. Export and Restore appear side by side on phone layouts from 320 px, with a stacked layout for very narrow screens. Preparing a backup, previewing a restore and confirming data changes use the existing workspace and safety checks. The public Guest tour's backup instructions still apply.
+
 ## Mobile legibility and reach (19 November 2026, development)
 
 On narrow phones, Refine wraps long field names and comparisons within their existing row. A selected related record name can use three lines in a filter rule. Search-on-demand dropdowns with searchable choices use the available screen width on phones up to 430 px. Long option lists keep fixed 44 px rows and give labels up to two lines. Named dropdowns expose their selected values to assistive technology. Paired form controls can show two lines at 360 px and below. The Dashboard header gives its date controls more separation, Transactions uses a shorter search hint, and recurring expense actions line up below the bill on small screens.

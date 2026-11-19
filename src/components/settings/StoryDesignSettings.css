@@ -3,10 +3,6 @@ html[data-theme] .dn-story-design-settings {
   display:grid;gap:18px;min-width:0;margin-top:22px;padding-top:20px;
   border-top:1px solid var(--color-border);
 }
-html[data-theme] .dn-story-design-heading {display:flex;gap:10px;align-items:flex-start;min-width:0;}
-html[data-theme] .dn-story-design-heading svg {color:var(--color-primary);flex:none;margin-top:2px;}
-html[data-theme] .dn-story-design-heading strong {display:block;font-size:.94rem;color:var(--color-text);}
-html[data-theme] .dn-story-design-heading p {margin:5px 0 0;color:var(--color-text-muted);font-size:.79rem;line-height:1.55;}
 html[data-theme] .dn-story-design-group {min-width:0;margin:0;padding:0;border:0;}
 html[data-theme] .dn-story-design-group legend {padding:0 0 11px;color:var(--color-text);font-size:.87rem;font-weight:750;}
 html[data-theme] .dn-story-design-group legend small {display:block;margin-top:3px;font-size:.72rem;font-weight:450;color:var(--color-text-muted);}

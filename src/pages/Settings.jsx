@@ -9,6 +9,7 @@ import './GuestTour.css';
 import './SettingsDataPremium.css';
 import './AppearancePreferences.css';
 import StoryDesignSettings from '../components/settings/StoryDesignSettings';
+import SettingsSectionLinks from '../components/settings/SettingsSectionLinks';
 // This page contains app settings and personalization controls.
 // It lets the user customize event categories, income types, expense labels, reminder time, and greeting templates.
 import { UserCircle, Settings2, Palette, ListChecks, Database, Download, Upload, Trash2, Bell, Info, ChevronRight, ChevronDown, RotateCcw, Plus, ArrowRight, RefreshCw, SlidersHorizontal, CloudOff, ShieldCheck, HardDrive, Cloud, FileJson, LockKeyhole, BookOpen } from 'lucide-react';
@@ -108,6 +109,11 @@ const DATA_BACKUP_SECTIONS = [
   { id: 'backup-actions', label: 'Backup', icon: Download },
   { id: 'data-management', label: 'Manage data', icon: HardDrive },
   { id: 'data-guide', label: 'Data guide', icon: BookOpen },
+];
+const APPEARANCE_SECTIONS = [
+  { id: 'appearance-theme', label: 'Theme' },
+  { id: 'appearance-creation', label: 'Creation defaults' },
+  { id: 'appearance-story', label: 'Story & PDF' },
 ];
 
 export default function Settings({ dataBackupOnly = false, appearanceOnly = false }) {
@@ -840,7 +846,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
 
   const renderDefaultsSection = () => (
     <div className="dn-appearance-body">
-      <section className="dn-appearance-section" id="appearance-theme" aria-label="App color theme">
+      <section className="dn-appearance-section dn-settings-section-target" id="appearance-theme" tabIndex={-1} aria-label="App color theme">
         <div className="dn-appearance-section-heading">
           <div>
             <h3>Choose your theme</h3>
@@ -863,7 +869,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         <p className="dn-appearance-footnote">Saved instantly.</p>
       </section>
 
-      <section className="dn-appearance-section" id="appearance-creation" aria-label="Defaults for new records">
+      <section className="dn-appearance-section dn-settings-section-target" id="appearance-creation" tabIndex={-1} aria-label="Defaults for new records">
         <div className="dn-appearance-section-heading">
           <div>
             <h3>Creation defaults</h3>
@@ -920,11 +926,12 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         </div>
       </section>
 
-      <section className="dn-appearance-section dn-appearance-story" id="appearance-story">
+      <section className="dn-appearance-section dn-appearance-story dn-settings-section-target" id="appearance-story" tabIndex={-1}
+        aria-labelledby="appearance-story-heading">
         <div className="dn-appearance-section-heading">
           <div>
-            <h3>Story & PDF design</h3>
-            <p>Choose a style for each Story type.</p>
+            <h3 id="appearance-story-heading">Story & PDF design</h3>
+            <p>Choose a default style for Journal, Diary and Tasks.</p>
           </div>
         </div>
         <StoryDesignSettings />
@@ -946,7 +953,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
       <section id="backup-actions" tabIndex={-1} className="dn-data-backup-block" aria-label="Backup and restore">
         <div className="dn-data-backup-head">
           <span className="dn-data-backup-icon"><ShieldCheck size={18} aria-hidden="true" /></span>
-          <div><strong>Protect your records</strong><p>Save a copy of your Moments, transactions, settings and available original photos before making changes.</p></div>
+          <div><strong>Backup and restore</strong><p>Keep a copy of your records, settings and available originals.</p></div>
         </div>
         <div className="dn-data-action-grid">
           <button type="button" className="settings-primary-button dn-data-action-button" onClick={exportBackup}
@@ -1094,16 +1101,12 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
     const signedIn = Boolean(user?.uid && !isGuest && !getActiveSampleScenario(user.uid));
     return (
       <div ref={dataPageRef} className="settings-page feature-page dn-settings-home dn-data-page">
-        <section className="dn-data-page-intro" aria-label="Your data protection">
-          <div className="dn-data-page-intro-copy">
-            <span className="dn-data-page-overline"><ShieldCheck size={15} aria-hidden="true" /> Your data, your control</span>
-            <p>Make a recovery copy, move your records to another device, or manage what DN keeps in your browser and Firebase.</p>
-          </div>
+        <div className="dn-data-page-workspace">
           <span className="dn-data-account-chip">
             {signedIn ? <Cloud size={15} aria-hidden="true" /> : <HardDrive size={15} aria-hidden="true" />}
             {signedIn ? 'Signed-in workspace' : 'Guest · this device'}
           </span>
-        </section>
+        </div>
 
         <nav className="dn-data-page-jumps" aria-label="Data and Backup sections">
           {DATA_BACKUP_SECTIONS.map(({ id, label, icon: Icon }) =>
@@ -1165,6 +1168,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
         <h2>Make DN yours</h2>
         <p>Theme, new-record defaults and Story/PDF styles.</p>
       </header>
+      <SettingsSectionLinks label="Appearance sections" sections={APPEARANCE_SECTIONS} />
       {renderDefaultsSection()}
     </div>;
   }

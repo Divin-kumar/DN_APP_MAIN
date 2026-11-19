@@ -130,7 +130,7 @@ html[data-theme] .dn-conditions :is(
 /* Clear text and actions in the separate settings destinations. */
 html[data-theme] .dn-data-page :is(
   .dn-data-backup-head p, .dn-data-clear-option p,
-  .dn-data-page-intro-copy p, .dn-data-location-item p,
+  .dn-data-location-item p,
   .dn-data-recovery-guide ol, .dn-data-guide-heading p
 ) {
   font-size: var(--dn-type-support) !important;
@@ -247,9 +247,6 @@ html[data-theme] :is(
 /* With enlarged OS text or user zoom, prefer reflow over a clipped action
    row; keep the 320px layout and the transaction's list scroller intact. */
 @media (max-width: 360px) {
-  html[data-theme] .dn-data-page .dn-data-action-grid {
-    grid-template-columns: minmax(0,1fr);
-  }
   html[data-theme] .dn-data-page :is(
     .dn-data-account-chip, .dn-data-location-item p,
     .dn-data-clear-option > div
@@ -280,7 +277,7 @@ html[data-theme] :is(
 @media (prefers-reduced-transparency: reduce) {
   html[data-theme] :is(
     .dn-header, .mobile-tabbar.dn-premium-dock,
-    .dn-dock-action-menu, .dn-data-page-intro
+    .dn-dock-action-menu
   ) {
     background: var(--color-card) !important;
     backdrop-filter: none !important;

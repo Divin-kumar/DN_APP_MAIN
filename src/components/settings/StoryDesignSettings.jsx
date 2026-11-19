@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { BookOpenText, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 import useAppStore from '../../store/useAppStore';
 import useStoryDesignDefaults from '../../hooks/useStoryDesignDefaults';
 import { getActiveSampleScenario } from '../../dev/sampleData';
@@ -58,12 +58,6 @@ export default function StoryDesignSettings() {
 
   return <section className="dn-story-design-settings" id="story-pdf-appearance"
     aria-label="Story and PDF appearance">
-    <div className="dn-story-design-heading">
-      <BookOpenText size={19} aria-hidden="true" />
-      <div><strong>Story & PDF Appearance</strong>
-        <p>Set the style for each Story type. Your records stay unchanged.</p>
-      </div>
-    </div>
     {isDemo && scope ? <p className="dn-story-design-hint" role="status">
       Exploring the demo? Designs you save here stay separate from your personal Guest settings and backups.
     </p> : null}
