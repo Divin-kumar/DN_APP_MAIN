@@ -21,6 +21,23 @@
   html[data-theme] .dn-header .dn-shell-page-title { font-size: 14px !important; }
   html[data-theme] .dn-header .dn-shell-scope { font-size: 9px; }
   html[data-theme] .dn-main { padding: 16px !important; height: 100dvh !important; }
+  /* Align browsing pages to the sidebar-side edge of the workspace. */
+  html[data-theme] .dn-route-transition > :is(
+    .dashboard-page-shell, .events-page, .activities-page, .dn-tasks-page,
+    .dn-financial-workspace, .insights-page, .dn-settings-redesign
+  ) {
+    margin-inline: 0 auto;
+  }
+  html[data-theme] .dn-route-transition > :is(
+    .dashboard-page-shell, .events-page, .activities-page, .dn-tasks-page,
+    .dn-financial-workspace, .insights-page
+  ) {
+    width: 100%;
+    max-width: 1520px;
+  }
+  html[data-theme] .dn-route-transition > .dn-tasks-page {
+    padding: 8px 5px 24px;
+  }
   html[data-theme] .dn-shell:has(.dn-sidebar-collapsed) .dn-header { width: 88px; }
   html[data-theme] .dn-shell:has(.dn-sidebar-collapsed) .dn-header > div:first-child { justify-content: center; }
   html[data-theme] .dn-shell:has(.dn-sidebar-collapsed) .dn-header .dn-route-brand { display: none; }

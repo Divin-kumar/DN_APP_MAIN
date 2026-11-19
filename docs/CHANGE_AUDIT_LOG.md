@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-578 | Use more of the desktop workspace and phone screen
+
+- **Scope.** Align the desktop browsing pages beside navigation and widen the available workspace. Place Tasks across the row above Moments and Activities on medium desktop panes, and use three columns with taller Moments and Activities previews on wide panes. Reclaim side space on phones, keep dates and times ahead of clipped context, compact empty Dashboard sections and give the final row clearance above the floating create button.
+- **Compatibility.** Section choices, date filters, the four-row Task preview, swipe actions and the create and Back gestures keep their existing behavior. The public Guest tour uses the same sample records and instructions.
+- **Executed.** Build, lint and 632 Node tests passed. Chromium passed 149 distinct responsive and interaction checks, plus a 22-case Dashboard rerun covering phone scroll clearance and desktop column sizes. Physical iPhone Safari remains unverified.
+
 ## CHG-20261119-577 | Keep touch feedback brief across DN
 
 - **Scope.** Restrict desktop hover treatments to fine hovering pointers. Use one light and dark press treatment across shared controls and reserve focus rings for keyboard focus. Keep Dashboard Show and Hide visually quiet, distinguish the selected date with a pill, and fit the controls at 320 px without shrinking the date labels. Touching a dropdown option uses its existing selection handler without the mouse-only highlight.

@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Responsive workspace spacing (19 November 2026, development)
+
+Desktop Dashboard, Moments, Activities, Tasks, Transactions, Insights and the Settings home align along the workspace edge beside the sidebar. The main browsing pages can use up to 1,520 px. Dashboard adapts to the width available after navigation. At medium workspace widths, Tasks spans the row above Moments and Activities. Wide workspaces display three equal columns. Expanded Moments and Activities can show up to five standard rows in wide columns and three in compact layouts before scrolling. The Tasks preview keeps its four-row limit.
+
+On phones through 430 px, these main pages give more width to their content. Dashboard gives timing priority over longer Moment names, uses less space for empty sections, keeps date switch targets at 44 px and lets the final row scroll above the floating create button. Existing date views, section visibility, record links, completion indicators and quick-create gestures still apply.
+
 ## Touch feedback across DN (19 November 2026, development)
 
 Touch controls use a brief theme-aware brightness change while held. Hover backgrounds and shadows are reserved for pointers that support hover. Selected tabs, open menus and keyboard focus retain distinct indicators. Dropdown options only move their pointer highlight for mouse input.

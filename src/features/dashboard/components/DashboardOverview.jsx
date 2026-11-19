@@ -2,7 +2,7 @@ import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
 import { useEffect, useMemo, useState } from 'react';
 import DashboardReveal from './DashboardReveal';
-import { Copy, Download, Sparkles, Pencil, BookOpen, Check, RotateCcw, XCircle, SlidersHorizontal, Flag } from 'lucide-react';
+import { Copy, Download, Sparkles, Pencil, Check, RotateCcw, XCircle, SlidersHorizontal, Flag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import ModalDialog from '../../../components/common/ModalDialog';
 import useAppStore from '../../../store/useAppStore';
@@ -213,6 +213,19 @@ function DashboardEmpty({ children, to, label }) {
   </div>;
 }
 
+function DashboardRowMeta({ date, today, view, record, context }) {
+  const days = getDaysRemaining(date);
+  const yearsAgo = date ? today.getFullYear() - date.getFullYear() : 0;
+  const timing = view === 'on-this-day'
+    ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago`
+    : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`;
+  const time = activityTime(record);
+  return <small className="dashboard-upcoming-meta">
+    <span className="dashboard-upcoming-timing">{timing}{time ? ` · ${time}` : ''}</span>
+    <span className="dashboard-upcoming-context"><span aria-hidden="true">· </span>{context}</span>
+  </small>;
+}
+
 export default function DashboardOverview() {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
@@ -339,19 +352,18 @@ export function DashboardOverviewContent() {
           ) : !ready || loading ? (
             <p className="dashboard-upcoming-empty" role="status">Loading moments…</p>
           ) : dashboardMoments.length ? (
-            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container" key={momentView} tabIndex={0} role="region" aria-label={momentView === 'upcoming' ? 'Moments in the next 30 days' : 'Moments on this day in previous years'}>
-              <div className="dashboard-upcoming-list" style={styles.upcomingList}>
+            <div className="dashboard-upcoming-list-container" key={momentView} tabIndex={0} role="region" aria-label={momentView === 'upcoming' ? 'Moments in the next 30 days' : 'Moments on this day in previous years'}>
+              <div className="dashboard-upcoming-list">
                 {dashboardMoments.map((event) => {
                   const date = momentView === 'on-this-day' ? getEventDate(event) : getNextOccurrenceForStatus(event, today);
-                  const days = getDaysRemaining(date);
-                  const yearsAgo = date ? today.getFullYear() - date.getFullYear() : 0;
                   const momentGreeting = getMomentGreeting(event);
                   return (
                     <div className="dashboard-moment-row" key={event.id || event.firestoreId}>
                       <button type="button" className="dashboard-upcoming-row" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}>
                         <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
-                        <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong><small>{event.type || 'Personal'} · {momentView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}{activityTime(event) ? ` · ${activityTime(event)}` : ''}</small></span>
-                        <span className="dashboard-upcoming-arrow" aria-hidden="true">›</span>
+                        <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong>
+                          <DashboardRowMeta date={date} today={today} view={momentView} record={event} context={event.type || 'Personal'} />
+                        </span>
                       </button>
                       <button type="button" className="dashboard-moment-greeting-button" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/pdf`)} aria-label={`PDF Studio for ${event.name || 'this moment'}`} title="PDF Studio"><SlidersHorizontal size={17} aria-hidden="true" /></button>
                       {momentGreeting ? <button type="button" className="dashboard-moment-greeting-button" onClick={() => setGreetingEvent({ event, greeting: momentGreeting, dateLabel: formatDisplayDate(momentView === 'on-this-day' ? today : date) })} aria-label={`Greeting for ${event.name || 'this moment'}`} title="View greeting"><Sparkles size={17} aria-hidden="true" /></button> : null}
@@ -384,11 +396,9 @@ export function DashboardOverviewContent() {
           ) : !ready || loading ? (
             <p className="dashboard-upcoming-empty" role="status">Loading activities…</p>
           ) : dashboardActivities.length ? (
-            <div style={styles.upcomingListContainer} className="dashboard-upcoming-list-container" key={activityView} tabIndex={0} role="region" aria-label={activityView === 'upcoming' ? 'Activities in the next 30 days' : 'Activities on this day in previous years'}>
-              <div className="dashboard-upcoming-list" style={styles.upcomingList}>
+            <div className="dashboard-upcoming-list-container" key={activityView} tabIndex={0} role="region" aria-label={activityView === 'upcoming' ? 'Activities in the next 30 days' : 'Activities on this day in previous years'}>
+              <div className="dashboard-upcoming-list">
                 {dashboardActivities.map(({ event, activity, date }) => {
-                  const yearsAgo = today.getFullYear() - date.getFullYear();
-                  const days = getDaysRemaining(date);
                   const target = { momentId: recordId(event.id) || recordId(event.firestoreId), activityId: recordId(activity.id) };
                   const status = activityStatus(activity);
                   return <SwipeActionCard key={JSON.stringify([target.momentId, target.activityId])}
@@ -406,8 +416,10 @@ export function DashboardOverviewContent() {
                       aria-label={`Open ${activity.title || activity.name || 'activity'}`}
                       onClick={() => navigate(activityDetailPath(target.momentId, target.activityId))}>
                       <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} activity={activity} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
-                      <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong><small>{event.name || event.type || 'Moment'} · {activityView === 'on-this-day' ? `${date.getFullYear()} · ${yearsAgo} ${yearsAgo === 1 ? 'year' : 'years'} ago` : days === 0 ? 'Today' : days === 1 ? 'Tomorrow' : `${days} days away`}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</small></span>
-                      <span className="dashboard-upcoming-arrow" aria-hidden="true">{status === 'completed' ? <Check size={14} /> : <BookOpen size={14} />}</span>
+                      <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong>
+                        <DashboardRowMeta date={date} today={today} view={activityView} record={activity} context={event.name || event.type || 'Moment'} />
+                      </span>
+                      {status === 'completed' ? <Check className="dashboard-upcoming-arrow" size={14} aria-hidden="true" /> : null}
                     </button>
                   </SwipeActionCard>;
                 })}
@@ -429,20 +441,3 @@ export function DashboardOverviewContent() {
     </>
   );
 }
-
-const styles = {
-  upcomingListContainer: {
-    maxHeight: '220px',
-    overflowY: 'auto',
-    overflowX: 'hidden',
-    paddingRight: '4px',
-    marginRight: '-4px',
-    WebkitOverflowScrolling: 'touch',
-    overscrollBehavior: 'contain',
-  },
-  upcomingList: {
-    display: 'grid',
-    gap: '4px',
-    minHeight: 0,
-  }
-};

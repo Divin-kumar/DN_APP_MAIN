@@ -1,9 +1,15 @@
-html[data-theme] .dashboard-page-shell { container-type: inline-size; }
+html[data-theme] .dashboard-page-shell { container: dashboard / inline-size; }
 html[data-theme] .dashboard-overview.dashboard-compact {
   --dn-dashboard-date-size: 52px;
   --dn-dashboard-row-height: 62px;
   --dn-dashboard-row-gap: 6px;
+  --dn-dashboard-preview-rows: 3;
   gap: 11px !important;
+}
+@media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
+  html[data-theme] .dashboard-overview.dashboard-compact {
+    padding-bottom: calc(64px + var(--dn-safe-area-bottom, 0px));
+  }
 }
 /* Empty-period navigation is a quiet text affordance, not another dashboard button. */
 html[data-theme] .dashboard-compact .dashboard-upcoming-empty a {
@@ -53,9 +59,34 @@ html[data-theme] .dashboard-section-actions .dashboard-date-views + .dashboard-s
   }
 }
 html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
-@container (min-width: 960px) {
+@media (min-width: 1024px) and (min-height: 501px) {
   html[data-theme] .dashboard-overview.dashboard-compact {
-    grid-template-columns:repeat(3,minmax(0,1fr)); align-items:start; max-width:1120px;
+    width: 100%;
+    max-width: none;
+    gap: 16px !important;
+    align-items: start;
+  }
+  @container dashboard (min-width: 640px) {
+    html[data-theme] .dashboard-overview.dashboard-compact {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    html[data-theme] .dashboard-compact .dn-dashboard-tasks {
+      grid-column: 1 / -1;
+    }
+  }
+  @container dashboard (min-width: 920px) {
+    html[data-theme] .dashboard-overview.dashboard-compact {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      --dn-dashboard-preview-rows: 5;
+    }
+    html[data-theme] .dashboard-compact .dn-dashboard-tasks {
+      grid-column: auto;
+    }
+  }
+  @container dashboard (920px <= width < 1000px) {
+    html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views button {
+      padding-inline: 4px;
+    }
   }
 }
 
@@ -65,7 +96,7 @@ html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px s
 html[data-theme] .dashboard-compact .dashboard-upcoming-card {
   min-width: 0;
   align-content: start;
-  gap: 9px;
+  gap: 6px;
   padding: 12px;
   border-color: var(--dn-panel-edge);
   border-radius: 18px;
@@ -82,6 +113,7 @@ html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-sect
   letter-spacing: -.02em;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-list {
+  display: grid;
   gap: var(--dn-dashboard-row-gap) !important;
 }
 html[data-theme] .dashboard-compact :is(.dashboard-moment-row, .dashboard-activity-card, .dn-dashboard-task-row) {
@@ -106,7 +138,7 @@ html[data-theme] .dashboard-compact .dashboard-activity-card .dn-swipe-main {
 html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
 html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
   display: grid;
-  grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr) 12px;
+  grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr);
   flex: 1 1 0;
   width: 0;
   min-width: 0;
@@ -117,6 +149,9 @@ html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming
   border-radius: 11px;
   background: transparent;
   text-align: left;
+}
+html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row:has(.dashboard-upcoming-arrow) {
+  grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr) 14px;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-date {
   position: relative;
@@ -179,7 +214,7 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-date:has(.dashboard-cove
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-copy {
   min-width: 0;
-  gap: 3px;
+  gap: 2px;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-copy strong {
   display: -webkit-box;
@@ -195,8 +230,25 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-copy strong {
   line-height: 1.2;
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-copy small {
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.3;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-meta {
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-context {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+html[data-theme] .dashboard-compact .dashboard-upcoming-timing {
+  flex: 0 0 auto;
+  max-width: 100%;
+  font-weight: 600;
+  white-space: normal;
 }
 html[data-theme] .dashboard-compact .dashboard-moment-greeting-button,
 html[data-theme] .dashboard-compact .dashboard-activity-card .dn-record-menu-trigger {
@@ -239,7 +291,6 @@ html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashbo
   }
   html[data-theme] .dashboard-compact .dashboard-moment-row > .dashboard-upcoming-row,
   html[data-theme] .dashboard-compact .dashboard-activity-card .dashboard-upcoming-row {
-    grid-template-columns: var(--dn-dashboard-date-size) minmax(0,1fr) 10px;
     gap: 6px;
   }
 }
@@ -275,15 +326,20 @@ html[data-theme] .dn-dashboard-tasks :is(button, a):focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: -2px;
 }
 
-/* Keep four complete Task rows in view, with further rows in the same scroll area. */
-html[data-theme] .dn-dashboard-tasks-rows {
-  display: grid; align-content: start; gap: var(--dn-dashboard-row-gap); min-width: 0;
-  max-height: calc(4 * var(--dn-dashboard-row-height) + 3 * var(--dn-dashboard-row-gap));
+html[data-theme] .dashboard-compact :is(.dn-dashboard-tasks-rows, .dashboard-upcoming-list-container) {
+  --preview-rows: var(--dn-dashboard-preview-rows);
+  min-width: 0;
+  max-height: calc(var(--preview-rows) * (var(--dn-dashboard-row-height) + var(--dn-dashboard-row-gap)) - var(--dn-dashboard-row-gap));
   overflow-y: auto; overflow-x: hidden; overscroll-behavior-y: contain;
   scrollbar-width: none; -webkit-overflow-scrolling: touch;
 }
-html[data-theme] .dn-dashboard-tasks-rows::-webkit-scrollbar { display: none; }
-html[data-theme] .dn-dashboard-tasks-rows:focus-visible {
+/* Keep four complete Task rows in view at any width. */
+html[data-theme] .dashboard-compact .dn-dashboard-tasks-rows {
+  --preview-rows: 4;
+  display: grid; align-content: start; gap: var(--dn-dashboard-row-gap);
+}
+html[data-theme] .dashboard-compact :is(.dn-dashboard-tasks-rows, .dashboard-upcoming-list-container)::-webkit-scrollbar { display: none; }
+html[data-theme] .dashboard-compact :is(.dn-dashboard-tasks-rows, .dashboard-upcoming-list-container):focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: -2px; border-radius: 10px;
 }
 @media (max-width: 380px) {
@@ -319,7 +375,7 @@ html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
   }
   html[data-theme] .dashboard-compact .dashboard-section-actions,
   html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views {
-    gap:2px;
+    gap:3px;
   }
   html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views button {
     padding-inline:0; letter-spacing:-.015em;
@@ -331,15 +387,10 @@ html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
     inset-inline-start:-2px;
   }
 }
-html[data-theme] .dashboard-compact .dashboard-upcoming-list-container:focus-visible {
-  outline:2px solid var(--color-primary);
-  outline-offset:-2px;
-  border-radius:10px;
-}
-
 /* Both empty sections keep their matching browse action on the right. */
 html[data-theme] .dashboard-compact .dashboard-empty-browse {
   display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 12px;
+  margin-block: 0;
 }
 html[data-theme] .dashboard-compact .dashboard-empty-browse > p { margin: 0; min-width: 0; line-height: 1.5; }
 html[data-theme] .dashboard-compact .dashboard-empty-browse > a {

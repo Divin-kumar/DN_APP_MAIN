@@ -76,6 +76,75 @@ for (const width of [320, 390, 768, 1440]) {
   });
 }
 
+test('Dashboard uses the available desktop pane and keeps date controls inside each card', async ({ page }) => {
+  await seedGuest(page, { theme: 'light' });
+  await page.goto('/dashboard');
+  const overview = page.locator('.dashboard-overview');
+  const cards = overview.locator('.dashboard-upcoming-card');
+  await expect(cards).toHaveCount(3);
+  for (const width of [1024, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 900 });
+    const positions = await cards.evaluateAll((panels) => panels.map((panel) => {
+      const box = panel.getBoundingClientRect();
+      const heading = panel.querySelector('.dashboard-section-heading').getBoundingClientRect();
+      const actions = panel.querySelector('.dashboard-section-actions').lastElementChild.getBoundingClientRect();
+      return { x: box.x, y: box.y, width: box.width, controlsFit: actions.right <= heading.right + 1 };
+    }));
+    const [tasks, momentPanel, activities] = positions;
+    expect(positions.every(({ controlsFit }) => controlsFit)).toBe(true);
+    expect(tasks.x).toBeLessThan(320);
+    expect(momentPanel.y).toBeCloseTo(activities.y, 0);
+    if (width === 1024) {
+      expect(tasks.y).toBeLessThan(momentPanel.y);
+      expect(tasks.width).toBeGreaterThan(momentPanel.width * 2);
+    } else {
+      expect(tasks.y).toBeCloseTo(momentPanel.y, 0);
+      expect(tasks.width).toBeCloseTo(momentPanel.width, 0);
+    }
+    if (width === 1920) expect((await overview.boundingBox()).width).toBeGreaterThan(1400);
+  }
+});
+
+for (const [width, visibleRows] of [[320, 3], [1440, 5]]) {
+  test(`Dashboard activity previews keep the time visible and scroll after ${visibleRows} rows at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 320 ? 640 : 900 });
+    await page.clock.install({ time: new Date('2026-10-26T09:30:00+05:30') });
+    await seedGuest(page, {
+      moments: [{
+        id: 'timing-moment', name: 'A long Moment name that competes for space', date: '2026-10-26',
+        activities: Array.from({ length: 7 }, (_, index) => ({
+          id: `timed-${index}`, title: `Activity ${index + 1}`, date: '2026-10-26', time: '09:30',
+        })),
+      }],
+    });
+    await page.goto('/dashboard');
+    const preview = page.getByRole('region', { name: 'Activities in the next 30 days' });
+    const rows = preview.locator('.dashboard-activity-card');
+    await expect(rows).toHaveCount(7);
+    const timing = rows.first().locator('.dashboard-upcoming-timing');
+    await expect(timing).toHaveText('Today · 09:30');
+    expect(await timing.evaluate((node) => node.getBoundingClientRect().right
+      <= node.parentElement.getBoundingClientRect().right)).toBe(true);
+    const previewBox = await preview.boundingBox();
+    const visible = await rows.nth(visibleRows - 1).boundingBox();
+    const next = await rows.nth(visibleRows).boundingBox();
+    expect(visible.y + visible.height).toBeLessThanOrEqual(previewBox.y + previewBox.height + 1);
+    expect(next.y).toBeGreaterThanOrEqual(previewBox.y + previewBox.height - 1);
+    const last = rows.last().getByRole('button', { name: 'Open Activity 7' });
+    await last.scrollIntoViewIfNeeded();
+    await expect(last).toBeInViewport();
+    if (width === 320) {
+      const menu = rows.last().getByRole('button', { name: 'Activity options' });
+      await page.locator('.dn-content').evaluate((pane) => { pane.scrollTop = pane.scrollHeight; });
+      const create = await page.getByRole('button', { name: 'Open quick create menu' }).boundingBox();
+      const menuBox = await menu.boundingBox();
+      expect(menuBox.y + menuBox.height).toBeLessThanOrEqual(create.y);
+      await menu.click();
+      await expect(page.getByRole('menu', { name: 'Actions for Activity 7' })).toBeVisible();
+    }
+  });
+}
+
 test('an unreadable expense ledger does not affect the simple Dashboard greeting and Finance still offers recovery', async ({ page }) => {
   await page.clock.install({ time: new Date('2026-10-26T09:30:00+05:30') });
   await seedGuest(page, { moments, incomes: [], expenses: [] });
