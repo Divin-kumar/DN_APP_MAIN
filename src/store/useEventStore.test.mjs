@@ -10,6 +10,7 @@ const openStore = async (t) => {
   const records = new Map();
   const calls = [];
   const pending = [];
+  let onWrite;
   const unexpected = () => { throw new Error('Unexpected persistence operation'); };
   const api = {
     createEvent: unexpected,
@@ -21,7 +22,10 @@ const openStore = async (t) => {
     detachParent: (parent) => { calls.push(['task-detach', parent]); return 1; },
     updateEvent: (uid, event) => {
       calls.push(['update', uid, event]);
-      return new Promise((resolve, reject) => pending.push({ resolve, reject, event }));
+      return new Promise((resolve, reject) => {
+        pending.push({ resolve, reject, event });
+        onWrite?.();
+      });
     },
     getActiveSampleData: () => null,
     saveActiveSampleData: unexpected,
@@ -36,7 +40,8 @@ const openStore = async (t) => {
       name: 'isolated-event-store', enforce: 'pre',
       resolveId(source, importer) {
         if (!importer?.replaceAll('\\', '/').endsWith('/src/store/useEventStore.js')) return null;
-        if (source === '../services/eventService') return '\0event-store-service';
+        if (['../services/eventService', '../services/guestEventService'].includes(source)) return '\0event-store-service';
+        if (source === '../services/accountTaskService') return '\0event-account-tasks';
         if (source === '../dev/sampleData') return '\0event-store-samples';
         if (source === './useTaskStore') return '\0event-store-tasks';
         return null;
@@ -45,6 +50,7 @@ const openStore = async (t) => {
         const fixture = `globalThis[${JSON.stringify(fixtureKey)}]`;
         if (id === '\0event-store-service') return `export const {createEvent,deleteEvent,getEventsForUser,getGuestEvents,removeGuestEvent,saveGuestEvent,updateEvent}=${fixture};`;
         if (id === '\0event-store-samples') return `export const {getActiveSampleData,saveActiveSampleData}=${fixture}; export const requireActiveSampleData=getActiveSampleData;`;
+        if (id === '\0event-account-tasks') return 'export const detachAccountTaskLinks=async()=>{};';
         if (id === '\0event-store-tasks') return `export default {getState:()=>({detachParent: (...args)=>${fixture}.detachParent(...args)})};`;
         return null;
       },
@@ -59,13 +65,15 @@ const openStore = async (t) => {
   records.set('owner-a', [original]);
   records.set('owner-b', [other]);
   await store.getState().loadEvents('owner-a', false);
-  return { store, calls, pending, original, other };
+  const waitForWrite = () => pending.length ? Promise.resolve() : new Promise((resolve) => { onWrite = resolve; });
+  return { store, calls, pending, original, other, waitForWrite };
 };
 
 test('an account-A update completing after switching to B cannot replace a same-ID B record', async (t) => {
-  const { store, calls, pending, original, other } = await openStore(t);
+  const { store, calls, pending, original, other, waitForWrite } = await openStore(t);
   const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Account A edited' });
   assert.equal(store.getState().events[0].name, 'Account A edited', 'the active account receives its optimistic edit');
+  await waitForWrite();
   assert.equal(calls.at(-1)[1], 'owner-a');
   await store.getState().loadEvents('owner-b', false);
   const accountB = store.getState();
@@ -78,10 +86,22 @@ test('an account-A update completing after switching to B cannot replace a same-
   assert.equal(store.getState().events[0].name, 'Account B private record');
 });
 
-test('an account-A update failing after switching to B cannot roll back or set errors in B', async (t) => {
+test('switching before the account writer is ready cancels the old write', async (t) => {
   t.mock.method(console, 'error', () => {});
   const { store, pending, original, other } = await openStore(t);
+  const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Pending edit' });
+  const failure = assert.rejects(operation, /Account changed/);
+  await store.getState().loadEvents('owner-b', false);
+  await failure;
+  assert.equal(pending.length, 0);
+  assert.equal(store.getState().events[0], other);
+});
+
+test('an account-A update failing after switching to B cannot roll back or set errors in B', async (t) => {
+  t.mock.method(console, 'error', () => {});
+  const { store, pending, original, other, waitForWrite } = await openStore(t);
   const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Account A edited' });
+  await waitForWrite();
   await store.getState().loadEvents('owner-b', false);
   store.setState({ error: 'Account B existing status' });
   const accountB = store.getState();
@@ -96,11 +116,12 @@ test('an account-A update failing after switching to B cannot roll back or set e
 
 test('a failed update in the same account restores its original record and reports the save error', async (t) => {
   t.mock.method(console, 'error', () => {});
-  const { store, pending, original } = await openStore(t);
+  const { store, pending, original, waitForWrite } = await openStore(t);
   const operation = store.getState().updateEventItem('owner-a', false, { ...original,
     activities: [{ ...original.activities[0], completed: true }], name: 'Pending edit' });
   assert.equal(store.getState().events[0].name, 'Pending edit');
   assert.equal(store.getState().events[0].status, 'completed');
+  await waitForWrite();
   const failure = new Error('Synthetic same-account write failure');
   const rejection = assert.rejects(operation, (error) => error === failure);
   pending[0].reject(failure);
@@ -112,8 +133,9 @@ test('a failed update in the same account restores its original record and repor
 });
 
 test('a successful update in the same account keeps the service result and provider identity', async (t) => {
-  const { store, pending, original } = await openStore(t);
+  const { store, pending, original, waitForWrite } = await openStore(t);
   const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Edited title' });
+  await waitForWrite();
   const saved = { id: original.id, name: 'Confirmed title', activities: original.activities, status: 'in-progress' };
   pending[0].resolve(saved);
   assert.equal(await operation, saved);
@@ -126,8 +148,9 @@ test('a successful update in the same account keeps the service result and provi
 test('A → B → A invalidates old completion and rollback even when the account and application IDs match again', async (t) => {
   t.mock.method(console, 'error', () => {});
   for (const fails of [false, true]) {
-    const { store, pending, original } = await openStore(t);
+    const { store, pending, original, waitForWrite } = await openStore(t);
     const operation = store.getState().updateEventItem('owner-a', false, { ...original, name: 'Old pending edit' });
+    await waitForWrite();
     await store.getState().loadEvents('owner-b', false);
     await store.getState().loadEvents('owner-a', false);
     store.setState({ events: [{ ...original, name: 'Newly loaded A record' }] });
@@ -158,7 +181,7 @@ test('Guest Activity deletion detaches canonical and legacy Task links only afte
 });
 
 test('Guest Moment deletion detaches links after removal; account updates do not modify Tasks', async (t) => {
-  const { store, calls, original, pending } = await openStore(t);
+  const { store, calls, original, pending, waitForWrite } = await openStore(t);
   store.setState({ events: [{ id: 'guest-moment', activities: [] }] });
   await store.getState().deleteEventItem(null, true, 'guest-moment');
   assert.deepEqual(calls.filter(([action]) => action === 'task-detach'), [
@@ -169,6 +192,7 @@ test('Guest Moment deletion detaches links after removal; account updates do not
   await store.getState().loadEvents('owner-a', false);
   const operation = store.getState().updateEventItem('owner-a', false, { ...original,
     activities: [] });
+  await waitForWrite();
   pending[0].resolve({ ...original, activities: [] });
   await operation;
   assert.equal(calls.filter(([action]) => action === 'task-detach').length, 1,

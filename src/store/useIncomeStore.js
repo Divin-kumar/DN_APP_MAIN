@@ -5,15 +5,7 @@ import { formatMomentDate } from '../utils/momentDates';
   This store is responsible for all income data the app tracks, including reading from storage and saving changes.
 */
 import { create } from 'zustand';
-import {
-  createIncome,
-  deleteIncome,
-  getGuestIncomes,
-  getIncomesForUser,
-  removeGuestIncome,
-  saveGuestIncome,
-  updateIncome,
-} from '../services/incomeService';
+import { getGuestIncomes, removeGuestIncome, saveGuestIncome } from '../services/guestIncomeService';
 import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
 import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
@@ -50,7 +42,7 @@ const useIncomeStore = create((set, get) => {
         const sampleData = getActiveSampleData(uid);
         const items = sampleData
           ? sampleData.incomes
-          : isGuest ? getGuestIncomes() : await getIncomesForUser(uid);
+          : isGuest ? getGuestIncomes() : await import('../services/incomeService').then(({ getIncomesForUser }) => getIncomesForUser(uid));
         if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) {
           set({ incomes: items, loading: false, error: null, loadedFor: loadKey, loadedSample: sample });
         }
@@ -96,6 +88,8 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: optimistic, error: null });
 
     try {
+      const { createIncome } = await import('../services/incomeService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const saved = await createIncome(uid, normalized);
       if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return saved;
       set({
@@ -139,6 +133,8 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: optimistic, error: null });
 
     try {
+      const { updateIncome } = await import('../services/incomeService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const updated = await updateIncome(uid, income);
       if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return updated;
       set({
@@ -187,6 +183,8 @@ const useIncomeStore = create((set, get) => {
     set({ incomes: remaining, error: null });
 
     try {
+      const { deleteIncome } = await import('../services/incomeService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       await deleteIncome(uid, income);
     } catch (error) {
       console.error('Failed to delete income:', error);

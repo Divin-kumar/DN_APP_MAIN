@@ -1,4 +1,3 @@
-import { detachAccountTaskLinks } from '../services/accountTaskService';
 /*
   Event state actions coordinate persistence and the Events workspace.
 
@@ -6,15 +5,7 @@ import { detachAccountTaskLinks } from '../services/accountTaskService';
   It loads event data, saves new events, edits existing ones, and deletes them.
 */
 import { create } from 'zustand';
-import {
-  createEvent,
-  deleteEvent,
-  getEventsForUser,
-  getGuestEvents,
-  removeGuestEvent,
-  saveGuestEvent,
-  updateEvent,
-} from '../services/eventService';
+import { getGuestEvents, removeGuestEvent, saveGuestEvent } from '../services/guestEventService';
 import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
 import { getStoredEventStatus } from '../utils/eventStatus';
 import { createEventLoader } from '../utils/eventLoadScope';
@@ -87,7 +78,10 @@ const useEventStore = create((set, get) => {
     getSample: getActiveSampleScenario,
     readEvents: async (uid, isGuest) => {
       const sampleData = getActiveSampleData(uid);
-      return sampleData ? sampleData.events : isGuest ? getGuestEvents() : getEventsForUser(uid);
+      if (sampleData) return sampleData.events;
+      if (isGuest) return getGuestEvents();
+      const { getEventsForUser } = await import('../services/eventService');
+      return getEventsForUser(uid);
     },
   }),
 
@@ -122,6 +116,7 @@ const useEventStore = create((set, get) => {
         throw new Error('Unable to load this account’s Moments before saving. Please retry.');
       }
     }
+    const mutationRevision = get().scopeRevision;
     const previous = get().events;
     normalized.firestoreCollection = previous.length && previous.every((item) => item.firestoreCollection === 'events')
       ? 'events' : 'eventGroups';
@@ -129,8 +124,10 @@ const useEventStore = create((set, get) => {
     set({ events: optimistic, error: null });
 
     try {
+      const { createEvent } = await import('../services/eventService');
+      if (get().activeLoadKey !== loadKey || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const saved = await createEvent(uid, normalized);
-      if (get().activeLoadKey === loadKey) {
+      if (get().activeLoadKey === loadKey && get().scopeRevision === mutationRevision) {
         set({
           events: [saved, ...get().events.filter((item) => item.id !== normalized.id && (item.firestoreId || item.id) !== (normalized.firestoreId || normalized.id))],
           error: null,
@@ -139,7 +136,7 @@ const useEventStore = create((set, get) => {
       return saved;
     } catch (error) {
       console.error('Failed to create event:', error);
-      if (get().activeLoadKey === loadKey) {
+      if (get().activeLoadKey === loadKey && get().scopeRevision === mutationRevision) {
         set({
           events: get().events.filter((item) => !sameEvent(item, normalized)),
           error: 'Unable to create the event. Your changes were restored.',
@@ -180,6 +177,8 @@ const useEventStore = create((set, get) => {
     set({ events: optimistic, error: null });
 
     try {
+      const { updateEvent } = await import('../services/eventService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const updated = await updateEvent(uid, normalizedEvent);
       if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return updated;
       set({
@@ -188,6 +187,7 @@ const useEventStore = create((set, get) => {
         ),
       });
       try {
+        const { detachAccountTaskLinks } = await import('../services/accountTaskService');
         await detachAccountTaskLinks(uid, { momentId: recordId(previousEvent?.id) || recordId(previousEvent?.firestoreId),
           activityIds: (previousEvent?.activities || []).flatMap((item) => [item.id, ...(item.mergedActivityIds || [])])
             .filter((id) => !(normalizedEvent.activities || []).some((item) => activityOwnsLinkedId(item, id))),
@@ -224,6 +224,8 @@ const useEventStore = create((set, get) => {
       return;
     }
 
+    const deletionScope = get().activeLoadKey;
+    const deletionRevision = get().scopeRevision;
     const remaining = current.filter((item) => item.id !== eventId && item.firestoreId !== eventId);
     set({ events: remaining, error: null });
 
@@ -234,16 +236,18 @@ const useEventStore = create((set, get) => {
         return;
       }
 
-      const deletionScope = get().activeLoadKey;
-      const deletionRevision = get().scopeRevision;
+      const { deleteEvent } = await import('../services/eventService');
+      if (get().activeLoadKey !== deletionScope || get().scopeRevision !== deletionRevision) throw new Error('Account changed.');
       await deleteEvent(uid, event);
       try {
+        const { detachAccountTaskLinks } = await import('../services/accountTaskService');
         await detachAccountTaskLinks(uid, { momentId: recordId(event.id) || recordId(event.firestoreId) }, () => {
           if (get().activeLoadKey !== deletionScope || get().scopeRevision !== deletionRevision) throw new Error('Account changed.');
         });
       } catch (error) { console.warn('Task links retained after parent deletion:', error); }
     } catch (error) {
       console.error('Failed to delete event:', error);
+      if (get().activeLoadKey !== deletionScope || get().scopeRevision !== deletionRevision) throw error;
       set({
         events: get().events.some((item) => sameEvent(item, event)) ? get().events : [event, ...get().events],
         error: 'Unable to delete the event. It has been restored.',

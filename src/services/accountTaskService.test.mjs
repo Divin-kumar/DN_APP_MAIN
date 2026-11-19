@@ -6,6 +6,7 @@ async function harness(t) {
   const key = `__taskCloud${Date.now()}${Math.random().toString(36).slice(2)}`;
   const rows = new Map();
   const listeners = [];
+  let onListener;
   const auth = { currentUser: { uid: 'alice' } };
   let failure = false;
   const snapshot = (ref) => ({ id: ref.path.split('/').at(-1), exists: () => rows.has(ref.path), data: () => rows.get(ref.path) });
@@ -19,7 +20,7 @@ async function harness(t) {
       return { docs: [...rows.keys()].filter((path) => path.startsWith(ref.path + '/')).map((path) => snapshot({ path })) };
     },
     onSnapshot: (ref, next, error) => {
-      const listener = { ref, next, error, stopped: false }; listeners.push(listener);
+      const listener = { ref, next, error, stopped: false }; listeners.push(listener); onListener?.(listener);
       return () => { listener.stopped = true; };
     },
     runTransaction: async (_, work) => {
@@ -54,7 +55,8 @@ async function harness(t) {
   const { default: store } = await server.ssrLoadModule('/src/store/useTaskStore.js');
   const transfer = await server.ssrLoadModule('/src/services/guestMergeService.js');
   const expensePlans = await server.ssrLoadModule('/src/services/expensePlanService.js');
-  return { ...api, service, transfer, expensePlans, store, app: api.app, fail: () => { failure = true; }, snapshot };
+  const nextListener = () => new Promise((resolve) => { onListener = resolve; });
+  return { ...api, service, transfer, expensePlans, store, app: api.app, fail: () => { failure = true; }, snapshot, nextListener };
 }
 const task = { id: 'stable', title: 'Keep my task', priority: 'high', dueDate: '2026-11-07', dueTime: '09:30', momentId: 'moment', activityId: 'activity', updatedAt: '2026-11-04T10:00:00.000Z' };
 
@@ -119,7 +121,12 @@ test('account expense plan keeps a single receipt and advances only on committed
 test('live Task store clears on logout and rejects old callbacks after A→B→A', async (t) => {
   const h = await harness(t);
   h.store.getState().loadTasks();
-  const first = h.listeners[0];
+  h.app.setState({ user: null });
+  h.app.setState({ user: { uid: 'alice' } });
+  const starting = h.nextListener();
+  h.store.getState().loadTasks();
+  const first = await starting;
+  assert.deepEqual(h.listeners, [first], 'logout cancels a watcher whose module has not finished loading');
   first.next({ docs: [{ id: task.id, data: () => task }] });
   assert.equal(h.store.getState().tasks.length, 1);
   h.app.setState({ user: null });
@@ -127,11 +134,13 @@ test('live Task store clears on logout and rejects old callbacks after A→B→A
   assert.equal(first.stopped, true);
   h.app.setState({ user: { uid: 'bob' } });
   h.app.setState({ user: { uid: 'alice' } });
+  const restarting = h.nextListener();
   h.store.getState().loadTasks();
   first.next({ docs: [{ id: 'old', data: () => ({ ...task, id: 'old' }) }] });
   assert.equal(h.store.getState().loadedFor, null);
   assert.equal(h.store.getState().tasks.length, 0);
-  h.listeners.at(-1).next({ docs: [{ id: task.id, data: () => task }] });
+  const latest = await restarting;
+  latest.next({ docs: [{ id: task.id, data: () => task }] });
   assert.equal(h.store.getState().loadedFor, 'account:alice');
   await h.service.writeAccountTask('alice', task, { mode: 'create' });
   await h.store.getState().setTaskStatus(task.id, 'completed');

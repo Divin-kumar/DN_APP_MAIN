@@ -263,18 +263,24 @@ export function DashboardOverviewContent() {
     loadEvents(user?.uid, isGuest);
   }, [isGuest, loadEvents, user?.uid, loadedFor]);
 
-  useEffect(() => { taskStore.loadTasks(); }, [taskStore.loadTasks, taskScope]);
+  useEffect(() => {
+    if (sections.tasks) taskStore.loadTasks();
+  }, [sections.tasks, taskStore.loadTasks, taskScope]);
   const today = useDashboardClock();
   const todayKey = today.toDateString();
-  const upcomingEvents = useMemo(() => getUpcomingDashboardEvents(events, today, momentTypes), [events, momentTypes, todayKey]);
-  const onThisDayEvents = useMemo(() => getOnThisDayDashboardEvents(events, today, momentTypes), [events, momentTypes, todayKey]);
-  const dashboardMoments = momentView === 'upcoming' ? upcomingEvents : onThisDayEvents;
-  const upcomingActivities = useMemo(() => getUpcomingDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
-  const onThisDayActivities = useMemo(() => getOnThisDayDashboardActivities(events, today, momentTypes), [events, momentTypes, todayKey]);
-  const dashboardActivities = activityView === 'upcoming' ? upcomingActivities : onThisDayActivities;
-  const dashboardTasks = useMemo(() => (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
+  const dashboardMoments = useMemo(() => {
+    if (!sections.moments) return EMPTY_EVENTS;
+    const selectMoments = momentView === 'upcoming' ? getUpcomingDashboardEvents : getOnThisDayDashboardEvents;
+    return selectMoments(events, today, momentTypes);
+  }, [events, momentTypes, momentView, sections.moments, todayKey]);
+  const dashboardActivities = useMemo(() => {
+    if (!sections.activities) return EMPTY_EVENTS;
+    const selectActivities = activityView === 'upcoming' ? getUpcomingDashboardActivities : getOnThisDayDashboardActivities;
+    return selectActivities(events, today, momentTypes);
+  }, [activityView, events, momentTypes, sections.activities, todayKey]);
+  const dashboardTasks = useMemo(() => sections.tasks && (isGuest || user?.uid) && taskStore.loadedFor === taskScope && !taskStore.error
     ? selectUpcomingIndependentTasks(taskStore.tasks, today) : [],
-  [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, todayKey]);
+  [isGuest, user?.uid, taskStore.loadedFor, taskStore.error, taskStore.tasks, taskScope, sections.tasks, todayKey]);
   const isTaskSectionEmpty = taskStore.loadedFor === taskScope && !taskStore.error && dashboardTasks.length === 0;
   const getMomentGreeting = (event) => {
     const greetingSource = momentView === 'on-this-day' && !isRecurringEvent(event) ? { ...event, recurrence: 'yearly' } : event;

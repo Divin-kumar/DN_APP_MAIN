@@ -7,8 +7,8 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
   await page.route('**/src/services/accountTaskService.js', (route) => route.fulfill({ contentType: 'application/javascript', body: `
     const rows = new Map(); let receive;
     const publish = () => receive?.([...rows.values()]);
-    window.taskTransport = { fail: false, flush: publish, push: (tasks) => { rows.clear(); tasks.forEach(t=>rows.set(t.id,t)); publish(); } };
-    export const watchAccountTasks=(uid,guard,next)=>{receive=tasks=>{guard();next(tasks)};queueMicrotask(()=>receive([...rows.values()]));return()=>{receive=null}};
+    window.taskTransport = { fail: false, watching: () => Boolean(receive), flush: publish, push: (tasks) => { rows.clear(); tasks.forEach(t=>rows.set(t.id,t)); publish(); } };
+    export const watchAccountTasks=(uid,guard,next)=>{receive=tasks=>{guard();next(tasks)};if(!window.holdTaskRead)queueMicrotask(publish);return()=>{receive=null}};
     export const writeAccountTask = async (uid, task, { repeatAction } = {}) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
       if (window.taskTransport.fail) throw Error('Save failed. Try again.');
@@ -26,14 +26,29 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
     export const removeAccountTask=async(uid,id)=>{rows.delete(id);receive?.([...rows.values()]);return true};
     export const listAccountTasks=async()=>[...rows.values()];export const mergeAccountTasks=async()=>({added:0,conflicts:0});export const detachAccountTaskLinks=async()=>{};
   ` }));
-  await seedGuest(page); await page.goto('/tasks');
-  await expect(page.locator('.dn-header').getByRole('heading', { name: 'Tasks', exact: true })).toBeVisible();
+  await seedGuest(page); await page.goto('/dashboard');
+  const dashboard = page.locator('.dashboard-overview');
+  await expect(dashboard.getByRole('button', { name: 'Show Tasks on dashboard' })).toBeVisible();
   await page.evaluate(async () => {
     const app = (await import('/src/store/useAppStore.js')).default;
     const events = (await import('/src/store/useEventStore.js')).default;
     events.setState({ loadEvents: () => {}, events: [], loadedFor: 'user:test-account', activeLoadKey: 'user:test-account' });
+    window.holdTaskRead = true;
     app.setState({ user: { uid: 'test-account', displayName: 'Test' }, isGuest: false });
   });
+  await expect(dashboard.getByRole('heading', { name: /Good .*, Test/ })).toBeVisible();
+  expect(await page.evaluate(() => window.taskTransport === undefined)).toBe(true);
+  await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
+  await page.getByRole('button', { name: 'Task', exact: true }).click();
+  const quickTask = page.getByRole('dialog', { name: 'New Task', exact: true });
+  await quickTask.getByLabel('Task title', { exact: true }).fill('Draft during sync');
+  await expect(quickTask.getByRole('button', { name: 'Preparing Tasks…' })).toBeDisabled();
+  await page.waitForFunction(() => window.taskTransport?.watching());
+  await page.evaluate(() => { window.holdTaskRead = false; window.taskTransport.flush(); });
+  await expect(quickTask.getByRole('button', { name: 'Create Task', exact: true })).toBeEnabled();
+  await expect(quickTask.getByLabel('Task title', { exact: true })).toHaveValue('Draft during sync');
+  await quickTask.getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.evaluate(() => { history.pushState({}, '', '/tasks'); dispatchEvent(new PopStateEvent('popstate')); });
   await expect(page.getByText('A clear start')).toBeVisible();
   // Drive the existing route via history without losing the injected session.
   await page.evaluate(() => { history.pushState({}, '', '/tasks?create=1'); dispatchEvent(new PopStateEvent('popstate')); });

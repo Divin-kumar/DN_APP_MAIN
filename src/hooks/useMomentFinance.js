@@ -5,7 +5,7 @@ import useExpenseStore from '../store/useExpenseStore';
 import { isRecordScopeLoaded } from '../utils/scopedRecordActions';
 import { projectMomentTransactions } from '../utils/momentTransactions';
 import { summarizeTransactions } from '../utils/transactionFilters';
-import { getGuestExpenseMasters } from '../services/expenseService';
+import { getGuestExpenseMasters } from '../services/guestExpenseService';
 import { requireActiveSampleData } from '../dev/sampleData';
 import { recordId } from '../utils/recordIdentity';
 

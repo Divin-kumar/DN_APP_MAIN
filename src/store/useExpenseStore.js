@@ -5,15 +5,7 @@ import { formatMomentDate } from '../utils/momentDates';
   This store handles all expense-related data, including loading, creating, updating, and deleting records.
 */
 import { create } from 'zustand';
-import {
-  createExpense,
-  deleteExpense,
-  getExpensesForUser,
-  getGuestExpenses,
-  removeGuestExpense,
-  saveGuestExpense,
-  updateExpense,
-} from '../services/expenseService';
+import { getGuestExpenses, removeGuestExpense, saveGuestExpense } from '../services/guestExpenseService';
 import { requireActiveSampleData as getActiveSampleData, getActiveSampleScenario, saveActiveSampleData } from '../dev/sampleData';
 import { sameRecord } from '../utils/transactionRelations';
 import { beginFinancialLoad, isFinancialScopeLoaded } from '../utils/financialLoadScope';
@@ -60,7 +52,7 @@ const useExpenseStore = create((set, get) => {
 
         const items = isGuest
           ? getGuestExpenses()
-          : await getExpensesForUser(uid);
+          : await import('../services/expenseService').then(({ getExpensesForUser }) => getExpensesForUser(uid));
 
         if (get().activeLoadKey === loadKey && (get().activeSample ?? null) === sample) set({ expenses: items, loading: false, error: null, loadedFor: loadKey, loadedSample: sample });
         return items;
@@ -106,6 +98,8 @@ const useExpenseStore = create((set, get) => {
     set({ expenses: optimistic, pendingCreateIds: [...get().pendingCreateIds, String(normalized.id)], loading: false, error: null });
 
     try {
+      const { createExpense } = await import('../services/expenseService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const saved = await createExpense(uid, normalized);
       if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return saved;
       set({
@@ -151,6 +145,8 @@ const useExpenseStore = create((set, get) => {
     set({ expenses: optimistic, error: null });
 
     try {
+      const { updateExpense } = await import('../services/expenseService');
+      if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
       const updated = await updateExpense(uid, expense);
       if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) return updated;
       set({
@@ -201,6 +197,8 @@ const useExpenseStore = create((set, get) => {
     try {
       // Nested-only records have no Firestore document to delete.
       if (expense.firestoreId) {
+        const { deleteExpense } = await import('../services/expenseService');
+        if (get().activeLoadKey !== mutationScope || get().scopeRevision !== mutationRevision) throw new Error('Account changed.');
         await deleteExpense(uid, expense);
       }
     } catch (error) {

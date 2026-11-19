@@ -7,9 +7,9 @@ for (const domain of ['Income', 'Expense']) for (const operation of ['add', 'upd
   test(`${domain} ${operation}: late account success/failure cannot replace a new same-ID scope`, async (t) => {
     t.mock.method(console, 'error', () => {});
     const key = `__dnFinanceMutation${Date.now()}${Math.random().toString(36).slice(2)}`;
-    let settle;
+    let settle, onWrite;
     const api = { read: async (uid) => [{ id: 'same', firestoreId: `${uid}-document`, name: uid, amount: 10 }],
-      write: () => new Promise((resolve, reject) => { settle = { resolve, reject }; }) };
+      write: () => new Promise((resolve, reject) => { settle = { resolve, reject }; onWrite(); }) };
     globalThis[key] = api;
     const server = await createServer({ configFile: false, envFile: false, ssr: { external: ['zustand', 'react'] },
       server: { middlewareMode: true, watch: null, hmr: { server: createHttpServer() } },
@@ -36,7 +36,9 @@ for (const domain of ['Income', 'Expense']) for (const operation of ['add', 'upd
       await store.getState()[load]('A', false);
       const original = store.getState()[field][0];
       const method = operation === 'add' ? `add${domain}` : `${operation}${domain}Item`;
+      const started = new Promise((resolve) => { onWrite = resolve; });
       const pending = store.getState()[method]('A', false, operation === 'delete' ? original.id : { ...original, name: 'Old pending edit' });
+      await started;
       await store.getState()[load]('B', false);
       const current = store.getState();
       if (failure) {

@@ -26,7 +26,7 @@ export function TaskRepeatActionSummary({ task, action }) {
 }
 
 // Keep drafts local until Save. An absent parent is never silently unlinked.
-export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, error = '' }) {
+export default function TaskEditor({ task, moments = [], onSave, onClose, onTaskAction, busy = false, saveReady = true, error = '' }) {
   const formId = useId();
   const footer = useDialogFormFooter();
   const [pendingAction, setPendingAction] = useState(null);
@@ -60,7 +60,8 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [activityId, setActivityId] = useState(recordId(task?.activityId));
   const nextRepeat = previewNextRepeat(task, repeatFrequency, dueDate);
   const repeatNotice = repeatEditNotice(task, repeatFrequency, dueDate, nextRepeat);
-  const canSave = !busy && title.trim() && (!repeatFrequency || nextRepeat);
+  const canSave = saveReady && !busy && title.trim() && (!repeatFrequency || nextRepeat);
+  const saveLabel = busy ? 'Saving…' : !saveReady && !error ? 'Preparing Tasks…' : task?.id ? 'Save Task' : 'Create Task';
   const cancelLabel = task?.repeat ? 'Pause repeat' : 'Cancel Task';
   const restoreLabel = task?.repeat ? 'Resume repeat' : 'Restore Task';
   const actionLabel = pendingAction === 'delete' ? 'Delete Task' : pendingAction === 'restore' ? restoreLabel : cancelLabel;
@@ -82,7 +83,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
       {pendingAction ? <button type="button" className={pendingAction === 'delete' || (pendingAction === 'cancel' && !task?.repeat) ? 'modal-danger-button' : 'primaryButton'}
         disabled={busy} onClick={() => onTaskAction(pendingAction)}>{actionLabel}</button>
         : <button type="submit" form={formId} className="primaryButton" disabled={!canSave}>
-        {busy ? 'Saving…' : task?.id ? 'Save Task' : 'Create Task'}
+        {saveLabel}
       </button>}
     </div>
   </>;

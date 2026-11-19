@@ -1,4 +1,3 @@
-import { watchAccountTasks, writeAccountTask, removeAccountTask } from '../services/accountTaskService';
 import { create } from 'zustand';
 import useAppStore from './useAppStore';
 import { getActiveSampleScenario, requireActiveSampleData, saveActiveSampleData } from '../dev/sampleData';
@@ -6,6 +5,9 @@ import { createGuestTaskRepository, withGuestTaskLock } from '../services/guestT
 import { advanceRepeatingTask, detachIndependentTaskLinks, normalizeIndependentTask, taskRepeatForDraft, taskStatusPatch } from '../utils/independentTasks.js';
 import { recordId } from '../utils/recordIdentity.js';
 import { scheduleTimestamp } from '../utils/repeatSchedule.js';
+import { deferSubscription } from '../utils/deferSubscription';
+
+const loadAccountTaskService = () => import('../services/accountTaskService');
 
 export const taskScopeKey = ({ user, isGuest } = {}) => user?.uid ? `account:${user.uid}`
   : isGuest ? `guest:${getActiveSampleScenario() || 'private'}` : 'signed-out';
@@ -57,10 +59,9 @@ const useTaskStore = create((set, get) => ({
       const fail = (error) => {
         if (epoch === accountEpoch && taskScopeKey(useAppStore.getState()) === scope) set({ tasks: [], loadedFor: null, error: error.message || 'Tasks could not sync.' });
       };
-      try {
-        unsubscribe = watchAccountTasks(scope.slice(8), guard,
-          (tasks) => set({ tasks, loadedFor: scope, error: null }), fail);
-      } catch (error) { fail(error); }
+      unsubscribe = deferSubscription(loadAccountTaskService, ({ watchAccountTasks }) => (
+        watchAccountTasks(scope.slice(8), guard, (tasks) => set({ tasks, loadedFor: scope, error: null }), fail)
+      ), fail);
       return;
     }
     unsubscribe?.(); unsubscribe = null; watchedScope = null; accountEpoch++;
@@ -90,10 +91,11 @@ const useTaskStore = create((set, get) => ({
     if (scope.startsWith('account:')) {
       if (get().loadedFor !== scope || get().error) throw new Error('Tasks are not ready. Reload and try again.');
       const now = scheduleTimestamp(previous?.updatedAt);
-      return writeAccountTask(scope.slice(8), { ...draft,
+      const guard = accountGuard(scope, accountEpoch);
+      return loadAccountTaskService().then(({ writeAccountTask }) => writeAccountTask(scope.slice(8), { ...draft,
         id: recordId(input?.id) || crypto.randomUUID(), createdAt: previous?.createdAt || now, updatedAt: now,
       }, { mode: input?.id ? 'edit' : 'create', expectedUpdatedAt: expectedUpdatedAt !== undefined
-        ? expectedUpdatedAt : previous?.updatedAt || null, assertCurrent: accountGuard(scope, accountEpoch) });
+        ? expectedUpdatedAt : previous?.updatedAt || null, assertCurrent: guard }));
     }
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace. Reload Tasks and try again.');
@@ -129,7 +131,10 @@ const useTaskStore = create((set, get) => ({
   },
   removeTask: (id, expectedUpdatedAt) => {
     const scope = taskScopeKey(useAppStore.getState());
-    if (scope.startsWith('account:')) return removeAccountTask(scope.slice(8), recordId(id), accountGuard(scope, accountEpoch), expectedUpdatedAt);
+    if (scope.startsWith('account:')) {
+      const guard = accountGuard(scope, accountEpoch);
+      return loadAccountTaskService().then(({ removeAccountTask }) => removeAccountTask(scope.slice(8), recordId(id), guard, expectedUpdatedAt));
+    }
     if (!scope.startsWith('guest:') || get().loadedFor !== scope || get().error) {
       throw new Error('Tasks are not ready in this workspace.');
     }
@@ -186,8 +191,9 @@ const useTaskStore = create((set, get) => ({
     if (status === 'skip' || (status === 'completed' && task.repeat && task.status === 'in-progress')) {
       const action = status === 'skip' ? 'skip' : 'complete';
       if (scope.startsWith('account:')) {
-        return writeAccountTask(scope.slice(8), task, { repeatAction: action,
-          expectedUpdatedAt: task.updatedAt, assertCurrent: accountGuard(scope, accountEpoch) });
+        const guard = accountGuard(scope, accountEpoch);
+        return loadAccountTaskService().then(({ writeAccountTask }) => writeAccountTask(scope.slice(8), task, { repeatAction: action,
+          expectedUpdatedAt: task.updatedAt, assertCurrent: guard }));
       }
       const epoch = guestEpoch;
       return withGuestTaskLock(() => {

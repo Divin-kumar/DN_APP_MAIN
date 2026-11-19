@@ -690,7 +690,7 @@ export default function DashboardLayout() {
           formFooter closeDisabled={quickTaskBusy}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
-            busy={quickTaskBusy || tasksLoaded !== quickTaskScope}
+            busy={quickTaskBusy} saveReady={tasksLoaded === quickTaskScope && !taskLoadError}
             error={quickCreateError || taskLoadError || ''}
             onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }} />
         </ModalDialog>

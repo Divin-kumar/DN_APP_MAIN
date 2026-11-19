@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-582 | Lighten Guest Dashboard and Moment startup
+
+- **Scope.** Split Guest-local Moment, income and expense services from Firestore and load cloud services for account reads, writes and subscriptions. Scope and revision checks guard deferred account writes, and old subscriptions can be cancelled while their module loads. Dashboard reads Tasks when their panel is shown and calculates the selected date view for each visible panel. Quick Create keeps the Task draft editable during the load and enables Create when the scope is ready and the form is valid.
+- **Compatibility.** Guest and demo records use the same keys, formats, and operations. Account services use the same collections, watcher cleanup, validation and transaction semantics. The existing Guest tour uses the same controls and sample data and needs no version change.
+- **Executed.** Compared with `dbc3b78` in a fresh 430 px Chromium session, requested gzip-equivalent JavaScript and CSS fell from 473 kB to 337 kB for Guest Dashboard and from 534 kB to 398 kB for Guest Moment Story, excluding offline installation. Initial offline JS and CSS fell from 438 kB to 302 kB. Build, lint and 633 Node tests passed. Chromium passed 105 browser cases, and 29 focused cases passed on the final form changes, including Task drafting during a delayed account sync. The built-app check verified that the Guest Dashboard skips Firestore before and during initial offline setup, then exercised warmed offline Story and PDF export, exact attachment bytes and Quick Create. WebKit verified Dashboard date controls, Quick Create, Story and PDF Studio at 320, 430 and 1440 px. Physical iPhone Safari and live Google sign-in remain unverified.
+
 ## CHG-20261119-581 | Reduce sign-in and offline startup downloads
 
 - **Scope.** Load the protected workspace, Firestore, Guest tour photo updates and account services when their paths need them. Start the Dashboard home module alongside the workspace on direct entry. Load PDF Studio separately from the rest of a Moment. Subscribe the shell and transaction coordinator to the Task and Finance store values they use.

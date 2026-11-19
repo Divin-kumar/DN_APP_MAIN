@@ -25,6 +25,17 @@ try {
   const context = await browser.newContext({ baseURL:`http://127.0.0.1:${server.address().port}`, viewport:{ width:390, height:844 }, reducedMotion:'reduce' });
   const page = await context.newPage();
   const errors = await seedGuest(page);
+  const firestoreAsset = /\/assets\/config-[^/]+\.js$/;
+  await page.goto('/dashboard');
+  await expect(page.getByRole('button', { name:'Open Book a lakeside stay', exact:true })).toBeVisible();
+  await page.waitForFunction(() => navigator.serviceWorker.controller);
+  const startupAssets = await page.evaluate(async () => [
+    ...performance.getEntriesByType('resource').map(({ name }) => name),
+    ...(await Promise.all((await caches.keys()).map(async (name) => (
+      (await (await caches.open(name)).keys()).map(({ url }) => url)
+    )))).flat(),
+  ]);
+  expect(startupAssets.some((url) => firestoreAsset.test(new URL(url).pathname))).toBe(false);
   await page.goto('/events/moment-one/gallery');
   // The opened Moment's hero is the single page-level heading; the compact
   // shared route label is a styled span, not a duplicate h1.
@@ -77,10 +88,18 @@ try {
   await page.goto('/dashboard');
   await page.getByRole('button', { name:'Open quick create menu', exact:true }).click();
   await page.getByRole('button', { name:'Life moment', exact:true }).click();
-  await expect(page.getByRole('dialog', { name:'Create a life moment' }).getByRole('button', { name:'Save moment' })).toBeVisible();
+  const momentForm = page.getByRole('dialog', { name:'Create a life moment' });
+  await expect(momentForm.getByRole('button', { name:'Save moment' })).toBeVisible();
+  await momentForm.getByRole('button', { name:'Cancel', exact:true }).click();
+  await page.getByRole('button', { name:'Open quick create menu', exact:true }).click();
+  await page.getByRole('button', { name:'Task', exact:true }).click();
+  const taskForm = page.getByRole('dialog', { name:'New Task', exact:true });
+  await taskForm.getByLabel('Task title', { exact:true }).fill('Offline draft');
+  await expect(taskForm.getByRole('button', { name:'Create Task', exact:true })).toBeEnabled();
+  await taskForm.getByRole('button', { name:'Cancel', exact:true }).click();
   const after = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k => localStorage.getItem(k)));
   expect(after).toEqual(before); expect(errors).toEqual([]);
-  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
+  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), guestDashboardWithoutFirestore:true, offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
   await writeFile(resolve(output, 'results.json'), JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }
