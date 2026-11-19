@@ -93,7 +93,9 @@
     background: var(--action-fill) !important;
   }
   html[data-theme] .dn-sidebar .dn-nav-link[aria-current="page"] .dn-nav-icon { color: var(--dn-accent-ink); }
-  html[data-theme] .dn-sidebar .dn-nav-link:hover { transform: none; }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-theme] .dn-sidebar .dn-nav-link:hover { transform: none; }
+  }
   html[data-theme] .dn-shell .dn-quick-create-trigger {
     width: 56px !important;
     min-width: 56px !important;

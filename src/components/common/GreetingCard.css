@@ -52,7 +52,9 @@
 .dashboard-moment-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
 .dashboard-moment-row > .dashboard-upcoming-row { flex: 1; width: 0; min-width: 0; }
 .dashboard-moment-greeting-button { display: inline-flex; flex-shrink: 0; align-items: center; justify-content: center; width: 40px; min-height: 44px; border: 0; border-radius: 9px; background: transparent; color: var(--ink-soft); cursor: pointer; touch-action: manipulation; }
-.dashboard-moment-greeting-button:hover { color: var(--ink); background: var(--surface-soft); }
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-moment-greeting-button:hover { color: var(--ink); background: var(--surface-soft); }
+}
 .dashboard-moment-greeting-button:focus-visible { outline: 2px solid var(--accent, #7c9ac7); outline-offset: 1px; }
 .dashboard-greeting-modal-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
 .dashboard-greeting-modal-actions button { gap: 7px; }

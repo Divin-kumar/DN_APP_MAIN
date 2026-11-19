@@ -243,8 +243,13 @@ html[data-theme] .dn-finance-tools button {
 
 .dn-finance-tools svg { flex: none; }
 .dn-finance-tools button > span { white-space: nowrap; }
-html[data-theme] .dn-finance-tools button:is([aria-expanded="true"], :hover) {
+html[data-theme] .dn-finance-tools button:is([aria-expanded="true"]) {
   background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-finance-tools button:is(:hover) {
+    background: color-mix(in srgb, var(--color-primary) 9%, transparent);
+  }
 }
 
 .dn-finance-table {

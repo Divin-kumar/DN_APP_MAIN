@@ -22,9 +22,11 @@ html[data-theme] .dn-guest-tour-actions .dn-tour-personal-switch {
   backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
   box-shadow:none;
 }
-html[data-theme] .dn-guest-tour-actions button:hover {
-  background:color-mix(in srgb,var(--color-primary) 11%,var(--color-card));
-  border-color:color-mix(in srgb,var(--color-primary) 35%,var(--color-border));
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-guest-tour-actions button:hover {
+    background:color-mix(in srgb,var(--color-primary) 11%,var(--color-card));
+    border-color:color-mix(in srgb,var(--color-primary) 35%,var(--color-border));
+  }
 }
 html[data-theme] .dn-guest-tour-actions button:focus-visible {
   outline:2px solid var(--color-primary);outline-offset:3px;

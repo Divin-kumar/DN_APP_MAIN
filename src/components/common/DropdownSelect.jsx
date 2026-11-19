@@ -359,7 +359,11 @@ export default function DropdownSelect({
                 aria-setsize={visibleIndices.length} aria-posinset={visibleIndices.indexOf(index) + 1}
                 aria-disabled={option.disabled || undefined}
                 className={`dropdown-option${index === selectedIndex ? ' is-selected' : ''}${index === shownActiveIndex ? ' is-active' : ''}`}
-                onMouseEnter={() => { keyboardChoiceRef.current = -1; setActiveIndex(index); }}
+                onPointerEnter={(event) => {
+                  if (event.pointerType !== 'mouse') return;
+                  keyboardChoiceRef.current = -1;
+                  setActiveIndex(index);
+                }}
                 onClick={() => commitOption(index)}>
                 <span title={option.label}>{option.custom ? `Use “${option.label}”` : option.label}</span>
                 {index === selectedIndex ? <Check size={15} aria-hidden="true" /> : null}

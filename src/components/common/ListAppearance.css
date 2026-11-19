@@ -27,7 +27,7 @@ html[data-theme] body :is(
   .code-lists-page .code-list-rows .code-list-row
 ) { background:transparent !important; box-shadow:none !important; }
 html[data-theme] body :is(.dn-task-list .dn-independent-task-row.is-dashboard-selected,
-  .code-lists-page .code-list-rows .code-list-item:focus-within) {
+  .code-lists-page .code-list-rows .code-list-item:has(:focus-visible)) {
   background:var(--dn-list-selected) !important;
 }
 html[data-theme] body :is(.dn-task-list,.life-journey-items,.event-activity-list,.code-list-rows) { gap:8px; }

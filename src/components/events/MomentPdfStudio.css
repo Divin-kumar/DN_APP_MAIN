@@ -55,7 +55,9 @@ html[data-theme] .dn-pdf-content-options[open] summary {margin-bottom:10px;}
 html[data-theme] .dn-pdf-studio-sections {display:grid;gap:6px;padding:0;margin:0;border:0;min-width:0;}
 html[data-theme] .dn-pdf-studio-sections legend {font-weight:660;font-size:.74rem;color:var(--color-text-muted);padding:0 0 5px;}
 html[data-theme] .dn-pdf-studio-toggle {display:flex;align-items:center;gap:10px;padding:8px 5px;min-width:0;cursor:pointer;border-radius:10px;}
-html[data-theme] .dn-pdf-studio-toggle:hover {background:var(--color-card-raised);}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-pdf-studio-toggle:hover {background:var(--color-card-raised);}
+}
 html[data-theme] .dn-pdf-studio-toggle input {width:18px;height:18px;flex:0 0 18px;accent-color:var(--color-primary);}
 html[data-theme] .dn-pdf-studio-toggle span {display:grid;gap:3px;min-width:0;}
 html[data-theme] .dn-pdf-studio-toggle strong {font-size:.79rem;font-weight:690;color:var(--color-text);}
@@ -365,7 +367,7 @@ html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:has(input:checked
   border-color:color-mix(in srgb,var(--color-primary) 45%,var(--color-border));
   background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
 }
-html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:focus-within {
+html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle:has(:focus-visible) {
   outline:2px solid var(--color-primary);outline-offset:2px;
 }
 html[data-theme] .dn-pdf-studio-controls .dn-pdf-studio-toggle > span {flex:1;min-width:0;}

@@ -260,7 +260,9 @@ html[data-theme] .dn-premium-about .dn-about-guide-entry[open] > summary svg {
   transform:rotate(180deg);
   color:var(--color-primary);
 }
-html[data-theme] .dn-premium-about .dn-about-guide-entry > summary:hover h4 { color:var(--color-primary); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-premium-about .dn-about-guide-entry > summary:hover h4 { color:var(--color-primary); }
+}
 html[data-theme] .dn-premium-about .dn-about-guide-entry > summary:focus-visible {
   outline:2px solid var(--color-primary);
   outline-offset:-2px;

@@ -13,6 +13,7 @@ html[data-theme] {
   --dn-type-content: 15px;
   --dn-type-section: 18px;
   --dn-interactive-min: 44px;
+  --dn-press-brightness: .91;
   --dn-focus-ring: 2px solid var(--color-primary);
   --dn-quiet-outline: color-mix(in srgb, var(--color-text) 9%, var(--color-border));
   --dn-premium-radius: 16px;
@@ -22,6 +23,21 @@ html[data-theme] {
   --dn-panel-shadow: 0 3px 13px color-mix(in srgb, var(--color-text) 4%, transparent);
   --dn-accent-ink: color-mix(in srgb, var(--color-primary) 78%, var(--color-text));
   accent-color: var(--color-primary);
+}
+
+html[data-theme="dark"] {
+  --dn-press-brightness: 1.13;
+}
+
+/* Keep press feedback paint-only. Selected and expanded styles belong to
+   the control's state, and the draggable + has its own press animation. */
+:where(
+  button, a[href], summary, [role="button"], [role="option"], [role="menuitem"],
+  [role="switch"], [role="tab"], input[type="checkbox"], input[type="radio"]
+):where(:not(
+  :disabled, [aria-disabled="true"], .dn-command-trigger, .mobile-dock-create-trigger, .dn-quick-create-trigger
+)):active {
+  filter: brightness(var(--dn-press-brightness));
 }
 
 /* Light falls across the work area; cards stay readable as the canvas fades. */
@@ -213,24 +229,13 @@ html[data-theme] .dn-moment-hero-swipe .event-moment-stat-line .dn-moment-metric
   font-size: 11.5px !important;
 }
 
-/* Keyboard and switch-control affordances must survive blur and glass.
-   Touch should never have the persistent desktop hover shadow. */
+/* Keep keyboard and switch-control focus visible on glass surfaces. */
 html[data-theme] :is(
   .dn-premium-dock, .dn-data-page, .dn-premium-about, .dn-premium-code-lists,
   .dn-list-controls, .dn-pdf-studio-page, .activity-detail-page
 ) :is(a,button,input,select,textarea,[role="button"],summary):focus-visible {
   outline: var(--dn-focus-ring) !important;
   outline-offset: 2px;
-}
-@media (hover: none) and (pointer: coarse) {
-  html[data-theme] .dashboard-compact .dashboard-section-actions :is(
-    button:hover, button:focus:not(:focus-visible)
-  ) {
-    box-shadow: none;
-  }
-  html[data-theme] .dn-premium-code-lists .code-list-row:hover:not(:focus-visible) {
-    transform: none;
-  }
 }
 @media (max-width: 760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
   html[data-theme] :is(
@@ -401,9 +406,11 @@ html[data-theme] .dn-header .dn-shell-back {
   box-shadow: none;
   touch-action: manipulation;
 }
-html[data-theme] .dn-header .dn-shell-back:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
-  color: var(--color-primary);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-header .dn-shell-back:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 28%, var(--color-border));
+    color: var(--color-primary);
+  }
 }
 html[data-theme] .dn-header .dn-shell-back:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -582,9 +589,11 @@ html[data-theme] .dn-activity-entry-actions > button {
   color: var(--color-text-muted);
   cursor: pointer;
 }
-html[data-theme] .dn-activity-entry-actions > button:hover {
-  background: var(--color-card-raised);
-  color: var(--color-primary);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-activity-entry-actions > button:hover {
+    background: var(--color-card-raised);
+    color: var(--color-primary);
+  }
 }
 html[data-theme] .dn-activity-entry-actions > button:focus-visible {
   outline: 2px solid var(--color-primary);

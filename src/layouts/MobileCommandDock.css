@@ -27,7 +27,10 @@
     color:white!important;box-shadow:0 3px 10px color-mix(in srgb,var(--color-primary) 22%,transparent)!important;
   }
   html[data-theme] .dn-command-root .dn-command-trigger svg { color:inherit!important; }
-  html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) { background:linear-gradient(145deg,var(--color-primary),color-mix(in srgb,var(--color-primary) 80%,#14213d))!important; }
+  html[data-theme] .dn-command-root .dn-command-trigger:is(:focus:not(:focus-visible)) { background:linear-gradient(145deg,var(--color-primary),color-mix(in srgb,var(--color-primary) 80%,#14213d))!important; }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-theme] .dn-command-root .dn-command-trigger:is(:hover) { background:linear-gradient(145deg,var(--color-primary),color-mix(in srgb,var(--color-primary) 80%,#14213d))!important; }
+  }
   html[data-theme] .dn-command-root .dn-command-trigger.is-dragging { transition:none!important; box-shadow:0 8px 28px color-mix(in srgb,var(--color-primary) 35%,transparent)!important; }
   body.dn-modal-open .dn-command-bar { visibility:hidden; }
   html[data-theme] .dn-content { padding-bottom:calc(98px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)))!important; }
@@ -125,8 +128,13 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
   box-shadow:inset 0 1px 0 color-mix(in srgb,var(--color-card) 58%,transparent) !important;
   backdrop-filter:blur(16px) saturate(1.2); -webkit-backdrop-filter:blur(16px) saturate(1.2);
  }
- html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger:is(:hover,[aria-expanded="true"],.is-active) {
+ html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger:is([aria-expanded="true"], .is-active) {
   background:color-mix(in srgb,var(--color-primary) 12%,var(--color-card)) !important; color:var(--color-primary);
+ }
+ @media (hover: hover) and (pointer: fine) {
+   html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-trigger:is(:hover) {
+    background:color-mix(in srgb,var(--color-primary) 12%,var(--color-card)) !important; color:var(--color-primary);
+   }
  }
  html[data-theme] .dn-command-root.is-floating .dn-command-bar:not(:has(.dn-command-controls > *)) { width:0; }
 }
@@ -167,7 +175,7 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
  }
 
  html[data-theme] .dn-command-root .dn-command-trigger,
- html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)) {
+ html[data-theme] .dn-command-root .dn-command-trigger:is(:focus:not(:focus-visible)) {
    display:grid!important;place-items:center!important;
    background:linear-gradient(155deg,#4383F5,#214CB1)!important;
    border:1px solid rgba(255,255,255,.24)!important;
@@ -176,6 +184,19 @@ html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px;l
    transition:opacity .35s ease,transform .35s cubic-bezier(.22,1,.36,1),
      box-shadow .2s ease!important;
    transform-origin:center bottom;
+ }
+
+ @media (hover: hover) and (pointer: fine) {
+   html[data-theme] .dn-command-root .dn-command-trigger:is(:hover) {
+     display:grid!important;place-items:center!important;
+     background:linear-gradient(155deg,#4383F5,#214CB1)!important;
+     border:1px solid rgba(255,255,255,.24)!important;
+     border-radius:20px!important;padding:0!important;color:white!important;
+     box-shadow:0 9px 22px rgba(23,69,164,.34),inset 0 1px 0 rgba(255,255,255,.3)!important;
+     transition:opacity .35s ease,transform .35s cubic-bezier(.22,1,.36,1),
+     box-shadow .2s ease!important;
+     transform-origin:center bottom;
+   }
  }
  html[data-theme] .dn-command-root .dn-command-trigger:focus-visible {
    outline:2px solid var(--color-primary)!important;outline-offset:3px;
@@ -286,7 +307,7 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     top:3px; right:4px;
   }
   html[data-theme] .dn-command-root .dn-command-trigger,
-  html[data-theme] .dn-command-root .dn-command-trigger:is(:hover,:focus:not(:focus-visible)),
+  html[data-theme] .dn-command-root .dn-command-trigger:is(:focus:not(:focus-visible)),
   html[data-theme] .dn-command-root .dn-command-trigger.is-dragging {
     width:52px !important;min-width:52px !important;height:52px !important;min-height:52px !important;
     display:grid !important;place-items:center !important;
@@ -296,6 +317,18 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     -webkit-tap-highlight-color:transparent;
     filter:none !important;
     transition:transform .18s ease !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-theme] .dn-command-root .dn-command-trigger:is(:hover) {
+      width:52px !important;min-width:52px !important;height:52px !important;min-height:52px !important;
+      display:grid !important;place-items:center !important;
+      padding:0 !important;border:0 !important;border-radius:50% !important;
+      background:#4383f5 !important;box-shadow:0 5px 14px rgba(44,94,190,.24) !important;
+      color:#fff !important;
+      -webkit-tap-highlight-color:transparent;
+      filter:none !important;
+      transition:transform .18s ease !important;
+    }
   }
   html[data-theme] .dn-command-root .dn-command-trigger .dn-create-glyph {
     display:block !important;width:31px !important;height:31px !important;

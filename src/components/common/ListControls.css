@@ -38,12 +38,18 @@ html[data-theme] .dn-list-controls-trigger {
   font-weight: 650;
   cursor: pointer;
 }
-html[data-theme] .dn-list-controls-trigger:hover,
 html[data-theme] .dn-list-controls-trigger[aria-expanded="true"],
 html[data-theme] .dn-list-controls-trigger.is-active {
   border-color: var(--action-border);
   background: var(--action-fill);
   color: var(--action-ink);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-trigger:hover {
+    border-color: var(--action-border);
+    background: var(--action-fill);
+    color: var(--action-ink);
+  }
 }
 html[data-theme] .dn-list-controls-badge {
   display: inline-grid;
@@ -155,16 +161,20 @@ html[data-theme] .dn-list-controls-scroll button {
   font-weight: 550;
   cursor: pointer;
 }
-html[data-theme] .dn-list-controls-reset:hover,
-html[data-theme] .dn-list-controls-scroll button:hover {
-  background: var(--action-fill);
-  color: var(--action-ink);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-reset:hover,
+  html[data-theme] .dn-list-controls-scroll button:hover {
+    background: var(--action-fill);
+    color: var(--action-ink);
+  }
 }
 html[data-theme] .dn-list-controls-reset {
   min-height: 32px; padding: 0 3px; border: 0; border-radius: 0;
   background: transparent; box-shadow: none;
 }
-html[data-theme] .dn-list-controls-reset:hover { background: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-reset:hover { background: transparent; }
+}
 html[data-theme] .dn-list-controls-reset:disabled,
 html[data-theme] .dn-list-controls-scroll button:disabled { opacity: .4; cursor: default; }
 html[data-theme] .dn-list-controls-scroll { display: flex; flex: 0 0 auto; gap: 0; }
@@ -243,9 +253,11 @@ html[data-theme] :is(.dn-list-controls, .dn-command-controls) .dn-list-controls-
   background:transparent; color:var(--color-text-muted);
   box-shadow:none; cursor:pointer; touch-action:manipulation;
 }
-html[data-theme] .dn-list-controls-search .dn-search-clear:hover {
-  background:color-mix(in srgb,var(--color-primary) 7%,transparent);
-  color:var(--color-text);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-search .dn-search-clear:hover {
+    background:color-mix(in srgb,var(--color-primary) 7%,transparent);
+    color:var(--color-text);
+  }
 }
 html[data-theme] .dn-list-controls-search .dn-search-clear:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:-3px;
@@ -261,10 +273,17 @@ html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-
   color:var(--color-text-muted); font-size:12px; font-weight:660;
   transition:background .16s ease,border-color .16s ease,color .16s ease;
 }
-html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:is(:hover,[aria-expanded="true"],.is-active) {
+html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:is([aria-expanded="true"], .is-active) {
   border-color:color-mix(in srgb,var(--color-primary) 29%,var(--color-border));
   background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
   color:var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:is(:hover) {
+    border-color:color-mix(in srgb,var(--color-primary) 29%,var(--color-border));
+    background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
+    color:var(--color-primary);
+  }
 }
 html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger .dn-list-controls-badge {
   position:absolute; top:-4px; right:-3px;
@@ -429,9 +448,15 @@ html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line .dn-list-
   font-weight: 600;
   box-shadow: none;
 }
-html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):not(:disabled):is(:hover,:focus-visible) {
+html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):not(:disabled):is(:focus-visible) {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   color: var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):not(:disabled):is(:hover) {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary);
+  }
 }
 html[data-theme] .dn-list-controls-panel .dn-list-controls-action-line :is(.dn-sort-direction,.dn-list-controls-reset):focus-visible {
   outline: 2px solid var(--color-primary);
@@ -532,7 +557,9 @@ html[data-theme] .dn-transactions-export {
   background: transparent; color: var(--color-primary); font: inherit;
   font-size: 12px; font-weight: 670; cursor: pointer;
 }
-html[data-theme] .dn-transactions-export:hover { background: var(--action-fill); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-transactions-export:hover { background: var(--action-fill); }
+}
 html[data-theme] .dn-transactions-export:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }
 html[data-theme] .dn-transactions-export:disabled { color: var(--color-text-muted); opacity: .55; cursor: not-allowed; }
 @media(max-width:360px) {

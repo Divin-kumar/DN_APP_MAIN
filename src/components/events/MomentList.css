@@ -187,17 +187,6 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   transform: none !important;
   transition: background-color .18s ease !important;
 }
-@media (hover: none), (pointer: coarse) {
-  html[data-theme] .life-timeline-page .dn-v2-moment-card:hover {
-    transform: none;
-    background: var(--color-card);
-    border-color: var(--color-border);
-    box-shadow: 0 6px 22px color-mix(in srgb, var(--color-bg) 65%, transparent);
-  }
-  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-record-menu-trigger:hover:not(:focus-visible) {
-    background: transparent; border-color: transparent;
-  }
-}
 @media (max-width: 850px) {
   html[data-theme] .life-timeline-page .life-journey-items { grid-template-columns: minmax(0,1fr); gap: 11px; }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { min-height: 156px !important; }

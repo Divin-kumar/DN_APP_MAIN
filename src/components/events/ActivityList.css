@@ -97,9 +97,11 @@ html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-co
   box-shadow:0 6px 22px color-mix(in srgb,var(--color-bg) 65%,transparent);
   transition:border-color .18s ease,box-shadow .18s ease,transform .18s ease;
 }
-html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card:hover {
-  border-color:color-mix(in srgb,var(--color-primary) 36%,var(--color-border));
-  box-shadow:0 13px 30px color-mix(in srgb,var(--color-bg) 48%,transparent);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card:hover {
+    border-color:color-mix(in srgb,var(--color-primary) 36%,var(--color-border));
+    box-shadow:0 13px 30px color-mix(in srgb,var(--color-bg) 48%,transparent);
+  }
 }
 html[data-theme] :is(.activities-page, .workspace-activities) .event-activity-content .dn-v2-activity-card .dn-swipe-main {
   display:block; width:100%; min-height:0; height:100%;

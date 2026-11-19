@@ -39,9 +39,11 @@ html[data-theme] .dn-moment-nav .event-workspace-nav-item > small {
   font-size:10px; font-weight:710; color:inherit;
   font-variant-numeric:tabular-nums;
 }
-html[data-theme] .dn-moment-nav .event-workspace-nav-item:hover {
-  color:var(--color-text) !important;
-  background:color-mix(in srgb,var(--color-primary) 5%,transparent) !important;
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-moment-nav .event-workspace-nav-item:hover {
+    color:var(--color-text) !important;
+    background:color-mix(in srgb,var(--color-primary) 5%,transparent) !important;
+  }
 }
 html[data-theme] .dn-moment-nav .event-workspace-nav-item.is-active,
 html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"] {

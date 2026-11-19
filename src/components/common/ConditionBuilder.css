@@ -15,10 +15,14 @@ html[data-theme] .dn-condition-chips .dn-condition-chip .dn-condition-chip-edit 
 html[data-theme] .dn-condition-chip-edit { flex:0 1 auto; }
 html[data-theme] .dn-condition-chip-edit > svg { flex:0 0 auto; }
 html[data-theme] .dn-condition-chip .dropdown-trigger > span { display:block; flex:1 1 0; min-width:0; }
-html[data-theme] .dn-condition-chip .dropdown-trigger:hover,
-html[data-theme] .dn-condition-chip-edit:hover { color:var(--color-primary) !important; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-condition-chip .dropdown-trigger:hover,
+  html[data-theme] .dn-condition-chip-edit:hover { color:var(--color-primary) !important; }
+}
 html[data-theme] .dn-condition-chip-remove { display:grid; place-items:center; flex:0 0 44px; width:44px; height:44px; padding:0; border:0; border-radius:8px; background:transparent; color:var(--color-text-muted); cursor:pointer; }
-html[data-theme] .dn-condition-chip-remove:hover { color:var(--color-danger); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-condition-chip-remove:hover { color:var(--color-danger); }
+}
 html[data-theme] .dn-applied-filter-editor .form-surface { gap:12px; }
 html[data-theme] .dn-applied-filter-editor .form-actions { display:flex; justify-content:flex-end; gap:8px; }
 html[data-theme] .dn-condition-group { min-width:0; }
@@ -231,8 +235,13 @@ html[data-theme] .dn-conditions .dn-condition-rule .dn-condition-no-value {
     background: var(--color-card);
     box-shadow: -5px 0 9px -5px color-mix(in srgb, var(--color-text) 12%, transparent);
   }
-  html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon:is(:hover,:focus-visible) {
+  html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon:is(:focus-visible) {
     background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card));
+  }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-theme] .dn-conditions .dn-condition-rule > .dn-condition-icon:is(:hover) {
+      background: color-mix(in srgb, var(--color-primary) 7%, var(--color-card));
+    }
   }
   html[data-theme] .dn-conditions .dn-condition-rule:focus-within {
     border-color: var(--action-border);
@@ -247,7 +256,9 @@ html[data-theme] .dn-condition-chips .dn-condition-more {
   background: var(--color-surface); color: var(--color-text-muted);
   font: inherit; font-size: 12px; font-weight: 650; cursor: pointer;
 }
-html[data-theme] .dn-condition-chips .dn-condition-more:hover { color: var(--color-primary); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-condition-chips .dn-condition-more:hover { color: var(--color-primary); }
+}
 html[data-theme] .dn-condition-chips .dn-condition-more:focus-visible {
   outline: 2px solid var(--color-primary); outline-offset: -2px;
 }

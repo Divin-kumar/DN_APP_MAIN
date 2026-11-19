@@ -173,9 +173,6 @@ html[data-theme] .dn-task-metrics span { font-size:12px; }
     background:color-mix(in srgb,var(--color-primary) 14%,var(--color-card));
   }
 }
-@media(hover:none), (pointer:coarse) {
-  html[data-theme] .dn-independent-task-row .dn-task-copy:hover { background:transparent; }
-}
 @media(max-width:430px) {
   html[data-theme] .dn-tasks-page { gap:11px; }
   html[data-theme] .dn-task-list .dn-independent-task-row.dn-swipe-surface > .dn-independent-task-row-main { padding:10px; gap:8px; }

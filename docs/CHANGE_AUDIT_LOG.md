@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-577 | Keep touch feedback brief across DN
+
+- **Scope.** Restrict desktop hover treatments to fine hovering pointers. Use one light and dark press treatment across shared controls and reserve focus rings for keyboard focus. Keep Dashboard Show and Hide visually quiet, distinguish the selected date with a pill, and fit the controls at 320 px without shrinking the date labels. Touching a dropdown option uses its existing selection handler without the mouse-only highlight.
+- **Compatibility.** Retain open and selected styling, existing swipe actions, save and cancel paths, and the draggable + gestures. The Guest tour already explains these actions and uses the same sample records.
+- **Executed.** Build, lint and 632 Node tests passed. Chromium passed 130 distinct browser checks across the initial run and the 320 px Dashboard rerun. Screenshot review covered 25 Guest screens and states at 320 px in light mode and 430 px in dark mode. Native iPhone Safari remains unverified.
+
 ## CHG-20261119-576 | Make Settings sections easier to reach
 
 - **Scope.** Add sticky phone shortcuts and bookmarkable sections to Appearance and List defaults. Move focus to the selected section, trim duplicate Story and PDF copy, and clear the docked create button at the end of Settings pages. Put the workspace label and paired Export and Restore actions near the top of Data & Backup.

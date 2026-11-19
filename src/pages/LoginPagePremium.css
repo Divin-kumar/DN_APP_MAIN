@@ -69,13 +69,17 @@ html[data-theme] .dn-login-actions button {
 html[data-theme] .dn-login-actions button > span:nth-child(2) { flex: 1; text-align: center; }
 html[data-theme] .dn-login-actions button svg { flex: 0 0 auto; }
 html[data-theme] .dn-login-google { color: #fff; border: 1px solid color-mix(in srgb, var(--color-primary) 50%, #12366d); background: color-mix(in srgb, var(--color-primary) 50%, #12366d); }
-html[data-theme] .dn-login-google:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary) 42%, #0e2d59); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-login-google:hover:not(:disabled) { background: color-mix(in srgb, var(--color-primary) 42%, #0e2d59); }
+}
 html[data-theme] .dn-login-google-mark {
   display: grid; place-items: center; width: 25px; height: 25px; flex: 0 0 25px;
   border-radius: 50%; background: #fff; color: #2457a5; font-size: 14px; font-weight: 800;
 }
 html[data-theme] .dn-login-guest { color: var(--color-text); border: 1px solid var(--color-border); background: var(--color-card-raised); }
-html[data-theme] .dn-login-guest:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border)); background: var(--action-fill-hover); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-login-guest:hover:not(:disabled) { border-color: color-mix(in srgb, var(--color-primary) 35%, var(--color-border)); background: var(--action-fill-hover); }
+}
 html[data-theme] .dn-login-guest > span { flex: 1; text-align: center; padding-left: 18px; }
 html[data-theme] .dn-login-actions button:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
 html[data-theme] .dn-login-actions button:disabled { opacity: .66; cursor: progress; }

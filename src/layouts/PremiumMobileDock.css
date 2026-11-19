@@ -253,7 +253,7 @@
    Safari: generic :hover styles otherwise replace it with a flat fill after
    the menu closes. Keep visible keyboard focus and the original icon/menu. */
 @media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
-  html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center .mobile-dock-create-trigger:is(:hover, :focus:not(:focus-visible)),
+  html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center .mobile-dock-create-trigger:is(:focus:not(:focus-visible)),
   html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center.is-open .mobile-dock-create-trigger {
     background: linear-gradient(145deg,
       color-mix(in srgb, var(--color-primary) 80%, white), var(--color-primary)) !important;
@@ -261,6 +261,16 @@
     border-color: color-mix(in srgb, var(--color-primary) 72%, white) !important;
     box-shadow: 0 8px 19px color-mix(in srgb, var(--color-primary) 33%, transparent),
       inset 0 1px 0 rgba(255, 255, 255, .4) !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center .mobile-dock-create-trigger:is(:hover) {
+      background: linear-gradient(145deg,
+      color-mix(in srgb, var(--color-primary) 80%, white), var(--color-primary)) !important;
+      color: #fff !important;
+      border-color: color-mix(in srgb, var(--color-primary) 72%, white) !important;
+      box-shadow: 0 8px 19px color-mix(in srgb, var(--color-primary) 33%, transparent),
+      inset 0 1px 0 rgba(255, 255, 255, .4) !important;
+    }
   }
   html[data-theme] .mobile-tabbar.dn-premium-dock .dn-dock-center .mobile-dock-create-trigger svg {
     color: #fff !important;

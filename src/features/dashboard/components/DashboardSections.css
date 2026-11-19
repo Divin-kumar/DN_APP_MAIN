@@ -26,20 +26,32 @@ html[data-theme] .dashboard-section-actions .dashboard-date-views {
   padding:0; border:0; border-radius:0; background:transparent;
 }
 html[data-theme] .dashboard-section-actions .dashboard-date-views button {
-  position:relative; isolation:isolate; min-height:44px; min-width:44px; padding:0 8px; border:0; border-radius:8px; background:transparent;
-  color:var(--color-text-muted); box-shadow:none; font:inherit; font-size:13px; line-height:1.3; white-space:nowrap; cursor:pointer;
+  position:relative; isolation:isolate; min-height:44px; min-width:44px; padding:0 8px; border:0; border-radius:999px; background:transparent;
+  color:var(--color-text-muted); box-shadow:none; font:inherit; font-size:13px; font-weight:620; line-height:1.3; white-space:nowrap; cursor:pointer;
 }
-html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"] { background:transparent; color:var(--action-ink); box-shadow:none; font-weight:650; }
+html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"] { background:transparent; color:var(--action-ink); box-shadow:none; }
 html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"]::before {
   position:absolute; z-index:-1; inset:7px 0; border-radius:999px;
-  background:var(--action-fill); content:''; pointer-events:none;
+  background:var(--action-fill); box-shadow:inset 0 0 0 1px var(--action-border); content:''; pointer-events:none;
 }
 html[data-theme] .dashboard-section-actions .dashboard-date-views button[aria-pressed="true"]::after { display:none; }
 html[data-theme] .dashboard-section-actions .dashboard-section-toggle {
-  flex:none; min-height:44px; min-width:44px; padding:0 3px; border:0; border-radius:6px; background:transparent;
-  color:var(--color-text-muted); font:inherit; font-size:11px; font-weight:600; cursor:pointer;
+  flex:none; min-height:44px; min-width:44px; padding:0 3px; border:0; border-radius:999px; background:transparent;
+  color:var(--color-text-muted); font:inherit; font-size:var(--dn-type-caption); font-weight:600; cursor:pointer;
 }
-html[data-theme] .dashboard-section-actions .dashboard-section-toggle:hover { color:var(--color-text); background:var(--color-surface); }
+html[data-theme] .dashboard-section-actions .dashboard-date-views + .dashboard-section-toggle {
+  position:relative; margin-inline-start:3px;
+}
+html[data-theme] .dashboard-section-actions .dashboard-date-views + .dashboard-section-toggle::before {
+  content:''; position:absolute; inset-block:14px; inset-inline-start:-4px;
+  width:1px; background:var(--dn-panel-edge); pointer-events:none;
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dashboard-section-actions .dashboard-section-toggle:hover,
+  html[data-theme] .dashboard-section-actions .dashboard-date-views button:hover {
+    color:var(--color-text);
+  }
+}
 html[data-theme] .dashboard-section-actions button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
 @container (min-width: 960px) {
   html[data-theme] .dashboard-overview.dashboard-compact {
@@ -202,9 +214,15 @@ html[data-theme] .dashboard-compact .dashboard-activity-card .dn-record-menu-tri
   color: var(--color-text-muted);
   box-shadow: none;
 }
-html[data-theme] .dashboard-compact :is(.dashboard-moment-greeting-button, .dn-record-menu-trigger):is(:hover,:focus-visible) {
+html[data-theme] .dashboard-compact :is(.dashboard-moment-greeting-button, .dn-record-menu-trigger):is(:focus-visible) {
   background: color-mix(in srgb, var(--color-primary) 8%, transparent);
   color: var(--color-primary);
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dashboard-compact :is(.dashboard-moment-greeting-button, .dn-record-menu-trigger):is(:hover) {
+    background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+    color: var(--color-primary);
+  }
 }
 html[data-theme] .dashboard-compact .dashboard-moment-row :is(button, .dashboard-upcoming-row):focus-visible,
 html[data-theme] .dashboard-compact .dashboard-activity-card :is(button, .dashboard-upcoming-row):focus-visible {
@@ -236,7 +254,9 @@ html[data-theme] .dn-dashboard-tasks-link {
   color: var(--color-primary); font-size: var(--dn-type-caption); font-weight: 650;
   text-decoration: none;
 }
-html[data-theme] .dn-dashboard-tasks-link:hover { text-decoration: underline; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-dashboard-tasks-link:hover { text-decoration: underline; }
+}
 html[data-theme] .dashboard-compact .dn-dashboard-task-row {
   display: grid;
   grid-template-columns: var(--dn-dashboard-date-size) minmax(0, 1fr) 24px;
@@ -293,6 +313,7 @@ html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
   }
 }
 @media (max-width:360px) {
+  html[data-theme] .dashboard-compact .dashboard-upcoming-card { padding-inline:8px; }
   html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
     gap:4px; padding-inline:0;
   }
@@ -301,7 +322,13 @@ html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
     gap:2px;
   }
   html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views button {
-    padding-inline:3px; font-size:12px !important;
+    padding-inline:0; letter-spacing:-.015em;
+  }
+  html[data-theme] .dashboard-section-actions .dashboard-date-views + .dashboard-section-toggle {
+    margin-inline-start:0;
+  }
+  html[data-theme] .dashboard-section-actions .dashboard-date-views + .dashboard-section-toggle::before {
+    inset-inline-start:-2px;
   }
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-list-container:focus-visible {

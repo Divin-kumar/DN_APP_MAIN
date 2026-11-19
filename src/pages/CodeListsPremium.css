@@ -37,9 +37,11 @@ html[data-theme] .dn-premium-code-lists .dn-code-list-index a[aria-current="loca
   color:var(--action-ink);
   font-weight:720;
 }
-html[data-theme] .dn-premium-code-lists .dn-code-list-index a:hover {
-  background:color-mix(in srgb,var(--color-primary) 6%,transparent);
-  color:var(--color-text);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-premium-code-lists .dn-code-list-index a:hover {
+    background:color-mix(in srgb,var(--color-primary) 6%,transparent);
+    color:var(--color-text);
+  }
 }
 html[data-theme] .dn-premium-code-lists .dn-code-list-index a:focus-visible {
   outline:2px solid var(--color-primary);
@@ -108,8 +110,10 @@ html[data-theme] .dn-premium-code-lists .code-list-rows .dn-code-list-row-more {
   color:var(--color-text-muted);
   opacity:.68;
 }
-html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row:hover .dn-code-list-row-more,
 html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row:focus-visible .dn-code-list-row-more { opacity:1; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-premium-code-lists .code-list-rows .code-list-row:hover .dn-code-list-row-more { opacity:1; }
+}
 html[data-theme] .dn-premium-code-lists .code-list-add-row {
   align-items:center;
   gap:8px;

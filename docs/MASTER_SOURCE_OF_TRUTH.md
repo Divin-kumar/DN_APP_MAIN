@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Touch feedback across DN (19 November 2026, development)
+
+Touch controls use a brief theme-aware brightness change while held. Hover backgrounds and shadows are reserved for pointers that support hover. Selected tabs, open menus and keyboard focus retain distinct indicators. Dropdown options only move their pointer highlight for mouse input.
+
+Dashboard Tasks, Moments and Activities keep Show and Hide as quiet text controls. A small divider separates Show or Hide from the date switch in expanded Moments and Activities. The date switch keeps its 44 px targets and 13 px text at 320 px. The draggable + uses its existing press effect and single-tap and double-tap gestures.
+
 ## Easier navigation through Settings (19 November 2026, development)
 
 Appearance links directly to Theme, Creation defaults and Story & PDF. List defaults links directly to Moments, Activities, Transactions and Tasks. These links stay at the top while scrolling on phones and move focus to the chosen section. The section can be bookmarked. Using the links or browser history within Appearance keeps unsaved choices available. The final Settings, Appearance and List defaults controls have clearance above the docked create button.

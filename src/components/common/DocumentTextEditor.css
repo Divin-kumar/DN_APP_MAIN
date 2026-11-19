@@ -22,9 +22,11 @@ html[data-theme] .dn-document-selection-tools { z-index:30; display:grid; max-wi
 html[data-theme] .dn-document-selection-primary { display:flex; gap:1px; justify-content:space-between; }
 html[data-theme] .dn-document-selection-more { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; border-top:1px solid var(--color-border); padding-top:3px; margin-top:3px; }
 html[data-theme] .dn-document-selection-tools button { display:inline-flex; align-items:center; justify-content:center; width:36px!important; min-width:36px!important; height:36px; min-height:36px!important; padding:0!important; border:0!important; border-radius:7px!important; background:transparent!important; color:var(--color-text-muted)!important; box-shadow:none!important; }
-html[data-theme] .dn-document-selection-tools button:hover:not(:disabled),
 html[data-theme] .dn-document-selection-tools button[aria-pressed="true"],
 html[data-theme] .dn-document-selection-tools button[aria-expanded="true"] { background:color-mix(in srgb,var(--color-primary) 12%,transparent)!important; color:var(--color-text)!important; }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-document-selection-tools button:hover:not(:disabled) { background:color-mix(in srgb,var(--color-primary) 12%,transparent)!important; color:var(--color-text)!important; }
+}
 html[data-theme] .dn-document-selection-tools button:focus-visible { outline:2px solid var(--color-primary); outline-offset:-2px; }
 html[data-theme] .dn-document-selection-tools button:disabled { opacity:.4; }
 html[data-theme] .dn-document-selection-more button[aria-label="Subheading"] svg { width:14px; }

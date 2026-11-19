@@ -128,8 +128,10 @@ html[data-theme] .activity-detail-more .dn-record-menu-trigger {
   opacity:.68; border:0; background:transparent; box-shadow:none;
   margin:0; border-radius:10px;
 }
-html[data-theme] .activity-detail-more .dn-record-menu-trigger:hover,
 html[data-theme] .activity-detail-more .dn-record-menu-trigger:focus-visible { opacity:1; background:var(--color-surface); }
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .activity-detail-more .dn-record-menu-trigger:hover { opacity:1; background:var(--color-surface); }
+}
 /* The minimal transaction component disappears entirely when ready and empty. */
 html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linked-transactions {
   margin-top:19px; padding-top:17px;
@@ -160,7 +162,9 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   display:block; min-width:0; overflow:hidden; white-space:nowrap;
   text-overflow:ellipsis;
 }
-.activity-detail-page .activity-parent-context-link:hover { color:var(--color-text); }
+@media (hover: hover) and (pointer: fine) {
+  .activity-detail-page .activity-parent-context-link:hover { color:var(--color-text); }
+}
 .activity-detail-page .activity-parent-context-link:focus-visible {
   color:var(--color-text); outline:2px solid var(--color-primary);
   outline-offset:2px; border-radius:5px;
@@ -210,7 +214,10 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
 .dn-content-legacy-title { display:block; margin-bottom:4px; font-size:13px; }
 .dn-content-row-actions { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex:0 0 auto; }
 .dn-content-row-actions button { min-width:40px; min-height:40px; display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:8px; color:var(--color-text-muted); background:transparent; cursor:pointer; font-size:11px; }
-.dn-content-row-actions button:hover,.dn-content-row-actions button:focus-visible { background:var(--color-surface); color:var(--color-text); }
+.dn-content-row-actions button:focus-visible { background:var(--color-surface); color:var(--color-text); }
+@media (hover: hover) and (pointer: fine) {
+  .dn-content-row-actions button:hover { background:var(--color-surface); color:var(--color-text); }
+}
 .dn-content-row-actions button:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
 .dn-content-row-actions button:disabled { opacity:.45; cursor:default; }
 .dn-content-empty { color:var(--color-text-muted); font-size:13px; line-height:1.6; }
@@ -298,9 +305,13 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   border-radius: 11px;
 }
 .activity-detail-page .dn-content-remove { color: var(--color-text-muted); }
-.activity-detail-page .dn-content-remove:hover,
 .activity-detail-page .dn-content-remove:focus-visible {
   color: var(--color-text);
+}
+@media (hover: hover) and (pointer: fine) {
+  .activity-detail-page .dn-content-remove:hover {
+    color: var(--color-text);
+  }
 }
 .activity-detail-page .moment-transactions.is-minimal.has-linked-transactions {
   margin-top: 24px;

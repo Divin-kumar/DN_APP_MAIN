@@ -189,18 +189,30 @@ html[data-theme] body :is(.dn-modal, form, .settings-page, .code-lists-page) :is
     box-shadow: none !important;
     font-weight: 650 !important;
   }
-  > button:is(.primaryButton, .settings-primary-button):is(:hover, :focus-visible):not(:disabled) {
+  > button:is(.primaryButton, .settings-primary-button):is(:focus-visible):not(:disabled) {
     background: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    > button:is(.primaryButton, .settings-primary-button):is(:hover):not(:disabled) {
+      background: color-mix(in srgb, var(--color-primary) 20%, transparent) !important;
+    }
   }
   > button:is(.secondaryButton, .settings-secondary-button) {
     background: transparent !important;
     border-color: transparent !important;
     color: var(--color-text-muted) !important;
   }
-  > button:is(.secondaryButton, .settings-secondary-button):is(:hover, :focus-visible):not(:disabled) {
+  > button:is(.secondaryButton, .settings-secondary-button):is(:focus-visible):not(:disabled) {
     background: var(--dn-form-field) !important;
     color: var(--color-text) !important;
     transform: none;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    > button:is(.secondaryButton, .settings-secondary-button):is(:hover):not(:disabled) {
+      background: var(--dn-form-field) !important;
+      color: var(--color-text) !important;
+      transform: none;
+    }
   }
 }
 /* Match paired form actions even when the primary label is longer. */

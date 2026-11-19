@@ -27,9 +27,11 @@ html[data-theme] .dn-header .profile-trigger {
   color: var(--color-text) !important;
   box-shadow: none !important;
 }
-html[data-theme] .dn-header .profile-trigger:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 27%, var(--color-border)) !important;
-  background: var(--color-card-raised) !important;
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-header .profile-trigger:hover {
+    border-color: color-mix(in srgb, var(--color-primary) 27%, var(--color-border)) !important;
+    background: var(--color-card-raised) !important;
+  }
 }
 html[data-theme] .dn-header .profile-trigger:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -133,10 +135,15 @@ html[data-theme] .dn-header .profile-menu-item > svg {
   flex: 0 0 18px;
   color: var(--color-text-muted);
 }
-html[data-theme] .dn-header .profile-menu-item:hover,
 html[data-theme] .dn-header .profile-menu-item:focus-visible {
   background: var(--color-card-raised) !important;
   color: var(--color-text) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-header .profile-menu-item:hover {
+    background: var(--color-card-raised) !important;
+    color: var(--color-text) !important;
+  }
 }
 html[data-theme] .dn-header .profile-menu-item:focus-visible {
   outline: 2px solid var(--color-primary);
@@ -149,10 +156,15 @@ html[data-theme] .dn-header .profile-menu-danger {
   color: var(--color-danger) !important;
 }
 html[data-theme] .dn-header .profile-menu-danger > svg { color: var(--color-danger); }
-html[data-theme] .dn-header .profile-menu-danger:hover,
 html[data-theme] .dn-header .profile-menu-danger:focus-visible {
   background: color-mix(in srgb, var(--color-danger) 9%, var(--color-card)) !important;
   color: var(--color-danger) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-header .profile-menu-danger:hover {
+    background: color-mix(in srgb, var(--color-danger) 9%, var(--color-card)) !important;
+    color: var(--color-danger) !important;
+  }
 }
 @media (max-width: 760px) {
   html[data-theme] .dn-header .profile-trigger {

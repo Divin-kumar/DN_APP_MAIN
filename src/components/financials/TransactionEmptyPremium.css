@@ -62,8 +62,10 @@ html[data-theme] .dn-transactions-page .dn-transactions-empty-reset {
   line-height: 1.35;
   cursor: pointer;
 }
-html[data-theme] .dn-transactions-page .dn-transactions-empty-reset:hover {
-  background: var(--action-fill-hover);
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme] .dn-transactions-page .dn-transactions-empty-reset:hover {
+    background: var(--action-fill-hover);
+  }
 }
 html[data-theme] .dn-transactions-page .dn-transactions-empty-reset:focus-visible {
   outline: 2px solid var(--color-primary);
