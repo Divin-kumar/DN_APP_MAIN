@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Mobile legibility and reach (19 November 2026, development)
+
+On narrow phones, Refine wraps long field names and comparisons within their existing row. A selected related record name can use three lines in a filter rule. Search-on-demand dropdowns with searchable choices use the available screen width on phones up to 430 px. Long option lists keep fixed 44 px rows and give labels up to two lines. Named dropdowns expose their selected values to assistive technology. Paired form controls can show two lines at 360 px and below. The Dashboard header gives its date controls more separation, Transactions uses a shorter search hint, and recurring expense actions line up below the bill on small screens.
+
+Story and PDF Studio use a shorter Moment header on phones with the date and all three metrics. The compact PDF controls fit on one line at 320 px with 44 px touch targets and can reflow in narrower panes. The final Gallery row can scroll clear of the docked create button. The existing Guest tour still describes the same gestures and workflows.
+
 ## Clearer browsing and controls (18 November 2026, development)
 
 On phone lists with filters, Search and Refine share one glass surface and an internal divider. Search keeps its keyboard focus ring on the whole surface. The result count and sort order sit ahead of the applied filters. The Transactions toolbar fits the count, sort order and filtered CSV action together, with a separate, readable Details label on transaction rows.

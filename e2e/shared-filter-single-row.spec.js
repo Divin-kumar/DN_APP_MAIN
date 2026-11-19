@@ -79,3 +79,25 @@ test('numeric range stays within a readable phone rule without horizontal page o
   await assertReadablePhoneRule(page);
   expect(errors).toEqual([]);
 });
+
+test('a narrow Refine rule shows both words and exposes the selection to assistive technology', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await seedGuest(page, { theme: 'dark' });
+  await page.goto('/activities');
+  await page.getByRole('button', { name: /^Filters and sort/ }).click();
+  await page.getByRole('button', { name: 'Add filter', exact: true }).first().click();
+  const rule = page.locator('.dn-refine-sheet .dn-condition-rule').last();
+  const field = rule.getByRole('combobox', { name: 'Filter by' });
+  await field.click();
+  await page.getByRole('option', { name: 'Moment visibility', exact: true }).click();
+  await expect(field).toHaveAccessibleDescription('Moment visibility');
+  const label = field.locator('.dropdown-label-short');
+  await expect(label).toHaveCSS('white-space', 'normal');
+  const wordCount = await label.evaluate((node) => {
+    const range = document.createRange();
+    range.selectNodeContents(node);
+    const bounds = node.closest('button').getBoundingClientRect();
+    return [...range.getClientRects()].filter((line) => line.left >= bounds.left && line.right <= bounds.right).length;
+  });
+  expect(wordCount).toBeGreaterThanOrEqual(2);
+});

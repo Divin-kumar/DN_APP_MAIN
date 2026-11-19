@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261119-575 | Make mobile filters, linked choices and previews easier to read
+
+- **Scope.** Wrap narrow Refine labels and paired form choices. Give searchable linked-record menus the available phone width, with two-line options in long lists and accessible descriptions for selected values. Space Dashboard date controls and upcoming expense actions, shorten a few form hints, and reclaim space above Story and PDF previews. Fit the five PDF preview controls in one row at 320 px with 44 px targets. Let the last Gallery attachment scroll clear of the floating create button.
+- **Compatibility.** Search, filter matching, links, form handoff, quick double-tap Back, saved originals and PDF export continue through their existing paths. The public Guest tour describes those paths and needs no new edition for the layout changes.
+- **Executed.** Build, lint and Node tests passed. Chromium covered the affected lists, forms, filters, Story, PDF Studio and navigation. The four Story contrast cases that stopped at a route error in the mixed run passed in a dedicated eight-case run. WebKit confirmed PDF touch targets and scroll restoration, Gallery removal and reduced-motion and double-tap create gestures. Visual checks used 320 px light and 430 px dark. Physical iPhone Safari remains unverified.
+
 ## CHG-20261118-574 | Make list controls and forms easier to scan
 
 - **Scope.** Join Search and Refine in one mobile surface with a shared focus ring. Put list counts and sort order above applied filters. Keep the Transactions count, sort and CSV action together, and give the Details label room beside long Moment names. Improve button emphasis in forms and Refine, align Activity Detail metadata, share a surface across Dashboard and empty states, and improve wide Settings navigation and the selected PDF thumbnail.

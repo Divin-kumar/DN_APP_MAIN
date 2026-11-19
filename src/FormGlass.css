@@ -389,6 +389,15 @@ html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-
 @media (max-width: 360px) {
   html[data-theme] body .activity-date-time-row :is(input[type="date"], input[type="time"]) { padding-inline: 4px !important; }
   html[data-theme] body .activity-date-time-row input::-webkit-calendar-picker-indicator { width: 14px; }
+  html[data-theme] body .activity-date-time-row .activity-time-control > input[type="time"] { padding-inline-end:0 !important; }
+  html[data-theme] body .activity-date-time-row input[type="time"]::-webkit-datetime-edit { padding-inline:0; }
+  html[data-theme] body .dn-form-pair .dropdown-trigger {
+    padding:6px 7px !important; line-height:1.22;
+  }
+  html[data-theme] body .dn-form-pair .dropdown-trigger > span {
+    display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2;
+    white-space:normal; overflow-wrap:anywhere;
+  }
 }
 @media (max-width: 300px) {
   html[data-theme] body .dn-form-pair,

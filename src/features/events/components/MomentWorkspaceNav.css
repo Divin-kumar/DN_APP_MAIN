@@ -78,6 +78,7 @@ html[data-theme] .dn-moment-panel > .dn-workspace-section-heading h2 {
      The theme background supplies the same palette without transparency. */
   html[data-theme] .event-workspace-nav.dn-moment-nav {
     background:var(--color-bg) !important;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
   }
   html[data-theme] .dn-moment-nav .event-workspace-nav-item {
     gap:6px !important; padding:0 11px !important;
@@ -193,4 +194,33 @@ html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"] {
 }
 html[data-theme] .dn-moment-nav .event-workspace-nav-item[aria-current="page"] > svg {
   color: var(--action-ink);
+}
+
+@media (max-width:580px) {
+  /* Reading and preview tabs keep the Moment context in a shorter header. */
+  html[data-theme] .dn-moment-workspace:is([data-moment-section="story"], [data-moment-section="pdf"]) .dn-moment-hero-swipe .event-moment-hero {
+    padding-block:8px 10px !important;
+  }
+  html[data-theme] .dn-moment-workspace:is([data-moment-section="story"], [data-moment-section="pdf"]) .dn-moment-hero-swipe .event-moment-content h1 {
+    font-size:clamp(18px,5.15vw,23px) !important;
+    line-height:1.15;
+  }
+  html[data-theme] .dn-moment-workspace:is([data-moment-section="story"], [data-moment-section="pdf"]) .dn-moment-hero-swipe .event-moment-content .event-moment-stat-line {
+    grid-template-columns:minmax(0,.78fr) minmax(0,1.28fr) minmax(0,1.44fr);
+    padding-top:6px; margin-top:6px !important;
+  }
+  html[data-theme] .dn-moment-workspace:is([data-moment-section="story"], [data-moment-section="pdf"]) .dn-moment-hero-swipe .dn-moment-metric {
+    flex-flow:row wrap; align-items:baseline;
+    gap:2px 4px; padding-block:0;
+  }
+  html[data-theme] .dn-moment-nav .dn-moment-nav-short {
+    font-size:clamp(11px,3.4vw,12px); white-space:normal; overflow-wrap:anywhere;
+  }
+}
+
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  /* The last attachment's Remove control must scroll above the floating +. */
+  html[data-theme] .dn-moment-workspace[data-moment-section="gallery"] .dn-moment-panel:has(.dn-attachment-remove) {
+    padding-block-end:56px !important;
+  }
 }

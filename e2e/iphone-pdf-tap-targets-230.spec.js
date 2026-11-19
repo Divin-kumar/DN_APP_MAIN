@@ -35,16 +35,16 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
           return { x, y, right, bottom };
         };
         return {
-          layout: getComputedStyle(node).display,
           pages: box(node.firstElementChild),
           zoom: box(node.querySelector('.dn-pdf-preview-zoom-controls')),
           fullscreen: box(node.lastElementChild),
           right: node.getBoundingClientRect().right,
         };
       });
-      expect(geometry.layout).toBe('grid');
       expect(Math.abs(geometry.pages.y - geometry.fullscreen.y)).toBeLessThan(2);
-      expect(geometry.zoom.y).toBeGreaterThanOrEqual(geometry.pages.bottom + 4);
+      expect(Math.abs(geometry.zoom.y - geometry.pages.y)).toBeLessThan(2);
+      expect(geometry.pages.right).toBeLessThanOrEqual(geometry.zoom.x);
+      expect(geometry.zoom.right).toBeLessThanOrEqual(geometry.fullscreen.x);
       expect(geometry.zoom.right).toBeLessThanOrEqual(geometry.right + 1);
     }
     await controls.getByRole('button', { name: 'Zoom in PDF preview' }).tap();

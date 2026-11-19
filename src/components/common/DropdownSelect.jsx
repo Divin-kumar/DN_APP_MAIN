@@ -68,6 +68,9 @@ export default function DropdownSelect({
     : sourceOptions, [sourceOptions, allowCustom, query]);
   const selectedIndex = options.findIndex((option) => option.value === String(value ?? ''));
   const selectedOption = options[selectedIndex] || (allowCustom && value ? { label: String(value), shortLabel: String(value) } : null);
+  const selectionId = selectedOption && !triggerLabel && (id || accessibilityProps['aria-label'] || accessibilityProps['aria-labelledby'])
+    ? `${triggerId}-selection` : undefined;
+  const descriptionIds = [accessibilityProps['aria-describedby'], selectionId].filter(Boolean).join(' ') || undefined;
   const searchable = searchableProp ?? (allowCustom || options.length > SEARCH_LIMIT);
   // On forms, show the choices first. Only an explicit Search tap or keyboard
   // request creates/focuses a search input, avoiding an unsolicited iOS keyboard.
@@ -117,11 +120,12 @@ export default function DropdownSelect({
       .map((node) => node.getBoundingClientRect().top)
       .filter((top) => top > bounds.bottom && top < viewport.top + viewport.height);
     const preferredHeight = Math.min(360, options.length * 44 + 14 + (searchVisible ? 52 : searchOnDemand && searchable ? 44 : 0));
+    const minimumWidth = searchOnDemand && searchable && viewport.width <= 430 ? viewport.width : menuMinWidth;
     const next = computeOverlayPlacement({
       anchor,
       viewport,
       preferredHeight,
-      minimumWidth: Math.max(bounds.width, menuMinWidth),
+      minimumWidth,
       bottomObstruction: obstruction.length ? Math.min(...obstruction) : null,
     });
     if (keyboardSearch && next.maxHeight < 90) {
@@ -307,13 +311,14 @@ export default function DropdownSelect({
           if (open) close(true);
           else { setQuery(''); setSearchOpen(false); setActiveIndex(selectedIndex >= 0 ? selectedIndex : 0); setOpen(true); }
         }}
-        onKeyDown={onKeyDown} {...accessibilityProps}>
+        onKeyDown={onKeyDown} {...accessibilityProps} aria-describedby={descriptionIds}>
         <span className={selectedOption ? '' : 'dropdown-placeholder'}>
           {triggerLabel ?? <><span className="dropdown-label-full">{selectedOption?.label || placeholder}</span>
             <span className="dropdown-label-short">{selectedOption?.shortLabel || placeholder}</span></>}
         </span>
         <ChevronDown size={16} aria-hidden="true" />
       </button>
+      {selectionId ? <span id={selectionId} hidden>{selectedOption.label}</span> : null}
       {createPortal(<AnimatePresence initial={false}>
       {open && placement ? <DropdownMenu menuRef={menuRef}
           style={{ position: 'fixed', top: placement.top, left: placement.left,

@@ -247,3 +247,8 @@ html[data-theme] .dn-refine-sort-reverse:focus-visible {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-refine-sort-reverse { transition:none !important; }
 }
+
+@media (max-width:360px) and (max-height:700px) {
+  html[data-theme] .dn-refine-sheet .dn-modal-body { gap:10px; }
+  html[data-theme] .dn-refine-sheet .dn-refine-sheet-section { gap:8px; padding-block-end:10px; }
+}

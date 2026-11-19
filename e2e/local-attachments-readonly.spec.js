@@ -5,6 +5,31 @@ import { fixtureMoments, seedGuest, swipe, openUniversalTransaction, accountScop
 
 // Only the Firestore store edge is mocked; file IO uses the real scoped IndexedDB repository.
 
+test('the final Gallery removal target scrolls clear of the creation button on a phone', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  const moments = fixtureMoments();
+  moments[0].attachments = Array.from({ length: 12 }, (_, index) => ({
+    id: `attachment-${index}`, name: `Photo ${index + 1}.png`, type: 'image/png',
+  }));
+  const errors = await seedGuest(page, { moments });
+  await page.goto('/events/moment-one/gallery');
+  const remove = page.getByRole('button', { name: 'Remove Photo 12.png' });
+  await expect(remove).toBeVisible({ timeout: 15000 });
+  await expect.poll(() => remove.evaluate((node) => {
+    const pane = node.closest('.dn-content');
+    pane.scrollTo({ top: pane.scrollHeight, behavior: 'instant' });
+    const rect = node.getBoundingClientRect();
+    return node.contains(document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2));
+  })).toBe(true);
+  await expect(page.locator('.dn-moment-panel')).toHaveCSS('padding-bottom', '56px');
+  await remove.click();
+  const confirmation = page.getByRole('dialog', { name: 'Remove attachment?' });
+  await expect(confirmation).toBeVisible();
+  await confirmation.getByRole('button', { name: 'Cancel' }).click();
+  await expect(remove).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('Moment Activities share action menus, open Detail and retain retired Timeline on Story', async ({ page }) => {
   await seedGuest(page); await page.goto('/events/moment-one/activities');
   const card = page.getByRole('group', { name: 'Open Book a lakeside stay', exact: true });

@@ -103,7 +103,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       <label htmlFor="event-name">Moment name
         <input ref={nameInputRef} id="event-name" name="name" value={form.name} onChange={handleChange}
           aria-invalid={Boolean(validationError && !form.name.trim())}
-          placeholder="e.g. A birthday worth celebrating" required />
+          placeholder="e.g. Birthday dinner" required />
       </label>
 
       <label htmlFor="event-type">Moment type

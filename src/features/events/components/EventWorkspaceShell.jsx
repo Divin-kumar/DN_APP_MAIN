@@ -503,7 +503,7 @@ export function EventWorkspaceContent() {
   };
 
   return (
-    <div className="event-workspace-shell dn-moment-workspace">
+    <div className="event-workspace-shell dn-moment-workspace" data-moment-section={activeSection.key}>
       <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
         otherActions={[
           { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },

@@ -573,10 +573,17 @@ html[data-theme] .dn-pdf-color-options p { font-size:12px; color:var(--color-tex
 .dn-pdf-content-thumbnail { display:grid; place-items:center; flex:0 0 34px; width:34px; height:34px; overflow:hidden; border-radius:7px; background:color-mix(in srgb, var(--ink) 6%, transparent); color:var(--ink-soft); }
 .dn-pdf-content-thumbnail img { display:block; width:100%; height:100%; object-fit:cover; }
 
-/* Narrow iPhone preview: Pages / Fullscreen share a predictable top row,
-   with zoom centered below. Never compress the five existing 44px controls
-   into a partially clipped flex wrap. Wider layouts are unchanged. */
+/* Compact preview leaves more room for the rendered page while keeping every
+   control at least 44px wide. Extremely narrow or zoomed panes can reflow. */
 @container (max-width:350px) {
+  html[data-theme] .dn-pdf-studio-preview { padding-inline:8px; }
+  html[data-theme] .dn-pdf-preview-tools { flex-wrap:nowrap; gap:1px; }
+  html[data-theme] .dn-pdf-preview-tools > button { flex:0 0 44px; padding-inline:0; }
+  html[data-theme] .dn-pdf-preview-tools > button:first-child > svg { display:none; }
+  html[data-theme] .dn-pdf-preview-tools .dn-pdf-preview-zoom-controls { gap:1px; }
+  html[data-theme] .dn-pdf-preview-tools .dn-pdf-preview-zoom-controls button:nth-child(2) { min-width:44px; padding-inline:4px; }
+}
+@container (max-width:240px) {
   html[data-theme] .dn-pdf-preview-tools {
     display:grid;grid-template-columns:minmax(0,1fr) auto;
     gap:6px 8px;align-items:center;

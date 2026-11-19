@@ -503,6 +503,10 @@ html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions b
   .dn-expense-plan-row { grid-template-columns: 36px minmax(0, 1fr); gap: 0 8px; }
   .dn-expense-plan-amount-row > span { font-size: 20px; }
   html[data-theme] .dn-modal .dn-expense-plan-amount-row .dn-expense-plan-record { padding-inline: 8px; }
+  html[data-theme] .dn-expense-plan-inline-actions .dn-expense-plan-menu-actions button {
+    flex-direction:column; align-items:center; gap:4px; padding-inline:2px; line-height:1.25;
+    text-align:center;
+  }
 }
 
 @media (prefers-reduced-motion: no-preference) {

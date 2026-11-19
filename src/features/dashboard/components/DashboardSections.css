@@ -294,14 +294,14 @@ html[data-theme] .dashboard-compact .dn-dashboard-reveal-inner {
 }
 @media (max-width:360px) {
   html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
-    gap:1px; padding-inline:0;
+    gap:4px; padding-inline:0;
   }
   html[data-theme] .dashboard-compact .dashboard-section-actions,
   html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views {
-    gap:0;
+    gap:2px;
   }
   html[data-theme] .dashboard-compact .dashboard-section-actions .dashboard-date-views button {
-    padding-inline:1px;
+    padding-inline:3px; font-size:12px !important;
   }
 }
 html[data-theme] .dashboard-compact .dashboard-upcoming-list-container:focus-visible {

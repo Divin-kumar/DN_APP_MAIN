@@ -150,7 +150,7 @@ export default function TransactionForm({
     <span>{paymentPlan ? 'Title' : 'Title *'}</span>
     <input type="text" required={!paymentPlan} maxLength={140} value={form.title}
       onChange={(event) => change('title', event.target.value)}
-      placeholder={canRepeat ? 'Expense name' : 'What was this for?'} disabled={busy} />
+      placeholder={canRepeat ? 'e.g. Fuel' : 'e.g. Refund'} disabled={busy} />
   </label>;
   const categoryField = <div className="dn-transaction-field">
     <span>Category *</span>

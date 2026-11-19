@@ -69,11 +69,12 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'light'],[430,93
 
 test('Task Moment and Activity pickers open to choices with search on demand', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 640 });
-  const moments = Array.from({ length: 12 }, (_, index) => ({
-    id: `moment-${index}`, name: `Travel plan ${index}`,
-    activities: Array.from({ length: 12 }, (_, activity) => ({
-      id: `activity-${activity}`, title: `Travel activity ${activity}`,
-    })),
+  const longNames = ['Travel plan 0 · Family weekend in the hills and lakeside stay', 'Travel activity 0 · Afternoon walk and dinner with the family'];
+  const moments = Array.from({ length: 64 }, (_, index) => ({
+    id: `moment-${index}`, name: index === 0 ? longNames[0] : `Travel plan ${index}`,
+    activities: index === 11 ? Array.from({ length: 64 }, (_, activity) => ({
+      id: `activity-${activity}`, title: activity === 0 ? longNames[1] : `Travel activity ${activity}`,
+    })) : [],
   }));
   const errors = await seedGuest(page, { moments });
   await page.goto('/dashboard');
@@ -85,10 +86,22 @@ test('Task Moment and Activity pickers open to choices with search on demand', a
   const moment = dialog.getByRole('combobox', { name: 'Moment (optional)', exact: true });
   const activity = dialog.getByRole('combobox', { name: 'Activity (optional)', exact: true });
   await expect(activity).toBeDisabled();
-  for (const [picker, label, query] of [[moment, 'Search linked moments', 'Travel plan 11'], [activity, 'Search linked activities', 'Travel activity 10']]) {
+  for (const [picker, label, query, longName] of [[moment, 'Search linked moments', 'Travel plan 11', longNames[0]], [activity, 'Search linked activities', 'Travel activity 10', longNames[1]]]) {
     await picker.click();
     await expect(picker).toBeFocused();
     await expect(page.getByRole('listbox')).toBeVisible();
+    const option = page.getByRole('option', { name: longName, exact: true });
+    await expect(option).toBeVisible();
+    const menu = page.locator('.dropdown-menu-portal');
+    await expect(menu).toHaveCSS('width', '304px');
+    await expect(menu).toHaveCSS('left', '8px');
+    await expect(option).toHaveCSS('height', '44px');
+    const lines = await option.locator('span').evaluate((label) => {
+      const range = document.createRange();
+      range.selectNodeContents(label);
+      return range.getClientRects().length;
+    });
+    expect(lines).toBe(2);
     const search = page.getByRole('searchbox', { name: label });
     await expect(search).toHaveCount(0);
     await page.getByRole('button', { name: label }).click();
@@ -97,6 +110,7 @@ test('Task Moment and Activity pickers open to choices with search on demand', a
     await page.getByRole('option', { name: query, exact: true }).click();
     await expect(picker).toBeFocused();
     await expect(picker).toContainText(query);
+    await expect(picker).toHaveAccessibleDescription(query);
   }
   await dialog.getByRole('button', { name: 'Create Task' }).click();
   await expect(dialog).toBeHidden();
