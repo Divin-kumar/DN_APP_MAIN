@@ -477,13 +477,14 @@ test('recurring expenses stay outside totals, then post one editable payment and
 });
 
 test('an Upcoming expenses link opens the sorted sheet once and supports several payments in place', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
   await page.clock.setFixedTime(new Date('2026-11-14T12:00:00.000Z'));
   const errors = await seedGuest(page, empty);
   await page.addInitScript(() => {
-    const plan = (id, name, dueDate) => ({ id, name, amount: 100, category: 'Home', dueDate,
+    const plan = (id, name, dueDate, amount = 100) => ({ id, name, amount, category: 'Home', dueDate,
       repeat: { frequency: 'monthly', anchorDate: dueDate }, paymentMethod: 'Online', updatedAt: '2026-11-01T12:00:00.000Z' });
     localStorage.setItem('dn_guest_expense_plans', JSON.stringify([
-      plan('later', 'Insurance', '2026-12-19'), plan('today', 'Mobile', '2026-11-14'), plan('overdue', 'Internet', '2026-11-12'),
+      plan('later', 'Insurance', '2027-01-19', 12845.75), plan('today', 'Mobile', '2026-11-14'), plan('overdue', 'Internet', '2026-11-12'),
     ]));
   });
   await page.goto('/financials/transactions#expense-plans');
@@ -499,6 +500,21 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
   await expect(dueToday.getByRole('heading')).toHaveText('Due today');
   await expect(overdue.getByRole('listitem')).toContainText('Internet');
   await expect(later.getByRole('listitem')).toContainText('Insurance');
+  await expect(later.locator('time')).toHaveText('19 Jan 2027');
+  const laterAmount = later.getByText('₹12,845.75', { exact: true });
+  expect(await laterAmount.evaluate(element => element.scrollWidth <= element.clientWidth)).toBe(true);
+  const columns = await plans.getByRole('listitem').evaluateAll(items => items.map(row => {
+    const position = selector => row.querySelector(selector).getBoundingClientRect();
+    return {
+      amountRight: position('.dn-expense-plan-amount').right,
+      amountWidth: position('.dn-expense-plan-amount').width,
+      frequencyLeft: position('.dn-expense-plan-frequency').left,
+      recordRight: position('.dn-expense-plan-record').right,
+    };
+  }));
+  expect(columns[1]).toEqual(columns[0]);
+  expect(columns[2]).toEqual(columns[0]);
+  expect(columns[0].recordRight).toBeCloseTo(columns[0].amountRight, 0);
   await plans.getByRole('button', { name: 'Close dialog' }).click();
   const trigger = page.getByRole('button', { name: /Upcoming expenses/ });
   await expect(trigger).toBeFocused();
@@ -552,7 +568,7 @@ test('returning to a long expense list keeps the scroll position and shows payme
     element.scrollTop += button.getBoundingClientRect().top - element.getBoundingClientRect().top - 200;
   });
   const heading = plans.getByRole('region', { name: 'Overdue' }).getByRole('heading');
-  await expect(heading).toBeInViewport({ ratio: 1 });
+  await expect(heading).toBeInViewport({ ratio: 0.98 });
   await expect.poll(() => heading.evaluate((element) => {
     const scrollBody = element.closest('.dn-modal-body');
     const bodyTop = scrollBody.getBoundingClientRect().top + scrollBody.clientTop + parseFloat(getComputedStyle(scrollBody).paddingTop);

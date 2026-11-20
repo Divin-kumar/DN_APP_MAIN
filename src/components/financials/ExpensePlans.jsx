@@ -43,7 +43,9 @@ function ExpensePlanList({ plans, onSelect }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
   const single = sorted.length === 1;
-  const yearSuffix = ` ${today.slice(0, 4)}`;
+  const currentYear = today.slice(0, 4);
+  const yearSuffix = ` ${currentYear}`;
+  const displaysYear = sorted.some(plan => !plan.dueDate.startsWith(currentYear));
   const groups = [
     { timing: 'today', label: 'Due today', items: sorted.filter((plan) => plan.dueDate === today) },
     { timing: 'overdue', label: 'Overdue', items: sorted.filter((plan) => plan.dueDate < today) },
@@ -55,7 +57,7 @@ function ExpensePlanList({ plans, onSelect }) {
     <p>Choose a repeat frequency when adding a transaction to schedule a bill.</p>
   </div>;
 
-  return <div className="dn-expense-plan-groups">
+  return <div className="dn-expense-plan-groups" data-displays-year={displaysYear}>
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
       {(!single || timing !== 'later') && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>{label}</h4>}
       <ul className="dn-expense-plan-list" role="list">
@@ -75,7 +77,8 @@ function ExpensePlanList({ plans, onSelect }) {
                 <time className="dn-expense-plan-day" dateTime={plan.dueDate} title={dateLabel}>
                   {dayAndMonth ? <>{dayAndMonth}<span className="dn-expense-plan-current-year">{yearSuffix}</span></> : dateLabel}
                 </time>
-                {' '}<span aria-hidden="true">·</span>{' '}{REPEAT_OPTIONS[plan.repeat.frequency]}
+                {' '}<span className="dn-expense-plan-meta-separator" aria-hidden="true">·</span>{' '}
+                <span className="dn-expense-plan-frequency">{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
               </span>
               <span id={amountId} className="dn-expense-plan-amount" title={amount}>{amount}</span>
             </div>
@@ -98,7 +101,7 @@ function ExpensePlanActions({ plan, nameId, description, onSelect }) {
       onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>End repeat</button>
     <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
       aria-label={`Record payment for ${plan.name}`} aria-describedby={description}
-      onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
+      onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><span>Record payment</span></button>
   </div>;
 }
 

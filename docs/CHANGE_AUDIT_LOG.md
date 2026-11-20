@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-593 | Align the two-line upcoming expense rows
+
+- **Scope.** Align the date, cadence and amount across rows. Give Record payment a quiet green button surface and align its right edge with the amount. Keep the secondary actions together on the same line and preserve their touch targets. On phones, shorten current-year dates to give bill names more room and reserve width for decimal amounts.
+- **Compatibility.** This change affects bill list presentation. The current Guest tour covers the two lines and the same payment and schedule actions, so its fixtures and edition still apply.
+- **Executed.** Build, lint, documentation and 636 Node checks passed. Twenty Chromium and six focused WebKit checks passed. Reviewed the layout at 320, 390 and 430 px phone widths and 1,280 px desktop. Verified consistent columns, visible dates in the next year and a full ₹12,845.75 amount at 320 px. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-592 | Use two lines for each upcoming bill
 
 - **Scope.** Align the bill name, due date, cadence and amount in one line and the four actions on the next. Keep the full bill labels in accessibility text and the corresponding views. On very narrow phones the visible date uses day and month for current-year bills.

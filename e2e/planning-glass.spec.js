@@ -61,12 +61,12 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
       return {
         itemRight: element.getBoundingClientRect().right,
         dataBottom: dataRow.getBoundingClientRect().bottom,
-        textLines: [...dataRow.children].map(child =>
-          child.getBoundingClientRect().height / parseFloat(getComputedStyle(child).lineHeight)),
+        lineHeightDifferences: [...dataRow.children].map(child =>
+          Math.abs(child.getBoundingClientRect().height - parseFloat(getComputedStyle(child).lineHeight))),
         buttons: [...element.querySelectorAll('button')].map(button => button.getBoundingClientRect().toJSON()),
       };
     });
-    for (const lines of layout.textLines) expect(lines).toBeCloseTo(1, 1);
+    for (const difference of layout.lineHeightDifferences) expect(difference).toBeLessThanOrEqual(1);
     expect(layout.buttons).toHaveLength(4);
     for (const [index, button] of layout.buttons.entries()) {
       expect(button.width).toBeGreaterThanOrEqual(44);
