@@ -1,8 +1,10 @@
 # DN — MASTER SOURCE OF TRUTH
 
-## Overdue dates and transaction details (20 November 2026, development)
+## Mobile sheets, overdue dates and transaction details (20 November 2026, development)
 
-Overdue date tiles on Tasks, the Dashboard Tasks preview and Upcoming expenses share high-contrast light and dark red colors. Record payment shows the selected date in day, month and year order beneath the native Paid on picker. The visible date follows edits and uses the same format as Scheduled for and Next due. Date and Time remain together in the form. Desktop transaction rows place the Details chevron beside its label. The full disclosure row remains clickable.
+Mobile sheets use a solid tinted base beneath the glass gradient so background text stays hidden when blur rendering varies. The buttons in the mobile Task editor stay in view while the fields and More options scroll. On Dashboard up to 360 CSS px wide and 740 px high, a docked + sits below the scroll area so it cannot cover the section controls.
+
+Overdue date tiles on Tasks, the Dashboard Tasks preview and Upcoming expenses share high-contrast light and dark red colors. The Dashboard overdue label uses the same foreground color. The Task editor and Record payment show a day, month and year date beneath the native picker when a date is set. The visible date follows edits and uses the same format as Scheduled for and Next due. Date and Time remain together in the form. Desktop transaction rows place the Details chevron beside its label. The full disclosure row remains clickable.
 
 ## Desktop Moment and PDF controls (20 November 2026, development)
 

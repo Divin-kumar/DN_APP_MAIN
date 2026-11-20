@@ -240,6 +240,9 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
    blue circular creator with a centered white +. Preserve its 52px drag/tap
    geometry, shared Search centerline and Search-free dock behavior. */
 @media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-shell {
+    --dn-standalone-dock-clearance: calc(58px + max(17px, var(--dn-safe-area-bottom, env(safe-area-inset-bottom, 0px))));
+  }
   html[data-theme] .dn-command-root .dn-command-bar {
     min-height:52px !important;
   }
@@ -357,7 +360,7 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     scroll-padding-bottom:calc(114px + var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)));
   }
   html[data-theme] .dn-shell:has(> .dn-command-root.is-insights-docked .dn-command-controls:empty) > .dn-main {
-    padding-bottom: calc(58px + max(17px, var(--dn-safe-area-bottom, env(safe-area-inset-bottom, 0px)))) !important;
+    padding-bottom: var(--dn-standalone-dock-clearance) !important;
   }
   html[data-theme] .dn-shell:has(> .dn-command-root.is-insights-docked .dn-command-controls:empty) .dn-content {
     scroll-padding-bottom: 12px;
@@ -368,10 +371,19 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
 @media (max-width:760px) and (max-height:380px),
        (orientation:landscape) and (max-height:380px) and (pointer:coarse) {
   html[data-theme] .dn-shell:has(> .dn-command-root:not(.is-floating) .dn-command-controls:empty) > .dn-main {
-    padding-bottom:calc(58px + max(17px,var(--dn-safe-area-bottom,env(safe-area-inset-bottom,0px)))) !important;
+    padding-bottom:var(--dn-standalone-dock-clearance) !important;
   }
   html[data-theme] .dn-shell:has(> .dn-command-root:not(.is-floating) .dn-command-controls:empty) .dn-content {
     scroll-padding-bottom:12px;
+  }
+}
+/* Keep a docked + below Dashboard controls on compact phones as cards expand. */
+@media (max-width:360px) and (max-height:740px) {
+  html[data-theme] .dn-shell:has(.dashboard-page-shell):has(> .dn-command-root:not(.is-floating) .dn-command-controls:empty) > .dn-main {
+    padding-bottom: var(--dn-standalone-dock-clearance) !important;
+  }
+  html[data-theme] .dn-shell:has(.dashboard-page-shell):has(> .dn-command-root:not(.is-floating) .dn-command-controls:empty) .dn-content {
+    scroll-padding-bottom: 12px;
   }
 }
 @media (prefers-reduced-motion:reduce) {

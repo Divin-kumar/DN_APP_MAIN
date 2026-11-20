@@ -1,4 +1,4 @@
-**Overdue dates and payment details (20 November 2026, development).** Overdue Task and bill dates are easier to read in both themes. **Record payment** shows a readable date such as **3 May 2026** beneath **Paid on**. On desktop, the chevron sits next to **Details** and the whole line still opens it.
+**Mobile forms, Dashboard and dates (20 November 2026, development).** Mobile sheets have a clearer glass finish. The Task form keeps its buttons visible when **More options** expands. On compact phones, the docked **+** stays clear of the Dashboard cards. Overdue Task and bill dates and the Dashboard overdue label are easier to read. The Task form and **Record payment** show a date such as **3 May 2026** beneath the date picker. On desktop, the chevron sits next to **Details** and the whole line still opens it.
 
 **Explore DN demo (20 November 2026, development).** The Dashboard greeting says **Viewing sample data** while the demo is active. The sample Journal opens with a short memory. Find app instructions through **Settings → Explore DN → Demo guide**. If you already have the demo, choose **Refresh demo** to load the new sample edition.
 

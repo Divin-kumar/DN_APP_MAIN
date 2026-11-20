@@ -135,7 +135,7 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
       const actions = dialog.locator('button[type="submit"]').locator('..');
       const actionOrder = await actions.getByRole('button').allTextContents();
       expect(actionOrder[0]).toBe('Cancel');
-      expect(await actions.evaluate(row => {
+      expect(await actions.evaluate((row, pinned) => {
         const parent = row.closest('.dn-modal-fixed-actions');
         const transparent = node => {
           const style = getComputedStyle(node);
@@ -143,10 +143,11 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
             && style.borderTopWidth === '0px' && style.boxShadow === 'none';
         };
         const [cancel, save] = [...row.querySelectorAll('button')].map(button => button.getBoundingClientRect());
-        return transparent(row) && !parent && Boolean(row.closest('form'))
+        return transparent(row) && Boolean(parent) === pinned && (!parent || transparent(parent))
+          && Boolean(row.querySelector('button[type="submit"]').form)
           && Math.abs(cancel.top - save.top) < 1 && Math.abs(cancel.width - save.width) < 1
           && cancel.height >= 44 && save.height >= 44;
-      })).toBe(true);
+      }, kind === 'Task')).toBe(true);
       expect(await dialog.evaluate(el => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
       await testInfo.attach(`${kind}-${theme}`, { body: await page.screenshot({ animations: 'disabled' }), contentType: 'image/png' });
       await dialog.getByRole('button', { name: 'Close dialog' }).click();

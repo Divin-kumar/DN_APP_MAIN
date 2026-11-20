@@ -689,7 +689,7 @@ export default function DashboardLayout() {
       ) : null}
       {quickCreateType === 'task' ? (
         <ModalDialog key="quick-task" title="New Task" className="dn-task-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
-          formFooter closeDisabled={quickTaskBusy}
+          formFooter="mobile" closeDisabled={quickTaskBusy}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
             busy={quickTaskBusy} saveReady={tasksLoaded === quickTaskScope && !taskLoadError}

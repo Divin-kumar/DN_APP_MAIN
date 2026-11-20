@@ -277,12 +277,6 @@ html[data-theme] .dn-plan-transaction-form { gap: 12px; }
 .dn-payment-context dd { color: var(--color-text); font-weight: 650; }
 .dn-payment-fields { display: grid; grid-template-columns: minmax(0, 1fr) minmax(140px, 1.25fr); align-items: start; gap: 10px; }
 .dn-payment-fields .dn-plan-form-date { min-width: 0; }
-.dn-payment-fields .dn-paid-on-date {
-  grid-column: 1;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 1.35;
-}
 @media (max-width: 300px) {
   .dn-payment-fields { grid-template-columns: minmax(0, 1fr); }
 }

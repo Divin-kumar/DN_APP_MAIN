@@ -106,7 +106,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
     </label>
     <div className="dn-editor-schedule">
       <div className="dn-task-date-row activity-date-time-row" role="group" aria-label="Task due date and time">
-        <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy} required={Boolean(repeatFrequency)}
+        <DateField label="Due date" name="dn-task-date" value={dueDate} disabled={busy} required={Boolean(repeatFrequency)} showReadableDate
           onChange={(event) => { setDueDate(event.target.value); if (!event.target.value) setDueTime(''); }} />
         <ActivityTimeField value={dueTime} onChange={setDueTime} subject="Task" disabled={busy || !dueDate} />
       </div>

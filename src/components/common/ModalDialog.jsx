@@ -15,6 +15,7 @@ const activeDialogSelector = '[role="dialog"][aria-modal="true"]:not([inert])';
 
 const FormFooterContext = createContext(null);
 const compactActionMedia = '(orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
+const mobileMedia = '(max-width: 760px), ' + compactActionMedia;
 
 export function useDialogFormFooter() {
   return useContext(FormFooterContext);
@@ -25,7 +26,8 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const [formActions, setFormActions] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [compactActions, setCompactActions] = useState(() => window.matchMedia(compactActionMedia).matches);
-  const pinFormActions = formFooter && (keyboardOpen || compactActions);
+  const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
+  const pinFormActions = formFooter && (keyboardOpen || compactActions || (formFooter === 'mobile' && isMobileSheet));
   useEffect(() => {
     if (!formFooter) return undefined;
     const media = window.matchMedia(compactActionMedia);
@@ -37,8 +39,6 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   const handingOff = usePresenceData() === true && !isPresent;
-  const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
-  const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
   const [swipeClosing, setSwipeClosing] = useState(false);
   const dismissRequested = useRef(false);
   const pulledToClose = useRef(false);

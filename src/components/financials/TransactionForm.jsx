@@ -167,14 +167,11 @@ export default function TransactionForm({
       <option value="expense">Expense</option>
     </DropdownSelect>
   </div> : null;
-  const paidOnDate = paymentPlan ? formatScheduleDate(form.date) : '';
-  const paidOnDescriptionId = `${formId}-paid-on-date`;
   const dates = <div className="activity-date-time-row">
     <DateField label={isPlan ? 'Due date *' : paymentPlan ? 'Paid on *' : 'Date *'} name="date" required value={form.date}
       onChange={(event) => change('date', event.target.value)} disabled={busy}
-      aria-describedby={paidOnDate ? paidOnDescriptionId : undefined} />
+      showReadableDate={Boolean(paymentPlan)} />
     <ActivityTimeField subject={paymentPlan ? 'Payment' : 'Transaction'} value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} />
-    {paidOnDate ? <time className="dn-paid-on-date" dateTime={form.date} id={paidOnDescriptionId}>{paidOnDate}</time> : null}
   </div>;
   const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}

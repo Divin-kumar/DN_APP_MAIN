@@ -1,4 +1,5 @@
 import { useId } from 'react';
+import { formatScheduleDate } from '../../utils/repeatSchedule.js';
 
 export default function DateField({
   label,
@@ -9,12 +10,16 @@ export default function DateField({
   required = false,
   disabled = false,
   className = '',
+  showReadableDate = false,
+  'aria-describedby': describedBy,
   ...props
 }) {
   const generatedId = useId();
   const inputId = id || `${name || 'date-field'}-${generatedId}`;
+  const readableDate = showReadableDate ? formatScheduleDate(value) : '';
+  const descriptionId = readableDate ? `${inputId}-readable` : undefined;
 
-  return (
+  return <>
     <label className={`field-group date-field${className ? ` ${className}` : ''}`} htmlFor={inputId}>
       {label ? <span>{label}</span> : null}
       <input
@@ -26,8 +31,10 @@ export default function DateField({
         required={required}
         disabled={disabled}
         className="date-field-input"
+        aria-describedby={[describedBy, descriptionId].filter(Boolean).join(' ') || undefined}
         {...props}
       />
     </label>
-  );
+    {readableDate ? <time className="dn-date-field-readable" dateTime={value} id={descriptionId}>{readableDate}</time> : null}
+  </>;
 }

@@ -29,7 +29,7 @@ test.describe('Recurring sheets on short phone screens', () => {
       await page.getByRole('button', { name: kind, exact: true }).tap();
       const dialog = page.getByRole('dialog', { name: title, exact: true });
       const save = dialog.getByRole('button', { name, exact: true });
-      await expect.poll(() => save.evaluate(button => Boolean(button.closest('form')))).toBe(true);
+      await expect.poll(() => save.evaluate(button => Boolean(button.closest('form')))).toBe(kind === 'Transaction');
       const input = dialog.getByLabel(field, { exact: true });
       await input.fill('Unsaved draft');
       if (kind === 'Transaction') await dialog.getByLabel('Amount *', { exact: true }).fill('42');
@@ -226,7 +226,7 @@ test('recurring Tasks use the normal list and advance one due date at a time', a
   await expect(schedule(pausedEditor).locator('time')).toHaveCount(0);
   await pausedEditor.getByRole('button', { name: 'Resume repeat…', exact: true }).click();
   await expect(pausedEditor.getByRole('heading', { name: 'Resume repeat?' })).toBeFocused();
-  await expect(pausedEditor.locator('time')).toHaveAttribute('datetime', '2026-03-31T18:30');
+  await expect(pausedEditor.locator('.dn-task-action-confirm time')).toHaveAttribute('datetime', '2026-03-31T18:30');
   await pausedEditor.getByRole('button', { name: 'Resume repeat', exact: true }).click();
   await expect(recurring).toHaveCount(1);
   await expect(page.locator('.app-toast')).toContainText('Repeat resumed. Due 31 Mar 2026 · 18:30.');
@@ -752,7 +752,7 @@ test.describe('Overdue dates and the readable payment date', () => {
       const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
       const date = payment.getByLabel('Paid on *', { exact: true });
       const time = payment.getByLabel('Payment time', { exact: true });
-      const readableDate = payment.locator('.dn-paid-on-date');
+      const readableDate = payment.locator('.dn-date-field-readable');
       await expect(date).toHaveValue('2026-11-14');
       await expect(date).toHaveAccessibleDescription('14 Nov 2026');
       await expect(readableDate).toBeInViewport();

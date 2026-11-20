@@ -339,7 +339,7 @@ html[data-theme] .dashboard-compact .dn-dashboard-task-date[data-overdue="true"]
   background: var(--dn-overdue-fill);
 }
 html[data-theme] .dashboard-compact :is(.dashboard-upcoming-copy .is-overdue, .dn-dashboard-task-flag.is-overdue) {
-  color: var(--color-danger, #c84545);
+  color: var(--dn-overdue-ink);
 }
 html[data-theme] .dn-dashboard-task-flag { display: grid; place-items: center; }
 html[data-theme] .dn-dashboard-tasks :is(button, a):focus-visible {

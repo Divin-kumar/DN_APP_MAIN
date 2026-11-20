@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-588 | Fix the mobile sheet and Dashboard audit findings
+
+- **Scope.** Put a solid tinted base beneath mobile sheet gradients, pin Task editor actions below the scrollable fields, and place the docked Dashboard + below the scroll area on narrow, short phones. Use the stronger overdue color for the Dashboard's timing label and show a readable local date below the native Task date picker.
+- **Compatibility.** Task Date and Time stay together. Record payment uses the same readable date component and keeps its existing save flow. Dashboard retains the tap, double-tap and drag gestures. The current Guest demo already covers the affected controls and overdue examples, so its fixture data and edition still cover these flows.
+- **Executed.** Build, lint and 635 Node tests passed. Chromium passed 136 distinct checks across the broad run and two targeted reruns. Eight focused WebKit checks covered both themes at 320 × 680 and 430 × 932 and included keyboard-sized and landscape sheet tests. The dark Dashboard overdue label measured 6.57:1 in the rendered Guest demo. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-587 | Improve overdue date contrast and payment details
 
 - **Scope.** Apply the same readable overdue colors to Tasks, the Dashboard Tasks preview and Upcoming expenses in both themes. Show a day–month–year date beneath the native Paid on picker and update it when the selected date changes. Bring the desktop Details chevron alongside its text.
