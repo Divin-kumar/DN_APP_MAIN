@@ -121,7 +121,7 @@ test('Phase 5 payment choice remains usable on a narrow iPhone viewport', async(
 
 // CHG-511: date/payment and existing expanded notes must be legible without
 // disturbing amount layout or original Guest records. Synthetic browser only.
-for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [1280, 900, 'dark']]) {
+for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [1280, 900, 'dark'], [1363, 936, 'light']]) {
   test(`Transaction detail text and disclosure remain readable at ${width}px ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, {
@@ -153,7 +153,15 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     // the 44px touch target belongs to the narrower phone presentation.
     expect(size.height).toBeGreaterThanOrEqual(width <= 760 ? 43.9 : 27.9);
     expect(await summary.evaluate(node => parseFloat(getComputedStyle(node).fontSize))).toBeGreaterThanOrEqual(13);
-    await summary.click();
+    if (width > 760) {
+      const gap = await summary.evaluate(node => node.querySelector('svg').getBoundingClientRect().left
+        - node.querySelector('.dn-transaction-details-label').getBoundingClientRect().right);
+      expect(gap).toBeGreaterThanOrEqual(0);
+      expect(gap).toBeLessThanOrEqual(8);
+      await summary.click({ position: { x: size.width - 8, y: size.height / 2 } });
+    } else {
+      await summary.click();
+    }
     const detail = card.locator('.dn-transaction-details');
     await expect(detail).toHaveAttribute('open', '');
     const note = detail.locator('.dn-transaction-note');

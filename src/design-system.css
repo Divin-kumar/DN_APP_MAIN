@@ -3259,6 +3259,11 @@ html[data-theme] .dn-transactions-page .dn-transaction-card .dn-transaction-deta
   justify-content:space-between; min-height:44px; gap:5px;
   color:var(--color-text-muted); font-size:11px;
 }
+@media (min-width:761px) and (min-height:501px), (min-width:761px) and (pointer:fine) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card .dn-transaction-details > summary {
+    justify-content:flex-start;
+  }
+}
 @media (max-width:360px) {
   html[data-theme] .dn-transactions-page .dn-transaction-card .dn-transaction-card-core {
     grid-template-columns:32px minmax(0,1fr); column-gap:9px;
@@ -3686,6 +3691,8 @@ html[data-theme] {
   --dn-planning-field: color-mix(in srgb, var(--color-card-raised) 58%, transparent);
   --dn-planning-line: color-mix(in srgb, var(--color-text) 11%, transparent);
   --dn-planning-shadow: 0 3px 12px rgb(0 0 0 / 5%);
+  --dn-overdue-ink: #ff929a;
+  --dn-overdue-fill: #30232d;
   --dn-planning-selected: linear-gradient(140deg, color-mix(in srgb, var(--color-primary) 22%, transparent), color-mix(in srgb, var(--color-primary) 9%, var(--color-glass)));
 }
 html[data-theme="light"] {
@@ -3693,6 +3700,8 @@ html[data-theme="light"] {
   --dn-planning-field: rgb(255 255 255 / 58%);
   --dn-planning-line: rgb(70 95 130 / 13%);
   --dn-planning-shadow: 0 3px 12px rgb(45 72 110 / 4%);
+  --dn-overdue-ink: #a12b3b;
+  --dn-overdue-fill: #fff0f1;
 }
 @media (prefers-reduced-transparency: reduce) {
   html[data-theme] {

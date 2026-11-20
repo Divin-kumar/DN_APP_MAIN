@@ -381,7 +381,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await recordPayment.click();
   await expect(payment.getByRole('combobox', { name: 'Transaction Type', exact: true })).toHaveCount(0);
   await expect(payment.getByLabel('Paid on *', { exact: true })).toBeVisible();
-  await expect(payment.locator('time')).toHaveText(['31 Jan 2026', '28 Feb 2026']);
+  await expect(payment.locator('.dn-payment-context time')).toHaveText(['31 Jan 2026', '28 Feb 2026']);
   await expect(payment.getByLabel('Title', { exact: true })).toBeHidden();
   await expect(payment.getByLabel('Amount paid *', { exact: true })).toHaveValue('799');
   await payment.getByLabel('Amount paid *', { exact: true }).fill('825');
@@ -692,3 +692,82 @@ for (const width of [320, 430]) {
     expect(errors).toEqual([]);
   });
 }
+
+test.describe('Overdue dates and the readable payment date', () => {
+  test.use({ isMobile: true, hasTouch: true, locale: 'en-IN', timezoneId: 'Asia/Kolkata' });
+
+  for (const theme of ['light', 'dark']) {
+    test(`overdue dates meet contrast and the payment date follows edits in ${theme}`, async ({ page }) => {
+      await page.setViewportSize({ width: 430, height: 932 });
+      await page.clock.setFixedTime(new Date('2026-11-14T12:00:00.000Z'));
+      const errors = await seedGuest(page, { ...empty, theme });
+      await page.addInitScript(() => {
+        localStorage.setItem('dn_guest_tasks', JSON.stringify([{
+          id: 'overdue-task', title: 'Return the library book', dueDate: '2026-11-12', dueTime: '16:00',
+          status: 'in-progress', priority: 'medium', createdAt: '2026-11-07T12:00:00.000Z',
+        }]));
+        const plan = (id, name, dueDate) => ({
+          id, name, dueDate, amount: 100, category: 'Home', paymentMethod: 'Online',
+          updatedAt: '2026-11-01T12:00:00Z', repeat: { frequency: 'monthly', anchorDate: dueDate },
+        });
+        localStorage.setItem('dn_guest_expense_plans', JSON.stringify([
+          plan('overdue-bill', 'Internet', '2026-11-12'),
+          plan('upcoming-bill', 'Mobile', '2026-11-20'),
+        ]));
+      });
+
+      const checkTile = async (tile, textCount) => {
+        await expect(tile).toBeVisible();
+        const contrast = await tile.evaluate(element => {
+          const luminance = value => {
+            const channels = value.match(/\d+/g).slice(0, 3).map(channel => Number(channel) / 255);
+            return channels.reduce((total, channel, index) => total
+              + (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+              * [0.2126, 0.7152, 0.0722][index], 0);
+          };
+          const background = getComputedStyle(element).backgroundColor;
+          const surface = luminance(background);
+          const ratios = [...element.querySelectorAll('strong, small')].map(child => {
+            const text = luminance(getComputedStyle(child).color);
+            return (Math.max(text, surface) + 0.05) / (Math.min(text, surface) + 0.05);
+          });
+          return { background, ratios };
+        });
+        expect(contrast.background).toMatch(/^rgb\(/);
+        expect(contrast.ratios).toHaveLength(textCount);
+        for (const ratio of contrast.ratios) expect(ratio).toBeGreaterThanOrEqual(4.5);
+      };
+
+      await page.goto('/tasks');
+      const taskDate = page.getByRole('img', { name: 'Overdue, 12 Nov 2026, 16:00' });
+      await checkTile(taskDate, 3);
+
+      await page.goto('/financials/transactions');
+      await page.getByRole('button', { name: /Upcoming expenses/ }).tap();
+      const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
+      const overdue = plans.getByRole('region', { name: 'Overdue' });
+      await checkTile(overdue.locator('.dn-expense-plan-day'), 2);
+      await overdue.getByRole('button', { name: 'Record payment for Internet' }).tap();
+
+      const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
+      const date = payment.getByLabel('Paid on *', { exact: true });
+      const time = payment.getByLabel('Payment time', { exact: true });
+      const readableDate = payment.locator('.dn-paid-on-date');
+      await expect(date).toHaveValue('2026-11-14');
+      await expect(date).toHaveAccessibleDescription('14 Nov 2026');
+      await expect(readableDate).toBeInViewport();
+      expect(Math.abs((await date.boundingBox()).y - (await time.boundingBox()).y)).toBeLessThan(2);
+
+      await date.fill('2026-05-03');
+      await expect(readableDate).toHaveText('3 May 2026');
+      await expect(readableDate).toHaveAttribute('datetime', '2026-05-03');
+      await expect(date).toHaveAccessibleDescription('3 May 2026');
+      await date.fill('');
+      await expect(readableDate).toHaveCount(0);
+      await payment.getByRole('button', { name: 'Cancel', exact: true }).tap();
+      await expect(plans).toBeVisible();
+      expect(await readGuest(page, 'dn_guest_expenses')).toEqual([]);
+      expect(errors).toEqual([]);
+    });
+  }
+});

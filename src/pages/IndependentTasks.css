@@ -248,6 +248,9 @@ html[data-theme] .dn-task-calendar {
   display:grid; align-content:center; justify-items:center; gap:1px; width:58px; height:58px; box-sizing:border-box; padding:3px; border-radius:10px;
   color:var(--color-text-secondary); background:color-mix(in srgb,var(--color-primary) 6%,transparent);
 }
+html[data-theme] .dn-task-list .dn-task-calendar.is-overdue {
+  color:var(--dn-overdue-ink); background:var(--dn-overdue-fill);
+}
 html[data-theme] .dn-task-calendar strong { font-size:20px; line-height:1.1; }
 html[data-theme] .dn-task-calendar small { font-size:10px; }
 html[data-theme] .dn-task-calendar-time { font-size:10px; font-variant-numeric:tabular-nums; }
@@ -322,10 +325,6 @@ html[data-theme] .dn-task-editor .dn-task-time-hint {font-size:13px;line-height:
     background:color-mix(in srgb,var(--color-primary) 7%,var(--color-card));
     font-variant-numeric:tabular-nums;
   }
-  html[data-theme] .dn-task-list .dn-task-calendar.is-overdue {
-    color:var(--color-danger,#c84545);
-    background:color-mix(in srgb,var(--color-danger,#c84545) 8%,var(--color-card));
-  }
   html[data-theme] .dn-task-list .dn-task-calendar strong {
     font-size:19px; font-weight:760; line-height:1.08; letter-spacing:-.03em;
   }
@@ -387,7 +386,7 @@ html[data-theme] .dn-task-repeat-context :is(.is-today, .is-overdue) {
   font-size: 12px;
 }
 html[data-theme] .dn-task-repeat-context .is-today { color: var(--color-primary); font-weight: 680; }
-html[data-theme] .dn-task-repeat-context .is-overdue { color: var(--color-danger); font-weight: 680; }
+html[data-theme] .dn-task-repeat-context .is-overdue { color: var(--dn-overdue-ink); font-weight: 680; }
 html[data-theme] .dn-task-repeat-context svg {
   flex-shrink: 0;
   color: var(--color-primary);

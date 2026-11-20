@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-587 | Improve overdue date contrast and payment details
+
+- **Scope.** Apply the same readable overdue colors to Tasks, the Dashboard Tasks preview and Upcoming expenses in both themes. Show a day–month–year date beneath the native Paid on picker and update it when the selected date changes. Bring the desktop Details chevron alongside its text.
+- **Compatibility.** Date and Time stay together. The desktop disclosure retains its full-width click target and mobile keeps its existing layout. The current Guest demo has overdue Tasks and bills and uses the same payment and disclosure controls, so its fixtures and edition still cover these flows.
+- **Executed.** Build, lint and 635 Node tests passed. Chromium passed 105 browser checks and the built app passed 10 focused WebKit checks. The overdue tiles measured 6.49:1 in light mode and 7.00:1 in dark mode. Browser checks covered payment date editing and clearing, accessible date descriptions, Dashboard and Task tile consistency, and desktop disclosure alignment and activation. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-586 | Fix Preview updates and clarify the Guest demo
 
 - **Scope.** Put Update PDF preview beside the stale message when PDF Studio panels stack. Show Viewing sample data in the demo Dashboard greeting. Shorten the sample Journal opening and give the Explore DN panel a Demo guide link to the existing application guide.

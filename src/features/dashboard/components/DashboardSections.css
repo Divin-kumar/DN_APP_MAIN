@@ -335,8 +335,8 @@ html[data-theme] .dashboard-compact .dn-dashboard-task-row {
   color: var(--color-text); text-decoration: none;
 }
 html[data-theme] .dashboard-compact .dn-dashboard-task-date[data-overdue="true"] {
-  color: var(--color-danger, #c84545);
-  background: color-mix(in srgb, var(--color-danger, #c84545) 8%, var(--color-card));
+  color: var(--dn-overdue-ink);
+  background: var(--dn-overdue-fill);
 }
 html[data-theme] .dashboard-compact :is(.dashboard-upcoming-copy .is-overdue, .dn-dashboard-task-flag.is-overdue) {
   color: var(--color-danger, #c84545);

@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Overdue dates and transaction details (20 November 2026, development)
+
+Overdue date tiles on Tasks, the Dashboard Tasks preview and Upcoming expenses share high-contrast light and dark red colors. Record payment shows the selected date in day, month and year order beneath the native Paid on picker. The visible date follows edits and uses the same format as Scheduled for and Next due. Date and Time remain together in the form. Desktop transaction rows place the Details chevron beside its label. The full disclosure row remains clickable.
+
 ## Desktop Moment and PDF controls (20 November 2026, development)
 
 The desktop sidebar abbreviates the persistent storage scope to Guest · Local or Account · Cloud. Its accessible description explains the storage boundary. Desktop Moments without an available cover show a compact date tile, and photo cards retain their full-height image. In Moment Story, the introduction heading and edit action share the width of the opening prose. Keepsakes retain the wider gallery layout.
