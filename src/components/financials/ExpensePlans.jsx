@@ -43,6 +43,7 @@ function ExpensePlanList({ plans, onSelect }) {
   const today = formatMomentDate(useDashboardClock());
   const sorted = [...plans].sort((a, b) => a.dueDate.localeCompare(b.dueDate) || a.name.localeCompare(b.name));
   const single = sorted.length === 1;
+  const yearSuffix = ` ${today.slice(0, 4)}`;
   const groups = [
     { timing: 'today', label: 'Due today', items: sorted.filter((plan) => plan.dueDate === today) },
     { timing: 'overdue', label: 'Overdue', items: sorted.filter((plan) => plan.dueDate < today) },
@@ -56,28 +57,29 @@ function ExpensePlanList({ plans, onSelect }) {
 
   return <div className="dn-expense-plan-groups">
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
-      {!single && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>{label}</h4>}
+      {(!single || timing !== 'later') && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>{label}</h4>}
       <ul className="dn-expense-plan-list" role="list">
         {items.map((plan) => {
           const nameId = `dn-plan-name-${plan.id}`;
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
           const statusLabel = timing === 'later' ? 'Due' : label;
+          const amount = formatAmount.format(plan.amount);
+          const dateLabel = formatScheduleDate(plan.dueDate);
+          const dayAndMonth = dateLabel.endsWith(yearSuffix) ? dateLabel.slice(0, -yearSuffix.length) : '';
           return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
-            <strong id={nameId} className="dn-expense-plan-name">{plan.name}</strong>
-            <div className="dn-expense-plan-meta" id={dateId}>
-              <span className={single ? `dn-expense-plan-status is-${timing}` : 'sr-only'}>{statusLabel}</span>{' '}
-              {single ? <span aria-hidden="true">·</span> : null}{' '}
-              <time className="dn-expense-plan-day" dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
-              {' '}<span aria-hidden="true">·</span>{' '}<span>{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
+            <div className="dn-expense-plan-data">
+              <strong id={nameId} className="dn-expense-plan-name" title={plan.name}>{plan.name}</strong>
+              <span className="dn-expense-plan-meta" id={dateId}>
+                <span className="sr-only">{statusLabel}</span>{' '}
+                <time className="dn-expense-plan-day" dateTime={plan.dueDate} title={dateLabel}>
+                  {dayAndMonth ? <>{dayAndMonth}<span className="dn-expense-plan-current-year">{yearSuffix}</span></> : dateLabel}
+                </time>
+                {' '}<span aria-hidden="true">·</span>{' '}{REPEAT_OPTIONS[plan.repeat.frequency]}
+              </span>
+              <span id={amountId} className="dn-expense-plan-amount" title={amount}>{amount}</span>
             </div>
-            <div className="dn-expense-plan-amount-row">
-              <span id={amountId}>{formatAmount.format(plan.amount)}</span>
-              <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
-                aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
-                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
-            </div>
-            <ExpensePlanActions plan={plan} nameId={nameId} onSelect={onSelect} />
+            <ExpensePlanActions plan={plan} nameId={nameId} description={`${amountId} ${dateId}`} onSelect={onSelect} />
           </li>;
         })}
       </ul>
@@ -85,7 +87,7 @@ function ExpensePlanList({ plans, onSelect }) {
   </div>;
 }
 
-function ExpensePlanActions({ plan, nameId, onSelect }) {
+function ExpensePlanActions({ plan, nameId, description, onSelect }) {
   const following = previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate);
   return <div className="dn-expense-plan-menu-actions" role="group" aria-labelledby={nameId}>
     <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" aria-describedby={nameId}
@@ -94,6 +96,9 @@ function ExpensePlanActions({ plan, nameId, onSelect }) {
       disabled={!following} onClick={(event) => onSelect(plan, 'skip', event.currentTarget)}>Skip</button>
     <button type="button" data-plan-manage-action="end" aria-describedby={nameId}
       onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>End repeat</button>
+    <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
+      aria-label={`Record payment for ${plan.name}`} aria-describedby={description}
+      onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
   </div>;
 }
 
@@ -167,7 +172,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
       const rect = row.getBoundingClientRect();
       return rect.top >= contentTop && rect.bottom <= bottom;
     });
-    visibleRow?.querySelector('button')?.focus({ preventScroll: true });
+    visibleRow?.querySelector('[data-plan-action="payment"]')?.focus({ preventScroll: true });
     body.scrollTop = anchor.scrollTop;
   };
 

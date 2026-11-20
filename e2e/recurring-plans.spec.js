@@ -359,11 +359,7 @@ test('recurring expenses stay outside totals, then post one editable payment and
   const recordPayment = plans.getByRole('button', { name: 'Record payment for Home internet' });
   await expect(plans.locator('time')).toBeVisible();
   await expect(plans.locator('time')).toHaveText('31 Jan 2026');
-  await expect(plans.locator('.dn-expense-plan-status')).toHaveText('Overdue');
-  const dateRow = await plans.locator('time').boundingBox();
-  const statusRow = await plans.locator('.dn-expense-plan-status').boundingBox();
-  expect(Math.abs(dateRow.y - statusRow.y)).toBeLessThan(5);
-  expect(dateRow.x).toBeGreaterThan(statusRow.x + statusRow.width);
+  await expect(plans.getByRole('heading', { name: 'Overdue', exact: true })).toBeVisible();
   await expect(plans.locator('..')).toHaveCSS('backdrop-filter', 'none');
   await expect(recordPayment).toHaveCSS('min-height', '44px');
   await expect(recordPayment).toHaveAccessibleDescription(/₹799 Overdue.*31 Jan 2026.*Monthly/);
@@ -563,13 +559,11 @@ test('returning to a long expense list keeps the scroll position and shows payme
     return Math.abs(element.getBoundingClientRect().top - bodyTop);
   })).toBeLessThanOrEqual(1);
   await expect(recordPayment).toBeInViewport({ ratio: 1 });
-  const [paymentBox, amountBox] = await recordPayment.evaluate((button) => {
-    const amount = button.closest('.dn-expense-plan-amount-row').querySelector('span');
-    return [button.getBoundingClientRect().toJSON(), amount.getBoundingClientRect().toJSON()];
-  });
-  expect(paymentBox.x).toBeGreaterThan(amountBox.x);
-  expect(paymentBox.y + paymentBox.height / 2).toBeCloseTo(amountBox.y + amountBox.height / 2, 0);
-  expect(paymentBox.height).toBeGreaterThanOrEqual(44);
+  const bill = plans.locator('[data-plan-id="bill-12"]');
+  const dataBounds = await bill.locator('.dn-expense-plan-data').boundingBox();
+  const paymentBounds = await recordPayment.boundingBox();
+  expect(paymentBounds.y).toBeGreaterThanOrEqual(dataBounds.y + dataBounds.height - 1);
+  expect(paymentBounds.height).toBeGreaterThanOrEqual(44);
   const edit = plans.locator('[data-plan-id="bill-12"]').getByRole('button', { name: 'Edit schedule', exact: true });
   await edit.click();
   await page.getByRole('dialog', { name: 'Edit expense plan' }).getByRole('button', { name: 'Cancel', exact: true }).click();

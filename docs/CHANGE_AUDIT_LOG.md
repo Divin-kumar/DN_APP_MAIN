@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-592 | Use two lines for each upcoming bill
+
+- **Scope.** Align the bill name, due date, cadence and amount in one line and the four actions on the next. Keep the full bill labels in accessibility text and the corresponding views. On very narrow phones the visible date uses day and month for current-year bills.
+- **Compatibility.** Preserve section priority, bill processing, payment receipts, minimum touch targets and focus restoration. The Guest tour edition advances to 2026.11.20.5 through explicit Refresh demo.
+- **Executed.** Build, lint, documentation and 636 Node checks passed. Twenty distinct Chromium checks and ten focused WebKit checks passed. Checked the two-line layout at 320, 390 and 430 px phone widths and 1,280 px desktop. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-591 | Simplify the Upcoming expenses sheet
 
 - **Scope.** Give the list a continuous surface, plain date and frequency text, and thin row dividers. Remove the top total, group counts, date chips and action icons. Keep a green Record payment action beside the amount and quiet text actions underneath. Flatten the payment context, confirmations and receipt.

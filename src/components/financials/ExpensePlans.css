@@ -77,49 +77,43 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-expense-
   font-weight: 650;
   line-height: 1.35;
 }
-.dn-expense-plan-heading.is-overdue,
-.dn-expense-plan-status.is-overdue { color: var(--dn-overdue-ink); }
+.dn-expense-plan-heading.is-overdue { color: var(--dn-overdue-ink); }
 .dn-expense-plan-list { list-style: none; margin: 0; padding: 0; }
 
 .dn-expense-plan-row {
-  display: grid;
   min-width: 0;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 1px 10px;
-  padding: 9px 3px 2px;
+  padding: 8px 3px 2px;
   border-top: 1px solid var(--dn-planning-line);
 }
-.dn-expense-plan-name { font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
-.dn-expense-plan-meta {
-  display: flex;
+.dn-expense-plan-data {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: baseline;
-  flex-wrap: wrap;
-  gap: 1px 5px;
+  gap: 8px;
+  min-height: 22px;
+  white-space: nowrap;
+}
+.dn-expense-plan-name,
+.dn-expense-plan-amount {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+.dn-expense-plan-name { font-size: 14px; }
+.dn-expense-plan-meta {
   color: var(--color-text-muted);
   font-size: 12px;
   line-height: 1.4;
 }
-.dn-expense-plan-day { white-space: nowrap; }
-.dn-expense-plan-status { font-weight: 650; }
-
-.dn-expense-plan-amount-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 0 8px;
-  min-width: 0;
-}
-.dn-expense-plan-amount-row > span,
+.dn-expense-plan-amount,
 .dn-expense-receipt-head > span { font-variant-numeric: tabular-nums; }
-.dn-expense-plan-amount-row > span {
-  min-width: 0;
-  overflow-wrap: anywhere;
-  font-size: 18px;
+.dn-expense-plan-amount {
+  max-width: 31vw;
+  font-size: 14px;
   font-weight: 680;
+  text-align: end;
 }
 
-html[data-theme] .dn-modal .dn-expense-plan-record,
 html[data-theme] .dn-expense-view-payment {
   flex: 0 0 auto;
   min-height: 44px;
@@ -136,16 +130,16 @@ html[data-theme] .dn-expense-view-payment {
   cursor: pointer;
 }
 .dn-expense-plan-record { margin-inline-start: auto; }
-html[data-theme="dark"] .dn-modal .dn-expense-plan-record,
 html[data-theme="dark"] .dn-expense-view-payment { color: #a0e9b8; }
 
 .dn-expense-plan-menu-actions {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0 8px;
-  margin-inline-start: -6px;
+  align-items: center;
+  gap: 0 4px;
+  margin-inline: -3px;
 }
 html[data-theme] body .dn-expense-plan-menu-actions button {
+  flex: 0 0 auto;
   min-width: 44px;
   min-height: 44px;
   padding: 4px 6px;
@@ -155,21 +149,31 @@ html[data-theme] body .dn-expense-plan-menu-actions button {
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: 13px;
+  font-size: 12px;
   line-height: 1.25;
+  white-space: nowrap;
   cursor: pointer;
 }
+html[data-theme] body .dn-expense-plan-menu-actions .dn-expense-plan-record { color: #195739; font-weight: 680; }
+html[data-theme="dark"] body .dn-expense-plan-menu-actions .dn-expense-plan-record { color: #a0e9b8; }
 html[data-theme] body .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
   html[data-theme] .dn-expense-plan-entry:hover { border-color: var(--color-primary); }
   html[data-theme] body .dn-expense-plan-menu-actions button:not(:disabled):hover,
-  html[data-theme] .dn-modal .dn-expense-plan-record:hover,
   html[data-theme] .dn-expense-view-payment:hover { background: var(--dn-planning-field); }
 }
-@media (min-width: 761px) and (min-height: 501px) {
-  .dn-expense-plan-row { grid-template-columns: minmax(0, 1fr) minmax(0, 50%); }
-  .dn-expense-plan-amount-row { grid-area: 1 / 2 / 3; }
-  .dn-expense-plan-menu-actions { grid-column: 1 / -1; }
+@media (max-width: 360px) {
+  .dn-expense-plan-data { gap: 5px; }
+  .dn-expense-plan-meta { font-size: 11px; }
+  .dn-expense-plan-current-year {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .dn-expense-plan-menu-actions { gap: 0; }
+  html[data-theme] body .dn-expense-plan-menu-actions button { padding-inline: 3px; }
 }
 
 .dn-expense-plan-empty { padding: 10px 3px; }

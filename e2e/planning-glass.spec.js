@@ -49,12 +49,32 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await expect(bills).toBeVisible();
     await expect(page.locator('.dn-command-bar')).toHaveCSS('opacity', '0');
     await expect(bills).toHaveCSS('background-image', 'none');
-    for (const name of ['Edit schedule', 'Skip this occurrence', 'End repeat']) {
-      const action = bills.getByRole('button', { name, exact: true });
-      await expect(action).toBeVisible();
-      const bounds = await action.boundingBox();
-      expect(bounds.width).toBeGreaterThanOrEqual(44);
-      expect(bounds.height).toBeGreaterThanOrEqual(44);
+    const bill = bills.getByRole('listitem');
+    const data = bill.locator('.dn-expense-plan-data');
+    await expect(data).toContainText('Home internet');
+    await expect(data).toContainText('16 Nov 2026');
+    await expect(data).toContainText('₹799');
+    const actions = ['Edit schedule', 'Skip this occurrence', 'End repeat', 'Record payment for Home internet'];
+    for (const name of actions) await expect(bill.getByRole('button', { name, exact: true })).toBeVisible();
+    const layout = await bill.evaluate(element => {
+      const dataRow = element.querySelector('.dn-expense-plan-data');
+      return {
+        itemRight: element.getBoundingClientRect().right,
+        dataBottom: dataRow.getBoundingClientRect().bottom,
+        textLines: [...dataRow.children].map(child =>
+          child.getBoundingClientRect().height / parseFloat(getComputedStyle(child).lineHeight)),
+        buttons: [...element.querySelectorAll('button')].map(button => button.getBoundingClientRect().toJSON()),
+      };
+    });
+    for (const lines of layout.textLines) expect(lines).toBeCloseTo(1, 1);
+    expect(layout.buttons).toHaveLength(4);
+    for (const [index, button] of layout.buttons.entries()) {
+      expect(button.width).toBeGreaterThanOrEqual(44);
+      expect(button.height).toBeGreaterThanOrEqual(44);
+      expect(button.y).toBeCloseTo(layout.buttons[0].y, 0);
+      expect(button.y).toBeGreaterThanOrEqual(layout.dataBottom - 1);
+      expect(button.right).toBeLessThanOrEqual(layout.itemRight + 1);
+      if (index) expect(button.x).toBeGreaterThanOrEqual(layout.buttons[index - 1].right - 1);
     }
     await capture('bill');
     await page.getByRole('button', { name: 'Edit schedule', exact: true }).click();
