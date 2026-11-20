@@ -13,14 +13,14 @@ import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
   It shows life moments, lets the user search and filter them, open an event in detail,
   and create or edit Moments.
 */
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Archive, ArchiveRestore, BookHeart, CalendarDays, ClipboardList, Clock3, FileText, Images, Pencil, Plus, Receipt, Search } from 'lucide-react';
 import EventForm from '../components/events/EventForm';
 import useAppStore from '../store/useAppStore';
 import useEventStore from '../store/useEventStore';
 import useExpenseStore from '../store/useExpenseStore';
-import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog, DialogFormActions } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { momentVisualName, runVisualTransition } from '../utils/visualTransitions';
 import SwipeActionCard from '../components/common/SwipeActionCard';
@@ -156,6 +156,7 @@ function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorit
 }
 
 export default function Events() {
+  const activityFormId = useId();
   const scopedMoments = useScopedMoments();
   const navigate = useNavigate();
   const location = useLocation();
@@ -421,8 +422,8 @@ export default function Events() {
           </ModalDialog>
         ) : null}
         {activityChooserEvent ? (
-          <ModalDialog key="activity-editor" title="Add an activity" onClose={() => setActivityChooserEvent(null)}>
-            <form className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
+          <ModalDialog key="activity-editor" title="Add an activity" formFooter onClose={() => setActivityChooserEvent(null)}>
+            <form id={activityFormId} className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
               <p className="dn-form-context">Moment · <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
               <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
@@ -435,10 +436,12 @@ export default function Events() {
                    if (patch.description !== undefined) setActivityDescription(patch.description);
                    if (patch.priority !== undefined) setActivityPriority(patch.priority);
                  }} />
-              <div className="form-actions">
-                <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
-                <button className="primaryButton" type="submit">Save activity</button>
-              </div>
+              <DialogFormActions>
+                <div className="form-actions">
+                  <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
+                  <button className="primaryButton" type="submit" form={activityFormId}>Save activity</button>
+                </div>
+              </DialogFormActions>
             </form>
           </ModalDialog>
         ) : null}
@@ -448,7 +451,7 @@ export default function Events() {
 }
 
 function Drawer({ editingEvent, onClose, onSaveEvent }) {
-  return <ModalDialog title={editingEvent?.name || 'New event'} onClose={onClose} variant="drawer">
+  return <ModalDialog title={editingEvent?.name || 'New event'} onClose={onClose} variant="drawer" formFooter>
     <div className="event-drawer-content">
       <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose}
         submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />

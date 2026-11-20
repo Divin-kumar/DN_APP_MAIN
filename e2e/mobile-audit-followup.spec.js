@@ -89,3 +89,57 @@ for (const [width, height, theme] of [[320, 680, 'light'], [320, 680, 'dark'], [
     expect(errors).toEqual([]);
   });
 }
+
+test('mobile create actions stay tappable when forms expand or the viewport shrinks', async ({ page }) => {
+  const width = 320;
+  const errors = await seedGuest(page, { theme: 'dark' });
+  for (const [route, kind, title, field] of [
+    ['/dashboard', 'Life moment', 'Create a life moment', 'Moment name'],
+    ['/dashboard', 'Activity', 'Add an activity', 'Activity title'],
+    ['/events/moment-one/activities/shared', 'Add entry', 'Add entry', 'Entry content'],
+    ['/tasks', 'Task', 'New Task', 'Task title'],
+    ['/financials/transactions', 'Transaction', 'Add Transaction', 'Title *'],
+  ]) {
+    await page.setViewportSize({ width, height: 680 });
+    await page.goto(route);
+    await page.getByRole('button', { name: 'Open quick create menu', exact: true }).tap();
+    await page.getByRole('button', { name: kind, exact: true }).tap();
+    const dialog = page.getByRole('dialog', { name: title, exact: true });
+    const viewport = dialog.locator('..');
+    const options = dialog.locator('summary').filter({ hasText: 'More options' });
+    if (kind !== 'Add entry') await options.tap();
+    const save = dialog.locator('button[type="submit"]');
+    const cancel = dialog.getByRole('button', { name: 'Cancel', exact: true });
+    const assertActions = async (visibleBottom) => {
+      await expect.poll(() => save.evaluate((button, bottom) => {
+        const body = button.closest('[role="dialog"]').querySelector('.dn-modal-body');
+        const bounds = button.getBoundingClientRect();
+        const target = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        return button.form === body.querySelector('form') && !body.contains(button)
+          && body.getBoundingClientRect().bottom <= bounds.top
+          && bounds.bottom <= bottom && button.contains(target);
+      }, visibleBottom)).toBe(true);
+      await expect(cancel).toBeInViewport({ ratio: 1 });
+    };
+    await assertActions(680);
+
+    await page.setViewportSize({ width, height: 425 });
+    await expect.poll(() => viewport.evaluate(element =>
+      element.style.getPropertyValue('--dn-dialog-layout-height'))).toBe('425px');
+    await expect(viewport).toHaveAttribute('data-keyboard-open', 'false');
+    await assertActions(425);
+
+    const input = dialog.getByRole('textbox', { name: field, exact: true });
+    await input.fill('Draft kept while typing');
+    await page.evaluate(() => {
+      Object.defineProperty(visualViewport, 'height', { configurable: true, value: 250 });
+      visualViewport.dispatchEvent(new Event('resize'));
+    });
+    await expect(viewport).toHaveAttribute('data-keyboard-open', 'true');
+    await assertActions(250);
+    await expect(input).toBeFocused();
+    await cancel.tap();
+    await expect(dialog).toHaveCount(0);
+  }
+  expect(errors).toEqual([]);
+});

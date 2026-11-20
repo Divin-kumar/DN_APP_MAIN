@@ -96,7 +96,7 @@ const openActivities = async (t) => {
       },
       load(id) {
         const fixture = `globalThis[${JSON.stringify(key)}]`;
-        if (id === '\0activities-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useMemo=${fixture}.memo; export const useEffect=()=>{};`;
+        if (id === '\0activities-react') return `export const useState=${fixture}.state,useRef=${fixture}.ref,useMemo=${fixture}.memo; export const useEffect=()=>{},useId=()=>"activity-form";`;
         if (id === '\0activities-jsx') return 'export const jsx=(type,props)=>({type,props}); export const jsxs=jsx,jsxDEV=jsx,Fragment="fragment";';
         if (id === '\0activities-router') return `export const Link="Link",useNavigate=()=>(...args)=>${fixture}.navigations.push(args);`;
         if (id === '\0activities-icons') return 'export const ListChecks="icon",Plus="icon";';

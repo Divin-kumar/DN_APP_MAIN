@@ -14,28 +14,23 @@ const exitEase = [0.4, 0, 0.7, 1];
 const activeDialogSelector = '[role="dialog"][aria-modal="true"]:not([inert])';
 
 const FormFooterContext = createContext(null);
-const compactActionMedia = '(orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
-const mobileMedia = '(max-width: 760px), ' + compactActionMedia;
+const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
 
 export function useDialogFormFooter() {
   return useContext(FormFooterContext);
+}
+
+export function DialogFormActions({ children }) {
+  const footer = useDialogFormFooter();
+  return footer ? createPortal(children, footer) : children;
 }
 
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
   closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
   const [formActions, setFormActions] = useState(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
-  const [compactActions, setCompactActions] = useState(() => window.matchMedia(compactActionMedia).matches);
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
-  const pinFormActions = formFooter && (keyboardOpen || compactActions || (formFooter === 'mobile' && isMobileSheet));
-  useEffect(() => {
-    if (!formFooter) return undefined;
-    const media = window.matchMedia(compactActionMedia);
-    const update = () => setCompactActions(media.matches);
-    update();
-    media.addEventListener('change', update);
-    return () => media.removeEventListener('change', update);
-  }, [formFooter]);
+  const pinFormActions = formFooter && (isMobileSheet || keyboardOpen);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   const handingOff = usePresenceData() === true && !isPresent;

@@ -29,7 +29,7 @@ test.describe('Recurring sheets on short phone screens', () => {
       await page.getByRole('button', { name: kind, exact: true }).tap();
       const dialog = page.getByRole('dialog', { name: title, exact: true });
       const save = dialog.getByRole('button', { name, exact: true });
-      await expect.poll(() => save.evaluate(button => Boolean(button.closest('form')))).toBe(kind === 'Transaction');
+      await expect(save).toBeInViewport({ ratio: 1 });
       const input = dialog.getByLabel(field, { exact: true });
       await input.fill('Unsaved draft');
       if (kind === 'Transaction') await dialog.getByLabel('Amount *', { exact: true }).fill('42');

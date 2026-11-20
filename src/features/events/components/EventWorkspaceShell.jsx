@@ -5,7 +5,7 @@ import { createStandaloneActivity, getMomentEntryMode } from '../../../utils/act
 import DebouncedFilterInput from '../../../components/common/DebouncedFilterInput';
 // This is the single-event workspace.
 // It is the full detail page for one life moment and its existing linked records.
-import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useId, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Archive, ArchiveRestore, ArrowLeft, CalendarDays, Download, FileText, Images, ListChecks, Pencil, Receipt, Save, Search, Sparkles, X } from 'lucide-react';
 import ActivityList from '../../../components/events/ActivityList';
@@ -23,7 +23,7 @@ import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
-import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog, DialogFormActions } from '../../../components/common/ModalDialog';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import usePersistentListState from '../../../hooks/usePersistentListState';
@@ -67,6 +67,7 @@ export default function EventWorkspaceShell() {
 }
 
 export function EventWorkspaceContent() {
+  const activityFormId = useId();
   const { eventId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -604,10 +605,8 @@ export function EventWorkspaceContent() {
           </form>
         </ModalDialog> : null}
         {activityDialogOpen ? (
-          <ModalDialog key="activity-editor" title="Add activity" className="event-activity-editor-modal" onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
-            <form className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
-              {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
-
+          <ModalDialog key="activity-editor" title="Add activity" className="event-activity-editor-modal" formFooter onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
+            <form id={activityFormId} className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
               <ActivityFormFields namePrefix="dn-workspace-entry"
                  value={{ title: activityTitle, date: activityDate, time: activityTime,
                    description: activityDescription, priority: activityPriority }}
@@ -619,10 +618,13 @@ export function EventWorkspaceContent() {
                    if (patch.description !== undefined) setActivityDescription(patch.description);
                    if (patch.priority !== undefined) setActivityPriority(patch.priority);
                  }} />
-               <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
-                <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
-                <button type="submit" disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
-              </div>
+              <DialogFormActions>
+                {activityError ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
+                <div className="dialog-actions dn-activity-create-actions" style={styles.dialogActions}>
+                  <button type="button" className="secondaryButton" disabled={activityBusy} onClick={() => setActivityDialogOpen(false)}>Cancel</button>
+                  <button type="submit" form={activityFormId} disabled={activityBusy} className="primaryButton" style={styles.primaryButton}>Add activity</button>
+                </div>
+              </DialogFormActions>
             </form>
           </ModalDialog>
         ) : null}

@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { useId, useState } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
-import ModalDialog, { ConfirmDialog } from '../../../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog, DialogFormActions } from '../../../components/common/ModalDialog';
 import RichText from '../../../components/common/RichText';
 import RichTextEditor from '../../../components/common/RichTextEditor';
 import DateField from '../../../components/common/DateField';
@@ -23,6 +23,7 @@ const readableTime = (value) => {
 };
 
 export default function ActivityEntryTimeline({ activity, moment, actions, target }) {
+  const entryFormId = useId();
   const [draft, setDraft] = useState(null);
   const [deleting, setDeleting] = useState(null);
   const rows = orderedUnifiedContent(activity);
@@ -76,8 +77,8 @@ export default function ActivityEntryTimeline({ activity, moment, actions, targe
       </article>;
     })}</div> : <p className="dn-content-empty">No entries yet. Use + and choose Add entry to write your first update.</p>}
     <AnimatePresence initial={false}>
-      {draft ? <ModalDialog key="entry-editor" title="Edit entry" onClose={() => { if (!actions.busy) setDraft(null); }}>
-        <form className="form-surface dn-entry-edit-form" aria-busy={actions.busy} onSubmit={save}>
+      {draft ? <ModalDialog key="entry-editor" title="Edit entry" formFooter onClose={() => { if (!actions.busy) setDraft(null); }}>
+        <form id={entryFormId} className="form-surface dn-entry-edit-form" aria-busy={actions.busy} onSubmit={save}>
           <RichTextEditor label="Entry content" value={draft.description || ''} rows={5}
             disabled={actions.busy} onChange={(description) => setDraft((previous) => ({ ...previous, description }))} />
           <div className="activity-date-time-row">
@@ -86,10 +87,12 @@ export default function ActivityEntryTimeline({ activity, moment, actions, targe
             <ActivityTimeField value={draft.time || ''} disabled={actions.busy}
               onChange={(time) => setDraft((previous) => ({ ...previous, time }))} />
           </div>
-          <div className="dialog-actions">
-            <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
-            <button type="submit" className="primaryButton" disabled={actions.busy || !draft.description.trim()}>Save entry</button>
-          </div>
+          <DialogFormActions>
+            <div className="dialog-actions">
+              <button type="button" className="secondaryButton" disabled={actions.busy} onClick={() => setDraft(null)}>Cancel</button>
+              <button type="submit" form={entryFormId} className="primaryButton" disabled={actions.busy || !draft.description.trim()}>Save entry</button>
+            </div>
+          </DialogFormActions>
         </form>
       </ModalDialog> : null}
     </AnimatePresence>

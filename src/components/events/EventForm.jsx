@@ -2,7 +2,8 @@ import ActivityTimeField from '../common/ActivityTimeField';
 import { activityTime, activityTimePatch, currentEntryTime, entryDateTimeSummary } from '../../utils/activityTime';
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useId, useRef, useState } from 'react';
+import { DialogFormActions } from '../common/ModalDialog';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -23,7 +24,8 @@ const createDefaultState = (defaultEventType) => ({
   notes: '',
 });
 
-export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event' }) {
+export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event', error }) {
+  const formId = useId();
   const reduceMotion = useReducedMotion();
   const adminValues = useAppStore((state) => state.adminValues);
   const eventTypeOptions = getCodeListItems('eventTypes', adminValues.eventTypes);
@@ -99,7 +101,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   };
 
   return (
-    <form className="form-surface event-form" onSubmit={handleSubmit}>
+    <form id={formId} className="form-surface event-form" onSubmit={handleSubmit}>
       <label htmlFor="event-name">Moment name
         <input ref={nameInputRef} id="event-name" name="name" value={form.name} onChange={handleChange}
           aria-invalid={Boolean(validationError && !form.name.trim())}
@@ -144,13 +146,13 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
           onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
       </FormDisclosure>
 
-      {validationError ? <p className="event-form-validation" role="alert">{validationError}</p> : null}
-      <div className="event-form-actions">
-        {onCancel ? (
-          <button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button>
-        ) : null}
-        <button type="submit" className="primaryButton">{submitLabel}</button>
-      </div>
+      <DialogFormActions>
+        {validationError || error ? <p className="event-form-validation" role="alert">{validationError || error}</p> : null}
+        <div className="event-form-actions">
+          {onCancel ? <button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button> : null}
+          <button type="submit" form={formId} className="primaryButton">{submitLabel}</button>
+        </div>
+      </DialogFormActions>
     </form>
   );
 }

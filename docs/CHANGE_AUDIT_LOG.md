@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-589 | Keep mobile form actions reachable
+
+- **Scope.** Transactions could scroll their buttons off a narrow phone screen. Moment and Activity sheets could hide their buttons when the visible area shrank. Reuse the Task action footer for phone Moment, Activity, entry, Transaction and recurring expense forms. Update the shared viewport observer so ordinary height-only resizes use the current layout dimensions.
+- **Compatibility.** Save keeps its native form association, validation and existing write path. The Guest tour's existing fixtures and instructions cover the same forms and actions, so the tour edition stays current.
+- **Executed.** Build, lint, documentation and 636 Node tests passed. Chromium passed 118 distinct checks across the main run and follow-ups. One 430 px dark Task sheet check clipped a button on its first run and passed eight consecutive reruns. The five quick-create paths were checked at widths of 320, 390 and 430 px, including a 425 px tall viewport. Seven focused WebKit checks covered both themes, simulated keyboard geometry and landscape payments. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-588 | Fix the mobile sheet and Dashboard audit findings
 
 - **Scope.** Put a solid tinted base beneath mobile sheet gradients, pin Task editor actions below the scrollable fields, and place the docked Dashboard + below the scroll area on narrow, short phones. Use the stronger overdue color for the Dashboard's timing label and show a readable local date below the native Task date picker.

@@ -13,14 +13,14 @@ import { detailQuickActivityContext } from '../utils/quickActivityDetailContext'
   It contains the top bar, side menu, mobile navigation, theme switch, profile actions,
   and quick-create buttons for moments, activities, and transactions.
 */
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation, useMatch, useNavigate, useNavigationType } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Activity, ArrowLeft, CalendarDays, ChevronDown, Cloud, HardDrive, LayoutDashboard, ListChecks, ListTodo, LogOut, Moon, Plus, Receipt, Settings, Sun, Upload, UserCircle, X } from 'lucide-react';
 import useAppStore from '../store/useAppStore';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
-import ModalDialog from '../components/common/ModalDialog';
+import ModalDialog, { DialogFormActions } from '../components/common/ModalDialog';
 import EventForm from '../components/events/EventForm';
 import TaskEditor from '../components/tasks/TaskEditor';
 import useTaskStore, { taskScopeKey } from '../store/useTaskStore';
@@ -58,6 +58,8 @@ const ACTIVITY_PICKER_DEFAULTS = Object.freeze({ type: '' });
 const momentId = (moment) => recordId(moment?.id) || recordId(moment?.firestoreId);
 
 export default function DashboardLayout() {
+  const quickEntryFormId = useId();
+  const quickActivityFormId = useId();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const adminValues = useAppStore((state) => state.adminValues);
@@ -682,14 +684,14 @@ export default function DashboardLayout() {
 
       <AnimatePresence initial={false} mode="wait">
       {quickCreateType === 'event' ? (
-        <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => setQuickCreateType(null)}>
-          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
-          <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)} submitLabel="Save moment" />
+        <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} formFooter onClose={() => setQuickCreateType(null)}>
+          <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)}
+            submitLabel="Save moment" error={quickCreateError} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'task' ? (
         <ModalDialog key="quick-task" title="New Task" className="dn-task-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
-          formFooter="mobile" closeDisabled={quickTaskBusy}
+          formFooter closeDisabled={quickTaskBusy}
           onClose={() => { if (!quickTaskSaving.current) setQuickCreateType(null); }}>
           <TaskEditor task={quickTaskPreset} moments={activityMoments} onSave={saveQuickTask}
             busy={quickTaskBusy} saveReady={tasksLoaded === quickTaskScope && !taskLoadError}
@@ -706,9 +708,8 @@ export default function DashboardLayout() {
       ) : null}
       {quickCreateType === 'activity-entry' ? (
         <ModalDialog key="quick-entry" title="Add entry" className="dn-entry-add-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
-          onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
-          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
-          <form className="form-surface quick-create-activity-form dn-entry-add-form"
+          formFooter closeDisabled={quickActivityBusy} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
+          <form id={quickEntryFormId} className="form-surface quick-create-activity-form dn-entry-add-form"
             aria-busy={quickActivityBusy} onSubmit={saveQuickEntry}>
             <p className="dn-form-context">Activity · <strong>{openedActivityContext?.activity?.title || 'Current Activity'}</strong></p>
             <RichTextEditor label="Entry content" value={quickActivityDescription} disabled={quickActivityBusy}
@@ -718,20 +719,23 @@ export default function DashboardLayout() {
                 onChange={(event) => setQuickActivityDate(event.target.value)} disabled={quickActivityBusy} required />
               <ActivityTimeField value={quickActivityTime} onChange={setQuickActivityTime} disabled={quickActivityBusy} />
             </div>
-            <div className="form-actions dn-activity-create-actions">
-              <button type="button" className="secondaryButton" disabled={quickActivityBusy}
-                onClick={() => setQuickCreateType(null)}>Cancel</button>
-              <button type="submit" className="primaryButton" disabled={quickActivityBusy || !quickActivityDescription.trim()}>
-                {quickActivityBusy ? 'Saving…' : 'Save entry'}
-              </button>
-            </div>
+            <DialogFormActions>
+              {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+              <div className="form-actions dn-activity-create-actions">
+                <button type="button" className="secondaryButton" disabled={quickActivityBusy}
+                  onClick={() => setQuickCreateType(null)}>Cancel</button>
+                <button type="submit" form={quickEntryFormId} className="primaryButton" disabled={quickActivityBusy || !quickActivityDescription.trim()}>
+                  {quickActivityBusy ? 'Saving…' : 'Save entry'}
+                </button>
+              </div>
+            </DialogFormActions>
           </form>
         </ModalDialog>
       ) : null}
       {quickCreateType === 'activity' ? (
-        <ModalDialog key="quick-activity" title="Add an activity" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
-          {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
-          <form className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>
+        <ModalDialog key="quick-activity" title="Add an activity" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
+          formFooter closeDisabled={quickActivityBusy} onClose={() => { if (!quickActivitySaving.current) setQuickCreateType(null); }}>
+          <form id={quickActivityFormId} className="form-surface quick-create-activity-form dn-activity-create-form" aria-busy={quickActivityBusy} onSubmit={saveQuickActivity}>
             <ActivityFormFields namePrefix="dn-quick-activity"
               value={{ title: quickActivityTitle, date: quickActivityDate, time: quickActivityTime,
                 description: quickActivityDescription, priority: quickActivityPriority }}
@@ -777,7 +781,16 @@ export default function DashboardLayout() {
                   {activityMoments.length ? 'No matching moments. Try a different type.' : 'Create a Moment to add an Activity.'}
                 </p> : null}
             </ActivityFormFields>
-            <div className="form-actions dn-activity-create-actions"><button className="secondaryButton" type="button" disabled={quickActivityBusy} onClick={() => setQuickCreateType(null)}>Cancel</button><button className="primaryButton" type="submit" disabled={quickActivityBusy}>{quickActivityBusy ? 'Saving…' : 'Save activity'}</button></div>
+            <DialogFormActions>
+              {quickCreateError ? <p className="quick-create-error" role="alert">{quickCreateError}</p> : null}
+              <div className="form-actions dn-activity-create-actions">
+                <button className="secondaryButton" type="button" disabled={quickActivityBusy}
+                  onClick={() => setQuickCreateType(null)}>Cancel</button>
+                <button className="primaryButton" type="submit" form={quickActivityFormId} disabled={quickActivityBusy}>
+                  {quickActivityBusy ? 'Saving…' : 'Save activity'}
+                </button>
+              </div>
+            </DialogFormActions>
           </form>
         </ModalDialog>
       ) : null}

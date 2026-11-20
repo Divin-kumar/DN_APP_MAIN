@@ -1,5 +1,6 @@
 const positive = (value, fallback) => Number.isFinite(value) && value > 0 ? value : fallback;
 const nonnegative = (value) => Number.isFinite(value) ? Math.max(0, value) : 0;
+const keyboardFields = 'textarea, input:is(:not([type]), [type="text"], [type="search"], [type="email"], [type="password"], [type="tel"], [type="url"], [type="number"])';
 
 export function getDialogLayoutSize(win) {
   return {
@@ -47,12 +48,16 @@ export function observeDialogViewport(win, update) {
   let frame = null;
   let layout = getDialogLayoutSize(win);
   const visual = win.visualViewport;
+  const touch = win.matchMedia?.('(pointer: coarse)');
   const flush = () => {
     frame = null;
     const next = getDialogLayoutSize(win);
-    // Some iOS versions resize innerHeight/clientHeight during focus. Keep the
-    // layout reference until width changes (orientation/window-width change).
-    layout = { width: next.width, height: visual && next.width === layout.width ? Math.max(layout.height, next.height) : next.height };
+    const focused = win.document?.activeElement;
+    const editing = focused?.isContentEditable || (focused?.matches?.(keyboardFields) && !focused.readOnly);
+    // Some iOS keyboards shrink both measurements during text entry.
+    // Outside touch editing, a same-width window resize is the new layout.
+    const retainHeight = visual && touch?.matches && editing && next.width === layout.width;
+    layout = retainHeight ? { ...next, height: Math.max(layout.height, next.height) } : next;
     update(getDialogViewportBounds(win, layout), layout);
   };
   const schedule = () => {

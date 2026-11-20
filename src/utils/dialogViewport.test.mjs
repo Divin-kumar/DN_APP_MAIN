@@ -84,6 +84,8 @@ test('a resized innerHeight does not discard Safari visual pan or hide the keybo
 
 test('focus and window scrolling retain the pre-keyboard reference even if both layout measurements shrink', () => {
   const { win, flushFrames } = browserFixture();
+  win.matchMedia = () => ({ matches: true });
+  win.document.activeElement = { matches: () => true };
   const updates = [];
   const stop = observeDialogViewport(win, (bounds, layout) => updates.push({ bounds, layout }));
   win.innerHeight = 390;
@@ -99,12 +101,33 @@ test('focus and window scrolling retain the pre-keyboard reference even if both 
   win.innerHeight = 844;
   win.document.documentElement.clientHeight = 844;
   Object.assign(win.visualViewport, { height: 844, offsetTop: 0 });
+  win.document.activeElement = null;
   win.document.dispatch('focusout');
   flushFrames();
   assert.equal(updates.at(-1).bounds.keyboardOpen, false);
   assert.equal(updates.at(-1).bounds.top, 0);
   stop();
   assert.equal(win.document.listenerCount, 0);
+});
+
+test('a same-width window resize updates layout without assuming a touch keyboard', () => {
+  for (const touch of [true, false]) {
+    const { win, flushFrames } = browserFixture();
+    win.matchMedia = () => ({ matches: touch });
+    win.document.activeElement = { matches: () => !touch };
+    const updates = [];
+    const stop = observeDialogViewport(win, (bounds, layout) => updates.push({ bounds, layout }));
+    win.innerHeight = 425;
+    win.document.documentElement.clientHeight = 425;
+    win.visualViewport.height = 425;
+    win.dispatch('resize');
+    flushFrames();
+    assert.deepEqual(updates.at(-1), {
+      bounds: { width: 390, height: 425, left: 0, top: 0, keyboardOpen: false },
+      layout: { width: 390, height: 425 },
+    });
+    stop();
+  }
 });
 
 test('browsers without visualViewport retain layout bounds', () => {

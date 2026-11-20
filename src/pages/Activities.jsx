@@ -1,7 +1,7 @@
 import { AnimatePresence } from 'framer-motion';
 import { activityTime, activityTimePatch } from '../utils/activityTime.js';
 import DebouncedFilterInput from '../components/common/DebouncedFilterInput';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ActivityList from '../components/events/ActivityList';
 import ActivityFormFields from '../components/events/ActivityFormFields';
@@ -9,7 +9,7 @@ import { getMomentEntryMode } from '../utils/activityEntries';
 import QuietEmptyState from '../components/common/QuietEmptyState';
 import ListControls from '../components/common/ListControls';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
-import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog, DialogFormActions } from '../components/common/ModalDialog';
 import SortControl from '../components/common/SortControl';
 import usePersistentListState from '../hooks/usePersistentListState';
 import useListViewDefaults from '../hooks/useListViewDefaults';
@@ -42,6 +42,7 @@ export default function Activities() {
 }
 
 export function ActivitiesContent({ uid, isGuest, scope }) {
+  const activityFormId = useId();
   const navigate = useNavigate();
   const mutationContext = records.capture();
   const [announcement, setAnnouncement] = useState('');
@@ -212,18 +213,20 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
       <AnimatePresence initial={false}>
-        {draft ? <ModalDialog key="activity-editor" title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" onClose={() => close(setDraft)}>
-          <form className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
-            {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
+        {draft ? <ModalDialog key="activity-editor" title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" formFooter onClose={() => close(setDraft)}>
+          <form id={activityFormId} className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
             <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
             <ActivityFormFields namePrefix="activity-editor" value={draft}
               titleLabel="Activity title"
               priorities={adminValues.activityPriorities} disabled={busy}
               onChange={(patch) => setDraft((current) => ({ ...current, ...patch }))} />
-            <div className="form-actions">
-              <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
-              <button className="primaryButton" type="submit" disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
-            </div>
+            <DialogFormActions>
+              {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
+              <div className="form-actions">
+                <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
+                <button className="primaryButton" type="submit" form={activityFormId} disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
+              </div>
+            </DialogFormActions>
           </form>
         </ModalDialog> : null}
       </AnimatePresence>

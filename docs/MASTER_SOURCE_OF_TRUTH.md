@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Reachable mobile form actions (20 November 2026, development)
+
+Moment, Activity, Activity entry, Task and Transaction sheets keep their primary and Cancel buttons below the scrolling fields in phone layouts. Recurring expense creation, schedule edits and Record payment use the same layout. More options, form validation and save feedback remain available with a short viewport or the on-screen keyboard. The submit button stays associated with its own form. Desktop sheets keep their in-form action placement when the keyboard is closed.
+
+Same-width window resizes use the current layout height. During touch text editing, the sheet retains the pre-keyboard height to accommodate Safari resizing both viewport measurements at once.
+
 ## Mobile sheets, overdue dates and transaction details (20 November 2026, development)
 
 Mobile sheets use a solid tinted base beneath the glass gradient so background text stays hidden when blur rendering varies. The buttons in the mobile Task editor stay in view while the fields and More options scroll. On Dashboard up to 360 CSS px wide and 740 px high, a docked + sits below the scroll area so it cannot cover the section controls.
