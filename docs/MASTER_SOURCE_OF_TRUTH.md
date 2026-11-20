@@ -4,11 +4,13 @@
 
 The desktop sidebar abbreviates the persistent storage scope to Guest · Local or Account · Cloud. Its accessible description explains the storage boundary. Desktop Moments without an available cover show a compact date tile, and photo cards retain their full-height image. In Moment Story, the introduction heading and edit action share the width of the opening prose. Keepsakes retain the wider gallery layout.
 
-PDF Studio puts Download PDF in the preview header. It becomes available when the preview is current. The rendered cover presents its edition once, and reading pages still carry the running header. In short mobile layouts up to 380 CSS px high, pages with a standalone docked + have space below their scroll area so pinned tabs and page actions remain reachable. Regular phone layouts, the movable + and the existing tap and drag gestures remain available.
+PDF Studio puts Download PDF in the preview header. It becomes available when the preview is current. When the panels stack, the stale preview offers Update PDF preview beside its status. Design keeps Update preview, and both actions regenerate the same pages for the download. The rendered cover presents its edition once, and reading pages still carry the running header. In short mobile layouts up to 380 CSS px high, pages with a standalone docked + have space below their scroll area so pinned tabs and page actions remain reachable. Regular phone layouts, the movable + and the existing tap and drag gestures remain available.
 
 ## Dashboard, Activity Detail and quick Task filters (20 November 2026, development)
 
 Dashboard sections keep their own height, including when a neighboring panel has more records. In the desktop Activity preview, timing and the parent Moment can wrap across two lines. The Tasks preview opens the saved list view through View Tasks. On phones the greeting explains the + in the page flow. The menu explains double-tap Back and drag. A form opens immediately when chosen from the menu.
+
+During an isolated demo the greeting shows Viewing sample data. The Explore DN panel in Settings links to Demo guide in the About application guide. Guest demo edition 2026.11.20.2 uses a short Journal opening, with the app instructions in the guide. Existing demos keep their edits until the user chooses Refresh demo.
 
 Tasks offers All Tasks, In progress and Completed above the list. Choosing a status updates the same applied filters shown by Refine, replaces existing status rules, and keeps search, sorting and non-status rules. Counts show what each shortcut would match with the remaining criteria. The result count shows the presently displayed list. Saved legacy status rules and advanced status filters still work. A complex status rule with no equivalent shortcut remains visible in the applied filters without selecting a shortcut.
 

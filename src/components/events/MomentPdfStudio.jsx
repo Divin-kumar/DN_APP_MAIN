@@ -267,6 +267,13 @@ export default function MomentPdfStudio({ event }) {
     </span>
   </nav>;
 
+  const updatePreview = () => {
+    if (!busy) void renderPreview(settingsRef.current);
+  };
+  const updateFromPreview = () => {
+    previewSectionRef.current?.focus({ preventScroll: true });
+    updatePreview();
+  };
   const previewNeedsUpdate = dirty || busy;
   return <section className="dn-pdf-studio-page" aria-label="PDF Studio">
     <div className="dn-pdf-studio">
@@ -293,7 +300,16 @@ export default function MomentPdfStudio({ event }) {
           </button>
         </div>
         {error ? <p className="dn-pdf-studio-error" role="alert">{error}</p> : null}
-        {dirty && preview ? <p className="dn-pdf-studio-stale" role="status">Settings changed. Update the preview to download.</p> : null}
+        {dirty && (preview || error) ? <div className="dn-pdf-studio-preview-update">
+          {preview ? <p className="dn-pdf-studio-stale" role="status">{busy
+            ? 'Rendering your pages…' : 'Settings changed. Update the preview to download.'}</p> : null}
+          <span className="dn-pdf-inline-update">
+            <button type="button" className="secondaryButton dn-pdf-update-button"
+              onClick={updateFromPreview} disabled={busy}>
+              <RefreshCw size={16} aria-hidden="true" /> Update PDF preview
+            </button>
+          </span>
+        </div> : null}
         {busy && !preview ? <p role="status" className="dn-pdf-studio-loading">Rendering your pages and original photos…</p> : null}
         {preview ? <>
           <div className="dn-pdf-preview-tools">
@@ -358,7 +374,7 @@ export default function MomentPdfStudio({ event }) {
           {previewNeedsUpdate ? <>
             <small role="status">{busy ? 'Rendering your pages…' : 'Preview needs updating'}</small>
             <button type="button" className="secondaryButton dn-pdf-update-button"
-              onClick={() => renderPreview(settings)} disabled={busy}>
+              onClick={updatePreview} disabled={busy}>
               <RefreshCw size={16} aria-hidden="true" />
               {busy ? 'Rendering…' : 'Update preview'}
             </button>

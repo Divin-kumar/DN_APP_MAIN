@@ -22,7 +22,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(root.getByRole('button', { name: 'Refresh app' })).toBeVisible();
       await expect(root.getByRole('heading', { name: 'What\'s New', exact: false })).toBeVisible();
       await expect(root.getByRole('heading', { name: 'Your Data', exact: true })).toBeVisible();
-      await expect(root.locator('.about-guide-grid details')).toHaveCount(11);
+      await expect(root.locator('.about-guide-grid details')).toHaveCount(12);
       const history = root.locator('.dn-about-release-entry');
       await expect(root.getByRole('heading', { name: 'Version History' })).toBeVisible();
       // Preserve every documented release while allowing future releases to be added.

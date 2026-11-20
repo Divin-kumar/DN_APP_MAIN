@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-586 | Fix Preview updates and clarify the Guest demo
+
+- **Scope.** Put Update PDF preview beside the stale message when PDF Studio panels stack. Show Viewing sample data in the demo Dashboard greeting. Shorten the sample Journal opening and give the Explore DN panel a Demo guide link to the existing application guide.
+- **Compatibility.** Both PDF update buttons use the same renderer and Download PDF becomes available after a successful update. The demo edition advances to 2026.11.20.2. Existing edited examples wait for Refresh demo and personal Guest records retain their separate scope.
+- **Executed.** Build, lint and 635 Node tests passed. Chromium passed 76 browser cases plus two About development ledger checks with the development configuration. Six built-app WebKit cases passed, and a 430 × 932 touch journey verified the greeting, shorter Story, inline PDF update and guide link. The full WebKit Guest smoke timed out during optional demo photo storage. The same local WebKit photo storage failure reproduced on the previous build 5ae19be. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-585 | Fix the desktop and short-screen UI audit findings
 
 - **Scope.** Shorten the desktop storage label, use a compact date tile on desktop Moments without a cover, and align the Story introduction action with the opening text. Place Download PDF in the preview header and draw the edition label once on the PDF cover. Give the standalone docked + clearance below the scroll area on short screens.

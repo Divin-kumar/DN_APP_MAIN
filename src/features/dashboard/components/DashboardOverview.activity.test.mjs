@@ -189,11 +189,12 @@ test('Moment and Activity date toggles share their heading with Hide and retain 
   assert.equal(h.writes.length, 0);
 });
 
-test('business read failures keep meaningful list retries while the greeting receives only the clock', async (t) => {
+test('business read failures keep list retries separate from the greeting', async (t) => {
   const h = await openDashboard(t);
   h.api.eventStore.error = 'Unable to load events.';
   const tree = h.render(), greeting = nodes(tree).find((node) => node.type === 'DashboardGreeting');
-  assert.deepEqual(Object.keys(greeting.props), ['now']);
+  assert.deepEqual(Object.keys(greeting.props), ['now', 'isViewingSampleData']);
+  assert.equal(greeting.props.isViewingSampleData, false);
   const alerts = nodes(tree).filter((node) => node.props?.role === 'alert' && node.props?.className === 'financial-load-error');
   assert.equal(alerts.length, 2);
   assert.ok(alerts.every((node) => nodes(node).some((child) => child.type === 'button' && child.props.children === 'Try again')));

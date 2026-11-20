@@ -128,9 +128,9 @@ test('new Guest backup guidance is versioned and older edited tours wait for exp
   await panel.getByRole('button', { name: 'Refresh demo' }).click();
   await expect.poll(() => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
   const current = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')));
-  expect(current.events[0].notes).toContain('Data & Backup');
+  expect(current.events[0].notes).toContain('We took the road into the hills before sunrise');
   expect(current.demoVersion).toBe(await page.evaluate(async () => (await import('/src/dev/sampleData.js')).GUEST_TOUR_VERSION));
   expect(current.events[2].notes).toMatch(/payment methods/i);
-  for (const destination of ['Story', 'Gallery', 'PDF Studio']) expect(current.events[0].notes).toContain(destination);
+  expect(current.events[0].notes).not.toContain('Data & Backup');
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups') || '[]')).toBe('[]');
 });

@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
 // Synthetic Guest journeys only. This verifies preview state, not real Safari or printing.
-for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [1280, 900, 'dark']]) {
+for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [430, 932, 'dark'], [1280, 900, 'dark']]) {
   test(`PDF Studio keeps pending edits separate from rendered preview at ${width}px ${theme}`, async ({ page }) => {
     await page.setViewportSize({ width, height });
     const errors = await seedGuest(page, { theme });
@@ -46,8 +46,22 @@ for (const [width, height, theme] of [[320, 740, 'dark'], [390, 844, 'light'], [
     expect(geometry.right).toBeLessThanOrEqual(width + 1);
     expect(geometry.left).toBeGreaterThanOrEqual(-1);
     expect(geometry.scrollWidth).toBeLessThanOrEqual(width + 1);
-    await update.click();
+    const preview = studio.getByRole('region', { name: 'PDF page preview' });
+    const inlineUpdate = preview.getByRole('button', { name: 'Update PDF preview', exact: true });
+    if (width <= 430) {
+      await studio.getByRole('button', { name: 'Back to PDF preview' }).click();
+      await expect(preview).toBeFocused();
+      await expect(inlineUpdate).toBeInViewport({ ratio: 1 });
+      expect((await inlineUpdate.boundingBox()).height).toBeGreaterThanOrEqual(44);
+      await inlineUpdate.focus();
+      await page.keyboard.press('Enter');
+      await expect(preview).toBeFocused();
+    } else {
+      await expect(inlineUpdate).toHaveCount(0);
+      await update.click();
+    }
     await expect(download).toBeEnabled({ timeout: 30000 });
+    await expect(inlineUpdate).toHaveCount(0);
     await expect(rail.getByText('Preview is up to date')).toBeVisible();
     await expect(update).toHaveCount(0);
     await expect(header).toContainText('Diary');

@@ -5,6 +5,8 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   page.on('pageerror', (error) => errors.push(error.message));
   await page.goto('/login');
   await page.getByRole('button', { name: 'Continue as Guest' }).click();
+  await expect(page.locator('.dashboard-greeting')).toContainText('Viewing sample data');
+  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
   await page.goto('/events');
   const banner = page.getByRole('region', { name: 'Explore DN sample data' });
   await expect(banner).toBeVisible();
@@ -23,9 +25,12 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
     expenses: localStorage.getItem('dn_guest_expenses'),
   }));
   expect([guestRecords.moments, guestRecords.incomes, guestRecords.expenses].every(x => x === null || x === '[]')).toBe(true);
-  await expect.poll(async () => page.evaluate(() => JSON.parse(localStorage.getItem('dn_dev_fixture_data')).imagesReady), { timeout: 20000 }).toBe(true);
   await expect(page.getByText('Explore DN · Our little getaway')).toBeVisible();
   await expect(page.getByText('Explore DN · This month in words')).toBeVisible();
+  await page.getByRole('button', { name: 'Open Explore DN · Our little getaway', exact: true }).click();
+  const introduction = page.getByRole('region', { name: 'Moment introduction' });
+  await expect(introduction).toContainText('We took the road into the hills before sunrise');
+  await expect(introduction).not.toContainText('Update preview');
   await page.goto('/financials/transactions');
   await page.getByRole('button', { name: /Upcoming expenses/ }).click();
   const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
@@ -44,7 +49,21 @@ test('new Guest automatically sees isolated DN demo with Journal, Diary, Tasks a
   await page.goto('/settings');
   const panel = page.getByRole('region', { name: 'Explore DN guest demo' });
   await expect(panel).toContainText('demo');
+  await panel.getByRole('link', { name: 'Demo guide' }).click();
+  const guide = page.getByRole('region', { name: 'Application Guide' });
+  await expect(page).toHaveURL(/\/settings\/about#application-guide$/);
+  await expect(guide).toBeFocused();
+  await expect(guide.getByRole('heading', { name: 'Application Guide' })).toBeInViewport();
+  await guide.getByText('Navigate & create', { exact: true }).click();
+  await expect(guide.getByText(/Double-tap it to go Back/)).toBeVisible();
+  await guide.getByText('PDF Studio', { exact: true }).click();
+  await expect(guide.getByText(/update the PDF directly from Preview/)).toBeVisible();
+
+  await page.goBack();
   await panel.getByRole('button', { name: 'Use my Guest data' }).click();
+  await page.goto('/dashboard');
+  await expect(page.locator('.dashboard-greeting')).toContainText('Your day');
+  await expect(page.getByText('Viewing sample data', { exact: true })).toHaveCount(0);
   await page.goto('/events');
   await expect(page.getByRole('region', { name: 'Explore DN sample data' })).toHaveCount(0);
   const actual = await page.evaluate(() => ({
@@ -122,6 +141,7 @@ test('Guest switch uses a compact touch-safe control at narrow mobile widths', a
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/login');
   await page.getByRole('button', { name: 'Continue as Guest' }).click();
+  await expect(page.locator('.dashboard-greeting')).toContainText('Viewing sample data');
   await page.goto('/settings');
   const button = page.getByRole('button', { name: 'Use my Guest data' });
   await expect(button).toBeVisible();

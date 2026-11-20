@@ -171,6 +171,8 @@ html[data-theme] .dn-pdf-studio-stale,html[data-theme] .dn-pdf-studio-loading,ht
 }
 html[data-theme] .dn-pdf-studio-error {color:var(--color-danger);}
 html[data-theme] .dn-pdf-studio-stale {color:var(--color-primary);}
+html[data-theme] .dn-pdf-studio-preview-update {width:100%;}
+html[data-theme] .dn-pdf-studio-preview-update .dn-pdf-inline-update {display:none;}
 /* Native dialog provides Escape/backdrop focus handling without replacing the PDF with an HTML approximation. */
 html[data-theme] .dn-pdf-fullscreen-dialog {
   color:var(--color-text);background:var(--color-card);
@@ -196,6 +198,12 @@ html[data-theme] .dn-pdf-fullscreen-viewport img {display:block;width:min(100%,6
   html[data-theme] .dn-pdf-studio-intro .dn-pdf-section-jump {margin-inline-start:auto;}
   html[data-theme] .dn-pdf-studio-controls {gap:15px;}
   html[data-theme] .dn-pdf-studio-preview {padding:12px;}
+  html[data-theme] .dn-pdf-studio-preview-update {
+    display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px 12px;
+  }
+  html[data-theme] .dn-pdf-studio-preview-update .dn-pdf-studio-stale {flex:1 1 155px;width:auto;}
+  html[data-theme] .dn-pdf-studio-preview-update .dn-pdf-inline-update {display:block;max-width:100%;}
+  html[data-theme] .dn-pdf-inline-update button {max-width:100%;white-space:normal;}
   html[data-theme] .dn-pdf-studio-preview-head {grid-template-columns:minmax(0,1fr) auto;}
   html[data-theme] .dn-pdf-studio-preview-head .dn-pdf-download {grid-column:1 / -1;justify-self:start;}
 }

@@ -7,7 +7,7 @@ const emojiForGreeting = (greeting) => greeting === 'Good morning' ? '☀️'
 
 // A quiet welcome, based only on the viewer's local clock and identity.
 // No finance, activity or Moment reads are needed for this card.
-export default function DashboardGreeting({ now = new Date() }) {
+export default function DashboardGreeting({ now = new Date(), isViewingSampleData = false }) {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const name = dashboardProfileName(user, isGuest);
@@ -17,7 +17,7 @@ export default function DashboardGreeting({ now = new Date() }) {
 
   return <header className="dashboard-greeting dashboard-greeting-compact" aria-label="Dashboard greeting">
     <div className="dashboard-greeting-topline">
-      <span className="dashboard-greeting-eyebrow">Your day</span>
+      <span className="dashboard-greeting-eyebrow">{isViewingSampleData ? 'Viewing sample data' : 'Your day'}</span>
       <span className="dashboard-greeting-create-guide">Use + to navigate or create</span>
       <span className="dashboard-greeting-emoji" aria-hidden="true">{emojiForGreeting(salutation)}</span>
     </div>

@@ -14,6 +14,7 @@
  */
 import { BookOpen, ChevronDown, Info, RefreshCw, Sparkles } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import './AboutPremium.css';
 
 const appVersion = import.meta.env.VITE_APP_VERSION || 'dev';
@@ -55,17 +56,18 @@ const pendingHighlights = [
 ];
 
 const guideItems = [
-  { title: 'Home', description: 'A short personal greeting welcomes you. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
+  { title: 'Home', description: 'A short personal greeting welcomes you. Home shows Viewing sample data while Explore DN is active. Sample records are stored separately from your own Guest records. Moments and Activities each have small Upcoming and On This Day controls beside their heading and Hide button. Tap an Activity for Detail; deliberately swipe left to complete or reopen it, or use Activity options. In Code Lists, each Moment type has separate Show Moments on Dashboard and Show Activities on Dashboard switches. You can also hide either entire Dashboard section.' },
+  { title: 'Navigate & create', description: 'On a phone, tap the blue + to navigate or create. Double-tap it to go Back. Drag it to move it and choose Return to dock to reset its position. Pull a mobile sheet down from the top to close it. Task and Transaction forms put Moment and Activity side by side, with Repeat below them where available.' },
   { title: 'Tasks', description: 'Use universal + → Task for a standalone or Moment-linked Task. Tap or swipe Task rows for actions. Choose All Tasks, In progress or Completed above the list to switch status while keeping your search and other filters. Dashboard Task rows show days away or overdue and highlight the matching Task in its regular list. Sign in for account sync or keep Guest Tasks on this device. Task defaults live in Settings → List defaults, and backups include independent Tasks.' },
-  { title: 'Moments', description: 'Create and search your Moments in one list. The compact Filters panel remembers your last choices automatically. Choose a field, a simple comparison and a value; add another filter when needed. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Reset restores the defaults. Use a Moment’s actions for Edit, PDF Studio, Archive or Delete.' },
+  { title: 'Moments', description: 'Create and search your Moments in one list. The compact Filters panel remembers your last choices automatically. Choose a field, a simple comparison and a value; add another filter when needed. The list starts with Event date from oldest to newest; choose Event date, Name or Status and change the direction in the same panel. Clear search keeps your filters and sorting. Reset in Refine restores your saved list defaults. Use a Moment’s actions for Edit, PDF Studio, Archive or Delete.' },
   { title: 'Moment workspace', description: 'Move between Story, Activities, Transactions, Gallery and PDF Studio using one compact section row. Story presents your Moment as a Journal, Diary or Tasks view. Moment Activity cards share the same swipe actions as global Activities; open Detail to edit individual Diary and Journal entries. Moment Transactions shows existing income and expenses with totals for the matching filtered rows. Manage existing records from Transactions under Profile. Use the universal + to add items; Attachment is available there while a Moment is open.' },
-  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Open Refine for sorting and filters; ordinary filter rules use one row while older multi-choice filters retain a touch-safe value lane. Completed titles stay readable; Reopen is required before editing. Diary days support the same swipe actions as other Activities. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
+  { title: 'Activities', description: 'Open Activities from the main navigation to see tasks across Moments. Open Refine for sorting and filters; ordinary filter rules use one row while older multi-choice filters retain a touch-safe value lane. Open an Activity and use + → Add entry to add another dated note to that Activity. More options in the editor holds Description, Date, Time and Priority. Reopen a completed Activity before editing it. Diary days support the same swipe actions as other Activities. Open Detail for its linked cover, description, finance and original files. Pinch the cover or open Reposition for zoom buttons, Reset and drag, then Done or Cancel. Swipe left deliberately on a list card to complete or reopen it; Activity options also offers Edit, Cancel/Restore and confirmed Delete.' },
   { title: 'Writing and greetings', description: 'Write with visible formatting on phones and computers. Select text for compact styling tools, or use keyboard shortcuts. Earlier Memories remain safe, read-only reflections in Story; personalized greeting cards have a matching preview and HTML download.' },
   { title: 'Attachments', description: 'Use + inside a Moment to keep an original photo or file up to 10 MB, optionally with an Activity. Photos preview in Story, Activity Detail and Gallery. Identical originals share one stored file. All new originals stay in this browser, separately for each account or Guest. Only filenames and reference details sync to an account. Download a backup to move or recover originals; no paid cloud file storage is used for new saves. Older file details cannot recover an original that was never stored.' },
-  { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format, design and Light or Dark page theme, page spacing, activity/day pagination and included sections, then update the actual page preview and download the PDF. Optional Searchable writing adds a text layer; image-based pages remain the visual source. Original photos stay in their current browser scope. Use a recovery backup to preserve editable records and original files.' },
+  { title: 'PDF Studio', description: 'Open PDF Studio from a Moment, its actions or the Dashboard. Choose a Story format, design and Light or Dark page theme, page spacing, activity/day pagination and included sections, then use Update preview and download the PDF. When the panels stack, you can also update the PDF directly from Preview. Optional Searchable writing adds a text layer; image-based pages remain the visual source. Original photos stay in their current browser scope. Use a recovery backup to preserve editable records and original files.' },
   { title: 'Transactions', description: 'Use universal + to add income or expenses, optionally linked to a Moment or Activity. It presets the current Moment or Activity Detail. Edit or delete existing transactions in Transactions under Profile; Activity and Moment histories are read-only. Search or use friendly filters, then sort by Date, Amount or Title in either direction. Export CSV saves exactly the matching records in their displayed order, including search and Refine conditions. History starts newest first. Income, Expense and Balance follow all filters and search on this page and in Moment Transactions. Add your own payment choices in Settings → Code Lists → Payment Methods.' },
   { title: 'Insights', description: 'Open Insights under Profile and choose Finance to see monthly income, expenses and balance. Choose a reporting month or open Compare months for the year table. In Breakdown, tap a category to filter the date-grouped transactions. Use CSV to download the rows. The Overview JSON report is separate from a recovery backup.' },
-  { title: 'Settings and backup', description: 'Open Settings under Profile. Appearance manages theme and Story/PDF designs; List defaults manages saved sorting and filters for Moments, Activities, Transactions and Tasks. Code Lists manages your choices. Export a JSON backup and review the restore summary before importing it. Notifications is Coming Soon; saved preferences and Reminder Presets are retained.' },
+  { title: 'Settings and backup', description: 'Open Settings under Profile. Appearance manages theme and Story/PDF designs; List defaults manages saved sorting and filters for Moments, Activities, Transactions and Tasks. Code Lists manages your choices. Export a JSON backup with original files. You can cancel backup preparation. Review the restore summary before importing a backup. Notifications is Coming Soon; saved preferences and Reminder Presets are retained.' },
 ];
 
 // Documented product milestones, not an automatic log of GitHub commits.
@@ -398,6 +400,16 @@ const dataInfo = [
 ];
 
 export default function About() {
+  const { hash } = useLocation();
+  useEffect(() => {
+    if (hash !== '#application-guide') return undefined;
+    const frame = requestAnimationFrame(() => {
+      const guide = document.getElementById('application-guide');
+      guide?.focus({ preventScroll: true });
+      guide?.scrollIntoView({ block: 'start' });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [hash]);
   const [refreshing, setRefreshing] = useState(false);
   const [pendingLedger, setPendingLedger] = useState(null);
 
@@ -638,11 +650,12 @@ export default function About() {
         ) : null}
       </section>
 
-      <section className="settings-section">
+      <section id="application-guide" tabIndex={-1} className="settings-section"
+        aria-labelledby="application-guide-title">
         <div className="settings-section-heading">
           <span className="settings-accordion-icon"><BookOpen size={18} /></span>
           <div>
-            <h3>Application Guide</h3>
+            <h3 id="application-guide-title">Application Guide</h3>
             <p>How to use DN across key flows</p>
           </div>
         </div>

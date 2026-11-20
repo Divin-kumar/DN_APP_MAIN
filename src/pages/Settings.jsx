@@ -1244,8 +1244,11 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <p>{activeSampleScenario === GUEST_TOUR_SCENARIO
               ? 'You’re viewing sample records. Your personal Guest records are stored separately.'
               : 'Try sample Moments, Journal and Diary entries, Tasks and Transactions. Your Guest records stay separate.'}</p>
-            <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
-              ? ' · Updated examples available' : ''}</small>
+            <div className="dn-tour-resources">
+              <small>Demo edition: {GUEST_TOUR_VERSION}{activeSampleScenario === GUEST_TOUR_SCENARIO && guestTourNeedsUpdate()
+                ? ' · Updated examples available' : ''}</small>
+              <Link className="dn-tour-guide-link" to="/settings/about#application-guide">Demo guide</Link>
+            </div>
           </div>
           <div className="dev-sample-actions dn-guest-tour-actions">
             <button type="button" className="dn-tour-refresh-button" onClick={startOrRefreshGuestTour}>

@@ -20,17 +20,12 @@ test('versioned Guest demo showcases every current DN phase without rewriting pe
   assert.match(demo.incomes[0].notes, /pick a year when several years are available, then tap a month/);
   assert.ok(demo.expenses.every((item) => demo.events.some((moment) => moment.id === item.eventId
     && moment.activities.some((activity) => activity.id === item.activityId))));
-  for (const destination of ['Story', 'Gallery', 'PDF Studio']) assert.ok(demo.events[0].notes.includes(destination));
-  assert.ok(demo.events[0].notes.includes('Data & Backup'));
-  assert.ok(demo.events[0].notes.includes('cancel backup preparation'));
-  assert.equal(demo.events[0].activities[0].entries.length, 1);
-  assert.equal(demo.events[0].activities[0].entries[0].id, 'dn-tour-entry-j1-continued');
-  assert.ok(demo.events[0].notes.includes('More options when creating or editing an Activity to find Description'));
-  assert.ok(demo.events[0].notes.includes('Moment and Activity side by side, with Repeat below them'));
-  assert.ok(demo.events[0].notes.includes('Add entry'));
-  assert.ok(demo.events[0].notes.includes('double-tap it to go back'));
-  assert.ok(demo.events[0].notes.includes('independent'));
-  assert.ok(!demo.events[0].notes.includes('switch to New'));
+  const journal = demo.events[0];
+  assert.match(journal.notes, /We took the road into the hills before sunrise/);
+  assert.ok(journal.notes.split(/\s+/).length <= 50);
+  assert.doesNotMatch(journal.notes, /PDF Studio|More options|Data & Backup|Add entry/);
+  assert.equal(journal.activities[0].entries.length, 1);
+  assert.equal(journal.activities[0].entries[0].id, 'dn-tour-entry-j1-continued');
   assert.equal(demo.events[1].activities[0].entries.length, 2);
   assert.equal(demo.events[1].activities[0].entries[0].time, undefined);
   assert.equal(demo.events[2].activities[1].entries.length, 1);

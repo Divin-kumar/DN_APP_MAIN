@@ -236,6 +236,7 @@ export function DashboardOverviewContent() {
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
+  const activeSample = getActiveSampleScenario(user?.uid);
   const showToast = useAppStore((state) => state.showToast);
   const greetingTemplates = useAppStore((state) => state.preferences.greetingTemplates || EMPTY_GREETING_TEMPLATES);
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
@@ -245,12 +246,12 @@ export function DashboardOverviewContent() {
   const taskStore = useTaskStore();
   const taskScope = taskScopeKey({ user, isGuest });
   const loadKey = `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`;
-  const ready = isRecordScopeLoaded(eventState, loadKey, getActiveSampleScenario(user?.uid));
+  const ready = isRecordScopeLoaded(eventState, loadKey, activeSample);
   const events = ready ? storedEvents : EMPTY_EVENTS;
   const [greetingEvent, setGreetingEvent] = useState(null);
   const [momentView, setMomentView] = useState('upcoming');
   const [activityView, setActivityView] = useState('upcoming');
-  const sectionKey = `dn_dashboard_sections_${isGuest ? 'guest' : user?.uid || 'signed-out'}_${getActiveSampleScenario(user?.uid) || 'live'}`;
+  const sectionKey = `dn_dashboard_sections_${isGuest ? 'guest' : user?.uid || 'signed-out'}_${activeSample || 'live'}`;
   const [sectionState, setSectionState] = useState(() => ({ key: sectionKey, visible: readDashboardSections(sectionKey) }));
   const sections = sectionState.key === sectionKey ? sectionState.visible : readDashboardSections(sectionKey);
   const changeSections = (patch) => {
@@ -300,7 +301,7 @@ export function DashboardOverviewContent() {
   return (
     <>
       <div className="dashboard-overview dashboard-compact">
-        <DashboardGreeting now={today} />
+        <DashboardGreeting now={today} isViewingSampleData={isGuest && Boolean(activeSample)} />
         {isGuest || user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Tasks</span>
@@ -366,7 +367,7 @@ export function DashboardOverviewContent() {
                   return (
                     <div className="dashboard-moment-row" key={event.id || event.firestoreId}>
                       <button type="button" className="dashboard-upcoming-row" onClick={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`)}>
-                        <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
+                        <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} uid={user?.uid} isGuest={isGuest} sample={activeSample} /><strong>{date?.toLocaleDateString('en-GB', { day: '2-digit' }) || '—'}</strong><small>{date?.toLocaleDateString('en-GB', { month: 'short' }) || 'Date'}</small></span>
                         <span className="dashboard-upcoming-copy"><strong>{event.name || event.type || 'Life moment'}</strong>
                           <DashboardRowMeta date={date} today={today} view={momentView} record={event} context={event.type || 'Personal'} />
                         </span>
@@ -421,7 +422,7 @@ export function DashboardOverviewContent() {
                     <button type="button" className="dashboard-upcoming-row" disabled={activityActions.busy}
                       aria-label={`Open ${activity.title || activity.name || 'activity'}`}
                       onClick={() => navigate(activityDetailPath(target.momentId, target.activityId))}>
-                      <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} activity={activity} uid={user?.uid} isGuest={isGuest} sample={getActiveSampleScenario(user?.uid)} /><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
+                      <span className="dashboard-upcoming-date"><DashboardCoverThumb moment={event} activity={activity} uid={user?.uid} isGuest={isGuest} sample={activeSample} /><strong>{date.toLocaleDateString('en-GB', { day: '2-digit' })}</strong><small>{date.toLocaleDateString('en-GB', { month: 'short' })}</small></span>
                       <span className="dashboard-upcoming-copy"><strong>{activity.title || activity.name || 'Untitled activity'}</strong>
                         <DashboardRowMeta date={date} today={today} view={activityView} record={activity} context={event.name || event.type || 'Moment'} />
                       </span>

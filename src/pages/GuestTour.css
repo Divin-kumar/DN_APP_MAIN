@@ -4,6 +4,13 @@ html[data-theme] .dn-guest-tour-panel .dn-guest-tour-actions {
   display:flex;align-items:center;justify-content:flex-start;flex-wrap:wrap;
   gap:9px;min-width:0;
 }
+html[data-theme] .dn-tour-resources {
+  display:flex;align-items:center;flex-wrap:wrap;gap:0 12px;
+}
+html[data-theme] .dn-tour-guide-link {
+  display:inline-flex;align-items:center;min-height:44px;
+  color:var(--color-primary);font-size:.75rem;font-weight:660;text-underline-offset:3px;
+}
 html[data-theme] .dn-guest-tour-actions button {
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
   min-height:42px;padding:8px 14px;
