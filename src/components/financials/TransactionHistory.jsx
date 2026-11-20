@@ -53,9 +53,11 @@ export function TransactionCard({ transaction, events = [], onEdit, onDelete, on
   }
 
   const Card = readOnly ? 'article' : SwipeActionCard;
+  const transactionLabel = transaction.name || transaction.title || 'Transaction';
   const actionProps = readOnly ? {} : {
     as: 'article', mainClassName: 'dn-transaction-swipe-content',
-    label: transaction.name || transaction.title || 'Transaction', openOnTap: true,
+    label: transactionLabel, openOnTap: true,
+    menuButton: Boolean(onEdit || onDelete), menuLabel: `Actions for ${transactionLabel}`, menuButtonText: 'Actions',
     onOpen: onOpen ? () => onOpen(transaction) : undefined,
     otherActions: onEdit ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(transaction) }] : [],
     onDelete: onDelete ? () => onDelete(transaction) : undefined,

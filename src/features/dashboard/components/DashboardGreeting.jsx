@@ -18,6 +18,7 @@ export default function DashboardGreeting({ now = new Date() }) {
   return <header className="dashboard-greeting dashboard-greeting-compact" aria-label="Dashboard greeting">
     <div className="dashboard-greeting-topline">
       <span className="dashboard-greeting-eyebrow">Your day</span>
+      <span className="dashboard-greeting-create-guide">Use + to navigate or create</span>
       <span className="dashboard-greeting-emoji" aria-hidden="true">{emojiForGreeting(salutation)}</span>
     </div>
     <h2 className="dashboard-greeting-title">{salutation}, {name}</h2>

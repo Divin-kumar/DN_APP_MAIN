@@ -22,6 +22,24 @@ test('desktop empty Moments panel stays compact next to populated Activities', a
   expect(geometry.heightDifference).toBeGreaterThan(35);
 });
 
+test('desktop Activity preview fits a longer parent Moment across two lines', async ({ page }) => {
+  await page.setViewportSize({ width:1363, height:936 });
+  const moments = fixtureMoments();
+  moments[0].name = 'Explore DN · Home renovation plans';
+  await seedGuest(page, { moments });
+  await page.goto('/dashboard');
+  const row = page.getByRole('button', { name:'Open Book a lakeside stay' });
+  const details = row.locator('.dashboard-upcoming-meta');
+  await expect(details).toBeVisible();
+  await expect(row.getByTitle('Explore DN · Home renovation plans')).toBeVisible();
+  const size = await details.evaluate(el => ({
+    height:el.clientHeight, scrollHeight:el.scrollHeight, lineHeight:parseFloat(getComputedStyle(el).lineHeight),
+  }));
+  expect(size.height).toBeGreaterThan(size.lineHeight * 1.5);
+  expect(size.height).toBeLessThan(size.lineHeight * 2 + 1);
+  expect(size.scrollHeight).toBeLessThanOrEqual(size.height + 1);
+});
+
 const moments = [
   { id: 'recent', name: 'A family day', type: 'Personal', date: '2026-10-26', activities: [
     { id: 'today', title: 'Today’s task', date: '2026-10-26', expenses: [{ id: 'expense', amount: 999, date: '2026-10-26' }] },

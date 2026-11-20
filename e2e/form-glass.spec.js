@@ -17,7 +17,7 @@ for (const width of [320, 430]) for (const theme of ['light', 'dark']) {
         return action.left >= text.right && action.right <= parent.getBoundingClientRect().right + 1;
       })).toBe(true);
     }
-    await expect(page.getByRole('region', { name: 'Independent Tasks' }).getByRole('link', { name: 'View all' })).toHaveCount(0);
+    await expect(page.getByRole('region', { name: 'Independent Tasks' }).getByRole('link', { name: 'View Tasks' })).toHaveCount(0);
     const titles = {
       Transaction: 'Add Transaction', Task: 'New Task', Moment: 'Create a life moment', Activity: 'Add an activity',
     };

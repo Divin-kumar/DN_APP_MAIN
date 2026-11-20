@@ -241,9 +241,6 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     }, DOUBLE_TAP_WINDOW_MS);
     pendingTap.current = { timer, at: event.timeStamp };
   };
-  const showLauncherLabel = activePath === '/dashboard' && !floating && !activeDrag;
-  const launcherName = open ? 'Close quick create menu'
-    : showLauncherLabel ? 'Open quick create menu, Navigate & create' : 'Open quick create menu';
   return <div ref={menuRef} className={`dn-command-root${dockInInsights ? ' is-insights-docked' : ''}${floating || activeDrag ? ' is-floating' : ''}${viewport.keyboardOpen ? ' is-keyboard-open' : ''}`} style={{
     '--dn-command-keyboard':`${viewport.inset}px`,
     '--dn-command-visual-bottom':`${viewport.visualBottom}px`
@@ -253,7 +250,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       <div className="dn-command-button-slot">
         <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}`}
           style={floating || activeDrag ? {position:'fixed',left:x,top:y}:undefined}
-          aria-label={launcherName}
+          aria-label={open ? 'Close quick create menu' : 'Open quick create menu'}
           aria-description={'Tap once for navigation and creation, double-tap to go back.' + (dockInInsights ? '' : ' Drag to move; return to dock from the menu.')}
           title={open ? 'Close menu' : 'Navigate & create'}
           aria-haspopup="dialog" aria-expanded={open}
@@ -261,8 +258,6 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
           onPointerCancel={event=>pointerEnd(event,true)}
           onClick={onTriggerClick}>
           <Plus className="dn-create-glyph" size={31} strokeWidth={2.8} aria-hidden="true" />
-          {showLauncherLabel
-            ? <span className="dn-command-trigger-label" aria-hidden="true">Navigate &amp; create</span> : null}
         </button>
       </div>
     </div>

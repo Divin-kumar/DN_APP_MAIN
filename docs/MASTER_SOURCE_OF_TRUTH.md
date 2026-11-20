@@ -2,11 +2,11 @@
 
 ## Dashboard, Activity Detail and quick Task filters (20 November 2026, development)
 
-Dashboard sections share row spacing and keep their own height, including when a neighboring panel has more records. On the phone Dashboard the docked + has a Navigate & create label. The menu explains double-tap Back and drag. A form still opens immediately when chosen from the menu.
+Dashboard sections keep their own height, including when a neighboring panel has more records. In the desktop Activity preview, timing and the parent Moment can wrap across two lines. The Tasks preview opens the saved list view through View Tasks. On phones the greeting explains the + in the page flow. The menu explains double-tap Back and drag. A form opens immediately when chosen from the menu.
 
 Tasks offers All Tasks, In progress and Completed above the list. Choosing a status updates the same applied filters shown by Refine, replaces existing status rules, and keeps search, sorting and non-status rules. Counts show what each shortcut would match with the remaining criteria. The result count shows the presently displayed list. Saved legacy status rules and advanced status filters still work. A complex status rule with no equivalent shortcut remains visible in the applied filters without selecting a shortcut.
 
-Original Activity writing uses the same reading column as dated entries on desktop. Moment and Activity forms summarize the local date and any explicit time in More options. Date and Time remain paired in the editor, with the existing create defaults and no new time for untimed records. Swipe actions continue to support touch, with keyboard instructions, focus and the existing action menu.
+Original Activity writing uses the same reading column as dated entries on desktop. The count sits beside the Entries heading. Moment and Activity forms summarize the local date and any explicit time in More options. Date and Time remain paired in the editor, with no new time for untimed records. In the desktop transaction ledger, hovering or focusing a row reveals Actions. The row and its button open the same menu and closing it returns focus to the control that opened it. Phones use the existing row tap and swipe actions.
 
 ## Compact Refine and entry forms (19 November 2026, development)
 

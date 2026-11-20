@@ -11,13 +11,15 @@ import { computeSwipeMenuPlacement, getSwipeDockReserve } from '../../utils/swip
 export default function SwipeActionCard({
   as: Root = 'article', className = '', mainClassName = '',
   label = 'Card', role = 'group', otherActions = [], onDelete, openOnTap = false, children,
-  onOpen, menuButton = false, menuLabel = 'Activity options', swipeEnabled = true, disabled = false, taskId, actionDescription,
+  onOpen, menuButton = false, menuLabel = 'Activity options', menuButtonText,
+  swipeEnabled = true, disabled = false, taskId, actionDescription,
 }) {
   const [open, setOpen] = useState(false);
   const reducedMotion = useReducedMotion();
   const [position, setPosition] = useState(null);
   const rootRef = useRef(null);
   const triggerRef = useRef(null);
+  const menuSource = useRef(null);
   const popupRef = useRef(null);
   const gesture = useRef(null);
   const removePointerListeners = useRef(null);
@@ -34,13 +36,18 @@ export default function SwipeActionCard({
     ...otherActions.filter((action) => typeof action?.onClick === 'function'),
     ...(onDelete ? [{ label: 'Delete', icon: Trash2, onClick: onDelete, danger: true }] : []),
   ];
+  const rowHasActions = actions.length > 0 && (!menuButton || openOnTap);
+  const getMenuAnchor = () => {
+    const anchor = menuSource.current ?? (rowHasActions ? rootRef.current : triggerRef.current);
+    return anchor?.getClientRects().length ? anchor : rootRef.current;
+  };
 
   const close = (restoreFocus = false) => {
     setOpen(false);
-    if (restoreFocus) (triggerRef.current || rootRef.current)?.focus({ preventScroll: true });
+    if (restoreFocus) getMenuAnchor()?.focus({ preventScroll: true });
   };
   const positionMenu = () => {
-    const anchor = (triggerRef.current || rootRef.current)?.getBoundingClientRect();
+    const anchor = getMenuAnchor()?.getBoundingClientRect();
     if (!anchor) return;
     const viewport = getVisibleViewport(window);
     if (anchor.bottom <= viewport.top || anchor.top >= viewport.top + viewport.height) { close(); return; }
@@ -55,10 +62,11 @@ export default function SwipeActionCard({
       anchor, viewport, count: actions.length, bottomReserve,
     }));
   };
-  const showMenu = (isTouch = false, fromKeyboard = false) => {
+  const showMenu = (isTouch = false, source = null) => {
     if (disabled || !actions.length || !rootRef.current || pendingAction.current) return;
+    menuSource.current = source;
     positionMenu();
-    focusOnOpen.current = fromKeyboard;
+    focusOnOpen.current = Boolean(source);
     window.dispatchEvent(new CustomEvent('dn:record-menu', { detail: menuId }));
     window.dispatchEvent(new CustomEvent('dn:activity-swipe', { detail: rootRef.current }));
     if (!open && isTouch) {
@@ -138,7 +146,7 @@ export default function SwipeActionCard({
     if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();
       if (open) close(true);
-      else showMenu(false, true);
+      else showMenu(false, event.currentTarget);
     }
   };
   const handleMenuKey = (event) => {
@@ -175,12 +183,12 @@ export default function SwipeActionCard({
   };
   return (
     <>
-      <Root ref={rootRef} data-task-id={taskId} tabIndex={menuButton && !onOpen ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
-        aria-description={[actionDescription, !menuButton && actions.length
+      <Root ref={rootRef} data-task-id={taskId} tabIndex={menuButton && !onOpen && !openOnTap ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
+        aria-description={[actionDescription, rowHasActions
           ? onOpen ? 'Use the left or right arrow key for actions.'
             : 'Press Enter or Space for actions.' : null].filter(Boolean).join(' ') || undefined}
-        aria-haspopup={!menuButton && actions.length ? 'menu' : undefined}
-        aria-expanded={!menuButton && actions.length ? open : undefined} aria-controls={!menuButton && actions.length && open ? menuId : undefined}
+        aria-haspopup={rowHasActions ? 'menu' : undefined}
+        aria-expanded={rowHasActions ? open : undefined} aria-controls={rowHasActions && open ? menuId : undefined}
         className={`dn-swipe-surface ${className}`}
         onKeyDown={handleCardKey}
         onPointerDownCapture={(event) => {
@@ -243,8 +251,8 @@ export default function SwipeActionCard({
           {children}
           {menuButton ? <button ref={triggerRef} type="button" data-swipe-ignore className="dn-record-menu-trigger"
             aria-label={menuLabel} aria-haspopup="menu" aria-controls={open ? menuId : undefined} aria-expanded={open} disabled={disabled}
-            onClick={(event) => { event.stopPropagation(); if (open) close(true); else showMenu(false, true); }}>
-            <Ellipsis size={19} aria-hidden="true" />
+            onClick={(event) => { event.stopPropagation(); if (open) close(true); else showMenu(false, event.currentTarget); }}>
+            {menuButtonText || <Ellipsis size={19} aria-hidden="true" />}
           </button> : null}
         </div>
       </Root>

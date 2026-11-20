@@ -12,7 +12,6 @@ import LinkedTransactions from '../finance/components/LinkedTransactions';
 import ActivityCover from './components/ActivityCover';
 import ActivityAttachments from './components/ActivityAttachments';
 import ActivityEntryTimeline from './components/ActivityEntryTimeline';
-import { orderedUnifiedContent } from '../../utils/activityEntries';
 import { activityDateLabel, activityDetailPath, activityStatus, activityStatusLabel, resolveActivityDetail } from '../../utils/activityDetail';
 import { recordId } from '../../utils/recordIdentity';
 import { getActivityMomentType } from '../../utils/activityRecords';
@@ -55,7 +54,6 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
   const status = activityStatus(activity);
   const StatusIcon = status === 'completed' ? Check : status === 'cancelled' ? XCircle : Circle;
   const parentTo = navigation.returnTo;
-  const contentCount = orderedUnifiedContent(activity).length;
   // Diary day containers share the same Activity actions as other modes.
   const menuActions = [
     status === 'cancelled'
@@ -89,7 +87,6 @@ export function ActivityDetailContent({ scoped, eventId, activityId }) {
         <div className="activity-detail-facts">
           <span className={`activity-status-pill status-${status}`}><StatusIcon size={13} aria-hidden="true" />{activityStatusLabel(activity)}</span>
           <span className="activity-detail-priority" aria-label={`Priority: ${activity.priority || 'medium'}`}><Flag size={13} aria-hidden="true" />{activity.priority || 'medium'}</span>
-          <span className="activity-detail-entry-count">{contentCount} {contentCount === 1 ? 'entry' : 'entries'}</span>
         </div>
         <SwipeActionCard as="div" className="activity-detail-more" label={activity.title || 'Activity'} menuButton menuLabel="Activity options" swipeEnabled={false} disabled={actions.busy}
           otherActions={menuActions}

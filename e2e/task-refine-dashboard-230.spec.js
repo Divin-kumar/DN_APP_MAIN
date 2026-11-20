@@ -50,6 +50,10 @@ for (const [width, theme] of [[320, 'light'], [430, 'dark'], [1440, 'light'], [1
     await expect(results).toHaveCount(1);
     await expect(results.first()).toContainText('Archive old pictures');
     await expect(page.locator('.dn-list-controls-context')).toHaveText('1 Task shown');
+    await page.goto('/dashboard');
+    await page.getByRole('link', { name: 'View Tasks', exact: true }).click();
+    await expect(completed).toHaveAttribute('aria-pressed', 'true');
+    await expect(results).toHaveCount(1);
     await page.getByRole('button', { name: 'Refine', exact: true }).click();
     const sheet = page.getByRole('dialog', { name: 'Refine Tasks' });
     await selectOption(page, 'Value for Status', 'In progress');

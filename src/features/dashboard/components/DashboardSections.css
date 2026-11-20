@@ -254,6 +254,22 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-timing {
   font-weight: 600;
   white-space: normal;
 }
+@media (min-width: 1024px) and (min-height: 501px) {
+  html[data-theme] .dashboard-compact .dashboard-activities-preview {
+    --dn-dashboard-row-height: 80px;
+  }
+  html[data-theme] .dashboard-activities-preview .dashboard-upcoming-meta {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+  html[data-theme] .dashboard-activities-preview .dashboard-upcoming-context {
+    white-space: normal;
+  }
+}
 html[data-theme] .dashboard-compact .dashboard-moment-greeting-button,
 html[data-theme] .dashboard-compact .dashboard-activity-card .dn-record-menu-trigger {
   flex: 0 0 44px;

@@ -104,7 +104,6 @@ html[data-theme] .activity-detail-page .dn-attachment-open strong { white-space:
 }
 .activity-detail-facts > .activity-status-pill { grid-column:1; grid-row:1; }
 .activity-detail-facts > .activity-detail-priority { grid-column:2; grid-row:1; }
-.activity-detail-facts > .activity-detail-entry-count { grid-column:1 / -1; grid-row:2; }
 .activity-detail-facts > .activity-status-pill,
 .activity-detail-facts > .activity-detail-priority {
   display:inline-flex; min-width:0; justify-self:start;
@@ -195,8 +194,6 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   text-decoration:none; font-size:13px; font-weight:600; overflow-wrap:anywhere; }
 .dn-linked-journal-list a:focus-visible { outline:2px solid var(--color-primary); outline-offset:2px; }
 
-/* DN 2.1.1: Diary status and day entry count are separately readable. */
-.activity-detail-entry-count { color:var(--color-text-muted); font-size:11px; font-weight:650; }
 
 /* Unified dated Activity content: quiet rows, no timeline dots or nested cards. */
 .dn-content-heading { display:flex; align-items:baseline; justify-content:space-between; gap:10px; margin-bottom:4px; }
@@ -243,17 +240,12 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   gap: 7px 12px;
 }
 .activity-detail-page .activity-detail-facts > .activity-status-pill,
-.activity-detail-page .activity-detail-facts > .activity-detail-priority,
-.activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
+.activity-detail-page .activity-detail-facts > .activity-detail-priority {
   display: inline-flex;
   grid-column: auto;
   grid-row: auto;
   justify-self: auto;
   align-items: center;
-}
-.activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
-  font-size: 12px;
-  font-weight: 500;
 }
 .activity-detail-page .activity-detail-due { margin-top: 2px; }
 .activity-detail-page .dn-content-section {
@@ -497,11 +489,6 @@ html[data-theme] .activity-detail-page .activity-cover-back {
 
 html[data-theme] .activity-detail-page .activity-detail-facts {
   gap:6px 10px;
-}
-html[data-theme] .activity-detail-page .activity-detail-facts > .activity-detail-entry-count {
-  padding-inline-start:10px;
-  border-inline-start:1px solid var(--dn-panel-edge);
-  color:var(--color-text-muted);
 }
 html[data-theme] .activity-detail-page .activity-detail-due {
   color:var(--color-text-muted); font-variant-numeric:tabular-nums;

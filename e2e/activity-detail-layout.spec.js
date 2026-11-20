@@ -14,6 +14,7 @@ test('desktop original Activity writing aligns with the dated entry text', async
   const dated = page.locator('.dn-content-row:not(.is-untimed) .dn-content-row-body');
   await expect(original).toBeVisible();
   await expect(dated).toBeVisible();
+  await expect(page.getByText('2 entries', { exact: true })).toHaveCount(1);
   const [first, next] = await Promise.all([original.boundingBox(), dated.boundingBox()]);
   expect(first.width).toBeGreaterThan(350);
   expect(Math.abs(first.x - next.x)).toBeLessThanOrEqual(1);
@@ -72,7 +73,9 @@ test('the metadata menu closes/reopens, edits, restores and confirms deletion wi
   await expect(page.locator('.activity-status-pill')).toHaveText('In progress');
   await expect(page.locator('.activity-detail-footer')).not.toContainText('Completed');
   await activityDetailAction(page, 'Edit');
-  await expect(page.getByRole('dialog').getByRole('textbox', { name: 'Activity title', exact: true })).toHaveValue('Book a lakeside stay');
+  const editor = page.getByRole('dialog', { name: 'Edit activity', exact: true });
+  await expect(editor.getByRole('textbox', { name: 'Activity title', exact: true })).toHaveValue('Book a lakeside stay');
+  await expect(editor.getByRole('button', { name:'Close dialog', exact:true })).toBeFocused();
   await page.keyboard.press('Escape'); await expect(trigger).toBeFocused();
   await activityDetailAction(page, 'Cancel');
   await expect(page.locator('.activity-status-pill')).toHaveText('Cancelled');

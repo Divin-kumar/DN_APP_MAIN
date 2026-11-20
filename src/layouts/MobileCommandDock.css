@@ -80,21 +80,6 @@ html[data-theme] .dn-command-actions button svg {
 html[data-theme] .dn-command-actions button:active, html[data-theme] .dn-command-redock:active { background:var(--color-surface)!important; }
 html[data-theme] .dn-command-redock { margin-top:14px;width:100%;justify-content:center;min-height:44px;font-size:12px;color:var(--color-text-muted)!important; }
 html[data-theme] .dn-command-hint { font-size:12px;line-height:1.5;text-align:center;color:var(--color-text-muted);margin:16px 0 0; }
-html[data-theme] .dn-command-trigger:has(> .dn-command-trigger-label) { position:relative; }
-html[data-theme] .dn-command-trigger-label {
-  position:absolute;
-  inset-inline-end:calc(100% + 10px);
-  top:50%;
-  transform:translateY(-50%);
-  padding:4px 6px;
-  border-radius:8px;
-  background:var(--color-card);
-  color:var(--color-text);
-  font-size:12px;
-  font-weight:650;
-  line-height:1.35;
-  white-space:nowrap;
-}
 @media (min-width:375px) { html[data-theme] .dn-command-destinations a { font-size:12px; } }
 @media (prefers-reduced-motion:reduce) { html[data-theme] .dn-command-destination-icon,html[data-theme] .dn-command-destinations a { transition:none; } }
 

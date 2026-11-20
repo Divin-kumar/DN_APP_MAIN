@@ -4,8 +4,7 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'dark'],[430,932,'l
   test(`mobile command navigation and creation preserve records ${width}`,async({page})=>{
     await page.setViewportSize({width,height});const errors=await seedGuest(page,{theme});
     await page.goto('/dashboard');
-    const launcher = page.getByRole('button', { name: 'Open quick create menu' });
-    await expect(launcher.getByText('Navigate & create')).toBeInViewport();
+    await expect(page.getByText('Use + to navigate or create', { exact: true })).toBeInViewport();
     const before=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k=>localStorage.getItem(k)));
     for(const [name,path] of [['Moments','/events'],['Activities','/activities'],['Tasks','/tasks'],['Finance','/financials/transactions'],['Home','/dashboard']]) {
       await page.getByRole('button',{name:'Open quick create menu'}).click();
@@ -28,3 +27,16 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'dark'],[430,932,'l
     expect(errors).toEqual([]);
   });
 }
+
+test('short responsive Dashboard keeps the creation cue above its panels', async ({ page }) => {
+  await page.setViewportSize({ width:454, height:312 });
+  await seedGuest(page);
+  await page.goto('/dashboard');
+  const guide = page.getByText('Use + to navigate or create', { exact:true });
+  const tasks = page.getByRole('region', { name:'Independent Tasks' });
+  await expect(guide).toBeInViewport();
+  await expect(tasks).toBeVisible();
+  const [hint, panel] = await Promise.all([guide.boundingBox(), tasks.boundingBox()]);
+  expect(hint.y + hint.height).toBeLessThan(panel.y);
+  await expect(page.getByRole('button', { name:'Open quick create menu' })).toBeInViewport();
+});

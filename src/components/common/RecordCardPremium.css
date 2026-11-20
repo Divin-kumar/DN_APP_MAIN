@@ -144,3 +144,28 @@ html[data-theme] .dn-transaction-details[open] .dn-transaction-details-content {
   padding-block-start:7px;
   border-top:1px solid var(--dn-panel-edge);
 }
+
+html[data-theme] .dn-transactions-page .dn-transaction-swipe-content > .dn-record-menu-trigger { display:none; }
+@media (min-width:761px) and (min-height:501px), (min-width:761px) and (pointer:fine) {
+  html[data-theme] .dn-transactions-page .dn-transaction-swipe-content {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) auto;
+    align-items:center;
+  }
+  html[data-theme] .dn-transactions-page .dn-transaction-swipe-content > .dn-record-menu-trigger {
+    display:inline-grid;
+    width:auto;
+    padding-inline:10px;
+    margin-inline-end:8px;
+    font-size:12px;
+    font-weight:650;
+    opacity:0;
+  }
+  html[data-theme] .dn-transactions-page .dn-transaction-card:focus-within .dn-record-menu-trigger,
+  html[data-theme] .dn-transactions-page .dn-record-menu-trigger[aria-expanded="true"] {
+    opacity:1;
+  }
+}
+@media (min-width:761px) and (hover:hover) and (pointer:fine) {
+  html[data-theme] .dn-transactions-page .dn-transaction-card:hover .dn-record-menu-trigger { opacity:1; }
+}

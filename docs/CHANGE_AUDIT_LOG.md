@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-584 | Address the follow-up UX audit
+
+- **Scope.** Rename the Dashboard link to View Tasks, allow the parent Moment to wrap in desktop Activity previews, and show the Activity entry count beside Entries. Move mobile + guidance into the greeting. Reveal an Actions button when editable transactions receive desktop hover or focus.
+- **Compatibility.** View Tasks opens the saved filter and sort. The + gestures, row swipes, transaction editing, payment records, and contextual read-only lists keep their existing behavior. The visual changes use the existing public Guest demo records and its instructions still apply.
+- **Executed.** Build, lint and 635 Node tests passed. Chromium passed 116 checks in the broader run. The Activity editor Escape check passed on three isolated repeats after an early focus assertion timed out in the broader run. The regression now waits for dialog focus before pressing Escape. Six WebKit checks passed against the built app, covering the short Dashboard viewport, saved Task filters, Activity text and entry count, and Finance Actions in both themes. Physical iPhone Safari and VoiceOver are unverified.
+
 ## CHG-20261120-583 | Fix Dashboard, Activity and Tasks audit findings
 
 - **Scope.** Size Dashboard panels to their content and share preview row styling. Align untimed original Activity writing with dated text on desktop. Make Task status counts usable as direct filters and reflect the active status from Refine. Add a Dashboard label for the mobile creator, readable Moment and Activity form timestamps, and keyboard instructions for swipe action menus.

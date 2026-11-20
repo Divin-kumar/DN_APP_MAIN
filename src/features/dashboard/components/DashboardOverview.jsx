@@ -222,7 +222,7 @@ function DashboardRowMeta({ date, today, view, record, context }) {
   const time = activityTime(record);
   return <small className="dashboard-upcoming-meta">
     <span className="dashboard-upcoming-timing">{timing}{time ? ` · ${time}` : ''}</span>
-    <span className="dashboard-upcoming-context"><span aria-hidden="true">· </span>{context}</span>
+    <span className="dashboard-upcoming-context" title={context}><span aria-hidden="true"> · </span>{context}</span>
   </small>;
 }
 
@@ -305,7 +305,7 @@ export function DashboardOverviewContent() {
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Tasks</span>
             <div className="dashboard-section-actions">
-              {!sections.tasks || !isTaskSectionEmpty ? <Link className="dn-dashboard-tasks-link" to="/tasks">View all</Link> : null}
+              {!sections.tasks || !isTaskSectionEmpty ? <Link className="dn-dashboard-tasks-link" to="/tasks">View Tasks</Link> : null}
               <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
                 aria-label={sections.tasks ? 'Hide Tasks on dashboard' : 'Show Tasks on dashboard'}
                 onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
@@ -383,7 +383,7 @@ export function DashboardOverviewContent() {
           )}
           </></DashboardReveal>
         </section>
-        <section className="dashboard-upcoming-card" aria-label="Activities">
+        <section className="dashboard-upcoming-card dashboard-activities-preview" aria-label="Activities">
           <header className="dashboard-section-heading">
             <span className="dashboard-section-title">Activities</span>
             <div className="dashboard-section-actions">

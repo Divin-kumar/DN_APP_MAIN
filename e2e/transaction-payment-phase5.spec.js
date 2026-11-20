@@ -15,6 +15,33 @@ test('transaction actions expose a keyboard menu and return focus to the row', a
   await expect(row).toBeFocused();
 });
 
+for (const theme of ['light', 'dark']) {
+  test(`desktop transaction Actions works from hover and keyboard in ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width:1363, height:936 });
+    await seedGuest(page, { theme });
+    await page.goto('/financials/transactions');
+    const row = page.getByRole('listitem', { name:/^Room deposit/ });
+    const actions = row.getByRole('button', { name:'Actions for Room deposit' });
+    const menu = page.getByRole('menu', { name:'Actions for Room deposit' });
+    await expect(actions).toHaveCSS('opacity', '0');
+    await row.hover();
+    await expect(actions).toHaveCSS('opacity', '1');
+    await page.getByRole('heading', { name:'Transactions' }).hover();
+    await row.focus();
+    await expect(actions).toHaveCSS('opacity', '1');
+    await page.keyboard.press('Tab');
+    await expect(row.locator('summary')).toBeFocused();
+    await page.keyboard.press('Tab');
+    await expect(actions).toBeFocused();
+    await expect(actions).toHaveCSS('opacity', '1');
+    await actions.press('Enter');
+    await expect(menu.getByRole('menuitem', { name:'Edit' })).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(menu).toBeHidden();
+    await expect(actions).toBeFocused();
+  });
+}
+
 test('Phase 5 new Cash expense is required, persisted, edited to Online, and shown in list', async ({page}) => {
   const errors = await seedGuest(page,{moments:fixtureMoments(), incomes:[], expenses:[]});
   await page.goto('/financials/transactions?create=transaction');
