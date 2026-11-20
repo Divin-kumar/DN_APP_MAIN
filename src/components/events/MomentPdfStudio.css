@@ -104,7 +104,7 @@ html[data-theme] .dn-pdf-studio-preview {
   border:1px solid var(--color-border);border-radius:17px;padding:16px;
 }
 html[data-theme] .dn-pdf-studio-preview-head {
-  width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;
+  width:100%;display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center;
 }
 html[data-theme] .dn-pdf-studio-preview-head>div {display:grid;gap:4px;}
 html[data-theme] .dn-pdf-studio-preview-head > .dn-pdf-preview-summary {
@@ -165,7 +165,7 @@ html[data-theme] .dn-pdf-studio-footer {
   margin-top:auto;border-top:1px solid var(--color-border);padding-top:13px;
 }
 html[data-theme] .dn-pdf-studio-footer small {color:var(--color-text-muted);font-size:.72rem;line-height:1.45;}
-html[data-theme] .dn-pdf-studio-footer button {display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;}
+html[data-theme] .dn-pdf-studio-preview-head .dn-pdf-download {display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:44px;white-space:nowrap;}
 html[data-theme] .dn-pdf-studio-stale,html[data-theme] .dn-pdf-studio-loading,html[data-theme] .dn-pdf-studio-error {
   font-size:.77rem;line-height:1.5;margin:0;width:100%;color:var(--color-text-muted);
 }
@@ -196,8 +196,8 @@ html[data-theme] .dn-pdf-fullscreen-viewport img {display:block;width:min(100%,6
   html[data-theme] .dn-pdf-studio-intro .dn-pdf-section-jump {margin-inline-start:auto;}
   html[data-theme] .dn-pdf-studio-controls {gap:15px;}
   html[data-theme] .dn-pdf-studio-preview {padding:12px;}
-  html[data-theme] .dn-pdf-studio-footer {align-items:stretch;}
-  html[data-theme] .dn-pdf-studio-footer button {flex:1;}
+  html[data-theme] .dn-pdf-studio-preview-head {grid-template-columns:minmax(0,1fr) auto;}
+  html[data-theme] .dn-pdf-studio-preview-head .dn-pdf-download {grid-column:1 / -1;justify-self:start;}
 }
 @media(max-width:390px) {
   html[data-theme] .dn-pdf-studio-controls {padding:14px;}

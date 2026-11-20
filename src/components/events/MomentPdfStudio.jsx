@@ -287,6 +287,10 @@ export default function MomentPdfStudio({ event }) {
             <button type="button" className="dn-pdf-section-jump" aria-label="Go to PDF design"
               onClick={() => jumpToSection(designSectionRef.current)}>Design</button>
           </div>
+          <button type="button" className="primaryButton dn-pdf-download" disabled={!preview || dirty || busy}
+            onClick={download} aria-label="Download customized PDF">
+            <Download size={16} aria-hidden="true" /> Download PDF
+          </button>
         </div>
         {error ? <p className="dn-pdf-studio-error" role="alert">{error}</p> : null}
         {dirty && preview ? <p className="dn-pdf-studio-stale" role="status">Settings changed. Update the preview to download.</p> : null}
@@ -340,8 +344,6 @@ export default function MomentPdfStudio({ event }) {
         <div className="dn-pdf-studio-footer">
           <small>{dirty ? 'Generate an up-to-date preview to enable download.'
             : 'Preview uses the exact pages embedded in your PDF.'}</small>
-          <button type="button" className="primaryButton" disabled={!preview || dirty || busy} onClick={download}
-            aria-label="Download customized PDF"><Download size={16} aria-hidden="true" /> Download PDF</button>
         </div>
       </section>
 

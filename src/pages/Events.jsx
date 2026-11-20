@@ -65,8 +65,10 @@ function MomentCardCover({ attachment, uid, isGuest, date }) {
   }, []);
   const original = useAttachmentOriginal(attachment, { uid, isGuest, enabled: nearby && Boolean(attachment) });
   const source = original.source && original.source !== failedSource && !original.error ? original.source : '';
+  const hasNoCover = !attachment || Boolean(original.error || (original.source && !source));
   return (
-    <span ref={tileRef} className={'event-story-art dn-v2-moment-cover' + (source ? ' has-photo' : '')} aria-hidden="true">
+    <span ref={tileRef} className={'event-story-art dn-v2-moment-cover'
+      + (source ? ' has-photo' : hasNoCover ? ' is-date-only' : '')} aria-hidden="true">
       {source ? <img src={source} alt="" loading="lazy" onError={() => setFailedSource(source)} /> : <Images size={32} strokeWidth={1.5} className="dn-v2-cover-symbol" />}
       <span className="dn-v2-moment-cover-glow" />
       <span className="dn-v2-moment-cover-date">

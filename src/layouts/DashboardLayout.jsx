@@ -561,7 +561,9 @@ export default function DashboardLayout() {
                   : 'Signed-in mode: account records use Firebase storage. Cloud availability depends on your connection.'}
               >
                 {isGuest ? <HardDrive size={13} strokeWidth={1.9} aria-hidden="true" /> : <Cloud size={13} strokeWidth={1.9} aria-hidden="true" />}
-                <span>{isGuest ? 'Guest · On this device' : 'Account · Cloud storage'}</span>
+                <span>{desktopShell
+                  ? (isGuest ? 'Guest · Local' : 'Account · Cloud')
+                  : (isGuest ? 'Guest · On this device' : 'Account · Cloud storage')}</span>
               </small>
             </section>
           </div>

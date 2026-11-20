@@ -230,12 +230,14 @@ export default function MomentStory({ moment, momentTypes, uid, isGuest, onEditI
       </div>
     </header>
     <section className="dn-v2-story-intro" aria-label="Moment introduction">
-      <div className="dn-v2-story-intro-head"><h4><BookOpenText size={17} /> {edition.intro}</h4>
-        <button type="button" onClick={onEditIntro}><Pencil size={14} />
-          {story.introduction ? 'Edit introduction' : 'Add introduction'}</button></div>
-      {story.introduction ? <RichText value={story.introduction} className="free-text-content dn-v2-story-intro-text" />
-        : <p>{isJournal ? 'Every keepsake has a story. What made this Moment special?'
-          : isTask ? 'What are you working toward?' : 'What is this month about?'}</p>}
+      <div className="dn-v2-story-opening">
+        <div className="dn-v2-story-intro-head"><h4><BookOpenText size={17} /> {edition.intro}</h4>
+          <button type="button" onClick={onEditIntro}><Pencil size={14} />
+            {story.introduction ? 'Edit introduction' : 'Add introduction'}</button></div>
+        {story.introduction ? <RichText value={story.introduction} className="free-text-content dn-v2-story-intro-text" />
+          : <p>{isJournal ? 'Every keepsake has a story. What made this Moment special?'
+            : isTask ? 'What are you working toward?' : 'What is this month about?'}</p>}
+      </div>
       {isJournal ? <Media items={story.keepsakes} uid={uid} isGuest={isGuest}
         label="Moment keepsakes and older unlinked files" album /> : null}
       {!isJournal && story.keepsakes.length ? <Link className="dn-story-entry-files"

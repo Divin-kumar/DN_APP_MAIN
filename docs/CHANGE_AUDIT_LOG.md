@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-585 | Fix the desktop and short-screen UI audit findings
+
+- **Scope.** Shorten the desktop storage label, use a compact date tile on desktop Moments without a cover, and align the Story introduction action with the opening text. Place Download PDF in the preview header and draw the edition label once on the PDF cover. Give the standalone docked + clearance below the scroll area on short screens.
+- **Compatibility.** Keep the full accessible storage description, original cover photos, PDF preview and download state, and the running header on reading pages. Regular phone layout and Quick Create gestures use the existing behavior. The Guest demo records and instructions cover the same workflows.
+- **Executed.** Build, lint and 635 Node tests passed. Chromium covered 179 distinct checks across the broad run and focused reruns. Three Story contrast cases that encountered intermittent route errors in the broad run passed in an isolated rerun. Nine checks passed in WebKit against the built app across the focused and short-viewport reruns. Screenshots verified the layout at 1,363 × 936, 454 × 312 and 430 × 932. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-584 | Address the follow-up UX audit
 
 - **Scope.** Rename the Dashboard link to View Tasks, allow the parent Moment to wrap in desktop Activity previews, and show the Activity entry count beside Entries. Move mobile + guidance into the greeting. Reveal an Actions button when editable transactions receive desktop hover or focus.

@@ -187,6 +187,20 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open {
   transform: none !important;
   transition: background-color .18s ease !important;
 }
+@media (min-width: 851px) {
+  html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-cover.is-date-only {
+    flex: 0 0 54px; width: 54px; min-height: 0;
+    align-self: flex-start; margin: 13px 0 0 13px;
+    border-radius: 10px !important;
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-cover.is-date-only :is(.dn-v2-cover-symbol, .dn-v2-moment-cover-glow) {
+    display: none;
+  }
+  html[data-theme] .life-timeline-page .dn-v2-moment-cover.is-date-only .dn-v2-moment-cover-date {
+    position: static; width: 100%; justify-items: center; padding: 8px 5px;
+    background: transparent; backdrop-filter: none;
+  }
+}
 @media (max-width: 850px) {
   html[data-theme] .life-timeline-page .life-journey-items { grid-template-columns: minmax(0,1fr); gap: 11px; }
   html[data-theme] .life-timeline-page .dn-v2-moment-card .dn-v2-moment-open { min-height: 156px !important; }

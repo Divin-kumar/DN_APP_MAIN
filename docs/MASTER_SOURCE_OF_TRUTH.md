@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Desktop Moment and PDF controls (20 November 2026, development)
+
+The desktop sidebar abbreviates the persistent storage scope to Guest · Local or Account · Cloud. Its accessible description explains the storage boundary. Desktop Moments without an available cover show a compact date tile, and photo cards retain their full-height image. In Moment Story, the introduction heading and edit action share the width of the opening prose. Keepsakes retain the wider gallery layout.
+
+PDF Studio puts Download PDF in the preview header. It becomes available when the preview is current. The rendered cover presents its edition once, and reading pages still carry the running header. In short mobile layouts up to 380 CSS px high, pages with a standalone docked + have space below their scroll area so pinned tabs and page actions remain reachable. Regular phone layouts, the movable + and the existing tap and drag gestures remain available.
+
 ## Dashboard, Activity Detail and quick Task filters (20 November 2026, development)
 
 Dashboard sections keep their own height, including when a neighboring panel has more records. In the desktop Activity preview, timing and the parent Moment can wrap across two lines. The Tasks preview opens the saved list view through View Tasks. On phones the greeting explains the + in the page flow. The menu explains double-tap Back and drag. A form opens immediately when chosen from the menu.

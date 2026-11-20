@@ -87,13 +87,15 @@ export class MomentPdfPainter {
     this.ctx.fillRect(0, 0, PDF_PAGE_WIDTH, PDF_PAGE_HEIGHT);
     this.ctx.textBaseline = 'top';
     this.y = INSET;
-    this.ctx.fillStyle = this.palette.accent;
-    this.ctx.font = '700 10px system-ui, sans-serif';
-    this.ctx.fillText(
-      (this.visualStyle === 'legacy' ? 'DN  /  ' : '')
-        + (PDF_TEMPLATE_NAMES[this.template] || 'Moment summary').toUpperCase(),
-      INSET, 23,
-    );
+    if (!this.includeCover || this.pageNumber !== 1) {
+      this.ctx.fillStyle = this.palette.accent;
+      this.ctx.font = '700 10px system-ui, sans-serif';
+      this.ctx.fillText(
+        (this.visualStyle === 'legacy' ? 'DN  /  ' : '')
+          + (PDF_TEMPLATE_NAMES[this.template] || 'Moment summary').toUpperCase(),
+        INSET, 23,
+      );
+    }
   }
   async finishPage() {
     if (!this.canvas) return;
