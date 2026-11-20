@@ -13,7 +13,7 @@ for(const [width,height,theme] of [[320,640,'dark'],[390,844,'light'],[430,932,'
     await expect(page.getByRole('heading',{name:'Tasks',exact:true})).toHaveCount(1);
     await expect(taskPage.getByText('Standalone and Moment-linked Tasks.')).toHaveCount(0);
     await expect(taskPage.locator('.dn-task-eyebrow')).toHaveCount(0);
-    const metrics=taskPage.locator('.dn-task-metrics span');
+    const metrics=taskPage.locator('.dn-task-metrics button');
     await expect(metrics).toHaveCount(3);
     const baseline=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_expenses','dn_guest_incomes'].map(key=>localStorage.getItem(key)));
     await page.getByRole('button',{name:'Open quick create menu'}).tap();
@@ -84,7 +84,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
       .toBeGreaterThanOrEqual(13);
     expect(await context.evaluate(node => parseFloat(getComputedStyle(node).lineHeight)))
       .toBeGreaterThanOrEqual(19);
-    const metrics = page.locator('.dn-tasks-page .dn-task-metrics span');
+    const metrics = page.locator('.dn-tasks-page .dn-task-metrics button');
     await expect(metrics).toHaveCount(3);
     for (const label of await metrics.all()) {
       expect(await label.evaluate(node => parseFloat(getComputedStyle(node).fontSize)))

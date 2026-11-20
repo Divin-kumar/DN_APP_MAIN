@@ -1,7 +1,26 @@
 import { test, expect } from '@playwright/test';
-import { seedGuest } from './fixtures.js';
+import { calendarDate, fixtureMoments, seedGuest } from './fixtures.js';
 
 test.use({ timezoneId: 'Asia/Kolkata' });
+
+test('desktop empty Moments panel stays compact next to populated Activities', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const moments = fixtureMoments();
+  for (const moment of moments) moment.date = calendarDate(-7);
+  await seedGuest(page, { moments });
+  await page.goto('/dashboard');
+  const empty = page.getByRole('region', { name: 'Moments', exact: true });
+  const populated = page.getByRole('region', { name: 'Activities', exact: true });
+  await expect(empty.getByRole('link', { name: 'Browse Moments' })).toBeVisible();
+  await expect(populated.getByRole('button', { name: 'Open Book a lakeside stay' })).toBeVisible();
+  const geometry = await page.evaluate(() => {
+    const short = document.querySelector('.dashboard-compact [aria-label="Moments"]').getBoundingClientRect();
+    const tall = document.querySelector('.dashboard-compact [aria-label="Activities"]').getBoundingClientRect();
+    return { topDifference: Math.abs(short.y - tall.y), heightDifference: tall.height - short.height };
+  });
+  expect(geometry.topDifference).toBeLessThanOrEqual(1);
+  expect(geometry.heightDifference).toBeGreaterThan(35);
+});
 
 const moments = [
   { id: 'recent', name: 'A family day', type: 'Personal', date: '2026-10-26', activities: [

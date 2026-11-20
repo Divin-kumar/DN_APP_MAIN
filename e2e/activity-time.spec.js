@@ -81,7 +81,7 @@ test('universal Activity creation saves its clock time and the next draft captur
   const errors=await seedGuest(page);
   await page.goto('/events/moment-one/story');
   const open=async()=>{
-    await page.getByRole('button',{name:'Open quick create menu',exact:true}).click();
+    await page.getByRole('button',{name: /^Open quick create menu/}).click();
     await page.getByRole('button',{name:'Activity',exact:true}).click();
   };
   await open();

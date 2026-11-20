@@ -10,7 +10,7 @@ import TaskEditor, { TaskRepeatActionSummary } from '../components/tasks/TaskEdi
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
 import { ConditionChips } from '../components/common/ConditionBuilder';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine.js';
-import { taskFilterFields, taskViewConditionGroup } from '../utils/taskConditionFields.js';
+import { TASK_STATUS_OPTIONS, taskFilterFields, taskStatusSelection, taskViewConditionGroup, taskViewWithoutStatus } from '../utils/taskConditionFields.js';
 import { filterTaskResults } from '../utils/taskListFilters.js';
 import { configuredConditionGroup, LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES } from '../utils/listViewDefaults.js';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -84,6 +84,9 @@ export function TaskListContent() {
   const eventReady = isRecordScopeLoaded(eventStore, `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`, getActiveSampleScenario(user?.uid));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
+  const statusSelection = useMemo(() => taskStatusSelection(view), [view]);
+  const statusCandidates = useMemo(() => statusSelection === 'all' ? matches
+    : filterTaskResults(tasks, taskViewWithoutStatus(view), today, moments), [matches, moments, statusSelection, tasks, today, view]);
   const selectedTask = tasks.find((task) => task.id === selectedTaskId);
   const nextTask = selection?.fromRepeat && selectedTask?.status === 'in-progress' && selectedTask.repeat ? selectedTask : null;
   const highlightedOutsideFilters = Boolean(selectedTask && !matches.some((task) => task.id === selectedTask.id));
@@ -127,8 +130,6 @@ export function TaskListContent() {
     });
     return () => cancelAnimationFrame(frame);
   }, [selectedTaskId, selectedTask]);
-  const active = matches.filter((task) => task.status === 'in-progress').length;
-  const completed = matches.filter((task) => task.status === 'completed').length;
   const run = async (change, message) => {
     if (pendingRef.current) return null;
     pendingRef.current = true; setBusy(true);
@@ -190,10 +191,17 @@ export function TaskListContent() {
   const confirmLabel = isDelete ? 'Delete Task' : isSkip ? 'Skip occurrence' : confirm?.task.repeat ? 'Pause repeat' : 'Cancel Task';
   const skipNextDate = isSkip && previewNextRepeat(confirm.task, confirm.task.repeat.frequency, confirm.task.dueDate);
   return <div className="dn-tasks-page">
-    <div className="dn-task-metrics" aria-label="Task summary">
-      <span><strong>{matches.length}</strong> All Tasks</span>
-      <span><strong>{active}</strong> In progress</span>
-      <span><strong>{completed}</strong> Completed</span>
+    <div className="dn-task-metrics" role="group" aria-label="Filter Tasks by status"
+      aria-description="Counts match your search and other filters.">
+      {TASK_STATUS_OPTIONS.map(({ value, label }) => <button key={value} type="button"
+        aria-pressed={statusSelection === value}
+        onClick={() => {
+          if (statusSelection === value) return;
+          const { group } = taskViewWithoutStatus(view);
+          changeView({ group, status: value });
+        }}>
+        <strong>{value === 'all' ? statusCandidates.length : statusCandidates.filter((task) => task.status === value).length}</strong>{' '}{label}
+      </button>)}
     </div>
     {store.error ? <p className="dn-task-feedback" role="alert">{store.error} <button type="button" onClick={() => store.loadTasks()}>Retry</button></p> : null}
     {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}

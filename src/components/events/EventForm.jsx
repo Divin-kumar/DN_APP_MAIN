@@ -1,5 +1,5 @@
 import ActivityTimeField from '../common/ActivityTimeField';
-import { activityTime, activityTimePatch, currentEntryTime } from '../../utils/activityTime';
+import { activityTime, activityTimePatch, currentEntryTime, entryDateTimeSummary } from '../../utils/activityTime';
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useRef, useState } from 'react';
@@ -126,7 +126,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         </motion.label>
       ) : null}
 
-      <FormDisclosure label="More options" hint={[form.date, form.time].filter(Boolean).join(' · ')}>
+      <FormDisclosure hint={entryDateTimeSummary(form.date || '', form.time)}>
         <div className="activity-date-time-row">
           <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
           <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />

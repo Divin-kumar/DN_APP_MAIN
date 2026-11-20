@@ -290,6 +290,8 @@ html[data-theme] .activity-detail-page .moment-transactions.is-minimal.has-linke
   padding: 3px 6px;
 }
 .activity-detail-page .dn-content-row-body {
+  grid-column: 2;
+  grid-row: 1;
   max-width: 72ch;
   font-size: 15.5px;
   line-height: 1.75;

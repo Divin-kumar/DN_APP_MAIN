@@ -11,7 +11,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     const saved = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
       .map((key) => localStorage.getItem(key)));
 
-    await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
+    await page.getByRole('button', { name: /^Open quick create menu/ }).click();
     await page.getByRole('button', { name: 'Life moment', exact: true }).click();
     const moment = page.getByRole('dialog', { name: 'Create a life moment', exact: true });
     const momentName = moment.getByRole('textbox', { name: 'Moment name', exact: true });
@@ -40,7 +40,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     await expect(moment).toHaveCount(0);
 
     await page.goto('/financials/transactions');
-    await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
+    await page.getByRole('button', { name: /^Open quick create menu/ }).click();
     await page.getByRole('button', { name: 'Transaction', exact: true }).click();
     const transaction = page.getByRole('dialog', { name: 'Add Transaction', exact: true });
     const amount = transaction.getByRole('spinbutton', { name: 'Amount *', exact: true });
@@ -71,8 +71,9 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) for (const t
     const action = introduction.getByRole('button', { name: 'Add introduction' });
     await expect(action).toBeVisible();
     const target = await action.boundingBox();
-    expect(target.height).toBeGreaterThanOrEqual(44);
-    expect(target.width).toBeGreaterThanOrEqual(44);
+    // Chromium can report a 44px target as 43.99997px during frame settling.
+    expect(target.height).toBeGreaterThanOrEqual(43.99);
+    expect(target.width).toBeGreaterThanOrEqual(43.99);
     expect(target.x + target.width).toBeLessThanOrEqual(width + 1);
     const before = await page.evaluate(() => [
       'dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses',

@@ -8,7 +8,7 @@ for (const [width, height, theme] of [[320,640,'dark'],[390,844,'dark'],[430,932
     const errors=await seedGuest(page,{theme});
     await page.goto('/activities');
     const before=await page.evaluate(()=>['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k=>localStorage.getItem(k)));
-    await page.getByRole('button',{name:'Open quick create menu',exact:true}).click();
+    await page.getByRole('button',{name: /^Open quick create menu/}).click();
     await page.getByRole('button',{name:'Activity',exact:true}).click();
     const dialog=page.getByRole('dialog',{name:'Add an activity',exact:true});
     const title=dialog.getByRole('textbox',{name:/^(Activity|Entry) title$/});

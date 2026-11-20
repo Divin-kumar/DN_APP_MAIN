@@ -1,5 +1,13 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Dashboard, Activity Detail and quick Task filters (20 November 2026, development)
+
+Dashboard sections share row spacing and keep their own height, including when a neighboring panel has more records. On the phone Dashboard the docked + has a Navigate & create label. The menu explains double-tap Back and drag. A form still opens immediately when chosen from the menu.
+
+Tasks offers All Tasks, In progress and Completed above the list. Choosing a status updates the same applied filters shown by Refine, replaces existing status rules, and keeps search, sorting and non-status rules. Counts show what each shortcut would match with the remaining criteria. The result count shows the presently displayed list. Saved legacy status rules and advanced status filters still work. A complex status rule with no equivalent shortcut remains visible in the applied filters without selecting a shortcut.
+
+Original Activity writing uses the same reading column as dated entries on desktop. Moment and Activity forms summarize the local date and any explicit time in More options. Date and Time remain paired in the editor, with the existing create defaults and no new time for untimed records. Swipe actions continue to support touch, with keyboard instructions, focus and the existing action menu.
+
 ## Compact Refine and entry forms (19 November 2026, development)
 
 Refine groups the Sort by heading, current direction and Reverse order action above the choices. The draft count and actions stay below the scrolling editor. In a collapsed applied-filter strip narrower than 440 px, the first filter stays in view with a +N control for the remaining filters. Expanding reveals the next filter in the same horizontal strip. Filters still support direct editing, removal and reordering.

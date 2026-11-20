@@ -24,7 +24,7 @@ for (const [width, height, theme] of [
     await expect(page.getByRole('region', { name: 'Story and PDF appearance' })).toBeVisible();
 
     await page.goto('/tasks');
-    expect(await size(page.locator('.dn-task-metrics span').first())).toBeGreaterThanOrEqual(12);
+    expect(await size(page.locator('.dn-task-metrics button').first())).toBeGreaterThanOrEqual(12);
     expect(await page.locator('.dn-task-discovery-summary').evaluate((el) =>
       getComputedStyle(el).display)).toBe('grid');
     const before = await page.evaluate(() => [

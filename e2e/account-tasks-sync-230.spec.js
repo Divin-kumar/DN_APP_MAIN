@@ -38,7 +38,7 @@ test('signed-in Tasks await saves, retain failures, receive updates and clear on
   });
   await expect(dashboard.getByRole('heading', { name: /Good .*, Test/ })).toBeVisible();
   expect(await page.evaluate(() => window.taskTransport === undefined)).toBe(true);
-  await page.getByRole('button', { name: 'Open quick create menu', exact: true }).click();
+  await page.getByRole('button', { name: /^Open quick create menu/ }).click();
   await page.getByRole('button', { name: 'Task', exact: true }).click();
   const quickTask = page.getByRole('dialog', { name: 'New Task', exact: true });
   await quickTask.getByLabel('Task title', { exact: true }).fill('Draft during sync');

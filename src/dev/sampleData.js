@@ -4,7 +4,7 @@ import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigrat
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
 export const GUEST_TOUR_SCENARIO = 'tour';
-export const GUEST_TOUR_VERSION = '2026.11.17.3';
+export const GUEST_TOUR_VERSION = '2026.11.20.1';
 const TOUR_DISMISSED_KEY = 'dn_guest_tour_declined';
 const FIXTURE_DATA_KEY = 'dn_dev_fixture_data';
 const ANCHOR_DATE = new Date();
@@ -293,6 +293,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
       'Open Story to read the Journal, Gallery to see the originals, or PDF Studio to make a book. PDF Studio lets you pick a design, light or dark pages, and which activities and photos to include. Use Update preview before downloading.',
       'On a phone, tap the blue + to open Navigate & create, or quickly double-tap it to go back one page. Drag + to move it and choose Return to dock to restore its position. A mobile sheet can be pulled down to close.',
       'Each Activity is independent. Open one and use + → Add entry to write another dated note. Open More options when creating or editing an Activity to find Description, Date, Time and Priority. Task and Transaction forms show Moment and Activity side by side, with Repeat below them when available.',
+      'In Tasks, tap All Tasks, In progress or Completed to switch status without clearing your search or other filters.',
       'In Moments, Activities or Transactions, Clear search keeps your filters and sort order. Restore saved defaults reloads the list preferences. Settings → Data & Backup can include original files in the JSON backup, and you can cancel backup preparation before restoring.',
     ].join('\n\n'),
     attachments: [], memories: [{ id: 'dn-tour-memory-1', title: 'Why we keep photos',

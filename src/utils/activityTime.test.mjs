@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { activityTime, normalizeActivityTime, compareActivityDateTime, currentEntryTime } from './activityTime.js';
+import { activityTime, normalizeActivityTime, compareActivityDateTime, currentEntryTime, entryDateTimeSummary } from './activityTime.js';
 import { sortedSummaryActivities } from './summaryAttachments.js';
 import { projectActivities, selectActivityEntries } from './activityRecords.js';
 import { buildMomentStory, groupMomentStoryTasks } from './momentStory.js';
@@ -15,6 +15,12 @@ test('new-entry defaults format the local clock with minute precision, including
   assert.equal(currentEntryTime(new Date(2026,9,29,0,0,59)), '00:00');
   assert.equal(currentEntryTime(new Date(2026,9,29,7,5)), '07:05');
   assert.equal(currentEntryTime(new Date(2026,9,29,23,59)), '23:59');
+});
+test('form date summaries show local calendar dates and only explicitly supplied times', () => {
+  assert.match(entryDateTimeSummary('2026-11-20', '00:05'), /^20 Nov 2026 · 12:05\s+am$/i);
+  assert.equal(entryDateTimeSummary('2026-11-20', ''), '20 Nov 2026');
+  assert.equal(entryDateTimeSummary('', ''), 'Choose date');
+  assert.match(entryDateTimeSummary(undefined, '18:20'), /^6:20\s+pm$/i);
 });
 test('clock parsing validates midnight, invalid historical values and explicit clearing of legacy aliases', () => {
   assert.equal(normalizeActivityTime('0:00'), '00:00');

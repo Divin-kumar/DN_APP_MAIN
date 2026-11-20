@@ -3,6 +3,7 @@ import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
 import RichTextEditor from '../common/RichTextEditor';
+import { entryDateTimeSummary } from '../../utils/activityTime';
 import { getActiveCodeListMeta } from '../../utils/codeLists';
 
 // Shared Activity editor. All supported Moment modes expose the same writing
@@ -17,8 +18,7 @@ export default function ActivityFormFields({
   const priority = value.priority || 'medium';
   // Show existing editable values before expanding More options.
   const metadata = [
-    showDate ? (value.date || 'Choose date') : null,
-    value.time,
+    entryDateTimeSummary(showDate ? (value.date || '') : undefined, value.time),
     value.description && 'Description added',
   ].filter(Boolean).join(' · ');
   return <>

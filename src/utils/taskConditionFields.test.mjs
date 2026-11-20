@@ -1,9 +1,24 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { compileConditionGroup, emptyGroup } from './conditionEngine.js';
-import { compactTaskRefineGroup, taskDueWindow, taskFilterFields, taskViewConditionGroup } from './taskConditionFields.js';
+import { compactTaskRefineGroup, taskDueWindow, taskFilterFields, taskStatusSelection, taskViewConditionGroup, taskViewWithoutStatus } from './taskConditionFields.js';
 import { filterTaskResults } from './taskListFilters.js';
 import { sortIndependentTasks } from './independentTasks.js';
+
+test('Task status shortcuts preserve search, sort and non-status rules from older and advanced filters', () => {
+  const statusRule = { id: 'done', kind: 'rule', field: 'status', operator: 'eq', value: 'completed' };
+  const titleRule = { id: 'title', kind: 'rule', field: 'title', operator: 'has', value: 'trip' };
+  const noteRule = { id: 'notes', kind: 'rule', field: 'notes', operator: 'has', value: 'tickets' };
+  const view = { search: 'rail', direction: 'desc', priority: 'high', due: 'next7',
+    group: { ...emptyGroup(), join: 'OR', children: [statusRule, titleRule, noteRule] } };
+  assert.equal(taskStatusSelection(view), null);
+  assert.equal(taskStatusSelection({ ...view, group: { ...emptyGroup(), children: [statusRule, titleRule] } }), 'completed');
+  assert.equal(taskStatusSelection({ status: 'in-progress' }), 'in-progress');
+  assert.deepEqual(taskViewWithoutStatus(view), {
+    ...view, status: 'all', group: { ...view.group, children: [titleRule, noteRule] },
+  });
+  assert.equal(taskStatusSelection(taskViewWithoutStatus(view)), 'all');
+});
 
 const tasks = [
   { id:'overdue', title:'Renew passport', notes:'Apply online', status:'in-progress',

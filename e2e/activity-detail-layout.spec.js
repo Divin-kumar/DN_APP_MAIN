@@ -1,5 +1,24 @@
 import { test, expect } from '@playwright/test';
-import { fixtureMoments, seedGuest, activityDetailAction } from './fixtures.js';
+import { calendarDate, fixtureMoments, seedGuest, activityDetailAction } from './fixtures.js';
+
+test('desktop original Activity writing aligns with the dated entry text', async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  const moments = fixtureMoments();
+  Object.assign(moments[0].activities[0], {
+    description: 'Confirm the appointment and cost before booking.',
+    entries: [{ id: 'follow-up', date: calendarDate(4), time: '10:45', description: 'The booking is confirmed.' }],
+  });
+  await seedGuest(page, { moments });
+  await page.goto('/events/moment-one/activities/shared');
+  const original = page.locator('.dn-content-row.is-untimed .dn-content-row-body');
+  const dated = page.locator('.dn-content-row:not(.is-untimed) .dn-content-row-body');
+  await expect(original).toBeVisible();
+  await expect(dated).toBeVisible();
+  const [first, next] = await Promise.all([original.boundingBox(), dated.boundingBox()]);
+  expect(first.width).toBeGreaterThan(350);
+  expect(Math.abs(first.x - next.x)).toBeLessThanOrEqual(1);
+  await expect(page.getByRole('button', { name: 'Edit original activity writing' })).toBeVisible();
+});
 
 test('detail shows actual content in reading order, compact file previews and recorded dates', async ({ page }) => {
   const moments = fixtureMoments();

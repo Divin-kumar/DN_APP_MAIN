@@ -28,6 +28,43 @@ async function selectOption(page,name,value){
   await list.getByRole('option', { name: value, exact: true }).click();
 }
 
+for (const [width, theme] of [[320, 'light'], [430, 'dark'], [1440, 'light'], [1440, 'dark']]) {
+  test(`Task status shortcuts and Refine stay in sync at ${width}px ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 932 });
+    await seedTasks(page, theme);
+    const statuses = page.getByRole('group', { name: 'Filter Tasks by status' });
+    const all = statuses.getByRole('button', { name: '3 All Tasks' });
+    const completed = statuses.getByRole('button', { name: '1 Completed' });
+    const inProgress = statuses.getByRole('button', { name: '2 In progress' });
+    const results = page.locator('.dn-independent-task-row');
+    await expect(all).toHaveAttribute('aria-pressed', 'true');
+    await all.focus();
+    await page.keyboard.press('Tab');
+    await expect(inProgress).toBeFocused();
+    expect(await inProgress.evaluate(button => getComputedStyle(button).outlineStyle)).toBe('solid');
+    await page.keyboard.press('Tab');
+    await expect(completed).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(completed).toHaveAttribute('aria-pressed', 'true');
+    await expect(all).toBeVisible();
+    await expect(results).toHaveCount(1);
+    await expect(results.first()).toContainText('Archive old pictures');
+    await expect(page.locator('.dn-list-controls-context')).toHaveText('1 Task shown');
+    await page.getByRole('button', { name: 'Refine', exact: true }).click();
+    const sheet = page.getByRole('dialog', { name: 'Refine Tasks' });
+    await selectOption(page, 'Value for Status', 'In progress');
+    await sheet.getByRole('button', { name: 'Show results' }).click();
+    await expect(inProgress).toHaveAttribute('aria-pressed', 'true');
+    await expect(results).toHaveCount(2);
+    await page.getByRole('searchbox', { name: 'Search Tasks' }).fill('Review');
+    await expect(statuses.getByRole('button', { name: '1 All Tasks' })).toBeVisible();
+    await statuses.getByRole('button', { name: '1 All Tasks' }).click();
+    await expect(results).toHaveCount(1);
+    await expect(results.first()).toContainText('Review travel documents');
+    await expect(page.getByRole('searchbox', { name: 'Search Tasks' })).toHaveValue('Review');
+  });
+}
+
 for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
   test('Task Refine shares editable chips and preserves draft/cancel at '+width+'px '+theme,async ({page},testInfo)=>{
     test.setTimeout(60000);

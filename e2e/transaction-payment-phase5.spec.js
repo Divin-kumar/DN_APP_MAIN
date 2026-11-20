@@ -1,6 +1,20 @@
 import { test, expect } from '@playwright/test';
 import { fixtureMoments, seedGuest } from './fixtures.js';
 
+test('transaction actions expose a keyboard menu and return focus to the row', async ({ page }) => {
+  await seedGuest(page, { theme: 'light' });
+  await page.goto('/financials/transactions');
+  const row = page.getByRole('listitem', { name: /^Room deposit/ });
+  await expect(row).toHaveAttribute('aria-haspopup', 'menu');
+  await row.focus();
+  await page.keyboard.press('ArrowRight');
+  const menu = page.getByRole('menu', { name: 'Actions for Room deposit' });
+  await expect(menu.getByRole('menuitem', { name: 'Edit' })).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(menu).toBeHidden();
+  await expect(row).toBeFocused();
+});
+
 test('Phase 5 new Cash expense is required, persisted, edited to Online, and shown in list', async ({page}) => {
   const errors = await seedGuest(page,{moments:fixtureMoments(), incomes:[], expenses:[]});
   await page.goto('/financials/transactions?create=transaction');

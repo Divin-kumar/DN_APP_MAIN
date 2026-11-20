@@ -13,6 +13,16 @@ export const normalizeActivityTime = (value) => {
 export const activityTime = (activity = {}) => Object.prototype.hasOwnProperty.call(activity, 'time')
   ? normalizeActivityTime(activity.time)
   : normalizeActivityTime(activity.dueTime) || normalizeActivityTime(activity.startTime);
+
+const entrySummaryDate = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+const entrySummaryTime = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', minute: '2-digit', hour12: true, timeZone: 'UTC' });
+
+export const entryDateTimeSummary = (date, time) => {
+  const day = parseMomentDate(date);
+  const clock = normalizeActivityTime(time);
+  const readableTime = clock ? entrySummaryTime.format(new Date(`2000-01-01T${clock}:00Z`)) : '';
+  return [day ? entrySummaryDate.format(day) : date === undefined ? '' : 'Choose date', readableTime].filter(Boolean).join(' · ');
+};
 export const compareActivityTimes = (a, b, direction = 'asc') => {
   const first = activityTime(a), second = activityTime(b);
   if (!first || !second) return first ? -1 : second ? 1 : 0;

@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-583 | Fix Dashboard, Activity and Tasks audit findings
+
+- **Scope.** Size Dashboard panels to their content and share preview row styling. Align untimed original Activity writing with dated text on desktop. Make Task status counts usable as direct filters and reflect the active status from Refine. Add a Dashboard label for the mobile creator, readable Moment and Activity form timestamps, and keyboard instructions for swipe action menus.
+- **Compatibility.** Status shortcuts replace status criteria while preserving other filters, search, sort and record data. Date/time defaults, optional times, Activity entries, form actions, create gestures and Finance mutations use the existing behavior. Guest tour edition 2026.11.20.1 teaches the status shortcuts and keeps the backup guidance. Edited demos wait for an explicit refresh.
+- **Executed.** Build and lint passed. Chromium passed 75 focused journeys and a further 19-case run covering the mobile creator, recording and editing transactions, keyboard menu focus, Task actions and backup. WebKit verified the Task status, form, mobile navigation, Activity reading and transaction keyboard journeys on the built app. Real iPhone Safari and VoiceOver are still unverified.
+
 ## CHG-20261119-582 | Lighten Guest Dashboard and Moment startup
 
 - **Scope.** Split Guest-local Moment, income and expense services from Firestore and load cloud services for account reads, writes and subscriptions. Scope and revision checks guard deferred account writes, and old subscriptions can be cancelled while their module loads. Dashboard reads Tasks when their panel is shown and calculates the selected date view for each visible panel. Quick Create keeps the Task draft editable during the load and enables Create when the scope is ready and the form is valid.

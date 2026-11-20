@@ -42,7 +42,7 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups'))[0].activities.find(x=>x.title==='Manually untimed activity').time)).toBe('');
   const open=async()=>{
-    await page.getByRole('button',{name:'Open quick create menu',exact:true}).click();
+    await page.getByRole('button',{name: /^Open quick create menu/}).click();
     await page.getByRole('button',{name:'Activity',exact:true}).click();
   };
   await open();await expect(dialog.getByLabel('Activity time',{exact:true})).toHaveValue('10:20');

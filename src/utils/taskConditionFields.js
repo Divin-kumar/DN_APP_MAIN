@@ -85,3 +85,35 @@ export const compactTaskRefineGroup = (value) => {
   };
   return prune(normalizeConditionGroup(value)) || emptyGroup();
 };
+
+export const TASK_STATUS_OPTIONS = [
+  { value: 'all', label: 'All Tasks' },
+  { value: 'in-progress', label: 'In progress' },
+  { value: 'completed', label: 'Completed' },
+];
+
+// A status shortcut replaces status criteria only, including older saved ones.
+// Keep every other condition and its existing AND/OR relationship.
+export const taskViewWithoutStatus = (view) => {
+  const withoutStatus = (node) => {
+    if (node.kind !== 'group') return node.field === 'status' ? null : node;
+    const children = node.children.map(withoutStatus).filter(Boolean);
+    return children.length ? { ...node, children } : null;
+  };
+  return { ...view, status: 'all', group: withoutStatus(normalizeConditionGroup(view.group)) || emptyGroup() };
+};
+
+export const taskStatusSelection = (view) => {
+  const criteria = [];
+  const collect = (node, required) => {
+    if (node.kind === 'group') {
+      node.children.forEach((child) => collect(child, required && (node.join === 'AND' || node.children.length === 1)));
+    } else if (node.field === 'status') {
+      criteria.push({ rule: node, required });
+    }
+  };
+  collect(compactTaskRefineGroup(taskViewConditionGroup(view)), true);
+  if (!criteria.length) return 'all';
+  const [{ rule, required }] = criteria;
+  return criteria.length === 1 && required && rule.operator === 'eq' ? rule.value : null;
+};
