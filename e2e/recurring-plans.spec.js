@@ -496,11 +496,11 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
   const overdue = plans.getByRole('region', { name: 'Overdue' });
   const later = plans.getByRole('region', { name: 'Later' });
   await expect(plans.getByRole('region').first()).toHaveAccessibleName('Due today');
-  const dueTotal = plans.locator('.dn-expense-plan-total');
-  await expect(dueTotal).toHaveText('Due today & overdue ₹200');
+  await expect(plans).not.toContainText('Due today & overdue');
+  await expect(plans).toHaveCSS('background-image', 'none');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹0');
   await expect(dueToday.getByRole('listitem')).toContainText('Mobile');
-  await expect(dueToday.getByRole('heading')).toHaveText('Due today1 bill');
+  await expect(dueToday.getByRole('heading')).toHaveText('Due today');
   await expect(overdue.getByRole('listitem')).toContainText('Internet');
   await expect(later.getByRole('listitem')).toContainText('Insurance');
   await plans.getByRole('button', { name: 'Close dialog' }).click();
@@ -516,12 +516,11 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
     await payment.getByRole('button', { name: 'Save payment' }).click();
     await expect(plans.getByRole('status')).toContainText('Payment recorded.');
     await expect(later.getByRole('button', { name: `Record payment for ${title}` })).toBeVisible();
-    await expect(dueTotal).toHaveCount(0);
   }
   await expect(dueToday).toBeHidden();
   await expect(overdue).toBeHidden();
   await expect(later.getByRole('listitem')).toHaveCount(3);
-  await expect(later.getByRole('heading')).toContainText('3 bills');
+  await expect(later.getByRole('heading')).toHaveText('Later');
   await expect(trigger).toContainText('Next 12 Dec 2026');
   await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹200');
   expect((await readGuest(page, 'dn_guest_expenses')).map(({ name }) => name)).toEqual(expect.arrayContaining(['Internet', 'Mobile']));
@@ -724,26 +723,27 @@ test.describe('Overdue dates and the readable payment date', () => {
         ]));
       });
 
+      const luminance = value => {
+        const channels = value.match(/\d+/g).slice(0, 3).map(channel => Number(channel) / 255);
+        return channels.reduce((total, channel, index) => total
+          + (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
+          * [0.2126, 0.7152, 0.0722][index], 0);
+      };
+      const checkContrast = (color, background) => {
+        const text = luminance(color);
+        const surface = luminance(background);
+        expect((Math.max(text, surface) + 0.05) / (Math.min(text, surface) + 0.05)).toBeGreaterThanOrEqual(4.5);
+      };
       const checkTile = async (tile, textCount) => {
         await expect(tile).toBeVisible();
         const contrast = await tile.evaluate(element => {
-          const luminance = value => {
-            const channels = value.match(/\d+/g).slice(0, 3).map(channel => Number(channel) / 255);
-            return channels.reduce((total, channel, index) => total
-              + (channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4)
-              * [0.2126, 0.7152, 0.0722][index], 0);
-          };
           const background = getComputedStyle(element).backgroundColor;
-          const surface = luminance(background);
-          const ratios = [...element.querySelectorAll('strong, small')].map(child => {
-            const text = luminance(getComputedStyle(child).color);
-            return (Math.max(text, surface) + 0.05) / (Math.min(text, surface) + 0.05);
-          });
-          return { background, ratios };
+          const colors = [...element.querySelectorAll('strong, small')].map(child => getComputedStyle(child).color);
+          return { background, colors };
         });
         expect(contrast.background).toMatch(/^rgb\(/);
-        expect(contrast.ratios).toHaveLength(textCount);
-        for (const ratio of contrast.ratios) expect(ratio).toBeGreaterThanOrEqual(4.5);
+        expect(contrast.colors).toHaveLength(textCount);
+        for (const color of contrast.colors) checkContrast(color, contrast.background);
       };
 
       await page.goto('/tasks');
@@ -754,7 +754,13 @@ test.describe('Overdue dates and the readable payment date', () => {
       await page.getByRole('button', { name: /Upcoming expenses/ }).tap();
       const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
       const overdue = plans.getByRole('region', { name: 'Overdue' });
-      await checkTile(overdue.locator('.dn-expense-plan-day'), 1);
+      const dueDate = overdue.locator('.dn-expense-plan-day');
+      await expect(dueDate).toHaveText('12 Nov 2026');
+      const [color, background] = await dueDate.evaluate(element => [
+        getComputedStyle(element).color,
+        getComputedStyle(element.closest('[role="dialog"]')).backgroundColor,
+      ]);
+      checkContrast(color, background);
       await overdue.getByRole('button', { name: 'Record payment for Internet' }).tap();
 
       const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });

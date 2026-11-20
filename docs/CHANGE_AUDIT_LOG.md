@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-591 | Simplify the Upcoming expenses sheet
+
+- **Scope.** Give the list a continuous surface, plain date and frequency text, and thin row dividers. Remove the top total, group counts, date chips and action icons. Keep a green Record payment action beside the amount and quiet text actions underneath. Flatten the payment context, confirmations and receipt.
+- **Compatibility.** The existing pay, edit, skip and end flows, storage and focus return still apply. The Guest tour edition advances to 2026.11.20.4 through explicit Refresh demo.
+- **Executed.** Build, lint, documentation and all 636 Node checks passed. Forty Chromium checks and eight focused WebKit checks passed. Reviewed the bill list and payment flow at phone widths of 320, 390 and 430 px and at 1,280 px desktop. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-590 | Redesign Upcoming expenses
 
 - **Scope.** Replace abbreviated date tiles and tall action rows with compact bill rows, full dates, sticky group labels and a due-today-and-overdue total when there are at least two urgent bills. Keep Record payment adjacent to the amount and all three schedule actions directly available, with bill context for assistive technology. Clarify scheduled dates in Record payment, remove the disabled time field from Edit expense plan and simplify confirmation and receipt states.

@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward } from 'lucide-react';
+import { CalendarDays, ChevronRight } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
@@ -50,32 +50,26 @@ function ExpensePlanList({ plans, onSelect }) {
   ];
 
   if (!sorted.length) return <div className="dn-expense-plan-empty">
-    <CalendarDays size={22} aria-hidden="true" />
-    <div><strong>No upcoming expenses</strong><p>To schedule a bill, choose a repeat frequency when adding a transaction.</p></div>
+    <strong>No upcoming expenses</strong>
+    <p>Choose a repeat frequency when adding a transaction to schedule a bill.</p>
   </div>;
 
-  const dueNow = groups[0].items.concat(groups[1].items);
   return <div className="dn-expense-plan-groups">
-    {dueNow.length > 1 ? <div className="dn-expense-plan-total">
-      <span>Due today &amp; overdue</span>{' '}
-      <strong>{formatAmount.format(dueNow.reduce((sum, plan) => sum + plan.amount, 0))}</strong>
-    </div> : null}
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
-      {!single && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>
-        <span>{label}</span><span>{items.length} {items.length === 1 ? 'bill' : 'bills'}</span>
-      </h4>}
+      {!single && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>{label}</h4>}
       <ul className="dn-expense-plan-list" role="list">
         {items.map((plan) => {
           const nameId = `dn-plan-name-${plan.id}`;
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
           const statusLabel = timing === 'later' ? 'Due' : label;
-          return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id} data-timing={timing}>
+          return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
             <strong id={nameId} className="dn-expense-plan-name">{plan.name}</strong>
             <div className="dn-expense-plan-meta" id={dateId}>
               <span className={single ? `dn-expense-plan-status is-${timing}` : 'sr-only'}>{statusLabel}</span>{' '}
-              <time className="dn-expense-plan-day" dateTime={plan.dueDate}><strong>{formatScheduleDate(plan.dueDate)}</strong></time>{' '}
-              <span className="dn-expense-plan-cadence"><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
+              {single ? <span aria-hidden="true">·</span> : null}{' '}
+              <time className="dn-expense-plan-day" dateTime={plan.dueDate}>{formatScheduleDate(plan.dueDate)}</time>
+              {' '}<span aria-hidden="true">·</span>{' '}<span>{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
             </div>
             <div className="dn-expense-plan-amount-row">
               <span id={amountId}>{formatAmount.format(plan.amount)}</span>
@@ -95,10 +89,10 @@ function ExpensePlanActions({ plan, nameId, onSelect }) {
   const following = previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate);
   return <div className="dn-expense-plan-menu-actions" role="group" aria-labelledby={nameId}>
     <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" aria-describedby={nameId}
-      onClick={(event) => onSelect(plan, 'edit', event.currentTarget)}><Pencil size={14} aria-hidden="true" /> Edit</button>
+      onClick={(event) => onSelect(plan, 'edit', event.currentTarget)}>Edit</button>
     <button type="button" data-plan-manage-action="skip" aria-label="Skip this occurrence" aria-describedby={nameId}
-      disabled={!following} onClick={(event) => onSelect(plan, 'skip', event.currentTarget)}><SkipForward size={14} aria-hidden="true" /> Skip</button>
-    <button type="button" data-plan-manage-action="end" aria-describedby={nameId} className="is-danger"
+      disabled={!following} onClick={(event) => onSelect(plan, 'skip', event.currentTarget)}>Skip</button>
+    <button type="button" data-plan-manage-action="end" aria-describedby={nameId}
       onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>End repeat</button>
   </div>;
 }
@@ -180,8 +174,8 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const visibleNotice = isList ? notice : null;
   const feedback = <div className={`dn-expense-plan-notice${visibleNotice ? ' is-visible' : ''}`}>
     <div className="dn-expense-plan-notice-text" role="status">
-      {visibleNotice ? <><span className="dn-expense-notice-icon"><Check size={15} aria-hidden="true" /></span>
-        <span><strong>{visibleNotice.message}.</strong>{visibleNotice.nextDue ? <> <small>Next due <time dateTime={visibleNotice.nextDue}>{formatScheduleDate(visibleNotice.nextDue)}</time>.</small></> : null}</span></> : null}
+      {visibleNotice ? <><strong>{visibleNotice.message}.</strong>
+        {visibleNotice.nextDue ? <> <small>Next due <time dateTime={visibleNotice.nextDue}>{formatScheduleDate(visibleNotice.nextDue)}</time>.</small></> : null}</> : null}
     </div>
     {visibleNotice?.payment ? <button type="button" ref={viewPaymentRef} className="dn-expense-view-payment" onClick={() => {
       listReturnRef.current = { action: 'receipt', scrollTop: listBodyRef.current.scrollTop };

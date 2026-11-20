@@ -48,7 +48,10 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-expense-
 }
 
 html[data-theme] .dn-expense-plan-dialog .dn-modal-body { overflow-anchor: none; }
-html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top: 40px; }
+html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top: 32px; }
+html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-expense-plan-list-view[role="dialog"][aria-modal="true"] {
+  background-image: none !important;
+}
 
 @media (max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse) {
   html[data-theme] body .dn-modal-backdrop.dn-modal-slide-scrim:has(> .dn-expense-plan-list-view) {
@@ -59,164 +62,117 @@ html[data-theme] .dn-expense-plan-list-view .dn-modal-body { scroll-padding-top:
   }
 }
 
-.dn-expense-plan-groups { display: grid; gap: 10px; }
-.dn-expense-plan-total {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 8px;
-  padding: 9px 10px;
-  border-radius: 10px;
-  background: var(--dn-planning-field);
-}
-.dn-expense-plan-total span { color: var(--color-text-muted); font-size: 13px; }
-.dn-expense-plan-total strong { font-size: 16px; text-align: end; overflow-wrap: anywhere; }
-
+.dn-expense-plan-groups { display: grid; gap: 6px; }
 .dn-expense-plan-heading {
   position: sticky;
   top: 0;
   z-index: 1;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-  min-height: 34px;
-  box-sizing: border-box;
   margin: 0;
-  padding: 4px 8px;
-  border-radius: 8px;
-  background: color-mix(in srgb, var(--dn-form-sheet-base) 88%, var(--color-primary));
-  color: var(--color-text);
+  min-height: 30px;
+  box-sizing: border-box;
+  padding: 6px 3px;
+  background: var(--dn-form-sheet-base);
+  color: var(--color-text-muted);
   font-size: 13px;
-  font-weight: 680;
+  font-weight: 650;
+  line-height: 1.35;
 }
-.dn-expense-plan-heading.is-today { color: var(--action-ink); }
-.dn-expense-plan-heading.is-overdue { color: var(--dn-overdue-ink); background: var(--dn-overdue-fill); }
-.dn-expense-plan-heading > :last-child { color: var(--color-text-muted); font-size: 12px; font-weight: 550; }
+.dn-expense-plan-heading.is-overdue,
+.dn-expense-plan-status.is-overdue { color: var(--dn-overdue-ink); }
 .dn-expense-plan-list { list-style: none; margin: 0; padding: 0; }
 
 .dn-expense-plan-row {
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 4px;
-  padding: 9px 4px 2px;
   min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1px 10px;
+  padding: 9px 3px 2px;
+  border-top: 1px solid var(--dn-planning-line);
 }
-.dn-expense-plan-row + .dn-expense-plan-row { border-top: 1px solid var(--dn-planning-line); }
 .dn-expense-plan-name { font-size: 16px; line-height: 1.3; overflow-wrap: anywhere; }
 .dn-expense-plan-meta {
   display: flex;
-  align-items: center;
+  align-items: baseline;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 1px 5px;
   color: var(--color-text-muted);
   font-size: 12px;
-  line-height: 1.35;
+  line-height: 1.4;
 }
-.dn-expense-plan-day {
-  padding: 3px 5px;
-  border-radius: 6px;
-  background: var(--dn-planning-field);
-  color: var(--color-text);
-  white-space: nowrap;
-}
-.dn-expense-plan-row[data-timing="overdue"] .dn-expense-plan-day {
-  color: var(--dn-overdue-ink);
-  background: var(--dn-overdue-fill);
-}
-.dn-expense-plan-day strong { font-weight: 620; }
-.dn-expense-plan-cadence { display: inline-flex; align-items: center; gap: 4px; }
-.dn-expense-plan-status { color: var(--color-text-muted); font-weight: 650; }
-.dn-expense-plan-status.is-today { color: var(--action-ink); }
-.dn-expense-plan-status.is-overdue { color: var(--dn-overdue-ink); }
+.dn-expense-plan-day { white-space: nowrap; }
+.dn-expense-plan-status { font-weight: 650; }
 
 .dn-expense-plan-amount-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: 4px 8px;
+  gap: 0 8px;
   min-width: 0;
 }
 .dn-expense-plan-amount-row > span,
-.dn-expense-plan-total strong,
 .dn-expense-receipt-head > span { font-variant-numeric: tabular-nums; }
 .dn-expense-plan-amount-row > span {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: clamp(20px, 5vw, 24px);
-  font-weight: 700;
-  letter-spacing: -.025em;
+  font-size: 18px;
+  font-weight: 680;
 }
 
 html[data-theme] .dn-modal .dn-expense-plan-record,
 html[data-theme] .dn-expense-view-payment {
   flex: 0 0 auto;
   min-height: 44px;
-  padding: 6px 11px;
+  max-width: 100%;
+  padding: 4px 8px;
   border: 0;
-  border-radius: 999px;
-  background: #dbeee3;
+  border-radius: 8px;
+  background: transparent;
   color: #195739;
   font: inherit;
   font-size: 13px;
   font-weight: 680;
+  line-height: 1.25;
   cursor: pointer;
 }
 .dn-expense-plan-record { margin-inline-start: auto; }
 html[data-theme="dark"] .dn-modal .dn-expense-plan-record,
-html[data-theme="dark"] .dn-expense-view-payment { background: #1a3633; color: #a0e9b8; }
+html[data-theme="dark"] .dn-expense-view-payment { color: #a0e9b8; }
 
 .dn-expense-plan-menu-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 4px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 8px;
+  margin-inline-start: -6px;
 }
 html[data-theme] body .dn-expense-plan-menu-actions button {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
+  min-width: 44px;
   min-height: 44px;
-  padding: 4px 1px;
+  padding: 4px 6px;
   border: 0;
   border-radius: 8px;
   box-shadow: none;
   background: transparent;
   color: var(--color-text-muted);
   font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.2;
-  text-align: center;
+  font-size: 13px;
+  line-height: 1.25;
   cursor: pointer;
 }
-.dn-expense-plan-menu-actions button svg { flex: none; }
-html[data-theme] body .dn-expense-plan-menu-actions button.is-danger { color: var(--dn-overdue-ink); }
 html[data-theme] body .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
   html[data-theme] .dn-expense-plan-entry:hover { border-color: var(--color-primary); }
-  html[data-theme] body .dn-expense-plan-menu-actions button:not(:disabled):hover { background: var(--dn-planning-field); }
+  html[data-theme] body .dn-expense-plan-menu-actions button:not(:disabled):hover,
   html[data-theme] .dn-modal .dn-expense-plan-record:hover,
-  html[data-theme] .dn-expense-view-payment:hover { filter: brightness(1.1); }
-}
-@media (390px <= width <= 760px) {
-  .dn-expense-plan-row { grid-template-columns: minmax(0, 1fr) minmax(0, 69%); gap: 4px 6px; }
-  .dn-expense-plan-name, .dn-expense-plan-menu-actions { grid-column: 1 / -1; }
+  html[data-theme] .dn-expense-view-payment:hover { background: var(--dn-planning-field); }
 }
 @media (min-width: 761px) and (min-height: 501px) {
-  .dn-expense-plan-row {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 52%);
-    gap: 4px 10px;
-    padding-block-start: 12px;
-  }
+  .dn-expense-plan-row { grid-template-columns: minmax(0, 1fr) minmax(0, 50%); }
   .dn-expense-plan-amount-row { grid-area: 1 / 2 / 3; }
   .dn-expense-plan-menu-actions { grid-column: 1 / -1; }
 }
 
-.dn-expense-plan-empty { display: flex; align-items: flex-start; gap: 12px; padding: 12px 2px; }
-.dn-expense-plan-empty svg { flex: none; color: var(--action-ink); }
+.dn-expense-plan-empty { padding: 10px 3px; }
 .dn-expense-plan-empty p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 13px; }
 
 .dn-expense-plan-notice.is-visible {
@@ -225,32 +181,28 @@ html[data-theme] body .dn-expense-plan-menu-actions button:disabled { opacity: .
   justify-content: space-between;
   gap: 8px;
   flex-shrink: 0;
-  margin-top: 8px;
-  padding: 6px 8px;
-  border: 1px solid color-mix(in srgb, var(--color-success) 24%, transparent);
-  border-radius: 12px;
-  background: color-mix(in srgb, var(--color-success) 8%, var(--dn-form-sheet-base));
+  margin-top: 6px;
+  padding-top: 5px;
+  border-top: 1px solid var(--dn-planning-line);
   color: var(--color-text);
   font-size: 13px;
   line-height: 1.4;
 }
-.dn-expense-plan-notice-text { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.dn-expense-plan-notice-text { min-width: 0; overflow-wrap: anywhere; }
 .dn-expense-plan-notice-text small { display: block; color: var(--color-text-muted); font-size: 12px; }
-.dn-expense-notice-icon { display: grid; place-items: center; flex: none; width: 24px; height: 24px; border-radius: 50%; background: color-mix(in srgb, var(--color-success) 15%, transparent); }
 .dn-expense-view-payment { max-width: 44%; }
-.dn-expense-payment-details { display: grid; gap: 10px; }
+.dn-expense-payment-details { display: grid; gap: 8px; }
 .dn-expense-receipt-head {
   display: flex;
   flex-wrap: wrap;
   align-items: baseline;
   justify-content: space-between;
   gap: 3px 12px;
-  padding: 10px;
-  border-radius: 10px;
-  background: color-mix(in srgb, var(--color-success) 8%, var(--dn-form-sheet-base));
+  padding-block: 4px 8px;
+  border-bottom: 1px solid var(--dn-planning-line);
   overflow-wrap: anywhere;
 }
-.dn-expense-receipt-head > span { font-size: 24px; font-weight: 700; }
+.dn-expense-receipt-head > span { font-size: 20px; font-weight: 680; }
 .dn-expense-payment-details dl { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); margin: 0; padding: 0 2px; }
 .dn-expense-payment-details :is(dt, dd) { margin: 0; padding-block: 8px; border-bottom: 1px solid var(--dn-planning-line); font-size: 13px; line-height: 1.4; }
 .dn-expense-payment-details :is(dt, dd):nth-last-child(-n+2) { border-bottom: 0; }
@@ -262,9 +214,8 @@ html[data-theme] .dn-plan-transaction-form { gap: 12px; }
   display: grid;
   gap: 6px;
   min-width: 0;
-  padding: 9px 10px;
-  border-radius: 10px;
-  background: var(--dn-planning-field);
+  padding-block: 2px 8px;
+  border-bottom: 1px solid var(--dn-planning-line);
   overflow-wrap: anywhere;
 }
 .dn-payment-context dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 4px 10px; margin: 0; }
@@ -322,9 +273,11 @@ html[data-theme] .dn-expense-plan-edit-date .date-field > span {
 
 html[data-theme] .dn-expense-plan-dialog .dn-repeat-action-summary { gap: 10px; }
 html[data-theme] .dn-expense-plan-dialog .dn-repeat-action-summary dl {
-  border-color: transparent;
-  border-radius: 10px;
-  background: var(--dn-planning-field);
+  border: 0;
+  border-block: 1px solid var(--dn-planning-line);
+  border-radius: 0;
+  padding-inline: 0;
+  background: transparent;
 }
 html[data-theme] body .dn-modal-viewport .dn-expense-plan-end-view .dn-modal-fixed-actions button.modal-danger-button {
   color: var(--dn-overdue-ink) !important;

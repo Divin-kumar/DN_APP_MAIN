@@ -1,4 +1,4 @@
-**Upcoming expenses (20 November 2026, development).** Each bill shows its full due date and repeat frequency, with **Record payment** beside the amount and **Edit**, **Skip** and **End repeat** directly below. When at least two bills are due today or overdue, the sheet shows the total expected amount for those bills. Record payment shows both scheduled and next due dates. After saving a payment, tap **View payment** for the receipt.
+**Upcoming expenses (20 November 2026, development).** The sheet lists each bill’s due date, frequency and amount in a simple list. **Record payment** is beside the amount. **Edit**, **Skip** and **End repeat** are directly below. After saving a payment, tap **View payment** for the receipt.
 
 **Mobile form buttons (20 November 2026, development).** **Save** and **Cancel** stay visible while you scroll the Moment, Activity, entry, Task and Transaction forms, including recurring expense and payment forms. They remain below the fields when you expand **More options** or type with the on-screen keyboard.
 
