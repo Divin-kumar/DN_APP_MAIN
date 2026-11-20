@@ -22,7 +22,6 @@ import { TRANSACTION_SORT_VALUES } from '../utils/userListSort';
 import TransactionHistory from '../components/financials/TransactionHistory';
 import TransactionForm from '../components/financials/TransactionForm';
 import ExpensePlanEntry, { ExpensePlanSheet } from '../components/financials/ExpensePlans';
-import { formatScheduleDate } from '../utils/repeatSchedule.js';
 import { changeExpensePlanDate } from '../services/expensePlanService';
 import { scopedRecordActions as records } from '../services/scopedRecordActions';
 import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
@@ -180,9 +179,9 @@ function FinancialsContent() {
       assertCurrent();
       applySavedPlan(plan, result.plan);
       const message = { edit: 'Expense plan saved', payment: 'Payment recorded', skip: 'Occurrence skipped', end: 'Expense plan ended' }[mode];
-      const nextDue = (mode === 'payment' || mode === 'skip') && formatScheduleDate(result.plan.dueDate);
       setPlanNotice({
-        message: nextDue ? `${message}. Next due ${nextDue}.` : `${message}.`,
+        message,
+        nextDue: mode === 'payment' || mode === 'skip' ? result.plan.dueDate : null,
         payment: mode === 'payment' ? {
           expense: result.expense,
           planName: plan.name,

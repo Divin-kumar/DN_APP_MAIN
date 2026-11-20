@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Upcoming expenses sheet (20 November 2026, development)
+
+Upcoming expenses displays each bill’s full due date and repeat frequency together. Due today, Overdue and Later retain their separate groups, and the group headings stay visible while their rows scroll. When there are two or more bills due today or overdue, the list shows their combined expected amount above the groups. The amount excludes later bills and is separate from the recorded spending totals in Transactions. Record payment stays alongside the expected amount, and Edit, Skip and End repeat remain directly available for every row.
+
+Record payment shows the originally scheduled date and next due date together above the editable payment. The expense plan editor uses a full-width title and shows a readable due date. It has date-only scheduling. Skip and End repeat present the dates and consequences before confirmation. A successful payment or skip shows the next due date in the list footer. View payment opens the receipt in the same sheet. Back and Cancel restore the list position and focus. The Guest tour edition 2026.11.20.3 explains the new total and bill layout after an explicit Refresh demo.
+
 ## Reachable mobile form actions (20 November 2026, development)
 
 Moment, Activity, Activity entry, Task and Transaction sheets keep their primary and Cancel buttons below the scrolling fields in phone layouts. Recurring expense creation, schedule edits and Record payment use the same layout. More options, form validation and save feedback remain available with a short viewport or the on-screen keyboard. The submit button stays associated with its own form. Desktop sheets keep their in-form action placement when the keyboard is closed.

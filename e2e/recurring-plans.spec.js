@@ -362,7 +362,8 @@ test('recurring expenses stay outside totals, then post one editable payment and
   await expect(plans.locator('.dn-expense-plan-status')).toHaveText('Overdue');
   const dateRow = await plans.locator('time').boundingBox();
   const statusRow = await plans.locator('.dn-expense-plan-status').boundingBox();
-  expect(dateRow.y).toBeGreaterThanOrEqual(statusRow.y + statusRow.height);
+  expect(Math.abs(dateRow.y - statusRow.y)).toBeLessThan(5);
+  expect(dateRow.x).toBeGreaterThan(statusRow.x + statusRow.width);
   await expect(plans.locator('..')).toHaveCSS('backdrop-filter', 'none');
   await expect(recordPayment).toHaveCSS('min-height', '44px');
   await expect(recordPayment).toHaveAccessibleDescription(/₹799 Overdue.*31 Jan 2026.*Monthly/);
@@ -419,6 +420,8 @@ test('recurring expenses stay outside totals, then post one editable payment and
   const endRepeat = planActions.getByRole('button', { name: 'End repeat', exact: true });
   await editSchedule.click();
   const edit = page.getByRole('dialog', { name: 'Edit expense plan' });
+  await expect(edit.locator('input[type="time"]')).toHaveCount(0);
+  await expect(edit.getByLabel('Due date *', { exact: true })).toHaveAccessibleDescription('28 Feb 2026');
   await expect(edit.getByLabel('Expected amount *', { exact: true })).toHaveValue('799');
   const expenseDueDate = edit.getByLabel('Due date *', { exact: true });
   const expensePreview = edit.getByRole('group', { name: 'Repeat', exact: true }).getByRole('status');
@@ -493,6 +496,9 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
   const overdue = plans.getByRole('region', { name: 'Overdue' });
   const later = plans.getByRole('region', { name: 'Later' });
   await expect(plans.getByRole('region').first()).toHaveAccessibleName('Due today');
+  const dueTotal = plans.locator('.dn-expense-plan-total');
+  await expect(dueTotal).toHaveText('Due today & overdue ₹200');
+  await expect(page.locator('.dn-finance-metric-expense strong')).toHaveText('₹0');
   await expect(dueToday.getByRole('listitem')).toContainText('Mobile');
   await expect(dueToday.getByRole('heading')).toHaveText('Due today1 bill');
   await expect(overdue.getByRole('listitem')).toContainText('Internet');
@@ -510,6 +516,7 @@ test('an Upcoming expenses link opens the sorted sheet once and supports several
     await payment.getByRole('button', { name: 'Save payment' }).click();
     await expect(plans.getByRole('status')).toContainText('Payment recorded.');
     await expect(later.getByRole('button', { name: `Record payment for ${title}` })).toBeVisible();
+    await expect(dueTotal).toHaveCount(0);
   }
   await expect(dueToday).toBeHidden();
   await expect(overdue).toBeHidden();
@@ -568,6 +575,7 @@ test('returning to a long expense list keeps the scroll position and shows payme
   await edit.click();
   await page.getByRole('dialog', { name: 'Edit expense plan' }).getByRole('button', { name: 'Cancel', exact: true }).click();
   await expect(edit).toBeFocused();
+  await expect(edit).toHaveAccessibleDescription('Bill 12');
   await recordPayment.click();
   const beforePayment = await openedAt.evaluate((offsets) => offsets.at(-1));
   const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });
@@ -746,7 +754,7 @@ test.describe('Overdue dates and the readable payment date', () => {
       await page.getByRole('button', { name: /Upcoming expenses/ }).tap();
       const plans = page.getByRole('dialog', { name: 'Upcoming expenses' });
       const overdue = plans.getByRole('region', { name: 'Overdue' });
-      await checkTile(overdue.locator('.dn-expense-plan-day'), 2);
+      await checkTile(overdue.locator('.dn-expense-plan-day'), 1);
       await overdue.getByRole('button', { name: 'Record payment for Internet' }).tap();
 
       const payment = page.getByRole('dialog', { name: 'Record payment', exact: true });

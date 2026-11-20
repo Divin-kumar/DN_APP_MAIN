@@ -107,7 +107,7 @@ export default function TransactionForm({
   const activities = useMemo(() => getMomentActivities(events, form.eventId), [events, form.eventId]);
   const selectedMomentExists = moments.some((moment) => moment.value === String(form.eventId));
   const selectedActivityExists = activities.some((activity) => activity.value === String(form.activityId));
-  const supportingDetails = paymentPlan ? 'Title, category and notes' : canRepeat ? 'Repeat, links and notes' : 'Links and notes';
+  const supportingDetails = paymentPlan ? 'Details, links & notes' : canRepeat ? 'Repeat, links and notes' : 'Links and notes';
   const change = (key, value) => setForm((current) => ({ ...current, [key]: value }));
   const changeMoment = (eventId) => setForm((current) => ({
     ...current,
@@ -167,11 +167,12 @@ export default function TransactionForm({
       <option value="expense">Expense</option>
     </DropdownSelect>
   </div> : null;
-  const dates = <div className="activity-date-time-row">
+  const dates = <div className={expensePlan ? 'dn-expense-plan-edit-date' : 'activity-date-time-row'}>
     <DateField label={isPlan ? 'Due date *' : paymentPlan ? 'Paid on *' : 'Date *'} name="date" required value={form.date}
       onChange={(event) => change('date', event.target.value)} disabled={busy}
-      showReadableDate={Boolean(paymentPlan)} />
-    <ActivityTimeField subject={paymentPlan ? 'Payment' : 'Transaction'} value={form.time} onChange={(time) => change('time', time)} disabled={busy || isPlan} />
+      showReadableDate={Boolean(paymentPlan || expensePlan)} />
+    {!expensePlan ? <ActivityTimeField subject={paymentPlan ? 'Payment' : 'Transaction'} value={form.time}
+      onChange={(time) => change('time', time)} disabled={busy || isPlan} /> : null}
   </div>;
   const repeatField = canRepeat ? <RepeatField value={form.repeatFrequency}
     onChange={(frequency) => change('repeatFrequency', frequency)} disabled={busy}
@@ -214,7 +215,7 @@ export default function TransactionForm({
   </div></>;
 
   return (
-    <form id={formId} className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}${paymentPlan ? ' dn-expense-payment-form' : ''}`}
+    <form id={formId} className={`dn-transaction-form form-surface${planFlow ? ' dn-plan-transaction-form' : ''}${expensePlan ? ' dn-expense-plan-edit-form' : ''}${paymentPlan ? ' dn-expense-payment-form' : ''}`}
       onSubmit={handleSubmit} aria-busy={busy}>
       {paymentPlan ? <div className="dn-payment-context">
         <strong>{paymentPlan.name}</strong>
@@ -223,13 +224,17 @@ export default function TransactionForm({
           {nextPaymentDate ? <div><dt>Next due</dt><dd><time dateTime={nextPaymentDate}>{formatScheduleDate(nextPaymentDate)}</time></dd></div> : null}
         </dl>
       </div> : null}
-      {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div> : <>
-        <div className="dn-form-pair">{titleField}{amount}</div>
-        <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
-          <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
-        </div>
-        {transactionType ? <div className="dn-form-pair">{transactionType}{categoryField}</div> : categoryField}
-      </>}
+      {paymentPlan ? <div className="dn-payment-fields">{amount}<div className="dn-plan-form-date">{dates}</div></div>
+        : expensePlan ? <>
+          <div className="dn-expense-plan-edit-fields">{titleField}{amount}{dates}</div>
+          {categoryField}
+        </> : <>
+          <div className="dn-form-pair">{titleField}{amount}</div>
+          <div className={canRepeat ? 'dn-editor-schedule' : undefined}>
+            <div className={canRepeat ? 'dn-plan-form-date' : undefined}>{dates}</div>
+          </div>
+          {transactionType ? <div className="dn-form-pair">{transactionType}{categoryField}</div> : categoryField}
+        </>}
       {paymentMethod}
       <FormDisclosure hint={canRepeat && (form.repeatFrequency || repeatNotice)
         ? <RepeatSummary value={form.repeatFrequency} dueDate={form.date} nextDate={nextRepeat} notice={repeatNotice} />

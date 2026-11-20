@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261120-590 | Redesign Upcoming expenses
+
+- **Scope.** Replace abbreviated date tiles and tall action rows with compact bill rows, full dates, sticky group labels and a due-today-and-overdue total when there are at least two urgent bills. Keep Record payment adjacent to the amount and all three schedule actions directly available, with bill context for assistive technology. Clarify scheduled dates in Record payment, remove the disabled time field from Edit expense plan and simplify confirmation and receipt states.
+- **Compatibility.** The list total uses expected amounts for the current occurrences only. Transactions and paid totals still use actual recorded payments. Repeat rules, payment deduplication, list scroll restoration and focus return use the existing flows. The Guest tour edition advances to 2026.11.20.3 through explicit Refresh demo.
+- **Executed.** Build, lint, documentation and 636 Node tests passed. All 45 Chromium checks and eight focused WebKit checks passed. Captured the entry, list, payment, edit, skip, end, saved and receipt states with synthetic Guest data at 320, 390 and 430 px phone widths and 1,280 px desktop. At 390 px the four sample bills and their actions fit in the updated sheet. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-589 | Keep mobile form actions reachable
 
 - **Scope.** Transactions could scroll their buttons off a narrow phone screen. Moment and Activity sheets could hide their buttons when the visible area shrank. Reuse the Task action footer for phone Moment, Activity, entry, Transaction and recurring expense forms. Update the shared viewport observer so ordinary height-only resizes use the current layout dimensions.

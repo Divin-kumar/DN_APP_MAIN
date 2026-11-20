@@ -1,16 +1,15 @@
 import { useRef } from 'react';
-import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward, XCircle } from 'lucide-react';
+import { CalendarDays, Check, ChevronRight, Pencil, Repeat, SkipForward } from 'lucide-react';
 import ModalDialog, { ConfirmButtons } from '../common/ModalDialog';
 import { RepeatActionSummary } from '../common/RepeatField';
 import TransactionForm from './TransactionForm';
 import { activityTime } from '../../utils/activityTime.js';
-import { formatMomentDate, parseMomentDate } from '../../utils/momentDates.js';
+import { formatMomentDate } from '../../utils/momentDates.js';
 import { paymentMethodLabel } from '../../utils/paymentMethod.js';
 import { formatScheduleDate, previewNextRepeat, REPEAT_OPTIONS } from '../../utils/repeatSchedule.js';
 import useDashboardClock from '../../features/dashboard/useDashboardClock';
 import './ExpensePlans.css';
 
-const billMonth = new Intl.DateTimeFormat('en-GB', { month: 'short' });
 const formatAmount = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0, maximumFractionDigits: 2 });
 const planTitles = {
   list: 'Upcoming expenses',
@@ -50,41 +49,41 @@ function ExpensePlanList({ plans, onSelect }) {
     { timing: 'later', label: 'Later', items: sorted.filter((plan) => plan.dueDate > today) },
   ];
 
-  if (!sorted.length) return <p className="dn-expense-plan-empty">No upcoming expenses</p>;
+  if (!sorted.length) return <div className="dn-expense-plan-empty">
+    <CalendarDays size={22} aria-hidden="true" />
+    <div><strong>No upcoming expenses</strong><p>To schedule a bill, choose a repeat frequency when adding a transaction.</p></div>
+  </div>;
+
+  const dueNow = groups[0].items.concat(groups[1].items);
   return <div className="dn-expense-plan-groups">
+    {dueNow.length > 1 ? <div className="dn-expense-plan-total">
+      <span>Due today &amp; overdue</span>{' '}
+      <strong>{formatAmount.format(dueNow.reduce((sum, plan) => sum + plan.amount, 0))}</strong>
+    </div> : null}
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
       {!single && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>
         <span>{label}</span><span>{items.length} {items.length === 1 ? 'bill' : 'bills'}</span>
       </h4>}
-      <ul className="dn-expense-plan-list">
+      <ul className="dn-expense-plan-list" role="list">
         {items.map((plan) => {
+          const nameId = `dn-plan-name-${plan.id}`;
           const amountId = `dn-plan-amount-${plan.id}`;
           const dateId = `dn-plan-date-${plan.id}`;
-          const dueDate = parseMomentDate(plan.dueDate);
-          return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id}>
-            {!single && <span className="dn-expense-plan-day" aria-hidden="true">
-              <strong>{dueDate?.getDate() ?? '—'}</strong>
-              {dueDate ? <small>{billMonth.format(dueDate)} {String(dueDate.getFullYear()).slice(-2)}</small> : null}
-            </span>}
-            <div className="dn-expense-plan-payment-details">
-              <div className="dn-expense-plan-title"><strong>{plan.name}</strong></div>
-              <div className="dn-expense-plan-amount-row">
-                <span id={amountId}>{formatAmount.format(plan.amount)}</span>
-                <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
-                  aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
-                  onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
-              </div>
-              <div className="dn-expense-plan-meta" id={dateId}>
-                <span className={single ? 'dn-expense-plan-due-info' : 'sr-only'}>
-                  <span className={`dn-expense-plan-status is-${timing}`}>{timing === 'later' ? 'Due' : label}</span>
-                  {' '}<time dateTime={plan.dueDate}>{single && <CalendarDays size={14} aria-hidden="true" />}{formatScheduleDate(plan.dueDate)}</time>
-                </span>
-                <span><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
-              </div>
+          const statusLabel = timing === 'later' ? 'Due' : label;
+          return <li key={plan.id} className="dn-expense-plan-row" data-plan-id={plan.id} data-timing={timing}>
+            <strong id={nameId} className="dn-expense-plan-name">{plan.name}</strong>
+            <div className="dn-expense-plan-meta" id={dateId}>
+              <span className={single ? `dn-expense-plan-status is-${timing}` : 'sr-only'}>{statusLabel}</span>{' '}
+              <time className="dn-expense-plan-day" dateTime={plan.dueDate}><strong>{formatScheduleDate(plan.dueDate)}</strong></time>{' '}
+              <span className="dn-expense-plan-cadence"><Repeat size={13} aria-hidden="true" />{REPEAT_OPTIONS[plan.repeat.frequency]}</span>
             </div>
-            <div id={`plan-actions-${plan.id}`} className="dn-expense-plan-inline-actions">
-              <ExpensePlanActions plan={plan} onNavigate={(action, button) => onSelect(plan, action, button)} />
+            <div className="dn-expense-plan-amount-row">
+              <span id={amountId}>{formatAmount.format(plan.amount)}</span>
+              <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
+                aria-label={`Record payment for ${plan.name}`} aria-describedby={`${amountId} ${dateId}`}
+                onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}>Record payment</button>
             </div>
+            <ExpensePlanActions plan={plan} nameId={nameId} onSelect={onSelect} />
           </li>;
         })}
       </ul>
@@ -92,28 +91,23 @@ function ExpensePlanList({ plans, onSelect }) {
   </div>;
 }
 
-function ExpensePlanActions({ plan, onNavigate }) {
-  const following = formatScheduleDate(previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate));
-  return <>
-    <div className="dn-expense-plan-menu-actions">
-      <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" onClick={(event) => onNavigate('edit', event.currentTarget)}><Pencil size={18} aria-hidden="true" />
-        <span>Edit</span>
-      </button>
-      <button type="button" data-plan-manage-action="skip" aria-label="Skip this occurrence" disabled={!following} onClick={(event) => onNavigate('skip', event.currentTarget)}><SkipForward size={18} aria-hidden="true" />
-        <span>Skip</span>
-      </button>
-      <button type="button" data-plan-manage-action="end" aria-label="End repeat" className="is-danger" onClick={(event) => onNavigate('end', event.currentTarget)}><XCircle size={18} aria-hidden="true" />
-        <span>End repeat</span>
-      </button>
-    </div>
-  </>;
+function ExpensePlanActions({ plan, nameId, onSelect }) {
+  const following = previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate);
+  return <div className="dn-expense-plan-menu-actions" role="group" aria-labelledby={nameId}>
+    <button type="button" data-plan-manage-action="edit" aria-label="Edit schedule" aria-describedby={nameId}
+      onClick={(event) => onSelect(plan, 'edit', event.currentTarget)}><Pencil size={14} aria-hidden="true" /> Edit</button>
+    <button type="button" data-plan-manage-action="skip" aria-label="Skip this occurrence" aria-describedby={nameId}
+      disabled={!following} onClick={(event) => onSelect(plan, 'skip', event.currentTarget)}><SkipForward size={14} aria-hidden="true" /> Skip</button>
+    <button type="button" data-plan-manage-action="end" aria-describedby={nameId} className="is-danger"
+      onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>End repeat</button>
+  </div>;
 }
 
 function RecordedPayment({ payment }) {
   const { expense, planName, scheduledFor, nextDue } = payment;
   const paidTime = activityTime(expense);
   return <div className="dn-expense-payment-details">
-    <div className="dn-expense-plan-title"><strong>{expense.name}</strong><span>{formatAmount.format(expense.amount)}</span></div>
+    <div className="dn-expense-receipt-head"><strong>{expense.name}</strong><span>{formatAmount.format(expense.amount)}</span></div>
     <dl>
       <dt>Paid on</dt><dd><time dateTime={paidTime ? `${expense.date}T${paidTime}` : expense.date}>
         {formatScheduleDate(expense.date)}{paidTime ? ` · ${paidTime}` : null}
@@ -129,11 +123,11 @@ function RecordedPayment({ payment }) {
 export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onClose, onSelect, onNavigate, onSave, onConfirm }) {
   const { mode, plan } = view;
   const isList = mode === 'list';
-  const previousView = 'list';
-  const goBack = () => onNavigate(previousView);
+  const goBack = () => onNavigate('list');
   const isForm = mode === 'edit' || mode === 'payment';
   const isSkip = mode === 'skip';
   const isConfirm = isSkip || mode === 'end';
+  const nextAfterSkip = isSkip ? previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate) : undefined;
   const listReturnRef = useRef(null);
   const listBodyRef = useRef(null);
   const viewPaymentRef = useRef(null);
@@ -186,7 +180,8 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   const visibleNotice = isList ? notice : null;
   const feedback = <div className={`dn-expense-plan-notice${visibleNotice ? ' is-visible' : ''}`}>
     <div className="dn-expense-plan-notice-text" role="status">
-      {visibleNotice ? <><Check size={16} aria-hidden="true" /><span>{visibleNotice.message}</span></> : null}
+      {visibleNotice ? <><span className="dn-expense-notice-icon"><Check size={15} aria-hidden="true" /></span>
+        <span><strong>{visibleNotice.message}.</strong>{visibleNotice.nextDue ? <> <small>Next due <time dateTime={visibleNotice.nextDue}>{formatScheduleDate(visibleNotice.nextDue)}</time>.</small></> : null}</span></> : null}
     </div>
     {visibleNotice?.payment ? <button type="button" ref={viewPaymentRef} className="dn-expense-view-payment" onClick={() => {
       listReturnRef.current = { action: 'receipt', scrollTop: listBodyRef.current.scrollTop };
@@ -196,11 +191,10 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
 
   const footer = isForm ? null : isConfirm ? <div className="dn-modal-fixed-actions">
     <ConfirmButtons confirmLabel={isSkip ? 'Skip occurrence' : 'End repeat'} destructive={!isSkip}
-      busy={busy} onCancel={goBack} onConfirm={onConfirm} />
-  </div> : feedback;
+      busy={busy} confirmDisabled={isSkip && !nextAfterSkip} onCancel={goBack} onConfirm={onConfirm} />
+  </div> : isList ? feedback : null;
 
-  const listClass = isList ? ' dn-expense-plan-list-view' + (plans.length === 1 ? ' is-single-plan' : '') : '';
-  return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog${listClass}`} viewKey={mode}
+  return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog dn-expense-plan-${mode}-view`} viewKey={mode}
     onViewChange={restorePosition}
     onBack={isList ? undefined : goBack} backLabel="Back to upcoming expenses"
     onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>
@@ -211,7 +205,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
       busy={busy} events={events} onCancel={goBack} onSubmit={onSave} /> : null}
     {isConfirm ? <>
       <RepeatActionSummary name={plan.name} dueDate={plan.dueDate} dueLabel={isSkip ? 'Scheduled for' : 'Upcoming bill'}
-        nextDate={isSkip ? previewNextRepeat(plan, plan.repeat.frequency, plan.dueDate) : undefined}>
+        nextDate={nextAfterSkip}>
         {isSkip ? 'Move to the next due date without recording a payment. Spending totals stay unchanged.' : 'This removes the upcoming bill and stops future repeats. Recorded payments stay in Transactions.'}
       </RepeatActionSummary>
       {error ? <p className="quick-create-error" role="alert">{error}</p> : null}
