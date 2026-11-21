@@ -62,25 +62,26 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-expense-
   }
 }
 
+/* The list is intentionally two visual lines per bill:
+   details on top, four aligned actions beneath. No nested cards or menus. */
 .dn-expense-plan-groups {
   --dn-expense-date-width: 72px;
-  --dn-expense-amount-width: clamp(74px, 18vw, 98px);
-  --dn-expense-inline-gap: 8px;
+  --dn-expense-amount-width: 9ch;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 7px;
+  gap: 6px;
+  min-width: 0;
 }
 .dn-expense-plan-heading {
   position: sticky;
   top: 0;
   z-index: 1;
+  min-height: 28px;
   margin: 0;
-  min-height: 30px;
-  box-sizing: border-box;
-  padding: 6px 3px;
+  padding: 7px 4px 4px;
   background: var(--dn-form-sheet-base);
   color: var(--color-text-muted);
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 650;
   line-height: 1.35;
 }
@@ -94,40 +95,104 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > section.dn-expense-
 }
 .dn-expense-plan-data {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto var(--dn-expense-amount-width);
-  align-items: baseline;
-  gap: var(--dn-expense-inline-gap);
-  min-height: 22px;
+  grid-template-columns: minmax(0, 1fr) calc(var(--dn-expense-date-width) + 56px) var(--dn-expense-amount-width);
+  align-items: center;
+  column-gap: 8px;
+  min-height: 25px;
+  min-width: 0;
   white-space: nowrap;
 }
-.dn-expense-plan-name,
-.dn-expense-plan-amount {
+.dn-expense-plan-name {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
-  line-height: 1.45;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
 }
-.dn-expense-plan-name { font-size: 14px; font-weight: 650; }
 .dn-expense-plan-meta {
   position: relative;
   display: grid;
   grid-template-columns: var(--dn-expense-date-width) 3px 47px;
   align-items: baseline;
   column-gap: 3px;
+  min-width: 0;
   color: var(--color-text-muted);
   font-size: 12px;
   font-variant-numeric: tabular-nums;
-  line-height: 1.45;
+  line-height: 1.4;
+  white-space: nowrap;
 }
-.dn-expense-plan-day { position: relative; text-align: end; }
+.dn-expense-plan-day { position: relative; min-width: 0; text-align: end; }
 .dn-expense-plan-meta-separator { text-align: center; }
+.dn-expense-plan-frequency { text-align: start; }
 .dn-expense-plan-amount,
 .dn-expense-receipt-head > span { font-variant-numeric: tabular-nums; }
 .dn-expense-plan-amount {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-size: 14px;
   font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
   text-align: end;
 }
 
+/* Same four stops on every row, with the payment action right-aligned.
+   Each actual button stays at least 44px tall for touch and keyboard use. */
+.dn-expense-plan-menu-actions {
+  display: grid;
+  grid-template-columns: 48px 48px minmax(44px, 1fr) max-content;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 1px;
+}
+html[data-theme] body .dn-expense-plan-menu-actions button {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0 4px;
+  border: 0;
+  border-radius: 9px;
+  background: transparent;
+  box-shadow: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  cursor: pointer;
+}
+html[data-theme] body .dn-expense-plan-menu-actions .dn-expense-plan-end {
+  color: #9a3836;
+}
+html[data-theme="dark"] body .dn-expense-plan-menu-actions .dn-expense-plan-end {
+  color: #f3a5a2;
+}
+.dn-expense-plan-end-short { display: none; }
+html[data-theme] body .dn-expense-plan-menu-actions .dn-expense-plan-record {
+  justify-content: flex-end;
+  padding: 0;
+  color: #195739;
+  font-weight: 650;
+}
+.dn-expense-plan-record > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  background: rgb(31 128 82 / 9%);
+}
+html[data-theme="dark"] body .dn-expense-plan-menu-actions .dn-expense-plan-record { color: #a0e9b8; }
+html[data-theme="dark"] .dn-expense-plan-record > span { background: rgb(100 220 155 / 11%); }
+html[data-theme] body .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 html[data-theme] .dn-expense-view-payment {
   flex: 0 0 auto;
   min-height: 44px;
@@ -139,83 +204,49 @@ html[data-theme] .dn-expense-view-payment {
   color: #195739;
   font: inherit;
   font-size: 13px;
-  font-weight: 680;
+  font-weight: 650;
   line-height: 1.25;
   cursor: pointer;
 }
 html[data-theme="dark"] .dn-expense-view-payment { color: #a0e9b8; }
-
-.dn-expense-plan-menu-actions {
-  display: flex;
-  align-items: center;
-  gap: 0 4px;
-  margin-inline-start: -6px;
-}
-html[data-theme] body .dn-expense-plan-menu-actions button {
-  flex: 0 0 auto;
-  min-width: 44px;
-  min-height: 44px;
-  padding: 4px 6px;
-  border: 0;
-  border-radius: 8px;
-  box-shadow: none;
-  background: transparent;
-  color: var(--color-text-muted);
-  font: inherit;
-  font-size: 12px;
-  line-height: 1.25;
-  white-space: nowrap;
-  cursor: pointer;
-}
-html[data-theme] body .dn-expense-plan-menu-actions .dn-expense-plan-record {
-  margin-inline-start: auto;
-  padding-inline: 0;
-  color: #195739;
-  font-weight: 680;
-}
-.dn-expense-plan-record > span {
-  display: inline-flex;
-  align-items: center;
-  min-height: 27px;
-  padding-inline: 9px;
-  border-radius: 8px;
-  background: rgb(31 128 82 / 11%);
-}
-html[data-theme="dark"] body .dn-expense-plan-menu-actions .dn-expense-plan-record { color: #a0e9b8; }
-html[data-theme="dark"] .dn-expense-plan-record > span { background: rgb(100 220 155 / 12%); }
-html[data-theme] body .dn-expense-plan-menu-actions button:disabled { opacity: .55; cursor: default; }
 @media (hover: hover) {
   html[data-theme] .dn-expense-plan-entry:hover { border-color: var(--color-primary); }
   html[data-theme] body .dn-expense-plan-menu-actions button[data-plan-manage-action]:not(:disabled):hover,
   html[data-theme] .dn-expense-view-payment:hover { background: var(--dn-planning-field); }
-  html[data-theme] .dn-expense-plan-record:hover > span { background: color-mix(in srgb, currentColor 18%, transparent); }
+  html[data-theme] .dn-expense-plan-record:hover > span { background: color-mix(in srgb, currentColor 16%, transparent); }
 }
 @media (max-width: 480px) {
   .dn-expense-plan-groups { --dn-expense-date-width: 40px; }
   .dn-expense-plan-groups[data-displays-year="true"] { --dn-expense-date-width: 72px; }
   .dn-expense-plan-current-year {
     position: absolute;
-    inset-inline-start: 0;
     width: 1px;
     height: 1px;
     clip-path: inset(50%);
     overflow: hidden;
   }
 }
-@media (max-width: 360px) {
-  .dn-expense-plan-groups {
-    --dn-expense-date-width: 36px;
-    --dn-expense-amount-width: 76px;
-    --dn-expense-inline-gap: 5px;
-  }
+@media (max-width: 380px) {
+  .dn-expense-plan-end-long { display: none; }
+  .dn-expense-plan-end-short { display: inline; }
+  .dn-expense-plan-menu-actions { grid-template-columns: 44px 44px minmax(44px, 1fr) max-content; gap: 3px; }
+  .dn-expense-plan-data { column-gap: 5px; }
+  .dn-expense-plan-groups { --dn-expense-date-width: 36px; }
   .dn-expense-plan-groups[data-displays-year="true"] { --dn-expense-date-width: 67px; }
-  .dn-expense-plan-row { padding-inline: 2px; }
   .dn-expense-plan-meta { grid-template-columns: var(--dn-expense-date-width) 3px 43px; font-size: 11px; }
+  .dn-expense-plan-data { grid-template-columns: minmax(0, 1fr) calc(var(--dn-expense-date-width) + 52px) var(--dn-expense-amount-width); }
   .dn-expense-plan-name, .dn-expense-plan-amount { font-size: 13px; }
-  .dn-expense-plan-menu-actions { gap: 0; margin-inline-start: -2px; }
-  html[data-theme] body .dn-expense-plan-menu-actions button { padding-inline: 4px; font-size: 11px; }
-  .dn-expense-plan-record > span { padding-inline: 6px; }
+  html[data-theme] body .dn-expense-plan-menu-actions button { font-size: 12px; padding-inline: 3px; }
+  .dn-expense-plan-record > span { padding-inline: 7px; font-size: 11px; }
 }
+
+/* The payment and schedule forms share the same restrained field rhythm.
+   Keep existing validation, links, repeat choices and fixed Save/Cancel. */
+html[data-theme] .dn-expense-plan-dialog .dn-expense-payment-form,
+html[data-theme] .dn-expense-plan-dialog .dn-expense-plan-edit-form { gap: 10px; }
+.dn-expense-plan-dialog .dn-payment-context { gap: 4px; padding-block: 2px 7px; }
+.dn-expense-plan-dialog .dn-payment-fields { gap: 8px; }
+.dn-expense-plan-dialog .dn-expense-plan-edit-fields { gap: 8px; }
 
 .dn-expense-plan-empty { padding: 10px 3px; }
 .dn-expense-plan-empty p { margin: 4px 0 0; color: var(--color-text-muted); font-size: 13px; }

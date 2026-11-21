@@ -46,6 +46,9 @@ function ExpensePlanList({ plans, onSelect }) {
   const currentYear = today.slice(0, 4);
   const yearSuffix = ` ${currentYear}`;
   const displaysYear = sorted.some(plan => !plan.dueDate.startsWith(currentYear));
+  // All amounts reserve the same right-aligned column. Keep large values
+  // readable and take the space from long names rather than clipping money.
+  const widestAmount = Math.max(9, ...sorted.map(plan => formatAmount.format(plan.amount).length));
   const groups = [
     { timing: 'today', label: 'Due today', items: sorted.filter((plan) => plan.dueDate === today) },
     { timing: 'overdue', label: 'Overdue', items: sorted.filter((plan) => plan.dueDate < today) },
@@ -57,7 +60,8 @@ function ExpensePlanList({ plans, onSelect }) {
     <p>Choose a repeat frequency when adding a transaction to schedule a bill.</p>
   </div>;
 
-  return <div className="dn-expense-plan-groups" data-displays-year={displaysYear}>
+  return <div className="dn-expense-plan-groups" data-displays-year={displaysYear}
+    style={{ '--dn-expense-amount-width': `${widestAmount}ch` }}>
     {groups.filter(({ items }) => items.length).map(({ timing, label, items }) => <section key={timing} aria-label={label}>
       {(!single || timing !== 'later') && <h4 data-plan-group className={`dn-expense-plan-heading is-${timing}`}>{label}</h4>}
       <ul className="dn-expense-plan-list" role="list">
@@ -97,8 +101,12 @@ function ExpensePlanActions({ plan, nameId, description, onSelect }) {
       onClick={(event) => onSelect(plan, 'edit', event.currentTarget)}>Edit</button>
     <button type="button" data-plan-manage-action="skip" aria-label="Skip this occurrence" aria-describedby={nameId}
       disabled={!following} onClick={(event) => onSelect(plan, 'skip', event.currentTarget)}>Skip</button>
-    <button type="button" data-plan-manage-action="end" aria-describedby={nameId}
-      onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>End repeat</button>
+    <button type="button" className="dn-expense-plan-end" data-plan-manage-action="end"
+      aria-label="End repeat" aria-describedby={nameId} title="End repeat"
+      onClick={(event) => onSelect(plan, 'end', event.currentTarget)}>
+      <span className="dn-expense-plan-end-long" aria-hidden="true">End repeat</span>
+      <span className="dn-expense-plan-end-short" aria-hidden="true">End</span>
+    </button>
     <button type="button" className="dn-expense-plan-record" data-plan-action="payment"
       aria-label={`Record payment for ${plan.name}`} aria-describedby={description}
       onClick={(event) => onSelect(plan, 'payment', event.currentTarget)}><span>Record payment</span></button>

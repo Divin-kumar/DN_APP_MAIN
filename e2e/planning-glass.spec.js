@@ -56,6 +56,14 @@ for (const [width, theme] of [[320, 'dark'], [430, 'light']]) {
     await expect(data).toContainText('₹799');
     const actions = ['Edit schedule', 'Skip this occurrence', 'End repeat', 'Record payment for Home internet'];
     for (const name of actions) await expect(bill.getByRole('button', { name, exact: true })).toBeVisible();
+    const compactEnd = bill.locator('.dn-expense-plan-end-short');
+    await expect(compactEnd).toBeVisible({ visible: width <= 380 });
+    const amountFits = await bill.locator('.dn-expense-plan-amount').evaluate(
+      el => el.scrollWidth <= el.clientWidth + 1);
+    expect(amountFits).toBe(true);
+    const endInk = await bill.locator('.dn-expense-plan-end').evaluate(el => getComputedStyle(el).color);
+    const editInk = await bill.getByRole('button', { name: 'Edit schedule' }).evaluate(el => getComputedStyle(el).color);
+    expect(endInk).not.toBe(editInk);
     const layout = await bill.evaluate(element => {
       const dataRow = element.querySelector('.dn-expense-plan-data');
       return {
