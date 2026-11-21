@@ -304,6 +304,8 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
   html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger {
     margin:0; border-radius:0 17px 17px 0 !important;
     position:relative;
+    /* Avoid a lingering selected tint after the Refine sheet closes. */
+    transition:none !important;
   }
   html[data-theme] .dn-command-root .dn-command-controls .dn-list-controls-row:has(> .dn-list-controls-search) > .dn-list-controls-trigger::before {
     position:absolute; content:''; inset:12px auto 12px 0;

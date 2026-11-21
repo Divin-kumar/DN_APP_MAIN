@@ -1,10 +1,10 @@
 # DN — MASTER SOURCE OF TRUTH
 
-## Actionable feedback and empty planned bills (21 November 2026, development)
+## Actionable feedback and mobile Refine state (21 November 2026, development)
 
 An actionable success toast remains visible for at least eight seconds and pauses its dismissal timer while a user hovers it or navigates its action by keyboard. On leaving or blurring, the timer resumes. Ordinary non-action toasts retain their previous timing, and View still navigates through the same route without modifying data.
 
-The Upcoming expenses entry states “Nothing scheduled yet” when it has no bills, instead of displaying an empty secondary line. Existing list, payment, edit, skip, end and repeat calculations remain unchanged. Guest tour fixtures and edition remain unchanged because the tour already covers the same bill and notification journeys; no new interaction, data model or sample record is introduced.
+After a mobile Refine dialog closes, the dock icon returns to its neutral appearance immediately rather than lingering in the selected tint during CSS interpolation. The button still shows its open state, focus outline and any relevant filter badges. Tasks shortcut status and condition rules remain unchanged. The Upcoming expenses entry remains intentionally hidden if there are no plans, avoiding an otherwise empty shortcut. Guest tour fixtures and edition are unchanged; no data model or sample records are changed.
 
 ## Upcoming expenses sheet (20 November 2026, development)
 

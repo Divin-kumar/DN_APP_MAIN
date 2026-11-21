@@ -33,7 +33,7 @@ export default function ExpensePlanEntry({ plans, expanded, buttonRef, onOpen })
   return <section id="expense-plans" className="dn-expense-plans" aria-label="Expense plans">
     <button ref={buttonRef} type="button" className="dn-expense-plan-entry" aria-haspopup="dialog" aria-expanded={expanded} onClick={onOpen}>
       <span className="dn-expense-plan-entry-icon"><CalendarDays size={18} aria-hidden="true" /></span>
-      <span className="dn-expense-plan-entry-text"><strong>Upcoming expenses</strong><small>{summaryHint(plans, today) || 'Nothing scheduled yet'}</small></span>
+      <span className="dn-expense-plan-entry-text"><strong>Upcoming expenses</strong><small>{summaryHint(plans, today)}</small></span>
       <ChevronRight size={17} aria-hidden="true" />
     </button>
   </section>;

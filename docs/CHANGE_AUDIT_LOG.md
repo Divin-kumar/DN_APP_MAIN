@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261121-595 | Repair Refine close-state and preserve the empty finance layout
+
+- **Scope.** Fix six phone browser regressions at widths 320, 390 and 430 px in light and dark mode. When a mobile Refine sheet closes, its icon must return immediately to the neutral appearance without retaining the open-state tint. Suppress the short color interpolation on this control only; do not change saved filter conditions or the shared filter builder. Revert the unreachable empty-bill hint, because Upcoming expenses is deliberately not shown without a plan, and remove the invalid browser assertion.
+- **Compatibility.** Keep the 44px-or-larger touch target, visible keyboard focus, open-state styling, condition chips, Guest data, financial totals, repeat behavior, and the original blue + button. No data writes or new dependencies.
+- **Verification.** Initial commit ac11840 passed 636 Node tests, nine focused toast tests, lint, build and documentation governance; follow-up phone and Finance suites exposed the six CSS transition assertions and one invalid test expectation. New commit verification and live development read-back are required before claiming this repair verified.
+
 ## CHG-20261121-594 | Keep actionable feedback reachable and clarify empty bills
 
 - **Scope.** Pause timed dismissal while an actionable toast is hovered or keyboard-focused, and allow at least eight seconds for its View action. Clearly label an empty Upcoming expenses shortcut instead of leaving an empty supporting line. Preserve original record actions, guest/account scope, schedules, payments, and the universal + behavior.
