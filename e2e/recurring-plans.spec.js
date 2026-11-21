@@ -795,3 +795,14 @@ test.describe('Overdue dates and the readable payment date', () => {
     });
   }
 });
+
+test('Upcoming expenses entry explains when no bills are scheduled', async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  const errors = await seedGuest(page, { moments: [], incomes: [], expenses: [] });
+  await page.goto('/financials/transactions');
+  const entry = page.getByRole('button', { name: /Upcoming expenses.*Nothing scheduled yet/ });
+  await expect(entry).toBeVisible();
+  await entry.click();
+  await expect(page.getByRole('dialog', { name: 'Upcoming expenses' })).toContainText('No upcoming expenses');
+  expect(errors).toEqual([]);
+});

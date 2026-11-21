@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261121-594 | Keep actionable feedback reachable and clarify empty bills
+
+- **Scope.** Pause timed dismissal while an actionable toast is hovered or keyboard-focused, and allow at least eight seconds for its View action. Clearly label an empty Upcoming expenses shortcut instead of leaving an empty supporting line. Preserve original record actions, guest/account scope, schedules, payments, and the universal + behavior.
+- **Compatibility.** No stored data or feature configuration changes. Non-action toast timing remains unchanged. The existing Guest tour still documents the same workflows, so its edition and records are preserved.
+- **Verification.** Source-reviewed; browser/CI checks and live development read-back must be recorded after the commit. Physical iPhone Safari and VoiceOver remain unverified.
+
 ## CHG-20261120-593 | Align the two-line upcoming expense rows
 
 - **Scope.** Align the date, cadence and amount across rows. Give Record payment a quiet green button surface and align its right edge with the amount. Keep the secondary actions together on the same line and preserve their touch targets. On phones, shorten current-year dates to give bill names more room and reserve width for decimal amounts.

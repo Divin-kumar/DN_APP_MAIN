@@ -15,7 +15,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         useAppStore.getState().showToast('Your Moment was saved', 'success', { label: 'View', to: '/events' });
         return useAppStore.getState().toast.duration;
       });
-      expect(duration).toBeGreaterThanOrEqual(6000);
+      expect(duration).toBeGreaterThanOrEqual(8000);
       const toast = page.getByRole('status').filter({ hasText: 'Your Moment was saved' });
       await expect(toast).toBeVisible();
       await expect(toast).toHaveAttribute('data-tone', 'success');
@@ -102,5 +102,36 @@ test('Error feedback is announced as an alert and does not change saved records'
   });
   expect(appearance.border).not.toBe(appearance.color);
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(originalRecords);
+  expect(errors).toEqual([]);
+});
+
+test('Action feedback remains available during keyboard focus and hover', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/dashboard');
+  const showShortAction = () => page.evaluate(async () => {
+    const { default: useAppStore } = await import('/src/store/useAppStore.js');
+    useAppStore.setState({ toast: {
+      message: 'Choose View to return to Moments',
+      type: 'success',
+      action: { label: 'View', to: '/events' },
+      duration: 450,
+    } });
+  });
+  await showShortAction();
+  const toast = page.getByRole('status').filter({ hasText: 'Choose View to return to Moments' });
+  const view = toast.getByRole('button', { name: 'View' });
+  await view.focus();
+  await page.waitForTimeout(620);
+  await expect(toast).toBeVisible();
+  await view.evaluate((button) => button.blur());
+  await expect(toast).toHaveCount(0, { timeout: 1500 });
+
+  await showShortAction();
+  await toast.hover();
+  await page.waitForTimeout(620);
+  await expect(toast).toBeVisible();
+  await page.mouse.move(0, 0);
+  await expect(toast).toHaveCount(0, { timeout: 1500 });
   expect(errors).toEqual([]);
 });

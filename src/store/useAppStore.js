@@ -264,7 +264,8 @@ const useAppStore = create((set, get) => ({
   },
 
   // Small success/error popups shown throughout the app.
-  showToast: (message, type = 'success', action = null) => set({ toast: { message, type, action, duration: action?.duration || (action?.label ? 6200 : 2600) } }),
+  showToast: (message, type = 'success', action = null) => set({ toast: { message, type, action,
+    duration: action?.label ? Math.max(8000, action?.duration || 0) : (action?.duration || 2600) } }),
   hideToast: () => set({ toast: null }),
 
   // Shared loading state used during auth checks and boot-up.

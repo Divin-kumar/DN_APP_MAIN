@@ -8,7 +8,7 @@
   It tells the app: "if the user opens /login, show login page; if they open /events,
   show the events section; if they open any unknown page, send them home."
 */
-import { Component, lazy, Suspense, useEffect } from 'react';
+import { Component, lazy, Suspense, useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
@@ -113,13 +113,16 @@ function GlobalToast() {
   const toast = useAppStore((state) => state.toast);
   const hideToast = useAppStore((state) => state.hideToast);
   const navigate = useNavigate();
+  const [toastInteracting, setToastInteracting] = useState(false);
 
-  // Keep success feedback visible long enough to read, without blocking the page.
+  // Action feedback must not disappear while someone is reading it with a
+  // pointer or navigating to its button with a keyboard.
+  useEffect(() => { setToastInteracting(false); }, [toast]);
   useEffect(() => {
-    if (!toast) return undefined;
+    if (!toast || (toast.action?.label && toastInteracting)) return undefined;
     const id = window.setTimeout(() => hideToast(), toast.duration || 2600);
     return () => window.clearTimeout(id);
-  }, [toast, hideToast]);
+  }, [toast, hideToast, toastInteracting]);
 
   if (!toast) return null;
 
@@ -132,7 +135,11 @@ function GlobalToast() {
   };
 
   return (
-    <div className="app-toast" data-tone={toast.type || 'success'} role={toast.type === 'danger' || toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'danger' || toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true">
+    <div className="app-toast" data-tone={toast.type || 'success'} role={toast.type === 'danger' || toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'danger' || toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true"
+      onMouseEnter={() => { if (toast.action?.label) setToastInteracting(true); }}
+      onMouseLeave={() => setToastInteracting(false)}
+      onFocusCapture={() => { if (toast.action?.label) setToastInteracting(true); }}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setToastInteracting(false); }}>
       <span className="app-toast-icon" aria-hidden="true">{toast.type === 'danger' || toast.type === 'error' ? <CircleAlert size={17} /> : <Check size={17} />}</span>
       <span className="app-toast-message">{toast.message}</span>
       {toast.action?.label ? <button className="app-toast-action" type="button" onClick={handleAction}>{toast.action.label}</button> : null}

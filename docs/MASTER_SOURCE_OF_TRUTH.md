@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Actionable feedback and empty planned bills (21 November 2026, development)
+
+An actionable success toast remains visible for at least eight seconds and pauses its dismissal timer while a user hovers it or navigates its action by keyboard. On leaving or blurring, the timer resumes. Ordinary non-action toasts retain their previous timing, and View still navigates through the same route without modifying data.
+
+The Upcoming expenses entry states “Nothing scheduled yet” when it has no bills, instead of displaying an empty secondary line. Existing list, payment, edit, skip, end and repeat calculations remain unchanged. Guest tour fixtures and edition remain unchanged because the tour already covers the same bill and notification journeys; no new interaction, data model or sample record is introduced.
+
 ## Upcoming expenses sheet (20 November 2026, development)
 
 Upcoming expenses uses a plain bill list with sticky headings for Due today, Overdue and Later. Each bill has two lines. The first shows the name, due date, frequency and expected amount. The date, frequency and right-aligned amount use shared columns. The second line shows Edit, Skip, End repeat and a lightly tinted Record payment action aligned to the right edge of the amount. At widths up to 480 px, the current year is omitted visually to give the name more room. Dates outside the current year display the year. The full date and name remain available to assistive technology and in the bill’s forms. Spending totals in Transactions use recorded payments.
