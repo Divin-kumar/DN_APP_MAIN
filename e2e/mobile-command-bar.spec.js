@@ -599,3 +599,52 @@ test('Reduced Motion keeps keyboard navigation without tile animation',async({pa
  await page.keyboard.press('Escape');await expect(menu).toHaveCount(0);
  expect(errors).toEqual([]);
 });
+
+// Applied conditions must not leave Refine permanently highlighted after
+// the sheet closes. Keep the badge and condition chip as the visible signal.
+for (const width of [320, 390, 430]) for (const theme of ['dark', 'light']) {
+  test(`saved filters keep the dock Refine icon neutral at ${width}px in ${theme}`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 844 });
+    const errors = await seedGuest(page, { theme });
+    await page.goto('/tasks');
+    const trigger = page.locator('.dn-command-controls .dn-list-controls-trigger');
+    await expect(trigger).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    const appearance = () => trigger.evaluate(el => {
+      const css = getComputedStyle(el);
+      return [css.backgroundColor, css.color];
+    });
+    const original = await appearance();
+    await page.getByRole('group', { name: 'Filter Tasks by status' })
+      .getByRole('button', { name: /Completed/ }).click();
+    await expect(trigger).toHaveClass(/is-active/);
+    await expect(trigger.locator('.dn-list-controls-badge')).toHaveText('1');
+    await expect(page.getByText('Status Is Completed')).toBeVisible();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(await appearance()).toEqual(original);
+    await trigger.click();
+    await expect(page.getByRole('dialog', { name: 'Refine Tasks' })).toBeVisible();
+    await page.getByRole('dialog', { name: 'Refine Tasks' })
+      .getByRole('button', { name: 'Cancel' }).click();
+    await expect(trigger).toHaveAttribute('aria-expanded', 'false');
+    expect(await appearance()).toEqual(original);
+    await expect(trigger.locator('.dn-list-controls-badge')).toHaveText('1');
+    // The other list pages reuse the same component and dock CSS. Simulating
+    // an active class verifies their styling without changing saved filters.
+    for (const route of ['/events', '/activities', '/financials/transactions']) {
+      await page.goto(route);
+      const button = page.locator('.dn-command-controls .dn-list-controls-trigger');
+      await expect(button).toBeVisible();
+      const style = () => button.evaluate(el => {
+        const css = getComputedStyle(el);
+        return [css.backgroundColor, css.color];
+      });
+      const idle = await style();
+      await button.evaluate(el => el.classList.add('is-active'));
+      expect(await style()).toEqual(idle);
+    }
+    await page.goto('/insights');
+    await expect(page.locator('.dn-command-controls .dn-list-controls-trigger')).toHaveCount(0);
+    expect(errors).toEqual([]);
+  });
+}

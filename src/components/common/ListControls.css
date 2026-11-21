@@ -38,8 +38,9 @@ html[data-theme] .dn-list-controls-trigger {
   font-weight: 650;
   cursor: pointer;
 }
-html[data-theme] .dn-list-controls-trigger[aria-expanded="true"],
-html[data-theme] .dn-list-controls-trigger.is-active {
+/* Count badge and applied chips show saved filters. The button only looks
+   pressed while the Refine panel is actually open. */
+html[data-theme] .dn-list-controls-trigger[aria-expanded="true"] {
   border-color: var(--action-border);
   background: var(--action-fill);
   color: var(--action-ink);
@@ -273,7 +274,7 @@ html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-
   color:var(--color-text-muted); font-size:12px; font-weight:660;
   transition:background .16s ease,border-color .16s ease,color .16s ease;
 }
-html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger:is([aria-expanded="true"], .is-active) {
+html[data-theme] .dn-list-controls-row:has(> .dn-list-controls-search) .dn-list-controls-trigger[aria-expanded="true"] {
   border-color:color-mix(in srgb,var(--color-primary) 29%,var(--color-border));
   background:color-mix(in srgb,var(--color-primary) 8%,var(--color-card));
   color:var(--color-primary);
