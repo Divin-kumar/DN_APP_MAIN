@@ -790,3 +790,16 @@ html[data-theme] .dn-condition-chips > .dn-condition-clear:focus-visible {
   outline: 2px solid var(--color-primary);
   outline-offset: -2px;
 }
+
+/* Reorder affordance must remain visible on iPhone dark/light themes.
+   Keep the 28px grip column and 44px touch lane; avoid another action row. */
+html[data-theme] .dn-condition-chip-rail .dn-condition-grip {
+  color: color-mix(in srgb, var(--color-text) 76%, var(--color-text-muted)) !important;
+  opacity: 1 !important;
+}
+html[data-theme] .dn-condition-chip-rail .dn-condition-grip > svg {
+  display: block !important;
+  width: 17px;
+  height: 17px;
+  stroke-width: 2.15;
+}
