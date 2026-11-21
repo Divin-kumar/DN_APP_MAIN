@@ -227,7 +227,7 @@ export function TaskListContent() {
       </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
         <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">
-          {displayedTasks.length}{displayedTasks.length !== tasks.length ? ` of ${tasks.length}` : ''} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown
+          {displayedTasks.length}{displayedTasks.length !== tasks.length ? ` of ${tasks.length}` : ''} {displayedTasks.length === 1 && tasks.length === 1 ? 'Task' : 'Tasks'} shown
         </span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
           hiddenIds={statusTabChipId ? [statusTabChipId] : []}

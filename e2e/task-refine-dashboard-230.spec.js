@@ -49,7 +49,7 @@ for (const [width, theme] of [[320, 'light'], [430, 'dark'], [1440, 'light'], [1
     await expect(all).toBeVisible();
     await expect(results).toHaveCount(1);
     await expect(results.first()).toContainText('Archive old pictures');
-    await expect(page.locator('.dn-list-controls-context')).toHaveText('1 Task shown');
+    await expect(page.locator('.dn-list-controls-context')).toHaveText('1 of 3 Tasks shown');
     await page.goto('/dashboard');
     await page.getByRole('link', { name: 'View Tasks', exact: true }).click();
     await expect(completed).toHaveAttribute('aria-pressed', 'true');

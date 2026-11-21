@@ -617,9 +617,10 @@ for (const width of [320, 390, 430]) for (const theme of ['dark', 'light']) {
     const original = await appearance();
     await page.getByRole('group', { name: 'Filter Tasks by status' })
       .getByRole('button', { name: /Completed/ }).click();
-    await expect(trigger).toHaveClass(/is-active/);
-    await expect(trigger.locator('.dn-list-controls-badge')).toHaveText('1');
-    await expect(page.getByText('Status Is Completed')).toBeVisible();
+    await expect(trigger).not.toHaveClass(/is-active/);
+    // The selected Completed tab already communicates the sole condition.
+    await expect(trigger.locator('.dn-list-controls-badge')).toHaveCount(0);
+    await expect(page.locator('.dn-task-discovery-summary .dn-condition-chips')).toHaveCount(0);
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(await appearance()).toEqual(original);
     await trigger.click();
@@ -628,7 +629,7 @@ for (const width of [320, 390, 430]) for (const theme of ['dark', 'light']) {
       .getByRole('button', { name: 'Cancel' }).click();
     await expect(trigger).toHaveAttribute('aria-expanded', 'false');
     expect(await appearance()).toEqual(original);
-    await expect(trigger.locator('.dn-list-controls-badge')).toHaveText('1');
+    await expect(trigger.locator('.dn-list-controls-badge')).toHaveCount(0);
     // The other list pages reuse the same component and dock CSS. Simulating
     // an active class verifies their styling without changing saved filters.
     for (const route of ['/events', '/activities', '/financials/transactions']) {

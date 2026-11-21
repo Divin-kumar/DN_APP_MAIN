@@ -146,3 +146,32 @@ test('Tasks status tab is not duplicated as an applied filter chip', async ({ pa
   await expect(page.locator('.dn-task-discovery-summary .dn-condition-chips')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
+
+test('multiple applied filters can be cleared without resetting sort or touching records', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.addInitScript(() => {
+    if (localStorage.getItem('dn_multi_filter_clear_test')) return;
+    const group = { id: 'root', kind: 'group', join: 'OR', children: [
+      { id: 'completed-rule', kind: 'rule', field: 'activity.status', operator: 'eq', value: 'completed' },
+      { id: 'progress-rule', kind: 'rule', field: 'activity.status', operator: 'eq', value: 'in-progress' },
+    ] };
+    localStorage.setItem('dn_list_state_guest_conditions%3Aactivities',
+      JSON.stringify({ group, migrationVersion: 1 }));
+    localStorage.setItem('dn_multi_filter_clear_test', 'true');
+  });
+  await page.goto('/activities');
+  const records = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
+  const trigger = page.locator('.dn-command-controls .dn-list-controls-trigger');
+  await expect(trigger.locator('.dn-list-controls-badge')).toHaveText('2');
+  const clear = page.getByRole('button', { name: 'Clear all active filters' });
+  await expect(clear).toBeVisible();
+  const before = await page.locator('.dn-list-controls-summary').textContent();
+  await clear.click();
+  await expect(trigger.locator('.dn-list-controls-badge')).toHaveCount(0);
+  await expect(page.getByRole('region', { name: 'Active filters' })).toHaveCount(0);
+  await expect(page.locator('.dn-list-controls-summary')).toHaveText(before);
+  await expect(page.locator('.dn-list-controls-context')).toContainText('activities');
+  expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(records);
+  expect(errors).toEqual([]);
+});
