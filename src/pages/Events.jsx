@@ -373,7 +373,7 @@ export default function Events() {
             label: 'Sort moments', onChange: (field, direction) => changeMomentFilters({ field, direction }) },
           defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
             direction: settingsDefaults.filters.direction } }}
-          activeCount={conditions.activeCount} resultCount={visibleEvents.length} resultLabel="moments"
+          activeCount={conditions.activeCount} resultCount={visibleEvents.length} totalCount={events.length} resultLabel="moments"
           chips={<ConditionChips filter={conditions} />}
           summary={sortSummary}
           sort={<SortControl field={sortField} direction={sortDirection} options={MOMENT_SORT_OPTIONS} label="Sort moments"

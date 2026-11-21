@@ -176,7 +176,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             label: 'Sort activities', onChange: (field, direction) => changeFilters({ field, direction }) },
             defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
               direction: settingsDefaults.filters.direction } }}
-          activeCount={activeCount} resultCount={visible.length} resultLabel="activities"
+          activeCount={activeCount} resultCount={visible.length} totalCount={allInScope.length} resultLabel="activities"
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}

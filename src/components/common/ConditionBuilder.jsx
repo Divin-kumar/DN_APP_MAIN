@@ -313,12 +313,13 @@ function AppliedCondition({ filter, chip, node, reducedMotion }) {
     </ModalDialog> : null}
   </motion.div>;
 }
-export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
+export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess, hiddenIds = [], onClear }) {
   const reducedMotion = useReducedMotion();
   const stripRef = useRef(null);
   const railRef = useRef(null);
   const [narrowStrip, setNarrowStrip] = useState(false);
-  const chips = conditionChipEntries(filter.state.group, filter.schema);
+  const chips = conditionChipEntries(filter.state.group, filter.schema)
+    .filter(({ id }) => !hiddenIds.includes(id));
   const hasChips = chips.length > 0;
   const canExpand = Boolean(onShowMore);
   useLayoutEffect(() => {
@@ -388,6 +389,8 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess }) {
       aria-label={`Show ${overflow} more active ${overflow === 1 ? 'filter' : 'filters'}`}
       onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"
         onClick={onShowLess}>Less</button> : null}
+    {onClear && chips.length > 1 ? <button type="button" className="dn-condition-clear"
+      aria-label="Clear all active filters" onClick={onClear}>Clear</button> : null}
   </div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately

@@ -103,6 +103,21 @@ export const taskViewWithoutStatus = (view) => {
   return { ...view, status: 'all', group: withoutStatus(normalizeConditionGroup(view.group)) || emptyGroup() };
 };
 
+// When a simple required Status condition is already expressed by the selected
+// Tasks status tab, suppress only that duplicate *chip*. Leave the actual
+// condition untouched in the saved filter model and the Refine editor.
+export const taskStatusTabRuleId = (view) => {
+  const status = taskStatusSelection(view);
+  if (!TASK_STATUS_OPTIONS.some(({ value }) => value !== 'all' && value === status)) return null;
+  const rules = [];
+  const visit = (node) => {
+    if (node.kind === 'group') node.children.forEach(visit);
+    else if (node.field === 'status' && isActiveCondition(node)) rules.push(node);
+  };
+  visit(compactTaskRefineGroup(taskViewConditionGroup(view)));
+  return rules.length === 1 && rules[0].operator === 'eq' && rules[0].value === status ? rules[0].id : null;
+};
+
 export const taskStatusSelection = (view) => {
   const criteria = [];
   const collect = (node, required) => {

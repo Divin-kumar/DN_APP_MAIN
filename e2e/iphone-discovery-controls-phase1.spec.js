@@ -123,3 +123,26 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     expect(errors).toEqual([]);
   });
 }
+
+
+test('Tasks status tab is not duplicated as an applied filter chip', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, { theme: 'dark' });
+  await page.goto('/tasks');
+  await page.getByRole('group', { name: 'Filter Tasks by status' })
+    .getByRole('button', { name: /Completed/ }).click();
+  const refine = page.locator('.dn-command-controls .dn-list-controls-trigger');
+  await expect(refine).toHaveAttribute('aria-expanded', 'false');
+  await expect(refine.locator('.dn-list-controls-badge')).toHaveCount(0);
+  await expect(page.locator('.dn-task-discovery-summary .dn-condition-chips')).toHaveCount(0);
+  await expect(page.getByRole('group', { name: 'Filter Tasks by status' })
+    .getByRole('button', { name: /Completed/ })).toHaveAttribute('aria-pressed', 'true');
+  await refine.click();
+  const sheet = page.getByRole('dialog', { name: 'Refine Tasks' });
+  await expect(sheet.locator('.dn-condition-rule')).toHaveCount(1);
+  await sheet.getByRole('button', { name: 'Cancel' }).click();
+  await page.getByRole('group', { name: 'Filter Tasks by status' })
+    .getByRole('button', { name: /All Tasks/ }).click();
+  await expect(page.locator('.dn-task-discovery-summary .dn-condition-chips')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

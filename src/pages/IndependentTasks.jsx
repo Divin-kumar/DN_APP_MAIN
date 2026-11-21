@@ -10,7 +10,7 @@ import TaskEditor, { TaskRepeatActionSummary } from '../components/tasks/TaskEdi
 import TaskRefineSheet, { TASK_VIEW_DEFAULTS, TASK_VIEW_RULES } from '../components/tasks/TaskRefineSheet';
 import { ConditionChips } from '../components/common/ConditionBuilder';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../utils/conditionEngine.js';
-import { TASK_STATUS_OPTIONS, taskFilterFields, taskStatusSelection, taskViewConditionGroup, taskViewWithoutStatus } from '../utils/taskConditionFields.js';
+import { TASK_STATUS_OPTIONS, taskFilterFields, taskStatusSelection, taskStatusTabRuleId, taskViewConditionGroup, taskViewWithoutStatus } from '../utils/taskConditionFields.js';
 import { filterTaskResults } from '../utils/taskListFilters.js';
 import { configuredConditionGroup, LIST_CONDITION_DEFAULTS, LIST_CONDITION_RULES } from '../utils/listViewDefaults.js';
 import usePersistentListState from '../hooks/usePersistentListState';
@@ -95,7 +95,8 @@ export function TaskListContent() {
     return highlightedOutsideFilters ? [selectedTask, ...sorted] : sorted;
   }, [matches, view.direction, view.field, selectedTask, highlightedOutsideFilters]);
   const viewGroup = useMemo(() => taskViewConditionGroup(view), [view]);
-  const activeFilterCount = conditionCount(viewGroup);
+  const statusTabChipId = useMemo(() => taskStatusTabRuleId(view), [view]);
+  const activeFilterCount = conditionCount(viewGroup) - (statusTabChipId ? 1 : 0);
   const filterSchema = useMemo(() => taskFilterFields(tasks, moments, today), [tasks, moments, today]);
   const appliedFilterControls = {
     schema: filterSchema, state: { group: viewGroup }, editorKey: 'task-chips:' + scope,
@@ -217,14 +218,20 @@ export function TaskListContent() {
             onClick={() => changeView({ search: '' })}><X size={17} aria-hidden="true" /></button> : null}
         </div>
         <button type="button" className={`dn-list-controls-trigger${activeFilterCount ? ' is-active' : ''}`}
-          aria-label="Refine" aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
+          aria-label="Refine"
+          aria-description={`Filters and sorting. ${activeFilterCount} additional ${activeFilterCount === 1 ? 'filter' : 'filters'} active; selected status is shown above.`}
+          title="Filters and sort" aria-haspopup="dialog" aria-expanded={refine} onClick={() => setRefine(true)}>
           <SlidersHorizontal size={17} aria-hidden="true" /><span>Refine</span>
           {activeFilterCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeFilterCount}</span> : null}
         </button>
       </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
-        <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{displayedTasks.length} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown</span>
+        <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">
+          {displayedTasks.length}{displayedTasks.length !== tasks.length ? ` of ${tasks.length}` : ''} {displayedTasks.length === 1 ? 'Task' : 'Tasks'} shown
+        </span>
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
+          hiddenIds={statusTabChipId ? [statusTabChipId] : []}
+          onClear={() => changeView({ group: emptyGroup(), status: 'all', priority: 'all', due: 'all' })}
           maxVisible={showAllTaskFilters ? undefined : 2}
           onShowMore={() => setShowAllTaskFilters(true)}
           onShowLess={showAllTaskFilters ? () => setShowAllTaskFilters(false) : undefined} /> : null}

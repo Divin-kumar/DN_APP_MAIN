@@ -119,7 +119,7 @@ export default function TransactionHistory({
           defaults: { group: savedDefaults?.group,
             field: String(savedDefaults?.filters?.sort || 'date-desc').split('-')[0],
             direction: String(savedDefaults?.filters?.sort || 'date-desc').split('-')[1] } }}
-        activeCount={conditions.activeCount} resultCount={transactions.length}
+        activeCount={conditions.activeCount} resultCount={transactions.length} totalCount={totalCount}
         resultLabel="transactions" summary={transactionSortSummary(filters.sort)} chips={<ConditionChips filter={conditions} />}
         sort={<SortControl field={sortField} direction={sortDirection} compactDirection options={TRANSACTION_SORT_OPTIONS} label="Sort transactions"
           onFieldChange={(field) => onFilters({ sort: transactionSortForField(field) })}

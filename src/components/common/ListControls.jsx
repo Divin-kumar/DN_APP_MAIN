@@ -6,7 +6,7 @@ import MobileControlsSlot from './MobileControlsSlot';
 
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
-  title = 'Filters', activeCount = 0, resultCount, resultLabel = 'results',
+  title = 'Filters', activeCount = 0, resultCount, totalCount, resultLabel = 'results',
   summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, trailingAction, children,
   refine,
 }) {
@@ -31,7 +31,8 @@ export default function ListControls({
   useEffect(() => { if (activeCount <= 2) setShowAllChips(false); }, [activeCount]);
   const displayChips = refine && isValidElement(chips)
     ? cloneElement(chips, { maxVisible: showAllChips ? undefined : 2,
-      onShowMore: () => setShowAllChips(true), onShowLess: showAllChips ? () => setShowAllChips(false) : undefined }) : chips;
+      onShowMore: () => setShowAllChips(true), onShowLess: showAllChips ? () => setShowAllChips(false) : undefined,
+      onClear: refine.conditions.clear }) : chips;
   const updateEdges = () => {
     const rail = railRef.current;
     if (!rail) return;
@@ -85,6 +86,8 @@ export default function ListControls({
         {search ? <div className="dn-list-controls-search"><Search className="dn-list-controls-search-icon" size={18} strokeWidth={1.8} aria-hidden="true" />{search}</div> : null}
         {hasPanel ? <button type="button" className={`dn-list-controls-trigger${activeCount ? ' is-active' : ''}`}
           aria-label={`${label}${activeCount ? `, ${activeCount} active` : ''}`}
+          aria-description="Open filters and sorting choices"
+          title="Filters and sort"
           ref={triggerRef} aria-controls={refine ? undefined : panelId} aria-haspopup={refine ? 'dialog' : undefined} aria-expanded={open} onClick={() => setOpen((current) => !current)}>
           <SlidersHorizontal size={17} strokeWidth={1.8} aria-hidden="true" /><span>Refine</span>
           {activeCount ? <span className="dn-list-controls-badge" aria-hidden="true">{activeCount}</span> : null}
@@ -110,7 +113,7 @@ export default function ListControls({
         </div>}
       </section> : null}
       <div className="dn-list-controls-topline">
-        {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount} {resultLabel}</span> : null}
+        {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount}{typeof totalCount === 'number' && totalCount !== resultCount ? ` of ${totalCount}` : ''} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}
         {trailingAction ? <span className="dn-list-controls-tail-action">{trailingAction}</span> : null}
       </div>
