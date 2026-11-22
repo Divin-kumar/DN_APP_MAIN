@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261122-596 | Prepare DN v2.3.13 for verified production promotion
+
+- **Scope.** Advance the patch release version from v2.3.12 to v2.3.13 to allow promotion of the latest OldVersion development code to dn-10. The prior production attempt at source f5e87088 was blocked because its candidate version matched the already live v2.3.12. Preserve the exact application behavior, data formats, Firebase hosting targets, and dependencies.
+- **Compatibility.** No business logic, security rules, stored records, Guest data, or backend configuration is changed. OldVersion remains the only writable branch; main is untouched.
+- **Verification.** The prior source f5e87088 passed the independent development deploy and targeted browser workflow; production's unit tests, lint, dependency audit and build passed before the duplicate-version guard blocked publication. The v2.3.13 release itself must pass its production workflow and exact live Hosting readback before publication is considered verified.
+
 ## CHG-20261121-595 | Repair Refine close-state and preserve the empty finance layout
 
 - **Scope.** Fix six phone browser regressions at widths 320, 390 and 430 px in light and dark mode. When a mobile Refine sheet closes, its icon must return immediately to the neutral appearance without retaining the open-state tint. Suppress the short color interpolation on this control only; do not change saved filter conditions or the shared filter builder. Revert the unreachable empty-bill hint, because Upcoming expenses is deliberately not shown without a plan, and remove the invalid browser assertion.
