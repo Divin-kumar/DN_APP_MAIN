@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Creation handoff and mobile Back correction (22 November 2026, development)
+
+Only the outgoing Navigate & create sheet disappears instantly while opening a different form; regular creation sheets retain their animated close. The blue + distinguishes an actual pointer press from keyboard activation even when a touch browser reports click.detail = 0, preserving double-tap Back without lengthening the 215 ms tap window. The stable Save/Cancel footer introduced in CHG-597 remains. This is visual and gesture handling only, with no saved-record or Guest tour fixture changes.
+
 ## Stable first-paint mobile creator (22 November 2026, development)
 
 The universal + hands directly from Navigate & create to Moment, Activity, Task or Transaction forms without showing both modal backdrops at once. Mobile creation sheets mount their Save and Cancel controls in a stable footer immediately, without first drawing them inside the scrolling form and then relocating them. Ordinary sheet close animations, keyboard and swipe actions, the + double-tap gesture and existing record saving remain unchanged. Guest tour fixtures and edition remain unchanged because these are visual stability corrections only.

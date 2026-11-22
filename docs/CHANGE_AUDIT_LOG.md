@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261122-598 | Preserve mobile Back and close motion during creation handoff
+
+- **Scope.** Narrow instant handoff hiding to the outgoing Navigate & create dialog, not all modal exits. Classify the universal + keyboard activation by whether a pointer press occurred, rather than relying on click.detail being nonzero. Mobile browsers may emit a zero-detail touch click; previously that took the keyboard path and bypassed double-tap Back.
+- **Compatibility.** Preserve a single-tap's existing 215ms double-tap window, immediate keyboard Enter/Space behavior, drag to reposition and suppression of clicks after dragging. Keep ordinary form exit animations visible and the pre-mounted pinned Save/Cancel footer. No changes to saved records, authentication, app version or Firebase configuration.
+- **Verification.** Two independent focused Chromium suites detected five failures each after CHG-597; the four touch Back failures exposed this pointer classification issue, and the immediate form-close visibility expectation requires an exit check. Re-run both focused suites, Node tests, lint and Firebase development read-back after this correction. Physical iPhone Safari remains unverified.
+
 ## CHG-20261122-597 | Keep the mobile creation sheet steady on first paint
 
 - **Scope.** Fix a shared creation-sheet transition: Save and Cancel buttons previously rendered inside the scrolling form first and then moved into the pinned footer after mount, briefly changing the sheet height. Give all formFooter sheets a stable pre-created portal target that attaches in a layout effect before paint. Hide the outgoing Navigate & create sheet immediately when a new form replaces it, avoiding overlapping visible dialogs.

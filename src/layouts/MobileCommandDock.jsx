@@ -42,6 +42,9 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const pointer = useRef(null);
   const pendingTap = useRef(null);
   const secondTap = useRef(false);
+  // Touch-generated click.detail can be zero on mobile browsers. Track the
+  // actual pointer press instead of classifying that click as keyboard input.
+  const pointerActivation = useRef(false);
   const suppressClick = useRef(false);
   const trigger = useRef(null);
   useEffect(() => {
@@ -178,6 +181,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const y = drag?.y ?? (viewport.top + 76 + position.y * verticalTravel);
   const pointerDown = event => {
     if (event.button !== 0 || !event.isPrimary) return;
+    pointerActivation.current = true;
     // Cancel the single-tap timer as soon as a second press starts on the +.
     // This keeps the sheet closed even when the second click arrives later.
     const first = pendingTap.current;
@@ -208,16 +212,18 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (!p || p.id !== event.pointerId) return;
     if (p.moved && drag && !cancelled) savePosition({ floating: true, edge: drag.x+CREATE_SIZE/2 < viewport.width/2 ? 'left':'right',
       y: clamp((drag.y-viewport.top-76)/verticalTravel,0,1) });
-    if (cancelled) suppressClick.current = false;
+    if (cancelled) { suppressClick.current = false; pointerActivation.current = false; }
     pointer.current = null;
     setDrag(null);
     if(event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
   };
   const onTriggerClick = event => {
-    const goBack = event.detail !== 0 && secondTap.current;
+    const pointerClick = pointerActivation.current;
+    pointerActivation.current = false;
+    const goBack = pointerClick && secondTap.current;
     secondTap.current = false;
     if (suppressClick.current) { suppressClick.current = false; return; }
-    if (event.detail === 0 || open) {
+    if ((!pointerClick && event.detail === 0) || open) {
       window.clearTimeout(pendingTap.current?.timer);
       pendingTap.current = null;
       blurDockSearch();

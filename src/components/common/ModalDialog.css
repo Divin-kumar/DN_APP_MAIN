@@ -122,9 +122,9 @@ html[data-theme] body .dn-modal-backdrop.dn-modal-viewport > .dn-modal {
 html[data-theme] .dn-modal-viewport > .dn-modal[data-closing],
 /* Hide the departing navigation sheet immediately during an entry handoff.
    The new form then animates in without an overlapping visible backdrop. */
-html[data-theme] .dn-modal-viewport[data-handoff] {
+html[data-theme] .dn-modal-viewport[data-handoff] { pointer-events: none; }
+html[data-theme] .dn-modal-viewport[data-handoff]:has(> .dn-command-dialog) {
   visibility: hidden;
-  pointer-events: none;
 }
 
 /* Native-feeling, opt-in downward dismissal for phone sheets. The title and
