@@ -430,3 +430,13 @@ html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-repeat-context 
 html[data-theme] .dn-task-editor-actions { border-top-color: var(--dn-planning-line); gap: 6px 12px; }
 html[data-theme] .dn-task-editor-actions button { padding-inline: 12px; border-radius: 12px; background: var(--dn-planning-field); }
 html[data-theme] .dn-task-feedback { border-color: var(--dn-planning-line); border-radius: 16px; background: var(--dn-planning-surface); }
+
+/* Compact iPhone Task labels remain legible without adding a third card line. */
+@media (max-width:760px), (orientation:landscape) and (max-height:500px) and (pointer:coarse) {
+  html[data-theme] .dn-tasks-page .dn-task-metrics button { font-size:12px; min-height:62px; }
+  html[data-theme] .dn-tasks-page .dn-task-applied button { font-size:12px; min-height:40px; }
+  html[data-theme] .dn-task-list .dn-task-calendar small { font-size:11.5px; }
+  html[data-theme] .dn-task-list .dn-task-calendar .dn-task-calendar-time { font-size:11px; }
+  html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-context { font-size:12.5px; line-height:1.4; }
+  html[data-theme] .dn-task-list .dn-independent-task-row .dn-task-copy strong { font-size:14px; }
+}

@@ -154,13 +154,14 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const requestClose = (onCancel) => {
     if (closeDisabledRef.current) return;
     const customClose = typeof onCancel === 'function' ? onCancel : null;
+    // Explicit Cancel and Back actions preserve the existing discard/return behavior.
+    if (customClose) { customClose(); return; }
     if (dirtyRef.current) {
-      closeAfterDiscard.current = customClose || onCloseRef.current;
+      closeAfterDiscard.current = onCloseRef.current;
       setConfirmDiscard(true);
       return;
     }
-    if (customClose) customClose();
-    else if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
+    if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
     else onCloseRef.current();
   };
   const keepEditing = () => {

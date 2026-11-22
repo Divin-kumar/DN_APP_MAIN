@@ -245,8 +245,17 @@ export default function DropdownSelect({
         return;
       }
       if (inSearch || onClearSearch) {
-        triggerRef.current?.focus({ preventScroll: true });
-        if (event.shiftKey) { event.preventDefault(); return; }
+        // Search lives in a body portal. Prevent Tab from escaping its owning form.
+        event.preventDefault();
+        event.stopPropagation();
+        const scope = triggerRef.current?.closest('[role="dialog"], form');
+        const focusable = scope ? [...scope.querySelectorAll('a[href],button:not([disabled]),input:not([disabled]),select:not([disabled]),textarea:not([disabled]),summary,[tabindex]:not([tabindex="-1"])')]
+          .filter((node) => node.getClientRects().length > 0 && !node.closest('[inert]')) : [];
+        const index = focusable.indexOf(triggerRef.current);
+        const target = event.shiftKey ? triggerRef.current : focusable[index + 1] || triggerRef.current;
+        close();
+        target?.focus({ preventScroll: true });
+        return;
       }
       close(); return;
     }
