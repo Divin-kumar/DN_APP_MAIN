@@ -355,15 +355,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
           <h3 id={titleId} ref={titleRef} tabIndex={viewKey ? -1 : undefined} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" disabled={closeDisabled} onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
-        {confirmDiscard ? <section className="dn-unsaved-confirm" role="alert" aria-live="assertive">
-          <h4>Discard unsaved changes?</h4>
-          <p>Your edits have not been saved.</p>
-          <div className="dn-unsaved-actions">
-            <button ref={keepEditingRef} type="button" className="secondaryButton" onClick={keepEditing}>Keep editing</button>
-            <button type="button" className="modal-danger-button" onClick={discardChanges}>Discard changes</button>
-          </div>
-        </section> : null}
-        <div className="dn-modal-body" ref={bodyRef} style={confirmDiscard ? { display: 'none' } : undefined}
+        <div key="dn-modal-body" className="dn-modal-body" ref={bodyRef} style={confirmDiscard ? { display: 'none' } : undefined}
           inert={confirmDiscard ? '' : undefined} onInputCapture={() => { if (formFooter) setIsDirty(true); }}
           onChangeCapture={() => { if (formFooter) setIsDirty(true); }}
           onTouchStartCapture={startBodySwipe} onTouchEndCapture={endBodySwipe}
@@ -374,9 +366,17 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
             </DialogDirtyContext.Provider>
           </DialogCloseContext.Provider>
         </div>
-        {pinFormActions ? <div ref={formActionsHost} className="dn-modal-fixed-actions dn-modal-form-footer"
+        {pinFormActions ? <div key="dn-form-footer" ref={formActionsHost} className="dn-modal-fixed-actions dn-modal-form-footer"
           style={confirmDiscard ? { display: 'none' } : undefined} inert={confirmDiscard ? '' : undefined} /> : null}
         {!confirmDiscard ? footer : null}
+        {confirmDiscard ? <section className="dn-unsaved-confirm" role="alert" aria-live="assertive">
+          <h4>Discard unsaved changes?</h4>
+          <p>Your edits have not been saved.</p>
+          <div className="dn-unsaved-actions">
+            <button ref={keepEditingRef} type="button" className="secondaryButton" onClick={keepEditing}>Keep editing</button>
+            <button type="button" className="modal-danger-button" onClick={discardChanges}>Discard changes</button>
+          </div>
+        </section> : null}
       </motion.section>
     </motion.div>,
     document.body,

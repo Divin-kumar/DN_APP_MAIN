@@ -436,7 +436,3 @@ html[data-theme] .dn-command-root .dn-command-trigger.is-tap-pending:not(.is-dra
 @media (prefers-reduced-motion: reduce) {
   html[data-theme] .dn-command-root .dn-command-trigger.is-tap-pending { transition: none; }
 }
-
-@media (max-width:360px) {
-  html[data-theme] .dn-command-destinations a > span:last-child { font-size:12px; }
-}
