@@ -223,7 +223,7 @@ jobs:
       - run: npm run build
       - run: npx playwright install --with-deps chromium
       - name: Verify 320-430px creator size and actual sheet movement
-        run: npx playwright test e2e/mobile-command-bar.spec.js e2e/iphone-premium-bottom-dock.spec.js e2e/iphone-quick-create-touch-state.spec.js --workers=2
+        run: npx playwright test e2e/mobile-command-bar.spec.js e2e/iphone-premium-bottom-dock.spec.js e2e/iphone-quick-create-touch-state.spec.js e2e/ux-unsaved-dialog-2026.spec.js --workers=2
       - name: Preserve failure screenshots and traces
         if: failure()
         uses: actions/upload-artifact@v4

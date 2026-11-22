@@ -576,3 +576,10 @@ html[data-theme] .dn-empty-recovery-actions {
   max-width: 100%;
   margin-top: 5px;
 }
+
+/* Keep result counts and filter summaries readable on narrow phones. */
+@media (max-width:760px) {
+  html[data-theme] .dn-list-controls-context,
+  html[data-theme] .dn-list-controls-summary { font-size:12px; line-height:1.45; }
+  html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row :is(button,select) { min-height:40px; }
+}
