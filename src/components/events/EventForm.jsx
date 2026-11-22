@@ -3,7 +3,7 @@ import { activityTime, activityTimePatch, currentEntryTime } from '../../utils/a
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useId, useRef, useState } from 'react';
-import { DialogFormActions, useDialogClose, useDialogDirty } from '../common/ModalDialog';
+import { DialogFormActions, useDialogClose } from '../common/ModalDialog';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -36,9 +36,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
     ...(initialValues ? { ...initialValues, time: activityTime(initialValues), customType: initialValues.customType || '' } : {}),
   }));
   const [validationError, setValidationError] = useState('');
-  const originalDraft = useRef(JSON.stringify(form));
   const guardedCancel = useDialogClose(onCancel);
-  useDialogDirty(JSON.stringify(form) !== originalDraft.current);
   const nameInputRef = useRef(null);
   const customTypeInputRef = useRef(null);
 
@@ -46,9 +44,6 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   useEffect(() => {
     if (sourceRef.current === initialValues) return;
     sourceRef.current = initialValues;
-    originalDraft.current = JSON.stringify(initialValues
-      ? { ...createDefaultState(defaultEventType), ...initialValues, customType: initialValues.customType || '', time: activityTime(initialValues) }
-      : createDefaultState(defaultEventType));
     setValidationError('');
     if (initialValues) {
       setForm({

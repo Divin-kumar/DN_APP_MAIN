@@ -198,7 +198,11 @@ export default function DropdownSelect({
   const commitOption = (index) => {
     const option = options[index];
     if (!option || option.disabled) return;
-    if (option.value !== String(value ?? '')) onChange?.({ target: { name, value: option.value } });
+    if (option.value !== String(value ?? '')) {
+      onChange?.({ target: { name, value: option.value } });
+      // Portalled choices do not fire a native change on their owning form.
+      triggerRef.current?.dispatchEvent(new Event('dn:form-field-change', { bubbles: true }));
+    }
     close(true);
   };
 

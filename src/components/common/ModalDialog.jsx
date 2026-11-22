@@ -14,21 +14,11 @@ const exitEase = [0.4, 0, 0.7, 1];
 const activeDialogSelector = '[role="dialog"][aria-modal="true"]:not([inert])';
 
 const FormFooterContext = createContext(null);
-const DialogDirtyContext = createContext(null);
 const DialogCloseContext = createContext(null);
 const mobileMedia = '(max-width: 760px), (orientation: landscape) and (max-height: 500px) and (pointer: coarse)';
 
 export function useDialogFormFooter() {
   return useContext(FormFooterContext);
-}
-
-export function useDialogDirty(isDirty) {
-  const setDialogDirty = useContext(DialogDirtyContext);
-  useEffect(() => {
-    if (!setDialogDirty) return undefined;
-    setDialogDirty(Boolean(isDirty));
-    return () => setDialogDirty(false);
-  }, [isDirty, setDialogDirty]);
 }
 
 export function useDialogClose(onCancel) {
@@ -65,9 +55,8 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
   const [isPresent, safeToRemove] = usePresence();
   const handingOff = usePresenceData() === true && !isPresent;
   const [swipeClosing, setSwipeClosing] = useState(false);
-  const [isDirty, setIsDirty] = useState(false);
+  // A ref tracks form edits without re-rendering the dialog or its children.
   const dirtyRef = useRef(false);
-  dirtyRef.current = isDirty;
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const keepEditingRef = useRef(null);
   const closeAfterDiscard = useRef(null);
@@ -173,7 +162,6 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     const dismiss = closeAfterDiscard.current || onCloseRef.current;
     closeAfterDiscard.current = null;
     dirtyRef.current = false;
-    setIsDirty(false);
     dismiss();
   };
   // Capture before portal children mount: React autoFocus can run before this
@@ -222,6 +210,12 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     onCloseRef.current = onClose;
     closeDisabledRef.current = closeDisabled;
   }, [onClose, closeDisabled]);
+  useEffect(() => {
+    const dialog = dialogRef.current;
+    const markCustomField = () => { if (formFooter) dirtyRef.current = true; };
+    dialog?.addEventListener('dn:form-field-change', markCustomField);
+    return () => dialog?.removeEventListener('dn:form-field-change', markCustomField);
+  }, [formFooter]);
 
   const previousView = useRef(viewKey);
   useLayoutEffect(() => {
@@ -355,20 +349,18 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
           <h3 id={titleId} ref={titleRef} tabIndex={viewKey ? -1 : undefined} style={{ margin: 0 }}>{title}</h3>
           <button ref={closeButtonRef} type="button" className="modal-close-button" disabled={closeDisabled} onClick={requestClose} aria-label="Close dialog"><X size={20} strokeWidth={1.9} aria-hidden="true" /></button>
         </div>
-        <div key="dn-modal-body" className="dn-modal-body" ref={bodyRef} style={confirmDiscard ? { display: 'none' } : undefined}
-          inert={confirmDiscard ? '' : undefined} onInputCapture={() => { if (formFooter) setIsDirty(true); }}
-          onChangeCapture={() => { if (formFooter) setIsDirty(true); }}
+        <div key="dn-modal-body" className="dn-modal-body" ref={bodyRef}
+          inert={confirmDiscard ? '' : undefined} onInputCapture={() => { if (formFooter) dirtyRef.current = true; }}
+          onChangeCapture={() => { if (formFooter) dirtyRef.current = true; }}
           onTouchStartCapture={startBodySwipe} onTouchEndCapture={endBodySwipe}
           onTouchCancelCapture={() => { bodySwipe.current = null; }}>
           <DialogCloseContext.Provider value={requestClose}>
-            <DialogDirtyContext.Provider value={setIsDirty}>
-              <FormFooterContext.Provider value={pinFormActions ? formActions : null}>{children}</FormFooterContext.Provider>
-            </DialogDirtyContext.Provider>
+            <FormFooterContext.Provider value={pinFormActions ? formActions : null}>{children}</FormFooterContext.Provider>
           </DialogCloseContext.Provider>
         </div>
         {pinFormActions ? <div key="dn-form-footer" ref={formActionsHost} className="dn-modal-fixed-actions dn-modal-form-footer"
-          style={confirmDiscard ? { display: 'none' } : undefined} inert={confirmDiscard ? '' : undefined} /> : null}
-        {!confirmDiscard ? footer : null}
+          inert={confirmDiscard ? '' : undefined} /> : null}
+        {footer ? <div inert={confirmDiscard ? '' : undefined}>{footer}</div> : null}
         {confirmDiscard ? <section className="dn-unsaved-confirm" role="alert" aria-live="assertive">
           <h4>Discard unsaved changes?</h4>
           <p>Your edits have not been saved.</p>

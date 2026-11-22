@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import DropdownSelect from '../common/DropdownSelect';
 import FormDisclosure from '../common/FormDisclosure';
 import FormReveal from '../common/FormReveal';
-import { useDialogFormFooter, useDialogClose, useDialogDirty } from '../common/ModalDialog';
+import { useDialogFormFooter, useDialogClose } from '../common/ModalDialog';
 import { RepeatField, RepeatSummary } from '../common/RepeatField';
 import DateField from '../common/DateField';
 import RichTextEditor from '../common/RichTextEditor';
@@ -74,9 +74,7 @@ export default function TransactionForm({
     return paymentPlan ? { ...original, ...paymentDraft(paymentPlan) } : original;
   });
   const [error, setError] = useState('');
-  const originalDraft = useRef(JSON.stringify(form));
   const guardedCancel = useDialogClose(onCancel);
-  useDialogDirty(JSON.stringify(form) !== originalDraft.current);
   const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
   const planFlow = Boolean(paymentPlan || expensePlan || canRepeat);
@@ -91,7 +89,6 @@ export default function TransactionForm({
     if (next.every((value, index) => value === sourceRef.current[index])) return;
     sourceRef.current = next;
     const restored = createDraft(preferences, initialTransaction, defaultKind, presetLink);
-    originalDraft.current = JSON.stringify(restored);
     setForm(restored);
     setError('');
   }, [initialTransaction, defaultKind, presetLink?.eventId, presetLink?.activityId, presetLink?.date, preferences.defaultIncomeType, preferences.defaultExpenseCategory]);

@@ -165,3 +165,15 @@ html[data-theme] .dn-unsaved-confirm p { margin: 0; font-size: 14px; color: var(
 html[data-theme] .dn-unsaved-actions { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1fr); gap: 10px; padding-top: 8px; }
 html[data-theme] .dn-unsaved-actions button { min-height: 44px; border-radius: 12px; font-size: 14px; }
 @media (max-width: 350px) { html[data-theme] .dn-unsaved-actions { grid-template-columns: 1fr; } }
+
+/* Keep the edited fields mounted and visible behind the in-sheet confirmation. */
+html[data-theme] .dn-modal:has(> .dn-unsaved-confirm) { position: relative; }
+html[data-theme] .dn-modal:has(> .dn-unsaved-confirm)::before {
+  content: ''; position:absolute; inset:0; z-index:3; pointer-events:none;
+  border-radius:inherit; background: color-mix(in srgb,var(--color-card) 66%,transparent);
+}
+html[data-theme] .dn-modal > .dn-unsaved-confirm {
+  position:absolute; left:12px; right:12px; bottom:12px; z-index:4;
+  padding:18px; border:1px solid var(--color-border); border-radius:16px;
+  background:var(--color-card); box-shadow:0 12px 36px color-mix(in srgb,var(--color-text) 13%,transparent);
+}

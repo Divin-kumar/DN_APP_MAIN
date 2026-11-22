@@ -12,6 +12,7 @@ test('Task sheet protects edited drafts from accidental Close', async ({ page })
   const dialog = page.getByRole('dialog', { name: 'New Task' });
   const title = dialog.getByRole('textbox', { name: 'Task title' });
   await title.fill('Keep my draft');
+  await expect(title).toHaveValue('Keep my draft');
   await dialog.getByRole('button', { name: 'Close dialog' }).click();
   await expect(dialog.getByText('Discard unsaved changes?')).toBeVisible();
   await expect(dialog.getByRole('button', { name: 'Keep editing' })).toBeFocused();
@@ -33,6 +34,7 @@ test('Moment date/time stays visible and Close protects a draft', async ({ page 
   await expect(dialog.locator('.activity-date-time-row input[type="time"]')).toBeVisible();
   const title = dialog.getByRole('textbox', { name: 'Moment name' });
   await title.fill('A lovely day');
+  await expect(title).toHaveValue('A lovely day');
   await dialog.getByRole('button', { name: 'Close dialog' }).click();
   await expect(dialog.getByText('Discard unsaved changes?')).toBeVisible();
   await dialog.getByRole('button', { name: 'Keep editing' }).click();
