@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Stable first-paint mobile creator (22 November 2026, development)
+
+The universal + hands directly from Navigate & create to Moment, Activity, Task or Transaction forms without showing both modal backdrops at once. Mobile creation sheets mount their Save and Cancel controls in a stable footer immediately, without first drawing them inside the scrolling form and then relocating them. Ordinary sheet close animations, keyboard and swipe actions, the + double-tap gesture and existing record saving remain unchanged. Guest tour fixtures and edition remain unchanged because these are visual stability corrections only.
+
 ## Actionable feedback and mobile Refine state (21 November 2026, development)
 
 An actionable success toast remains visible for at least eight seconds and pauses its dismissal timer while a user hovers it or navigates its action by keyboard. On leaving or blurring, the timer resumes. Ordinary non-action toasts retain their previous timing, and View still navigates through the same route without modifying data.

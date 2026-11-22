@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261122-597 | Keep the mobile creation sheet steady on first paint
+
+- **Scope.** Fix a shared creation-sheet transition: Save and Cancel buttons previously rendered inside the scrolling form first and then moved into the pinned footer after mount, briefly changing the sheet height. Give all formFooter sheets a stable pre-created portal target that attaches in a layout effect before paint. Hide the outgoing Navigate & create sheet immediately when a new form replaces it, avoiding overlapping visible dialogs.
+- **Compatibility.** Preserve the universal blue +, double-tap Back, drag gesture, native form associations, close animations on ordinary dismissal, scroll-lock, keyboard handling, and underlying entry/save operations. No stored-data, authentication, Firebase configuration or app-version changes. Guest sample records unchanged because this fixes presentation only.
+- **Verification.** Added a four-form mobile browser regression checking one visible dialog and Save/Cancel already pinned on first render. Focused GitHub checks and automatic Firebase development readback must succeed before calling this verified. Physical iPhone Safari remains unverified.
+
 ## CHG-20261122-596 | Prepare DN v2.3.13 for verified production promotion
 
 - **Scope.** Advance the patch release version from v2.3.12 to v2.3.13 to allow promotion of the latest OldVersion development code to dn-10. The prior production attempt at source f5e87088 was blocked because its candidate version matched the already live v2.3.12. Preserve the exact application behavior, data formats, Firebase hosting targets, and dependencies.

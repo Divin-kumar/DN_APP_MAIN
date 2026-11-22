@@ -27,10 +27,24 @@ export function DialogFormActions({ children }) {
 
 export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
   closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
-  const [formActions, setFormActions] = useState(null);
+  // Create the portal target before first paint so mobile Save/Cancel controls
+  // never jump from the scrolling body to the pinned footer after mount.
+  const [formActions] = useState(() => {
+    if (typeof document === 'undefined') return null;
+    const node = document.createElement('div');
+    node.className = 'dn-modal-form-footer-content';
+    return node;
+  });
+  const formActionsHost = useRef(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);
   const pinFormActions = formFooter && (isMobileSheet || keyboardOpen);
+  useLayoutEffect(() => {
+    // Attach the stable portal before the sheet paints or measures its height.
+    if (pinFormActions && formActions && formActionsHost.current) {
+      formActionsHost.current.appendChild(formActions);
+    }
+  }, [pinFormActions, formActions]);
   const reducedMotion = useReducedMotion();
   const [isPresent, safeToRemove] = usePresence();
   const handingOff = usePresenceData() === true && !isPresent;
@@ -300,7 +314,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
           onTouchEndCapture={endBodySwipe} onTouchCancelCapture={() => { bodySwipe.current = null; }}>
           <FormFooterContext.Provider value={pinFormActions ? formActions : null}>{children}</FormFooterContext.Provider>
         </div>
-        {pinFormActions ? <div ref={setFormActions} className="dn-modal-fixed-actions dn-modal-form-footer" /> : null}
+        {pinFormActions ? <div ref={formActionsHost} className="dn-modal-fixed-actions dn-modal-form-footer" /> : null}
         {footer}
       </motion.section>
     </motion.div>,
