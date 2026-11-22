@@ -10,7 +10,7 @@ const defaults = Object.freeze({ floating: false, edge: 'right', y: .65 });
 const rules = Object.freeze({ edge: ['left','right'], y: value => Number.isFinite(value) && value >= 0 && value <= 1 });
 const CREATE_SIZE = 52;
 const EDGE_PADDING = 10;
-const DOUBLE_TAP_WINDOW_MS = 215;
+const DOUBLE_TAP_WINDOW_MS = 195;
 
 const blurDockSearch = () => {
   const focused = document.activeElement;
@@ -36,6 +36,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
   const [viewport, setViewport] = useState(() => ({ width: window.innerWidth, height: window.innerHeight, top: 0,
     inset: 0, visualBottom: window.innerHeight, keyboardOpen: false }));
   const [searchFocused, setSearchFocused] = useState(false);
+  const [tapPending, setTapPending] = useState(false);
   const searchFocusRef = useRef(false);
   const focusBaselineRef = useRef(0);
   const [drag, setDrag] = useState(null);
@@ -51,6 +52,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     const cancelTap = () => {
       window.clearTimeout(pendingTap.current?.timer);
       pendingTap.current = null;
+      setTapPending(false);
       secondTap.current = false;
     };
     const handleOutsidePointer = event => {
@@ -190,6 +192,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if (first) {
       window.clearTimeout(first.timer);
       pendingTap.current = null;
+      setTapPending(false);
     }
     suppressClick.current = false;
     if (dockInInsights) return;
@@ -226,11 +229,13 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     if ((!pointerClick && event.detail === 0) || open) {
       window.clearTimeout(pendingTap.current?.timer);
       pendingTap.current = null;
+      setTapPending(false);
       blurDockSearch();
       setOpen(!open);
       return;
     }
     if (goBack) {
+      setTapPending(false);
       // React Router history index prevents leaving DN for an external origin.
       if (Number.isInteger(window.history.state?.idx) && window.history.state.idx > 0) navigate(-1);
       else {
@@ -239,9 +244,11 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
       }
       return;
     }
-    // Keep the + in position while waiting for a second tap near the iOS keyboard.
+    // Show instant tactile acknowledgement without flashing a sheet before a double-tap Back.
+    setTapPending(true);
     const timer = window.setTimeout(() => {
       pendingTap.current = null;
+      setTapPending(false);
       blurDockSearch();
       setOpen(true);
     }, DOUBLE_TAP_WINDOW_MS);
@@ -254,7 +261,7 @@ export default function MobileCommandDock({ controlsRef, menuRef, open, setOpen,
     <div className={`dn-command-bar${activeDrag ? ' is-pointer-active' : ''}`} aria-label="Current page controls">
       <div ref={controlsRef} className="dn-command-controls" />
       <div className="dn-command-button-slot">
-        <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}`}
+        <button ref={trigger} type="button" className={`mobile-dock-create-trigger dn-command-trigger${open?' is-open':''}${activeDrag?' is-dragging':''}${tapPending?' is-tap-pending':''}`}
           style={floating || activeDrag ? {position:'fixed',left:x,top:y}:undefined}
           aria-label={open ? 'Close quick create menu' : 'Open quick create menu'}
           aria-description={'Tap once for navigation and creation, double-tap to go back.' + (dockInInsights ? '' : ' Drag to move; return to dock from the menu.')}

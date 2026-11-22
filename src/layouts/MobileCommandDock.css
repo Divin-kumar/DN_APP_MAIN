@@ -428,3 +428,11 @@ body.dn-modal-open .dn-command-root .dn-command-bar {
     backdrop-filter:none; -webkit-backdrop-filter:none;
   }
 }
+
+/* A first tap acknowledges immediately while a second tap can still navigate Back. */
+html[data-theme] .dn-command-root .dn-command-trigger.is-tap-pending:not(.is-dragging) {
+  transform: scale(.95); filter: brightness(1.08); transition: transform 90ms ease-out, filter 90ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  html[data-theme] .dn-command-root .dn-command-trigger.is-tap-pending { transition: none; }
+}

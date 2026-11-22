@@ -5,7 +5,7 @@ import { createPortal } from 'react-dom';
 import DateField from '../common/DateField';
 import ActivityTimeField from '../common/ActivityTimeField';
 import FormDisclosure from '../common/FormDisclosure';
-import { useDialogFormFooter } from '../common/ModalDialog';
+import { useDialogFormFooter, useDialogClose, useDialogDirty } from '../common/ModalDialog';
 import { RepeatActionSummary, RepeatField, RepeatSummary } from '../common/RepeatField';
 import { formatMomentDate } from '../../utils/momentDates.js';
 import DropdownSelect from '../common/DropdownSelect';
@@ -58,6 +58,11 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const [repeatFrequency, setRepeatFrequency] = useState(task?.repeat?.frequency || '');
   const [momentId, setMomentId] = useState(recordId(task?.momentId));
   const [activityId, setActivityId] = useState(recordId(task?.activityId));
+  const originalDraft = useRef(null);
+  const draft = JSON.stringify({ title, notes, priority, dueDate, dueTime, repeatFrequency, momentId, activityId });
+  if (originalDraft.current === null) originalDraft.current = draft;
+  useDialogDirty(draft !== originalDraft.current);
+  const guardedCancel = useDialogClose(onClose);
   const nextRepeat = previewNextRepeat(task, repeatFrequency, dueDate);
   const repeatNotice = repeatEditNotice(task, repeatFrequency, dueDate, nextRepeat);
   const canSave = saveReady && !busy && title.trim() && (!repeatFrequency || nextRepeat);
@@ -77,7 +82,7 @@ export default function TaskEditor({ task, moments = [], onSave, onClose, onTask
   const actions = <>
     {error ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     <div className="form-actions dn-task-form-actions">
-      <button type="button" className="secondaryButton" disabled={busy} onClick={pendingAction ? () => setPendingAction(null) : onClose}>
+      <button type="button" className="secondaryButton" disabled={busy} onClick={pendingAction ? () => setPendingAction(null) : guardedCancel}>
         {pendingAction ? 'Keep editing' : 'Cancel'}
       </button>
       {pendingAction ? <button type="button" className={pendingAction === 'delete' || (pendingAction === 'cancel' && !task?.repeat) ? 'modal-danger-button' : 'primaryButton'}

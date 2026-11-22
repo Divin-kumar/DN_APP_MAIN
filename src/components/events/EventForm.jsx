@@ -1,9 +1,9 @@
 import ActivityTimeField from '../common/ActivityTimeField';
-import { activityTime, activityTimePatch, currentEntryTime, entryDateTimeSummary } from '../../utils/activityTime';
+import { activityTime, activityTimePatch, currentEntryTime } from '../../utils/activityTime';
 import { formatMomentDate } from '../../utils/momentDates';
 /* Event metadata form used by the Events workspace and quick-create modal. */
 import { useEffect, useId, useRef, useState } from 'react';
-import { DialogFormActions } from '../common/ModalDialog';
+import { DialogFormActions, useDialogClose, useDialogDirty } from '../common/ModalDialog';
 import DateField from '../common/DateField';
 import DropdownSelect from '../common/DropdownSelect';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -36,6 +36,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
     ...(initialValues ? { ...initialValues, time: activityTime(initialValues), customType: initialValues.customType || '' } : {}),
   }));
   const [validationError, setValidationError] = useState('');
+  const originalDraft = useRef(JSON.stringify(form));
+  const guardedCancel = useDialogClose(onCancel);
+  useDialogDirty(JSON.stringify(form) !== originalDraft.current);
   const nameInputRef = useRef(null);
   const customTypeInputRef = useRef(null);
 
@@ -43,6 +46,9 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   useEffect(() => {
     if (sourceRef.current === initialValues) return;
     sourceRef.current = initialValues;
+    originalDraft.current = JSON.stringify(initialValues
+      ? { ...createDefaultState(defaultEventType), ...initialValues, customType: initialValues.customType || '', time: activityTime(initialValues) }
+      : createDefaultState(defaultEventType));
     setValidationError('');
     if (initialValues) {
       setForm({
@@ -71,7 +77,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       return;
     }
     if (!form.date) {
-      setValidationError('Choose a date in More options.');
+      setValidationError('Choose a date.');
       const disclosure = event.currentTarget.querySelector('details.dn-form-disclosure');
       if (disclosure) disclosure.open = true;
       event.currentTarget.querySelector('#event-date')?.focus({ preventScroll: true });
@@ -128,12 +134,12 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
         </motion.label>
       ) : null}
 
-      <FormDisclosure hint={entryDateTimeSummary(form.date || '', form.time)}>
-        <div className="activity-date-time-row">
-          <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
-          <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
-        </div>
+      <div className="activity-date-time-row">
+        <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
+        <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
+      </div>
 
+      <FormDisclosure hint={form.recurrence !== 'none' ? `Repeats ${form.recurrence}` : 'Repeat and notes'}>
         <label htmlFor="event-recurrence">Repeat
           <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
             <option value="none">Does not repeat</option>
@@ -149,7 +155,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
       <DialogFormActions>
         {validationError || error ? <p className="event-form-validation" role="alert">{validationError || error}</p> : null}
         <div className="event-form-actions">
-          {onCancel ? <button type="button" className="secondaryButton" onClick={onCancel}>Cancel</button> : null}
+          {onCancel ? <button type="button" className="secondaryButton" onClick={guardedCancel}>Cancel</button> : null}
           <button type="submit" form={formId} className="primaryButton">{submitLabel}</button>
         </div>
       </DialogFormActions>
