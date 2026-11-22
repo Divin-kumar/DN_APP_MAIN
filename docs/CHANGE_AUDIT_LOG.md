@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261122-599 | Protect drafts and refine DN's mobile controls
+
+- **Scope.** Prevent accidental form-sheet dismissal through X, Escape, backdrop or swipe after edits, using a lightweight in-sheet Keep editing / Discard changes prompt. Retain direct explicit Cancel and expense-plan Back. Move Moment Date and Time above More options. Shorten the universal + double-tap window to 195ms and immediately acknowledge the first tap without flashing the menu. Keep Upcoming expenses to two visual lines and four available actions while improving control-label legibility; improve compact Task and filter labels. Return keyboard Tab focus from portalled dropdown search to the parent form. Add dedicated Playwright regression checks.
+- **Compatibility.** OldVersion development branch only, existing ExpenseTracker auto-preview only. No saved-record formats, finance schedules, guest/account boundaries, backend rules, PDF semantics or production release changes. Versioned Guest tour data and its edition remain valid because the same scenarios already exercise these forms and tasks, and no sample records changed.
+- **Verification.** Code reviewed and regression tests added. Independently running lint, build, browser checks, documentation governance and live development build readback are the gates for this development patch. Complete visual walkthroughs and physical iPhone Safari VoiceOver remain unverified.
+
 ## CHG-20261122-598 | Preserve mobile Back and close motion during creation handoff
 
 - **Scope.** Narrow instant handoff hiding to the outgoing Navigate & create dialog, not all modal exits. Classify the universal + keyboard activation by whether a pointer press occurred, rather than relying on click.detail being nonzero. Mobile browsers may emit a zero-detail touch click; previously that took the keyboard path and bypassed double-tap Back.

@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Form dismissal safeguards and compact mobile UX (22 November 2026, development)
+
+Task, Moment, Transaction, and other form-footer dialogs now protect edits against accidental X, Escape, backdrop and downward sheet-swipe closure. The same sheet offers Keep editing or Discard changes while the unsaved fields remain mounted. An explicit Cancel intentionally discards as before, and the expense-plan form's custom Back retains its return-to-list semantics. No saved data, recurrence rules, authentication, or transaction accounting changes. Moment Date and Time are now directly visible on the main form; Repeat and Notes stay under More options. The mobile blue + gives an immediate press acknowledgement and uses a 195ms window for double-tap Back, without flashing the creation sheet during a double tap. Searchable dropdowns return keyboard Tab focus from their portal to the owning form. Task/filter/bill controls receive small-screen text-legibility improvements while Upcoming expenses remains a two-line, four-action list. The Guest tour version and records stay unchanged because these are presentation and control refinements to flows already represented in the tour. Physical iPhone Safari and VoiceOver checks are still needed.
+
 ## Creation handoff and mobile Back correction (22 November 2026, development)
 
 Only the outgoing Navigate & create sheet disappears instantly while opening a different form; regular creation sheets retain their animated close. The blue + distinguishes an actual pointer press from keyboard activation even when a touch browser reports click.detail = 0, preserving double-tap Back without lengthening the 215 ms tap window. The stable Save/Cancel footer introduced in CHG-597 remains. This is visual and gesture handling only, with no saved-record or Guest tour fixture changes.
