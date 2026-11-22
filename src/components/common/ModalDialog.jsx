@@ -360,7 +360,7 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
         </div>
         {pinFormActions ? <div key="dn-form-footer" ref={formActionsHost} className="dn-modal-fixed-actions dn-modal-form-footer"
           inert={confirmDiscard ? '' : undefined} /> : null}
-        {footer ? <div inert={confirmDiscard ? '' : undefined}>{footer}</div> : null}
+        {footer}
         {confirmDiscard ? <section className="dn-unsaved-confirm" role="alert" aria-live="assertive">
           <h4>Discard unsaved changes?</h4>
           <p>Your edits have not been saved.</p>
