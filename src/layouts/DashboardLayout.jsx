@@ -118,6 +118,7 @@ export default function DashboardLayout() {
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickTransaction, setQuickTransaction] = useState(null);
   const [transactionBusy, setTransactionBusy] = useState(false);
+  const pendingTransactionNotice = useRef(null);
   const transactionSaving = useRef(false);
   const transactionMounted = useRef(true);
   useEffect(() => { transactionMounted.current = true; return () => { transactionMounted.current = false; }; }, []);
@@ -444,13 +445,21 @@ export default function DashboardLayout() {
       const saved = await saveTransaction(formData);
       if (transactionMounted.current && records.isCurrent(context)) {
         setQuickCreateType(null); setQuickTransaction(null);
-        showToast(saved.plan ? 'Expense plan saved' : 'Transaction added', 'success', {
-          label: 'View', to: saved.plan ? '/financials/transactions#expense-plans' : '/financials/transactions',
-        });
+        pendingTransactionNotice.current = { context, plan: Boolean(saved.plan) };
       }
     } finally {
       transactionSaving.current = false;
       if (transactionMounted.current) setTransactionBusy(false);
+    }
+  };
+
+  const announceTransactionAfterExit = () => {
+    const notice = pendingTransactionNotice.current;
+    pendingTransactionNotice.current = null;
+    if (notice && records.isCurrent(notice.context)) {
+      showToast(notice.plan ? 'Expense plan saved' : 'Transaction added', 'success', {
+        label: 'View', to: notice.plan ? '/financials/transactions#expense-plans' : '/financials/transactions',
+      });
     }
   };
 
@@ -701,7 +710,7 @@ export default function DashboardLayout() {
       ) : null}
       {quickCreateType === 'transaction' && records.isCurrent(quickTransaction?.context) ? (
         <ModalDialog key="quick-transaction" title="Add Transaction" className="dn-transaction-dialog dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"}
-          formFooter closeDisabled={transactionBusy} onClose={closeQuickTransaction}>
+          formFooter onDismissed={announceTransactionAfterExit} closeDisabled={transactionBusy} onClose={closeQuickTransaction}>
           <TransactionForm events={activityMoments} onSubmit={saveQuickTransaction}
             presetLink={quickTransaction.preset} busy={transactionBusy} onCancel={closeQuickTransaction} />
         </ModalDialog>

@@ -266,7 +266,8 @@ export function TaskListContent() {
     <div className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {
         const parent = resolveIndependentTaskParent(task, moments);
-        const context = parent.kind === 'activity' ? `${parent.moment.name} · ${parent.activity.title || 'Activity'}`
+        const context = parent.kind === 'activity' && parent.activity.title?.trim() === task.title?.trim() ? parent.moment.name
+          : parent.kind === 'activity' ? `${parent.moment.name} · ${parent.activity.title || 'Activity'}`
           : parent.kind === 'moment' ? parent.moment.name
             : parent.kind === 'standalone' ? 'Standalone'
               : parent.kind === 'missing-activity' ? `${parent.moment.name || 'Moment'} · Activity unavailable` : 'Moment unavailable';

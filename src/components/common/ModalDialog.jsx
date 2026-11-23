@@ -31,7 +31,7 @@ export function DialogFormActions({ children }) {
   return footer ? createPortal(children, footer) : children;
 }
 
-export default function ModalDialog({ title, onClose, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
+export default function ModalDialog({ title, onClose, onDismissed, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
   closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
   // Create the portal target before first paint so mobile Save/Cancel controls
   // never jump from the scrolling body to the pinned footer after mount.
@@ -41,6 +41,10 @@ export default function ModalDialog({ title, onClose, children, footer, variant 
     node.className = 'dn-modal-form-footer-content';
     return node;
   });
+  const dismissedCallback = useRef(onDismissed);
+  useLayoutEffect(() => { dismissedCallback.current = onDismissed; }, [onDismissed]);
+  useEffect(() => () => dismissedCallback.current?.(), []);
+
   const formActionsHost = useRef(null);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
   const [isMobileSheet, setMobileSheet] = useState(() => window.matchMedia(mobileMedia).matches);

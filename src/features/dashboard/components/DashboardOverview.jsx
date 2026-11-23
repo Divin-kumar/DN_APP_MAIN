@@ -300,7 +300,7 @@ export function DashboardOverviewContent() {
 
   return (
     <>
-      <div className="dashboard-overview dashboard-compact">
+      <div className="dashboard-overview dashboard-compact" data-activity-focus={sections.activities && dashboardActivities.length > 0 && (!sections.tasks || isTaskSectionEmpty) && (!sections.moments || (ready && !loading && !error && !dashboardMoments.length))}>
         <DashboardGreeting now={today} isViewingSampleData={isGuest && Boolean(activeSample)} />
         {isGuest || user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
           <header className="dashboard-section-heading">

@@ -40,6 +40,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
         const dueText = !date ? 'Date to be decided' : entryMode === ENTRY_MODES.DAILY
           ? `Diary · ${dateText}` : entryMode === ENTRY_MODES.JOURNAL
           ? `Journal · ${dateText}` : overdue ? `Past due · ${dateText}` : `Due ${dateText}`;
+        const cardMeta = [entryMode === ENTRY_MODES.DAILY ? 'Diary' : entryMode === ENTRY_MODES.JOURNAL ? 'Journal' : overdue ? 'Past due' : 'Due', activityTime(activity)].filter(Boolean).join(' · ');
         // Swiping either direction only reveals actions; it never writes by itself.
         const actions = readOnly ? [] : [
           ...(onEdit && isActivityEditable(activity) ? [{ label: 'Edit', icon: Pencil, onClick: () => onEdit(activity) }] : []),
@@ -60,7 +61,7 @@ export default function ActivityList({ eventName = 'This event', activities, all
             <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
               <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}><CompletionCheck active={completed} size={16} />{completed ? <span className="sr-only">Completed</span> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
             </div>
-            <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span></div>
+            <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{parentMoment && date ? <><span className="sr-only">{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span><span aria-hidden="true">{cardMeta}</span></> : <>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</>}</span></div>
           </div></div>
         </SwipeActionCard>;
         return card;

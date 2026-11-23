@@ -1,5 +1,12 @@
 # DN — Change Log
 
+## CHG-20261123-601 | Desktop record layouts and transaction confirmation timing
+
+- Desktop Dashboard gives populated Activities extra room when Tasks and Moments are collapsed or empty. The desktop ledger aligns amounts and collapsed details in separate columns. Expanded details retain a full-width row. Sidebar selection changes immediately with the route.
+- Linked Tasks omit a repeated Activity title. Dated Activity cards present the date once visually and keep the full date in accessible metadata. Cover management remains available on cards without photos.
+- Quick-create and ledger edit confirmations wait for the transaction sheet to unmount. Existing payment chips, validation, success actions, Guest/account storage and records retain their behavior. Existing Guest tour entries exercise these presentation changes without a fixture or edition change.
+- Verification: local build, lint, Node suite and focused browser checks on synthetic Guest records. Physical iPhone and VoiceOver testing remains open.
+
 ## CHG-20261123-600 | Prevent transaction payment-radio flash during save and close
 
 - **Scope.** Keep an edited Transaction's title and payment selection intact during the animated closing sheet; reset the edit reference only after the exit completes. Suppress native browser painting of payment-method radios so only the existing pill choices are visible, while keeping native radio input semantics. Cover the mobile edit-and-save transition with a focused browser regression.

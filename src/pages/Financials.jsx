@@ -60,6 +60,7 @@ function FinancialsContent() {
   const [savingError, setSavingError] = useState('');
   const [planView, setPlanView] = useState(null);
   const [planNotice, setPlanNotice] = useState(null);
+  const pendingSaveNotice = useRef(null);
   const savingPlanRef = useRef(false);
   const planEntryRef = useRef(null);
   const financeSummaryRef = useRef(null);
@@ -141,7 +142,7 @@ function FinancialsContent() {
     try {
       const saved = await saveTransaction(form, editing);
       setDialogOpen(false);
-      showToast(saved.plan ? 'Expense plan saved' : editing ? 'Transaction updated' : 'Transaction added', 'success');
+      pendingSaveNotice.current = saved.plan ? 'Expense plan saved' : editing ? 'Transaction updated' : 'Transaction added';
       if (saved.plan) navigate('/financials/transactions#expense-plans', { replace: true });
     } finally { savingPlanRef.current = false; setBusy(false); }
   };
@@ -245,6 +246,12 @@ function FinancialsContent() {
       <AnimatePresence initial={false} onExitComplete={() => { if (!dialogOpen) setEditing(null); }}>
         {dialogOpen ? (
           <ModalDialog key="transaction-editor" title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
+            onDismissed={() => {
+              if (pendingSaveNotice.current) {
+                showToast(pendingSaveNotice.current, 'success');
+                pendingSaveNotice.current = null;
+              }
+            }}
             onClose={() => { if (!savingPlanRef.current && !busy) { setDialogOpen(false); } }}>
             <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
               onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); }} />

@@ -28,7 +28,7 @@ export default function ActivityCardCover({ moment, activity, uid, isGuest, samp
   const source = original.source && !original.error && original.source !== broken ? original.source : '';
   return <><span ref={tile} className={'dn-v2-activity-cover' + (source ? ' has-photo' : '')} >
     {source ? <img src={source} alt="" loading="lazy" onError={() => setBroken(source)} />
-      : <Images size={24} strokeWidth={1.5} className="dn-v2-activity-cover-symbol" aria-hidden="true" />}
+      : onOpen ? null : <Images size={24} strokeWidth={1.5} className="dn-v2-activity-cover-symbol" aria-hidden="true" />}
     <span className="dn-v2-activity-cover-glow" />
     <span className="dn-v2-activity-cover-date" aria-hidden="true">
       <strong>{date ? date.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</strong>

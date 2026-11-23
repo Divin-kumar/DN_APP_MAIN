@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Dashboard, ledger and record presentation (23 November 2026, development)
+
+On wide dashboards, populated Activities gain space when Tasks and Moments have little content. The desktop ledger aligns amounts and collapsed details across rows and gives expanded details their full width. Sidebar selection follows the current route immediately. Linked Tasks show the parent Moment alone when the Activity title repeats the Task title. Activity cards retain the full accessible date while showing it once visually, and empty covers keep their photo action. Successful quick and ledger transaction saves announce completion after the sheet has closed.
+
 ## Stable transaction payment controls during sheet dismissal (23 November 2026, development)
 
 When an existing Transaction is saved or cancelled, its edit draft and selected payment-method radio remain unchanged throughout the modal exit animation. Only after the animation has completed is the edit selection cleared. The visual payment-method chips suppress the browser's native radio artwork while retaining native radio selection, keyboard and assistive technology semantics. This is a UI-only correction; the save path, payment-method requirement, stored transactions, account/Guest boundaries, expense-plan logic and versioned Guest tour fixtures are unchanged. Chromium regression added; execution and physical iPhone Safari verification remain pending.
