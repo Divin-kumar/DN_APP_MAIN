@@ -74,7 +74,7 @@ export default function TransactionForm({
     return paymentPlan ? { ...original, ...paymentDraft(paymentPlan) } : original;
   });
   const [error, setError] = useState('');
-  const guardedCancel = useDialogClose(onCancel, { protectDraft: true });
+  const guardedCancel = useDialogClose(onCancel, { protectDraft: !expensePlan && !paymentPlan });
   const canRepeat = !initialTransaction && !paymentPlan && form.transactionKind === 'expense';
   const isPlan = canRepeat && Boolean(form.repeatFrequency);
   const planFlow = Boolean(paymentPlan || expensePlan || canRepeat);

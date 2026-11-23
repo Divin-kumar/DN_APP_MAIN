@@ -119,8 +119,6 @@ test('Activity Detail entry and two canonical create forms preserve distinct dat
   await openQuick('Life moment');
   dialog = page.getByRole('dialog', { name: 'Create a life moment' });
   await expect(dialog.getByRole('textbox', { name: 'Moment name' })).toBeVisible();
-  await expect(dialog.locator('input[name="date"]')).toBeHidden();
-  await dialog.locator('.dn-form-disclosure > summary').click();
   await expect(dialog.locator('input[name="date"]')).toBeVisible();
   await dialog.getByRole('button', { name: 'Cancel' }).click();
 
@@ -136,7 +134,7 @@ test('Activity Detail entry and two canonical create forms preserve distinct dat
   expect(errors).toEqual([]);
 });
 
-test('invalid required metadata automatically opens its disclosure before save', async ({ page }) => {
+test('missing required Moment date stays visible and prevents save', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page);
   await page.goto('/events');
@@ -152,8 +150,7 @@ test('invalid required metadata automatically opens its disclosure before save',
   await disclosure.locator('summary').click();
   await expect(disclosure).not.toHaveAttribute('open', '');
   await dialog.getByRole('button', { name: 'Save moment' }).click();
-  await expect(disclosure).toHaveAttribute('open', '');
-  await expect(dialog.locator('input[name="date"]')).toBeVisible();
+  await expect(dialog.locator('input[name="date"]:invalid')).toBeVisible();
   await expect(dialog).toBeVisible();
   expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
   await dialog.getByRole('button', { name: 'Cancel' }).click();

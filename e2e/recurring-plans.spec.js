@@ -50,7 +50,7 @@ test.describe('Recurring sheets on short phone screens', () => {
         await expect(error).toContainText('Choose an available payment method.');
         await expect.poll(() => error.evaluate((alert) => {
           const bounds = alert.getBoundingClientRect();
-          const footer = alert.parentElement;
+          const footer = alert.closest('.dn-modal-form-footer');
           return footer.classList.contains('dn-modal-form-footer')
             && footer.previousElementSibling.getBoundingClientRect().bottom <= bounds.top
             && bounds.bottom <= footer.querySelector('button[type="submit"]').getBoundingClientRect().top;
