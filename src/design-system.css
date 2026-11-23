@@ -3055,6 +3055,8 @@ html[data-theme] .dn-payment-method-choice {
   position:relative;display:block;min-width:0;cursor:pointer;
 }
 html[data-theme] .dn-payment-method-choice input {
+  /* This radio is an accessible hit target; only its adjacent pill is painted. */
+  -webkit-appearance:none;appearance:none;
   position:absolute;opacity:0;width:100%;height:100%;min-height:0;
   margin:0;inset:0;cursor:inherit;z-index:1;
 }

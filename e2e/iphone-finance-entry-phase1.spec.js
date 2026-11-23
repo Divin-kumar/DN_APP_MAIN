@@ -123,3 +123,45 @@ for (const [width, height] of [[320,640],[390,844],[430,932]]) for (const theme 
     expect(errors).toEqual([]);
   });
 }
+
+test('edited Transaction keeps its payment radio and title stable until the save sheet exits', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const errors = await seedGuest(page, {
+    theme: 'light', incomes: [], expenses: [{
+      id: 'stable-radio', name: 'Payment selection check', amount: 120,
+      date: '2026-11-23', category: 'Travel', paymentMethod: 'Cash',
+    }],
+  });
+  await page.goto('/financials/transactions');
+  const card = page.locator('.dn-transactions-page .dn-transaction-card').filter({ hasText: 'Payment selection check' });
+  await card.locator('.dn-transaction-copy > strong').click();
+  await page.getByRole('menuitem', { name: 'Edit', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Edit Transaction', exact: true });
+  const cash = dialog.getByRole('radio', { name: 'Cash', exact: true });
+  await expect(cash).toBeChecked();
+  expect(await cash.evaluate((node) => getComputedStyle(node).appearance)).toBe('none');
+
+  await page.evaluate(() => {
+    const sheet = document.querySelector('.dn-transaction-dialog');
+    window.__dnRadioExitFrames = [];
+    window.__dnRadioExitObserver = new MutationObserver(() => {
+      if (!sheet.hasAttribute('data-closing')) return;
+      window.__dnRadioExitFrames.push({
+        heading: sheet.querySelector('.dn-modal-header h3')?.textContent,
+        cashChecked: sheet.querySelector('input[name="paymentMethod"][value="Cash"]')?.checked,
+      });
+    });
+    window.__dnRadioExitObserver.observe(sheet, { attributes: true, childList: true, characterData: true, subtree: true });
+  });
+  await dialog.getByRole('button', { name: 'Save Changes', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  const frames = await page.evaluate(() => {
+    window.__dnRadioExitObserver.disconnect();
+    return window.__dnRadioExitFrames;
+  });
+  expect(frames.length).toBeGreaterThan(0);
+  expect(frames.every((frame) => frame.heading === 'Edit Transaction' && frame.cashChecked)).toBe(true);
+  await expect(card).toContainText('Payment selection check');
+  expect(errors).toEqual([]);
+});

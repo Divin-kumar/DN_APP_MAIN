@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261123-600 | Prevent transaction payment-radio flash during save and close
+
+- **Scope.** Keep an edited Transaction's title and payment selection intact during the animated closing sheet; reset the edit reference only after the exit completes. Suppress native browser painting of payment-method radios so only the existing pill choices are visible, while keeping native radio input semantics. Cover the mobile edit-and-save transition with a focused browser regression.
+- **Compatibility.** Change only `Financials.jsx`, payment-chip styling and a targeted browser test. Transaction validation, finance data, payment choices, recurring schedules, Firestore/Guest storage, backend configuration, app version and production Hosting are unchanged. The existing Guest tour covers transaction editing and requires no data or edition update.
+- **Verification.** Source-derived: traced `AnimatePresence` exit lifecycle, edit reset and payment radio styling; an edit/save Chromium regression is added. Automated execution, dev deployment readback and physical iPhone Safari testing are unverified pending CI completion. No claim of successful deployment is made by this commit alone.
+
 ## CHG-20261122-599 | Protect drafts and refine DN's mobile controls
 
 - **Scope.** Prevent accidental form-sheet dismissal through X, Escape, backdrop or swipe after edits, using a lightweight in-sheet Keep editing / Discard changes prompt. Retain direct explicit Cancel and expense-plan Back. Move Moment Date and Time above More options. Shorten the universal + double-tap window to 195ms and immediately acknowledge the first tap without flashing the menu. Keep Upcoming expenses to two visual lines and four available actions while improving control-label legibility; improve compact Task and filter labels. Return keyboard Tab focus from portalled dropdown search to the parent form. Add dedicated Playwright regression checks.
