@@ -166,13 +166,15 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   const activeCount = conditions.activeCount;
   const resetActivityDiscovery = () => { resetFilters(); conditions.restore(settingsDefaults.group); };
   const canResetActivity = !matchesListDefaults(filters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
+  const canRestorePreferences = !matchesListDefaults({ ...filters, search: settingsDefaults.filters.search },
+    settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const summary = `${SORTS.find(({ value }) => value === filters.field)?.label} ${filters.direction === 'asc' ? '↑' : '↓'}`;
 
   return (
     <div className="events-page life-timeline-page activities-page">
       <div className="event-discovery-bar">
         <ListControls title="Activity filters" builder hasSort
-          refine={{ conditions, candidates: searchCandidates, sort: { field: filters.field, direction: filters.direction, options: SORTS,
+          refine={{ describeSortChanges: true, conditions, candidates: searchCandidates, sort: { field: filters.field, direction: filters.direction, options: SORTS,
             label: 'Sort activities', onChange: (field, direction) => changeFilters({ field, direction }) },
             defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
               direction: settingsDefaults.filters.direction } }}
@@ -191,9 +193,9 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
           : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
               onClearSearch={filters.search.trim() ? () => changeFilters({ search: '' }) : undefined}
-              onRestoreDefaults={canResetActivity ? resetActivityDiscovery : undefined} />
+              onRestoreDefaults={canRestorePreferences ? resetActivityDiscovery : undefined} />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allViews} progressActivities={allViews}
-            progressLabel="overall active steps complete"
+            describeProgressScope
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
             getEntryMode={(view) => getMomentEntryMode(momentsById.get(projection.context.get(view).momentId), adminValues.eventTypes)}

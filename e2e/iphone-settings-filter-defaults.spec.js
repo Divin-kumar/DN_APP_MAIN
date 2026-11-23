@@ -30,7 +30,7 @@ for (const config of lists) {
       await expect(chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', descending') })).toBeVisible();
       await chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', descending') }).click();
       await expect(chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', ascending') })).toBeVisible();
-      await sheet.getByRole('button', { name: 'Show results' }).click();
+      await sheet.getByRole('button', { name: config.path === '/activities' ? 'Apply sort' : 'Show results' }).click();
       await page.getByRole('button', { name: /^Filters and sort/ }).click();
       sheet = page.getByRole('dialog');
       await sheet.getByRole('button', { name: 'Reset', exact: true }).click();

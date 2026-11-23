@@ -57,6 +57,7 @@ test.describe('Recurring sheets on short phone screens', () => {
         })).toBe(true);
       }
       await dialog.getByRole('button', { name: 'Cancel', exact: true }).tap();
+      if (kind === 'Transaction') await dialog.getByRole('button', { name: 'Discard changes' }).tap();
       await expect(dialog).toBeHidden();
       await page.evaluate(() => {
         delete visualViewport.height;

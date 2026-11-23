@@ -117,7 +117,7 @@ test('Per-list restore updates its summary and leaves other defaults and working
   await page.getByRole('button', { name: /^Filters and sort/ }).click();
   const sheet = page.getByRole('dialog', { name: 'Activity filters' });
   await sheet.getByRole('group', { name: 'Sort activities' }).getByRole('button', { name: 'Sort by Priority', exact: true }).click();
-  await sheet.getByRole('button', { name: 'Show results' }).click();
+  await sheet.getByRole('button', { name: 'Apply sort' }).click();
   const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses'].map(key => localStorage.getItem(key)));
   await page.goto('/settings/list-defaults');
   const moments = page.getByRole('region', { name: 'Moments defaults', exact: true });

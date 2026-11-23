@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261123-602 | Protect transaction drafts and clarify Activity discovery
+
+- Transaction Cancel uses the existing unsaved-changes decision for edited forms. Untouched forms still dismiss directly. Activity search recovery distinguishes a search term from altered preferences, and applied chips label their removal action Clear filters.
+- Activity Refine describes the selected order and offers Apply sort for a sort-only draft. Activity progress keeps its overall count and identifies when the counted activities differ from the displayed results.
+- Verification covers Guest transaction cancellation, search recovery, sort application and progress under filtering. Existing Guest tour records exercise these controls and require no fixture update. No change to stored data, accounting, saved preference formats or app version.
+
 ## CHG-20261123-601 | Desktop record layouts and transaction confirmation timing
 
 - Desktop Dashboard gives populated Activities extra room when Tasks and Moments are collapsed or empty. The desktop ledger aligns amounts and collapsed details in separate columns. Expanded details retain a full-width row. Sidebar selection changes immediately with the route.

@@ -3,7 +3,7 @@ import './FilterSortSheet.css';
 
 // Shared by live Refine drafts and Settings defaults. Selected-chip taps retain
 // their original direction toggle; this separate action makes it discoverable.
-const directionDescription = (field, direction) => {
+export const directionDescription = (field, direction) => {
   const descending = direction === 'desc';
   if (['date', 'dueDate', 'createdAt', 'updatedAt'].includes(field)) {
     if (field === 'dueDate') return descending ? 'Latest due first' : 'Earliest due first';

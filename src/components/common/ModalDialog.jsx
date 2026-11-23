@@ -21,9 +21,9 @@ export function useDialogFormFooter() {
   return useContext(FormFooterContext);
 }
 
-export function useDialogClose(onCancel) {
+export function useDialogClose(onCancel, { protectDraft = false } = {}) {
   const requestDialogClose = useContext(DialogCloseContext);
-  return requestDialogClose ? () => requestDialogClose(onCancel) : onCancel;
+  return requestDialogClose ? () => requestDialogClose(onCancel, protectDraft) : onCancel;
 }
 
 export function DialogFormActions({ children }) {
@@ -144,16 +144,17 @@ export default function ModalDialog({ title, onClose, onDismissed, children, foo
   const closeDisabledRef = useRef(closeDisabled);
   // Close actions use the same reverse sheet animation as a downward swipe.
   // Re-evaluate the media query for the Escape listener installed on mount.
-  const requestClose = (onCancel) => {
+  const requestClose = (onCancel, protectDraft = false) => {
     if (closeDisabledRef.current) return;
     const customClose = typeof onCancel === 'function' ? onCancel : null;
     // Explicit Cancel and Back actions preserve the existing discard/return behavior.
-    if (customClose) { customClose(); return; }
+    if (customClose && !protectDraft) { customClose(); return; }
     if (dirtyRef.current) {
-      closeAfterDiscard.current = onCloseRef.current;
+      closeAfterDiscard.current = customClose || onCloseRef.current;
       setConfirmDiscard(true);
       return;
     }
+    if (customClose) { customClose(); return; }
     if (swipeDismiss && window.matchMedia(mobileMedia).matches) setSwipeClosing(true);
     else onCloseRef.current();
   };

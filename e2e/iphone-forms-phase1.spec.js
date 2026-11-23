@@ -51,6 +51,7 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'dark'], [4
     await amount.fill('124.50');
     await expect(amount).toBeFocused();
     await transaction.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await transaction.getByRole('button', { name: 'Discard changes' }).click();
     await expect(transaction).toHaveCount(0);
 
     const after = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']

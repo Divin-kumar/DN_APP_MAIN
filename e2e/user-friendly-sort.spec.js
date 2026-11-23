@@ -13,7 +13,7 @@ async function pickSort(sheet, label, field) {
     .getByRole('button', { name: new RegExp('^Sort by ' + field + '(?:,|$)') }).click();
 }
 async function apply(sheet) {
-  await sheet.getByRole('button', { name: 'Show results' }).click();
+  await sheet.getByRole('button', { name: /^(Apply sort|Show results)$/ }).click();
   await expect(sheet).toHaveCount(0);
 }
 

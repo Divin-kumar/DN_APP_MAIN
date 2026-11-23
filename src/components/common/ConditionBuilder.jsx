@@ -390,7 +390,7 @@ export function ConditionChips({ filter, maxVisible, onShowMore, onShowLess, hid
       onClick={onShowMore}>+{overflow}</button> : expanded ? <button type="button" className="dn-condition-more" aria-label="Show fewer active filters"
         onClick={onShowLess}>Less</button> : null}
     {onClear && chips.length > 1 ? <button type="button" className="dn-condition-clear"
-      aria-label="Clear all active filters" onClick={onClear}>Clear</button> : null}
+      aria-label="Clear all active filters" onClick={onClear}>Clear filters</button> : null}
   </div> : null;
 }
 // Embedded in the page's existing Filters control; this component deliberately

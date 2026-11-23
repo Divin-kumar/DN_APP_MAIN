@@ -12,7 +12,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await page.goto('/activities');
       const progress = page.locator('.activities-page .event-activity-progress');
       await expect(progress).toContainText('1 of 3');
-      await expect(progress).toContainText('overall active steps complete');
+      await expect(progress).toContainText('activities complete');
       await expect(progress.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '33');
       const cards = page.locator('.activities-page .dn-v2-activity-card');
       await expect(cards).toHaveCount(3);
@@ -23,6 +23,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       // become 100% merely because the visible list is filtered.
       await setActivityStatusCondition(page, 'completed');
       await expect(cards).toHaveCount(1);
+      await expect(progress).toContainText('across all results');
       await expect(progress).toContainText('1 of 3');
       await expect(progress.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '33');
 
@@ -34,6 +35,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(cards).toHaveCount(3);
       await page.getByRole('searchbox', { name: 'Search activities and Moments' }).fill('Book a lakeside stay');
       await expect(cards).toHaveCount(1);
+      await expect(progress).toContainText('across all results');
       await expect(progress).toContainText('1 of 3');
       await expect(progress.getByRole('progressbar')).toHaveAttribute('aria-valuenow', '33');
 

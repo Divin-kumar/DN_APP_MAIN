@@ -12,7 +12,7 @@ import '../common/RecordCardPremium.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
-  showCancelled = false, includeCancelled = false, hasActiveFilters = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id, getEntryMode,
+  showCancelled = false, includeCancelled = false, hasActiveFilters = false, describeProgressScope = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id, getEntryMode,
   getEventName, getMoment, visualCards = false, showMomentName = true, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
@@ -20,10 +20,15 @@ export default function ActivityList({ eventName = 'This event', activities, all
       <strong>A few helpful steps can make this moment easier</strong><p>Activities help you track things to do for {eventName}.</p></div>;
   const activeActivities = progressActivities.filter((activity) => activity.entryMode !== ENTRY_MODES.DAILY && activityStatus(activity) !== 'cancelled');
   const visibleActivities = includeCancelled ? activities : activities.filter((activity) => (activityStatus(activity) === 'cancelled') === showCancelled);
+  if (describeProgressScope) {
+    const counted = new Set(activeActivities);
+    const matchesVisible = visibleActivities.length === counted.size && visibleActivities.every(activity => counted.has(activity));
+    progressLabel = matchesVisible ? 'activities complete' : 'activities complete across all results (excluding diary and cancelled entries)';
+  }
   const completedCount = activeActivities.filter((activity) => activityStatus(activity) === 'completed').length;
   const progress = activeActivities.length ? Math.round(completedCount / activeActivities.length * 100) : 0;
   return <div className="event-activity-content">
-    {activeActivities.length ? <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} active activities complete`}>
+    {activeActivities.length ? <div className="event-activity-progress" aria-label={`${completedCount} of ${activeActivities.length} ${progressLabel}`}>
       <div><strong>{completedCount} of {activeActivities.length}</strong><span>{progressLabel}</span></div>
       <span className="event-activity-progress-track" role="progressbar" aria-valuenow={progress} aria-valuemin={0} aria-valuemax={100} aria-label={`${progress}% complete`}><i style={{ width: `${progress}%` }} /></span>
     </div> : null}

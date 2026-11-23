@@ -44,6 +44,10 @@ for (const [width, height, theme] of [[320, 640, 'dark'], [390, 844, 'light'], [
     await expect(amount).not.toBeFocused();
     await amount.fill('245');
     await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Keep editing' }).click();
+    await expect(amount).toHaveValue('245');
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await dialog.getByRole('button', { name: 'Discard changes' }).click();
     await expect(dialog).toHaveCount(0);
 
     const after = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']

@@ -1,5 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
-import SortChips from './SortChips';
+import SortChips, { directionDescription } from './SortChips';
 import ModalDialog from './ModalDialog';
 import ConditionBuilder from './ConditionBuilder';
 import RefineActions from './RefineActions';
@@ -35,20 +35,25 @@ export default function FilterSortSheet({ title, refine, resultLabel = 'results'
     group: cloneGroup(defaults?.group), field: defaults?.field || sort.field,
     direction: defaults?.direction || sort.direction, reset: true,
   });
+  const groupChanged = JSON.stringify(draft.group) !== JSON.stringify(conditions.state.group);
+  const sortChanged = draft.field !== sort.field || draft.direction !== sort.direction;
+  const sortSummary = refine.describeSortChanges && sortChanged && !groupChanged && !draft.reset
+    ? [sort.options.find(option => option.value === draft.field)?.label, directionDescription(draft.field, draft.direction)].join(' · ')
+    : '';
   const apply = () => {
     // A stale sheet cannot commit after Guest/account/saved-filter scope changes.
     if (conditions.editorKey !== scopeAtOpen.current) { onClose(); return; }
     if (draft.reset) onReset?.();
-    if (draft.reset || JSON.stringify(draft.group) !== JSON.stringify(conditions.state.group)) {
+    if (draft.reset || groupChanged) {
       conditions.restore(draft.group);
     }
-    if (draft.reset || draft.field !== sort.field || draft.direction !== sort.direction) {
+    if (draft.reset || sortChanged) {
       sort.onChange(draft.field, draft.direction);
     }
     onClose();
   };
   return <ModalDialog title={title} className="dn-refine-sheet" onClose={onClose}
-    footer={<RefineActions count={draftCount} resultLabel={resultLabel} onReset={resetDraft} onCancel={onClose} onApply={apply} />}>
+    footer={<RefineActions count={draftCount} sortSummary={sortSummary} resultLabel={resultLabel} onReset={resetDraft} onCancel={onClose} onApply={apply} />}>
     <div className="dn-refine-sheet-section">
       <SortChips heading="Sort by" field={draft.field} direction={draft.direction} options={sort.options}
         label={sort.label || 'Sort by'} onChange={(field, direction) => setDraft((current) => ({ ...current, field, direction }))} />

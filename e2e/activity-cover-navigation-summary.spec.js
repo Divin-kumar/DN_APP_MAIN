@@ -89,7 +89,7 @@ test('detail swipes follow the Activities sort order across reused child IDs, wi
   await seedGuest(page); await page.goto('/activities');
   await page.getByRole('button', { name: /Filters and sort/ }).click();
   await page.getByRole('button', { name: 'Sort by Title', exact: true }).click();
-  await page.getByRole('button', { name: 'Show results', exact: true }).click();
+  await page.getByRole('button', { name: 'Apply sort', exact: true }).click();
   const titles = await page.locator('.event-activity-title-row > strong').allTextContents();
   expect(titles).toEqual(['A different activity with the same ID', 'Book a lakeside stay', 'Choose the train']);
   const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));

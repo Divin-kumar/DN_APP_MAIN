@@ -77,3 +77,8 @@ html[data-theme] .dn-discovery-empty .dn-discovery-empty-reset:focus-visible {
     padding: 14px 10px;
   }
 }
+
+html[data-theme] .activities-page .dn-empty-recovery-actions > .dn-discovery-empty-reset:first-child {
+  background: var(--action-fill);
+  color: var(--action-ink);
+}
