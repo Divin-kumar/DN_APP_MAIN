@@ -23,7 +23,7 @@ export default function ActivityFormFields({
   ].filter(Boolean).join(' · ');
   return <>
     <label className="dn-activity-create-title" htmlFor={`${namePrefix}-title`}>{titleLabel}
-      <input id={`${namePrefix}-title`} aria-label={titleLabel} type="text"
+      <input id={`${namePrefix}-title`} aria-label={titleLabel} type="text" pattern={'.*\\S.*'} title="Enter an activity title."
         value={value.title || ''} disabled={disabled} required
         onChange={(event) => onChange({ title: event.target.value })}
         placeholder={titleLabel} autoFocus={autoFocus && typeof window !== 'undefined'

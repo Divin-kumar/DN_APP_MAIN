@@ -1,3 +1,5 @@
+**Dashboard, Moments and Activities (24 November 2026, development).** If Tasks fail to load, use Try again on the Dashboard. If saving a Moment or an Activity from its chooser fails, the form keeps your edits for another try. Searching the chooser lists each Moment once. Clear search returns you to the search field. Activity cards use a single column when the tablet sidebar leaves limited space. A keyboard user can tab to an Activity to open it or tab to Actions for its menu.
+
 **Transactions and Activities (23 November 2026, development).** If you cancel an edited transaction, choose whether to keep editing or discard it. You can clear an Activity search without losing your filters. When you change just the order, review the direction and tap Apply sort.
 
 **Browsing records (23 November 2026, development).** Desktop Activities gain room on quiet dashboards. In Transactions, amounts and details line up across the ledger, and the confirmation appears once the save form has closed. Linked Task and Activity cards show fewer repeated details.

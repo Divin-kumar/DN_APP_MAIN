@@ -85,7 +85,7 @@ test.describe('local calendar defaults', () => {
     const eventDialog = page.getByRole('dialog');
     await expect(eventDialog.locator('input[name="date"]')).toHaveValue('2026-10-29');
     await eventDialog.getByRole('textbox', { name:'Moment name', exact:true }).fill('Local day review');
-    await eventDialog.getByRole('button', { name:'Save Event', exact:true }).click();
+    await eventDialog.getByRole('button', { name:'Save Moment', exact:true }).click();
     await expect(eventDialog).toHaveCount(0);
     await page.goto('/events/moment-one/activities?create=activity');
     const activityDialog = page.getByRole('dialog');

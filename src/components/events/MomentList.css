@@ -250,3 +250,10 @@ html[data-theme] .life-timeline-page .dn-v2-moment-card .event-story-status.is-c
   border:0 !important; background:transparent !important;
   color:var(--color-success) !important; box-shadow:none !important;
 }
+
+html[data-theme] .dn-modal-activity-picker .activity-event-option {
+  grid-template-columns:minmax(0, 1fr) 44px;
+}
+html[data-theme] .dn-modal-activity-picker .activity-event-option-main,
+html[data-theme] .dn-modal-activity-picker .activity-event-favorite { min-height:44px; }
+html[data-theme] .dn-modal-activity-picker .activity-event-favorite { width:44px; }

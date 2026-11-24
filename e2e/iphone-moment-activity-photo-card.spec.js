@@ -14,7 +14,8 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await expect(card).toBeVisible();
       await expect(card).toHaveClass(/dn-v2-activity-card/);
       await expect(card.locator('.dn-v2-activity-cover')).toBeVisible();
-      await expect(card.locator('.dn-v2-activity-cover-symbol')).toBeVisible();
+      await expect(card.getByRole('button', { name: 'Manage photos for Book a lakeside stay' }).locator('svg')).toBeVisible();
+      await expect(card.locator('.dn-v2-activity-cover-symbol')).toHaveCount(0);
       await expect(card.locator('.event-activity-status')).toHaveText('In progress');
       await expect(card.locator('.event-activity-moment-name')).toHaveCount(0);
       await expect(card.locator('.event-activity-context')).toContainText(/Due|Past due/);

@@ -19,18 +19,19 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
         const before = await page.evaluate(() => ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses']
           .map((key) => localStorage.getItem(key)));
         const refine = page.getByRole('button', { name: /^Filters and sort/ });
-        if (section.route === '/activities') {
+        {
           const search = page.getByRole('searchbox', { name: section.input });
           await search.fill('no-match-search-only');
           const empty = page.locator('.dn-discovery-empty');
           await expect(empty.getByRole('button', { name: 'Clear search' })).toBeVisible();
           await expect(empty.getByRole('button', { name: 'Restore saved defaults' })).toHaveCount(0);
           await empty.getByRole('button', { name: 'Clear search' }).click();
+          await expect(search).toBeFocused();
         }
         await refine.click();
         const dialog = page.getByRole('dialog');
         await dialog.getByRole('button', { name: 'Sort by ' + section.sort, exact: true }).click();
-        await dialog.getByRole('button', { name: section.route === '/activities' ? 'Apply sort' : 'Show results' }).click();
+        await dialog.getByRole('button', { name: 'Apply sort' }).click();
         const input = page.getByRole('searchbox', { name: section.input });
         await input.fill('no-match-discovery-999');
         const empty = page.locator('.dn-discovery-empty');

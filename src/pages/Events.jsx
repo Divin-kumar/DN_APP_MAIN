@@ -1,3 +1,4 @@
+import useMomentDialogAction from '../hooks/useMomentDialogAction';
 import { AnimatePresence } from 'framer-motion';
 import { currentEntryTime } from '../utils/activityTime.js';
 import { activityTime as savedRecordTime } from '../utils/activityTime';
@@ -97,7 +98,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
   return (
     <>
     <SwipeActionCard className="event-story-card dn-v2-moment-card"
-      mainClassName="event-story-main-viewport" label={event.name || 'Moment'}
+      mainClassName="event-story-main-viewport" accessibleActions label={event.name || 'Moment'}
       
       otherActions={[
         { label: 'Edit', icon: Pencil, onClick: onEdit },
@@ -105,9 +106,9 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
         ...(coverOptions.length ? [{ label: 'Cover photo', icon: Images, onClick: () => setChoosingCover(true) }] : []),
         { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: onArchive },
       ]} onDelete={onDelete}>
-      <button type="button" className="event-story-main dn-v2-moment-open" onClick={onOpen}
+      <button type="button" data-card-open className="event-story-main dn-v2-moment-open" onClick={onOpen}
         style={{ viewTransitionName: momentVisualName(event.id || event.firestoreId) }}
-        aria-label={'Open ' + (event.name || 'event')}>
+        aria-label={'Open ' + (event.name || 'Moment')}>
         <MomentCardCover attachment={cover} uid={uid} isGuest={isGuest} date={date} />
         <span className="event-story-copy dn-v2-moment-copy">
           <span className="dn-v2-moment-heading">
@@ -124,7 +125,7 @@ function EventStoryCard({ event, expenseTotal, uid, isGuest, onOpen, onPdf, onEd
           <span className="event-story-details">
             <span><Clock3 size={13} /> {activities.length} {activities.length === 1 ? 'activity' : 'activities'}</span>
             {memories.length ? <span><BookHeart size={13} /> {memories.length} {memories.length === 1 ? 'reflection' : 'reflections'}</span> : null}
-            {attachments.length ? <span><FileText size={13} /> {attachments.length} files</span> : null}
+            {attachments.length ? <span><FileText size={13} /> {attachments.length} {attachments.length === 1 ? 'file' : 'files'}</span> : null}
             {expenseTotal > 0 ? <span><Receipt size={13} /> {currency(expenseTotal)}</span> : null}
           </span>
         </span>
@@ -147,7 +148,7 @@ function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorit
     <div className="activity-event-option">
       <button type="button" className="activity-event-option-main" onClick={onChoose}>
         <span className="activity-event-option-date"><strong>{nextDate ? nextDate.toLocaleDateString('en-GB', { day: '2-digit' }) : '—'}</strong><small>{nextDate ? nextDate.toLocaleDateString('en-GB', { month: 'short' }) : 'Date'}</small></span>
-        <span className="activity-event-option-copy"><strong>{event.name || 'Life moment'}</strong><small>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'} · {dateLabel(nextDate || event.date)}</small></span>
+        <span className="activity-event-option-copy"><strong>{event.name || 'Life moment'}</strong><small>{event.type === 'Other' ? event.customType || 'Other' : event.type || 'Personal'} · {nextDate ? dateLabel(nextDate) : 'Date to be decided'}</small></span>
         {badge ? <span className="activity-event-option-badge">{badge}</span> : null}
       </button>
       <button type="button" className={`activity-event-favorite${favorite ? ' is-favorite' : ''}`} onClick={onToggleFavorite} aria-label={favorite ? `Remove ${event.name} from favorites` : `Favorite ${event.name}`} aria-pressed={favorite}>★</button>
@@ -156,8 +157,14 @@ function ActivityEventOption({ event, badge, favorite, onChoose, onToggleFavorit
 }
 
 export default function Events() {
-  const activityFormId = useId();
   const scopedMoments = useScopedMoments();
+  return <MomentsPage key={scopedMoments.scopeIdentity} scopedMoments={scopedMoments} />;
+}
+
+function MomentsPage({ scopedMoments }) {
+  const activityFormId = useId();
+  const resultFocusRef = useRef(null);
+  const request = useMomentDialogAction();
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppStore((state) => state.user);
@@ -165,11 +172,7 @@ export default function Events() {
   const adminValues = useAppStore((state) => state.adminValues);
   const showToast = useAppStore((state) => state.showToast);
   const events = scopedMoments.events;
-  const loading = useEventStore((state) => state.loading);
-  const error = useEventStore((state) => state.error);
-  const loadEvents = useEventStore((state) => state.loadEvents);
   const addEvent = useEventStore((state) => state.addEvent);
-  const updateEventItem = useEventStore((state) => state.updateEventItem);
   const deleteEventItem = useEventStore((state) => state.deleteEventItem);
   const expenses = useExpenseStore((state) => state.expenses);
   const loadExpenses = useExpenseStore((state) => state.loadExpenses);
@@ -193,6 +196,8 @@ export default function Events() {
     startingGroup: Object.keys(settingsDefaults.filters).every((key) => momentFilters[key] === settingsDefaults.filters[key]) ? settingsDefaults.group : undefined,
   });
   const canResetMoment = !matchesListDefaults(momentFilters, settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
+  const canRestorePreferences = !matchesListDefaults({ ...momentFilters, search: settingsDefaults.filters.search },
+    settingsDefaults.filters, conditions.state.group, settingsDefaults.group);
   const [activityChooserOpen, setActivityChooserOpen] = useState(false);
   const [activityChooserEvent, setActivityChooserEvent] = useState(null);
   const [activityEventSearch, setActivityEventSearch] = useState('');
@@ -208,9 +213,8 @@ export default function Events() {
   // ============================
   useEffect(() => {
     if (!user && !isGuest) return;
-    loadEvents(user?.uid, isGuest);
     loadExpenses(user?.uid, isGuest);
-  }, [user, isGuest, loadEvents, loadExpenses]);
+  }, [user, isGuest, loadExpenses]);
 
   const eventExpenseTotals = useMemo(() => {
     const totals = new Map();
@@ -235,10 +239,14 @@ export default function Events() {
   const pickerRecentIds = (() => {
     try { return JSON.parse(localStorage.getItem(recentKey) || '[]'); } catch { return []; }
   })();
-  const pickerRecent = pickerRecentIds.map((id) => pickerById.get(id)).filter((event) => event && !favoriteEventIds.includes(event.id || event.firestoreId)).slice(0, 3);
-  const pickerSuggested = [...pickerEvents].filter((event) => getNextOccurrenceDate(event) >= new Date(new Date().setHours(0, 0, 0, 0))).sort((first, second) => getNextOccurrenceDate(first) - getNextOccurrenceDate(second))[0];
-  const pickerFeaturedIds = new Set([...pickerFavorites, ...pickerRecent].map((event) => event.id || event.firestoreId));
-  const pickerAll = pickerEvents.filter((event) => !pickerFeaturedIds.has(event.id || event.firestoreId) && event !== pickerSuggested);
+  const pickerSuggested = pickerQuery ? null : [...pickerEvents]
+    .filter((event) => getNextOccurrenceDate(event) >= new Date(new Date().setHours(0, 0, 0, 0)))
+    .sort((first, second) => getNextOccurrenceDate(first) - getNextOccurrenceDate(second))[0];
+  const favoriteRows = pickerQuery ? [] : pickerFavorites.filter((event) => event !== pickerSuggested);
+  const recentRows = pickerQuery ? [] : pickerRecentIds.map((id) => pickerById.get(id)).filter((event) => event && event !== pickerSuggested && !pickerFavorites.includes(event)).slice(0, 3);
+  const featured = new Set([...favoriteRows, ...recentRows]);
+  if (pickerSuggested) featured.add(pickerSuggested);
+  const pickerAll = pickerEvents.filter((event) => !featured.has(event));
 
   const chooseEventForActivity = (event) => {
     const id = event.id || event.firestoreId;
@@ -246,6 +254,7 @@ export default function Events() {
       const recentIds = JSON.parse(localStorage.getItem(recentKey) || '[]').filter((recentId) => recentId !== id);
       localStorage.setItem(recentKey, JSON.stringify([id, ...recentIds].slice(0, 8)));
     } catch { /* Keep selection usable if browser storage is unavailable. */ }
+    request.clearError();
     setActivityChooserOpen(false);
     setActivityChooserEvent(event);
     setActivityTitle('');
@@ -253,28 +262,20 @@ export default function Events() {
     setActivityDescription('');
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
-    
-    
   };
 
-  const saveActivityFromChooser = async (submitEvent) => {
+  const saveActivityFromChooser = (submitEvent) => {
     submitEvent.preventDefault();
     if (!activityChooserEvent || !activityTitle.trim()) return;
     const eventId = activityChooserEvent.id || activityChooserEvent.firestoreId;
     const mode = getMomentEntryMode(activityChooserEvent, adminValues.eventTypes);
-    const context = records.capture();
-    try {
-      await records.mutateMoment(context, eventId, (latest) =>
-        createStandaloneActivity(latest, { title: activityTitle, description: activityDescription,
-          date: activityDate, time: activityTime, priority: activityPriority, mode,
-        }));
-      if (!records.isCurrent(context)) return;
+    request.run((context) => records.mutateMoment(context, eventId, (latest) =>
+      createStandaloneActivity(latest, { title: activityTitle, description: activityDescription,
+        date: activityDate, time: activityTime, priority: activityPriority, mode })), () => {
       setActivityChooserEvent(null);
       showToast('Activity saved', 'success');
-      navigate(`/events/${eventId}/activities`);
-    } catch (error) {
-      showToast(error?.message || 'Could not save this entry. Please try again.', 'danger');
-    }
+      navigate(`/events/${encodeURIComponent(eventId)}/activities`);
+    }, 'Couldn’t save this activity. Your draft is here. Try saving again.');
   };
 
   const toggleFavoriteEvent = (event) => {
@@ -298,7 +299,7 @@ export default function Events() {
     setActivityDate(formatMomentDate(new Date()));
     setActivityPriority('medium');
   };
-  const openNewEvent = () => { setEditingEvent(null); setDrawer('event'); };
+  const openNewEvent = () => { request.clearError(); setEditingEvent(null); setDrawer('event'); };
 
   useEffect(() => {
     if (!location.search.includes('create=event')) return;
@@ -312,36 +313,42 @@ export default function Events() {
     navigate('/events', { replace: true });
   }, [location.search, navigate]);
 
-  const saveEvent = async (formData) => {
+  const saveEvent = (formData) => {
     if (editingEvent) {
-      await updateEventItem(user?.uid, isGuest, { ...editingEvent, ...formData, id: editingEvent.id || formData.id, activities: editingEvent.activities || [] });
-      showToast('Event updated', 'success');
-      closeDrawer();
+      const id = editingEvent.id || editingEvent.firestoreId;
+      // The editor also receives older records with nested data. Only the
+      // fields it actually edits may replace the latest version of the record.
+      const { name, type, customType, date, time, recurrence, notes } = formData;
+      const values = { name, type, customType, date, recurrence, notes };
+      if ('time' in formData) values.time = time;
+      else if ('time' in editingEvent) values.time = '';
+      request.run((context) => records.mutateMoment(context, id, (latest) => ({ ...latest, ...values })), () => {
+        showToast('Moment updated', 'success');
+        closeDrawer();
+      }, 'Couldn’t save this Moment. Your draft is here. Try saving again.');
     } else {
-      const savedEvent = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
-      showToast('Event saved', 'success');
-      closeDrawer();
-      navigate(`/events/${savedEvent.id || savedEvent.firestoreId}`);
+      request.run(() => addEvent(user?.uid, isGuest, { ...formData, activities: [] }), (saved) => {
+        showToast('Moment saved', 'success');
+        closeDrawer();
+        navigate(`/events/${encodeURIComponent(saved.id || saved.firestoreId)}`);
+      }, 'Couldn’t save this Moment. Your draft is here. Try saving again.');
     }
   };
 
   const archiveMoment = async (event) => {
+    const context = records.capture();
     try {
-      await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
-      showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
-    } catch { showToast('Could not update archive state', 'danger'); }
-  };
-
-  const removeEvent = async (event) => {
-    try {
-      await deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId);
-      showToast('Event deleted', 'danger');
-      setPendingDeleteEvent(null);
-    } catch (deleteError) {
-      console.error('Event deletion failed:', deleteError);
-      showToast('Delete failed', 'danger');
+      await records.mutateMoment(context, event.id || event.firestoreId, (latest) => ({ ...latest, archived: !event.archived }));
+      if (records.isCurrent(context)) showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
+    } catch {
+      if (records.isCurrent(context)) showToast('Couldn’t change this Moment. Try again.', 'danger');
     }
   };
+
+  const removeEvent = (event) => request.run(() => deleteEventItem(user?.uid, isGuest, event.id || event.firestoreId), () => {
+    showToast('Moment deleted', 'success');
+    setPendingDeleteEvent(null);
+  }, 'Couldn’t delete this Moment. Try again.');
 
   const renderEventCard = (event) => (
     <EventStoryCard
@@ -352,9 +359,9 @@ export default function Events() {
       expenseTotal={eventExpenseTotals.get(event.id || event.firestoreId) || 0}
       onOpen={() => runVisualTransition(() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/story`))}
       onPdf={() => navigate(`/events/${encodeURIComponent(event.id || event.firestoreId)}/pdf`)}
-      onEdit={() => { setEditingEvent(event); setDrawer('event'); }}
+      onEdit={() => { request.clearError(); setEditingEvent(event); setDrawer('event'); }}
       onArchive={() => archiveMoment(event)}
-      onDelete={() => setPendingDeleteEvent(event)}
+      onDelete={() => { request.clearError(); setPendingDeleteEvent(event); }}
     />
   );
 
@@ -368,12 +375,12 @@ export default function Events() {
         </section>
       ) : null}
       <div className="event-discovery-bar">
-        <ListControls title="Moment filters" builder
-          refine={{ conditions, candidates: searchCandidates.map(momentConditionRecord), sort: { field: sortField, direction: sortDirection, options: MOMENT_SORT_OPTIONS,
+        <ListControls title="Moment filters" resultFocusRef={resultFocusRef} builder
+          refine={{ describeSortChanges: true, conditions, candidates: searchCandidates.map(momentConditionRecord), sort: { field: sortField, direction: sortDirection, options: MOMENT_SORT_OPTIONS,
             label: 'Sort moments', onChange: (field, direction) => changeMomentFilters({ field, direction }) },
           defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
             direction: settingsDefaults.filters.direction } }}
-          activeCount={conditions.activeCount} resultCount={visibleEvents.length} totalCount={events.length} resultLabel="moments"
+          activeCount={conditions.activeCount} resultCount={scopedMoments.pending || scopedMoments.loadError ? undefined : visibleEvents.length} totalCount={events.length} resultLabel="moments"
           chips={<ConditionChips filter={conditions} />}
           summary={sortSummary}
           sort={<SortControl field={sortField} direction={sortDirection} options={MOMENT_SORT_OPTIONS} label="Sort moments"
@@ -385,8 +392,8 @@ export default function Events() {
         </ListControls>
       </div>
 
-      {error ? <p style={styles.errorText}>{error}</p> : null}
-      {loading ? <LoadingSkeleton rows={4} label="Loading moments" /> : error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => loadEvents(user?.uid, isGuest)}>Try again</button></div> : visibleEvents.length ? (
+      {scopedMoments.loadError ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={scopedMoments.retry}>Try again</button></div>
+        : scopedMoments.pending ? <LoadingSkeleton rows={4} label="Loading moments" /> : visibleEvents.length ? (
         <div className="life-journey dn-motion-loaded">
           <section className="life-journey-section" aria-label={`Moments ordered by ${sortSummary}`}>
             <div className="life-journey-items">{visibleEvents.map(renderEventCard)}</div>
@@ -394,39 +401,41 @@ export default function Events() {
         </div>
       ) : (
         <QuietEmptyState kind="moments" filtered={events.length > 0}
-          onClearSearch={search.trim() ? () => setSearch('') : undefined}
-          onRestoreDefaults={canResetMoment ? resetMomentDiscovery : undefined} />
+          searchInputId="moment-filter-search" onClearSearch={search.trim() ? () => setSearch('') : undefined}
+          onRestoreDefaults={canRestorePreferences ? resetMomentDiscovery : undefined} />
       )}
 
-      {pendingDeleteEvent ? <ConfirmDialog title="Delete event?" message={`Delete “${pendingDeleteEvent.name || 'Untitled event'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
+      {pendingDeleteEvent ? <ConfirmDialog title="Delete Moment?" fallbackFocusRef={resultFocusRef} busy={request.busy} error={request.error} confirmLabel="Delete Moment" busyLabel="Deleting…" message={`Delete “${pendingDeleteEvent.name || 'Untitled Moment'}” and its activities? This cannot be undone.`} onCancel={() => setPendingDeleteEvent(null)} onConfirm={() => removeEvent(pendingDeleteEvent)} /> : null}
       <AnimatePresence initial={false}>
-        {drawer === 'event' ? <Drawer key="moment-editor" editingEvent={editingEvent} onClose={closeDrawer} onSaveEvent={saveEvent} /> : null}
+        {drawer === 'event' ? <Drawer key="moment-editor" fallbackFocusRef={resultFocusRef} editingEvent={editingEvent} busy={request.busy} error={request.error} onClose={() => { if (!request.pending.current) closeDrawer(); }} onSaveEvent={saveEvent} /> : null}
         {activityChooserOpen ? (
           <ModalDialog key="activity-picker" title="Choose a life moment" className="dn-modal-activity-picker" onClose={() => { setActivityChooserOpen(false); setActivityEventSearch(''); }}>
-            {events.length ? (
+            {scopedMoments.loadError ? <div className="financial-load-error" role="alert"><span>Moments couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={scopedMoments.retry}>Try again</button></div>
+              : scopedMoments.pending ? <LoadingSkeleton rows={2} label="Loading moments" />
+              : events.some((event) => !event.archived) ? (
               <div className="activity-event-picker">
-                <p>Activities belong to an event. Choose the moment this next step will help with.</p>
+                <p>Choose the Moment for this activity.</p>
                 <label className="activity-event-search"><Search size={16} /><input value={activityEventSearch} onChange={(changeEvent) => setActivityEventSearch(changeEvent.target.value)} placeholder="Search your moments" aria-label="Search moments for activity" /></label>
                 <div className="activity-event-picker-results">
-                  {pickerSuggested && !pickerQuery ? <section className="activity-picker-group"><div className="activity-picker-label">A good place to begin <span>Suggested</span></div><ActivityEventOption event={pickerSuggested} badge="Next up" favorite={favoriteEventIds.includes(pickerSuggested.id || pickerSuggested.firestoreId)} onChoose={() => chooseEventForActivity(pickerSuggested)} onToggleFavorite={() => toggleFavoriteEvent(pickerSuggested)} /></section> : null}
-                  {pickerFavorites.length ? <section className="activity-picker-group"><div className="activity-picker-label">Favorites</div>{pickerFavorites.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
-                  {pickerRecent.length ? <section className="activity-picker-group"><div className="activity-picker-label">Recently opened</div>{pickerRecent.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} badge="Recent" favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
-                  <section className="activity-picker-group activity-picker-all"><div className="activity-picker-label">{pickerQuery ? 'Search results' : 'All moments'} <span>{pickerAll.length + (pickerSuggested ? 1 : 0)}</span></div>
-                    {pickerAll.length || (pickerSuggested && pickerQuery) ? [...pickerAll, ...(pickerSuggested && pickerQuery && !pickerAll.includes(pickerSuggested) ? [pickerSuggested] : [])].map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />) : !pickerSuggested && !pickerFavorites.length && !pickerRecent.length ? <p className="activity-picker-no-results">No matching moments. Try another search.</p> : null}
-                  </section>
+                  {pickerSuggested ? <section className="activity-picker-group"><div className="activity-picker-label">A good place to begin <span>Suggested</span></div><ActivityEventOption event={pickerSuggested} badge="Next up" favorite={favoriteEventIds.includes(pickerSuggested.id || pickerSuggested.firestoreId)} onChoose={() => chooseEventForActivity(pickerSuggested)} onToggleFavorite={() => toggleFavoriteEvent(pickerSuggested)} /></section> : null}
+                  {favoriteRows.length ? <section className="activity-picker-group"><div className="activity-picker-label">Favorites</div>{favoriteRows.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
+                  {recentRows.length ? <section className="activity-picker-group"><div className="activity-picker-label">Recently opened</div>{recentRows.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} badge="Recent" favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />)}</section> : null}
+                  {pickerAll.length || !pickerEvents.length ? <section className="activity-picker-group activity-picker-all"><div className="activity-picker-label">{pickerQuery ? 'Search results' : featured.size ? 'Other moments' : 'All moments'} <span>{pickerAll.length}</span></div>
+                    {pickerAll.length ? pickerAll.map((event) => <ActivityEventOption key={event.id || event.firestoreId} event={event} favorite={favoriteEventIds.includes(event.id || event.firestoreId)} onChoose={() => chooseEventForActivity(event)} onToggleFavorite={() => toggleFavoriteEvent(event)} />) : !pickerEvents.length ? <p className="activity-picker-no-results">No matching moments. Try another search.</p> : null}
+                  </section> : null}
                 </div>
               </div>
             ) : (
-              <div className="activity-event-picker-empty"><p>Start with a life moment. Activities will live inside its story.</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}><Plus size={16} aria-hidden="true" /> Create a life moment</button></div>
+              <div className="activity-event-picker-empty"><p>{events.length ? 'Your Moments are archived. Restore one or create a Moment for this activity.' : 'Create a Moment for your first activity.'}</p><button type="button" className="primaryButton event-empty-state-cta" onClick={() => { setActivityChooserOpen(false); openNewEvent(); }}><Plus size={16} aria-hidden="true" /> Create a life moment</button></div>
             )}
           </ModalDialog>
         ) : null}
         {activityChooserEvent ? (
-          <ModalDialog key="activity-editor" title="Add an activity" formFooter onClose={() => setActivityChooserEvent(null)}>
+          <ModalDialog key="activity-editor" title="Add an activity" formFooter closeDisabled={request.busy} onClose={() => { if (!request.pending.current) setActivityChooserEvent(null); }}>
             <form id={activityFormId} className="form-surface quick-create-activity-form" onSubmit={saveActivityFromChooser}>
               <p className="dn-form-context">Moment · <strong>{activityChooserEvent.name || 'This life moment'}</strong></p>
 
-              <ActivityFormFields namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
+              <ActivityFormFields disabled={request.busy} namePrefix="dn-chooser-entry" priorities={adminValues.activityPriorities}
                  value={{ title: activityTitle, date: activityDate, time: activityTime,
                    priority: activityPriority, description: activityDescription }}
                  onChange={(patch) => {
@@ -437,9 +446,10 @@ export default function Events() {
                    if (patch.priority !== undefined) setActivityPriority(patch.priority);
                  }} />
               <DialogFormActions>
+                {request.error ? <p className="quick-create-error" role="alert">{request.error}</p> : null}
                 <div className="form-actions">
-                  <button className="secondaryButton" type="button" onClick={() => setActivityChooserEvent(null)}>Cancel</button>
-                  <button className="primaryButton" type="submit" form={activityFormId}>Save activity</button>
+                  <button className="secondaryButton" type="button" disabled={request.busy} onClick={() => setActivityChooserEvent(null)}>Cancel</button>
+                  <button className="primaryButton" type="submit" form={activityFormId} disabled={request.busy}>{request.busy ? 'Saving…' : 'Save activity'}</button>
                 </div>
               </DialogFormActions>
             </form>
@@ -450,15 +460,11 @@ export default function Events() {
   );
 }
 
-function Drawer({ editingEvent, onClose, onSaveEvent }) {
-  return <ModalDialog title={editingEvent?.name || 'New event'} onClose={onClose} variant="drawer" formFooter>
+function Drawer({ editingEvent, fallbackFocusRef, busy, error, onClose, onSaveEvent }) {
+  return <ModalDialog title={editingEvent?.name || 'New Moment'} fallbackFocusRef={fallbackFocusRef} closeDisabled={busy} onClose={onClose} variant="drawer" formFooter>
     <div className="event-drawer-content">
       <EventForm initialValues={editingEvent} onSubmit={onSaveEvent} onCancel={onClose}
-        submitLabel={editingEvent ? 'Update Event' : 'Save Event'} />
+        busy={busy} error={error} submitLabel={editingEvent ? 'Update Moment' : 'Save Moment'} />
     </div>
   </ModalDialog>;
 }
-
-const styles = {
-  errorText: { margin: '0 0 12px', padding: '10px 12px', borderRadius: '10px', background: '#fff1f1', color: '#9d3c3c', border: '1px solid #efcaca' }
-};

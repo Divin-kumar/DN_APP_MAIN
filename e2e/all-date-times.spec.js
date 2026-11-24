@@ -34,7 +34,7 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await dialog.getByLabel('Moment time',{exact:true}).fill('12:15');
   await paired(dialog,'Moment');
   await page.screenshot({path:`.verification/moment-time-form-${width}.png`});
-  await dialog.getByRole('button',{name:'Save Event',exact:true}).click();
+  await dialog.getByRole('button',{name:'Save Moment',exact:true}).click();
   await expect(dialog).toHaveCount(0);await page.reload();
   await expect(page.locator('.event-moment-date-value')).toContainText('12:15');
   await page.goto('/events');
@@ -58,7 +58,7 @@ for(const width of [320,390,1280]) test(`Moment and transaction clocks save, cle
   await page.getByRole('menuitem',{name:'Edit',exact:true}).click();
   await dialog.locator('.dn-form-disclosure > summary').click();
   await dialog.getByRole('button',{name:'Clear moment time',exact:true}).click();
-  await dialog.getByRole('button',{name:'Update Event',exact:true}).click();
+  await dialog.getByRole('button',{name:'Update Moment',exact:true}).click();
   await expect(dialog).toHaveCount(0);
   const savedMoment=await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find(x=>x.name==='A timed Moment'));
   expect(savedMoment.time).toBe('');

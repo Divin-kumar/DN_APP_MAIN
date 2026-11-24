@@ -1,3 +1,4 @@
+import { useId } from 'react';
 import { activityTime } from '../../utils/activityTime.js';
 import { Check, Circle, Pencil, RotateCcw, Sparkles, XCircle } from 'lucide-react';
 import SwipeActionCard from '../common/SwipeActionCard';
@@ -12,8 +13,9 @@ import '../common/RecordCardPremium.css';
 
 // List cards contain identity and metadata only. Full content lives in Activity Detail.
 export default function ActivityList({ eventName = 'This event', activities, allActivities = activities, progressActivities = allActivities,
-  showCancelled = false, includeCancelled = false, hasActiveFilters = false, describeProgressScope = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id, getEntryMode,
+  accessibleCardControls = false, showCancelled = false, includeCancelled = false, hasActiveFilters = false, describeProgressScope = false, progressLabel = 'active steps complete', getActivityKey = (activity) => activity.id, getEntryMode,
   getEventName, getMoment, visualCards = false, showMomentName = true, uid, isGuest, sample, onOpen, onEdit, onToggleComplete, onToggleCancelled, onDelete, disabled = false, readOnly = false }) {
+  const listId = useId();
   if (!allActivities.length) return hasActiveFilters
     ? <div className="event-activity-filter-empty">No activities match these filters.</div>
     : <div className="event-activity-empty"><span className="event-activity-empty-art"><Sparkles size={21} /><Circle size={8} /></span>
@@ -35,6 +37,13 @@ export default function ActivityList({ eventName = 'This event', activities, all
     <div className="event-activity-list">
       {!visibleActivities.length ? <div className="event-activity-filter-empty">{includeCancelled || hasActiveFilters ? 'No activities match these filters.' : showCancelled ? 'No cancelled activities.' : activeActivities.length === 0 ? 'All activities are cancelled.' : 'No activities match these filters.'}</div> : visibleActivities.map((activity) => {
         const key = getActivityKey(activity), status = activityStatus(activity);
+        const metaId = accessibleCardControls ? `${listId}-${encodeURIComponent(key)}` : undefined;
+        const Copy = accessibleCardControls && onOpen ? 'button' : 'div';
+        const openControl = Copy === 'button' ? {
+          type: 'button', 'data-card-open': true, className: 'event-activity-copy dn-activity-open',
+          'aria-label': `Open ${activity.title || 'Untitled activity'}`, 'aria-describedby': `${metaId}-status ${metaId}-context`,
+          disabled, onClick: () => onOpen(activity),
+        } : { className: 'event-activity-copy' };
         const parentMoment = visualCards ? getMoment?.(activity) : null;
         const completed = status === 'completed', cancelled = status === 'cancelled';
         const entryMode = getEntryMode?.(activity) || activity.entryMode;
@@ -55,19 +64,19 @@ export default function ActivityList({ eventName = 'This event', activities, all
             icon: cancelled ? RotateCcw : XCircle, onClick: () => onToggleCancelled(activity.id, activity) }] : []),
         ];
         const card = <SwipeActionCard key={key} as="article" className={`event-activity-card${visualCards && parentMoment ? ' dn-v2-activity-card' : ''}${readOnly ? ' is-readonly' : ''}${completed ? ' is-complete' : ''}${overdue ? ' is-overdue' : ''}${cancelled ? ' is-cancelled' : ''}`}
-          label={activity.title || 'Untitled activity'}
+          accessibleActions={accessibleCardControls} label={activity.title || 'Untitled activity'}
           onOpen={onOpen ? () => onOpen(activity) : undefined} swipeEnabled={!readOnly && (actions.length > 0 || Boolean(onDelete))}
           disabled={disabled} otherActions={actions} onDelete={!readOnly && onDelete ? () => onDelete(activity.id, activity) : undefined}>
           <div className="event-activity-main">
             {visualCards && parentMoment ? <ActivityCardCover moment={parentMoment} activity={activity}
               uid={uid} isGuest={isGuest} sample={sample} date={date}
               onOpen={onOpen ? () => onOpen(activity) : undefined} disabled={disabled} /> : null}
-            <div className="event-activity-copy">
-            <div className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
-              <span className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}><CompletionCheck active={completed} size={16} />{completed ? <span className="sr-only">Completed</span> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
-            </div>
-            <div className="event-activity-context">{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{parentMoment && date ? <><span className="sr-only">{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span><span aria-hidden="true">{cardMeta}</span></> : <>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</>}</span></div>
-          </div></div>
+            <Copy {...openControl}>
+            <span className="event-activity-title-row"><strong>{activity.title || 'Untitled activity'}</strong>
+              <span id={metaId && `${metaId}-status`} className={`event-activity-status${completed ? ' complete' : ''}${cancelled ? ' cancelled' : ''}`} aria-label={`Status: ${activityStatusLabel(activity)}${activity.entryMode === ENTRY_MODES.DAILY ? `; ${entryCount(activity)} diary entries` : ''}`}><CompletionCheck active={completed} size={16} />{completed ? <span className="sr-only">Completed</span> : <>{activityStatusLabel(activity)}{activity.entryMode === ENTRY_MODES.DAILY ? ` · ${entryCount(activity)}` : ''}</>}</span>
+            </span>
+            <span className="event-activity-context" id={metaId && `${metaId}-context`}>{showMomentName ? <><span className="event-activity-moment-name">{getEventName ? getEventName(activity) : eventName}</span><i>·</i></> : null}<span>{parentMoment && date ? <><span className="sr-only">{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</span><span aria-hidden="true">{cardMeta}</span></> : <>{dueText}{activityTime(activity) ? ` · ${activityTime(activity)}` : ''}</>}</span></span>
+          </Copy></div>
         </SwipeActionCard>;
         return card;
       })}

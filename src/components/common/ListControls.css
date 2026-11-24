@@ -583,3 +583,7 @@ html[data-theme] .dn-empty-recovery-actions {
   html[data-theme] .dn-list-controls-summary { font-size:12px; line-height:1.45; }
   html[data-theme] .dn-list-controls-panel .dn-list-controls-sort-row :is(button,select) { min-height:40px; }
 }
+
+html[data-theme] .dn-list-controls-context:focus-visible {
+  outline:2px solid var(--color-primary); outline-offset:2px; border-radius:3px;
+}

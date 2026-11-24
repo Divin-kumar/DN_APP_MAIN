@@ -24,7 +24,7 @@ const createDefaultState = (defaultEventType) => ({
   notes: '',
 });
 
-export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Event', error }) {
+export default function EventForm({ initialValues, onSubmit, onCancel, submitLabel = 'Save Moment', busy = false, error }) {
   const formId = useId();
   const reduceMotion = useReducedMotion();
   const adminValues = useAppStore((state) => state.adminValues);
@@ -65,6 +65,7 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
 
   const handleSubmit = (event) => {
     event.preventDefault();
+    if (busy) return;
 
     if (!form.name.trim()) {
       setValidationError('Enter a Moment name.');
@@ -73,8 +74,6 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
     }
     if (!form.date) {
       setValidationError('Choose a date.');
-      const disclosure = event.currentTarget.querySelector('details.dn-form-disclosure');
-      if (disclosure) disclosure.open = true;
       event.currentTarget.querySelector('#event-date')?.focus({ preventScroll: true });
       return;
     }
@@ -102,15 +101,15 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   };
 
   return (
-    <form id={formId} className="form-surface event-form" onSubmit={handleSubmit}>
+    <form id={formId} className="form-surface event-form" aria-busy={busy} onSubmit={handleSubmit}>
       <label htmlFor="event-name">Moment name
-        <input ref={nameInputRef} id="event-name" name="name" value={form.name} onChange={handleChange}
+        <input ref={nameInputRef} id="event-name" name="name" disabled={busy} value={form.name} onChange={handleChange}
           aria-invalid={Boolean(validationError && !form.name.trim())}
           placeholder="e.g. Birthday dinner" required />
       </label>
 
       <label htmlFor="event-type">Moment type
-        <DropdownSelect id="event-type" name="type" value={form.type} onChange={handleChange}>
+        <DropdownSelect id="event-type" name="type" disabled={busy} value={form.type} onChange={handleChange}>
           {eventTypeOptions.map((option) => (
             <option key={option} value={option}>{option}</option>
           ))}
@@ -123,35 +122,35 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
           initial={reduceMotion ? false : { opacity: .4, y: -4 }}
           animate={{ opacity: 1, y: 0 }} transition={{ duration: .14, ease: 'easeOut' }}>
           Custom moment type
-          <input ref={customTypeInputRef} id="event-custom-type" name="customType" value={form.customType}
+          <input ref={customTypeInputRef} id="event-custom-type" name="customType" disabled={busy} value={form.customType}
             onChange={handleChange} aria-invalid={Boolean(validationError && !form.customType.trim())}
             placeholder="What kind of moment is this?" required />
         </motion.label>
       ) : null}
 
       <div className="activity-date-time-row">
-        <DateField label="Date" id="event-date" name="date" value={form.date} onChange={handleChange} required />
-        <ActivityTimeField subject="Moment" value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
+        <DateField label="Date" id="event-date" name="date" disabled={busy} value={form.date} onChange={handleChange} required />
+        <ActivityTimeField subject="Moment" disabled={busy} value={form.time || ''} onChange={(time) => setForm((current) => ({ ...current, time }))} />
       </div>
 
       <FormDisclosure hint={form.recurrence !== 'none' ? `Repeats ${form.recurrence}` : 'Repeat and notes'}>
         <label htmlFor="event-recurrence">Repeat
-          <DropdownSelect id="event-recurrence" name="recurrence" value={form.recurrence} onChange={handleChange}>
+          <DropdownSelect id="event-recurrence" name="recurrence" disabled={busy} value={form.recurrence} onChange={handleChange}>
             <option value="none">Does not repeat</option>
             <option value="monthly">Every month</option>
             <option value="yearly">Every year</option>
           </DropdownSelect>
         </label>
 
-        <RichTextEditor label="Notes (optional)" id="event-notes" name="notes" value={form.notes}
+        <RichTextEditor label="Notes (optional)" id="event-notes" disabled={busy} name="notes" value={form.notes}
           onChange={(notes) => setForm((current) => ({ ...current, notes }))} placeholder="Add a detail you would like to remember" />
       </FormDisclosure>
 
       <DialogFormActions>
         {validationError || error ? <p className="event-form-validation" role="alert">{validationError || error}</p> : null}
         <div className="event-form-actions">
-          {onCancel ? <button type="button" className="secondaryButton" onClick={guardedCancel}>Cancel</button> : null}
-          <button type="submit" form={formId} className="primaryButton">{submitLabel}</button>
+          {onCancel ? <button type="button" className="secondaryButton" disabled={busy} onClick={guardedCancel}>Cancel</button> : null}
+          <button type="submit" form={formId} className="primaryButton" disabled={busy}>{busy ? 'Saving…' : submitLabel}</button>
         </div>
       </DialogFormActions>
     </form>

@@ -44,6 +44,12 @@ async function expectCompactDateTime(row) {
   await expect(clear).toHaveCount(0);
 }
 
+async function discardEditedDialog(dialog) {
+  await dialog.getByRole('button', { name: 'Close dialog' }).click();
+  await dialog.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(dialog).toHaveCount(0);
+}
+
 async function openQuickCreate(page, label) {
   await page.getByRole('button', { name: 'Open quick create menu' }).click();
   await page.getByRole('button', { name: label, exact: true }).click();
@@ -56,12 +62,11 @@ for (const width of [320, 390, 1280]) {
     await page.goto('/events');
     const before = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
 
-    // Standard new/edit Moment form: date remains in More options.
+    // Moment date and time are visible before More options opens.
     await page.goto('/events?create=event');
-    const momentDialog = page.getByRole('dialog', { name: 'New event' });
-    await momentDialog.locator('details.dn-form-disclosure > summary').click();
+    const momentDialog = page.getByRole('dialog', { name: 'New Moment' });
     await expectCompactDateTime(momentDialog.locator('.activity-date-time-row'));
-    await momentDialog.getByRole('button', { name: 'Close dialog' }).click();
+    await discardEditedDialog(momentDialog);
 
     // A universal new Activity uses the same shared form component.
     await page.goto('/events');
@@ -69,14 +74,14 @@ for (const width of [320, 390, 1280]) {
     const activityDialog = page.getByRole('dialog', { name: 'Add an activity' });
     await activityDialog.locator('details.dn-form-disclosure').filter({ hasText: 'More options' }).last().locator('summary').click();
     await expectCompactDateTime(activityDialog.locator('.activity-date-time-row'));
-    await activityDialog.getByRole('button', { name: 'Close dialog' }).click();
+    await discardEditedDialog(activityDialog);
 
     // Both income and expense use TransactionForm, with this same date/time row.
     await openQuickCreate(page, 'Transaction');
     const transactionDialog = page.getByRole('dialog', { name: 'Add Transaction' });
     await transactionDialog.locator('details.dn-form-disclosure > summary').click();
     await expectCompactDateTime(transactionDialog.locator('.activity-date-time-row'));
-    await transactionDialog.getByRole('button', { name: 'Close dialog' }).click();
+    await discardEditedDialog(transactionDialog);
 
     // Add entry has its own form but still shares the Date and Time components.
     await page.goto('/events/moment-one/activities/shared');
@@ -84,7 +89,7 @@ for (const width of [320, 390, 1280]) {
     await openQuickCreate(page, 'Add entry');
     const entryDialog = page.getByRole('dialog', { name: 'Add entry' });
     await expectCompactDateTime(entryDialog.locator('.activity-date-time-row'));
-    await entryDialog.getByRole('button', { name: 'Close dialog' }).click();
+    await discardEditedDialog(entryDialog);
 
     expect(await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'))).toBe(before);
     expect(errors).toEqual([]);

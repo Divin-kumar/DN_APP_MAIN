@@ -80,12 +80,12 @@ for (const width of [320, 390]) {
     await page.goto('/events');
     const original = await page.evaluate(() => localStorage.getItem('dn_guest_eventGroups'));
     await page.goto('/events?create=event');
-    const dialog = page.getByRole('dialog', { name: 'New event' });
+    const dialog = page.getByRole('dialog', { name: 'New Moment' });
     const name = dialog.getByRole('textbox', { name: 'Moment name' });
     await name.fill('   ');
     const nativeDialogs = [];
     page.on('dialog', async (item) => { nativeDialogs.push(item.message()); await item.dismiss(); });
-    await dialog.getByRole('button', { name: 'Save Event' }).click();
+    await dialog.getByRole('button', { name: 'Save Moment' }).click();
     await expect(dialog.getByRole('alert')).toHaveText('Enter a Moment name.');
     await expect(name).toBeFocused();
     await expect(name).toHaveAttribute('aria-invalid', 'true');

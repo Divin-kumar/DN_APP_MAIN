@@ -432,6 +432,7 @@ html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-
   html[data-theme] body .dn-expense-payment-form .dn-payment-fields { grid-template-columns: minmax(0, 1fr); }
 }
 @media (max-width: 360px) {
+  html[data-theme] body .activity-date-time-row { grid-template-columns:minmax(0, .94fr) minmax(0, 1.06fr); }
   html[data-theme] body .activity-date-time-row :is(input[type="date"], input[type="time"]) { padding-inline: 4px !important; }
   html[data-theme] body .activity-date-time-row input::-webkit-calendar-picker-indicator { width: 14px; }
   html[data-theme] body .activity-date-time-row .activity-time-control > input[type="time"] { padding-inline-end:0 !important; }
@@ -450,6 +451,9 @@ html[data-theme] body .activity-date-time-row :is(.date-field > span, .activity-
 }
 
 
+html[data-theme] body .activity-time-control > .activity-time-clear {
+  flex-basis:44px; width:44px; min-width:44px;
+}
 html[data-theme] body .activity-time-control > .activity-time-clear[aria-hidden="true"] {
   flex-basis: 0;
   width: 0;

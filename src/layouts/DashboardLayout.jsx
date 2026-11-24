@@ -1,3 +1,4 @@
+import useMomentDialogAction from '../hooks/useMomentDialogAction';
 import { currentEntryTime } from '../utils/activityTime.js';
 import ActivityFormFields from '../components/events/ActivityFormFields';
 import RichTextEditor from '../components/common/RichTextEditor';
@@ -114,6 +115,8 @@ export default function DashboardLayout() {
   const [quickTaskPreset, setQuickTaskPreset] = useState(null);
   const quickTaskScopeRef = useRef(null);
   const quickTaskSaving = useRef(false);
+  const quickMoment = useMomentDialogAction();
+  const quickMomentScope = useRef(null);
   const [quickTaskBusy, setQuickTaskBusy] = useState(false);
   const [quickCreateError, setQuickCreateError] = useState('');
   const [quickTransaction, setQuickTransaction] = useState(null);
@@ -340,7 +343,12 @@ export default function DashboardLayout() {
   // Quick create opens a lightweight modal for common tasks without leaving the page.
   // Shared quick-create for moments, activities, or any transaction.
   const beginQuickCreate = (type, activationEvent) => {
-    if (transactionSaving.current || quickActivitySaving.current) return;
+    if (transactionSaving.current || quickActivitySaving.current || quickMoment.pending.current) return;
+    if (type === 'event') {
+      loadEvents(user?.uid, isGuest);
+      quickMomentScope.current = records.capture();
+      quickMoment.clearError();
+    }
     commandReturnFocus.current = mobileShell && activationEvent?.detail === 0;
     if (type === 'task') {
       const parent = activityDetailMatch ? openedActivityContext?.moment : workspaceMoment;
@@ -402,15 +410,14 @@ export default function DashboardLayout() {
   };
 
   // Save a life moment and let the user choose whether to open it.
-  const saveQuickEvent = async (formData) => {
-    try {
-      const event = await addEvent(user?.uid, isGuest, { ...formData, activities: [] });
+  const saveQuickEvent = (formData) => quickMoment.run(
+    () => addEvent(user?.uid, isGuest, { ...formData, activities: [] }),
+    (event) => {
       setQuickCreateType(null);
-      showToast('Moment added successfully', 'success', { label: 'View', to: `/events/${event.id || event.firestoreId}` });
-    } catch {
-      setQuickCreateError('Could not save this life moment. Please try again.');
-    }
-  };
+      showToast('Moment added successfully', 'success', { label: 'View', to: `/events/${encodeURIComponent(event.id || event.firestoreId)}` });
+    },
+    'Couldn’t save this Moment. Your draft is here. Try saving again.',
+  );
 
   // Task persistence remains scoped to the existing Guest/account store.
   const saveQuickTask = async (draft) => {
@@ -551,6 +558,7 @@ export default function DashboardLayout() {
           <button
             type="button"
             className="menu-button"
+            aria-controls="dn-primary-sidebar" aria-expanded={!sidebarCollapsed}
             aria-label={sidebarCollapsed ? 'Open navigation' : 'Close navigation'}
             onClick={() => setSidebarCollapsed((open) => !open)}
           >
@@ -621,7 +629,7 @@ export default function DashboardLayout() {
       </header>
 
       <main className="dn-main" style={styles.mainContent}>
-        <aside
+        <aside id="dn-primary-sidebar"
           className={`dn-sidebar ${sidebarCollapsed ? 'dn-sidebar-collapsed' : ''}`}
           style={{
             ...styles.sidebar,
@@ -692,10 +700,10 @@ export default function DashboardLayout() {
       </div>
 
       <AnimatePresence initial={false} mode="wait">
-      {quickCreateType === 'event' ? (
-        <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} formFooter onClose={() => setQuickCreateType(null)}>
+      {quickCreateType === 'event' && records.isCurrent(quickMomentScope.current) ? (
+        <ModalDialog key="quick-moment" title="Create a life moment" className="dn-create-sheet" variant={mobileShell ? "drawer" : "dialog"} formFooter closeDisabled={quickMoment.busy} onClose={() => { if (!quickMoment.pending.current) setQuickCreateType(null); }}>
           <EventForm onSubmit={saveQuickEvent} onCancel={() => setQuickCreateType(null)}
-            submitLabel="Save moment" error={quickCreateError} />
+            submitLabel="Save moment" busy={quickMoment.busy} error={quickMoment.error} />
         </ModalDialog>
       ) : null}
       {quickCreateType === 'task' ? (

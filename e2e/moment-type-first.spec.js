@@ -6,7 +6,7 @@ test('Default New/Edit Moment shows Name then Type without opening More options'
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/events?create=event');
 
-  const create = page.getByRole('dialog', { name: 'New event' });
+  const create = page.getByRole('dialog', { name: 'New Moment' });
   await expect(create).toBeVisible();
   const name = create.getByLabel('Moment name');
   const type = create.getByRole('combobox', { name: 'Moment type' });
@@ -18,12 +18,12 @@ test('Default New/Edit Moment shows Name then Type without opening More options'
   await expect(create.locator('form.event-form > label').nth(0)).toContainText('Moment name');
   await expect(create.locator('form.event-form > label').nth(1)).toContainText('Moment type');
   await expect(create.locator('details.dn-form-disclosure')).not.toHaveAttribute('open', '');
-  await expect(create.getByLabel('Date', { exact: true })).toBeHidden();
+  await expect(create.getByLabel('Date', { exact: true })).toBeVisible();
 
   // Save with the configured default and existing hidden date. No "Other"
   // selection or More options expansion should ever be required.
   await name.fill('Baseline Moment');
-  await create.getByRole('button', { name: 'Save Event' }).click();
+  await create.getByRole('button', { name: 'Save Moment' }).click();
   await expect(create).toHaveCount(0);
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups') || '[]'));
   const added = saved.find((moment) => moment.name === 'Baseline Moment');
@@ -57,21 +57,21 @@ test('Configured custom Moment Type stays accessible without opening More option
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/events?create=event');
 
-  const createDialog = page.getByRole('dialog', { name: 'New event' });
+  const createDialog = page.getByRole('dialog', { name: 'New Moment' });
   await expect(createDialog).toBeVisible();
   const picker = createDialog.getByRole('combobox', { name: 'Moment type' });
   const moreOptions = createDialog.locator('details.dn-form-disclosure');
   await expect(picker).toBeVisible();
   await expect(picker).toBeInViewport();
   await expect(moreOptions).not.toHaveAttribute('open', '');
-  await expect(createDialog.getByLabel('Date', { exact: true })).toBeHidden();
+  await expect(createDialog.getByLabel('Date', { exact: true })).toBeVisible();
 
   await picker.click();
   await page.getByRole('option', { name: 'Other', exact: true }).click();
   await expect(createDialog.getByLabel('Custom moment type')).toBeVisible();
   await createDialog.getByLabel('Moment name').fill('Visible Type example');
   await createDialog.getByLabel('Custom moment type').fill('Family milestone');
-  await createDialog.getByRole('button', { name: 'Save Event' }).click();
+  await createDialog.getByRole('button', { name: 'Save Moment' }).click();
   await expect(createDialog).toHaveCount(0);
 
   const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('dn_guest_eventGroups') || '[]'));

@@ -17,7 +17,7 @@ for(const width of [320,1280]) test(`new entries capture local time once and cle
   await expect(dialog.getByRole('textbox',{name:'Moment name',exact:true})).toHaveValue('Manually untimed Moment');
   await page.clock.setSystemTime(new Date('2026-10-29T04:50:00Z'));
   await expect(dialog.getByLabel('Moment time',{exact:true})).toHaveValue('');
-  await dialog.getByRole('button',{name:'Save Event',exact:true}).click();
+  await dialog.getByRole('button',{name:'Save Moment',exact:true}).click();
   await expect(dialog).toHaveCount(0);
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')).find(x=>x.name==='Manually untimed Moment').time||'')).toBe('');
   await page.goto('/financials/transactions?create=expense');

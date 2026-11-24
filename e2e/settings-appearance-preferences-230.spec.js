@@ -76,7 +76,7 @@ test('Saved new-Moment type is honored by actual creation form without affecting
   await pick(page,'Default Moment type','Birthday');
   await page.getByRole('button',{name:'Save defaults'}).click();
   await page.goto('/events?create=event');
-  const editor=page.getByRole('dialog',{name:'New event'});
+  const editor=page.getByRole('dialog',{name:'New Moment'});
   await expect(editor.getByRole('combobox',{name:'Moment type'})).toContainText('Birthday');
   await editor.getByRole('button',{name:'Cancel'}).click();
   expect(await page.evaluate(()=>JSON.parse(localStorage.getItem('dn_guest_eventGroups')))).toEqual([]);

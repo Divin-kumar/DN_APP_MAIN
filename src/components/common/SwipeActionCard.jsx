@@ -2,6 +2,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { Ellipsis, Trash2 } from 'lucide-react';
+import './SwipeActionCard.css';
 import { resolveSwipeGesture } from '../../utils/swipeGestures';
 import { getVisibleViewport } from '../../utils/overlayPosition';
 import { computeSwipeMenuPlacement, getSwipeDockReserve } from '../../utils/swipeMenuPlacement';
@@ -11,7 +12,7 @@ import { computeSwipeMenuPlacement, getSwipeDockReserve } from '../../utils/swip
 export default function SwipeActionCard({
   as: Root = 'article', className = '', mainClassName = '',
   label = 'Card', role = 'group', otherActions = [], onDelete, openOnTap = false, children,
-  onOpen, menuButton = false, menuLabel = 'Activity options', menuButtonText,
+  onOpen, accessibleActions = false, menuButton = false, menuLabel = 'Activity options', menuButtonText,
   swipeEnabled = true, disabled = false, taskId, actionDescription,
 }) {
   const [open, setOpen] = useState(false);
@@ -135,7 +136,9 @@ export default function SwipeActionCard({
   }, [open]);
 
   const handleCardKey = (event) => {
-    if (event.target !== event.currentTarget) return;
+    const primaryButton = accessibleActions && event.target.closest?.('[data-card-open]');
+    if (event.target !== event.currentTarget && !primaryButton) return;
+    if (primaryButton && ['Enter', ' '].includes(event.key)) return;
     if (onOpen && ['Enter', ' '].includes(event.key)) {
       event.preventDefault();
       if (!disabled) onOpen();
@@ -146,7 +149,7 @@ export default function SwipeActionCard({
     if (['Enter', ' ', 'ArrowLeft', 'ArrowRight'].includes(event.key)) {
       event.preventDefault();
       if (open) close(true);
-      else showMenu(false, event.currentTarget);
+      else showMenu(false, primaryButton || event.currentTarget);
     }
   };
   const handleMenuKey = (event) => {
@@ -183,7 +186,7 @@ export default function SwipeActionCard({
   };
   return (
     <>
-      <Root ref={rootRef} data-task-id={taskId} tabIndex={menuButton && !onOpen && !openOnTap ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
+      <Root ref={rootRef} data-task-id={taskId} tabIndex={accessibleActions || (menuButton && !onOpen && !openOnTap) ? -1 : 0} role={role} aria-label={onOpen ? `Open ${label}` : swipeEnabled ? `${label}. Swipe either direction for actions.` : `${label} actions`}
         aria-description={[actionDescription, rowHasActions
           ? onOpen ? 'Use the left or right arrow key for actions.'
             : 'Press Enter or Space for actions.' : null].filter(Boolean).join(' ') || undefined}
@@ -191,6 +194,11 @@ export default function SwipeActionCard({
         aria-expanded={rowHasActions ? open : undefined} aria-controls={rowHasActions && open ? menuId : undefined}
         className={`dn-swipe-surface ${className}`}
         onKeyDown={handleCardKey}
+        onContextMenu={accessibleActions && actions.length ? (event) => {
+          if (disabled || event.target.closest('[data-swipe-ignore]')) return;
+          event.preventDefault();
+          showMenu(false, rootRef.current.querySelector('[data-card-open]') || rootRef.current);
+        } : undefined}
         onPointerDownCapture={(event) => {
           if (!swipeEnabled || disabled || event.pointerType === 'touch' || event.target.closest?.('[data-swipe-ignore]')) return;
           // A new intentional press must not inherit the previous swipe's click guard.
@@ -249,6 +257,9 @@ export default function SwipeActionCard({
         }}>
         <div className={`dn-swipe-main ${mainClassName}`} style={{ touchAction: 'pan-y' }}>
           {children}
+          {accessibleActions && actions.length > 0 ? <button type="button" data-swipe-ignore className="dn-card-access-actions"
+            aria-label={`Actions for ${label}`} aria-haspopup="menu" aria-expanded={open} aria-controls={open ? menuId : undefined}
+            disabled={disabled} onClick={(event) => { event.stopPropagation(); showMenu(false, event.currentTarget); }}>Actions</button> : null}
           {menuButton ? <button ref={triggerRef} type="button" data-swipe-ignore className="dn-record-menu-trigger"
             aria-label={menuLabel} aria-haspopup="menu" aria-controls={open ? menuId : undefined} aria-expanded={open} disabled={disabled}
             onClick={(event) => { event.stopPropagation(); if (open) close(true); else showMenu(false, event.currentTarget); }}>

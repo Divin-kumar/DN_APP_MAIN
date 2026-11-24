@@ -6,7 +6,7 @@ import MobileControlsSlot from './MobileControlsSlot';
 
 // Filtering stays in the caller; controls expand within the page, without a modal.
 export default function ListControls({
-  title = 'Filters', activeCount = 0, resultCount, totalCount, resultLabel = 'results',
+  title = 'Filters', activeCount = 0, resultCount, resultFocusRef, totalCount, resultLabel = 'results',
   summary = '', onReset, canReset, hasSort = false, hasPanel = true, builder = false, chips, search, sort, trailingAction, children,
   refine,
 }) {
@@ -113,7 +113,7 @@ export default function ListControls({
         </div>}
       </section> : null}
       <div className="dn-list-controls-topline">
-        {typeof resultCount === 'number' ? <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount}{typeof totalCount === 'number' && totalCount !== resultCount ? ` of ${totalCount}` : ''} {resultLabel}</span> : null}
+        {typeof resultCount === 'number' ? <span ref={resultFocusRef} tabIndex={resultFocusRef ? -1 : undefined} className="dn-list-controls-context" aria-live="polite" aria-atomic="true">{resultCount}{typeof totalCount === 'number' && totalCount !== resultCount ? ` of ${totalCount}` : ''} {resultLabel}</span> : null}
         {summary ? <span className="dn-list-controls-summary" title={summary}>{summary}</span> : null}
         {trailingAction ? <span className="dn-list-controls-tail-action">{trailingAction}</span> : null}
       </div>

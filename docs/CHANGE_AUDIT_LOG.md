@@ -1,5 +1,12 @@
 # DN — Change Log
 
+## CHG-20261124-604 | Dashboard, Moments and Activities audit
+
+- Dashboard exposes section headings and retries failed Tasks reads. The sidebar toggle communicates its state. Filter reordering, time clearing and Moment selection have larger touch targets.
+- Moment dialogs guard pending saves and deletes, preserve failed drafts and identify the action in plain language. The Moment picker lists each match once. Discovery lists withhold unresolved counts and return keyboard focus after empty-state recovery.
+- Activity cards adapt to the result column, offer a native opening action and keep photo selection and the swipe menu separate. Keyboard and assistive-technology users can open the Actions menu on both lists.
+- Executed with synthetic Guest data and injected read/write failures in Chromium and WebKit. The Guest tour's existing Moments, photos and Activities exercise these controls, so its records and edition need no change. Stored formats, route URLs and app version are compatible. Physical-device VoiceOver and authenticated cloud writes remain unverified.
+
 ## CHG-20261124-603 | Restore the ledger after closing Upcoming expenses
 
 - Restore focus after sheet dismissal to Upcoming expenses when available, or the financial totals when the final plan ends. Clear stale unsaved-field state when a sheet switches views. Guest tour records and financial storage formats are unaffected. Added filtered record edit-and-return browser coverage for Tasks, Activities and Transactions.

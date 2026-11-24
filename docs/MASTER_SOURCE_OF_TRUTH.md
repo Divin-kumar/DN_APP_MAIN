@@ -1,5 +1,11 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Dashboard, Moments and Activities accessibility and recovery (24 November 2026, development)
+
+Dashboard sections have navigable headings. A failed Tasks read offers a retry in its section. The sidebar toggle exposes its expanded state. Moments and Activities hold their result count until the active records finish loading. Clearing an empty search returns focus to search. If a deleted or edited card disappears, its dialog returns focus to the results count or Dashboard Activities heading. Moments offers Restore saved defaults only after a filter or sort preference changes, and previews the order before applying a sort-only change.
+
+Moment creation, editing, the Activity chooser and Moment deletion allow one write at a time. A failed write keeps the dialog open with an inline retry message. Editing Moment metadata merges with the latest record, preserving its linked activities and attachments. A suggested or favorite Moment appears once in the chooser, and searches show a single list of matches. Archived-only collections explain how to create an Activity. The Activity results grid uses the list's available width. Its cards expose a native open button, a separate keyboard-accessible Actions button and their original swipe menu. Moment cards offer the same Actions alternative. Reorder grips, Clear time, chooser favorites and the sidebar toggle have 44-pixel targets.
+
 ## Returning from Upcoming expenses (24 November 2026, development)
 
 After closing Upcoming expenses, keyboard focus returns to its launcher. If the last plan has ended, focus returns to the financial summary without scrolling. Each view of the sheet tracks its own unsaved field changes.

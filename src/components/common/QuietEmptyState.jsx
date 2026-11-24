@@ -3,7 +3,7 @@ import './QuietEmptyState.css';
 
 // Presentation-only recovery for top-level discovery lists. The caller owns
 // its existing shared Refine reset; this component stores no filter state.
-export default function QuietEmptyState({ kind, filtered = false, hasMoments = false, onClearSearch, onRestoreDefaults }) {
+export default function QuietEmptyState({ kind, filtered = false, hasMoments = false, searchInputId, onClearSearch, onRestoreDefaults }) {
   const moments = kind === 'moments';
   const Icon = moments ? BookHeart : ListChecks;
   const title = filtered
@@ -15,6 +15,10 @@ export default function QuietEmptyState({ kind, filtered = false, hasMoments = f
     : moments ? 'Use + to record a Moment whenever you are ready.'
       : hasMoments ? 'Activities you add to your Moments will appear here.'
         : 'Use + to create a Moment, then add its first Activity.';
+  const recover = (action) => {
+    action();
+    document.getElementById(searchInputId)?.focus({ preventScroll: true });
+  };
   return (
     <section className={'dn-discovery-empty' + (moments ? ' life-journey-empty' : ' event-activity-empty')}
       role="status" aria-label={title}>
@@ -24,10 +28,10 @@ export default function QuietEmptyState({ kind, filtered = false, hasMoments = f
       {filtered && (onClearSearch || onRestoreDefaults) ? (
         <div className="dn-empty-recovery-actions">
           {onClearSearch ? (
-            <button type="button" className="dn-discovery-empty-reset" onClick={onClearSearch}>Clear search</button>
+            <button type="button" className="dn-discovery-empty-reset" onClick={() => recover(onClearSearch)}>Clear search</button>
           ) : null}
           {onRestoreDefaults ? (
-            <button type="button" className="dn-discovery-empty-reset" onClick={onRestoreDefaults}>Restore saved defaults</button>
+            <button type="button" className="dn-discovery-empty-reset" onClick={() => recover(onRestoreDefaults)}>Restore saved defaults</button>
           ) : null}
         </div>
       ) : null}

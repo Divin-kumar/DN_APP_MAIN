@@ -31,7 +31,7 @@ export function DialogFormActions({ children }) {
   return footer ? createPortal(children, footer) : children;
 }
 
-export default function ModalDialog({ title, onClose, onDismissed, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
+export default function ModalDialog({ title, onClose, onDismissed, fallbackFocusRef, children, footer, variant = 'dialog', className = '', swipeDismiss = true,
   closeDisabled = false, viewKey, onViewChange, onBack, backLabel = 'Back', formFooter = false }) {
   // Create the portal target before first paint so mobile Save/Cancel controls
   // never jump from the scrolling body to the pinned footer after mount.
@@ -285,9 +285,10 @@ export default function ModalDialog({ title, onClose, onDismissed, children, foo
       document.removeEventListener('keydown', handleKeyDown);
       const activeDialogs = document.querySelectorAll(activeDialogSelector);
       const remainingDialog = activeDialogs[activeDialogs.length - 1];
-      if (previousFocus instanceof HTMLElement && previousFocus.isConnected &&
-          (!remainingDialog || remainingDialog.contains(previousFocus))) {
-        previousFocus.focus({ preventScroll: true });
+      const returnTarget = previousFocus instanceof HTMLElement && previousFocus !== document.body && previousFocus.isConnected
+        ? previousFocus : fallbackFocusRef?.current;
+      if (returnTarget?.isConnected && (!remainingDialog || remainingDialog.contains(returnTarget))) {
+        returnTarget.focus({ preventScroll: true });
       }
     };
   }, []);
@@ -381,17 +382,17 @@ export default function ModalDialog({ title, onClose, onDismissed, children, foo
   );
 }
 
-export function ConfirmButtons({ onCancel, onConfirm, confirmLabel = 'Delete', busy = false,
+export function ConfirmButtons({ onCancel, onConfirm, confirmLabel = 'Delete', busy = false, busyLabel = 'Saving…',
   destructive = true, confirmDisabled = false }) {
   return <div className="modal-confirm-actions" style={styles.actions}>
     <button type="button" className="secondaryButton modal-action-button" disabled={busy} onClick={onCancel}>Cancel</button>
-    <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy || confirmDisabled} onClick={onConfirm}>{busy ? 'Saving…' : confirmLabel}</button>
+    <button type="button" className={`${destructive ? 'modal-danger-button' : 'primaryButton'} modal-action-button`} disabled={busy || confirmDisabled} onClick={onConfirm}>{busy ? busyLabel : confirmLabel}</button>
   </div>;
 }
 
-export function ConfirmDialog({ title, message, children, error, ...actions }) {
+export function ConfirmDialog({ title, message, children, error, fallbackFocusRef, ...actions }) {
   return (
-    <ModalDialog title={title} onClose={actions.onCancel} swipeDismiss={false} closeDisabled={actions.busy}
+    <ModalDialog title={title} fallbackFocusRef={fallbackFocusRef} onClose={actions.onCancel} swipeDismiss={false} closeDisabled={actions.busy}
       footer={<div className="dn-modal-fixed-actions"><ConfirmButtons {...actions} /></div>}>
       {message ? <p style={styles.message}>{message}</p> : null}
       {children}

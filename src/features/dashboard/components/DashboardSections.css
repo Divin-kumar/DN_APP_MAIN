@@ -25,7 +25,7 @@ html[data-theme] .dashboard-compact .dashboard-upcoming-empty { margin:6px 0; fo
 html[data-theme] .dashboard-compact .dashboard-upcoming-card > .dashboard-section-heading {
   display:flex; align-items:center; justify-content:space-between; flex-wrap:nowrap; min-width:0; min-height:44px; gap:6px;
 }
-html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-section-title { flex:none; font-size:13px; font-weight:700; }
+html[data-theme] .dashboard-compact .dashboard-section-heading > .dashboard-section-title { flex:none; margin:0; font-size:13px; font-weight:700; }
 html[data-theme] .dashboard-section-actions { display:flex; flex:0 1 auto; align-items:center; min-width:0; gap:4px; }
 html[data-theme] .dashboard-section-actions .dashboard-date-views {
   display:inline-flex; flex:none; align-items:center; width:auto; max-width:none; gap:2px; overflow:visible;

@@ -16,9 +16,12 @@ test('desktop empty Moments panel stays compact next to populated Activities', a
   const geometry = await page.evaluate(() => {
     const short = document.querySelector('.dashboard-compact [aria-label="Moments"]').getBoundingClientRect();
     const tall = document.querySelector('.dashboard-compact [aria-label="Activities"]').getBoundingClientRect();
-    return { topDifference: Math.abs(short.y - tall.y), heightDifference: tall.height - short.height };
+    const tasks = document.querySelector('.dn-dashboard-tasks').getBoundingClientRect();
+    return { topDifference: Math.abs(tasks.y - tall.y), stacked: short.y >= tasks.bottom,
+      beside: tall.left >= short.right, heightDifference: tall.height - short.height };
   });
   expect(geometry.topDifference).toBeLessThanOrEqual(1);
+  expect(geometry.stacked && geometry.beside).toBe(true);
   expect(geometry.heightDifference).toBeGreaterThan(35);
 });
 
@@ -78,7 +81,7 @@ for (const width of [320, 390, 768, 1440]) {
     for (const [section, dates] of [['Moments', 'Moment dates'], ['Activities', 'Activity dates']]) {
       const panel = page.getByRole('region', { name: section, exact: true });
       const header = panel.locator('header').first();
-      const title = await header.locator('span').first().boundingBox();
+      const title = await header.getByRole('heading', { name: section, level: 2 }).boundingBox();
       const controls = [header.getByRole('group', { name: dates, exact: true }),
         header.getByRole('button', { name: `Hide ${section} on dashboard`, exact: true })];
       const upcoming = controls[0].getByRole('button', { name: 'Upcoming', exact: true });

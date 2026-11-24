@@ -651,7 +651,7 @@ html[data-theme] body .dn-list-controls-panel .dn-conditions .dn-condition-rule,
 html[data-theme] body .dn-task-refine .dn-conditions .dn-condition-rule {
   display:grid !important;
   width:100%; min-width:0; max-width:100%;
-  grid-template-columns:24px minmax(0,1.1fr) minmax(0,.72fr) minmax(0,1.05fr) 44px !important;
+  grid-template-columns:44px minmax(44px,1fr) minmax(44px,.66fr) minmax(44px,1.18fr) 44px !important;
   grid-template-rows:minmax(44px,auto) !important;
   column-gap:2px !important; row-gap:0 !important;
   overflow:visible !important; padding-inline:0 !important;
@@ -666,11 +666,11 @@ html[data-theme] body .dn-conditions .dn-condition-rule > .dn-condition-icon {
   min-width:44px; width:44px; min-height:44px;
 }
 html[data-theme] body .dn-conditions .dn-condition-rule > .dn-condition-grip {
-  grid-column:1 !important; grid-row:1 !important; width:24px;
+  grid-column:1 !important; grid-row:1 !important; width:44px;
 }
 @media (max-width:760px), (max-height:500px) and (pointer:coarse) {
   html[data-theme] body .dn-conditions .dn-condition-rule:has(.dn-condition-selected-values > button) {
-    grid-template-columns:24px minmax(0,1fr) minmax(0,.8fr) 44px !important;
+    grid-template-columns:44px minmax(44px,1fr) minmax(44px,.8fr) 44px !important;
     grid-template-rows:minmax(44px,auto) minmax(44px,auto) !important;
     gap:5px 5px !important;
   }
@@ -792,8 +792,9 @@ html[data-theme] .dn-condition-chips > .dn-condition-clear:focus-visible {
 }
 
 /* Reorder affordance must remain visible on iPhone dark/light themes.
-   Keep the 28px grip column and 44px touch lane; avoid another action row. */
+   Reserve a full touch target between the edge and the editable filter value. */
 html[data-theme] .dn-condition-chip-rail .dn-condition-grip {
+  width:44px; min-width:44px; flex-basis:44px;
   color: color-mix(in srgb, var(--color-text) 76%, var(--color-text-muted)) !important;
   opacity: 1 !important;
 }

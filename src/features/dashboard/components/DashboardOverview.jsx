@@ -1,6 +1,6 @@
 import { activityTime } from '../../../utils/activityTime.js';
 // Dashboard Moment and Activity lists keep their own date view and visibility.
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DashboardReveal from './DashboardReveal';
 import { Copy, Download, Sparkles, Pencil, Check, RotateCcw, XCircle, SlidersHorizontal, Flag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -233,6 +233,7 @@ export default function DashboardOverview() {
 }
 
 export function DashboardOverviewContent() {
+  const activityHeadingRef = useRef(null);
   const navigate = useNavigate();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
@@ -304,7 +305,7 @@ export function DashboardOverviewContent() {
         <DashboardGreeting now={today} isViewingSampleData={isGuest && Boolean(activeSample)} />
         {isGuest || user?.uid ? <section className="dashboard-upcoming-card dn-dashboard-tasks" aria-label="Independent Tasks">
           <header className="dashboard-section-heading">
-            <span className="dashboard-section-title">Tasks</span>
+            <h2 className="dashboard-section-title">Tasks</h2>
             <div className="dashboard-section-actions">
               {!sections.tasks || !isTaskSectionEmpty ? <Link className="dn-dashboard-tasks-link" to="/tasks">View Tasks</Link> : null}
               <button type="button" className="dashboard-section-toggle" aria-expanded={sections.tasks}
@@ -312,7 +313,7 @@ export function DashboardOverviewContent() {
                 onClick={() => changeSections({ tasks: !sections.tasks })}>{sections.tasks ? 'Hide' : 'Show'}</button>
             </div>
           </header>
-          <DashboardReveal open={sections.tasks}>{taskStore.error ? <p role="alert" className="dashboard-upcoming-empty">{taskStore.error}</p>
+          <DashboardReveal open={sections.tasks}>{taskStore.error ? <div className="financial-load-error" role="alert"><span>Tasks couldn’t be loaded.</span><button type="button" className="settings-secondary-button" onClick={() => taskStore.loadTasks()}>Try again</button></div>
             : taskStore.loadedFor !== taskScope ? <p role="status" className="dashboard-upcoming-empty">Loading Tasks…</p>
               : dashboardTasks.length ? <div className="dn-dashboard-tasks-rows" role="region" aria-label="Dashboard Tasks, scroll for more" tabIndex={dashboardTasks.length > 4 ? 0 : undefined}>
                 {dashboardTasks.map((task) => {
@@ -342,7 +343,7 @@ export function DashboardOverviewContent() {
         </section> : null}
         <section className="dashboard-upcoming-card" aria-label="Moments">
           <header className="dashboard-section-heading">
-            <span className="dashboard-section-title">Moments</span>
+            <h2 className="dashboard-section-title">Moments</h2>
             <div className="dashboard-section-actions">
             {sections.moments ? <div role="group" aria-label="Moment dates" className="dashboard-date-views">
               <button type="button" aria-pressed={momentView === 'upcoming'} onClick={() => setMomentView('upcoming')}>Upcoming</button>
@@ -386,7 +387,7 @@ export function DashboardOverviewContent() {
         </section>
         <section className="dashboard-upcoming-card dashboard-activities-preview" aria-label="Activities">
           <header className="dashboard-section-heading">
-            <span className="dashboard-section-title">Activities</span>
+            <h2 ref={activityHeadingRef} tabIndex={-1} className="dashboard-section-title">Activities</h2>
             <div className="dashboard-section-actions">
             {sections.activities ? <div role="group" aria-label="Activity dates" className="dashboard-date-views">
               <button type="button" aria-pressed={activityView === 'upcoming'} onClick={() => setActivityView('upcoming')}>Upcoming</button>
@@ -444,7 +445,7 @@ export function DashboardOverviewContent() {
       </div>
 
       {greetingEvent && selectedGreeting ? <GreetingCardModal event={greetingEvent.event} greeting={selectedGreeting} dateLabel={greetingEvent.dateLabel} onClose={() => setGreetingEvent(null)} onCopy={copyTodaysGreeting} /> : null}
-      <ActivityActionDialogs actions={activityActions} />
+      <ActivityActionDialogs fallbackFocusRef={activityHeadingRef} actions={activityActions} />
     </>
   );
 }

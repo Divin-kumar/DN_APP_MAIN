@@ -43,6 +43,7 @@ export default function Activities() {
 
 export function ActivitiesContent({ uid, isGuest, scope }) {
   const activityFormId = useId();
+  const resultFocusRef = useRef(null);
   const navigate = useNavigate();
   const mutationContext = records.capture();
   const [announcement, setAnnouncement] = useState('');
@@ -150,7 +151,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   };
   const saveActivity = (event) => {
     event.preventDefault();
-    if (!draft.title.trim() || !draft.momentId) { setSaveError('Choose a Moment and enter an activity title.'); return; }
+    if (!draft.title.trim() || !draft.momentId) { setSaveError('Enter an activity title.'); return; }
     runAction(async () => {
       const { moment, activity } = resolve(draft);
       const values = { title: draft.title.trim(), date: draft.date, ...activityTimePatch(activity || {}, draft.time), description: draft.description, priority: draft.priority };
@@ -173,16 +174,16 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
   return (
     <div className="events-page life-timeline-page activities-page">
       <div className="event-discovery-bar">
-        <ListControls title="Activity filters" builder hasSort
+        <ListControls title="Activity filters" resultFocusRef={resultFocusRef} builder hasSort
           refine={{ describeSortChanges: true, conditions, candidates: searchCandidates, sort: { field: filters.field, direction: filters.direction, options: SORTS,
             label: 'Sort activities', onChange: (field, direction) => changeFilters({ field, direction }) },
             defaults: { group: settingsDefaults.group, field: settingsDefaults.filters.field,
               direction: settingsDefaults.filters.direction } }}
-          activeCount={activeCount} resultCount={visible.length} totalCount={allInScope.length} resultLabel="activities"
+          activeCount={activeCount} resultCount={ready && !eventStore.loading && eventStore.error !== 'Unable to load events.' ? visible.length : undefined} totalCount={allInScope.length} resultLabel="activities"
           summary={summary} chips={<ConditionChips filter={conditions} />} canReset={canResetActivity} onReset={resetActivityDiscovery}
           sort={<SortControl field={filters.field} direction={filters.direction} onFieldChange={(field) => changeFilters({ field, direction: 'asc' })}
             onToggleDirection={() => changeFilters({ direction: filters.direction === 'asc' ? 'desc' : 'asc' })} options={SORTS} label="Sort activities" />}
-          search={<DebouncedFilterInput clearable scopeKey={conditions.editorKey} type="search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
+          search={<DebouncedFilterInput clearable scopeKey={conditions.editorKey} type="search" id="activity-filter-search" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} placeholder="Search activities" aria-label="Search activities and Moments" />}>
           <ConditionBuilder filter={conditions} title="Activity conditions" />
         </ListControls>
       </div>
@@ -191,11 +192,11 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
       <p className="sr-only" role="status" aria-live="polite">{announcement}</p>
       {eventStore.error === 'Unable to load events.' ? <div className="financial-load-error" role="alert"><span>Activities couldn’t be loaded.</span><button className="settings-secondary-button" onClick={() => loadEvents(uid, isGuest)}>Try again</button></div>
         : !ready || eventStore.loading ? <LoadingSkeleton rows={4} label="Loading activities" />
-          : !visible.length ? <QuietEmptyState kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
+          : !visible.length ? <QuietEmptyState searchInputId="activity-filter-search" kind="activities" filtered={allInScope.length > 0} hasMoments={events.length > 0}
               onClearSearch={filters.search.trim() ? () => changeFilters({ search: '' }) : undefined}
               onRestoreDefaults={canRestorePreferences ? resetActivityDiscovery : undefined} />
           : <ActivityList eventName="your Moments" activities={visible} allActivities={allViews} progressActivities={allViews}
-            describeProgressScope
+            describeProgressScope accessibleCardControls
             getActivityKey={(view) => projection.context.get(view).key}
             getEventName={(view) => projection.context.get(view).momentName}
             getEntryMode={(view) => getMomentEntryMode(momentsById.get(projection.context.get(view).momentId), adminValues.eventTypes)}
@@ -215,7 +216,7 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
             onDelete={(_id, view) => { if (!saving.current) { setSaveError(''); setDeleteTarget({ ...reference(view), title: view.title }); } }}
  />}
       <AnimatePresence initial={false}>
-        {draft ? <ModalDialog key="activity-editor" title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" formFooter onClose={() => close(setDraft)}>
+        {draft ? <ModalDialog key="activity-editor" fallbackFocusRef={resultFocusRef} title={draft.activityId ? 'Edit activity' : 'Add activity'} className="event-activity-editor-modal" formFooter closeDisabled={busy} onClose={() => close(setDraft)}>
           <form id={activityFormId} className="form-surface quick-create-activity-form" onSubmit={saveActivity}>
             <p className="dn-form-context">Moment · <strong>{momentsById.get(draft.momentId)?.name || 'This Moment'}</strong></p>
             <ActivityFormFields namePrefix="activity-editor" value={draft}
@@ -226,13 +227,13 @@ export function ActivitiesContent({ uid, isGuest, scope }) {
               {saveError ? <p className="quick-create-error" role="alert">{saveError}</p> : null}
               <div className="form-actions">
                 <button className="secondaryButton" type="button" disabled={busy} onClick={() => close(setDraft)}>Cancel</button>
-                <button className="primaryButton" type="submit" form={activityFormId} disabled={busy}>{draft.activityId ? 'Save activity' : 'Add activity'}</button>
+                <button className="primaryButton" type="submit" form={activityFormId} disabled={busy}>{busy ? 'Saving…' : draft.activityId ? 'Save activity' : 'Add activity'}</button>
               </div>
             </DialogFormActions>
           </form>
         </ModalDialog> : null}
       </AnimatePresence>
-      {deleteTarget ? <ConfirmDialog title="Delete activity?" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}
+      {deleteTarget ? <ConfirmDialog title="Delete activity?" fallbackFocusRef={resultFocusRef} busyLabel="Deleting…" message={`Delete “${deleteTarget.title || 'Untitled activity'}”? This cannot be undone.`} onCancel={() => close(setDeleteTarget)}
         busy={busy} error={saveError} onConfirm={() => runAction(() => records.mutateActivity(mutationContext, deleteTarget.momentId, deleteTarget.activityId, () => null), () => setDeleteTarget(null))} /> : null}
 
 

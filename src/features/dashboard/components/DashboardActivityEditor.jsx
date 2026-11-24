@@ -4,9 +4,9 @@ import ActivityFormFields from '../../../components/events/ActivityFormFields';
 import './DashboardActivityEditor.css';
 
 // Detail and Dashboard use the same Activity fields as the Moment composer.
-export default function DashboardActivityEditor({ draft, priorities, busy, error, onChange, onSubmit, onClose }) {
+export default function DashboardActivityEditor({ draft, priorities, busy, error, fallbackFocusRef, onChange, onSubmit, onClose }) {
   const activityFormId = useId();
-  return <ModalDialog title="Edit activity" className="event-activity-editor-modal dashboard-activity-editor-modal" formFooter onClose={onClose}>
+  return <ModalDialog title="Edit activity" className="event-activity-editor-modal dashboard-activity-editor-modal" formFooter closeDisabled={busy} fallbackFocusRef={fallbackFocusRef} onClose={onClose}>
     <form id={activityFormId} className="form-surface quick-create-activity-form dashboard-activity-editor" onSubmit={onSubmit} aria-busy={busy}>
       <p className="dashboard-activity-context">{draft.momentName || 'Moment'}</p>
       <ActivityFormFields value={draft} priorities={priorities} disabled={busy} onChange={onChange}

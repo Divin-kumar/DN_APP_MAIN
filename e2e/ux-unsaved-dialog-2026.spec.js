@@ -29,7 +29,7 @@ test('Moment date/time stays visible and Close protects a draft', async ({ page 
   await page.setViewportSize({ width: 390, height: 844 });
   const errors = await seedGuest(page, { theme: 'dark' });
   await page.goto('/events?create=event');
-  const dialog = page.getByRole('dialog', { name: 'New event' });
+  const dialog = page.getByRole('dialog', { name: 'New Moment' });
   await expect(dialog.locator('.activity-date-time-row input[type="date"]')).toBeVisible();
   await expect(dialog.locator('.activity-date-time-row input[type="time"]')).toBeVisible();
   const title = dialog.getByRole('textbox', { name: 'Moment name' });
