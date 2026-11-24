@@ -1,5 +1,9 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Returning from Upcoming expenses (24 November 2026, development)
+
+After closing Upcoming expenses, keyboard focus returns to its launcher. If the last plan has ended, focus returns to the financial summary without scrolling. Each view of the sheet tracks its own unsaved field changes.
+
 ## Transaction draft protection and Activity discovery (23 November 2026, development)
 
 Cancel on an edited Transaction offers Keep editing or Discard changes. A pristine transaction closes directly. In Activities, an unmatched search offers Clear search, and Restore saved defaults appears when filter or sort preferences differ. Refine previews the chosen field and direction for sort-only edits. Activity completion always uses the full eligible set, excluding diary and cancelled entries, and labels the wider scope when the displayed set differs.

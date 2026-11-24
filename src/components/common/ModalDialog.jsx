@@ -227,6 +227,7 @@ export default function ModalDialog({ title, onClose, onDismissed, children, foo
     if (!viewKey) return;
     const changed = previousView.current !== viewKey;
     previousView.current = viewKey;
+    if (changed) dirtyRef.current = false;
     bodyRef.current.scrollTop = 0;
     titleRef.current?.focus({ preventScroll: true });
     onViewChange?.(bodyRef.current);

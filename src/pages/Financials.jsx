@@ -163,7 +163,7 @@ function FinancialsContent() {
     if (savingPlanRef.current) return;
     setPlanView(null);
     setSavingError('');
-    requestAnimationFrame(() => (planEntryRef.current || financeSummaryRef.current)?.focus({ preventScroll: true }));
+
   };
   const runPlan = async (form) => {
     if (savingPlanRef.current || !planView?.plan) return;
@@ -258,7 +258,13 @@ function FinancialsContent() {
           </ModalDialog>
         ) : null}
         {planView ? <ExpensePlanSheet key="expense-plans" view={planView} plans={plans} events={events} busy={busy} error={savingError} notice={planNotice}
-          onClose={closePlan} onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
+          onClose={closePlan}
+          onDismissed={() => requestAnimationFrame(() => {
+            if (!document.querySelector('[role="dialog"][aria-modal="true"]')) {
+              (planEntryRef.current || financeSummaryRef.current)?.focus({ preventScroll: true });
+            }
+          })}
+          onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
       </AnimatePresence>
       {deleteTarget ? <ConfirmDialog title="Delete transaction?"
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}

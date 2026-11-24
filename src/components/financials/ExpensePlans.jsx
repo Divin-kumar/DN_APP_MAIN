@@ -130,7 +130,7 @@ function RecordedPayment({ payment }) {
   </div>;
 }
 
-export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onClose, onSelect, onNavigate, onSave, onConfirm }) {
+export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onClose, onDismissed, onSelect, onNavigate, onSave, onConfirm }) {
   const { mode, plan } = view;
   const isList = mode === 'list';
   const goBack = () => onNavigate('list');
@@ -205,7 +205,7 @@ export function ExpensePlanSheet({ view, plans, events, busy, error, notice, onC
   </div> : isList ? feedback : null;
 
   return <ModalDialog title={planTitles[mode]} className={`dn-transaction-dialog dn-expense-plan-dialog dn-expense-plan-${mode}-view`} viewKey={mode}
-    onViewChange={restorePosition}
+    onViewChange={restorePosition} onDismissed={onDismissed}
     onBack={isList ? undefined : goBack} backLabel="Back to upcoming expenses"
     onClose={onClose} closeDisabled={busy} footer={footer} formFooter={isForm}>
     {isList ? <ExpensePlanList plans={plans} onSelect={selectPlan} /> : null}

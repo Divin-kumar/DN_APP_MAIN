@@ -1,5 +1,9 @@
 # DN — Change Log
 
+## CHG-20261124-603 | Restore the ledger after closing Upcoming expenses
+
+- Restore focus after sheet dismissal to Upcoming expenses when available, or the financial totals when the final plan ends. Clear stale unsaved-field state when a sheet switches views. Guest tour records and financial storage formats are unaffected. Added filtered record edit-and-return browser coverage for Tasks, Activities and Transactions.
+
 ## CHG-20261123-602 | Protect transaction drafts and clarify Activity discovery
 
 - Transaction Cancel uses the existing unsaved-changes decision for edited forms. Untouched forms still dismiss directly. Activity search recovery distinguishes a search term from altered preferences, and applied chips label their removal action Clear filters.
