@@ -407,7 +407,7 @@ const documentedRelease = versionHistory.find((release) => isAtLeastVersion(appV
   || versionHistory.at(-1);
 
 const dataInfo = [
-  'Signed-in records are stored in your account. Guest records stay in this browser; export a backup before changing browsers or devices.',
+  'Personal Guest records stay in this browser until Google sign-in starts transferring them to the account you choose. Export a backup before changing browsers or devices.',
   'Original attachment files stay on this device even when signed in. Clearing browser site data or losing the device can remove originals; cloud filenames cannot recover them. Keep a backup.',
   'Recovery backups include supported records, settings and stored original attachments, with no fixed DN backup size cap. Available browser memory and storage still apply. Missing or corrupted originals stop export. Older metadata-only entries have no file bytes to recover.',
   'Downloaded JSON backups are not encrypted. Store them privately because they can contain personal and financial information.',

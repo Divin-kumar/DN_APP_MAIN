@@ -8,8 +8,13 @@ const output = resolve('.verification/production-shell');
 await readFile(resolve(root, 'index.html')); // Run npm run build first.
 await mkdir(output, { recursive:true });
 const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.json':'application/json', '.webmanifest':'application/manifest+json', '.woff2':'font/woff2' };
+let networkAvailable = true;
+let rejectAboutAsset = false;
 const server = createServer(async (req, res) => {
-  const path = resolve(root, '.' + new URL(req.url, 'http://localhost').pathname);
+  if (!networkAvailable) { req.socket.destroy(); return; }
+  const pathname = new URL(req.url, 'http://localhost').pathname;
+  if (rejectAboutAsset && /\/assets\/About-.*\.js$/.test(pathname)) { res.writeHead(503); res.end(); return; }
+  const path = resolve(root, '.' + pathname);
   if (!path.startsWith(root + '/') && path !== root) { res.writeHead(403); res.end(); return; }
   let actual = path, data;
   try { data = await readFile(actual); } catch {
@@ -99,7 +104,70 @@ try {
   await taskForm.getByRole('button', { name:'Cancel', exact:true }).click();
   const after = await page.evaluate(() => ['dn_guest_eventGroups','dn_guest_incomes','dn_guest_expenses'].map(k => localStorage.getItem(k)));
   expect(after).toEqual(before); expect(errors).toEqual([]);
-  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), guestDashboardWithoutFirestore:true, offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
+  // Start on Tasks in a new installation. Neither Login, Home nor Data & Backup
+  // has been visited. Stop the origin as well as disconnecting the browser.
+  const fresh = await browser.newContext({ baseURL: `http://127.0.0.1:${server.address().port}`, viewport: { width: 430, height: 932 } });
+  const coldPage = await fresh.newPage();
+  const guestTask = JSON.stringify([{ id: 'offline-guest-task', title: 'Collect the parcel', priority: 'medium', status: 'in-progress' }]);
+  await coldPage.addInitScript((task) => {
+    if (sessionStorage.getItem('fixture-started')) return;
+    localStorage.setItem('dn_guest_mode', 'true');
+    localStorage.setItem('dn_guest_tasks', task);
+    sessionStorage.setItem('fixture-started', 'true');
+  }, guestTask);
+  await coldPage.goto('/tasks');
+  await expect(coldPage.getByText('Collect the parcel', { exact: true })).toBeVisible();
+  await coldPage.waitForFunction(() => navigator.serviceWorker.controller);
+  const initialCache = await coldPage.evaluate(async () => {
+    const cache = await caches.open((await caches.keys()).find(key => key.startsWith('dn-shell-')));
+    return (await cache.keys()).map(request => new URL(request.url).pathname);
+  });
+  expect(initialCache.some(path => /\/LoginPage-.*\.js$/.test(path))).toBe(true);
+  expect(initialCache.some(path => /\/DashboardHome-.*\.js$/.test(path))).toBe(true);
+  expect(initialCache.some(path => /\/(?:DataBackup|Settings|MomentPdfStudio)-.*\.js$/.test(path))).toBe(false);
+  networkAvailable = false;
+  await fresh.setOffline(true);
+  await coldPage.getByRole('button', { name: 'Open profile and account menu' }).click();
+  await coldPage.getByRole('menuitem', { name: 'Logout' }).click();
+  await expect(coldPage.getByRole('button', { name: 'Continue with Google' })).toBeDisabled();
+  await coldPage.getByRole('button', { name: 'Continue as Guest' }).click();
+  await expect(coldPage).toHaveURL(/\/dashboard$/);
+  await expect(coldPage.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+
+  const unavailable = '/settings/data-backup?from=bookmark#data-guide';
+  let documentLoads = 0;
+  coldPage.on('domcontentloaded', () => { documentLoads++; });
+  await coldPage.goto(unavailable);
+  const offlineHeading = coldPage.getByRole('heading', { name: 'This screen isn’t available offline' });
+  await expect(offlineHeading).toBeFocused();
+  await expect(coldPage.getByRole('button', { name: 'Retry this screen' })).toBeDisabled();
+  expect(documentLoads).toBe(1);
+  await coldPage.getByRole('link', { name: 'Go to Home' }).click();
+  await expect(coldPage.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+
+  await coldPage.goto(unavailable);
+  await expect(offlineHeading).toBeVisible();
+  networkAvailable = true;
+  await fresh.setOffline(false);
+  await expect(coldPage.getByText('You’re back online. Retry to open this screen.')).toBeVisible();
+  await coldPage.getByRole('button', { name: 'Retry this screen' }).click();
+  await expect(coldPage).toHaveURL(/\/settings\/data-backup\?from=bookmark#data-guide$/);
+  await expect(coldPage.locator('#data-guide')).toBeFocused();
+  expect(await coldPage.evaluate(() => localStorage.getItem('dn_guest_tasks'))).toBe(guestTask);
+  // An old or temporarily unavailable online chunk may refresh once. An
+  // unrelated successful parent route must not restart that refresh cycle.
+  rejectAboutAsset = true;
+  documentLoads = 0;
+  await coldPage.goto('/settings/about?from=bookmark');
+  await expect.poll(() => documentLoads).toBe(2);
+  await expect(coldPage.getByRole('heading', { name: 'This page couldn’t load' })).toBeVisible();
+  await expect(coldPage.getByRole('button', { name: 'Retry this screen' })).toBeEnabled();
+  rejectAboutAsset = false;
+  await coldPage.getByRole('button', { name: 'Retry this screen' }).click();
+  await expect(coldPage.getByRole('heading', { name: 'About DN', exact: true }).first()).toBeVisible();
+  await expect(coldPage.getByRole('button', { name: 'Retry this screen' })).toHaveCount(0);
+  await fresh.close();
+  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), coldOfflineLogoutAndGuestReturn:true, uncachedRouteHomeAndOnlineRetry:true, boundedOnlineRefresh:true, guestDashboardWithoutFirestore:true, offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
   await writeFile(resolve(output, 'results.json'), JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }

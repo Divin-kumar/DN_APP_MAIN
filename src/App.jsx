@@ -8,12 +8,13 @@
   It tells the app: "if the user opens /login, show login page; if they open /events,
   show the events section; if they open any unknown page, send them home."
 */
-import { Component, lazy, Suspense, useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Component, lazy, Suspense, useEffect, useRef, useState } from 'react';
+import { Routes, Route, Navigate, useNavigate, useOutletContext } from 'react-router-dom';
 import { Check, CircleAlert } from 'lucide-react';
 import { AuthProvider } from './context/AuthContext';
 import { GuestProvider } from './context/GuestContext';
 import ProtectedRoute from './routes/ProtectedRoute';
+import useOfflineStatus from './hooks/useOfflineStatus';
 import LoadingSkeleton from './components/common/LoadingSkeleton';
 import useAppStore from './store/useAppStore';
 
@@ -39,6 +40,39 @@ const About = lazy(() => import('./pages/About'));
 const APP_VERSION = String(import.meta.env.VITE_APP_VERSION || 'dev');
 const CHUNK_RELOAD_KEY = `dn-chunk-reload:${APP_VERSION}`;
 
+function isRouteDownloadError(error) {
+  return /chunk|dynamically imported module|module script|fetch.*module|loading css|preload.*css|failed to fetch|networkerror|load failed/i.test(String(error?.message || error));
+}
+
+function RouteFailure({ error }) {
+  const shell = useOutletContext();
+  const Container = shell ? 'section' : 'main';
+  const Heading = shell?.hasPageHeading ? 'h2' : 'h1';
+  const offline = useOfflineStatus();
+  const [failedOffline] = useState(() => !navigator.onLine && isRouteDownloadError(error));
+  const needsConnection = offline && isRouteDownloadError(error);
+  const heading = useRef(null);
+  useEffect(() => { heading.current?.focus({ preventScroll: true }); }, []);
+  return (
+    <Container className="route-error-screen" aria-labelledby="dn-route-failure">
+      <div className="route-error-card">
+        <Heading id="dn-route-failure" ref={heading} tabIndex={-1}>{needsConnection ? 'This screen isn’t available offline' : 'This page couldn’t load'}</Heading>
+        <p role="status">{needsConnection ? 'Go to Home to keep using DN. Reconnect to open this screen.'
+          : failedOffline ? 'You’re back online. Retry to open this screen.' : 'Try opening this screen again, or go to Home.'}</p>
+        {!(needsConnection || failedOffline) && <details className="route-error-details">
+          <summary>Technical details</summary>
+          <code>{error?.name || 'Error'}: {error?.message || 'Unknown rendering error'}</code>
+        </details>}
+        <div className="route-error-actions">
+          <a className={needsConnection ? 'primaryButton' : 'secondaryButton'} href="/dashboard">Go to Home</a>
+          <button type="button" className={needsConnection ? 'secondaryButton' : 'primaryButton'} disabled={needsConnection}
+            onClick={() => window.location.reload()}>Retry this screen</button>
+        </div>
+      </div>
+    </Container>
+  );
+}
+
 class RouteErrorBoundary extends Component {
   state = { error: null };
 
@@ -46,57 +80,22 @@ class RouteErrorBoundary extends Component {
     return { error };
   }
 
-  componentDidMount() {
-    if (!this.state.error) {
-      try {
-        sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-      } catch {
-        // Storage can be unavailable in private browsing; route rendering still works.
-      }
-    }
-  }
-
   componentDidCatch(error) {
     console.error('A route failed to render:', error);
-    const message = String(error?.message || error);
-    const isChunkLoadError = /chunk|dynamically imported module|module script|fetch.*module|loading css|preload.*css|failed to fetch|networkerror|load failed/i.test(message);
-    if (!isChunkLoadError) return;
-
+    if (!navigator.onLine || !isRouteDownloadError(error)) return;
     try {
-      if (sessionStorage.getItem(CHUNK_RELOAD_KEY)) return;
-      sessionStorage.setItem(CHUNK_RELOAD_KEY, '1');
+      // Nested boundaries mount independently. Bound automatic reloads across the entire tab.
+      const lastReload = Number(sessionStorage.getItem(CHUNK_RELOAD_KEY)) || 0;
+      if (Date.now() - lastReload < 60000) return;
+      sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
       window.location.reload();
     } catch {
-      // The in-app retry fallback remains available if session storage is blocked.
+      // Manual recovery remains available when session storage is blocked.
     }
   }
 
-  retryPage = () => {
-    try {
-      sessionStorage.removeItem(CHUNK_RELOAD_KEY);
-    } catch {
-      // Reload still works if browser storage is blocked.
-    }
-    window.location.reload();
-  };
-
   render() {
-    if (!this.state.error) return this.props.children;
-
-    return (
-      <main className="route-error-screen" role="alert">
-        <div className="route-error-card">
-          <span className="route-error-eyebrow">DN</span>
-          <h1>This page couldn’t load</h1>
-          <p>The page encountered a loading error. Refresh to try again.</p>
-          <details className="route-error-details">
-            <summary>Technical details</summary>
-            <code>{this.state.error?.name || 'Error'}: {this.state.error?.message || 'Unknown rendering error'}</code>
-          </details>
-          <button type="button" className="primaryButton" onClick={this.retryPage}>Refresh app</button>
-        </div>
-      </main>
-    );
+    return this.state.error ? <RouteFailure error={this.state.error} /> : this.props.children;
   }
 }
 

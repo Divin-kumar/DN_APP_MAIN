@@ -8,6 +8,7 @@
   Based on that, it updates the app's global state so every page can know the current session.
 */
 import { createContext, useContext, useEffect } from 'react';
+import { hasPersonalGuestRecords } from '../utils/storageMigration';
 import { authService } from '../services/firebase';
 import useAppStore from '../store/useAppStore';
 
@@ -39,16 +40,23 @@ export function AuthProvider({ children }) {
 
           if (revision !== authChangeRevision) return;
 
-          let retainedGuestTasks = 0;
-          let retainedExpensePlans = false;
+          let transferNotice = '';
           try {
             const { mergeGuestDataIntoAccount } = await import('../services/guestMergeService');
             if (revision !== authChangeRevision) return;
             const merge = await mergeGuestDataIntoAccount(user.uid);
-            retainedGuestTasks = merge.tasksRetainedLocally || 0;
-            retainedExpensePlans = merge.expensePlansRetainedLocally;
+            if (merge.expensePlansRetainedLocally) {
+              transferNotice = `Guest expense plans${merge.tasksRetainedLocally ? ' and Tasks' : ''} remain on this device. Open Guest to back them up.`;
+            } else if (merge.tasksRetainedLocally) {
+              transferNotice = 'Your Guest Task data is still on this device. Open Guest to make a backup.';
+            }
           } catch (error) {
             console.error('Failed to merge guest data:', error);
+            try {
+              if (hasPersonalGuestRecords()) transferNotice = 'Your Guest transfer didn’t finish. Open Guest on this device to back up remaining records.';
+            } catch {
+              transferNotice = 'DN couldn’t check the Guest records on this device. Open the backup guide for help.';
+            }
           }
 
           if (revision !== authChangeRevision) return;
@@ -58,24 +66,18 @@ export function AuthProvider({ children }) {
               displayName: user.displayName,
               photoURL: user.photoURL,
           });
-          if (retainedExpensePlans) showToast(
-            `Guest expense plans${retainedGuestTasks ? ' and Tasks' : ''} remain on this device. Export a Guest backup before clearing browser data.`,
-            'danger', { label: 'Data & Backup', to: '/settings/data-backup', duration: 9500 },
-          );
-          else if (retainedGuestTasks) showToast(
-            `${retainedGuestTasks} Guest ${retainedGuestTasks === 1 ? 'Task remains' : 'Tasks remain'} on this browser, not in your account. Export a Guest backup before clearing device data.`,
-            'danger', { label: 'Learn more', to: '/tasks', duration: 9500 },
-          );
+          if (transferNotice) showToast(transferNotice, 'danger', {
+            label: 'Backup guide', to: '/settings/data-backup#data-guide', duration: 9500,
+          });
         };
         void initializeAccount();
-      } else if (localStorage.getItem('dn_guest_mode') === 'true') {
-        authChangeRevision += 1;
-        // If the app is in guest mode, keep the user in a limited mode instead of forcing logout.
-        setGuestMode(true);
       } else {
         authChangeRevision += 1;
-        // If no account and no guest mode, reset session to a logged-out state.
-        clearSession();
+        let resumeGuest = false;
+        try { resumeGuest = localStorage.getItem('dn_guest_mode') === 'true'; }
+        catch { /* The public sign-in screen can still open with browser storage blocked. */ }
+        if (resumeGuest) setGuestMode(true);
+        else clearSession();
       }
     });
 

@@ -1,5 +1,5 @@
 import { formatMomentDate } from '../utils/momentDates.js';
-import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX } from '../utils/storageMigration.js';
+import { DN_STORAGE_PREFIX, LEGACY_STORAGE_PREFIX, hasPersonalGuestRecords } from '../utils/storageMigration.js';
 // This file creates realistic demo data for development and testing.
 // It lets the app behave like it has real events, incomes, expenses, memories, and attachments without needing live backend data.
 const ACTIVE_SCENARIO_KEY = 'dn_dev_fixture_scenario';
@@ -394,12 +394,7 @@ export function buildGuestTourDataset(reference = ANCHOR_DATE) {
 }
 export const canOfferGuestTour = () => {
   if (typeof localStorage === 'undefined' || localStorage.getItem(TOUR_DISMISSED_KEY)) return false;
-  return ['dn_guest_eventGroups', 'dn_guest_incomes', 'dn_guest_expenses', 'dn_guest_tasks', 'dn_guest_expense_plans'].every((key) => {
-    const value = localStorage.getItem(key);
-    if (value === null) return true;
-    try { const records = JSON.parse(value); return Array.isArray(records) && records.length === 0; }
-    catch { return false; }
-  });
+  return !hasPersonalGuestRecords(localStorage);
 };
 export const guestTourNeedsUpdate = () => {
   const data = getActiveSampleData();

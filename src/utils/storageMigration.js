@@ -39,6 +39,22 @@ const getStorageKeys = (storage) => {
   return [...new Set(keys)];
 };
 
+// An unreadable collection is still personal data. Modern keys take precedence.
+export const hasPersonalGuestRecords = (storage = globalThis.localStorage) => {
+  if (!storage) return false;
+  return ['eventGroups', 'incomes', 'expenses', 'tasks', 'expense_plans'].some((collection) => {
+    const suffix = `guest_${collection}`;
+    const raw = storage.getItem(DN_STORAGE_PREFIX + suffix) ?? storage.getItem(LEGACY_STORAGE_PREFIX + suffix);
+    if (raw === null) return false;
+    try {
+      const records = JSON.parse(raw);
+      return !Array.isArray(records) || records.length > 0;
+    } catch {
+      return true;
+    }
+  });
+};
+
 // Copy only absent DN keys and retain the originals for recovery/downgrade.
 // A newer DN value ALWAYS wins. Running this repeatedly never overwrites saved DN data.
 export const migrateLegacyStorage = (storage = globalThis.localStorage) => {

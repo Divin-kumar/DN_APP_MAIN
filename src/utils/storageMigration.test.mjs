@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { migrateLegacyStorage, clearDnLocalData } from './storageMigration.js';
+import { migrateLegacyStorage, clearDnLocalData, hasPersonalGuestRecords } from './storageMigration.js';
 
 const makeStorage = (values = {}) => {
   const store = new Map(Object.entries(values));
@@ -75,4 +75,16 @@ test('migration supports minimal storage fakes with no key enumeration', () => {
   const result = migrateLegacyStorage(storage);
   assert.deepEqual(result.failed, []);
   assert.equal(values.get('dn_admin_values'), '{"eventTypes":[]}');
+});
+
+test('Guest recovery and the tour recognize personal, legacy and unreadable records only in Guest scope', () => {
+  const storage = makeStorage({ dn_dev_fixture_data: '[{"demo":true}]', dn_guest_mode: 'true', dn_guest_tasks: '[]' });
+  assert.equal(hasPersonalGuestRecords(storage), false);
+  storage.setItem('lifehub_guest_expense_plans', '[{"id":"legacy-plan"}]');
+  assert.equal(hasPersonalGuestRecords(storage), true);
+  storage.setItem('dn_guest_expense_plans', '[]');
+  assert.equal(hasPersonalGuestRecords(storage), false);
+  storage.setItem('dn_guest_tasks', 'invalid JSON');
+  assert.equal(hasPersonalGuestRecords(storage), true);
+  assert.equal(storage.getItem('dn_guest_tasks'), 'invalid JSON');
 });

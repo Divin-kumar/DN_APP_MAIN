@@ -82,7 +82,10 @@ html[data-theme] .dn-login-guest { color: var(--color-text); border: 1px solid v
 }
 html[data-theme] .dn-login-guest > span { flex: 1; text-align: center; padding-left: 18px; }
 html[data-theme] .dn-login-actions button:focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
-html[data-theme] .dn-login-actions button:disabled { opacity: .66; cursor: progress; }
+html[data-theme] .dn-login-actions button:disabled { opacity: .66; cursor: default; }
+html[data-theme] .dn-login-actions button[aria-busy="true"] { cursor: progress; }
+html[data-theme] .dn-login-status { margin: 0; color: var(--color-text); font-size: 14px; line-height: 1.5; }
+html[data-theme] .dn-login-status:not(:empty) { margin-top: 14px; }
 html[data-theme] .dn-login-privacy {
   margin: 20px 0 0; padding-top: 17px; border-top: 1px solid var(--dn-login-line);
   color: var(--color-text-muted); font-size: 12px; line-height: 1.55;

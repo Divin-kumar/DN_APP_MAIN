@@ -1126,8 +1126,8 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
           <div className="dn-data-location-grid">
             <div className="dn-data-location-item">
               <Cloud size={18} aria-hidden="true" />
-              <strong>Firebase records</strong>
-              <p>When signed in, Moments, Activity details, Tasks, transactions and Code Lists live in your account's Firestore data. Guest records are browser-only.</p>
+              <strong>Account records</strong>
+              <p>Your account stores Moments, Activities, Tasks, transactions and Code Lists. Signing in with Google starts transferring personal Guest records on this browser to the account you choose. Demo records stay separate.</p>
             </div>
             <div className="dn-data-location-item">
               <HardDrive size={18} aria-hidden="true" />
@@ -1137,6 +1137,7 @@ export default function Settings({ dataBackupOnly = false, appearanceOnly = fals
             <div className="dn-data-location-item">
               <FileJson size={18} aria-hidden="true" />
               <strong>Recovery copy</strong>
+              <p>To back up remaining Guest records, log out, continue as Guest on this device, then open Data &amp; Backup and choose Export backup.</p>
               <p>Your downloaded JSON can contain Moments, Activities, Tasks, transactions, expense plans, Code Lists, saved defaults and available originals. It is not encrypted, so store it privately.</p>
             </div>
           </div>

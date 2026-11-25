@@ -95,6 +95,8 @@ export default function DashboardLayout() {
   const shellNavItems = desktopShell ? [navItems[0], navItems[3], navItems[1], navItems[2]] : navItems;
   const [avatarError, setAvatarError] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const logoutPending = useRef(false);
+  const [loggingOut, setLoggingOut] = useState(false);
   const profileMenuRef = useRef(null);
   const profileTriggerRef = useRef(null);
   const profileKeyboardOpenRef = useRef(null);
@@ -323,20 +325,37 @@ export default function DashboardLayout() {
   const profileName = user?.displayName || user?.email || 'Guest';
   const initials = profileName.split(/[\s@]+/).filter(Boolean).slice(0, 2).map((part) => part[0].toUpperCase()).join('') || 'G';
 
-  // Logout should behave differently for guest accounts and real accounts.
-  // Real users sign out through Firebase; guest users just clear the guest session.
   const handleLogout = async () => {
+    const sameSession = () => {
+      const current = useAppStore.getState();
+      return current.isGuest === isGuest && current.user?.uid === user?.uid;
+    };
+    if (logoutPending.current || !sameSession()) return;
+    logoutPending.current = true;
+    useAppStore.setState({ logoutRequested: true });
+    setLoggingOut(true);
     try {
       if (isGuest) {
         exitGuestMode();
-        window.location.href = '/login';
-        return;
+      } else {
+        await authService.signOutUser();
+        const current = useAppStore.getState();
+        if (current.isGuest || (current.user && current.user.uid !== user?.uid)) return;
+        if (current.user) current.clearSession();
       }
-
-      await authService.signOutUser();
-      window.location.href = '/login';
-    } catch (error) {
-      console.error('Logout failed:', error);
+    } catch {
+      if (!sameSession()) return;
+      useAppStore.setState({ logoutRequested: false });
+      if (profileMenuRef.current?.contains(document.activeElement) || profileMenuOpen) {
+        setProfileMenuOpen(false);
+        profileTriggerRef.current?.focus({ preventScroll: true });
+      }
+      showToast('Couldn’t log out. Your workspace is still open.', 'danger', {
+        label: 'Retry logout', onClick: handleLogout,
+      });
+    } finally {
+      logoutPending.current = false;
+      setLoggingOut(false);
     }
   };
 
@@ -580,7 +599,7 @@ export default function DashboardLayout() {
                 className={`dn-shell-scope${isGuest ? ' is-guest' : ' is-account'}`}
                 role="note"
                 aria-label={isGuest
-                  ? 'Guest mode: your data is stored locally on this device and is not automatically transferred to Google.'
+                  ? 'Guest mode: your data is stored locally on this device. Signing in with Google starts transferring personal Guest records to the account you choose.'
                   : 'Signed-in mode: account records use Firebase storage. Cloud availability depends on your connection.'}
               >
                 {isGuest ? <HardDrive size={13} strokeWidth={1.9} aria-hidden="true" /> : <Cloud size={13} strokeWidth={1.9} aria-hidden="true" />}
@@ -625,7 +644,7 @@ export default function DashboardLayout() {
                 <NavLink to="/settings#profile" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><UserCircle size={16} /> Profile</NavLink>
                 <NavLink to="/insights" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Activity size={16} /> Insights</NavLink>
                 <NavLink to="/settings" className="profile-menu-item" role="menuitem" onClick={() => setProfileMenuOpen(false)}><Settings size={16} /> Settings</NavLink>
-                <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" onClick={handleLogout}><LogOut size={16} /> Logout</button>
+                <button type="button" className="profile-menu-item profile-menu-danger" role="menuitem" disabled={loggingOut} onClick={handleLogout}><LogOut size={16} /> {loggingOut ? 'Logging out…' : 'Logout'}</button>
               </div>
             ) : null}
           </div>
@@ -655,7 +674,7 @@ export default function DashboardLayout() {
             <NavLink to="/insights" aria-label="Insights" className="dn-nav-link"><span className="dn-nav-icon"><Activity size={18} /></span><span className="dn-nav-label">Insights</span></NavLink>
             <Link to="/settings#profile" className="dn-nav-link dn-desktop-account-start" aria-label="Profile"><span className="dn-nav-icon"><UserCircle size={18} /></span><span className="dn-nav-label">Profile</span></Link>
             <NavLink to="/settings" aria-label="Settings" end className="dn-nav-link"><span className="dn-nav-icon"><Settings size={18} /></span><span className="dn-nav-label">Settings</span></NavLink>
-            <button type="button" className="dn-nav-link dn-desktop-logout" aria-label="Logout" onClick={handleLogout}><span className="dn-nav-icon"><LogOut size={18} /></span><span className="dn-nav-label">Logout</span></button>
+            <button type="button" className="dn-nav-link dn-desktop-logout" aria-label={loggingOut ? 'Logging out…' : 'Logout'} disabled={loggingOut} onClick={handleLogout}><span className="dn-nav-icon"><LogOut size={18} /></span><span className="dn-nav-label">{loggingOut ? 'Logging out…' : 'Logout'}</span></button>
           </div>
         </nav>
 
@@ -670,7 +689,7 @@ export default function DashboardLayout() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: reducedMotion ? 0 : (mobileShell ? 0.2 : 0.14), ease: [0.22, 1, 0.36, 1] }}
           >
-            <Outlet />
+            <Outlet context={{ hasPageHeading: !activityDetailMatch && !workspaceKey }} />
           </motion.div>
         </main>
       </div>

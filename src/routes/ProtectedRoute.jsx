@@ -14,6 +14,7 @@ export default function ProtectedRoute({ children }) {
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
   const authReady = useAppStore((state) => state.authReady);
+  const logoutRequested = useAppStore((state) => state.logoutRequested);
   const location = useLocation();
 
   // Wait until auth state has loaded before deciding if the user can enter a protected page.
@@ -23,7 +24,7 @@ export default function ProtectedRoute({ children }) {
 
   // If there is no real user and no guest session, redirect to login.
   if (!user && !isGuest) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    return <Navigate to="/login" replace state={logoutRequested ? null : { from: location }} />;
   }
 
   return children;

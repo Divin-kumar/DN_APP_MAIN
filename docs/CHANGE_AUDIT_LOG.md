@@ -1,5 +1,14 @@
 # DN — Change Log
 
+## CHG-20261125-606 | Preserve entry links, explain Guest transfers and recover offline sessions
+
+- **Entry.** Preserve the complete internal destination through Guest or Google sign-in. Wait for the prepared session, explain popup, network and browser-storage failures, and keep Guest available offline.
+- **Guest and account.** Align sign-in, account scope and recovery guidance with the existing transfer of personal Guest records. Retained records link to instructions for exporting from Guest. Suppress reports for empty or demo-only devices. Logout prevents repeat submissions, provides a retry and clears the return destination for an intentional exit.
+- **Offline.** Cache Login and Home with the static shell. An unavailable screen offers Home and retry after reconnect. An online chunk failure is allowed one automatic refresh per minute per tab and build.
+- **Compatibility.** Scope is session navigation and feedback. Record transfer, storage formats, financial calculations and PDF output retain their existing behavior. The Guest tour already exercises the same entry points and needs no new sample records or edition.
+- **Executed.** Build, lint and 637 Node tests passed. 51 focused Chromium and 12 WebKit browser cases passed. In 24 responsive views per build, the New Task shortcut opened its editor in all eight size/theme combinations after the fix and in zero before. The final 24 WCAG A/AA scans reported no automated violations. An installed-build test disconnected the browser and origin, exercised a cold offline logout, Guest re-entry, uncached screen, reconnect and bounded online refresh, and checked stored originals, offline PDF output and saved Guest records.
+- **Limits.** Google sign-in, transfer failures and logout failures used controlled test identities and transports. Physical iPhone Safari, VoiceOver and a live personal account were not exercised.
+
 ## CHG-20261125-605 | Restore Moment editing and make task and finance recovery reliable
 
 - **Scope.** Wire the Moment workspace Edit action to its form. Merge edited metadata, introductions, greetings, archive state and attachment changes into the latest record. Keep failed drafts and confirmations open, guard duplicate writes and restore focus after destructive or empty-list actions.

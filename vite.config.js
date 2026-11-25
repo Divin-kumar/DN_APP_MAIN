@@ -24,7 +24,8 @@ const pwaShellPlugin = () => ({
     };
     Object.values(bundle)
       .filter((output) => output.type === 'chunk' && (
-        output.isEntry || output.facadeModuleId?.endsWith('/src/layouts/DashboardLayout.jsx')
+        output.isEntry || ['/src/layouts/DashboardLayout.jsx', '/src/pages/LoginPage.jsx', '/src/pages/DashboardHome.jsx']
+          .some((route) => output.facadeModuleId?.endsWith(route))
       ))
       .forEach((output) => addEntryAndImports(output.fileName));
     const entryAssets = [...entryFiles].map((fileName) => `/${fileName}`);

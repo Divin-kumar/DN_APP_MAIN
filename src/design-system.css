@@ -1574,12 +1574,15 @@ html[data-theme] .event-memory-story-copy.is-expanded { display: block !importan
 
 html[data-theme] .route-error-screen { display: grid; min-height: 100dvh; place-items: center; padding: max(var(--space-lg),env(safe-area-inset-top)) var(--space-lg) max(var(--space-lg),env(safe-area-inset-bottom)); background: var(--color-bg); color: var(--color-text); }
 html[data-theme] .route-error-card { display: grid; width: min(100%,420px); justify-items: start; gap: var(--space-md); padding: var(--space-xl); border: 1px solid var(--color-border); border-radius: var(--radius-lg); background: var(--color-card); box-shadow: var(--shadow-card); }
-html[data-theme] .route-error-eyebrow { color: var(--color-primary); font-size: var(--font-caption); font-weight: 750; letter-spacing: .08em; text-transform: uppercase; }
-html[data-theme] .route-error-card h1 { margin: 0; color: var(--color-text); font-size: var(--font-title); }
+html[data-theme] .route-error-card :is(h1,h2) { margin: 0; color: var(--color-text); font-size: var(--font-title); }
 html[data-theme] .route-error-card p { margin: 0; color: var(--color-text-muted); font-size: var(--font-body); line-height: 1.5; }
-html[data-theme] .route-error-card button { width: 100%; }
+html[data-theme] main .route-error-screen { min-height: min(54dvh, 36rem); }
+html[data-theme] .route-error-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+html[data-theme] .route-error-actions > :is(a,button) { display: inline-flex; align-items: center; justify-content: center; min-height: 44px; text-decoration: none; }
+html[data-theme] .route-error-actions > :focus-visible { outline: 3px solid var(--color-primary); outline-offset: 3px; }
+html[data-theme] .route-error-actions > :disabled { opacity: .6; cursor: default; }
 html[data-theme] .route-error-details { width: 100%; color: var(--color-text-muted); font-size: var(--font-caption); }
-html[data-theme] .route-error-details summary { min-height: 36px; padding: var(--space-sm) 0; color: var(--color-primary); cursor: pointer; }
+html[data-theme] .route-error-details summary { min-height: 44px; padding: var(--space-sm) 0; color: var(--color-primary); cursor: pointer; }
 html[data-theme] .route-error-details code { display: block; max-height: 140px; padding: var(--space-sm); overflow: auto; border: 1px solid var(--color-border); border-radius: var(--radius-sm); background: var(--color-surface); color: var(--color-text-muted); font-size: 11px; overflow-wrap: anywhere; white-space: pre-wrap; }
 
 /* Shared premium swipe-action cards: keep the reveal geometry, soften every action surface. */

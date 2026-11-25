@@ -3,66 +3,84 @@
   Keep both existing session handlers and navigation destinations intact.
 */
 import { useEffect, useRef, useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { ArrowRight, CircleAlert } from 'lucide-react';
 import { authService } from '../services/firebase';
 import { useGuest } from '../context/GuestContext';
 import useAppStore from '../store/useAppStore';
+import useOfflineStatus from '../hooks/useOfflineStatus';
 import './LoginPagePremium.css';
 
+const googleErrors = {
+  'auth/popup-closed-by-user': 'Sign-in was closed. You can try again.',
+  'auth/cancelled-popup-request': 'Sign-in was interrupted. Try again when you’re ready.',
+  'auth/popup-blocked': 'Allow pop-ups for DN in your browser, then try Google sign-in again.',
+  'auth/network-request-failed': 'Couldn’t reach Google. Check your connection and try again.',
+};
+
+function returnDestination(from) {
+  const path = from?.pathname;
+  if (typeof path !== 'string' || !path.startsWith('/') || path.startsWith('//')
+      || path.includes('\\') || path.replace(/\/+$/, '').toLowerCase() === '/login') return '/dashboard';
+  return { pathname: path, search: from.search || '', hash: from.hash || '' };
+}
+
 export default function LoginPage() {
-  const navigate = useNavigate();
   const location = useLocation();
   const { continueAsGuest } = useGuest();
   const user = useAppStore((state) => state.user);
   const isGuest = useAppStore((state) => state.isGuest);
-  const [busy, setBusy] = useState(false);
+  const authReady = useAppStore((state) => state.authReady);
+  const offline = useOfflineStatus();
+  const [phase, setPhase] = useState('idle');
   const [errorMessage, setErrorMessage] = useState('');
-  const pendingRef = useRef(false);
-  const mountedRef = useRef(true);
-  const from = location.state?.from?.pathname || '/dashboard';
+  const pending = useRef(null);
 
   useEffect(() => {
-    mountedRef.current = true;
-    return () => { mountedRef.current = false; };
+    if (useAppStore.getState().logoutRequested) useAppStore.setState({ logoutRequested: false });
+    const unsubscribe = useAppStore.subscribe((state, previous) => {
+      if (pending.current && !previous.authReady && state.authReady && !state.user && !state.isGuest) {
+        pending.current = null;
+        setPhase('idle');
+        setErrorMessage('Sign-in ended before your workspace opened. Try again.');
+      }
+    });
+    return () => { pending.current = null; unsubscribe(); };
   }, []);
 
-  useEffect(() => {
-    if (user || isGuest) navigate(from, { replace: true });
-  }, [user, isGuest, from, navigate]);
-
   const handleGoogleSignIn = async () => {
-    if (pendingRef.current) return;
-    pendingRef.current = true;
-    setBusy(true);
+    if (pending.current || offline || !authReady) return;
+    const attempt = {};
+    pending.current = attempt;
+    setPhase('google');
     setErrorMessage('');
     try {
       await authService.signInWithGoogle();
-      navigate(from, { replace: true });
+      if (pending.current === attempt) setPhase('opening');
     } catch (error) {
-      console.error('Google sign-in failed:', error);
-      if (mountedRef.current) setErrorMessage(
-        error?.code === 'auth/popup-closed-by-user'
-          ? 'Sign-in was closed. You can try again.'
-          : 'Google sign-in is unavailable right now. Try again or continue as Guest.',
-      );
-    } finally {
-      pendingRef.current = false;
-      if (mountedRef.current) setBusy(false);
+      if (pending.current !== attempt) return;
+      pending.current = null;
+      setPhase('idle');
+      setErrorMessage(googleErrors[error?.code] || 'Google sign-in is unavailable right now. Try again or continue as Guest.');
     }
   };
 
   const handleGuestLogin = () => {
-    if (pendingRef.current) return;
+    if (pending.current || !authReady) return;
     setErrorMessage('');
     try {
       continueAsGuest();
-      navigate(from, { replace: true });
-    } catch (error) {
-      console.error('Guest session could not start:', error);
+    } catch {
       setErrorMessage('Guest mode needs browser storage. Check your browser settings and try again.');
     }
   };
+
+  if (authReady && (user || isGuest)) return <Navigate to={returnDestination(location.state?.from)} replace />;
+
+  const busy = phase !== 'idle' || !authReady;
+  const status = phase === 'opening' || (phase === 'google' && !authReady) ? 'Opening your workspace…'
+    : phase === 'google' ? 'Connecting to Google…' : !authReady ? 'Checking your session…'
+    : offline ? 'You’re offline. Continue as Guest or reconnect to sign in with Google.' : '';
 
   return (
     <main className="dn-login">
@@ -83,9 +101,9 @@ export default function LoginPage() {
             <h2 id="dn-login-welcome">Your space starts here.</h2>
           </div>
           <div className="dn-login-actions">
-            <button type="button" className="dn-login-google" onClick={handleGoogleSignIn} disabled={busy} aria-busy={busy}>
+            <button type="button" className="dn-login-google" onClick={handleGoogleSignIn} disabled={busy || offline} aria-busy={phase !== 'idle'} aria-describedby="dn-login-privacy">
               <span className="dn-login-google-mark" aria-hidden="true">G</span>
-              <span>{busy ? 'Connecting to Google…' : 'Continue with Google'}</span>
+              <span>Continue with Google</span>
               <ArrowRight size={18} aria-hidden="true" />
             </button>
             <button type="button" className="dn-login-guest" onClick={handleGuestLogin} disabled={busy}>
@@ -93,10 +111,11 @@ export default function LoginPage() {
               <ArrowRight size={18} aria-hidden="true" />
             </button>
           </div>
+          <p className="dn-login-status" role="status">{status}</p>
           {errorMessage ? (
             <p className="dn-login-error" role="alert"><CircleAlert size={17} aria-hidden="true" />{errorMessage}</p>
           ) : null}
-          <p className="dn-login-privacy">Guest records stay in this browser. They aren’t automatically transferred to your Google account.</p>
+          <p id="dn-login-privacy" className="dn-login-privacy">Personal Guest records stay in this browser while you use Guest. Signing in with Google starts transferring them to the account you choose. Demo records stay separate.</p>
         </section>
       </div>
     </main>

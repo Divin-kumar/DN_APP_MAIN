@@ -189,7 +189,7 @@ export function TaskListContent() {
     <section className="dn-task-empty" role="status"><ListTodo size={28} aria-hidden="true" />
       <h3>Open a workspace to use Tasks</h3>
       <p>Sign in to sync your Tasks, or continue as Guest to keep them on this device.</p>
-      <p>Guest Tasks remain on the original device. Export a backup before changing sessions.</p>
+      <p>Signing in with Google starts transferring your personal Guest Tasks to the account you choose.</p>
       <Link to="/activities">Open Activities</Link>
     </section>
   </div>;
