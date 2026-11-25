@@ -10,6 +10,7 @@ await mkdir(output, { recursive:true });
 const types = { '.html':'text/html', '.js':'text/javascript', '.css':'text/css', '.svg':'image/svg+xml', '.json':'application/json', '.webmanifest':'application/manifest+json', '.woff2':'font/woff2' };
 let networkAvailable = true;
 let rejectAboutAsset = false;
+let bookmarkDocumentReads = 0;
 const server = createServer(async (req, res) => {
   if (!networkAvailable) { req.socket.destroy(); return; }
   const pathname = new URL(req.url, 'http://localhost').pathname;
@@ -21,7 +22,10 @@ const server = createServer(async (req, res) => {
     if (extname(path)) { res.writeHead(404); res.end(); return; }
     actual = resolve(root, 'index.html'); data = await readFile(actual);
   }
-  res.writeHead(200, { 'Content-Type':types[extname(actual)] || 'application/octet-stream', 'Cache-Control':'no-cache' }); res.end(data);
+  const legacyBookmark = req.url === '/tasks?source=bookmark-cache-check';
+  if (legacyBookmark) bookmarkDocumentReads++;
+  res.writeHead(200, { 'Content-Type':types[extname(actual)] || 'application/octet-stream',
+    'Cache-Control':legacyBookmark ? 'public, max-age=3600' : 'no-cache' }); res.end(data);
 });
 await new Promise((resolve, reject) => { server.once('error', reject); server.listen(0, '127.0.0.1', resolve); });
 let browser;
@@ -166,8 +170,15 @@ try {
   await coldPage.getByRole('button', { name: 'Retry this screen' }).click();
   await expect(coldPage.getByRole('heading', { name: 'About DN', exact: true }).first()).toBeVisible();
   await expect(coldPage.getByRole('button', { name: 'Retry this screen' })).toHaveCount(0);
+  for (let visit = 1; visit <= 2; visit++) {
+    await coldPage.goto('/tasks?source=bookmark-cache-check');
+    await expect(coldPage.getByText('Collect the parcel', { exact: true })).toBeVisible();
+    expect(bookmarkDocumentReads).toBe(visit);
+    await coldPage.goto('/dashboard');
+    await expect(coldPage.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+  }
   await fresh.close();
-  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), coldOfflineLogoutAndGuestReturn:true, uncachedRouteHomeAndOnlineRetry:true, boundedOnlineRefresh:true, guestDashboardWithoutFirestore:true, offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
+  const result = { manifestName:manifest.name, worker:await page.evaluate(() => navigator.serviceWorker.controller.scriptURL), cacheNames:await page.evaluate(() => caches.keys()), coldOfflineLogoutAndGuestReturn:true, uncachedRouteHomeAndOnlineRetry:true, boundedOnlineRefresh:true, bookmarkedDocumentRevalidated:true, guestDashboardWithoutFirestore:true, offlineStory:true, offlineOriginalExactBytes:bytes.length, offlinePdfBytes:pdf.length, offlineQuickCreate:true, recordsUnchanged:true, pageErrors:errors };
   await writeFile(resolve(output, 'results.json'), JSON.stringify(result,null,2));
   console.log(JSON.stringify(result));
 } finally { await browser?.close(); await new Promise(resolve => server.close(resolve)); }

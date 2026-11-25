@@ -80,9 +80,14 @@ jobs:
               -H 'Cache-Control: no-cache' "https://expense-tracker-divin.web.app/?build=$GITHUB_SHA" -o /tmp/dn-development-index.html \
               && cmp -s dist/index.html /tmp/dn-development-index.html \
               && curl --fail --silent --show-error --location --retry 2 --max-time 20 \
+                --dump-header /tmp/dn-development-bookmark.headers \
+                "https://expense-tracker-divin.web.app/tasks?create=1&build=$GITHUB_SHA" -o /tmp/dn-development-bookmark.html \
+              && cmp -s dist/index.html /tmp/dn-development-bookmark.html \
+              && grep -Eiq '^cache-control:.*no-store' /tmp/dn-development-bookmark.headers \
+              && curl --fail --silent --show-error --location --retry 2 --max-time 20 \
                 -H 'Cache-Control: no-cache' "https://expense-tracker-divin.web.app/dn-pending-release.json?build=$GITHUB_SHA&run=$GITHUB_RUN_ID" -o /tmp/dn-development-ledger.json \
               && cmp -s dist/dn-pending-release.json /tmp/dn-development-ledger.json; then
-              echo "Verified the exact development build and About ledger on Hosting."
+              echo "Verified the exact development build, bookmark cache policy and About ledger on Hosting."
               exit 0
             fi
             sleep 5

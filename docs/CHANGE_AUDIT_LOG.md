@@ -1,5 +1,12 @@
 # DN — Change Log
 
+## CHG-20261125-607 | Revalidate bookmarked screens after a development release
+
+- **Observed.** The live New Task bookmark and other rewritten HTML routes returned `Cache-Control: max-age=3600`. One existing browser reopened the previous login screen after CHG-606 had deployed. Refreshing the login document preserved the destination and opened the repaired editor.
+- **Fix.** Apply the no-store document policy to the root and supported route families. The service worker revalidates online navigations, including older HTTP cache entries, while retaining its installed offline fallback. The development workflow compares the live New Task bookmark with the built index and checks its no-store header.
+- **Executed.** The installed build revisited a document served with a one-hour cache policy twice. Both navigations contacted the origin. Offline sign-out and re-entry, Home recovery, reconnect-and-retry, bounded online refresh, saved Guest record bytes, original download and PDF generation passed.
+- **Compatibility.** Existing Hosting target selection, Guest/account record formats and demo fixtures are preserved. A tab already running older code may need one reload to receive the new document. Physical Safari and VoiceOver remain unverified.
+
 ## CHG-20261125-606 | Preserve entry links, explain Guest transfers and recover offline sessions
 
 - **Entry.** Preserve the complete internal destination through Guest or Google sign-in. Wait for the prepared session, explain popup, network and browser-storage failures, and keep Guest available offline.

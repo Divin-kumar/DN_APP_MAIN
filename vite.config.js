@@ -62,7 +62,7 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || url.origin !== self.location.origin) return;
 
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(async () => (
+    event.respondWith(fetch(request, { cache: 'no-cache' }).catch(async () => (
       (await caches.match('/index.html')) || (await caches.match('/'))
     )));
     return;

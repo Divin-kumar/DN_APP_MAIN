@@ -6,7 +6,7 @@ A protected link retains its path, query and section through Guest or Google sig
 
 Google sign-in starts the existing transfer of personal Guest records in this browser. The tour uses separate records. Interrupted transfers with personal records and partially retained Tasks or expense plans offer the Data & Backup guide. It explains how to reopen Guest on the same device and export the remaining personal records. Original photos stay on their device.
 
-After the installed web app has finished caching its shell, Login and Home are available offline even when the first visit was to a different screen. An uncached route offers Home and an in-place retry after reconnection. Online module failures allow one automatic refresh per minute per tab and build. Only static app assets enter this shell cache.
+After the installed web app has finished caching its shell, Login and Home are available offline even when the first visit was to a different screen. An uncached route offers Home and an in-place retry after reconnection. Online module failures allow one automatic refresh per minute per tab and build. Only static app assets enter this shell cache. Hosting marks the root and supported app routes as no-store. Online service-worker navigation revalidates the requested document, including bookmarks written under the former one-hour cache policy. Development publication checks a New Task bookmark’s HTML and headers.
 
 ## Moment workspace, Task and finance recovery (25 November 2026, development)
 
