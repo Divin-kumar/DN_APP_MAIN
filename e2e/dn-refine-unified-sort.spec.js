@@ -82,7 +82,8 @@ for (const width of [320, 390, 430]) {
       const updated = await selected.getAttribute('aria-label');
       expect(updated).not.toBe(initial);
       expect(updated).toMatch(/ascending|descending/);
-      await expect(sheet.locator('.dn-refine-sort-direction-current strong')).not.toBeEmpty();
+      const direction = (await reverse.getAttribute('aria-label')).replace('Reverse sort direction, currently ', '');
+      await expect(sheet.getByRole('group', { name: 'Sort direction' }).getByText(direction, { exact: true })).toBeVisible();
       await sheet.getByRole('button', { name: 'Cancel', exact: true }).tap();
       await expect(sheet).toHaveCount(0);
       expect(await snapshot()).toEqual(before);

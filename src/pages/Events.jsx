@@ -316,13 +316,7 @@ function MomentsPage({ scopedMoments }) {
   const saveEvent = (formData) => {
     if (editingEvent) {
       const id = editingEvent.id || editingEvent.firestoreId;
-      // The editor also receives older records with nested data. Only the
-      // fields it actually edits may replace the latest version of the record.
-      const { name, type, customType, date, time, recurrence, notes } = formData;
-      const values = { name, type, customType, date, recurrence, notes };
-      if ('time' in formData) values.time = time;
-      else if ('time' in editingEvent) values.time = '';
-      request.run((context) => records.mutateMoment(context, id, (latest) => ({ ...latest, ...values })), () => {
+      request.run((context) => records.mutateMoment(context, id, (latest) => ({ ...latest, ...formData })), () => {
         showToast('Moment updated', 'success');
         closeDrawer();
       }, 'Couldn’t save this Moment. Your draft is here. Try saving again.');

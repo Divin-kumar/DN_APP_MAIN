@@ -17,7 +17,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
       await refine.click();
       const dialog = page.getByRole('dialog');
       await dialog.getByRole('button', { name: 'Sort by Amount', exact: true }).click();
-      await dialog.getByRole('button', { name: 'Show results' }).click();
+      await dialog.getByRole('button', { name: 'Apply sort' }).click();
       await input.fill('unique-unmatched-text-999');
       const empty = page.locator('.dn-financial-workspace .dn-transactions-empty-premium');
       await expect(empty).toBeVisible();

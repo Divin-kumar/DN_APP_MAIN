@@ -1,5 +1,5 @@
 /* Keep names and values readable alongside the existing Insights charts. */
-html[data-theme] .insights-page .milestone-list h4 {
+html[data-theme] .insights-page .milestone-list h3 {
   font-size: 14px;
   margin-bottom: 8px;
 }
@@ -633,3 +633,17 @@ html[data-theme] .insights-page .dn-finance-detail-head .dn-finance-report-actio
   color: var(--color-text-muted); font-size: 12px;
 }
 html[data-theme] .insights-page .dn-finance-month-summary dl { margin-top: 14px; padding-top: 12px; }
+
+html[data-theme] .insights-panel-heading h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: 1rem;
+  line-height: 1.4;
+}
+html[data-theme] a.milestone-row {
+  min-height: 44px;
+  color: var(--color-text);
+  text-decoration: none;
+}
+html[data-theme] a.milestone-row:hover > strong { text-decoration: underline; }
+html[data-theme] a.milestone-row:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }

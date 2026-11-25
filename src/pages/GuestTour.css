@@ -72,3 +72,5 @@ html[data-theme] .dn-restore-tour-note {
 @media(prefers-reduced-motion:reduce) {
   html[data-theme] .dn-guest-tour-actions button {transition:none;}
 }
+
+html[data-theme] .dn-guest-tour-actions .dn-tour-refresh-button { min-height:44px; }

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import ModalDialog from '../common/ModalDialog';
-import SortChips from '../common/SortChips';
+import SortChips, { directionDescription } from '../common/SortChips';
 import ConditionBuilder from '../common/ConditionBuilder';
 import RefineActions from '../common/RefineActions';
 import { conditionCount, emptyGroup, normalizeConditionGroup } from '../../utils/conditionEngine.js';
@@ -26,6 +26,12 @@ export default function TaskRefineSheet({ current, resetDefaults = TASK_VIEW_DEF
     editorKey: 'task-refine-draft', activeCount, setGroup,
     clear: () => setGroup(emptyGroup()),
   };
+  const originalGroup = compactTaskRefineGroup(taskViewConditionGroup(current));
+  const onlySortingChanged = (draft.field !== current.field || draft.direction !== current.direction)
+    && JSON.stringify(draft.group) === JSON.stringify(originalGroup);
+  const sortSummary = onlySortingChanged
+    ? TASK_SORT_OPTIONS.find((option) => option.value === draft.field)?.label + ' · ' + directionDescription(draft.field, draft.direction)
+    : undefined;
   const count = useMemo(() => filterTaskResults(tasks, draft, today, moments).length,
     [tasks, draft, today, moments]);
   const resetDraft = () => setDraft({
@@ -34,7 +40,7 @@ export default function TaskRefineSheet({ current, resetDefaults = TASK_VIEW_DEF
     status: 'all', priority: 'all', due: 'all',
   });
   return <ModalDialog title="Refine Tasks" className="dn-refine-sheet dn-task-refine" onClose={onClose}
-    footer={<RefineActions count={count} resultLabel="Tasks" onReset={resetDraft} onCancel={onClose} onApply={() => onApply(draft)} />}>
+    footer={<RefineActions count={count} sortSummary={sortSummary} resultLabel={count === 1 ? 'Task' : 'Tasks'} onReset={resetDraft} onCancel={onClose} onApply={() => onApply(draft)} />}>
     <div className="dn-refine-sheet-section">
       <SortChips heading="Sort by" label="Sort Tasks" field={draft.field} direction={draft.direction}
         options={TASK_SORT_OPTIONS} onChange={(field, direction) => change({ field, direction })} />

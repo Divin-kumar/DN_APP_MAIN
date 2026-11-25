@@ -1954,6 +1954,16 @@ html[data-theme] .dn-transaction-card-side { display: grid; justify-items: end; 
 html[data-theme] .dn-transaction-value { white-space: nowrap; font-weight: 700; letter-spacing: -.01em; font-size: 13px; }
 html[data-theme] .dn-transaction-value.is-income { color: var(--color-success); }
 html[data-theme] .dn-transaction-value.is-expense { color: var(--color-danger); }
+html[data-theme="dark"] .dn-transaction-value.is-expense,
+html[data-theme="dark"] .dn-finance-metric-expense > strong { color: #ff8585; }
+html[data-theme] .dn-transaction-details-content a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  min-width: 44px;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
 html[data-theme] .dn-transaction-overflow {
   min-width: 44px; min-height: 44px; display: grid; place-items: center;
   border: 1px solid var(--color-border); border-radius: 12px;
@@ -3710,5 +3720,22 @@ html[data-theme="light"] {
     --dn-planning-surface: var(--color-card);
     --dn-planning-field: var(--color-card-raised);
     --dn-planning-selected: var(--action-fill);
+  }
+}
+
+/* Keep long rupee amounts together on narrow screens while ordinary totals share a row. */
+@media (max-width: 400px) {
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid[data-long-amounts] {
+    grid-template-columns: minmax(0, 1fr) !important;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid[data-long-amounts] .dn-finance-metric {
+    flex-direction: row; justify-content: space-between; min-height: 40px !important;
+    gap: 8px !important; padding: 7px 12px !important;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid[data-long-amounts] .dn-finance-metric + .dn-finance-metric::before {
+    inset: 0 12px auto; width: auto; height: 1px;
+  }
+  html[data-theme] .dn-financial-workspace .dn-finance-summary-grid[data-long-amounts] .dn-finance-metric > strong {
+    width: auto; text-align: end;
   }
 }

@@ -17,13 +17,14 @@ import { attachmentRepository, MAX_ATTACHMENT_BYTES } from '../../../services/at
 import { getActiveSampleData, getActiveSampleScenario } from '../../../dev/sampleData';
 import SwipeActionCard from '../../../components/common/SwipeActionCard';
 import EventForm from '../../../components/events/EventForm';
+import useMomentDialogAction from '../../../hooks/useMomentDialogAction';
 import RichTextEditor from '../../../components/common/RichTextEditor';
 import RichText from '../../../components/common/RichText';
 import DropdownSelect from '../../../components/common/DropdownSelect';
 import useAppStore from '../../../store/useAppStore';
 import useEventStore from '../../../store/useEventStore';
 import useExpenseStore from '../../../store/useExpenseStore';
-import ModalDialog, { ConfirmDialog, DialogFormActions } from '../../../components/common/ModalDialog';
+import ModalDialog, { ConfirmDialog, DialogFormActions, useDialogClose } from '../../../components/common/ModalDialog';
 import { downloadBlob } from '../../../utils/download';
 import { getEventGreeting } from '../../../utils/greeting';
 import usePersistentListState from '../../../hooks/usePersistentListState';
@@ -84,7 +85,7 @@ export function EventWorkspaceContent() {
   const momentTypes = useAppStore((state) => state.adminValues.eventTypes || EMPTY_MOMENT_TYPES);
   const showToast = useAppStore((state) => state.showToast);
   const eventState = useEventStore();
-  const { loading, error, loadEvents, updateEventItem, deleteEventItem } = eventState;
+  const { loading, error, loadEvents, deleteEventItem } = eventState;
   const expenseState = useExpenseStore();
   const { loadExpenses } = expenseState;
   const finance = useMomentFinance(eventId);
@@ -115,7 +116,9 @@ export function EventWorkspaceContent() {
   const [attachmentError, setAttachmentError] = useState('');
   const attachmentSavingRef = useRef(false);
   const [pendingDeleteEvent, setPendingDeleteEvent] = useState(false);
-  const [eventEditOpen, setEventEditOpen] = useState(false);
+  const [editingMoment, setEditingMoment] = useState(null);
+  const workspaceAction = useMomentDialogAction();
+  const sectionFocusRef = useRef(null);
   const [greetingDialogOpen, setGreetingDialogOpen] = useState(false);
   const [greetingTitleDraft, setGreetingTitleDraft] = useState('');
   const [greetingBodyDraft, setGreetingBodyDraft] = useState('');
@@ -220,7 +223,7 @@ export function EventWorkspaceContent() {
       <div style={{ display: 'grid', gap: '14px' }}>
         <h2 style={{ margin: 0 }}>Moment not found</h2>
         <p style={{ margin: 0, color: 'var(--ink-soft)' }}>This Moment may have been removed or is not available in the current session.</p>
-        <Link to="/events" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Moments</Link>
+        <Link to="/events" className="dn-missing-moment-back" style={{ color: 'var(--primary)', fontWeight: 700 }}>Back to Moments</Link>
       </div>
     );
   }
@@ -268,6 +271,7 @@ export function EventWorkspaceContent() {
   const eventStyle = String(event.type || '').toLowerCase();
   const eventMood = eventStyle.includes('birth') || eventStyle.includes('wedding') || eventStyle.includes('engagement') ? 'celebration' : eventStyle.includes('vacation') || eventStyle.includes('travel') ? 'travel' : eventStyle.includes('investment') || eventStyle.includes('insurance') || eventStyle.includes('finance') ? 'finance' : eventStyle.includes('anniversary') || eventStyle.includes('marriage') ? 'romance' : 'life';
   const currency = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
+  const spendingLabel = finance.error ? 'Unavailable' : finance.pending ? '…' : currency(totalSpent);
   const generatedGreeting = getEventGreeting(event, greetingTemplates, momentTypes) || {
     title: `A moment worth celebrating: ${event.name || event.type || 'today'}`,
     body: event.notes || 'Wishing you a beautiful day filled with meaning and memories to treasure.',
@@ -277,21 +281,19 @@ export function EventWorkspaceContent() {
     : generatedGreeting;
 
   const openGreetingCard = () => {
+    workspaceAction.clearError();
     setGreetingTitleDraft(eventGreeting.title || '');
     setGreetingBodyDraft(eventGreeting.body || '');
     setGreetingDialogOpen(true);
   };
 
-  const saveGreetingCard = async (submitEvent) => {
+  const saveGreetingCard = (submitEvent) => {
     submitEvent.preventDefault();
     const greetingCard = { title: greetingTitleDraft.trim(), body: greetingBodyDraft, updatedAt: new Date().toISOString() };
-    try {
-      await updateEventItem(user?.uid, isGuest, { ...event, greetingCard });
+    workspaceAction.run((context) => records.mutateMoment(context, eventId, (latest) => ({ ...latest, greetingCard })), () => {
       setGreetingDialogOpen(false);
       showToast('Greeting card saved', 'success');
-    } catch {
-      showToast('Could not save this greeting card', 'danger');
-    }
+    }, 'Couldn’t save this greeting. Your edits are here. Try again.');
   };
 
   const downloadGreetingCard = () => {
@@ -357,10 +359,10 @@ export function EventWorkspaceContent() {
       }).catch(() => {});
   };
 
-  const saveNotes = async (submitEvent) => {
+  const saveNotes = (submitEvent) => {
     submitEvent.preventDefault();
-    await updateEventItem(user?.uid, isGuest, { ...event, notes: notesDraft });
-    setNotesDialogOpen(false);
+    workspaceAction.run((context) => records.mutateMoment(context, eventId, (latest) => ({ ...latest, notes: notesDraft })),
+      () => setNotesDialogOpen(false), 'Couldn’t save the introduction. Your edits are here. Try again.');
   };
 
   const addAttachment = (changeEvent) => {
@@ -387,54 +389,52 @@ export function EventWorkspaceContent() {
       const reference = await attachmentRepository.save(file, { uid: user?.uid, isGuest, sample: Boolean(getActiveSampleData(user?.uid)), assertCurrent: () => {
         if (!resolveCreateMoment(context)) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
       } });
-      const currentMoment = resolveCreateMoment(context);
-      if (!currentMoment) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
-      if (attachmentActivityId && !currentMoment.activities?.some((activity) => recordId(activity.id) === attachmentActivityId)) throw new Error('The chosen activity is no longer available.');
-      await updateEventItem(user?.uid, isGuest, { ...currentMoment, attachments: [...(currentMoment.attachments || []), {
+      if (!resolveCreateMoment(context)) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
+      const attachment = {
         id: crypto.randomUUID(), name: file.name, type: file.type || 'application/octet-stream', size: file.size,
         createdAt: new Date().toISOString(), ...reference, ...(attachmentActivityId ? { activityId: attachmentActivityId } : {}),
-      }] });
+      };
+      await records.mutateMoment(mutationContext, eventId, (latest) => {
+        if (!resolveCreateMoment(context)) throw new Error('Your session changed. Reopen this Moment before attaching the file.');
+        if (attachmentActivityId && !latest.activities?.some((activity) => recordId(activity.id) === attachmentActivityId)) {
+          throw new Error('The chosen activity is no longer available.');
+        }
+        return { ...latest, attachments: [...(latest.attachments || []), attachment] };
+      });
+      if (!workspaceMountedRef.current || !records.isCurrent(mutationContext)) return;
       setAttachmentDraft(null);
       showToast('Original file saved', 'success');
     } catch (reason) { setAttachmentError(reason?.message || 'Unable to save the original file. Please try again.'); }
     finally { attachmentSavingRef.current = false; setAttachmentBusy(false); }
   };
 
-  const removeAttachment = async (attachmentId) => {
-    await updateEventItem(user?.uid, isGuest, { ...event, attachments: (event.attachments || []).filter((attachment) => attachment.id !== attachmentId) });
-    setPendingDeleteAttachment(null);
-  };
+  const removeAttachment = (attachmentId) => workspaceAction.run(
+    (context) => records.mutateMoment(context, eventId, (latest) => ({
+      ...latest, attachments: (latest.attachments || []).filter((item) => item.id !== attachmentId),
+    })), () => setPendingDeleteAttachment(null), 'Couldn’t remove this attachment. Try again.');
 
-  const editEventDetails = async (formValues) => {
-    try {
-      await updateEventItem(user?.uid, isGuest, { ...event, ...formValues });
-      setEventEditOpen(false);
+  const editEventDetails = (changes) => workspaceAction.run(
+    (context) => records.mutateMoment(context, eventId, (latest) => ({ ...latest, ...changes })), () => {
+      setEditingMoment(null);
       showToast('Moment updated', 'success');
-    } catch { showToast('Unable to update moment', 'danger'); }
-  };
-  const archiveMoment = async () => {
-    try {
-      await updateEventItem(user?.uid, isGuest, { ...event, archived: !event.archived });
-      showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success');
-    } catch { showToast('Could not update archive state', 'danger'); }
-  };
+    }, 'Couldn’t save this Moment. Your edits are here. Try again.');
 
-  const removeEvent = async () => {
-    try {
-      await deleteEventItem(user?.uid, isGuest, eventId);
-      navigate('/events');
+  const archiveMoment = () => workspaceAction.run(
+    (context) => records.mutateMoment(context, eventId, (latest) => ({ ...latest, archived: !event.archived })),
+    () => showToast(event.archived ? 'Moment restored' : 'Moment archived', 'success'), 'Couldn’t change this Moment’s archive status. Try again.');
+
+  const removeEvent = () => workspaceAction.run(
+    (context) => deleteEventItem(context.uid, context.isGuest, eventId), () => {
       setPendingDeleteEvent(false);
-    } catch (deleteError) {
-      console.error('Event deletion failed:', deleteError);
-    }
-  };
+      navigate('/events');
+    }, 'Couldn’t delete this Moment. Try again.');
 
   const renderSectionContent = () => {
     if (activeSection.key === 'story') {
       return (
         <div className="event-moment-overview dn-v2-story-overview">
           <MomentStory moment={event} momentTypes={momentTypes} uid={user?.uid} isGuest={isGuest}
-            onEditIntro={() => { setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}
+            onEditIntro={() => { workspaceAction.clearError(); setNotesDraft(event.notes || ''); setNotesDialogOpen(true); }}
             onTaskStatusChange={requestTaskStatus} taskStatusBusy={activityBusy} />
           <MomentContents moment={event} finance={finance} />
         </div>
@@ -447,7 +447,7 @@ export function EventWorkspaceContent() {
       return (
         <div className="workspace-activities">
           <ListControls title="Activity filters" builder hasSort
-            refine={{ conditions: activityConditions, candidates: searchCandidates.map(activityConditionRecord), sort: {
+            refine={{ describeSortChanges: true, conditions: activityConditions, candidates: searchCandidates.map(activityConditionRecord), sort: {
               field: activitySort, direction: activitySortDirection,
               options: [{ value: 'date', label: 'Due date' }, { value: 'title', label: 'Title' },
                 { value: 'priority', label: 'Priority' }, { value: 'status', label: 'Status' }],
@@ -467,7 +467,7 @@ export function EventWorkspaceContent() {
             eventName={event.name || 'This life moment'}
             activities={filteredActivities}
             allActivities={activities} progressActivities={activities}
-            includeCancelled disabled={activityBusy || listActivityActions.busy}
+            accessibleCardControls includeCancelled disabled={activityBusy || listActivityActions.busy}
             onEdit={(activity) => listActivityActions.edit({ momentId: eventId, activityId: recordId(activity.id) })}
             onToggleComplete={(_id, activity) => listActivityActions.setCompleted(
               { momentId: eventId, activityId: recordId(activity.id) },
@@ -487,6 +487,14 @@ export function EventWorkspaceContent() {
             } })}
 
           />
+          {activities.length > 0 && !filteredActivities.length && (activitySearch.trim() || activityConditions.activeCount) ? <div className="dn-empty-recovery-actions">
+            {activitySearch.trim() ? <button type="button" className="dn-discovery-empty-reset" onClick={() => {
+              setActivitySearch(''); document.getElementById('activity-filter-search')?.focus({ preventScroll: true });
+            }}>Clear search</button> : null}
+            {activityConditions.activeCount > 0 ? <button type="button" className="dn-discovery-empty-reset" onClick={() => {
+              activityConditions.clear(); document.getElementById('activity-filter-search')?.focus({ preventScroll: true });
+            }}>Clear filters</button> : null}
+          </div> : null}
         </div>
       );
     }
@@ -495,7 +503,7 @@ export function EventWorkspaceContent() {
       return (
         <div className="workspace-resource-list">
           <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
-          {event.attachments?.length ? <AttachmentGallery uid={user?.uid} isGuest={isGuest} attachments={attachments} onRemove={setPendingDeleteAttachment} /> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Use + to attach original photos and files to this Moment or one of its activities.</p></div>}
+          {event.attachments?.length ? <AttachmentGallery uid={user?.uid} isGuest={isGuest} attachments={attachments} onRemove={(attachment) => { workspaceAction.clearError(); setPendingDeleteAttachment(attachment); }} /> : <div className="workspace-empty-surface"><Images size={24} /><strong>Keep the important pieces together</strong><p>Use + to attach original photos and files to this Moment or one of its activities.</p></div>}
         </div>
       );
     }
@@ -507,11 +515,11 @@ export function EventWorkspaceContent() {
 
   return (
     <div className="event-workspace-shell dn-moment-workspace" data-moment-section={activeSection.key}>
-      <SwipeActionCard as="section" className="dn-moment-hero-swipe" label={event.name || 'Moment'}
+      <SwipeActionCard as="section" accessibleActions disabled={workspaceAction.busy} className="dn-moment-hero-swipe" label={event.name || 'Moment'}
         otherActions={[
-          { label: 'Edit', icon: Pencil, onClick: () => setEventEditOpen(true) },
+          { label: 'Edit', icon: Pencil, onClick: () => { workspaceAction.clearError(); setEditingMoment(event); } },
           { label: event.archived ? 'Restore' : 'Archive', icon: event.archived ? ArchiveRestore : Archive, onClick: archiveMoment },
-        ]} onDelete={() => setPendingDeleteEvent(true)}>
+        ]} onDelete={() => { workspaceAction.clearError(); setPendingDeleteEvent(true); }}>
       <header className={`event-moment-hero mood-${eventMood}`} style={{ viewTransitionName: momentVisualName(eventId) }}>
         <div className="event-moment-cover" aria-hidden="true"><span>{eventMood === 'celebration' ? '✳' : eventMood === 'travel' ? '◒' : eventMood === 'romance' ? '♡' : eventMood === 'finance' ? '⌁' : '✦'}</span></div>
         <div className="event-moment-topline">
@@ -534,10 +542,10 @@ export function EventWorkspaceContent() {
             {birthdayAge !== null ? <span className="event-moment-turning">· Turning {birthdayAge}</span> : null}
             <span className="event-moment-countdown">· {daysUntilEvent === null ? 'Date to be decided' : daysUntilEvent > 0 ? `${daysUntilEvent} ${daysUntilEvent === 1 ? 'day' : 'days'} remaining` : daysUntilEvent === 0 ? 'Today is the day' : `${Math.abs(daysUntilEvent)} days since this moment`}</span>
           </div>
-          <div className="event-moment-stat-line" aria-label="Moment highlights">
+          <div className="event-moment-stat-line" role="group" aria-label="Moment highlights" data-long-amounts={spendingLabel.length >= 14 || undefined}>
             <span className="dn-moment-metric"><strong>{activities.length}</strong><small>Steps</small></span>
             <span className="dn-moment-metric"><strong>{memoryCount}</strong><small>Reflections</small></span>
-            <span className="dn-moment-metric is-financial"><strong>{currency(totalSpent)}</strong><small>Spent</small></span>
+            <span className="dn-moment-metric is-financial"><strong>{spendingLabel}</strong><small>Spent</small></span>
           </div>
         </div>
       </header>
@@ -565,32 +573,40 @@ export function EventWorkspaceContent() {
         ))}
       </nav>
 
+      {workspaceAction.error && !editingMoment && !notesDialogOpen && !greetingDialogOpen && !pendingDeleteAttachment && !pendingDeleteEvent
+        ? <p className="quick-create-error" role="alert">{workspaceAction.error}</p> : null}
       {activityBusy ? <p role="status">Saving activity…</p> : null}
       {activityError && !activityDialogOpen ? <p className="quick-create-error" role="alert">{activityError}</p> : null}
       <input ref={attachmentInputRef} type="file" hidden aria-label="Add attachment" onChange={addAttachment} />
       <section className={`event-workspace-section-panel event-section-${activeSection.key} dn-moment-panel dn-motion-loaded`} aria-labelledby="dn-moment-panel-title">
-        <h2 id="dn-moment-panel-title" className="sr-only">{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
+        <h2 ref={sectionFocusRef} tabIndex={-1} id="dn-moment-panel-title" className="sr-only">{activeSection.key === 'story' ? 'Your Moment Story' : activeSection.label === 'Activities' ? 'Plans for this moment' : activeSection.label}</h2>
         {error ? <p style={styles.errorText}>{error}</p> : null}
         {renderSectionContent()}
       </section>
 
       <AnimatePresence initial={false}>
+        {editingMoment ? <ModalDialog key="moment-editor" title="Edit Moment" formFooter closeDisabled={workspaceAction.busy}
+          fallbackFocusRef={sectionFocusRef} onClose={() => { setEditingMoment(null); workspaceAction.clearError(); }}>
+          <EventForm initialValues={editingMoment} onSubmit={editEventDetails} busy={workspaceAction.busy} error={workspaceAction.error}
+            onCancel={() => { setEditingMoment(null); workspaceAction.clearError(); }} submitLabel="Update Moment" />
+        </ModalDialog> : null}
         {greetingDialogOpen ? (
-          <ModalDialog key="greeting-editor" title="Greeting card" onClose={() => setGreetingDialogOpen(false)} className="event-greeting-editor-modal">
+          <ModalDialog key="greeting-editor" title="Greeting card" formFooter closeDisabled={workspaceAction.busy} onClose={() => { setGreetingDialogOpen(false); workspaceAction.clearError(); }} className="event-greeting-editor-modal">
             <GreetingCard title={greetingTitleDraft} body={greetingBodyDraft} momentName={event.name} momentType={event.type} dateLabel={formatDate(event.date)} />
-            <form className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
-              <label>Greeting title<input value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
-              <RichTextEditor label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
-              <div className="event-greeting-editor-actions">
-                <button type="button" className="secondaryButton" onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
-                <button type="button" className="event-greeting-close-button" onClick={() => setGreetingDialogOpen(false)}><X size={15} /> Close</button>
-                <button type="submit" className="primaryButton"><Save size={15} /> Save greeting</button>
-              </div>
+            <form id="dn-workspace-greeting-form" className="form-surface event-greeting-editor" onSubmit={saveGreetingCard}>
+              <label>Greeting title<input disabled={workspaceAction.busy} value={greetingTitleDraft} onChange={(changeEvent) => setGreetingTitleDraft(changeEvent.target.value)} maxLength={120} required /></label>
+              <RichTextEditor disabled={workspaceAction.busy} label="Message" value={greetingBodyDraft} onChange={setGreetingBodyDraft} rows={4} required />
+              {workspaceAction.error ? <p className="quick-create-error" role="alert">{workspaceAction.error}</p> : null}
+              <DialogFormActions><div className="event-greeting-editor-actions">
+                <button type="button" className="secondaryButton" disabled={workspaceAction.busy} onClick={downloadGreetingCard}><Download size={15} /> Download card</button>
+                <WorkspaceCancel className="event-greeting-close-button" disabled={workspaceAction.busy}><X size={15} /> Close</WorkspaceCancel>
+                <button type="submit" form="dn-workspace-greeting-form" disabled={workspaceAction.busy} className="primaryButton"><Save size={15} /> {workspaceAction.busy ? 'Saving…' : 'Save greeting'}</button>
+              </div></DialogFormActions>
             </form>
           </ModalDialog>
         ) : null}
 
-        {attachmentDraft ? <ModalDialog key="attachment-editor" title="Save attachment" onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
+        {attachmentDraft ? <ModalDialog key="attachment-editor" title="Save attachment" closeDisabled={attachmentBusy} onClose={() => { if (!attachmentSavingRef.current) setAttachmentDraft(null); }}>
           <form className="form-surface" onSubmit={saveAttachment}>
             <p className="moment-empty-state">Original files stay in this browser. Use a backup to move them to another device.</p>
             <p style={{ margin: 0, overflowWrap: 'anywhere' }}>{attachmentDraft.file.name} <small>· {Math.ceil(attachmentDraft.file.size / 1024)} KB</small></p>
@@ -605,7 +621,7 @@ export function EventWorkspaceContent() {
           </form>
         </ModalDialog> : null}
         {activityDialogOpen ? (
-          <ModalDialog key="activity-editor" title="Add activity" className="event-activity-editor-modal" formFooter onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
+          <ModalDialog key="activity-editor" title="Add activity" className="event-activity-editor-modal" formFooter closeDisabled={activityBusy} onClose={() => { if (!activitySavingRef.current) { setActivityDialogOpen(false); setActivityError(''); } }}>
             <form id={activityFormId} className="dn-activity-create-form dn-activity-create-workspace" aria-busy={activityBusy} onSubmit={addActivity}>
               <ActivityFormFields namePrefix="dn-workspace-entry"
                  value={{ title: activityTitle, date: activityDate, time: activityTime,
@@ -629,33 +645,39 @@ export function EventWorkspaceContent() {
           </ModalDialog>
         ) : null}
         {notesDialogOpen ? (
-          <ModalDialog key="notes-editor" title="Edit event notes" onClose={() => setNotesDialogOpen(false)}>
-            <form className="form-surface" onSubmit={saveNotes}>
-              <RichTextEditor label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
-              <div className="dialog-actions" style={styles.dialogActions}>
-                <button type="button" className="secondaryButton" onClick={() => setNotesDialogOpen(false)}>Cancel</button>
-                <button type="submit" className="primaryButton" style={styles.primaryButton}>Save notes</button>
-              </div>
+          <ModalDialog key="notes-editor" title="Edit introduction" formFooter closeDisabled={workspaceAction.busy} onClose={() => { setNotesDialogOpen(false); workspaceAction.clearError(); }}>
+            <form id="dn-story-introduction-form" className="form-surface" onSubmit={saveNotes}>
+              <RichTextEditor disabled={workspaceAction.busy} label="Moment notes" value={notesDraft} onChange={setNotesDraft} placeholder="What should you remember about this Moment?" rows={7} autoFocus={typeof window !== 'undefined' && window.innerWidth > 760} />
+              {workspaceAction.error ? <p className="quick-create-error" role="alert">{workspaceAction.error}</p> : null}
+              <DialogFormActions><div className="dialog-actions" style={styles.dialogActions}>
+                <WorkspaceCancel className="secondaryButton" disabled={workspaceAction.busy}>Cancel</WorkspaceCancel>
+                <button type="submit" form="dn-story-introduction-form" disabled={workspaceAction.busy} className="primaryButton">{workspaceAction.busy ? 'Saving…' : 'Save notes'}</button>
+              </div></DialogFormActions>
             </form>
           </ModalDialog>
         ) : null}
       </AnimatePresence>
-      <ActivityActionDialogs actions={listActivityActions} />
+      <ActivityActionDialogs fallbackFocusRef={sectionFocusRef} actions={listActivityActions} />
       {pendingTaskCancellation ? <ConfirmDialog title="Cancel task?"
         message={`Cancel “${pendingTaskCancellation.title}”? You can restore it later by changing its status.`}
         confirmLabel="Cancel task" busy={activityBusy} onCancel={() => setPendingTaskCancellation(null)}
         onConfirm={confirmTaskCancellation} /> : null}
-      {pendingDeleteAttachment ? <ConfirmDialog title="Remove attachment?" message={`Remove “${pendingDeleteAttachment.name}” from this event?`} onCancel={() => setPendingDeleteAttachment(null)} onConfirm={() => removeAttachment(pendingDeleteAttachment.id)} /> : null}
+      {pendingDeleteAttachment ? <ConfirmDialog title="Remove attachment?" message={`Remove “${pendingDeleteAttachment.name}” from this Moment?`} confirmLabel="Remove attachment" busy={workspaceAction.busy} busyLabel="Removing…" error={workspaceAction.error} fallbackFocusRef={sectionFocusRef} onCancel={() => { setPendingDeleteAttachment(null); workspaceAction.clearError(); }} onConfirm={() => removeAttachment(pendingDeleteAttachment.id)} /> : null}
       {pendingDeleteEvent ? (
         <ConfirmDialog
-          title="Delete event?"
+          title="Delete Moment?" confirmLabel="Delete Moment" busy={workspaceAction.busy} busyLabel="Deleting…" error={workspaceAction.error}
           message={`Delete “${event.name}” and its activities? This cannot be undone.`}
-          onCancel={() => setPendingDeleteEvent(false)}
+          onCancel={() => { setPendingDeleteEvent(false); workspaceAction.clearError(); }}
           onConfirm={removeEvent}
         />
       ) : null}
     </div>
   );
+}
+
+function WorkspaceCancel({ children, ...props }) {
+  const close = useDialogClose(undefined, { protectDraft: true });
+  return <button type="button" {...props} onClick={close}>{children}</button>;
 }
 
 const styles = {

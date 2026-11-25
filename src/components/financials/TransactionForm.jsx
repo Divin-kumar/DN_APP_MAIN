@@ -188,11 +188,12 @@ export default function TransactionForm({
       value={form.amount} onChange={(event) => change('amount', event.target.value)}
       placeholder="0.00" disabled={busy} />
   </label>;
-  const paymentMethod = <fieldset className="dn-payment-method-field" aria-required={!isPlan}>
+  const paymentMethod = <fieldset className="dn-payment-method-field">
     <legend>{isPlan ? 'Default payment method (optional)' : 'Payment method *'}</legend>
     <div className="dn-payment-method-options" data-optional={isPlan}>
       {paymentMethods.map((method) => <label key={method} className="dn-payment-method-choice">
-        <input type="radio" name="paymentMethod" value={method} checked={form.paymentMethod === method}
+        <input type="radio" name="paymentMethod" value={method} required={!isPlan}
+          onInvalid={() => setError('Choose an available payment method.')} checked={form.paymentMethod === method}
           onChange={() => change('paymentMethod', method)} disabled={busy} />
         <span>{method}</span>
       </label>)}

@@ -1,5 +1,13 @@
 # DN — MASTER SOURCE OF TRUTH
 
+## Moment workspace, Task and finance recovery (25 November 2026, development)
+
+The Moment workspace uses its existing metadata form and scoped write queue. Save applies only edited metadata fields. Introduction, Greeting, archive and attachment operations merge with the latest Moment. Pending saves block duplicate actions and failed saves retain the original draft. Attachment linking rechecks the route and record scope before registering the original. Moment Spent waits for the linked finance data.
+
+Tasks keeps metrics pending during loading or failure. Filtered-empty actions return focus to the search and a status-only empty view can restore all statuses. Global and linked ledgers restore search focus as filters clear. Ledger deletion exposes busy and retry states in the confirmation. On very narrow screens, unusually long amounts have a separate label and value row.
+
+Insights Overview requires the active Moment collection and both scoped transaction ledgers. A read failure exposes a retry and suppresses totals and the JSON export until recovery. Historical dates and archive status have distinct counts. Milestone links open the associated Story. The app shell provides a keyboard bypass to the active main content. The released v2.3.13 notes are listed separately from pending dev changes in About.
+
 ## Dashboard, Moments and Activities accessibility and recovery (24 November 2026, development)
 
 Dashboard sections have navigable headings. A failed Tasks read offers a retry in its section. The sidebar toggle exposes its expanded state. Moments and Activities hold their result count until the active records finish loading. Clearing an empty search returns focus to search. If a deleted or edited card disappears, its dialog returns focus to the results count or Dashboard Activities heading. Moments offers Restore saved defaults only after a filter or sort preference changes, and previews the order before applying a sort-only change.

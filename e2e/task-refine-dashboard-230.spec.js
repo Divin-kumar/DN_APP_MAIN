@@ -89,7 +89,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     expect(fieldBounds.width).toBeGreaterThan(width===320?45:50);
     await expect(sheet.locator('.dn-condition-rule').first()
       .getByRole('combobox',{name:'Filter by',exact:true})).toContainText('Status');
-    await expect(sheet.getByRole('status')).toContainText('1 matching Tasks');
+    await expect(sheet.getByRole('status')).toContainText('1 matching Task if applied');
     await expect(page.locator('.dn-independent-task-row')).toHaveCount(3);
     const selected=sheet.getByRole('group',{name:'Sort Tasks'}).getByRole('button',{name:/Sort by Priority/});
     await selected.click();
@@ -109,7 +109,7 @@ for(const [width,theme] of [[320,'dark'],[390,'light'],[1280,'dark']]){
     await sheet.getByRole('button',{name:'Add filter',exact:true}).click();
     await selectOption(page,'Filter by','Due timing');
     await selectOption(page,'Value for Due timing','Overdue');
-    await expect(sheet.getByRole('status')).toContainText('1 matching Tasks');
+    await expect(sheet.getByRole('status')).toContainText('1 matching Task if applied');
     await sheet.getByRole('button',{name:'Show results'}).click();
     await expect(page.locator('.dn-independent-task-row')).toHaveCount(1);
     await expect(page.getByText('Book return tickets',{exact:true})).toBeVisible();

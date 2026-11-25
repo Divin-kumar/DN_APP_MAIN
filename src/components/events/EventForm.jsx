@@ -41,20 +41,16 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
   const customTypeInputRef = useRef(null);
 
   const sourceRef = useRef(initialValues);
+  const editBaseline = useRef(form);
   useEffect(() => {
     if (sourceRef.current === initialValues) return;
     sourceRef.current = initialValues;
     setValidationError('');
-    if (initialValues) {
-      setForm({
-        ...createDefaultState(defaultEventType),
-        ...initialValues,
-        customType: initialValues.customType || '',
-        time: activityTime(initialValues),
-      });
-    } else {
-      setForm(createDefaultState(defaultEventType));
-    }
+    const nextForm = { ...createDefaultState(defaultEventType),
+      ...(initialValues ? { ...initialValues, customType: initialValues.customType || '', time: activityTime(initialValues) } : {}),
+    };
+    editBaseline.current = nextForm;
+    setForm(nextForm);
   }, [initialValues, defaultEventType]);
 
   const handleChange = (event) => {
@@ -89,15 +85,19 @@ export default function EventForm({ initialValues, onSubmit, onCancel, submitLab
     }
 
     setValidationError('');
-    const { time, ...values } = form;
-    onSubmit({
-      ...values,
+    const values = {
       name: form.name.trim(),
+      date: form.date,
+      recurrence: form.recurrence,
       type: form.type,
       customType: form.type === 'Other' ? form.customType.trim() : '',
       notes: form.notes,
-      ...activityTimePatch(initialValues || {}, time),
-    });
+      ...activityTimePatch(initialValues || {}, form.time),
+    };
+    // Background edits to other fields and linked records must survive this save.
+    onSubmit(initialValues
+      ? Object.fromEntries(Object.entries(values).filter(([key, value]) => value !== editBaseline.current[key]))
+      : { id: form.id, budget: form.budget, ...values });
   };
 
   return (

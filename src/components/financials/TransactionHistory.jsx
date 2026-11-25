@@ -113,7 +113,7 @@ export default function TransactionHistory({
   return (
     <section className="transactions-panel dn-transactions-page" aria-label="Transactions">
       <ListControls title="Transaction filters" builder
-        refine={{ conditions, candidates, sort: { field: sortField, direction: sortDirection,
+        refine={{ describeSortChanges: true, conditions, candidates, sort: { field: sortField, direction: sortDirection,
           options: TRANSACTION_SORT_OPTIONS, label: 'Sort transactions',
           onChange: (field, direction) => onFilters({ sort: field + '-' + direction }) },
           defaults: { group: savedDefaults?.group,
@@ -134,7 +134,7 @@ export default function TransactionHistory({
           value={filters.search} onChange={(event) => onFilters({ search: event.target.value })} />}>
         <ConditionBuilder filter={conditions} title="Transaction conditions" />
       </ListControls>
-      <div className="dn-transactions-results" role="list" aria-label="Filtered transactions">
+      <div className="dn-transactions-results" role={transactions.length ? 'list' : 'region'} aria-label="Filtered transactions">
         {transactions.length ? transactions.map((item) => (
           <TransactionCard key={item.stableTransactionKey} transaction={item}
             events={events} onEdit={onEdit} onDelete={onDelete} />
@@ -149,12 +149,12 @@ export default function TransactionHistory({
             {totalCount > 0 && (hasSearch || canRestoreDefaults) ? (
               <div className="dn-empty-recovery-actions">
                 {hasSearch ? (
-                  <button type="button" className="dn-transactions-empty-reset" onClick={() => onFilters({ search: '' })}>
+                  <button type="button" className="dn-transactions-empty-reset" onClick={() => { onFilters({ search: '' }); document.getElementById('transaction-filter-search')?.focus({ preventScroll: true }); }}>
                     Clear search
                   </button>
                 ) : null}
                 {canRestoreDefaults ? (
-                  <button type="button" className="dn-transactions-empty-reset" onClick={resetAllFilters}>
+                  <button type="button" className="dn-transactions-empty-reset" onClick={() => { resetAllFilters(); document.getElementById('transaction-filter-search')?.focus({ preventScroll: true }); }}>
                     <RotateCcw size={15} aria-hidden="true" /> Restore saved defaults
                   </button>
                 ) : null}

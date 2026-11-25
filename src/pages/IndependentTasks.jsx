@@ -50,6 +50,8 @@ export function TaskListContent() {
   const enabled = isGuest || Boolean(user?.uid);
   const pendingRef = useRef(false);
   const focusedTaskRef = useRef('');
+  const searchRef = useRef(null);
+  const resultRef = useRef(null);
   const [busy, setBusy] = useState(false);
   const navigate = useNavigate();
   const { state: arrival } = useLocation();
@@ -80,7 +82,12 @@ export function TaskListContent() {
   }, [enabled, searchParams, setSearchParams]);
 
   const ready = store.loadedFor === scope;
-  const tasks = enabled && ready && !store.error ? store.tasks : EMPTY;
+  const countsReady = enabled && ready && !store.error;
+  const tasks = countsReady ? store.tasks : EMPTY;
+  const recoverSearch = (patch) => {
+    changeView(patch);
+    searchRef.current?.focus({ preventScroll: true });
+  };
   const eventReady = isRecordScopeLoaded(eventStore, `${isGuest ? 'guest' : 'user'}:${user?.uid || 'anonymous'}`, getActiveSampleScenario(user?.uid));
   const moments = enabled && eventReady ? eventStore.events : EMPTY;
   const matches = useMemo(() => filterTaskResults(tasks, view, today, moments), [tasks, view, today, moments]);
@@ -201,21 +208,23 @@ export function TaskListContent() {
           const { group } = taskViewWithoutStatus(view);
           changeView({ group, status: value });
         }}>
-        <strong>{value === 'all' ? statusCandidates.length : statusCandidates.filter((task) => task.status === value).length}</strong>{' '}{label}
+        <strong aria-hidden={!countsReady || undefined}>{countsReady
+          ? (value === 'all' ? statusCandidates.length : statusCandidates.filter((task) => task.status === value).length)
+          : '—'}</strong>{' '}{label}
       </button>)}
     </div>
-    {store.error ? <p className="dn-task-feedback" role="alert">{store.error} <button type="button" onClick={() => store.loadTasks()}>Retry</button></p> : null}
+    {store.error ? <p className="dn-task-feedback" role="alert">Tasks couldn’t be loaded. <button type="button" onClick={() => store.loadTasks()}>Try again</button></p> : null}
     {error && !editor && !confirm ? <p className="dn-task-feedback" role="alert">{error}</p> : null}
     {notice ? <p className="sr-only" role="status" aria-live="polite">{notice}</p> : null}
     <div className="dn-list-controls dn-task-discovery">
       <MobileControlsSlot><div className="dn-list-controls-row">
         <div className="dn-list-controls-search">
           <Search className="dn-list-controls-search-icon" size={18} aria-hidden="true" />
-          <input type="search" aria-label="Search Tasks" value={view.search}
+          <input ref={searchRef} type="search" aria-label="Search Tasks" value={view.search}
             onChange={(event) => changeView({ search: event.target.value })} placeholder="Search Tasks" />
           {view.search ? <button type="button" className="dn-search-clear" aria-label="Clear Task search"
             title="Clear Task search" onPointerDown={(event) => event.preventDefault()}
-            onClick={() => changeView({ search: '' })}><X size={17} aria-hidden="true" /></button> : null}
+            onClick={() => recoverSearch({ search: '' })}><X size={17} aria-hidden="true" /></button> : null}
         </div>
         <button type="button" className={`dn-list-controls-trigger${activeFilterCount ? ' is-active' : ''}`}
           aria-label="Refine"
@@ -226,9 +235,9 @@ export function TaskListContent() {
         </button>
       </div></MobileControlsSlot>
       <div className="dn-task-discovery-summary">
-        <span className="dn-list-controls-context" aria-live="polite" aria-atomic="true">
+        {countsReady ? <span ref={resultRef} tabIndex={-1} className="dn-list-controls-context" aria-live="polite" aria-atomic="true">
           {displayedTasks.length}{displayedTasks.length !== tasks.length ? ` of ${tasks.length}` : ''} {displayedTasks.length === 1 && tasks.length === 1 ? 'Task' : 'Tasks'} shown
-        </span>
+        </span> : null}
         {activeFilterCount ? <ConditionChips filter={appliedFilterControls}
           hiddenIds={statusTabChipId ? [statusTabChipId] : []}
           onClear={() => changeView({ group: emptyGroup(), status: 'all', priority: 'all', due: 'all' })}
@@ -247,10 +256,12 @@ export function TaskListContent() {
       ? <div className="dn-task-empty" role="status"><Search size={24} aria-hidden="true" />
         <h3>No matching Tasks</h3><p>Try another search or change your Refine selections.</p>
         <div className="dn-task-empty-actions">
-          {view.search ? <button type="button" onClick={() => changeView({ search: '' })}>Clear search</button> : null}
-          {activeFilterCount ? <button type="button" onClick={() => changeView({
+          {view.search ? <button type="button" onClick={() => recoverSearch({ search: '' })}>Clear search</button> : null}
+          {activeFilterCount > 0 ? <button type="button" onClick={() => recoverSearch({
             group: emptyGroup(), status: 'all', priority: 'all', due: 'all',
-          })}>Clear filters</button> : null}
+          })}>Clear filters</button> : statusSelection !== 'all' ? <button type="button" onClick={() => recoverSearch({
+            group: taskViewWithoutStatus(view).group, status: 'all',
+          })}>Show all statuses</button> : null}
         </div>
       </div> : null}
     {selectedTask ? <div className="dn-task-dashboard-arrival">
@@ -263,7 +274,7 @@ export function TaskListContent() {
       </div>
       <button type="button" onClick={() => setSelection(null)}>Dismiss</button>
     </div> : null}
-    <div className="dn-task-list" aria-label="Task list">
+    <section className="dn-task-list" aria-label="Task list">
       {displayedTasks.map((task) => {
         const parent = resolveIndependentTaskParent(task, moments);
         const context = parent.kind === 'activity' && parent.activity.title?.trim() === task.title?.trim() ? parent.moment.name
@@ -322,9 +333,9 @@ export function TaskListContent() {
           </span>
         </SwipeActionCard>;
       })}
-    </div>
+    </section>
     <AnimatePresence initial={false}>
-      {editor ? <ModalDialog key="task-editor" title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog" formFooter closeDisabled={busy}
+      {editor ? <ModalDialog key="task-editor" fallbackFocusRef={resultRef} title={editor.kind === 'edit' ? 'Edit Task' : 'New Task'} className="dn-task-dialog" formFooter closeDisabled={busy}
         onClose={() => { if (!busy) { setEditor(null); setError(''); } }}>
         <TaskEditor key={editor.value?.id || 'new'} task={editor.value}
           busy={busy} onTaskAction={async (action) => {
@@ -338,13 +349,13 @@ export function TaskListContent() {
     </AnimatePresence>
     {refine ? <TaskRefineSheet current={view} resetDefaults={resetDefaults} tasks={tasks} moments={moments} today={today} onClose={() => setRefine(false)}
       onApply={(draft) => { changeView(draft); setRefine(false); }} /> : null}
-    {confirm ? <ConfirmDialog title={isSkip ? 'Skip this Task?' : `${confirmLabel}?`}
+    {confirm ? <ConfirmDialog fallbackFocusRef={resultRef} title={isSkip ? 'Skip this Task?' : `${confirmLabel}?`}
       message={confirm.task.repeat ? undefined : isDelete
         ? `Remove "${confirm.task.title}"? Its Moment and Activities will not be changed.`
         : `Mark "${confirm.task.title}" as cancelled? You can restore it later.`}
       confirmLabel={confirmLabel}
       destructive={isDelete || (!isSkip && !confirm.task.repeat)} confirmDisabled={isSkip && !skipNextDate}
-      busy={busy} error={error} onCancel={() => { setConfirm(null); setError(''); }}
+      busy={busy} busyLabel={isDelete ? 'Deleting…' : isSkip ? 'Skipping…' : 'Saving…'} error={error} onCancel={() => { setConfirm(null); setError(''); }}
       onConfirm={() => isDelete ? remove(confirm.task) : statusChange(confirm.task, isSkip ? 'skip' : 'cancelled')}>
       {isSkip ? <RepeatActionSummary name={confirm.task.title} dueDate={confirm.task.dueDate}
         nextDate={skipNextDate} dueTime={confirm.task.dueTime}>

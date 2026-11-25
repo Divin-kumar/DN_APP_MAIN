@@ -46,7 +46,7 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
         {minimal && activityId && finance.transactions.length ? <h2 className="activity-linked-transactions-title">Transactions</h2> : null}
         {!minimal ? <>{totals}<div className="moment-transactions-heading"><h3>Transaction history</h3></div></> : null}
         {!activityId && finance.transactions.length ? <ListControls title="Moment transaction filters" builder
-          refine={{ conditions, candidates: searchCandidates, sort: { field: sortField, direction: sortDirection,
+          refine={{ describeSortChanges: true, conditions, candidates: searchCandidates, sort: { field: sortField, direction: sortDirection,
             options: TRANSACTION_SORT_OPTIONS, label: 'Sort Moment transactions',
             onChange: (field, direction) => changeFilters({ sort: field + '-' + direction }) },
             defaults: { group: emptyGroup(), field: 'date', direction: 'desc' } }}
@@ -56,13 +56,21 @@ export default function LinkedTransactions({ eventId, activityId = '', minimal =
           sort={<SortControl field={sortField} direction={sortDirection} options={TRANSACTION_SORT_OPTIONS} label="Sort Moment transactions"
             onFieldChange={(field) => changeFilters({ sort: transactionSortForField(field) })}
             onToggleDirection={() => changeFilters({ sort: `${sortField}-${sortDirection === 'asc' ? 'desc' : 'asc'}` })} />}
-          search={<DebouncedFilterInput scopeKey={conditions.editorKey} type="search" aria-label="Search Moment transactions" placeholder="Search transactions" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} />}>
+          search={<DebouncedFilterInput scopeKey={conditions.editorKey} id="moment-transaction-search" type="search" aria-label="Search Moment transactions" placeholder="Search transactions" value={filters.search} onChange={(event) => changeFilters({ search: event.target.value })} />}>
           <ConditionBuilder filter={conditions} title="Moment transaction conditions" />
         </ListControls> : null}
-        {filtered.length || !minimal ? <div className="dn-transactions-results" role="list" aria-label="Linked transactions">
+        {filtered.length || !minimal ? <div className="dn-transactions-results" role={filtered.length ? 'list' : undefined} aria-label="Linked transactions">
           {filtered.length ? filtered.map((item) => <TransactionCard key={item.stableTransactionKey} transaction={item} events={finance.events}
             readOnly showActivity={!minimal} />)
             : <p className="moment-empty-state">{finance.transactions.length ? 'No transactions match these filters.' : activityId ? 'No transactions have been recorded for this Activity.' : 'No transactions have been recorded for this Moment.'}</p>}
+        </div> : null}
+        {!minimal && !filtered.length && finance.transactions.length > 0 ? <div className="dn-empty-recovery-actions">
+          {filters.search.trim() ? <button type="button" className="dn-transactions-empty-reset" onClick={() => {
+            changeFilters({ search: '' }); document.getElementById('moment-transaction-search')?.focus({ preventScroll: true });
+          }}>Clear search</button> : null}
+          {conditions.activeCount > 0 ? <button type="button" className="dn-transactions-empty-reset" onClick={() => {
+            conditions.clear(); document.getElementById('moment-transaction-search')?.focus({ preventScroll: true });
+          }}>Clear filters</button> : null}
         </div> : null}
         {minimal ? totals : null}
       </>}

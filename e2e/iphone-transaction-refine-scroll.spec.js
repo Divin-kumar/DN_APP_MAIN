@@ -84,7 +84,7 @@ for (const [width, height] of [[320, 640], [390, 844], [430, 932]]) {
     await refine.click();
     await expect(sheet.locator('button[aria-pressed="true"]')).toHaveAttribute('aria-label', /descending/);
     await sheet.locator('button[aria-pressed="true"]').click();
-    await sheet.getByRole('button', { name: 'Show results' }).click();
+    await sheet.getByRole('button', { name: 'Apply sort' }).click();
     await expect(page.locator('.dn-list-controls-summary')).toContainText('Oldest first');
     await refine.click();
     await sheet.getByRole('button', { name: 'Reset', exact: true }).click();

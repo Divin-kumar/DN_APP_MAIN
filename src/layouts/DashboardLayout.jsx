@@ -553,6 +553,10 @@ export default function DashboardLayout() {
   return (
     <MobileControlsContext.Provider value={mobileShell ? mobileControlsTarget : null}>
     <div className="dn-shell" style={styles.appShell}>
+      <a className="dn-skip-content" href="#dn-page-content" onClick={(event) => {
+        event.preventDefault();
+        contentRef.current?.focus({ preventScroll: true });
+      }}>Skip to page content</a>
       <header className="dn-header" style={styles.header}>
         <div style={styles.topBarLeft}>
           <button
@@ -628,8 +632,8 @@ export default function DashboardLayout() {
         </div>
       </header>
 
-      <main className="dn-main" style={styles.mainContent}>
-        <aside id="dn-primary-sidebar"
+      <div className="dn-main" style={styles.mainContent}>
+        <nav id="dn-primary-sidebar" aria-label="Primary navigation"
           className={`dn-sidebar ${sidebarCollapsed ? 'dn-sidebar-collapsed' : ''}`}
           style={{
             ...styles.sidebar,
@@ -653,11 +657,11 @@ export default function DashboardLayout() {
             <NavLink to="/settings" aria-label="Settings" end className="dn-nav-link"><span className="dn-nav-icon"><Settings size={18} /></span><span className="dn-nav-label">Settings</span></NavLink>
             <button type="button" className="dn-nav-link dn-desktop-logout" aria-label="Logout" onClick={handleLogout}><span className="dn-nav-icon"><LogOut size={18} /></span><span className="dn-nav-label">Logout</span></button>
           </div>
-        </aside>
+        </nav>
 
         {!sidebarCollapsed ? <button className="mobile-nav-overlay" type="button" aria-label="Close navigation" onClick={() => setSidebarCollapsed(true)} /> : null}
 
-        <section ref={contentRef} className="dn-content" style={styles.contentPane}>
+        <main id="dn-page-content" ref={contentRef} tabIndex={-1} className="dn-content" style={styles.contentPane}>
           <ConnectivityBanner />
           <motion.div
             key={getRouteTransitionKey(location.pathname)}
@@ -668,8 +672,8 @@ export default function DashboardLayout() {
           >
             <Outlet />
           </motion.div>
-        </section>
-      </main>
+        </main>
+      </div>
 
       {mobileShell ? <MobileCommandDock controlsRef={setMobileControlsTarget} menuRef={quickCreateMobileRef}
         open={quickCreateOpen} setOpen={setQuickCreateOpen} onCreate={beginQuickCreate}

@@ -28,9 +28,10 @@ import ModalDialog, { ConfirmDialog } from '../components/common/ModalDialog';
 import LoadingSkeleton from '../components/common/LoadingSkeleton';
 import { ArrowDownLeft, ArrowUpRight, Wallet } from 'lucide-react';
 
-const formatMoney = (value) => new Intl.NumberFormat('en-IN', {
+const moneyFormatter = new Intl.NumberFormat('en-IN', {
   style: 'currency', currency: 'INR', maximumFractionDigits: 0,
-}).format(Number(value) || 0);
+});
+const formatMoney = (value) => moneyFormatter.format(Number(value) || 0);
 
 const filterRules = { type: ['all', 'income', 'expense'], month: (value) => value === 'all' || /^\d{4}-(0[1-9]|1[0-2])$/.test(value), sort: TRANSACTION_SORT_VALUES };
 
@@ -56,12 +57,13 @@ function FinancialsContent() {
   const [defaultKind, setDefaultKind] = useState('expense');
   const [activityPreset, setActivityPreset] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState('');
   const [busy, setBusy] = useState(false);
   const [savingError, setSavingError] = useState('');
   const [planView, setPlanView] = useState(null);
   const [planNotice, setPlanNotice] = useState(null);
   const pendingSaveNotice = useRef(null);
-  const savingPlanRef = useRef(false);
+  const savingRef = useRef(false);
   const planEntryRef = useRef(null);
   const financeSummaryRef = useRef(null);
   const openedFromLink = useRef(null);
@@ -91,6 +93,8 @@ function FinancialsContent() {
   const sorted = useMemo(() => sortTransactions(filtered, filters.sort), [filtered, filters.sort]);
   // Cards and rows always describe the same cohort, including search and OR groups.
   const summary = useMemo(() => summarizeTransactions(filtered), [filtered]);
+  const totals = { income: formatMoney(summary.income), expense: formatMoney(summary.expense), balance: formatMoney(summary.balance) };
+  const hasLongAmounts = Object.values(totals).some((value) => value.length >= 14);
   const hasLoadError = Boolean(incomeError || expenseError);
   const exportVisibleTransactions = () => {
     if (!ready || hasLoadError || loadingIncome || loadingExpense || !sorted.length) return;
@@ -136,15 +140,15 @@ function FinancialsContent() {
     setSavingError(''); setDialogOpen(true);
   };
   const handleSave = async (form) => {
-    if (savingPlanRef.current || busy) return;
-    savingPlanRef.current = true;
+    if (savingRef.current || busy) return;
+    savingRef.current = true;
     setBusy(true); setSavingError('');
     try {
       const saved = await saveTransaction(form, editing);
       setDialogOpen(false);
       pendingSaveNotice.current = saved.plan ? 'Expense plan saved' : editing ? 'Transaction updated' : 'Transaction added';
       if (saved.plan) navigate('/financials/transactions#expense-plans', { replace: true });
-    } finally { savingPlanRef.current = false; setBusy(false); }
+    } finally { savingRef.current = false; setBusy(false); }
   };
   const openPlanList = () => {
     setPlanNotice(null);
@@ -155,23 +159,23 @@ function FinancialsContent() {
     setPlanView({ plan, mode, context: records.capture() });
   };
   const switchPlanView = (mode) => {
-    if (savingPlanRef.current) return;
+    if (savingRef.current) return;
     setSavingError('');
     setPlanView((current) => mode === 'list' ? { mode } : { ...current, mode });
   };
   const closePlan = () => {
-    if (savingPlanRef.current) return;
+    if (savingRef.current) return;
     setPlanView(null);
     setSavingError('');
 
   };
   const runPlan = async (form) => {
-    if (savingPlanRef.current || !planView?.plan) return;
+    if (savingRef.current || !planView?.plan) return;
     const { context, mode, plan } = planView;
     const assertCurrent = () => {
       if (!records.isCurrent(context)) throw new Error('Your session changed. Reopen the expense plan.');
     };
-    savingPlanRef.current = true;
+    savingRef.current = true;
     setBusy(true); setSavingError('');
     try {
       assertCurrent();
@@ -195,20 +199,21 @@ function FinancialsContent() {
       if (form) throw error;
       setSavingError(error?.message || 'Could not save the expense plan. Try again.');
     } finally {
-      savingPlanRef.current = false;
+      savingRef.current = false;
       setBusy(false);
     }
   };
   const handleDelete = async () => {
-    if (!deleteTarget || busy) return;
-    setBusy(true);
+    if (!deleteTarget || savingRef.current) return;
+    savingRef.current = true;
+    setBusy(true); setDeleteError('');
     try {
       await removeTransaction(deleteTarget);
       setDeleteTarget(null);
       showToast('Transaction deleted', 'success');
-    } catch (error) {
-      showToast(error?.message || 'Could not delete this transaction', 'danger');
-    } finally { setBusy(false); }
+    } catch {
+      setDeleteError('Couldn’t delete this transaction. Try again.');
+    } finally { savingRef.current = false; setBusy(false); }
   };
 
   return (
@@ -221,18 +226,18 @@ function FinancialsContent() {
         : <section className="financials-content-panel">
           <section ref={financeSummaryRef} className="dn-finance-summary" aria-label="Financial totals for matching transactions" tabIndex={-1}>
             <span className="moment-finance-caption">Matching transactions</span>
-            <div className="dn-finance-summary-grid">
+            <div className="dn-finance-summary-grid" data-long-amounts={hasLongAmounts || undefined}>
               <div className="dn-finance-metric dn-finance-metric-income">
                 <span className="dn-finance-metric-heading"><ArrowDownLeft size={18} aria-hidden="true" /> Income</span>
-                <strong>{formatMoney(summary.income)}</strong>
+                <strong>{totals.income}</strong>
               </div>
               <div className="dn-finance-metric dn-finance-metric-expense">
                 <span className="dn-finance-metric-heading"><ArrowUpRight size={18} aria-hidden="true" /> Expense</span>
-                <strong>{formatMoney(summary.expense)}</strong>
+                <strong>{totals.expense}</strong>
               </div>
               <div className={`dn-finance-metric dn-finance-metric-balance${summary.balance < 0 ? ' is-negative' : ''}`}>
                 <span className="dn-finance-metric-heading"><Wallet size={18} aria-hidden="true" /> Balance</span>
-                <strong>{formatMoney(summary.balance)}</strong>
+                <strong>{totals.balance}</strong>
               </div>
             </div>
           </section>
@@ -241,18 +246,18 @@ function FinancialsContent() {
           </div> : plans.length ? <ExpensePlanEntry plans={plans} expanded={Boolean(planView)} buttonRef={planEntryRef} onOpen={openPlanList} /> : null}
           <TransactionHistory transactions={sorted} candidates={searchCandidates} totalCount={allTransactions.length} filters={filters} onFilters={changeFilters} conditions={conditions}
             onResetDefaults={restoreSavedFilters} canResetDefaults={canResetFilters} savedDefaults={settingsDefaults}
-            events={events} onEdit={openEdit} onDelete={setDeleteTarget} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
+            events={events} onEdit={openEdit} onDelete={(target) => { setDeleteError(''); setDeleteTarget(target); }} onExport={exportVisibleTransactions} hasExpensePlans={plans.length > 0} />
         </section>}
       <AnimatePresence initial={false} onExitComplete={() => { if (!dialogOpen) setEditing(null); }}>
         {dialogOpen ? (
-          <ModalDialog key="transaction-editor" title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
+          <ModalDialog key="transaction-editor" fallbackFocusRef={financeSummaryRef} title={editing ? 'Edit Transaction' : 'Add Transaction'} className="dn-transaction-dialog" formFooter closeDisabled={busy}
             onDismissed={() => {
               if (pendingSaveNotice.current) {
                 showToast(pendingSaveNotice.current, 'success');
                 pendingSaveNotice.current = null;
               }
             }}
-            onClose={() => { if (!savingPlanRef.current && !busy) { setDialogOpen(false); } }}>
+            onClose={() => { if (!savingRef.current && !busy) { setDialogOpen(false); } }}>
             <TransactionForm initialTransaction={editing} defaultKind={defaultKind} presetLink={activityPreset} events={events}
               onSubmit={handleSave} busy={busy} onCancel={() => { setDialogOpen(false); }} />
           </ModalDialog>
@@ -266,10 +271,10 @@ function FinancialsContent() {
           })}
           onSelect={openPlan} onNavigate={switchPlanView} onSave={runPlan} onConfirm={() => runPlan()} /> : null}
       </AnimatePresence>
-      {deleteTarget ? <ConfirmDialog title="Delete transaction?"
+      {deleteTarget ? <ConfirmDialog title="Delete transaction?" fallbackFocusRef={financeSummaryRef} busy={busy} busyLabel="Deleting…" error={deleteError}
         message={'Delete “' + (deleteTarget.name || deleteTarget.title || 'this transaction') + '”? This cannot be undone.'}
         onConfirm={handleDelete} onCancel={() => { if (!busy) setDeleteTarget(null); }}
-        confirmLabel={busy ? 'Deleting…' : 'Delete'} /> : null}
+        confirmLabel="Delete" /> : null}
     </div>
   );
 }

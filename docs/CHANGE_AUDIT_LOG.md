@@ -1,5 +1,12 @@
 # DN — Change Log
 
+## CHG-20261125-605 | Restore Moment editing and make task and finance recovery reliable
+
+- **Scope.** Wire the Moment workspace Edit action to its form. Merge edited metadata, introductions, greetings, archive state and attachment changes into the latest record. Keep failed drafts and confirmations open, guard duplicate writes and restore focus after destructive or empty-list actions.
+- **Interface.** Tasks distinguishes a failed read from an empty list. Insights waits for scoped Moments and both ledgers before presenting or exporting the overview, links milestones to Story and separates past from archived. Improve keyboard bypass, payment-radio semantics, dark-mode contrast and compact hit areas. Reflow very large totals on narrow phones and document the installed v2.3.13 release in About.
+- **Compatibility.** Existing Guest and account storage formats, IDs, financial calculations, repeat rules and PDF output are preserved. The current Guest tour already exercises the affected task, payment, Moment, settings and reporting flows. Its edition and sample records were reviewed and kept.
+- **Executed.** Production bundle, lint and 636 Node tests passed. Compared 136 responsive views per build, including 72 WCAG A/AA automated phone scans on the final build with zero reported violations, and exercised interrupted saves, search recovery, backups, PDFs and repeating bills using synthetic data. Physical iPhone and assistive-technology checks remain unverified.
+
 ## CHG-20261124-604 | Dashboard, Moments and Activities audit
 
 - Dashboard exposes section headings and retries failed Tasks reads. The sidebar toggle communicates its state. Filter reordering, time clearing and Moment selection have larger touch targets.

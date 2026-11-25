@@ -74,6 +74,21 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.13',
+    title: 'Compact upcoming bills and easier mobile forms',
+    summary: 'Upcoming expenses uses two lines per bill. Save and Cancel stay within reach on small screens.',
+    highlights: [
+      'Each upcoming bill groups its name, date, repeat frequency and amount above its payment and schedule actions.',
+      'Moment, Activity, Task and Transaction forms keep their actions visible when the phone keyboard opens.',
+      'A confirmation with a View action gives you more time to open your saved record.',
+    ],
+    changes: [
+      'Find Record payment, Edit, Skip and End repeat on the second line of each upcoming bill.',
+      'Confirmation messages pause their dismissal while their action has keyboard focus or the pointer is over it.',
+      'The Refine button returns to its usual appearance as soon as the sheet closes.',
+    ],
+  },
+  {
     version: '2.3.12',
     title: 'Glassy forms, recurring schedules and Finance reports',
     summary: 'Task and Transaction forms are easier to scan, with repeat controls and clearer monthly Finance reports.',

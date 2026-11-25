@@ -2,6 +2,9 @@
 // It helps the user understand trends, upcoming events, and money movement without digging through raw records.
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, Archive, BookHeart, CalendarDays, CircleCheck, Database, Download, HeartPulse, Sparkles, WalletCards } from 'lucide-react';
+import { getEventStatus } from '../utils/eventStatus';
+import { Link } from 'react-router-dom';
+import { getEventDate as eventDate, getNextOccurrenceDate as nextEventDate, getStartOfDay, isRecurringEvent } from '../utils/momentDates';
 import useScopedMoments from '../hooks/useScopedMoments';
 import useExpenseStore from '../store/useExpenseStore';
 import useIncomeStore from '../store/useIncomeStore';
@@ -16,32 +19,13 @@ const EMPTY_LEDGER = Object.freeze([]);
 const defaultInsightFilters = Object.freeze({ search: '' });
 
 const money = (value) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(Number(value || 0));
-const eventDate = (event) => {
-  const date = new Date(event.date || event.startDate || event.createdAt);
-  return Number.isNaN(date.getTime()) ? null : date;
-};
-const nextEventDate = (event) => {
-  const date = eventDate(event);
-  if (!date) return null;
-  const recurrence = String(event.recurrence || '').toLowerCase();
-  if (!(event.isRecurring === true || (recurrence && recurrence !== 'none'))) return date;
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const next = recurrence === 'monthly'
-    ? new Date(today.getFullYear(), today.getMonth(), date.getDate())
-    : new Date(today.getFullYear(), date.getMonth(), date.getDate());
-  if (next >= today) return next;
-  return recurrence === 'monthly'
-    ? new Date(today.getFullYear(), today.getMonth() + 1, date.getDate())
-    : new Date(today.getFullYear() + 1, date.getMonth(), date.getDate());
-};
-
 export default function Insights() {
   const [insightFilters, changeInsightFilters, resetInsightFilters] = usePersistentListState('insights', defaultInsightFilters);
   const search = insightFilters.search;
   const setSearch = (value) => changeInsightFilters({ search: value });
   const [view, setView] = useState('overview');
-  const { events, uid, isGuest, sample, scope: financialScope, scopeIdentity } = useScopedMoments();
+  const moments = useScopedMoments();
+  const { events, uid, isGuest, sample, scope: financialScope, scopeIdentity } = moments;
   const expenseState = useExpenseStore();
   const incomeState = useIncomeStore();
   const { loadExpenses } = expenseState;
@@ -56,6 +40,8 @@ export default function Insights() {
   const financeReady = isFinancialViewReady(incomeState, expenseState, financialScope, sample);
   const financeError = [incomeState, expenseState].some((state) =>
     state.activeLoadKey === financialScope && state.activeSample === sample && state.error);
+  const financePending = !financeReady || incomeState.loading || expenseState.loading;
+  const overviewReady = !moments.pending && !moments.loadError && !financePending && !financeError;
   const incomes = financeReady ? incomeState.incomes : EMPTY_LEDGER;
   const expenses = financeReady ? expenseState.expenses : EMPTY_LEDGER;
 
@@ -106,11 +92,12 @@ export default function Insights() {
       return { label: monthDate.toLocaleDateString('en', { month: 'short' }), count: memories.filter((date) => String(date || '').slice(0, 7) === monthKey).length };
     });
   }, [events]);
-  const nextEvents = [...events].filter((event) => nextEventDate(event) && nextEventDate(event) >= new Date(new Date().setHours(0, 0, 0, 0))).sort((a, b) => nextEventDate(a) - nextEventDate(b));
+  const today = getStartOfDay(new Date());
+  const nextEvents = [...events].filter((event) => nextEventDate(event) && nextEventDate(event) >= today).sort((a, b) => nextEventDate(a) - nextEventDate(b));
   const pastEvents = [...events].filter((event) => {
     const originalDate = eventDate(event);
-    return originalDate && !(event.isRecurring === true || (event.recurrence && String(event.recurrence).toLowerCase() !== 'none'))
-      && originalDate < new Date(new Date().setHours(0, 0, 0, 0));
+    return originalDate && !isRecurringEvent(event)
+      && originalDate < today;
   }).sort((a, b) => eventDate(b) - eventDate(a));
   const memoryCount = events.reduce((sum, event) => sum + (event.memories?.length || 0), 0);
   const attachmentCount = events.reduce((sum, event) => sum + (event.attachments?.length || 0), 0);
@@ -124,9 +111,10 @@ export default function Insights() {
   const memoryMax = Math.max(1, ...monthlyMemories.map((month) => month.count));
 
   const exportInsights = () => {
+    if (!overviewReady) return;
     const report = {
       exportedAt: new Date().toISOString(),
-      overview: { events: events.length, upcoming: nextEvents.length, archived: pastEvents.length, activities: activities.length, completedActivities, memories: memoryCount, attachments: attachmentCount, income: totalIncome, expenses: totalExpenses },
+      overview: { events: events.length, upcoming: nextEvents.length, past: pastEvents.length, archived: events.filter((event) => getEventStatus(event) === 'archived').length, activities: activities.length, completedActivities, memories: memoryCount, attachments: attachmentCount, income: totalIncome, expenses: totalExpenses },
       events,
       incomes,
       expenses,
@@ -154,12 +142,25 @@ export default function Insights() {
           loadExpenses(uid, isGuest);
         }}>Retry</button>
       </section>;
-    } else if (financeReady) {
+    } else if (!financePending) {
       report = <FinanceInsightsReport key={scopeIdentity} incomes={incomes} expenses={expenses} events={events} />;
     }
     return <div className="insights-page">{viewSelector}{report}</div>;
   }
 
+  if (!overviewReady) {
+    const failed = moments.loadError || financeError;
+    const source = moments.loadError && financeError ? 'Moments and transactions' : moments.loadError ? 'Moments' : 'Transactions';
+    return <div className="insights-page">{viewSelector}
+      {failed ? <section className="insights-panel">
+        <p role="alert">{source} couldn’t be loaded. Try again to see your totals and export the overview.</p>
+        <button type="button" className="dn-finance-report-action" onClick={() => {
+          if (moments.loadError) moments.retry();
+          if (financeError) { loadIncomes(uid, isGuest); loadExpenses(uid, isGuest); }
+        }}>Try again</button>
+      </section> : <p role="status" className="insights-muted">Loading Moments and transactions…</p>}
+    </div>;
+  }
   return (
     <div className="insights-page">
       {viewSelector}
@@ -173,7 +174,7 @@ export default function Insights() {
           aria-label="Export Insights data"><Download size={16} aria-hidden="true" /><span>Export</span></button>
       </div>
 
-      {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your insights will grow as you add moments and memories. Nothing to measure until there is something meaningful to look back on.</span></div> : null}
+      {empty ? <div className="insights-empty-note"><HeartPulse size={18} /><span>Your overview will appear as you add Moments or transactions.</span></div> : null}
 
       <section className="insights-metric-grid" aria-label="Life overview">
         <InsightMetric icon={CalendarDays} label="Life moments" value={events.length} detail={`${nextEvents.length} ahead`} />
@@ -184,11 +185,11 @@ export default function Insights() {
 
       <div className="insights-content-grid">
         <section className="insights-panel">
-          <PanelHeading icon={CalendarDays} title="Events overview" detail="Your chapters across time" />
-          <div className="insights-timeline-stats"><span><strong>{nextEvents.length}</strong> upcoming</span><span><strong>{pastEvents.length}</strong> archived</span><span><strong>{events.reduce((sum, event) => sum + (event.activities || []).length, 0)}</strong> planned steps</span></div>
+          <PanelHeading icon={CalendarDays} title="Moments overview" detail="Your chapters across time" />
+          <div className="insights-timeline-stats"><span><strong>{nextEvents.length}</strong> upcoming</span><span><strong>{pastEvents.length}</strong> past</span><span><strong>{events.reduce((sum, event) => sum + (event.activities || []).length, 0)}</strong> planned steps</span></div>
           <div className="insights-milestones-grid">
-            <MilestoneList title="Next milestones" events={searchedUpcoming} emptyText="No matching upcoming moments." useNextDate />
-            <MilestoneList title="Recently remembered" events={searchedPast} emptyText="No matching archived moments." />
+            <MilestoneList title="Next milestones" events={searchedUpcoming} emptyText={search.trim() ? 'No upcoming Moments match your search.' : 'No upcoming Moments.'} useNextDate />
+            <MilestoneList title="Recently remembered" events={searchedPast} emptyText={search.trim() ? 'No past Moments match your search.' : 'No past Moments yet.'} />
           </div>
         </section>
 
@@ -197,12 +198,12 @@ export default function Insights() {
           <div className="archive-health-row"><span><BookHeart size={15} /> Saved memories</span><strong>{memoryCount}</strong></div>
           <div className="archive-health-row"><span><Activity size={15} /> Activities captured</span><strong>{activities.length}</strong></div>
           <div className="archive-health-row"><span><Database size={15} /> Documents & keepsakes</span><strong>{attachmentCount}</strong></div>
-          <div className="data-health-note"><CircleCheck size={15} /> {events.length ? 'Your life timeline is ready to explore.' : 'Add your first event to begin your archive.'}</div>
+          <div className="data-health-note"><CircleCheck size={15} /> {events.length ? 'Your life timeline is ready to explore.' : 'Add your first Moment to begin your archive.'}</div>
         </section>
 
         <section className="insights-panel">
-          <PanelHeading icon={HeartPulse} title="Event categories" detail="The moments you make room for" />
-          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{name}</span><i aria-hidden="true"><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Event categories appear here as your timeline grows.</p>}
+          <PanelHeading icon={HeartPulse} title="Moment categories" detail="The moments you make room for" />
+          {categoryRows.length ? <div className="category-insight-list">{categoryRows.map(([name, count]) => <div key={name} className="category-insight-row"><span>{name}</span><i aria-hidden="true"><b style={{ width: `${Math.max(8, (count / Math.max(1, events.length)) * 100)}%` }} /></i><strong>{count}</strong></div>)}</div> : <p className="insights-muted">Moment categories appear here as your timeline grows.</p>}
         </section>
 
         <section className="insights-panel">
@@ -247,12 +248,13 @@ function InsightMetric({ icon: Icon, label, value, detail }) {
 }
 
 function PanelHeading({ icon: Icon, title, detail }) {
-  return <div className="insights-panel-heading"><span><Icon size={17} /></span><div><h3>{title}</h3><small>{detail}</small></div></div>;
+  return <div className="insights-panel-heading"><span><Icon size={17} /></span><div><h2>{title}</h2><small>{detail}</small></div></div>;
 }
 
 function MilestoneList({ title, events, emptyText, useNextDate = false }) {
-  return <div className="milestone-list"><h4>{title}</h4>{events.length ? events.map((event) => {
+  return <div className="milestone-list"><h3>{title}</h3>{events.length ? events.map((event) => {
     const date = useNextDate ? nextEventDate(event) : eventDate(event);
-    return <div className="milestone-row" key={event.id || event.firestoreId}><span>{date?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '—'}</span><strong>{event.name || 'Life moment'}</strong><small>{event.type || 'Personal'}</small></div>;
+    const id = event.id || event.firestoreId;
+    return <Link className="milestone-row" key={id} to={'/events/' + encodeURIComponent(id) + '/story'}><span>{date?.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) || '—'}</span><strong>{event.name || 'Life moment'}</strong><small>{event.type || 'Personal'}</small></Link>;
   }) : <p>{emptyText}</p>}</div>;
 }

@@ -33,11 +33,11 @@ html[data-theme] .activities-page .event-activity-content .event-activity-list {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
-html[data-theme] .activities-page .dn-activity-open {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-activity-open {
   min-height:44px; border:0; border-radius:8px; background:transparent;
   color:inherit; text-align:start; font:inherit; cursor:pointer;
 }
-html[data-theme] .activities-page .dn-activity-open:focus-visible {
+html[data-theme] :is(.activities-page, .workspace-activities) .dn-activity-open:focus-visible {
   outline:2px solid var(--color-primary); outline-offset:-2px;
 }
 @media(max-width:480px) {

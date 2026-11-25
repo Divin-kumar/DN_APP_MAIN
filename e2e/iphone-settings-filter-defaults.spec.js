@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 import { seedGuest } from './fixtures.js';
 
 // One saved Settings baseline per top-level list, edited independently of
-// temporary Refine drafts. Sort chips do not persist until Show results.
+// temporary Refine drafts. Sort changes take effect when the sheet is applied.
 const lists = [
   { label: 'Moments', path: '/events', settings: 'Sort Moments in settings', sort: 'Sort moments', option: 'Name' },
   { label: 'Activities', path: '/activities', settings: 'Sort Activities in settings', sort: 'Sort activities', option: 'Title' },
@@ -30,7 +30,7 @@ for (const config of lists) {
       await expect(chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', descending') })).toBeVisible();
       await chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', descending') }).click();
       await expect(chips.getByRole('button', { name: new RegExp('^Sort by ' + config.option + ', ascending') })).toBeVisible();
-      await sheet.getByRole('button', { name: config.path === '/activities' ? 'Apply sort' : 'Show results' }).click();
+      await sheet.getByRole('button', { name: 'Apply sort' }).click();
       await page.getByRole('button', { name: /^Filters and sort/ }).click();
       sheet = page.getByRole('dialog');
       await sheet.getByRole('button', { name: 'Reset', exact: true }).click();
