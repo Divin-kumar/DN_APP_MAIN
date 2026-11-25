@@ -1,5 +1,11 @@
 # DN — Change Log
 
+## CHG-20261125-608 | Prepare DN v2.3.14 for production
+
+- **Scope.** Package the 18 pending development commits through d9c0169 for production. Update the installed version and About history for sign-in, Guest and offline recovery, draft protection, Moment editing, list feedback and financial screen improvements.
+- **Compatibility.** The release wrapper changes version metadata and documentation. The reviewed application code and Guest tour fixtures are unchanged.
+- **Verification.** Publication requires the independent full browser, offline and upgrade checks on this exact commit, plus production dependency, test, lint, build and version checks. Deployment status is recorded by the production workflow and its exact live readback.
+
 ## CHG-20261125-607 | Revalidate bookmarked screens after a development release
 
 - **Observed.** The live New Task bookmark and other rewritten HTML routes returned `Cache-Control: max-age=3600`. One existing browser reopened the previous login screen after CHG-606 had deployed. Refreshing the login document preserved the destination and opened the repaired editor.

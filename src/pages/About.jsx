@@ -74,6 +74,21 @@ const guideItems = [
 // v2.0.1 had a public worker version but no independently verified per-patch feature log.
 const versionHistory = [
   {
+    version: '2.3.14',
+    title: 'Saved shortcuts, draft protection and offline recovery',
+    summary: 'Return to a bookmarked task after sign-in, keep edits when saving fails, and reopen Guest offline.',
+    highlights: [
+      'Sign-in preserves the action and section you opened. The backup guide helps you find Guest records left on this device.',
+      'Once DN has saved its offline screens, you can log out, return to Guest and reach Home without a connection.',
+      'Moment editing preserves linked records. Tasks and Insights offer a retry when their data cannot load.',
+    ],
+    changes: [
+      'Task, Moment and Transaction forms protect drafts and keep their actions accessible on smaller screens.',
+      'Dashboard, lists and financial screens give clearer keyboard focus and feedback after filtering, saving or closing a sheet.',
+      'Reopening a bookmark online checks for the current release.',
+    ],
+  },
+  {
     version: '2.3.13',
     title: 'Compact upcoming bills and easier mobile forms',
     summary: 'Upcoming expenses uses two lines per bill. Save and Cancel stay within reach on small screens.',
