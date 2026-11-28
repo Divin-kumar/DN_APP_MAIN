@@ -112,16 +112,22 @@ function GlobalToast() {
   const toast = useAppStore((state) => state.toast);
   const hideToast = useAppStore((state) => state.hideToast);
   const navigate = useNavigate();
-  const [toastInteracting, setToastInteracting] = useState(false);
+  const toastRef = useRef(null);
+  const [toastHovered, setToastHovered] = useState(false);
+  const [toastFocused, setToastFocused] = useState(false);
 
   // Action feedback must not disappear while someone is reading it with a
   // pointer or navigating to its button with a keyboard.
-  useEffect(() => { setToastInteracting(false); }, [toast]);
   useEffect(() => {
-    if (!toast || (toast.action?.label && toastInteracting)) return undefined;
+    const element = toastRef.current;
+    setToastHovered(Boolean(toast?.action?.label && element?.matches(':hover')));
+    setToastFocused(Boolean(toast?.action?.label && element?.contains(document.activeElement)));
+  }, [toast]);
+  useEffect(() => {
+    if (!toast || (toast.action?.label && (toastHovered || toastFocused))) return undefined;
     const id = window.setTimeout(() => hideToast(), toast.duration || 2600);
     return () => window.clearTimeout(id);
-  }, [toast, hideToast, toastInteracting]);
+  }, [toast, hideToast, toastHovered, toastFocused]);
 
   if (!toast) return null;
 
@@ -134,11 +140,11 @@ function GlobalToast() {
   };
 
   return (
-    <div className="app-toast" data-tone={toast.type || 'success'} role={toast.type === 'danger' || toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'danger' || toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true"
-      onMouseEnter={() => { if (toast.action?.label) setToastInteracting(true); }}
-      onMouseLeave={() => setToastInteracting(false)}
-      onFocusCapture={() => { if (toast.action?.label) setToastInteracting(true); }}
-      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setToastInteracting(false); }}>
+    <div ref={toastRef} className="app-toast" data-tone={toast.type || 'success'} role={toast.type === 'danger' || toast.type === 'error' ? 'alert' : 'status'} aria-live={toast.type === 'danger' || toast.type === 'error' ? 'assertive' : 'polite'} aria-atomic="true"
+      onMouseEnter={() => { if (toast.action?.label) setToastHovered(true); }}
+      onMouseLeave={() => setToastHovered(false)}
+      onFocusCapture={() => { if (toast.action?.label) setToastFocused(true); }}
+      onBlurCapture={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setToastFocused(false); }}>
       <span className="app-toast-icon" aria-hidden="true">{toast.type === 'danger' || toast.type === 'error' ? <CircleAlert size={17} /> : <Check size={17} />}</span>
       <span className="app-toast-message">{toast.message}</span>
       {toast.action?.label ? <button className="app-toast-action" type="button" onClick={handleAction}>{toast.action.label}</button> : null}

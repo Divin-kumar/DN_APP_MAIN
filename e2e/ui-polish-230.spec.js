@@ -78,7 +78,9 @@ for (const width of [320, 390, 1280]) {
       const refine = page.getByRole('dialog', { name: 'Refine Tasks' });
       await expect(refine).toBeVisible();
       await expect(refine.getByText('Group by')).toHaveCount(0);
-      await expect(refine.locator('.dn-refine-sheet-intro')).toBeVisible();
+      await expect(refine.getByRole('heading', { name: 'Sort by', exact: true })).toBeVisible();
+      await expect(refine.getByRole('heading', { name: 'Filters', exact: true })).toBeVisible();
+      await expect(refine.getByRole('button', { name: 'Show results', exact: true })).toBeVisible();
       await waitForReadableSurface(page, '.dn-refine-sheet');
       await assertNoPageOverflow(page);
       await testInfo.attach(`Task-refine-${width}-${theme}`, { body: await page.screenshot(), contentType: 'image/png' });
@@ -107,7 +109,8 @@ for (const route of ['/events', '/activities', '/financials/transactions']) {
     await expect(trigger).toBeVisible();
     await trigger.click();
     const sheet = page.getByRole('dialog');
-    await expect(sheet.locator('.dn-refine-sheet-intro')).toBeVisible();
+    await expect(sheet.getByRole('heading', { name: 'Sort by', exact: true })).toBeVisible();
+    await expect(sheet.getByRole('heading', { name: 'Filters', exact: true })).toBeVisible();
     await expect(sheet.locator('.dn-refine-sort-chips')).toBeVisible();
     await waitForReadableSurface(page, '.dn-refine-sheet');
     await expect(sheet.getByRole('button', { name: 'Show results' })).toBeVisible();

@@ -133,5 +133,15 @@ test('Action feedback remains available during keyboard focus and hover', async 
   await expect(toast).toBeVisible();
   await page.mouse.move(0, 0);
   await expect(toast).toHaveCount(0, { timeout: 1500 });
+
+  // Pointer departure must not resume dismissal while the action retains focus.
+  await showShortAction();
+  await toast.hover();
+  await view.focus();
+  await page.mouse.move(0, 0);
+  await page.waitForTimeout(620);
+  await expect(toast).toBeVisible();
+  await view.evaluate((button) => button.blur());
+  await expect(toast).toHaveCount(0, { timeout: 1500 });
   expect(errors).toEqual([]);
 });

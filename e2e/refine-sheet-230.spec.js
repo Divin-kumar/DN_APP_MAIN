@@ -36,7 +36,7 @@ test('Moments Refine draft discards sort/filter on Cancel and Escape', async ({ 
   expect(errors).toEqual([]);
 });
 
-test('Moments Refine applies draft sort only when Show results is pressed', async ({ page }) => {
+test('Moments Refine applies draft sort only when Apply sort is pressed', async ({ page }) => {
   const errors = await seedGuest(page);
   await page.setViewportSize({ width: 320, height: 740 });
   await page.goto('/events');
@@ -48,7 +48,8 @@ test('Moments Refine applies draft sort only when Show results is pressed', asyn
   await chips.getByRole('button', { name: /^Sort by Name/ }).click();
   await chips.getByRole('button', { name: 'Sort by Name, ascending' }).click();
   await expect(chips.getByRole('button', { name: 'Sort by Name, descending' })).toBeVisible();
-  await sheet.getByRole('button', { name: 'Show results' }).click();
+  await expect(sheet.getByRole('status').filter({ hasText: /Name · Z to A/ })).toBeVisible();
+  await sheet.getByRole('button', { name: 'Apply sort', exact: true }).click();
   await expect(sheet).toHaveCount(0);
   await refine.click();
   await expect(sheet.getByRole('button', { name: 'Sort by Name, descending' })).toHaveAttribute('aria-pressed', 'true');
